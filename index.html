@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>TTスーパーズコAPP</title>
+<style>
+  html, body { margin:0; height:100%; overflow:hidden; background:#2C7A99; }
+  #wrap { position:fixed; inset:0; overflow:hidden; }
+  /* Google Apps Scriptの警告バー分だけ上へずらして隠す（--crop を端末で微調整） */
+  :root { --crop: 56px; }
+  #app { position:absolute; left:0; width:100%; border:0;
+         top: calc(var(--crop) * -1); height: calc(100% + var(--crop)); }
+</style>
+</head>
+<body>
+<div id="wrap"><iframe id="app" title="施術室被り検出"></iframe></div>
+<script>
+  var EXEC = "https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";
+  // このページのクエリ(?view=... など)をそのままアプリへ渡す
+  document.getElementById("app").src = EXEC + (location.search || "");
+</script>
+</body>
+</html>
