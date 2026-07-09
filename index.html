@@ -54,6 +54,20 @@
       '<div class="boot" style="text-align:center;padding:1.5em;">' + msg + '</div>';
   }
 
+  // スマホの画面サイズ(縦横)を読み取り、被り画面が1画面に収まるよう自動で拡縮する。
+  // 件数が多い日は縮んで全部1画面に、少ない日は等倍のまま。横幅もはみ出さない。
+  var _fitBound = false;
+  function fitConflict() {
+    var wrap = document.querySelector('#root .wrap');
+    if (!wrap) return;
+    wrap.style.transform = 'none';
+    var ch = wrap.scrollHeight, cw = wrap.scrollWidth;
+    if (!ch || !cw) return;
+    var k = Math.min(1.5, window.innerHeight / ch, window.innerWidth / cw);
+    wrap.style.transformOrigin = 'top center';
+    wrap.style.transform = 'scale(' + k.toFixed(3) + ')';
+  }
+
   function showConflict() {
     // JSONPでデータ取得 → detect（判定）→ renderPage_（描画）。すべてブラウザ内で完結。
     window.__ttEvents = function (payload) {
@@ -61,6 +75,15 @@
         if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
         var res = detect(payload.events, nail, payload.date_from);
         mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff));
+        var root = document.getElementById('root');
+        root.style.height = '100vh'; root.style.overflow = 'hidden';   // ページ自体はスクロールさせない
+        fitConflict();
+        setTimeout(fitConflict, 60);   // レイアウト確定後にもう一度
+        if (!_fitBound) {
+          _fitBound = true;
+          window.addEventListener('resize', fitConflict);
+          window.addEventListener('orientationchange', function () { setTimeout(fitConflict, 200); });
+        }
       } catch (e) { fail('描画エラー：' + e); }
     };
     var s = document.createElement('script');
