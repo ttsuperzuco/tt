@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>TTスーパーズコAPP</title>
+<title>TTスーパーズコApp</title>
 <style>
   html, body { margin:0; height:100%; overflow:hidden; background:#2C7A99; }
   #wrap { position:fixed; inset:0; overflow:hidden; }
@@ -17,8 +17,14 @@
 <div id="wrap"><iframe id="app" title="施術室被り検出"></iframe></div>
 <script>
   var EXEC = "https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";
-  // このページのクエリ(?view=... など)をそのままアプリへ渡す
-  document.getElementById("app").src = EXEC + (location.search || "");
+  var target = EXEC + (location.search || "");   // このページのクエリ(?view=...&staff=1 等)をそのまま渡す
+  // Firefoxは他サイト(script.google.com)の埋め込みを安全のためブロックし「ページを開けません」になる。
+  // その時はiframe埋め込みをやめ、直接そのアプリへ移動する（＝全ブラウザで開ける）。Chrome等は従来どおりiframe。
+  if (/Firefox/i.test(navigator.userAgent)) {
+    location.replace(target);
+  } else {
+    document.getElementById("app").src = target;
+  }
 </script>
 </body>
 </html>
