@@ -682,8 +682,24 @@ function renderHomePage_(tileSettings, base, staff, dev) {
     '<div class="hhead"><span class="bmark">🍅</span><span class="bname">TTスーパーズコApp</span></div>' +
     '<div class="hsub">' + subtitle + '</div>' +
     '<div class="tiles">' + tilesHtml + '</div>' +
-  '</div>';
+  '</div>' +
+  HOMESCRIPT_;
 }
+
+// タイル文言が長い（例:「LINE未回答＆返信待ち」「売上TimeTree転記」）とスマホ幅で折り返して
+// 2行になるため、実際に1行に収まるまで縮小する（.tnameはCSS側でwhite-space:nowrap+overflow:hidden。
+// 売上表示(.uv)・LINE未回答タイトル(#unatitle)と同じscrollWidth実測方式）。
+var HOMESCRIPT_ =
+'<script>(function(){' +
+'var els=document.querySelectorAll(".tname");' +
+'for(var i=0;i<els.length;i++){' +
+'  var el=els[i]; var tries=0;' +
+'  while(el.scrollWidth>el.clientWidth && tries<20){' +
+'    var cur=parseFloat(getComputedStyle(el).fontSize);' +
+'    el.style.fontSize=(cur-1)+"px"; tries++;' +
+'  }' +
+'}' +
+'})();</scr' + 'ipt>';
 
 /** L⇔T予約照合（LINEの予約 と TimeTree の予定を突き合わせた結果を表示）。
  *  事務所PCが export_lt_super.py で書き出した lt_match.json を読むだけ（GASは判定しない）。 */
@@ -1083,7 +1099,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
     '<a class="unahome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
     '<span class="unagen">' + esc_(d.fresh || '—') + ' 時点</span>' +
   '</div>' +
-  '<h1>💬 LINE未回答＆返信待ち</h1>' +
+  '<h1 id="unatitle">💬 LINE未回答＆返信待ち</h1>' +
   '<div class="unatabs">' +
     '<button type="button" class="unatab cust sel" data-v="cust">🟢 当店が未返信<span class="unac" id="unaCntCust">' + cust.length + '</span></button>' +
     '<button type="button" class="unatab ours" data-v="ours">🔵 お客様の返事待ち<span class="unac" id="unaCntOurs">' + ours.length + '</span></button>' +
@@ -1143,6 +1159,16 @@ var UNASCRIPT_ =
 'if(q) q.addEventListener("input",apply);' +
 'if(per) per.addEventListener("input",apply);' +
 'apply();' +
+// タイトルがスマホ幅で1行に収まりきらない時だけ、実際にはみ出さなくなるまで縮小する
+// （white-space:nowrapは折り返しを防ぐだけではみ出しは防げないため、売上表示(.uv)と同じ
+//   scrollWidth>clientWidthでの実測縮小が必要）。
+'var t=document.getElementById("unatitle");' +
+'if(t){ var tries=0;' +
+'  while(t.scrollWidth>t.clientWidth && tries<20){' +
+'    var cur=parseFloat(getComputedStyle(t).fontSize);' +
+'    t.style.fontSize=(cur-1)+"px"; tries++;' +
+'  }' +
+'}' +
 '})();</scr' + 'ipt>';
 
 // LINE未回答＆返信待ちページ用スタイル（自己完結・ダーク/ライト対応・スマホ第一。L⇔T照合のCSSを土台にする）。
@@ -1159,7 +1185,7 @@ var UNACSS_ =
 '  .unahome{ color:#fff; text-decoration:none; font-weight:700; font-size:14px;' +
 '    background:rgba(255,255,255,.16); padding:7px 12px; border-radius:10px; }' +
 '  .unagen{ color:#eaf3f7; font-size:11px; opacity:.9; }' +
-'  h1{ color:#fff; font-size:clamp(13px, 5.4vw, 19px); white-space:nowrap; margin:6px 0 12px; }' +
+'  h1{ color:#fff; font-size:19px; white-space:nowrap; overflow:hidden; margin:6px 0 12px; }' +
 '  .unatabs{ display:flex; gap:8px; margin-bottom:12px; }' +
 '  .unatab{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:10px 8px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; font-weight:700; font-size:13px; }' +
@@ -1379,8 +1405,8 @@ var HOMECSS_ =
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
-'  .tname { flex:1; min-width:0; font-size:1.5rem; font-weight:800; white-space:normal;' +
-'    display:flex; flex-wrap:wrap; align-items:center; gap:6px; }' +
+'  .tname { flex:1; min-width:0; font-size:1.5rem; font-weight:800; white-space:nowrap; overflow:hidden;' +
+'    display:flex; align-items:center; gap:6px; }' +
 '  .badge { display:inline-block; font-size:.9rem; font-weight:800; color:#fff; background:#f97316;' +
 '    border-radius:999px; padding:4px 12px; vertical-align:middle;' +
 '    letter-spacing:.03em; white-space:nowrap; box-shadow:0 2px 8px rgba(249,115,22,.45); }' +
