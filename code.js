@@ -345,27 +345,61 @@ function circled_(n) { return (n >= 1 && n <= CIRCLED.length) ? CIRCLED[n - 1] :
 
 function roomColor_(room) {
   var p = { 'FREEDOM': '#e11d48', 'COSMOS': '#7c3aed', 'HAPPY': '#f59e0b',
-            'LUCKY': '#16a34a', 'STAR/福/🇫🇷': '#0ea5e9', 'NAIL': '#db2777' };
+            'LUCKY': '#16a34a', 'STAR/福/🇫🇷': '#0ea5e9' };
   return p[room] || '#64748b';
 }
 
 // 部屋名 → 移動先の (カレンダーID, ラベルID)。config.ROOM と同じ（部屋も揃えて移動＝B方式）。
-// ★config.py の ROOM と一致させること（片方直したら両方）。
+// ★config.py の ROOM_LABELS と一致させること（片方直したら両方）。
+// ★NAIL(ネイル)はうちの部屋管理の対象外（外部の間借りの方のサービス）＝共通ルールで恒久的に除外。
+//   一覧・移動候補・空き部屋表示、このアプリのどこにも一切出さない。
 var ROOMS_ = {
   'FREEDOM':      { cal: '73208496', label: 1 },
   'COSMOS':       { cal: '59950873', label: 2 },
   'HAPPY':        { cal: '59950855', label: 6 },
   'LUCKY':        { cal: '59950871', label: 9 },
-  'STAR/福/🇫🇷': { cal: '86075789', label: 10 },
-  'NAIL':         { cal: '83695993', label: 7 }
+  'STAR/福/🇫🇷': { cal: '86075789', label: 10 }
 };
+var ROOM_ORDER_ = ['FREEDOM', 'COSMOS', 'HAPPY', 'LUCKY', 'STAR/福/🇫🇷'];
 
-// 被りカード内「A/Bを別の空き部屋へ移す」1行（現在の部屋は候補から除く）。
-function moveRow_(side, cal, event, who, title, curRoom) {
+// 'HH:MM' → 分。ダメなら null。
+function hmToMin_(s) {
+  var m = /^(\d{1,2}):(\d{2})$/.exec(String(s || ''));
+  if (!m) return null;
+  return (+m[1]) * 60 + (+m[2]);
+}
+function toHm_(min) {
+  var h = Math.floor(min / 60), m = min % 60;
+  return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+}
+// 'HH:MM-HH:MM' → [開始分, 終了分]。ダメなら null。
+function parseTimeRange_(s) {
+  var parts = String(s || '').split('-');
+  if (parts.length !== 2) return null;
+  var a = hmToMin_(parts[0]), b = hmToMin_(parts[1]);
+  return (a == null || b == null) ? null : [a, b];
+}
+// その部屋がその日の [s,e) の時間帯に空いているか（room_busy＝PC側がroom_availabilityモジュールで
+// 計算済みの答え。GAS側では空き判定ロジックを再実装しない＝共通ルール）。
+function roomIsFree_(roomBusyForDate, name, s, e) {
+  var ivs = (roomBusyForDate && roomBusyForDate[name]) || [];
+  for (var i = 0; i < ivs.length; i++) {
+    if (ivs[i][0] < e && s < ivs[i][1]) return false;   // 重なりあり＝使用中
+  }
+  return true;
+}
+
+// 被りカード内「A/Bを別の空き部屋へ移す」1行（現在の部屋は候補から除く／空いてる部屋だけ表示）。
+function moveRow_(side, cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
   var hasId = (cal != null && cal !== '' && event != null && event !== '');
+  var range = parseTimeRange_(timeStr);
   var btns = '';
-  for (var name in ROOMS_) {
+  var anyFree = false;
+  for (var i = 0; i < ROOM_ORDER_.length; i++) {
+    var name = ROOM_ORDER_[i];
     if (name === curRoom) continue;   // 今と同じ部屋は出さない
+    if (range && !roomIsFree_(roomBusyForDate, name, range[0], range[1])) continue;  // 使用中は出さない
+    anyFree = true;
     var rm = ROOMS_[name];
     btns += '<button type="button" class="mvbtn"' +
       (hasId ? '' : ' disabled') +
@@ -374,11 +408,26 @@ function moveRow_(side, cal, event, who, title, curRoom) {
       ' data-room="' + esc_(name) + '" data-title="' + esc_(title) + '" data-side="' + side + '"' +
       ' style="--rc:' + roomColor_(name) + '">' + esc_(name) + '</button>';
   }
-  var note = hasId ? '' : '<span class="mvng">IDが取れず移動不可</span>';
+  var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
+    : (!anyFree ? '<span class="mvng">その時間、空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
     '<span class="mvlabel">' + side + '（' + esc_(who) + '）を→</span>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
+}
+
+// 「空き部屋状況を見る」パネル：その日1日の施術室別・使用中時間（NAIL除外）。
+function roomStatusPanel_(date, roomBusyForDate) {
+  var rows = ROOM_ORDER_.map(function (name) {
+    var ivs = (roomBusyForDate && roomBusyForDate[name]) || [];
+    var chips = ivs.length
+      ? ivs.slice().sort(function (a, b) { return a[0] - b[0]; })
+          .map(function (iv) { return '<span class="slot">' + toHm_(iv[0]) + '-' + toHm_(iv[1]) + '</span>'; }).join('')
+      : '<span class="none">空き（予約なし）</span>';
+    return '<div class="rstat"><span class="room" style="--rc:' + roomColor_(name) + '">' +
+      esc_(name) + '</span><span class="rchips">' + chips + '</span></div>';
+  }).join('');
+  return '<div class="rspanel" hidden><div class="rstitle">' + esc_(date) + ' の施術室別・使用中時間</div>' + rows + '</div>';
 }
 
 function esc_(s) {
@@ -405,14 +454,18 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
   } else {
     cards = conflicts.map(function (x, idx) {
       var rc = roomColor_(x.room);
+      var roomBusyForDate = (payload.room_busy && payload.room_busy[x.date]) || {};
       return '' +
       '<article class="card real">' +
         '<header class="card-h">' +
           '<span class="no">' + (idx + 1) + '</span>' +
           '<span class="date">' + esc_(x.date) + '</span>' +
           '<span class="room" style="--rc:' + rc + '">' + esc_(x.room) + '</span>' +
+          '<button type="button" class="rstoggle">📋 空き部屋状況を見る</button>' +
+          (x.dup_suspect ? '<span class="dup">⚠️同一人物の疑い(二重入力?)</span>' : '') +
           '<span class="ov">被り時間数 ' + x.overlap_min + '分（' + esc_(x.overlap_time) + '）</span>' +
         '</header>' +
+        roomStatusPanel_(x.date, roomBusyForDate) +
         '<div class="pair">' +
           '<div class="side">' +
             '<div class="time"><span class="ab abA">A</span>' + esc_(x.a_time) + '</div>' +
@@ -437,9 +490,9 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
         '<div class="mv" data-room="' + esc_(x.room) + '">' +
           '<button type="button" class="mvtoggle">🔀 部屋を移して被りを解消</button>' +
           '<div class="mvpanel" hidden>' +
-            moveRow_('A', x.a_cal_id, x.a_event_id, (x.a_staff || '') + ' ' + (x.a_name || ''), x.a_title, x.room) +
-            moveRow_('B', x.b_cal_id, x.b_event_id, (x.b_staff || '') + ' ' + (x.b_name || ''), x.b_title, x.room) +
-            '<div class="mvhint">選ぶと事務所PCがTimeTreeを書き換えます（削除はしません）。</div>' +
+            moveRow_('A', x.a_cal_id, x.a_event_id, (x.a_staff || '') + ' ' + (x.a_name || ''), x.a_title, x.room, roomBusyForDate, x.a_time) +
+            moveRow_('B', x.b_cal_id, x.b_event_id, (x.b_staff || '') + ' ' + (x.b_name || ''), x.b_title, x.room, roomBusyForDate, x.b_time) +
+            '<div class="mvhint">選ぶとTimeTreeを書き換えます（削除はしません）。</div>' +
           '</div>' +
           '<div class="mvstatus" hidden></div>' +
         '</div>' +
@@ -864,6 +917,10 @@ var MOVESCRIPT_ =
 'var wrap=document.querySelector(".wrap"); if(!wrap) return;' +
 'wrap.addEventListener("click",function(ev){' +
 '  var t=ev.target;' +
+'  if(t.classList&&t.classList.contains("rstoggle")){' +
+'    var card=t; while(card&&!(card.classList&&card.classList.contains("card"))) card=card.parentNode; if(!card) return;' +
+'    var pn=card.querySelector(".rspanel"); if(pn) pn.hidden=!pn.hidden; return;' +
+'  }' +
 '  if(t.classList&&t.classList.contains("mvtoggle")){' +
 '    var pn=t.parentNode.querySelector(".mvpanel"); if(pn) pn.hidden=!pn.hidden; return;' +
 '  }' +
@@ -874,7 +931,7 @@ var MOVESCRIPT_ =
 '    var toCal=t.getAttribute("data-tocal"), toLabel=t.getAttribute("data-tolabel");' +
 '    var room=t.getAttribute("data-room"), title=t.getAttribute("data-title"), side=t.getAttribute("data-side");' +
 '    if(!cal||!evid){ alert("この予約のIDが取れず移動できません"); return; }' +
-'    if(!confirm(side+"を「"+room+"」へ移動します。よろしいですか？\\n（事務所PCがTimeTreeを書き換えます・削除はしません）")) return;' +
+'    if(!confirm(side+"を「"+room+"」へ移動します。よろしいですか？\\n（TimeTreeを書き換えます・削除はしません）")) return;' +
 '    var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
 '    var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
 '    google.script.run' +
@@ -1084,6 +1141,9 @@ var CSS_ =
 '  .date { font-weight:900; font-size:1.55rem; }' +
 '  .room { background:var(--rc); color:#fff; font-weight:800; font-size:1.05rem;' +
 '    padding:4px 16px; border-radius:999px; }' +
+'  .dup { font-size:.95rem; font-weight:800; color:#92400e;' +
+'    background:#fde68a; padding:4px 12px; border-radius:999px; }' +
+'  @media (prefers-color-scheme: dark) { .dup { color:#1c1400; background:#fbbf24; } }' +
 '  .kind { font-size:.82rem; font-weight:600; }' +
 '  .card.real .kind { color:var(--real); } .card.dup .kind { color:var(--dup); }' +
 '  .ov { font-size:1.05rem; font-weight:800; color:var(--real);' +
@@ -1130,4 +1190,16 @@ var CSS_ =
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .mvstatus.ok { background:#dcfce7; color:#166534; }' +
 '  .mvstatus.err { background:#fee2e2; color:#991b1b; }' +
+'  .rstoggle { font-size:.78rem; font-weight:700; color:var(--ink); background:var(--bg);' +
+'    border:1px solid var(--line); border-radius:999px; padding:5px 12px; cursor:pointer; }' +
+'  .rstoggle:active { transform:translateY(1px); }' +
+'  .rspanel { margin:0 0 8px; background:var(--bg); border:1px solid var(--line);' +
+'    border-radius:10px; padding:8px 10px; }' +
+'  .rstitle { font-size:.8rem; font-weight:700; color:var(--sub); margin-bottom:6px; }' +
+'  .rstat { display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding:4px 0; }' +
+'  .rstat + .rstat { border-top:1px dashed var(--line); }' +
+'  .rchips { display:flex; flex-wrap:wrap; gap:5px; }' +
+'  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
+'    border-radius:7px; padding:2px 8px; font-size:.82rem; font-variant-numeric:tabular-nums; }' +
+'  .rchips .none { color:#16a34a; font-size:.82rem; font-weight:700; }' +
 '';
