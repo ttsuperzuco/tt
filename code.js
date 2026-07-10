@@ -109,10 +109,20 @@ function _uriageJsonp_(p) {
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
+// タイル(ボタン)表示ON/OFF設定のJSONP配信（読み取り専用・鍵不要）。
+// 事務所PC「自動監視システム」の tile_settings.py が書き出す tile_settings.json を渡すだけ。
+function _tileSettingsJsonp_(p) {
+  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
+  var payload = { tiles: getTileSettings_() };
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
 function handleAction_(p) {
   if (p.action === 'events') return _eventsJsonp_(p);
   if (p.action === 'lt') return _ltJsonp_(p);
   if (p.action === 'uriage') return _uriageJsonp_(p);
+  if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
   if (p.key !== EDIT_KEY) return _jsonOut_({ ok: false, error: 'bad key' });
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
@@ -282,6 +292,45 @@ function getUriageFile_() {
   return newest;
 }
 
+/** tile_settings.json のファイルを取得（ホーム画面ボタンの表示ON/OFF設定。
+ *  事務所PC「自動監視システム」の tile_settings.py が書き出す）。 */
+var TILE_SETTINGS_FILENAME = 'tile_settings.json';
+function getTileSettingsFile_() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('TILESET_FILE_ID');
+  if (id) {
+    try { return DriveApp.getFileById(id); } catch (ignore) { /* IDが古い→探し直す */ }
+  }
+  var it = DriveApp.getFilesByName(TILE_SETTINGS_FILENAME);
+  var newest = null;
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
+  }
+  if (!newest) throw new Error('tile_settings.json 未生成');
+  props.setProperty('TILESET_FILE_ID', newest.getId());
+  return newest;
+}
+
+// tile_settings.json が無い/壊れている時のデフォルト＝現状の挙動と同じ（売上だけスタッフに非表示）。
+// ★新しいボタン(タイル)を足す時は、下のTILE_DEFS_と両方に1件ずつ追記する（idを一致させる）。
+var DEFAULT_TILE_SETTINGS_ = {
+  conflict: { exec: true, staff: true },
+  lt:       { exec: true, staff: true },
+  uriage:   { exec: true, staff: false }
+};
+
+/** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
+ *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
+function getTileSettings_() {
+  try {
+    var file = getTileSettingsFile_();
+    var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
+    if (d && d.tiles && typeof d.tiles === 'object') return d.tiles;
+  } catch (ignore) {}
+  return DEFAULT_TILE_SETTINGS_;
+}
+
 // ---- 表示（room_conflict_detect.py の render_html を移植。並び・色を一致させる）----
 
 var CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
@@ -430,29 +479,41 @@ var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="tru
   '<rect x="8" y="5.3" width="1.7" height="3.6" rx=".85" fill="#12864e"/>' +
   '<rect x="14.3" y="5.3" width="1.7" height="3.6" rx=".85" fill="#12864e"/></svg>';
 
+// ホームのタイル(ボタン)定義。表示ON/OFFはコードでなく tile_settings.json（幹部用／スタッフ用）で管理する。
+// ★新しいボタンを足す時はここに1件追加＋DEFAULT_TILE_SETTINGS_にも同じidで1件追加する。
+var TILE_DEFS_ = [
+  { id: 'conflict', cls: 'conflict', view: 'conflict',
+    icon: '<span class="ticon">🛏️</span>', label: '施術室被り検出' },
+  { id: 'lt', cls: 'lt', view: 'lt',
+    icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'L⇔T予約照合' },
+  { id: 'uriage', cls: 'uriage', view: 'uriage',
+    icon: '<span class="ticon">💰</span>', label: '売上TimeTree転記' }
+];
+
+/** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を読んで renderHomePage_ に渡すだけ。 */
 function renderHome_(base, staff) {
+  return renderHomePage_(getTileSettings_(), base, staff);
+}
+
+/** ホーム画面の描画（純JS・GAS API不使用）。②静的アプリは JSONP で tile_settings を取得し、
+ *  これを直接呼ぶ（renderPage_/renderLtPage_/renderUriagePage_ と同じ「取得と描画を分離」の作法）。 */
+function renderHomePage_(tileSettings, base, staff) {
+  var settings = tileSettings || DEFAULT_TILE_SETTINGS_;
   var sfx = staff ? '&staff=1' : '';
   var subtitle = staff ? 'ALLスタッフ版' : 'なしぼ版';
-  var uriageTile = staff ? '' :
-      '<a class="tile uriage" href="' + base + '?view=uriage" target="_top">' +
-        '<span class="ticon">💰</span>' +
-        '<span class="tname">売上TimeTree転記</span>' +
-      '</a>';
+  var role = staff ? 'staff' : 'exec';
+  var tilesHtml = TILE_DEFS_.filter(function (t) {
+    var s = settings[t.id];
+    return !s || s[role] !== false;   // 設定に無いタイル＝デフォルト表示
+  }).map(function (t) {
+    return '<a class="tile ' + t.cls + '" href="' + base + '?view=' + t.view + sfx + '" target="_top">' +
+      t.icon + '<span class="tname">' + esc_(t.label) + '</span></a>';
+  }).join('');
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' +
     '<div class="hhead"><span class="bmark">🍅</span><span class="bname">TTスーパーズコApp</span></div>' +
     '<div class="hsub">' + subtitle + '</div>' +
-    '<div class="tiles">' +
-      '<a class="tile conflict" href="' + base + '?view=conflict' + sfx + '" target="_top">' +
-        '<span class="ticon">🛏️</span>' +
-        '<span class="tname">施術室被り検出</span>' +
-      '</a>' +
-      '<a class="tile lt" href="' + base + '?view=lt' + sfx + '" target="_top">' +
-        '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>' +
-        '<span class="tname">L⇔T予約照合</span>' +
-      '</a>' +
-      uriageTile +
-    '</div>' +
+    '<div class="tiles">' + tilesHtml + '</div>' +
   '</div>';
 }
 

@@ -121,6 +121,20 @@
     document.body.appendChild(s);
   }
 
+  // ホーム画面のボタン表示ON/OFF設定（幹部用／スタッフ用）もJSONPで取得。
+  // renderHome_（DriveApp使用）は①専用なので、②はrenderHomePage_を直接呼ぶ
+  // （取得失敗時はtileSettings未指定＝renderHomePage_内のデフォルトにフォールバック）。
+  function showHome() {
+    window.__ttTileSettings = function (payload) {
+      var tiles = (payload && payload.tiles) || null;
+      mount(renderHomePage_(tiles, base, staff));
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=tilesettings&callback=__ttTileSettings&cb=' + Date.now();
+    s.onerror = function () { mount(renderHomePage_(null, base, staff)); };
+    document.body.appendChild(s);
+  }
+
   if (view === 'lt') {
     showLt();
   } else if (view === 'uriage' && !staff) {
@@ -128,7 +142,7 @@
   } else if (view === 'conflict') {
     showConflict();
   } else {
-    mount(renderHome_(base, staff));
+    showHome();
   }
 })();
 </script>
