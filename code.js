@@ -1379,10 +1379,8 @@ var HOMECSS_ =
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
-'  .tname { flex:1; min-width:0; font-size:1.5rem; font-weight:800; white-space:nowrap;' +
+'  .tname { flex:1; min-width:0; font-size:.98rem; font-weight:800; white-space:nowrap;' +
 '    overflow:hidden; text-overflow:ellipsis; }' +
-'  .tile.uriage .tname { font-size:1.08rem; }' +
-'  .tile.unanswered .tname { font-size:.98rem; }' +
 '  .badge { display:inline-block; font-size:.9rem; font-weight:800; color:#fff; background:#f97316;' +
 '    border-radius:999px; padding:4px 12px; vertical-align:middle;' +
 '    letter-spacing:.03em; white-space:nowrap; box-shadow:0 2px 8px rgba(249,115,22,.45); }' +
