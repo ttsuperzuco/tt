@@ -725,8 +725,8 @@ function uriageBody_(d) {
       '<span class="upc"><b class="up">' + (pl.mistake_days || 0) + '</b><span>記入ミス</span></span>' +
       '<span class="upc"><b class="ok">' + (pl.done_days || 0) + '</b><span>記入完了</span></span>' +
     '</div>' +
-    (missList ? '<div class="ublk"><b>未記入（下のボタンで記入できます）</b><ul>' + missList + '</ul></div>' : '') +
-    (mistList ? '<div class="ublk warn"><b>記入ミス（下のボタンで修正できます・内容を確認してください）</b><ul>' + mistList + '</ul></div>' : '') +
+    (missList ? '<div class="ublk"><b>未記入</b><ul>' + missList + '</ul></div>' : '') +
+    (mistList ? '<div class="ublk warn"><b>記入ミス</b><ul>' + mistList + '</ul></div>' : '') +
   '</div>' +
   '<button type="button" id="ubtn" class="ubtn"' + (nMissing > 0 ? '' : ' data-empty="1"') + '>' + missBtnLabel + '</button>' +
   '<button type="button" id="ufixbtn" class="ubtn ufix"' + (nMistake > 0 ? '' : ' data-empty="1"') + '>' + fixBtnLabel + '</button>' +
