@@ -1086,7 +1086,8 @@ var CSS_ =
 '    padding:2px 11px; border-radius:999px; }' +
 '  .kind { font-size:.82rem; font-weight:600; }' +
 '  .card.real .kind { color:var(--real); } .card.dup .kind { color:var(--dup); }' +
-'  .ov { font-size:.85rem; color:var(--ink); font-weight:700; }' +
+'  .ov { font-size:1.05rem; font-weight:800; color:var(--real);' +
+'    background:rgba(225,29,72,.14); padding:4px 12px; border-radius:999px; }' +
 '  .pair { display:flex; flex-direction:column; gap:0;' +
 '    border-top:2px solid var(--sub); padding-top:7px; margin-top:2px; }' +
 '  .side { background:var(--bg); border-radius:10px; padding:6px 10px; }' +
@@ -1094,7 +1095,7 @@ var CSS_ =
 '    font-variant-numeric:tabular-nums; }' +
 '  .ab { flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:9px;' +
 '    color:#fff; font-weight:800; font-size:1.15rem; margin-right:8px; }' +
-'  .abA { background:#2563eb; } .abB { background:#f59e0b; }' +
+'  .abA { background:#2563eb; } .abB { background:#475569; }' +
 '  .who { margin:4px 0 2px; font-size:1rem; }' +
 '  .who .staff { font-size:1.02rem; } .who .code { color:var(--sub); font-weight:600; margin:0 4px; }' +
 '  .who .name { font-weight:500; }' +
