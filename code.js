@@ -1159,7 +1159,7 @@ var UNACSS_ =
 '  .unahome{ color:#fff; text-decoration:none; font-weight:700; font-size:14px;' +
 '    background:rgba(255,255,255,.16); padding:7px 12px; border-radius:10px; }' +
 '  .unagen{ color:#eaf3f7; font-size:11px; opacity:.9; }' +
-'  h1{ color:#fff; font-size:19px; margin:6px 0 12px; }' +
+'  h1{ color:#fff; font-size:clamp(13px, 5.4vw, 19px); white-space:nowrap; margin:6px 0 12px; }' +
 '  .unatabs{ display:flex; gap:8px; margin-bottom:12px; }' +
 '  .unatab{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:10px 8px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; font-weight:700; font-size:13px; }' +
