@@ -360,7 +360,8 @@ var ROOMS_ = {
   'LUCKY':        { cal: '59950871', label: 9 },
   'STAR/福/🇫🇷': { cal: '86075789', label: 10 }
 };
-var ROOM_ORDER_ = ['FREEDOM', 'COSMOS', 'HAPPY', 'LUCKY', 'STAR/福/🇫🇷'];
+// ★COSMOSは常に最後（部屋移動の候補ボタン＝一番右／空き部屋状況パネル＝一番下）＝ユーザー指定の並び。
+var ROOM_ORDER_ = ['FREEDOM', 'HAPPY', 'LUCKY', 'STAR/福/🇫🇷', 'COSMOS'];
 
 // 'HH:MM' → 分。ダメなら null。
 function hmToMin_(s) {
