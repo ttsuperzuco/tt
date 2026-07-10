@@ -447,6 +447,12 @@ function freeGaps_(busy, winS, winE) {
 // ★空きの元データ(busy)はPC側がroom_availabilityモジュールで計算した答え（room_busy）そのまま。
 //   ここでやっているのは「営業窓からbusyを引いた残り」を出すだけの表示計算（判定ロジックの
 //   再実装ではない）。
+// このパネル内だけの表示用の短い部屋名（色・空き判定は元の正式名"STAR/福/🇫🇷"のまま行う。
+// バッジ幅を詰めて時間チップを右側に収めるための表示専用の短縮＝他画面には影響しない）。
+function shortRoomName_(name) {
+  return name === 'STAR/福/🇫🇷' ? 'STAR/福' : name;
+}
+
 function roomStatusPanel_(date, roomBusyForDate) {
   var rows = ROOM_ORDER_.map(function (name) {
     var busy = (roomBusyForDate && roomBusyForDate[name]) || [];
@@ -455,10 +461,9 @@ function roomStatusPanel_(date, roomBusyForDate) {
       ? gaps.map(function (iv) { return '<span class="slot">' + toHm_(iv[0]) + '-' + toHm_(iv[1]) + '</span>'; }).join('')
       : '<span class="none">空きなし</span>';
     return '<div class="rstat"><span class="room" style="--rc:' + roomColor_(name) + '">' +
-      esc_(name) + '</span><span class="rchips">' + chips + '</span></div>';
+      esc_(shortRoomName_(name)) + '</span><span class="rchips">' + chips + '</span></div>';
   }).join('');
-  return '<div class="rspanel" hidden><div class="rstitle">' + esc_(date) + ' の施術室別・空き時間（' +
-    toHm_(DAY_WIN_S_) + '-' + toHm_(DAY_WIN_E_) + 'の営業想定）</div>' + rows + '</div>';
+  return '<div class="rspanel" hidden><div class="rstitle">' + esc_(date) + ' の施術室別・空き時間</div>' + rows + '</div>';
 }
 
 function esc_(s) {
@@ -1233,9 +1238,10 @@ var CSS_ =
 '  .rspanel { margin:8px 0 0; background:var(--bg); border:1px solid var(--line);' +
 '    border-radius:10px; padding:8px 10px; }' +
 '  .rstitle { font-size:.8rem; font-weight:700; color:var(--sub); margin-bottom:6px; }' +
-'  .rstat { display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding:4px 0; }' +
+'  .rstat { display:flex; align-items:flex-start; flex-wrap:nowrap; gap:6px; padding:4px 0; }' +
 '  .rstat + .rstat { border-top:1px dashed var(--line); }' +
-'  .rchips { display:flex; flex-wrap:wrap; gap:5px; }' +
+'  .rstat .room { flex:0 0 auto; }' +
+'  .rchips { flex:1 1 auto; min-width:0; display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-end; }' +
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
 '    border-radius:7px; padding:2px 8px; font-size:.82rem; font-variant-numeric:tabular-nums; }' +
 '  .rchips .none { color:var(--real); font-size:.82rem; font-weight:700; }' +
