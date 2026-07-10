@@ -179,15 +179,23 @@ function uiStatus(id) {
   return { status: 'notfound', result: '' };
 }
 
-// 売上TimeTree転記ボタン（オーナー版のみ）。命令置き場に op='uriage' を積むだけ。
-// 事務所PCの edit_worker が拾って run.py（新規記入のみ自動・上書き訂正はしない）を実行→report。
+// 売上TimeTree転記ボタン（オーナー版のみ）。命令置き場に積むだけ。事務所PCの edit_worker が拾って実行→report。
+// op='uriage'      … 未記入売上を記入（新規記入のみ自動・既存の値は一切触らない＝失敗しても実害ゼロ）。
+// op='uriage_fix'  … 記入ミスを修正（TimeTreeの既存値を上書き。アプリ画面で新旧の値を見せた上での
+//                     明示タップ＋確認ダイアログを安全弁とする＝部屋移動ボタンと同じ考え方）。
 function uiSubmitUriage() {
+  return _uriageSubmit_('uriage');
+}
+function uiSubmitUriageFix() {
+  return _uriageSubmit_('uriage_fix');
+}
+function _uriageSubmit_(op) {
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
   try {
     var q = _queueGet_();
     var id = 'u' + Date.now() + Math.floor(Math.random() * 1000);
-    q.push({ id: id, ts: new Date().toISOString(), op: 'uriage',
+    q.push({ id: id, ts: new Date().toISOString(), op: op,
       status: 'pending', result: '' });
     _queueSet_(q);
     return id;
@@ -630,9 +638,13 @@ function uriageBody_(d) {
   }).join('');
 
   var nMissing = pl.missing_days || 0;
-  var btnLabel = nMissing > 0
-    ? ('▶ TimeTreeに転記する（未記入 ' + nMissing + '日ぶん）')
-    : '▶ 記入する（追加なし）';
+  var nMistake = pl.mistake_days || 0;
+  var missBtnLabel = nMissing > 0
+    ? ('▶ 未記入売上を記入（' + nMissing + '日ぶん）')
+    : '▶ 未記入売上を記入（対象なし）';
+  var fixBtnLabel = nMistake > 0
+    ? ('🔧 記入ミスを修正（' + nMistake + '日ぶん）')
+    : '🔧 記入ミスを修正（対象なし）';
   var noteBox = d.note ? '<div class="unote">' + esc_(d.note) + '</div>' : '';
 
   return '' +
@@ -652,10 +664,11 @@ function uriageBody_(d) {
       '<span class="upc"><b class="up">' + (pl.mistake_days || 0) + '</b><span>記入ミス</span></span>' +
       '<span class="upc"><b class="ok">' + (pl.done_days || 0) + '</b><span>記入完了</span></span>' +
     '</div>' +
-    (missList ? '<div class="ublk"><b>未記入（これから自動で記入）</b><ul>' + missList + '</ul></div>' : '') +
-    (mistList ? '<div class="ublk warn"><b>記入ミス（内容を確認してください・アプリからは直しません）</b><ul>' + mistList + '</ul></div>' : '') +
+    (missList ? '<div class="ublk"><b>未記入（下のボタンで記入できます）</b><ul>' + missList + '</ul></div>' : '') +
+    (mistList ? '<div class="ublk warn"><b>記入ミス（下のボタンで修正できます・内容を確認してください）</b><ul>' + mistList + '</ul></div>' : '') +
   '</div>' +
-  '<button type="button" id="ubtn" class="ubtn"' + (nMissing > 0 ? '' : ' data-empty="1"') + '>' + btnLabel + '</button>' +
+  '<button type="button" id="ubtn" class="ubtn"' + (nMissing > 0 ? '' : ' data-empty="1"') + '>' + missBtnLabel + '</button>' +
+  '<button type="button" id="ufixbtn" class="ubtn ufix"' + (nMistake > 0 ? '' : ' data-empty="1"') + '>' + fixBtnLabel + '</button>' +
   '<div id="ustatus" class="ustatus" hidden></div>' +
   '<div class="ugen">最終計算：' + esc_(d.generated_at || '—') + '</div>';
 }
@@ -677,27 +690,39 @@ var URIAGESCRIPT_ =
 'if(pb){ pb.addEventListener("click",function(){' +
 '  var pn=document.getElementById("uperpanel"); if(pn) pn.hidden=!pn.hidden;' +
 '}); }' +
-'var b=document.getElementById("ubtn"); if(!b) return;' +
 'var st=document.getElementById("ustatus");' +
-'b.addEventListener("click",function(){' +
-'  var empty=b.getAttribute("data-empty")==="1";' +
-'  var msg=empty?"追加する新規記入はありません。念のため実行しますか？":' +
-'    "今日ぶんの売上をTimeTreeに記入します。よろしいですか？\\n（新規記入のみ・上書き訂正はしません）";' +
-'  if(!confirm(msg)) return;' +
-'  b.disabled=true; st.hidden=false; st.className="ustatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
-'  google.script.run' +
-'    .withSuccessHandler(function(id){ pollU(id); })' +
-'    .withFailureHandler(function(e){ st.className="ustatus err"; st.textContent="⚠️ 依頼に失敗："+e; b.disabled=false; })' +
-'    .uiSubmitUriage();' +
-'});' +
-'function pollU(id){' +
-'  st.textContent="⏳ 処理中…（帳簿を読んでTimeTreeに記入）"; var tries=0;' +
+'var missBtn=document.getElementById("ubtn");' +
+'var fixBtn=document.getElementById("ufixbtn");' +
+'function wireUriageBtn(btn, submitFn, emptyMsg, confirmMsg, workingMsg){' +
+'  if(!btn || !st) return;' +
+'  btn.addEventListener("click",function(){' +
+'    var empty=btn.getAttribute("data-empty")==="1";' +
+'    if(!confirm(empty?emptyMsg:confirmMsg)) return;' +
+'    if(missBtn) missBtn.disabled=true; if(fixBtn) fixBtn.disabled=true;' +
+'    st.hidden=false; st.className="ustatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
+'    google.script.run' +
+'      .withSuccessHandler(function(id){ pollU(id, workingMsg); })' +
+'      .withFailureHandler(function(e){ st.className="ustatus err"; st.textContent="⚠️ 依頼に失敗："+e; enableUriageBtns(); })' +
+'      [submitFn]();' +
+'  });' +
+'}' +
+'function enableUriageBtns(){ if(missBtn) missBtn.disabled=false; if(fixBtn) fixBtn.disabled=false; }' +
+'wireUriageBtn(missBtn, "uiSubmitUriage",' +
+'  "追加する新規記入はありません。念のため実行しますか？",' +
+'  "今日ぶんの売上をTimeTreeに記入します。よろしいですか？\\n（新規記入のみ・既存の値は変更しません）",' +
+'  "⏳ 処理中…（帳簿を読んでTimeTreeに記入）");' +
+'wireUriageBtn(fixBtn, "uiSubmitUriageFix",' +
+'  "修正が必要な記入ミスはありません。念のため実行しますか？",' +
+'  "上のリストの通りTimeTreeの既存の値を書き換えます。よろしいですか？\\n（内容をよく確認してから実行してください）",' +
+'  "⏳ 処理中…（TimeTreeの値を修正）");' +
+'function pollU(id, workingMsg){' +
+'  st.textContent=workingMsg; var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
 '    google.script.run.withSuccessHandler(function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); st.className="ustatus ok"; st.textContent="✅ "+((r.result)||"転記しました")+"（画面を更新すると最新に）"; }' +
-'      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
-'      else if(tries>=60){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
+'      if(s==="done"){ clearInterval(timer); st.className="ustatus ok"; st.textContent="✅ "+((r.result)||"完了しました")+"（画面を更新すると最新に）"; enableUriageBtns(); }' +
+'      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); enableUriageBtns(); }' +
+'      else if(tries>=60){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; enableUriageBtns(); }' +
 '    }).withFailureHandler(function(e){}).uiStatus(id);' +
 '  },3000);' +
 '}' +
@@ -734,6 +759,7 @@ var URIAGECSS_ =
 '    box-shadow:0 4px 14px rgba(245,158,11,.4); }' +
 '  .ubtn:active { transform:translateY(1px); }' +
 '  .ubtn:disabled { opacity:.55; }' +
+'  .ubtn.ufix { background:#2563eb; box-shadow:0 4px 14px rgba(37,99,235,.4); margin-top:10px; }' +
 '  .ustatus { margin-top:12px; padding:13px 14px; border-radius:12px; font-size:1rem; font-weight:700; }' +
 '  .ustatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .ustatus.ok { background:#dcfce7; color:#166534; }' +
