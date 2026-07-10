@@ -475,6 +475,7 @@ function moveRow_(side, cal, event, who, title, curRoom, roomBusyForDate, timeSt
       ' data-cal="' + esc_(cal) + '" data-ev="' + esc_(event) + '"' +
       ' data-tocal="' + rm.cal + '" data-tolabel="' + rm.label + '"' +
       ' data-room="' + esc_(name) + '" data-title="' + esc_(title) + '" data-side="' + side + '"' +
+      ' data-who="' + esc_(who) + '" data-fromroom="' + esc_(curRoom) + '"' +
       ' style="--rc:' + roomColor_(name) + '">' + esc_(name) + '</button>';
   }
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
@@ -1238,8 +1239,9 @@ var MOVESCRIPT_ =
 '    var cal=t.getAttribute("data-cal"), evid=t.getAttribute("data-ev");' +
 '    var toCal=t.getAttribute("data-tocal"), toLabel=t.getAttribute("data-tolabel");' +
 '    var room=t.getAttribute("data-room"), title=t.getAttribute("data-title"), side=t.getAttribute("data-side");' +
+'    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
-'    ccPopup_(side+"を「"+room+"」へ移動します。よろしいですか？", true, function(){' +
+'    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 '      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
 '      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
 '      google.script.run' +
