@@ -27,6 +27,8 @@
   var params = new URLSearchParams(location.search);
   var view  = params.get('view') || 'home';
   var staff = params.get('staff') === '1';
+  // 開発用URL（?dev=1）＝tile_settings.jsonの表示ON/OFF設定を無視して全ボタン表示。staff指定時は無効。
+  var dev   = !staff && params.get('dev') === '1';
   var nail  = params.get('nail') === '1';
   var base  = location.pathname;   // メニュー内の遷移は同じページの ?view= を切り替えるだけ
 
@@ -74,7 +76,7 @@
       try {
         if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
         var res = detect(payload.events, nail, payload.date_from);
-        mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff));
+        mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff, dev));
         var root = document.getElementById('root');
         root.style.height = '100vh'; root.style.overflow = 'hidden';   // ページ自体はスクロールさせない
         fitConflict();
@@ -99,7 +101,7 @@
     window.__ttLt = function (payload) {
       try {
         if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
-        mount(renderLtPage_(payload, base, staff));
+        mount(renderLtPage_(payload, base, staff, dev));
       } catch (e) { fail('描画エラー：' + e); }
     };
     var s = document.createElement('script');
@@ -111,8 +113,8 @@
   function showUriage() {
     window.__ttUriage = function (payload) {
       try {
-        if (!payload || payload.error) { mount(renderUriageError_((payload && payload.error) || '不明', base, staff)); return; }
-        mount(renderUriagePage_(payload, base, staff));
+        if (!payload || payload.error) { mount(renderUriageError_((payload && payload.error) || '不明', base, staff, dev)); return; }
+        mount(renderUriagePage_(payload, base, staff, dev));
       } catch (e) { fail('描画エラー：' + e); }
     };
     var s = document.createElement('script');
@@ -127,11 +129,11 @@
   function showHome() {
     window.__ttTileSettings = function (payload) {
       var tiles = (payload && payload.tiles) || null;
-      mount(renderHomePage_(tiles, base, staff));
+      mount(renderHomePage_(tiles, base, staff, dev));
     };
     var s = document.createElement('script');
     s.src = EXEC + '?action=tilesettings&callback=__ttTileSettings&cb=' + Date.now();
-    s.onerror = function () { mount(renderHomePage_(null, base, staff)); };
+    s.onerror = function () { mount(renderHomePage_(null, base, staff, dev)); };
     document.body.appendChild(s);
   }
 

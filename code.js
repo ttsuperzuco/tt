@@ -14,6 +14,11 @@
 
 var EVENTS_FILENAME = 'events.json';
 
+// 役割(URL引数)をリンク用のクエリ文字列に変換。staff/devは排他（doGetでdevはstaff未指定時のみ有効化）。
+function roleSfx_(staff, dev) {
+  return staff ? '&staff=1' : (dev ? '&dev=1' : '');
+}
+
 function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.action) return handleAction_(p);   // 編集依頼の受付/取り出し/結果（命令置き場API）
@@ -21,6 +26,8 @@ function doGet(e) {
   var base = getBaseUrl_();
   // スタッフ版（?staff=1）＝売上を見せない・「ALLスタッフ版」表示。未指定＝オーナー「なしぼ版」。
   var staff = (p.staff === '1' || p.staff === 'true');
+  // 開発版（?dev=1）＝tile_settings.jsonの表示ON/OFF設定を無視して全ボタンを表示。staff指定時は無効。
+  var dev = !staff && (p.dev === '1' || p.dev === 'true');
   var html, title;
   if (view === 'conflict') {
     title = '施術室被り検出';
@@ -29,19 +36,19 @@ function doGet(e) {
       var file = getEventsFile_();
       var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
       var res = detect(d.events, withNail, d.date_from);
-      html = renderPage_(res.conflicts, res.meta, d, withNail, base, staff);
+      html = renderPage_(res.conflicts, res.meta, d, withNail, base, staff, dev);
     } catch (err) {
-      html = renderError_(err, base, staff);
+      html = renderError_(err, base, staff, dev);
     }
   } else if (view === 'lt') {
     title = 'L⇔T予約照合';
-    html = renderLT_(base, staff);
+    html = renderLT_(base, staff, dev);
   } else if (view === 'uriage' && !staff) {
     title = '売上TimeTree転記';
-    html = renderUriage_(base, staff);
+    html = renderUriage_(base, staff, dev);
   } else {
-    title = staff ? 'TTスーパーズコApp（ALLスタッフ版）' : 'TTスーパーズコApp';
-    html = renderHome_(base, staff);
+    title = staff ? 'TTスーパーズコApp（ALLスタッフ版）' : (dev ? 'TTスーパーズコApp（開発版）' : 'TTスーパーズコApp');
+    html = renderHome_(base, staff, dev);
   }
   return HtmlService.createHtmlOutput(html)
     .setTitle(title)
@@ -380,7 +387,7 @@ function esc_(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function renderPage_(conflicts, meta, payload, withNail, base, staff) {
+function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
   var real = conflicts.length;
   function menu_(m) {
     m = (m || '').trim();
@@ -445,7 +452,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff) {
 '<style>' + CSS_ + '</style>' +
 '<div class="wrap">' +
   '<div class="bar">' +
-    '<a class="homelink" href="' + (base || '') + '?view=home' + (staff ? '&staff=1' : '') + '" target="_top">← 前に戻る</a>' +
+    '<a class="homelink" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
     '<div class="fetched">' +
       '<span class="fline"><b>LINE取得</b> ' + esc_(payload.line_fetched_at || '—') + '</span>' +
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
@@ -457,10 +464,10 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff) {
 TTSCRIPT_ + MOVESCRIPT_;
 }
 
-function renderError_(err, base, staff) {
+function renderError_(err, base, staff, dev) {
   return '<style>' + CSS_ + '</style>' +
     '<div class="wrap"><div class="bar">' +
-    '<a class="homelink" href="' + (base || '') + '?view=home' + (staff ? '&staff=1' : '') + '" target="_top">☰ メニュー</a>' +
+    '<a class="homelink" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">☰ メニュー</a>' +
     '<button class="reload" onclick="location.reload()">🔄 再読込</button></div>' +
     '<h1>⚠️ 表示できませんでした</h1>' +
     '<div class="empty" style="color:#e11d48">' + esc_(err && err.message ? err.message : err) + '</div>' +
@@ -491,18 +498,20 @@ var TILE_DEFS_ = [
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を読んで renderHomePage_ に渡すだけ。 */
-function renderHome_(base, staff) {
-  return renderHomePage_(getTileSettings_(), base, staff);
+function renderHome_(base, staff, dev) {
+  return renderHomePage_(getTileSettings_(), base, staff, dev);
 }
 
 /** ホーム画面の描画（純JS・GAS API不使用）。②静的アプリは JSONP で tile_settings を取得し、
- *  これを直接呼ぶ（renderPage_/renderLtPage_/renderUriagePage_ と同じ「取得と描画を分離」の作法）。 */
-function renderHomePage_(tileSettings, base, staff) {
+ *  これを直接呼ぶ（renderPage_/renderLtPage_/renderUriagePage_ と同じ「取得と描画を分離」の作法）。
+ *  dev=true（開発用URL）は tile_settings.json の設定を無視して全ボタンを表示する。 */
+function renderHomePage_(tileSettings, base, staff, dev) {
   var settings = tileSettings || DEFAULT_TILE_SETTINGS_;
-  var sfx = staff ? '&staff=1' : '';
-  var subtitle = staff ? 'ALLスタッフ版' : 'なしぼ版';
+  var sfx = roleSfx_(staff, dev);
+  var subtitle = staff ? 'ALLスタッフ版' : (dev ? '開発版（全ボタン表示）' : 'なしぼ版');
   var role = staff ? 'staff' : 'exec';
   var tilesHtml = TILE_DEFS_.filter(function (t) {
+    if (dev) return true;
     var s = settings[t.id];
     return !s || s[role] !== false;   // 設定に無いタイル＝デフォルト表示
   }).map(function (t) {
@@ -519,13 +528,13 @@ function renderHomePage_(tileSettings, base, staff) {
 
 /** L⇔T予約照合（LINEの予約 と TimeTree の予定を突き合わせた結果を表示）。
  *  事務所PCが export_lt_super.py で書き出した lt_match.json を読むだけ（GASは判定しない）。 */
-function renderLT_(base, staff) {
+function renderLT_(base, staff, dev) {
   try {
     var file = getLtFile_();
     var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
-    return renderLtPage_(d, base, staff);
+    return renderLtPage_(d, base, staff, dev);
   } catch (err) {
-    return renderError_(err, base, staff);
+    return renderError_(err, base, staff, dev);
   }
 }
 
@@ -584,7 +593,7 @@ function ltCard_(r) {
   '</article>';
 }
 
-function renderLtPage_(d, base, staff) {
+function renderLtPage_(d, base, staff, dev) {
   var c = d.counts || {};
   var action = d.action || [];
   var oks = d.ok || [];
@@ -611,7 +620,7 @@ function renderLtPage_(d, base, staff) {
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +
   '<div class="lbar">' +
-    '<a class="lhome" href="' + (base || '') + '?view=home' + (staff ? '&staff=1' : '') + '" target="_top">← 前に戻る</a>' +
+    '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
     '<span class="lgen">照合: ' + esc_(d.generated_at || '—') + '</span>' +
   '</div>' +
   '<h1>🔗 L⇔T予約照合 <span class="lcnt">要対応 ' + (c.action || 0) + '件</span></h1>' +
@@ -640,27 +649,27 @@ function comma_(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!
  *  事務所PCが export_uriage.py で書き出した uriage.json を DriveApp で読んで renderUriagePage_ に渡す。
  *  ※静的アプリ(ttsuperzuco.github.io/tt)はDriveAppを呼べないので、こちらは使わずJSONP経由で
  *    renderUriagePage_/renderUriageError_（純JS・GAS API不使用）を直接呼ぶ（index.html側）。 */
-function renderUriage_(base, staff) {
+function renderUriage_(base, staff, dev) {
   try {
     var d = JSON.parse(getUriageFile_().getBlob().getDataAsString('UTF-8'));
-    return renderUriagePage_(d, base, staff);
+    return renderUriagePage_(d, base, staff, dev);
   } catch (err) {
-    return renderUriageError_(err, base, staff);
+    return renderUriageError_(err, base, staff, dev);
   }
 }
 
 // 「前に戻る」共通の土台（★ルール：戻るリンクは全画面この方式に統一＝施術室被り(.homelink)と
 // 同じ「← 前に戻る」の上部バー。新しいviewを足す時もこれを使う。共通\スーパーズコApp_必読.md参照）。
-function backBar_(base, staff) {
+function backBar_(base, staff, dev) {
   return '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +
-    (staff ? '&staff=1' : '') + '" target="_top">← 前に戻る</a></div>';
+    roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a></div>';
 }
 
 /** 売上ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの両方から呼ばれる。 */
-function renderUriagePage_(d, base, staff) {
+function renderUriagePage_(d, base, staff, dev) {
   return '<style>' + HOMECSS_ + URIAGECSS_ + '</style>' +
   '<div class="home">' +
-    backBar_(base, staff) +
+    backBar_(base, staff, dev) +
     '<div class="hhead"><span class="bmark">💰</span><span class="bname">売上TimeTree転記</span></div>' +
     uriageBody_(d) +
   '</div>' +
@@ -668,10 +677,10 @@ function renderUriagePage_(d, base, staff) {
 }
 
 /** 売上データが読めない時の表示（純JS）。 */
-function renderUriageError_(err, base, staff) {
+function renderUriageError_(err, base, staff, dev) {
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' +
-    backBar_(base, staff) +
+    backBar_(base, staff, dev) +
     '<div class="hhead"><span class="bmark">💰</span><span class="bname">売上TimeTree転記</span></div>' +
     '<div class="soon">' +
       '<div class="soonic">📄</div>' +
@@ -725,8 +734,8 @@ function uriageBody_(d) {
       '<span class="upc"><b class="up">' + (pl.mistake_days || 0) + '</b><span>記入ミス</span></span>' +
       '<span class="upc"><b class="ok">' + (pl.done_days || 0) + '</b><span>記入完了</span></span>' +
     '</div>' +
-    (missList ? '<div class="ublk"><b>未記入（下のボタンで記入できます）</b><ul>' + missList + '</ul></div>' : '') +
-    (mistList ? '<div class="ublk warn"><b>記入ミス（下のボタンで修正できます・内容を確認してください）</b><ul>' + mistList + '</ul></div>' : '') +
+    (missList ? '<div class="ublk"><b>未記入</b><ul>' + missList + '</ul></div>' : '') +
+    (mistList ? '<div class="ublk warn"><b>記入ミス</b><ul>' + mistList + '</ul></div>' : '') +
   '</div>' +
   '<button type="button" id="ubtn" class="ubtn"' + (nMissing > 0 ? '' : ' data-empty="1"') + '>' + missBtnLabel + '</button>' +
   '<button type="button" id="ufixbtn" class="ubtn ufix"' + (nMistake > 0 ? '' : ' data-empty="1"') + '>' + fixBtnLabel + '</button>' +
