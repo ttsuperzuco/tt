@@ -15,9 +15,12 @@
 <div id="root"><div class="boot">よみこみ中…</div></div>
 
 <!-- 判定コア(detect)と、GASと共通の描画関数(renderHome_/renderPage_ など)。
-     どちらも純JS。GAS専用の関数(doGet等)は同梱されるが呼ばれないだけ。 -->
-<script src="detect_core.js"></script>
-<script src="code.js"></script>
+     どちらも純JS。GAS専用の関数(doGet等)は同梱されるが呼ばれないだけ。
+     ★?v=... はキャッシュ避け（GitHub PagesがCache-Control: max-age=600を付けるため、
+     コード更新のたびにここの番号を上げないとスマホが古いJSを最大10分キャッシュし続ける）。
+     更新手順：code.js/detect_core.jsを直したら、この2行の?v=も必ず同じ値へ上げてからpushする。 -->
+<script src="detect_core.js?v=20260710d"></script>
+<script src="code.js?v=20260710d"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
