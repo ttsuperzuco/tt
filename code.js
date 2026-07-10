@@ -1051,7 +1051,7 @@ function unaCard_(r, kind) {
     ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(r.url) + '">💬 LINEを開く（返信する）</a>'
     : '';
   return '' +
-  '<article class="unacard ' + (kind === 'cust' ? 'cust' : 'ours') + '" data-search="' + search + '">' +
+  '<article class="unacard ' + (kind === 'cust' ? 'cust' : 'ours') + '" data-search="' + search + '" data-days="' + (r.d || 0) + '">' +
     '<div class="unahead">' +
       unaBadge_(kind, r.v) + unaReadPill_(r.read) +
       '<span class="unaname">' + esc_(name) + '</span>' +
@@ -1085,38 +1085,64 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '</div>' +
   '<h1>💬 LINE未回答＆返信待ち</h1>' +
   '<div class="unatabs">' +
-    '<button type="button" class="unatab cust sel" data-v="cust">🟢 当店が未返信<span class="unac">' + cust.length + '</span></button>' +
-    '<button type="button" class="unatab ours" data-v="ours">🔵 お客様の返事待ち<span class="unac">' + ours.length + '</span></button>' +
+    '<button type="button" class="unatab cust sel" data-v="cust">🟢 当店が未返信<span class="unac" id="unaCntCust">' + cust.length + '</span></button>' +
+    '<button type="button" class="unatab ours" data-v="ours">🔵 お客様の返事待ち<span class="unac" id="unaCntOurs">' + ours.length + '</span></button>' +
   '</div>' +
+  '<select id="unaperiod">' +
+    '<option value="3">3日間</option>' +
+    '<option value="7" selected>7日間</option>' +
+    '<option value="31">1か月</option>' +
+    '<option value="9999">全期間</option>' +
+  '</select>' +
   '<input id="unaq" type="search" placeholder="名前・質問内容でしぼり込み">' +
   '<div id="unacust" class="unalist">' + custCards + '</div>' +
   '<div id="unaours" class="unalist unahidden">' + oursCards + '</div>' +
+  '<div class="unaempty" id="unaperiodempty" hidden>この期間に該当はありません。上の期間を広げてください。</div>' +
   '<div class="unafoot">緑＝こちらが返すべき（お客様が待っている）／ 青＝お客様の返事待ち。' +
-    'アフターケア確認・一斉あいさつ等の返事不要な定型は除外済み。既読/未読はLINE公式マネージャー基準。</div>' +
+    'アフターケア確認・一斉あいさつ等の返事不要な定型は除外済み。既読/未読はLINE公式マネージャー基準。' +
+    '既定は7日間表示（PC版ダッシュボードと同じ）。古い会話は「期間」を広げると出てきます。</div>' +
 '</div>' +
 UNASCRIPT_;
 }
 
-// タブ切替（客の質問⇔客の返事待ち）＋名前・質問文でのしぼり込み（L⇔T照合の絞り込みと同じ発想）。
+// タブ切替（客の質問⇔客の返事待ち）＋期間しぼり込み（既定7日間＝PC版ダッシュボードと同じ既定値）＋
+// 名前・質問文でのしぼり込み（L⇔T照合の絞り込みと同じ発想）。
 var UNASCRIPT_ =
 '<script>(function(){' +
 'var tabs=[].slice.call(document.querySelectorAll(".unatab"));' +
 'var custEl=document.getElementById("unacust"), oursEl=document.getElementById("unaours");' +
 'var q=document.getElementById("unaq");' +
+'var per=document.getElementById("unaperiod");' +
+'var cntCust=document.getElementById("unaCntCust"), cntOurs=document.getElementById("unaCntOurs");' +
+'var empty=document.getElementById("unaperiodempty");' +
 'function apply(){' +
 '  var kw=(q&&q.value||"").trim().toLowerCase();' +
+'  var pv=+(per&&per.value)||9999;' +
+'  var nc=0, no=0;' +
 '  [].slice.call(document.querySelectorAll(".unacard")).forEach(function(c){' +
+'    var days=+(c.getAttribute("data-days")||0);' +
+'    var okP=(days<=pv);' +
 '    var okK=(!kw||(c.getAttribute("data-search")||"").indexOf(kw)>=0);' +
-'    c.classList.toggle("unahide", !okK);' +
+'    var show=okP&&okK;' +
+'    c.classList.toggle("unahide", !show);' +
+'    if(show){ if(c.classList.contains("cust")) nc++; else no++; }' +
 '  });' +
+'  if(cntCust) cntCust.textContent=nc;' +
+'  if(cntOurs) cntOurs.textContent=no;' +
+'  var activeEl=(custEl&&!custEl.classList.contains("unahidden"))?custEl:oursEl;' +
+'  var activeCount=(activeEl===custEl)?nc:no;' +
+'  if(empty) empty.hidden=(activeCount>0);' +
 '}' +
 'tabs.forEach(function(t){ t.addEventListener("click",function(){' +
 '  var v=t.getAttribute("data-v");' +
 '  tabs.forEach(function(x){ x.classList.toggle("sel", x===t); });' +
 '  if(custEl) custEl.classList.toggle("unahidden", v!=="cust");' +
 '  if(oursEl) oursEl.classList.toggle("unahidden", v!=="ours");' +
+'  apply();' +
 '}); });' +
 'if(q) q.addEventListener("input",apply);' +
+'if(per) per.addEventListener("input",apply);' +
+'apply();' +
 '})();</scr' + 'ipt>';
 
 // LINE未回答＆返信待ちページ用スタイル（自己完結・ダーク/ライト対応・スマホ第一。L⇔T照合のCSSを土台にする）。
@@ -1139,6 +1165,8 @@ var UNACSS_ =
 '    padding:10px 8px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; font-weight:700; font-size:13px; }' +
 '  .unatab .unac{ display:block; font-size:20px; font-weight:900; margin-top:2px; }' +
 '  .unatab.cust.sel{ outline:2px solid var(--cust); } .unatab.ours.sel{ outline:2px solid var(--q); }' +
+'  #unaperiod{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
+'    background:var(--card); color:var(--ink); font-size:14px; font-weight:700; margin-bottom:10px; }' +
 '  #unaq{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
 '    background:var(--card); color:var(--ink); font-size:15px; margin-bottom:14px; }' +
 '  .unahidden{ display:none!important; } .unahide{ display:none!important; }' +
