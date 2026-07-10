@@ -1210,6 +1210,18 @@ var TTSCRIPT_ =
 var MOVESCRIPT_ =
 '<script>(function(){' +
 'var wrap=document.querySelector(".wrap"); if(!wrap) return;' +
+// ブラウザ標準confirm/alertは「ttsuperzuco.github.io says」のようにドメイン名を強制表示して
+// しまい消せない（ブラウザのセキュリティ機能）ため、自前のポップアップ（ドメイン名なし）で代用する。
+'function ccPopup_(msg, showCancel, onYes){' +
+'  var mask=document.createElement("div"); mask.className="ccmask";' +
+'  mask.innerHTML="<div class=\\"ccbox\\"><div class=\\"ccmsg\\"></div><div class=\\"ccbtns\\">"+' +
+'    (showCancel?"<button type=\\"button\\" class=\\"ccno\\">キャンセル</button>":"")+' +
+'    "<button type=\\"button\\" class=\\"ccyes\\">OK</button></div></div>";' +
+'  mask.querySelector(".ccmsg").textContent=msg;' +
+'  document.body.appendChild(mask);' +
+'  mask.querySelector(".ccyes").addEventListener("click",function(){ document.body.removeChild(mask); if(onYes) onYes(); });' +
+'  var no=mask.querySelector(".ccno"); if(no) no.addEventListener("click",function(){ document.body.removeChild(mask); });' +
+'}' +
 'wrap.addEventListener("click",function(ev){' +
 '  var t=ev.target;' +
 '  if(t.classList&&t.classList.contains("rstoggle")){' +
@@ -1226,14 +1238,15 @@ var MOVESCRIPT_ =
 '    var cal=t.getAttribute("data-cal"), evid=t.getAttribute("data-ev");' +
 '    var toCal=t.getAttribute("data-tocal"), toLabel=t.getAttribute("data-tolabel");' +
 '    var room=t.getAttribute("data-room"), title=t.getAttribute("data-title"), side=t.getAttribute("data-side");' +
-'    if(!cal||!evid){ alert("この予約のIDが取れず移動できません"); return; }' +
-'    if(!confirm(side+"を「"+room+"」へ移動します。よろしいですか？\\n（TimeTreeを書き換えます・削除はしません）")) return;' +
-'    var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
-'    var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
-'    google.script.run' +
-'      .withSuccessHandler(function(id){ pollMove(st,id,room); })' +
-'      .withFailureHandler(function(e){ st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+e; })' +
-'      .uiSubmitMove(cal,evid,toCal,toLabel,room,title);' +
+'    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
+'    ccPopup_(side+"を「"+room+"」へ移動します。よろしいですか？", true, function(){' +
+'      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
+'      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
+'      google.script.run' +
+'        .withSuccessHandler(function(id){ pollMove(st,id,room); })' +
+'        .withFailureHandler(function(e){ st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+e; })' +
+'        .uiSubmitMove(cal,evid,toCal,toLabel,room,title);' +
+'    });' +
 '  }' +
 '});' +
 'function pollMove(st,id,room){' +
@@ -1509,4 +1522,16 @@ var CSS_ =
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
 '    border-radius:7px; padding:2px 8px; font-size:.82rem; font-variant-numeric:tabular-nums; }' +
 '  .rchips .none { color:var(--real); font-size:.82rem; font-weight:700; }' +
+// 自前の確認ポップアップ（ブラウザ標準confirm/alertの代わり＝ドメイン名を表示しない）。
+'  .ccmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex;' +
+'    align-items:center; justify-content:center; z-index:200; padding:20px; }' +
+'  .ccbox { background:var(--card); border-radius:16px; padding:20px; max-width:340px; width:100%;' +
+'    box-shadow:0 12px 40px rgba(0,0,0,.35); }' +
+'  .ccmsg { font-size:1rem; line-height:1.55; color:var(--ink); margin-bottom:18px; white-space:pre-wrap; }' +
+'  .ccbtns { display:flex; gap:10px; }' +
+'  .ccno, .ccyes { flex:1; padding:12px; border-radius:10px; border:0; font-weight:700;' +
+'    font-size:.95rem; cursor:pointer; font:inherit; }' +
+'  .ccno { background:var(--bg); color:var(--ink); border:1px solid var(--line); }' +
+'  .ccyes { background:#2563eb; color:#fff; }' +
+'  .ccno:active, .ccyes:active { transform:translateY(1px); }' +
 '';
