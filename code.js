@@ -78,6 +78,16 @@ function _jsonOut_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+// callbackがあればJSONPで（②静的アプリの<script>タグ経由）、無ければ生JSONで返す
+// （①のgoogle.script.run・gas_bridge.py等の既存呼び出し元との互換を保つ）。
+function _actionOut_(obj, callback) {
+  if (callback) {
+    var cb = String(callback).replace(/[^A-Za-z0-9_$.]/g, '');
+    return ContentService.createTextOutput(cb + '(' + JSON.stringify(obj) + ');')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return _jsonOut_(obj);
+}
 function _queueGet_() {
   var raw = PropertiesService.getScriptProperties().getProperty(QUEUE_PROP);
   return raw ? JSON.parse(raw) : [];
@@ -151,25 +161,76 @@ function _tileSettingsJsonp_(p) {
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
+// ========== 部屋移動の依頼の安全弁（②静的アプリ経由でEDIT_KEYが公開されるため必須） ==========
+// ①移動先が実在の施術部屋(ROOMS_)か ②その予定が「今まさに被り検出に出ている」か
+// ③直近に依頼が集中していないか、をサーバー側で必ず確認してからキューに積む。
+// google.script.run経由(①直リンク)・JSONP経由(②静的アプリ)のどちらから来ても同じ関門を通す。
+function _validRoom_(toCal, toLabel) {
+  for (var name in ROOMS_) {
+    var r = ROOMS_[name];
+    if (String(r.cal) === String(toCal) && String(r.label) === String(toLabel)) return true;
+  }
+  return false;
+}
+function _isCurrentConflict_(cal, eventId) {
+  try {
+    var file = getEventsFile_();
+    var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
+    var res = detect(d.events, true, d.date_from);   // with_nail=trueで両方の判定を包含
+    var conflicts = res.conflicts || [];
+    for (var i = 0; i < conflicts.length; i++) {
+      var c = conflicts[i];
+      if ((String(c.a_cal_id) === String(cal) && c.a_event_id === eventId) ||
+          (String(c.b_cal_id) === String(cal) && c.b_event_id === eventId)) return true;
+    }
+  } catch (e) { /* 取得失敗時は安全側＝不許可のまま */ }
+  return false;
+}
+var RATE_WINDOW_MS_ = 60000, RATE_LIMIT_ = 5;   // 直近60秒に5件を超えたら弾く（大量送信の抑止）
+function _rateOk_(q) {
+  var now = Date.now();
+  var recent = q.filter(function (c) {
+    var t = Date.parse(c.ts || '');
+    return !isNaN(t) && (now - t) < RATE_WINDOW_MS_;
+  });
+  return recent.length < RATE_LIMIT_;
+}
+// キューへ積む共通処理（handleAction_のaction=submitと、uiSubmitMoveの両方から呼ぶ）。
+function _submitToQueue_(q, op, fields) {
+  if (op === 'movecal') {
+    if (!_rateOk_(q)) return { ok: false, error: '依頼が集中しています。少し待ってから試してください。' };
+    if (!_validRoom_(fields.to_cal, fields.to_label)) return { ok: false, error: '移動先が不正です。' };
+    if (!_isCurrentConflict_(fields.cal, fields.event)) {
+      return { ok: false, error: 'この予定は現在、被り検出に出ていません。画面を更新してからもう一度お試しください。' };
+    }
+  } else if (!_rateOk_(q)) {
+    return { ok: false, error: '依頼が集中しています。少し待ってから試してください。' };
+  }
+  var id = 'c' + Date.now() + Math.floor(Math.random() * 1000);
+  q.push({ id: id, ts: new Date().toISOString(), op: op,
+    cal: fields.cal, event: fields.event, to_cal: fields.to_cal, to_label: fields.to_label,
+    room: fields.room || '', title: fields.title || '', status: 'pending', result: '' });
+  _queueSet_(q);
+  return { ok: true, id: id };
+}
+
 function handleAction_(p) {
   if (p.action === 'events') return _eventsJsonp_(p);
   if (p.action === 'lt') return _ltJsonp_(p);
   if (p.action === 'uriage') return _uriageJsonp_(p);
   if (p.action === 'unanswered') return _unansweredJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
-  if (p.key !== EDIT_KEY) return _jsonOut_({ ok: false, error: 'bad key' });
+  if (p.key !== EDIT_KEY) return _actionOut_({ ok: false, error: 'bad key' }, p.callback);
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
   var out;
   try {
     var q = _queueGet_();
     if (p.action === 'submit') {
-      var id = 'c' + Date.now() + Math.floor(Math.random() * 1000);
-      q.push({ id: id, ts: new Date().toISOString(), op: p.op || 'movecal',
+      out = _submitToQueue_(q, p.op || 'movecal', {
         cal: p.cal, event: p.event, to_cal: p.to_cal, to_label: Number(p.to_label),
-        room: p.room || '', title: p.title || '', status: 'pending', result: '' });
-      _queueSet_(q);
-      out = { ok: true, id: id };
+        room: p.room || '', title: p.title || ''
+      });
     } else if (p.action === 'pending') {
       out = { ok: true, pending: q.filter(function (c) { return c.status === 'pending'; }) };
     } else if (p.action === 'report') {
@@ -192,24 +253,23 @@ function handleAction_(p) {
   } finally {
     try { lock.releaseLock(); } catch (ig2) {}
   }
-  return _jsonOut_(out);
+  return _actionOut_(out, p.callback);
 }
 
-// ========== スマホUIから直接呼ぶ（google.script.run）＝鍵不要・同オリジン ==========
+// ========== スマホUIから直接呼ぶ（google.script.run）＝①直リンク限定・同オリジン ==========
 // 命令置き場は handleAction_ と同じ QUEUE_PROP を共用。事務所PCの edit_worker が
 // ?action=pending でこの依頼を拾い、move_calendar 実行後 ?action=report で結果を書く。
-// スマホ側はここ(uiStatus)で done/error を見に行く。EDIT_KEYはサーバ内なので露出しない。
+// スマホ側はここ(uiStatus)で done/error を見に行く。
+// ★②静的アプリはgoogle.script.runが使えないため、同じ安全弁(_submitToQueue_)を通る
+//   action=submit（JSONP）経由でこの関数と同じキューに積む（MOVESCRIPT_のsubmitMove_参照）。
 function uiSubmitMove(cal, event, toCal, toLabel, room, title) {
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
   try {
     var q = _queueGet_();
-    var id = 'c' + Date.now() + Math.floor(Math.random() * 1000);
-    q.push({ id: id, ts: new Date().toISOString(), op: 'movecal',
-      cal: cal, event: event, to_cal: toCal, to_label: Number(toLabel),
-      room: room || '', title: title || '', status: 'pending', result: '' });
-    _queueSet_(q);
-    return id;
+    return _submitToQueue_(q, 'movecal', {
+      cal: cal, event: event, to_cal: toCal, to_label: Number(toLabel), room: room, title: title
+    });
   } finally {
     try { lock.releaseLock(); } catch (ig2) {}
   }
@@ -1211,6 +1271,36 @@ var TTSCRIPT_ =
 var MOVESCRIPT_ =
 '<script>(function(){' +
 'var wrap=document.querySelector(".wrap"); if(!wrap) return;' +
+// ①直リンク(google.script.runが使える)・②静的アプリ(使えない→JSONPで代用)のどちらでも
+// 同じ見た目・同じ安全弁(サーバー側_submitToQueue_)で部屋移動できるようにする共通呼び出し口。
+// ★EDIT_KEY_CLIENT_はページソースに公開される前提（②で使うため）。サーバー側で
+//   「今まさに被り検出に出ている予定か」「直近の依頼数」を必ずチェックする安全弁と対にしてある。
+'var EXEC_URL_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
+'var EDIT_KEY_CLIENT_="kx7Q2p9mVt4Zr8";' +
+'function callGas_(fnName, args, actionName, extraParams, onResult){' +
+'  if(typeof google!=="undefined" && google.script && google.script.run){' +
+'    var runner=google.script.run' +
+'      .withSuccessHandler(function(r){ onResult(r); })' +
+'      .withFailureHandler(function(e){ onResult({ok:false,error:String(e)}); });' +
+'    runner[fnName].apply(runner, args);' +
+'    return;' +
+'  }' +
+'  var cb="__cc"+Date.now()+Math.floor(Math.random()*1000);' +
+'  window[cb]=function(r){ try{ delete window[cb]; }catch(ig){} onResult(r); };' +
+'  var qs="action="+actionName+"&key="+encodeURIComponent(EDIT_KEY_CLIENT_)+"&callback="+cb;' +
+'  for(var k in extraParams){ qs+="&"+k+"="+encodeURIComponent(extraParams[k]); }' +
+'  var s=document.createElement("script");' +
+'  s.src=EXEC_URL_+"?"+qs;' +
+'  s.onerror=function(){ onResult({ok:false,error:"通信エラー"}); };' +
+'  document.body.appendChild(s);' +
+'}' +
+'function submitMove_(cal,evid,toCal,toLabel,room,title,onDone){' +
+'  callGas_("uiSubmitMove",[cal,evid,toCal,toLabel,room,title],"submit",' +
+'    {op:"movecal",cal:cal,event:evid,to_cal:toCal,to_label:toLabel,room:room,title:title}, onDone);' +
+'}' +
+'function statusCheck_(id,onDone){' +
+'  callGas_("uiStatus",[id],"status",{id:id}, onDone);' +
+'}' +
 // ブラウザ標準confirm/alertは「ttsuperzuco.github.io says」のようにドメイン名を強制表示して
 // しまい消せない（ブラウザのセキュリティ機能）ため、自前のポップアップ（ドメイン名なし）で代用する。
 'function ccPopup_(msg, showCancel, onYes){' +
@@ -1244,22 +1334,22 @@ var MOVESCRIPT_ =
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 '      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
 '      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
-'      google.script.run' +
-'        .withSuccessHandler(function(id){ pollMove(st,id,room); })' +
-'        .withFailureHandler(function(e){ st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+e; })' +
-'        .uiSubmitMove(cal,evid,toCal,toLabel,room,title);' +
+'      submitMove_(cal,evid,toCal,toLabel,room,title,function(r){' +
+'        if(r && r.ok){ pollMove(st,r.id,room); }' +
+'        else { st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
+'      });' +
 '    });' +
 '  }' +
 '});' +
 'function pollMove(st,id,room){' +
 '  st.textContent="⏳ 処理中…（"+room+"へ移動）"; var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
-'    google.script.run.withSuccessHandler(function(r){' +
+'    statusCheck_(id,function(r){' +
 '      var s=(r&&r.status)||"";' +
 '      if(s==="done"){ clearInterval(timer); st.className="mvstatus ok"; st.textContent="✅ "+((r.result)||(room+"へ移動しました")); }' +
 '      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
 '      else if(tries>=40){ clearInterval(timer); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
-'    }).withFailureHandler(function(e){}).uiStatus(id);' +
+'    });' +
 '  },3000);' +
 '}' +
 '})();</scr' + 'ipt>';
