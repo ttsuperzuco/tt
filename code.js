@@ -15,19 +15,34 @@
 var EVENTS_FILENAME = 'events.json';
 
 // 役割(URL引数)をリンク用のクエリ文字列に変換。staff/devは排他（doGetでdevはstaff未指定時のみ有効化）。
+// CUR_WHO_ は doGet がリクエストごとにセットする「今の人」。メニュー↔各画面のリンクに &who= を
+// 引き継がせ、移動しても本人(＝権限・ログ)が保たれるようにする（GAS実行はリクエスト毎に独立のため）。
+var CUR_WHO_ = '';
 function roleSfx_(staff, dev) {
-  return staff ? '&staff=1' : (dev ? '&dev=1' : '');
+  var s = staff ? '&staff=1' : (dev ? '&dev=1' : '');
+  if (CUR_WHO_) s += '&who=' + encodeURIComponent(CUR_WHO_);
+  return s;
 }
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
-  if (p.action) return handleAction_(p);   // 編集依頼の受付/取り出し/結果（命令置き場API）
+  if (p.action) return handleAction_(p);   // 編集依頼の受付/取り出し/結果＋ログ/権限API（命令置き場API）
   var view = p.view || 'home';   // home（メニュー）／conflict（施術室被り）／lt（L⇔T予約照合・準備中）
   var base = getBaseUrl_();
-  // スタッフ版（?staff=1）＝売上を見せない・「ALLスタッフ版」表示。未指定＝オーナー「なしぼ版」。
+  // スタッフ版（?staff=1）＝名前を選ぶ・権限で出し分け。未指定＝社長(幹部)。?dev=1＝開発(全表示)。
   var staff = (p.staff === '1' || p.staff === 'true');
-  // 開発版（?dev=1）＝tile_settings.jsonの表示ON/OFF設定を無視して全ボタンを表示。staff指定時は無効。
   var dev = !staff && (p.dev === '1' || p.dev === 'true');
+  // 「今の人」＝スタッフが選んだ名前(who)。リンク引き継ぎ用にリクエストスコープの CUR_WHO_ にも入れる。
+  var who = String(p.who || '').replace(/[^a-z]/g, '');
+  var device = String(p.device || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  CUR_WHO_ = staff ? who : '';
+  // 権限（人ごと）。dev=全許可。無い/未選択は安全側＝施術被りだけ。
+  var perms = getPerms_();
+  var allow = personPerms_(perms, staff, dev, who);
+  // 権限の無い画面へのdeep-linkはホームへ戻す。
+  if (!viewAllowed_(view, allow)) view = 'home';
+  // アクセスログ（①GAS直アクセス分。②静的アプリは action=hit で記録）。失敗してもページは出す。
+  try { logAccess_(who, roleName_(staff, dev, who), device, view); } catch (ig) {}
   var html, title;
   if (view === 'conflict') {
     title = '施術室被り検出';
@@ -53,15 +68,15 @@ function doGet(e) {
     } catch (nerr) {
       html = renderError_(nerr, base, staff, dev);
     }
-  } else if (view === 'uriage' && !staff) {
+  } else if (view === 'uriage') {
     title = '売上TimeTree転記';
     html = renderUriage_(base, staff, dev);
   } else if (view === 'unanswered') {
     title = 'LINE未回答＆返信待ち';
     html = renderUnanswered_(base, staff, dev);
   } else {
-    title = staff ? 'TTスーパーズコApp（ALLスタッフ版）' : (dev ? 'TTスーパーズコApp（開発版）' : 'TTスーパーズコApp');
-    html = renderHome_(base, staff, dev);
+    title = staff ? 'TTスーパーズコApp（スタッフ版）' : (dev ? 'TTスーパーズコApp（開発版）' : 'TTスーパーズコApp');
+    html = renderHome_(base, staff, dev, who);
   }
   return HtmlService.createHtmlOutput(html)
     .setTitle(title)
@@ -156,7 +171,7 @@ function _unansweredJsonp_(p) {
 // 事務所PC「自動監視システム」の tile_settings.py が書き出す tile_settings.json を渡すだけ。
 function _tileSettingsJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
-  var payload = { tiles: getTileSettings_() };
+  var payload = { tiles: getTileSettings_(), perms: getPerms_(), people: PEOPLE_, labels: PERSON_LABEL_ };
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
@@ -209,7 +224,9 @@ function _submitToQueue_(q, op, fields) {
   var id = 'c' + Date.now() + Math.floor(Math.random() * 1000);
   q.push({ id: id, ts: new Date().toISOString(), op: op,
     cal: fields.cal, event: fields.event, to_cal: fields.to_cal, to_label: fields.to_label,
-    room: fields.room || '', title: fields.title || '', status: 'pending', result: '' });
+    room: fields.room || '', title: fields.title || '', from_room: fields.from_room || '',
+    who: fields.who || '', role: fields.role || '', device: fields.device || '',
+    status: 'pending', result: '' });
   _queueSet_(q);
   return { ok: true, id: id };
 }
@@ -220,6 +237,13 @@ function handleAction_(p) {
   if (p.action === 'uriage') return _uriageJsonp_(p);
   if (p.action === 'unanswered') return _unansweredJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
+  if (p.action === 'hit') {   // アクセスログ（②静的アプリが画面表示ごとに叩く・鍵不要・軽量）
+    try {
+      logAccess_(String(p.who || '').replace(/[^a-z]/g, ''), String(p.role || ''),
+                 String(p.device || '').slice(0, 40), String(p.view || '').slice(0, 20));
+    } catch (e) {}
+    return _actionOut_({ ok: true }, p.callback);
+  }
   if (p.key !== EDIT_KEY) return _actionOut_({ ok: false, error: 'bad key' }, p.callback);
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
@@ -229,7 +253,8 @@ function handleAction_(p) {
     if (p.action === 'submit') {
       out = _submitToQueue_(q, p.op || 'movecal', {
         cal: p.cal, event: p.event, to_cal: p.to_cal, to_label: Number(p.to_label),
-        room: p.room || '', title: p.title || ''
+        room: p.room || '', title: p.title || '', from_room: p.from_room || '',
+        who: String(p.who || '').replace(/[^a-z]/g, ''), role: p.role || '', device: p.device || ''
       });
     } else if (p.action === 'pending') {
       out = { ok: true, pending: q.filter(function (c) { return c.status === 'pending'; }) };
@@ -247,6 +272,12 @@ function handleAction_(p) {
       var c = null;
       for (var j = 0; j < q.length; j++) { if (q[j].id === p.id) { c = q[j]; break; } }
       out = { ok: true, status: c ? c.status : 'notfound', result: c ? c.result : '' };
+    } else if (p.action === 'drainlog') {   // 事務所PCがアクセスログを回収→DBへ（回収後クリア）
+      var propsL = PropertiesService.getScriptProperties();
+      var rawL = propsL.getProperty(ACCESS_LOG_PROP_);
+      var arrL = rawL ? JSON.parse(rawL) : [];
+      propsL.deleteProperty(ACCESS_LOG_PROP_);
+      out = { ok: true, access: arrL };
     } else {
       out = { ok: false, error: 'unknown action' };
     }
@@ -262,13 +293,14 @@ function handleAction_(p) {
 // スマホ側はここ(uiStatus)で done/error を見に行く。
 // ★②静的アプリはgoogle.script.runが使えないため、同じ安全弁(_submitToQueue_)を通る
 //   action=submit（JSONP）経由でこの関数と同じキューに積む（MOVESCRIPT_のsubmitMove_参照）。
-function uiSubmitMove(cal, event, toCal, toLabel, room, title) {
+function uiSubmitMove(cal, event, toCal, toLabel, room, title, who, device, fromRoom) {
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
   try {
     var q = _queueGet_();
     return _submitToQueue_(q, 'movecal', {
-      cal: cal, event: event, to_cal: toCal, to_label: Number(toLabel), room: room, title: title
+      cal: cal, event: event, to_cal: toCal, to_label: Number(toLabel), room: room, title: title,
+      from_room: fromRoom || '', who: String(who || '').replace(/[^a-z]/g, ''), role: '', device: device || ''
     });
   } finally {
     try { lock.releaseLock(); } catch (ig2) {}
@@ -462,6 +494,77 @@ function getTileSettings_() {
     if (d && d.tiles && typeof d.tiles === 'object') return d.tiles;
   } catch (ignore) {}
   return DEFAULT_TILE_SETTINGS_;
+}
+
+// ========== 人ごとの権限（誰にどのボタンを見せるか）＝ tile_settings.py と一致 ==========
+// 人ID（tile_settings.py の PEOPLE と順番・IDを一致させること）。kanbu=社長, reception=お店受付。
+var PEOPLE_ = ['kanbu', 'ringo', 'mikan', 'olive', 'marron', 'mango', 'coconut', 'reception'];
+// 表示名（アプリの名前選択・ログで使う。絵文字つき）。
+var PERSON_LABEL_ = {
+  kanbu: '社長', ringo: '🍎りんご', mikan: '🍊みかん', olive: '🫒オリーブ',
+  marron: '🌰マロン', mango: '🥭マンゴー', coconut: '🥥ココナッツ', reception: 'お店受付'
+};
+// 初期権限＝全員「施術室被り(conflict)」だけON（tile_settings.py DEFAULT と一致）。
+function defaultPerms_() {
+  var perms = {};
+  for (var i = 0; i < PEOPLE_.length; i++) {
+    perms[PEOPLE_[i]] = { conflict: true, lt: false, uriage: false, unanswered: false };
+  }
+  return perms;
+}
+// tile_settings.json の perms を読む（無ければ／壊れていれば初期値）。①GAS専用＝DriveApp。
+function getPerms_() {
+  try {
+    var file = getTileSettingsFile_();
+    var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
+    var perms = defaultPerms_();
+    var saved = d && d.perms;
+    if (saved && typeof saved === 'object') {
+      for (var i = 0; i < PEOPLE_.length; i++) {
+        var pid = PEOPLE_[i];
+        if (saved[pid] && typeof saved[pid] === 'object') {
+          for (var t in perms[pid]) { if (t in saved[pid]) perms[pid][t] = !!saved[pid][t]; }
+        }
+      }
+    }
+    return perms;
+  } catch (ignore) {
+    return defaultPerms_();
+  }
+}
+// 役割から「その人の権限オブジェクト」を返す。dev=全許可(null)。staff=who本人。無印=社長(kanbu)。
+// 不明な人(whoが空/未登録)は安全側＝施術被りだけ。
+function personPerms_(perms, staff, dev, who) {
+  if (dev) return null;   // null = すべて許可
+  var pid = staff ? String(who || '') : 'kanbu';
+  if (PEOPLE_.indexOf(pid) < 0) return { conflict: true, lt: false, uriage: false, unanswered: false };
+  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false };
+}
+// そのviewを見る権限があるか（home/notice は常に可）。allow=null(dev)は常に可。
+function viewAllowed_(view, allow) {
+  if (view === 'home' || view === 'notice') return true;
+  if (!allow) return true;   // dev
+  return allow[view] === true;
+}
+
+// ========== ログ（アクセス＝画面表示 / 操作＝書込） ==========
+// 外部スコープ(スプレッドシート書込等)を増やさないため、GASは一旦Propertiesに貯めるだけにし、
+// 事務所PCが action=drainlog で回収して shared_store.sqlite へ移す（GASは drive.readonly のまま）。
+// 操作ログ（誰がどのデータをどう変えたか）は who を積んだキュー項目を edit_worker が実行時にDBへ記録する。
+var ACCESS_LOG_PROP_ = 'ACCESS_LOG';
+function roleName_(staff, dev, who) {
+  if (dev) return '開発';
+  if (!staff) return '社長(幹部)';
+  return PERSON_LABEL_[who] || ('スタッフ(' + (who || '未選択') + ')');
+}
+function logAccess_(who, role, device, view) {
+  var props = PropertiesService.getScriptProperties();
+  var raw = props.getProperty(ACCESS_LOG_PROP_);
+  var arr = raw ? JSON.parse(raw) : [];
+  arr.push({ ts: new Date().toISOString(), who: who || '', role: role || '',
+             device: device || '', view: view || '' });
+  if (arr.length > 300) arr = arr.slice(arr.length - 300);   // 回収前でも上限で守る
+  props.setProperty(ACCESS_LOG_PROP_, JSON.stringify(arr));
 }
 
 // ---- 表示（room_conflict_detect.py の render_html を移植。並び・色を一致させる）----
@@ -681,7 +784,17 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
   '<h1>⚠️ 施術室被り検出 <span class="cnt">' + real + '件</span>' + nailNote + '</h1>' +
   cards +
 '</div>' +
-TTSCRIPT_ + MOVESCRIPT_;
+identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_;
+}
+
+// ①GAS直アクセス時の操作者識別子をページに注入（②静的アプリは localStorage の値が優先される）。
+// これで①でスタッフURL(?who=)から部屋移動しても、その who が操作ログに残る。
+function identScript_(staff, dev) {
+  var who = CUR_WHO_ || '';
+  var role = roleName_(staff, dev, who);
+  return '<scr' + 'ipt>window.__SZ_WHO_=' + JSON.stringify(who) +
+         ';window.__SZ_ROLE_=' + JSON.stringify(role) +
+         ';window.__SZ_DEVICE_="";</scr' + 'ipt>';
 }
 
 function renderError_(err, base, staff, dev) {
@@ -720,22 +833,22 @@ var TILE_DEFS_ = [
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を読んで renderHomePage_ に渡すだけ。 */
-function renderHome_(base, staff, dev) {
-  return renderHomePage_(getTileSettings_(), base, staff, dev);
+function renderHome_(base, staff, dev, who) {
+  return renderHomePage_({ perms: getPerms_() }, base, staff, dev, who);
 }
 
 /** ホーム画面の描画（純JS・GAS API不使用）。②静的アプリは JSONP で tile_settings を取得し、
  *  これを直接呼ぶ（renderPage_/renderLtPage_/renderUriagePage_ と同じ「取得と描画を分離」の作法）。
  *  dev=true（開発用URL）は tile_settings.json の設定を無視して全ボタンを表示する。 */
-function renderHomePage_(tileSettings, base, staff, dev) {
-  var settings = tileSettings || DEFAULT_TILE_SETTINGS_;
+function renderHomePage_(cfg, base, staff, dev, who) {
+  var perms = (cfg && cfg.perms) || defaultPerms_();
+  var allow = personPerms_(perms, staff, dev, who);   // null=dev(全許可)
   var sfx = roleSfx_(staff, dev);
-  var subtitle = staff ? 'ALLスタッフ版' : (dev ? '開発版（全ボタン表示）' : 'なしぼ版');
-  var role = staff ? 'staff' : 'exec';
+  var subtitle = dev ? '開発版（全ボタン表示）'
+    : (staff ? (PERSON_LABEL_[who] || 'スタッフ') : 'なしぼ版（社長）');
   var tilesHtml = TILE_DEFS_.filter(function (t) {
-    if (dev) return true;
-    var s = settings[t.id];
-    return !s || s[role] !== false;   // 設定に無いタイル＝デフォルト表示
+    if (!allow) return true;          // dev＝全部
+    return allow[t.id] === true;      // 明示ONのボタンだけ表示（初期は施術室被りのみ）
   }).map(function (t) {
     return '<a class="tile ' + t.cls + '" href="' + base + '?view=' + t.view + sfx + '" target="_top">' +
       t.icon + '<span class="tname">' + esc_(t.label) + '</span></a>';
@@ -1294,9 +1407,14 @@ var MOVESCRIPT_ =
 '  s.onerror=function(){ onResult({ok:false,error:"通信エラー"}); };' +
 '  document.body.appendChild(s);' +
 '}' +
-'function submitMove_(cal,evid,toCal,toLabel,room,title,onDone){' +
-'  callGas_("uiSubmitMove",[cal,evid,toCal,toLabel,room,title],"submit",' +
-'    {op:"movecal",cal:cal,event:evid,to_cal:toCal,to_label:toLabel,room:room,title:title}, onDone);' +
+// 操作者(who)＝端末で選んだ名前(localStorage)を優先。無ければ①GAS-direct用のURL由来(window.__SZ_*)。
+'function szIdent_(){ var w="",r="",d=""; try{ w=localStorage.getItem("sz_who")||""; r=localStorage.getItem("sz_role")||""; d=localStorage.getItem("sz_device")||""; }catch(e){}' +
+'  if(!w&&window.__SZ_WHO_)w=window.__SZ_WHO_; if(!r&&window.__SZ_ROLE_)r=window.__SZ_ROLE_; if(!d&&window.__SZ_DEVICE_)d=window.__SZ_DEVICE_; return {who:w,role:r,device:d}; }' +
+'function submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,onDone){' +
+'  var idn=szIdent_();' +
+'  callGas_("uiSubmitMove",[cal,evid,toCal,toLabel,room,title,idn.who,idn.device,fromRoom],"submit",' +
+'    {op:"movecal",cal:cal,event:evid,to_cal:toCal,to_label:toLabel,room:room,title:title,' +
+'     from_room:fromRoom,who:idn.who,role:idn.role,device:idn.device}, onDone);' +
 '}' +
 'function statusCheck_(id,onDone){' +
 '  callGas_("uiStatus",[id],"status",{id:id}, onDone);' +
@@ -1334,7 +1452,7 @@ var MOVESCRIPT_ =
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 '      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
 '      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
-'      submitMove_(cal,evid,toCal,toLabel,room,title,function(r){' +
+'      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
 '        if(r && r.ok){ pollMove(st,r.id,room); }' +
 '        else { st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
 '      });' +

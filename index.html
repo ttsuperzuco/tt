@@ -9,18 +9,30 @@
   #root { min-height:100vh; }
   .boot { position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
     color:#fff; opacity:.85; font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; }
+  /* 名前選択（スタッフURLで初回のみ） */
+  .pkwrap{ max-width:520px; margin:0 auto; padding:34px 18px; color:#fff;
+    font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; text-align:center; }
+  .pktitle{ font-size:20px; font-weight:800; margin-bottom:22px; line-height:1.5; }
+  .pkgrid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .pk{ background:#fff; color:#155e75; border:0; border-radius:14px; padding:20px 10px;
+    font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.15); }
+  .pk:active{ transform:scale(.97); }
+  .pkbtns{ display:flex; gap:12px; justify-content:center; margin-top:6px; }
+  .pkyes,.pkno{ border:0; border-radius:12px; padding:15px 30px; font-size:16px; font-weight:800; cursor:pointer; }
+  .pkyes{ background:#16a34a; color:#fff; } .pkno{ background:#e5e7eb; color:#333; }
+  .pknote{ margin-top:20px; font-size:12.5px; opacity:.82; line-height:1.7; }
 </style>
 </head>
 <body>
 <div id="root"><div class="boot">よみこみ中…</div></div>
 
-<!-- 判定コア(detect)と、GASと共通の描画関数(renderHome_/renderPage_ など)。
+<!-- 判定コア(detect)と、GASと共通の描画関数(renderHome_/renderPage_/personPerms_ など)。
      どちらも純JS。GAS専用の関数(doGet等)は同梱されるが呼ばれないだけ。
      ★?v=... はキャッシュ避け（GitHub PagesがCache-Control: max-age=600を付けるため、
      コード更新のたびにここの番号を上げないとスマホが古いJSを最大10分キャッシュし続ける）。
      更新手順：code.js/detect_core.jsを直したら、この2行の?v=も必ず同じ値へ上げてからpushする。 -->
-<script src="detect_core.js?v=20260711i"></script>
-<script src="code.js?v=20260711i"></script>
+<script src="detect_core.js?v=20260711j"></script>
+<script src="code.js?v=20260711j"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -35,9 +47,29 @@
   var nail  = params.get('nail') === '1';
   var base  = location.pathname;   // メニュー内の遷移は同じページの ?view= を切り替えるだけ
 
+  // ===== 操作者(who)＝この端末で選んだ名前。localStorageに「固定」する。=====
+  // 一度選んだら本人は変更不可。変えられるのは開発者だけ＝開発URLに ?reset=1 を付けて解除する。
+  var LS_WHO='sz_who', LS_ROLE='sz_role', LS_DEV='sz_device', LS_LABEL='sz_label';
+  function lsGet(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  // 開発者だけのロック解除（対象端末で開発URL＋?reset=1を開く）。
+  if (dev && params.get('reset') === '1') { lsDel(LS_WHO); lsDel(LS_ROLE); lsDel(LS_LABEL); }
+
+  var device = lsGet(LS_DEV);
+  if (!device) { device = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet(LS_DEV, device); }
+  var who  = staff ? lsGet(LS_WHO) : '';
+  var role = staff ? (lsGet(LS_ROLE) || 'スタッフ') : (dev ? '開発' : '社長(幹部)');
+  // MOVESCRIPT_ の szIdent_（部屋移動の送信）が拾えるようグローバルへ。localStorageが主・これは補助。
+  window.__SZ_WHO_ = who;
+  window.__SZ_ROLE_ = role;
+  window.__SZ_DEVICE_ = device;
+
+  function esc(s){ return (typeof esc_==='function') ? esc_(s) : String(s==null?'':s); }
+
   function runScripts(container) {
     // innerHTMLで挿入した<script>は実行されないので、作り直して実行する
-    // （renderPage_ 内の TTSCRIPT_＝Android用 intent 差し替え などを効かせるため）。
+    // （renderPage_ 内の TTSCRIPT_/MOVESCRIPT_ などを効かせるため）。
     var list = container.querySelectorAll('script');
     for (var i = 0; i < list.length; i++) {
       var old = list[i];
@@ -59,11 +91,19 @@
       '<div class="boot" style="text-align:center;padding:1.5em;">' + msg + '</div>';
   }
 
+  // ===== アクセスログ（画面表示ごとにGASへ。GASが一旦貯め、事務所PCがDBへ回収）=====
+  function logHit(v){
+    try {
+      var s = document.createElement('script');
+      s.src = EXEC + '?action=hit&who=' + encodeURIComponent(who) +
+        '&role=' + encodeURIComponent(role) + '&device=' + encodeURIComponent(device) +
+        '&view=' + encodeURIComponent(v) + '&cb=' + Date.now();
+      s.onerror = function(){ /* ログ失敗は無視（画面は出す） */ };
+      document.body.appendChild(s);
+    } catch(e){}
+  }
+
   function showConflict() {
-    // JSONPでデータ取得 → detect（判定）→ renderPage_（描画）。すべてブラウザ内で完結。
-    // ★カード1件=ほぼ1画面(.card{min-height:90vh})はCSS側の担当。ここで全体を縮小合成して
-    //   1画面に収める処理をすると、それを無効化して逆に「3件全部小さく1画面」に戻ってしまう
-    //   （2026-07-10発見・過去にも同じ不具合が出ていたのはこれが原因）。ページは普通にスクロールさせる。
     window.__ttEvents = function (payload) {
       try {
         if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
@@ -77,9 +117,6 @@
     document.body.appendChild(s);
   }
 
-  // lt/uriage も conflict と同じJSONP方式：GAS専用API(DriveApp等)はブラウザに無いので、
-  // データだけJSONPで取り、描画は純JS(renderLtPage_/renderUriagePage_)で行う
-  // （renderLT_/renderUriage_ をここで直接呼ぶとDriveApp未定義で必ずエラー表示になる＝2026-07-10修正）。
   function showLt() {
     window.__ttLt = function (payload) {
       try {
@@ -119,31 +156,70 @@
     document.body.appendChild(s);
   }
 
-  // ホーム画面のボタン表示ON/OFF設定（幹部用／スタッフ用）もJSONPで取得。
-  // renderHome_（DriveApp使用）は①専用なので、②はrenderHomePage_を直接呼ぶ
-  // （取得失敗時はtileSettings未指定＝renderHomePage_内のデフォルトにフォールバック）。
-  function showHome() {
-    window.__ttTileSettings = function (payload) {
-      var tiles = (payload && payload.tiles) || null;
-      mount(renderHomePage_(tiles, base, staff, dev));
-    };
-    var s = document.createElement('script');
-    s.src = EXEC + '?action=tilesettings&callback=__ttTileSettings&cb=' + Date.now();
-    s.onerror = function () { mount(renderHomePage_(null, base, staff, dev)); };
-    document.body.appendChild(s);
+  // ホーム：権限(perms)＋選んだ名前(who)で出し分け（renderHomePage_は code.js＝GASと同一）。
+  function showHome(perms) {
+    mount(renderHomePage_({ perms: perms || (typeof defaultPerms_==='function' ? defaultPerms_() : null) },
+                          base, staff, dev, who));
   }
 
-  if (view === 'lt') {
-    showLt();
-  } else if (view === 'uriage' && !staff) {
-    showUriage();
-  } else if (view === 'unanswered') {
-    showUnanswered();
-  } else if (view === 'conflict') {
-    showConflict();
-  } else {
-    showHome();
+  // ===== 名前選択画面（スタッフURLで未選択のときだけ）=====
+  function showPicker(people, labels) {
+    var root = document.getElementById('root');
+    var pick = (people || []).filter(function (p) { return p !== 'kanbu'; });
+    var btns = pick.map(function (pid) {
+      return '<button type="button" class="pk" data-who="' + esc(pid) + '">' + esc(labels[pid] || pid) + '</button>';
+    }).join('');
+    root.innerHTML = '<div class="pkwrap"><div class="pktitle">あなたは誰ですか？</div>' +
+      '<div class="pkgrid">' + btns + '</div>' +
+      '<div class="pknote">タップして選ぶと、この端末に記憶されます。<br>次回からは自動でメニューが開きます。</div></div>';
+    var bs = root.querySelectorAll('.pk');
+    for (var i = 0; i < bs.length; i++) {
+      bs[i].addEventListener('click', function () {
+        confirmPick(this.getAttribute('data-who'), this.textContent);
+      });
+    }
   }
+  function confirmPick(pid, label) {
+    var root = document.getElementById('root');
+    root.innerHTML = '<div class="pkwrap"><div class="pktitle">あなたは「' + esc(label) + '」で<br>正しいですか？</div>' +
+      '<div class="pkbtns"><button type="button" class="pkno">ちがう</button>' +
+      '<button type="button" class="pkyes">はい</button></div>' +
+      '<div class="pknote">「はい」を押すと、この端末はこの名前で固定されます。<br>（あとで変えられるのは開発者だけです）</div></div>';
+    root.querySelector('.pkyes').addEventListener('click', function () {
+      lsSet(LS_WHO, pid); lsSet(LS_ROLE, 'スタッフ'); lsSet(LS_LABEL, label);
+      location.reload();   // 記憶して読み直し→通常フローへ
+    });
+    root.querySelector('.pkno').addEventListener('click', function () { location.reload(); });
+  }
+
+  // ===== 起動：タイル設定/権限を取得 → 名前選択 or 画面表示 =====
+  function boot(cfg) {
+    var people = (cfg && cfg.people) || ['kanbu','ringo','mikan','olive','marron','mango','coconut','reception'];
+    var labels = (cfg && cfg.labels) || {};
+    var perms  = (cfg && cfg.perms) || null;
+
+    // スタッフURLで名前が未選択なら、まず名前を選ばせる（選ぶまで他は出さない）。
+    if (staff && !who) { showPicker(people, labels); return; }
+
+    // 権限判定は code.js の関数を再利用＝GAS(①)と完全一致。
+    var allow = (typeof personPerms_ === 'function')
+      ? personPerms_(perms || (typeof defaultPerms_==='function'?defaultPerms_():{}), staff, dev, who) : null;
+    var v = view;
+    if (typeof viewAllowed_ === 'function' && !viewAllowed_(v, allow)) v = 'home';
+
+    logHit(v);
+    if (v === 'lt') showLt();
+    else if (v === 'uriage') showUriage();
+    else if (v === 'unanswered') showUnanswered();
+    else if (v === 'conflict') showConflict();
+    else showHome(perms);
+  }
+
+  window.__ttTileSettings = function (payload) { boot(payload || {}); };
+  var s0 = document.createElement('script');
+  s0.src = EXEC + '?action=tilesettings&callback=__ttTileSettings&cb=' + Date.now();
+  s0.onerror = function () { boot({}); };   // 取得失敗＝デフォルト権限で続行
+  document.body.appendChild(s0);
 })();
 </script>
 </body>
