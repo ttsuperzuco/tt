@@ -24,6 +24,37 @@ function roleSfx_(staff, dev) {
   return s;
 }
 
+// ★2026-07-11追加：Drive書込権限の承認を強制するテスト用関数。
+//   エディタの実行ボタン横のプルダウンでこの関数(_authTest_)を選んで「実行」を押すと、
+//   まだ承認していなければ「承認が必要です」ダイアログが出る→「権限を確認」→
+//   Googleアカウントを選択→「許可」で完了（1回だけでよい）。
+function authTestNow() {
+  var f = getEventsFile_();
+  f.setContent(f.getBlob().getDataAsString('UTF-8'));  // 中身は変えず書き込み権限だけ試す
+  Logger.log('OK: Drive書込テスト成功');
+}
+
+// ★2026-07-11追加：events.jsonを事務所PCから直接受け取ってDriveへ書く（doPost）。
+//   これまではPCがローカルに書いたファイルをWindowsの「Googleドライブ」アプリが裏で
+//   拾ってアップロードするのを待つ方式で、数秒〜10分以上と読めなかった。GASはDriveApp経由で
+//   直接Driveに書き込めるので、PCからそのままPOSTしてもらえば５〜10秒程度で確実に届く。
+//   ペイロードが大きいのでGET(URL長制限)ではなくPOST bodyで受ける。EDIT_KEYで保護。
+function doPost(e) {
+  var p = (e && e.parameter) || {};
+  if (p.action === 'push_events') {
+    if (p.key !== EDIT_KEY) return _actionOut_({ ok: false, error: 'bad key' }, null);
+    try {
+      var body = (e.postData && e.postData.contents) || '';
+      JSON.parse(body);  // 壊れたJSONを書き込まない安全弁
+      getEventsFile_().setContent(body);
+      return _actionOut_({ ok: true }, null);
+    } catch (err) {
+      return _actionOut_({ ok: false, error: String(err) }, null);
+    }
+  }
+  return _actionOut_({ ok: false, error: 'unknown action' }, null);
+}
+
 function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.action) return handleAction_(p);   // 編集依頼の受付/取り出し/結果＋ログ/権限API（命令置き場API）
@@ -1532,36 +1563,47 @@ var MOVESCRIPT_ =
 '      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
 '      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ "+fromRoom+"から"+room+"に移動中です";' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
-'        if(r && r.ok){ pollMove(st,r.id,room,fromRoom); }' +
+'        if(r && r.ok){ pollMove(st,r.id,room,fromRoom,evid); }' +
 '        else { st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
 '      });' +
 '    });' +
 '  }' +
 '});' +
-'function pollMove(st,id,room,fromRoom){' +
+'function pollMove(st,id,room,fromRoom,evid){' +
 '  st.textContent="⏳ "+fromRoom+"から"+room+"に移動中です"; var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
 '    statusCheck_(id,function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); st.className="mvstatus ok"; showMoveDone_(st,(r.result)||(room+"へ移動しました")); }' +
+'      if(s==="done"){ clearInterval(timer); st.className="mvstatus ok"; showMoveDone_(st,(r.result)||(room+"へ移動しました"),evid); }' +
 '      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
 '      else if(tries>=40){ clearInterval(timer); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
 '    });' +
 '  },3000);' +
 '}' +
-// 移動完了後：★このカードを「解消済み」の緑1行に畳んで即座に消えたように見せる（2026-07-11）。
-// Googleドライブ同期(最大1分)を待たずにその場で被りを消す＝「移動したのにまだ出てる」を根絶。
-'function showMoveDone_(st,msg){' +
+// 移動完了後：★このカードを「解消済み」の緑1行に畳む＋★データに本当に反映される（＝消した
+// イベントがevents.jsonから消える）まで裏で待ってから自動でページを更新する（2026-07-12）。
+// 【なぜ】反映には数秒〜最大1分の時間差がある。ここで手動「🔄再読込」を押させると、その時差の
+//   最中は古いevents.jsonが返り、消えたはずの被りが復活して見える（「押しても消えない」の正体）。
+//   そこで、移動したevent_idがevents.jsonから消えたのを確認してから location.reload() する＝
+//   ユーザーに古い被りを一切見せず・手動リロードも不要にする。最大約60秒でタイムアウト後は更新。
+'function showMoveDone_(st,msg,evid){' +
 '  var card=st; while(card && !(card.classList && card.classList.contains("card"))) card=card.parentNode;' +
-'  if(!card){ st.textContent="✅ "+msg; return; }' +
-'  var kids=card.children; for(var i=0;i<kids.length;i++){ kids[i].style.display="none"; }' +
-'  var done=document.createElement("div"); done.style.cssText="padding:16px;text-align:center;color:#16a34a;font-weight:bold;font-size:16px;";' +
-'  done.textContent="✅ "+msg+"（この被りは解消しました）";' +
-'  var p=document.createElement("div"); p.textContent="このボタンを押すとページを再読込します"; p.style.cssText="font-size:13px;color:#888;font-weight:normal;margin-top:12px;";' +
-'  var b=document.createElement("button"); b.type="button"; b.textContent="🔄 再読込";' +
-'  b.style.cssText="margin-top:6px;padding:10px 18px;font-size:15px;font-weight:bold;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;";' +
-'  b.addEventListener("click",function(){ location.reload(); });' +
-'  done.appendChild(p); done.appendChild(b); card.appendChild(done);' +
+'  if(card){ var kids=card.children; for(var i=0;i<kids.length;i++){ kids[i].style.display="none"; }' +
+'    var done=document.createElement("div"); done.style.cssText="padding:16px;text-align:center;color:#16a34a;font-weight:bold;font-size:16px;";' +
+'    done.innerHTML="\\u2705 "+msg+"\\uFF08\\u3053\\u306E\\u88AB\\u308A\\u306F\\u89E3\\u6D88\\u3057\\u307E\\u3057\\u305F\\uFF09"+' +
+'      "<div style=\\"font-size:13px;color:#888;font-weight:normal;margin-top:10px;\\">\\u6700\\u65B0\\u306E\\u72B6\\u614B\\u306B\\u66F4\\u65B0\\u3057\\u3066\\u3044\\u307E\\u3059\\u2026</div>";' +
+'    card.appendChild(done); }' +
+'  else { st.textContent="\\u2705 "+msg; }' +
+'  var tries=0;' +
+'  function chk(){ tries++;' +
+'    var cb="__cd"+Date.now()+Math.floor(Math.random()*100000); var fired=false;' +
+'    window[cb]=function(d){ if(fired) return; fired=true; try{delete window[cb];}catch(e){}' +
+'      var gone=true; try{ var evs=(d&&d.events)||[]; for(var i=0;i<evs.length;i++){ if(evs[i].event_id===evid){ gone=false; break; } } }catch(e2){}' +
+'      if(gone||tries>=30){ location.reload(); } else { setTimeout(chk,2000); } };' +
+'    var s=document.createElement("script"); s.src=EXEC_URL_+"?action=events&callback="+cb+"&cb="+Date.now();' +
+'    s.onerror=function(){ if(fired) return; fired=true; if(tries>=30){ location.reload(); } else { setTimeout(chk,2000); } };' +
+'    document.body.appendChild(s); }' +
+'  setTimeout(chk,2000);' +
 '}' +
 '})();</scr' + 'ipt>';
 
