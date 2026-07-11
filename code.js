@@ -1549,15 +1549,19 @@ var MOVESCRIPT_ =
 '    });' +
 '  },3000);' +
 '}' +
-// 移動完了後：完了メッセージ＋「このボタンを押すとページを再読込します」＋再読込ボタン。
+// 移動完了後：★このカードを「解消済み」の緑1行に畳んで即座に消えたように見せる（2026-07-11）。
+// Googleドライブ同期(最大1分)を待たずにその場で被りを消す＝「移動したのにまだ出てる」を根絶。
 'function showMoveDone_(st,msg){' +
-'  st.textContent="✅ "+msg;' +
-'  var box=document.createElement("div"); box.style.marginTop="10px";' +
-'  var p=document.createElement("div"); p.textContent="このボタンを押すとページを再読込します"; p.style.fontSize="13px"; p.style.marginBottom="6px";' +
+'  var card=st; while(card && !(card.classList && card.classList.contains("card"))) card=card.parentNode;' +
+'  if(!card){ st.textContent="✅ "+msg; return; }' +
+'  var kids=card.children; for(var i=0;i<kids.length;i++){ kids[i].style.display="none"; }' +
+'  var done=document.createElement("div"); done.style.cssText="padding:16px;text-align:center;color:#16a34a;font-weight:bold;font-size:16px;";' +
+'  done.textContent="✅ "+msg+"（この被りは解消しました）";' +
+'  var p=document.createElement("div"); p.textContent="このボタンを押すとページを再読込します"; p.style.cssText="font-size:13px;color:#888;font-weight:normal;margin-top:12px;";' +
 '  var b=document.createElement("button"); b.type="button"; b.textContent="🔄 再読込";' +
-'  b.style.cssText="padding:10px 18px;font-size:15px;font-weight:bold;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;";' +
+'  b.style.cssText="margin-top:6px;padding:10px 18px;font-size:15px;font-weight:bold;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;";' +
 '  b.addEventListener("click",function(){ location.reload(); });' +
-'  box.appendChild(p); box.appendChild(b); st.appendChild(box);' +
+'  done.appendChild(p); done.appendChild(b); card.appendChild(done);' +
 '}' +
 '})();</scr' + 'ipt>';
 
