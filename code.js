@@ -1217,12 +1217,28 @@ function unaReadPill_(read) {
   if (read === '既読') return '<span class="unapill read">既読</span>';
   return '';
 }
+// "YYYY-MM-DD HH:MM" → "M月D日 HH:MM"（最近メッセージが来た月日時分を分かりやすく表示）
+function unaWhen_(s) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(s || '');
+  if (!m) return s || '';
+  return (+m[2]) + '月' + (+m[3]) + '日 ' + m[4] + ':' + m[5];
+}
 
-// 1件のカード（build_web.py の row描画のGAS/静的アプリ版。全文モーダルは今回省略＝リンク先LINEで確認）。
+// 1件のカード（build_web.py の row描画のGAS/静的アプリ版）。
+// 「🔍 詳細（内容を見る）」＝PC版ダッシュボードと同じく、その会話の末尾数件(r.full)を
+// モーダルでその場に表示する（LINEに触れない＝既読を付けずに内容確認できる）。
+// 詳細でいつでも中身を見られるので、カード上部の要約は短く（.unaq は2行でクランプ・
+// 直近のやりとり.unath は詳細と重複するので省略）＝PC版の行と同じ見せ方に揃える。
 function unaCard_(r, kind) {
   var name = r.nm || '🆕 新規（番号未設定）';
   var tag = [r.nat, r.sex].filter(Boolean).join('・');
   var search = esc_(((name) + ' ' + (r.q || '')).toLowerCase());
+  var sub = [tag, (r.read && r.read !== '—') ? r.read : '', '待ち' + (r.d || 0) + '日']
+    .filter(Boolean).join('　/　');
+  var full = esc_(JSON.stringify(r.full || []));
+  var when = unaWhen_((r.full && r.full.length) ? r.full[r.full.length - 1].t : r.t);
+  var detail = '<button type="button" class="unadetail" data-nm="' + esc_(name) +
+    '" data-sub="' + esc_(sub) + '" data-full="' + full + '">🔍 詳細（内容を見る）</button>';
   var link = r.url
     ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(r.url) + '">💬 LINEを開く（返信する）</a>'
     : '';
@@ -1234,9 +1250,9 @@ function unaCard_(r, kind) {
       (tag ? '<span class="unatag">' + esc_(tag) + '</span>' : '') +
       '<span class="unadays">待ち' + (r.d || 0) + '日</span>' +
     '</div>' +
+    (when ? '<div class="unawhen">🕒 最新メッセージ ' + esc_(when) + '</div>' : '') +
     '<div class="unaq">' + esc_(r.q || '') + '</div>' +
-    (r.th ? '<div class="unath">' + esc_(r.th) + '</div>' : '') +
-    (link ? '<div class="unaactions">' + link + '</div>' : '') +
+    '<div class="unaactions">' + detail + link + '</div>' +
   '</article>';
 }
 
@@ -1270,13 +1286,22 @@ function renderUnansweredPage_(d, base, staff, dev) {
     '<option value="31">1か月</option>' +
     '<option value="9999">全期間</option>' +
   '</select>' +
-  '<input id="unaq" type="search" placeholder="名前・質問内容でしぼり込み">' +
   '<div id="unacust" class="unalist">' + custCards + '</div>' +
   '<div id="unaours" class="unalist unahidden">' + oursCards + '</div>' +
   '<div class="unaempty" id="unaperiodempty" hidden>この期間に該当はありません。上の期間を広げてください。</div>' +
   '<div class="unafoot">緑＝こちらが返すべき（お客様が待っている）／ 青＝お客様の返事待ち。' +
     'アフターケア確認・一斉あいさつ等の返事不要な定型は除外済み。既読/未読はLINE公式マネージャー基準。' +
     '既定は7日間表示（PC版ダッシュボードと同じ）。古い会話は「期間」を広げると出てきます。</div>' +
+'</div>' +
+// 詳細モーダル（LINEに触れずに会話の中身をここで確認＝PC版ダッシュボードと同じ）
+'<div class="unamask" id="unamask" role="dialog" aria-modal="true">' +
+  '<div class="unamodal">' +
+    '<div class="unamh">' +
+      '<div><div class="unamnm" id="unaMnm"></div><div class="unamsub" id="unaMsub"></div></div>' +
+      '<button type="button" class="unamx" id="unaMx" aria-label="閉じる">&times;</button>' +
+    '</div>' +
+    '<div class="unamlog" id="unaMlog"></div>' +
+  '</div>' +
 '</div>' +
 UNASCRIPT_;
 }
@@ -1287,19 +1312,15 @@ var UNASCRIPT_ =
 '<script>(function(){' +
 'var tabs=[].slice.call(document.querySelectorAll(".unatab"));' +
 'var custEl=document.getElementById("unacust"), oursEl=document.getElementById("unaours");' +
-'var q=document.getElementById("unaq");' +
 'var per=document.getElementById("unaperiod");' +
 'var cntCust=document.getElementById("unaCntCust"), cntOurs=document.getElementById("unaCntOurs");' +
 'var empty=document.getElementById("unaperiodempty");' +
 'function apply(){' +
-'  var kw=(q&&q.value||"").trim().toLowerCase();' +
 '  var pv=+(per&&per.value)||9999;' +
 '  var nc=0, no=0;' +
 '  [].slice.call(document.querySelectorAll(".unacard")).forEach(function(c){' +
 '    var days=+(c.getAttribute("data-days")||0);' +
-'    var okP=(days<=pv);' +
-'    var okK=(!kw||(c.getAttribute("data-search")||"").indexOf(kw)>=0);' +
-'    var show=okP&&okK;' +
+'    var show=(days<=pv);' +
 '    c.classList.toggle("unahide", !show);' +
 '    if(show){ if(c.classList.contains("cust")) nc++; else no++; }' +
 '  });' +
@@ -1316,8 +1337,30 @@ var UNASCRIPT_ =
 '  if(oursEl) oursEl.classList.toggle("unahidden", v!=="ours");' +
 '  apply();' +
 '}); });' +
-'if(q) q.addEventListener("input",apply);' +
 'if(per) per.addEventListener("input",apply);' +
+// ―― 詳細モーダル（LINEに触れず全文をここで確認＝PC版ダッシュボードと同じ）――
+'var mask=document.getElementById("unamask");' +
+'var mlog=document.getElementById("unaMlog"),mnm=document.getElementById("unaMnm"),msub=document.getElementById("unaMsub");' +
+'function escH(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}' +
+'function openDetail(btn){' +
+'  if(!mask||!mlog)return;' +
+'  var full=[]; try{ full=JSON.parse(btn.getAttribute("data-full")||"[]"); }catch(e){ full=[]; }' +
+'  if(mnm) mnm.textContent=btn.getAttribute("data-nm")||"";' +
+'  if(msub) msub.textContent=btn.getAttribute("data-sub")||"";' +
+'  mlog.innerHTML=full.length? full.map(function(m){' +
+'    return "<div class=\\"unamsg "+(m.w==="客"?"cli":"shop")+"\\">"+escH(m.x)+"<span class=\\"unats\\">"+escH(m.w)+" "+escH(m.t)+"</span></div>";' +
+'  }).join(""):"<div class=\\"unamnote\\">本文がありません（画像・スタンプのみ等）。</div>";' +
+'  mask.classList.add("on");' +
+'  setTimeout(function(){ mlog.scrollTop=mlog.scrollHeight; },0);' +
+'}' +
+'function closeDetail(){ if(mask) mask.classList.remove("on"); }' +
+'document.addEventListener("click",function(e){' +
+'  var b=e.target&&e.target.closest?e.target.closest(".unadetail"):null;' +
+'  if(b){ openDetail(b); }' +
+'});' +
+'if(mask) mask.addEventListener("click",function(e){ if(e.target===mask) closeDetail(); });' +
+'var mx=document.getElementById("unaMx"); if(mx) mx.addEventListener("click",closeDetail);' +
+'document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeDetail(); });' +
 'apply();' +
 '})();</scr' + 'ipt>';
 
@@ -1359,13 +1402,38 @@ var UNACSS_ =
 '  .unaname{ font-weight:800; font-size:15px; }' +
 '  .unatag{ font-size:11px; color:var(--sub); }' +
 '  .unadays{ margin-left:auto; font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; }' +
-'  .unaq{ font-size:14px; margin:2px 0 6px; line-height:1.45; }' +
+'  .unawhen{ font-size:12px; color:var(--sub); font-weight:700; margin:2px 0 4px;' +
+'    font-variant-numeric:tabular-nums; }' +
+'  .unaq{ font-size:14px; margin:2px 0 6px; line-height:1.45;' +
+'    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .unath{ font-size:12px; color:var(--sub); border-top:1px dashed var(--line); padding-top:6px; margin-top:2px; }' +
-'  .unaactions{ margin-top:9px; }' +
+'  .unaactions{ margin-top:9px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }' +
+'  .unadetail{ appearance:none; font:inherit; font-size:12.5px; font-weight:700; cursor:pointer;' +
+'    padding:8px 14px; border-radius:10px; border:1px solid var(--q); background:var(--card); color:var(--q); }' +
 '  .unalink{ display:inline-block; text-decoration:none; background:#06c755; color:#fff; font-weight:700;' +
 '    font-size:12.5px; padding:8px 14px; border-radius:10px; }' +
 '  .unaempty{ text-align:center; color:#fff; padding:30px; font-weight:700; }' +
-'  .unafoot{ margin-top:18px; color:rgba(255,255,255,.85); font-size:11px; line-height:1.6; }';
+'  .unafoot{ margin-top:18px; color:rgba(255,255,255,.85); font-size:11px; line-height:1.6; }' +
+// 詳細モーダル（LINEに触れず会話の中身をその場で確認）
+'  .unamask{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none;' +
+'    align-items:center; justify-content:center; padding:16px; z-index:60; }' +
+'  .unamask.on{ display:flex; }' +
+'  .unamodal{ background:var(--card); border:1px solid var(--line); border-radius:16px;' +
+'    max-width:560px; width:100%; max-height:82vh; display:flex; flex-direction:column;' +
+'    box-shadow:0 24px 60px rgba(0,0,0,.4); }' +
+'  .unamh{ padding:14px 16px; border-bottom:1px solid var(--line); display:flex;' +
+'    justify-content:space-between; gap:10px; align-items:flex-start; }' +
+'  .unamnm{ font-weight:800; font-size:16px; color:var(--ink); }' +
+'  .unamsub{ font-size:12px; color:var(--sub); margin-top:3px; }' +
+'  .unamx{ appearance:none; border:0; background:none; font-size:24px; line-height:1;' +
+'    color:var(--sub); cursor:pointer; padding:2px 6px; }' +
+'  .unamlog{ overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }' +
+'  .unamsg{ max-width:85%; padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.55;' +
+'    white-space:pre-wrap; word-break:break-word; color:var(--ink); }' +
+'  .unamsg.cli{ align-self:flex-start; background:var(--line); }' +
+'  .unamsg.shop{ align-self:flex-end; background:var(--custbg); border:1px solid var(--cust); }' +
+'  .unats{ display:block; font-size:10px; color:var(--sub); opacity:.85; margin-top:5px; }' +
+'  .unamnote{ color:var(--sub); font-size:12.5px; padding:8px; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
 // iOSは https のユニバーサルリンクのまま（Safariで開けばアプリに渡る）。
