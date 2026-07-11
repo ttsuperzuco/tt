@@ -187,6 +187,7 @@
       '<div class="pknote">「はい」を押すと、この端末はこの名前で固定されます。<br>（あとで変えられるのは開発者だけです）</div></div>';
     root.querySelector('.pkyes').addEventListener('click', function () {
       lsSet(LS_WHO, pid); lsSet(LS_ROLE, 'スタッフ'); lsSet(LS_LABEL, label);
+      lsSet('sz_picked_at', String(Date.now()));   // リセット合図との比較用（選んだ時刻）
       location.reload();   // 記憶して読み直し→通常フローへ
     });
     root.querySelector('.pkno').addEventListener('click', function () { location.reload(); });
@@ -198,6 +199,17 @@
     var labels = (cfg && cfg.labels) || {};
     var perms  = (cfg && cfg.perms) || null;
 
+    // 端末リセットの合図：この端末が名前を選んだ時刻より後にリセット指示があれば、記憶を消して選び直し。
+    // （PCの自動監視メニュー4で「この人を選び直し／全員を選び直し」を押すと合図が立つ。次回起動で効く）
+    if (staff && who) {
+      var resets = (cfg && cfg.resets) || {};
+      var pickedAt = parseInt(lsGet('sz_picked_at') || '0', 10) || 0;
+      var need = Math.max(parseInt(resets.all || 0, 10) || 0, parseInt(resets[who] || 0, 10) || 0);
+      if (need > pickedAt) {
+        lsDel(LS_WHO); lsDel(LS_ROLE); lsDel(LS_LABEL); lsDel('sz_picked_at');
+        who = ''; window.__SZ_WHO_ = '';
+      }
+    }
     // スタッフURLで名前が未選択なら、まず名前を選ばせる（選ぶまで他は出さない）。
     if (staff && !who) { showPicker(people, labels); return; }
 

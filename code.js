@@ -171,7 +171,8 @@ function _unansweredJsonp_(p) {
 // 事務所PC「自動監視システム」の tile_settings.py が書き出す tile_settings.json を渡すだけ。
 function _tileSettingsJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
-  var payload = { tiles: getTileSettings_(), perms: getPerms_(), people: PEOPLE_, labels: PERSON_LABEL_ };
+  var payload = { tiles: getTileSettings_(), perms: getPerms_(), people: PEOPLE_,
+                  labels: PERSON_LABEL_, resets: getResets_() };
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
@@ -531,6 +532,16 @@ function getPerms_() {
   } catch (ignore) {
     return defaultPerms_();
   }
+}
+// 端末リセットの合図（人ID or 'all' → エポックms）。この時刻より前に名前を選んだ端末は選び直し。
+// tile_settings.py（自動監視メニュー4）から書かれる。②アプリが起動時に自分の pick 時刻と比べて判定。
+function getResets_() {
+  try {
+    var file = getTileSettingsFile_();
+    var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
+    var r = d && d.resets;
+    return (r && typeof r === 'object') ? r : {};
+  } catch (ignore) { return {}; }
 }
 // 役割から「その人の権限オブジェクト」を返す。dev=全許可(null)。staff=who本人。無印=社長(kanbu)。
 // 不明な人(whoが空/未登録)は安全側＝施術被りだけ。
