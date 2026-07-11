@@ -1530,24 +1530,34 @@ var MOVESCRIPT_ =
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 '      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
-'      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
+'      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ "+fromRoom+"から"+room+"に移動中です";' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
-'        if(r && r.ok){ pollMove(st,r.id,room); }' +
+'        if(r && r.ok){ pollMove(st,r.id,room,fromRoom); }' +
 '        else { st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
 '      });' +
 '    });' +
 '  }' +
 '});' +
-'function pollMove(st,id,room){' +
-'  st.textContent="⏳ 処理中…（"+room+"へ移動）"; var tries=0;' +
+'function pollMove(st,id,room,fromRoom){' +
+'  st.textContent="⏳ "+fromRoom+"から"+room+"に移動中です"; var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
 '    statusCheck_(id,function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); st.className="mvstatus ok"; st.textContent="✅ "+((r.result)||(room+"へ移動しました")); }' +
+'      if(s==="done"){ clearInterval(timer); st.className="mvstatus ok"; showMoveDone_(st,(r.result)||(room+"へ移動しました")); }' +
 '      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
 '      else if(tries>=40){ clearInterval(timer); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
 '    });' +
 '  },3000);' +
+'}' +
+// 移動完了後：完了メッセージ＋「このボタンを押すとページを再読込します」＋再読込ボタン。
+'function showMoveDone_(st,msg){' +
+'  st.textContent="✅ "+msg;' +
+'  var box=document.createElement("div"); box.style.marginTop="10px";' +
+'  var p=document.createElement("div"); p.textContent="このボタンを押すとページを再読込します"; p.style.fontSize="13px"; p.style.marginBottom="6px";' +
+'  var b=document.createElement("button"); b.type="button"; b.textContent="🔄 再読込";' +
+'  b.style.cssText="padding:10px 18px;font-size:15px;font-weight:bold;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;";' +
+'  b.addEventListener("click",function(){ location.reload(); });' +
+'  box.appendChild(p); box.appendChild(b); st.appendChild(box);' +
 '}' +
 '})();</scr' + 'ipt>';
 
