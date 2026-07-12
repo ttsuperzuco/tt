@@ -887,7 +887,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var allow = personPerms_(perms, staff, dev, who);   // null=dev(全許可)
   var sfx = roleSfx_(staff, dev);
   var subtitle = dev ? '開発版（全ボタン表示）'
-    : (staff ? (PERSON_LABEL_[who] || 'スタッフ') : 'なしぼ版（社長）');
+    : (staff ? (PERSON_LABEL_[who] || 'スタッフ') : 'TOMATOさん版');
   var tilesHtml = TILE_DEFS_.filter(function (t) {
     if (!allow) return true;          // dev＝全部
     return allow[t.id] === true;      // 明示ONのボタンだけ表示（初期は施術室被りのみ）
