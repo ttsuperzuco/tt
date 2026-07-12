@@ -1589,21 +1589,13 @@ var MOVESCRIPT_ =
 '    });' +
 '  },3000);' +
 '}' +
-// 移動完了後：★このカードを「解消済み」の緑1行に畳む＋★データに本当に反映される（＝消した
-// イベントがevents.jsonから消える）まで裏で待ってから自動でページを更新する（2026-07-12）。
-// 【なぜ】反映には数秒〜最大1分の時間差がある。ここで手動「🔄再読込」を押させると、その時差の
-//   最中は古いevents.jsonが返り、消えたはずの被りが復活して見える（「押しても消えない」の正体）。
-//   そこで、移動したevent_idがevents.jsonから消えたのを確認してから doneRefresh_() で検出画面を
-//   直接再描画（リロード画面を出さず最上部へスクロール）＝ユーザーに古い被りを一切見せず・手動
-//   リロードも不要にする。最大約60秒でタイムアウト後は更新。
+// 移動完了後：★「解消しました／更新しています」の別画面は出さず（2026-07-12 ユーザー要望）、
+//   移動中の待機案内（movingHtml_）を出したまま、移動したevent_idがevents.jsonから消えるのを
+//   待って、消えたら doneRefresh_() で直接 検出画面へ戻す（リロード画面なし・最上部へスクロール）。
+// 【なぜ待つ】反映には数秒〜最大1分の時間差がある。すぐ再描画すると古いevents.jsonで被りが復活
+//   して見えるため、当該event_idが消えたのを確認してから戻す。最大約60秒でタイムアウト後も戻す。
 'function showMoveDone_(st,msg,evid){' +
-'  var card=st; while(card && !(card.classList && card.classList.contains("card"))) card=card.parentNode;' +
-'  if(card){ var kids=card.children; for(var i=0;i<kids.length;i++){ kids[i].style.display="none"; }' +
-'    var done=document.createElement("div"); done.style.cssText="padding:16px;text-align:center;color:#16a34a;font-weight:bold;font-size:16px;";' +
-'    done.innerHTML="\\u2705 "+msg+"\\uFF08\\u3053\\u306E\\u88AB\\u308A\\u306F\\u89E3\\u6D88\\u3057\\u307E\\u3057\\u305F\\uFF09"+' +
-'      "<div style=\\"font-size:13px;color:#888;font-weight:normal;margin-top:10px;\\">\\u6700\\u65B0\\u306E\\u72B6\\u614B\\u306B\\u66F4\\u65B0\\u3057\\u3066\\u3044\\u307E\\u3059\\u2026</div>";' +
-'    card.appendChild(done); }' +
-'  else { st.textContent="\\u2705 "+msg; }' +
+'  try{ st.className="mvstatus working"; }catch(e){}' +
 '  var tries=0;' +
 '  function chk(){ tries++;' +
 '    var cb="__cd"+Date.now()+Math.floor(Math.random()*100000); var fired=false;' +
