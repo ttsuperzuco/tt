@@ -681,6 +681,7 @@ function moveRow_(side, cal, event, who, title, curRoom, roomBusyForDate, timeSt
       ' data-tocal="' + rm.cal + '" data-tolabel="' + rm.label + '"' +
       ' data-room="' + esc_(name) + '" data-title="' + esc_(title) + '" data-side="' + side + '"' +
       ' data-who="' + esc_(who) + '" data-fromroom="' + esc_(curRoom) + '"' +
+      ' data-time="' + esc_(timeStr || '') + '"' +
       ' style="--rc:' + roomColor_(name) + '">' + esc_(name) + '</button>';
   }
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
@@ -1557,12 +1558,12 @@ var MOVESCRIPT_ =
 '    var cal=t.getAttribute("data-cal"), evid=t.getAttribute("data-ev");' +
 '    var toCal=t.getAttribute("data-tocal"), toLabel=t.getAttribute("data-tolabel");' +
 '    var room=t.getAttribute("data-room"), title=t.getAttribute("data-title"), side=t.getAttribute("data-side");' +
-'    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"";' +
+'    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"", mtime=t.getAttribute("data-time")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 '      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
-'      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.innerHTML=movingHtml_(fromRoom,room);' +
-'      mvOverlay_(fromRoom,room);' +
+'      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.innerHTML=movingHtml_(who,mtime,fromRoom,room);' +
+'      mvOverlay_(who,mtime,fromRoom,room);' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
 '        if(r && r.ok){ pollMove(st,r.id,room,fromRoom,evid); }' +
 '        else { mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
@@ -1570,16 +1571,21 @@ var MOVESCRIPT_ =
 '    });' +
 '  }' +
 '});' +
-// 「移動中」メッセージ＝主文＋「TimeTree書込完了で自動で画面が切り替わる」旨の待機案内（2026-07-12）。
-'function movingHtml_(fromRoom,room){ return "⏳ "+fromRoom+"から"+room+"に移動中です"+' +
+// 「移動中」の説明文＝何を動かしているか（担当者マーク＋番号＋名前 と 時刻の予約）を明示（2026-07-12
+//   ユーザー要望）。who="🍅 M375 ○○様" 等、mtime="13:30-14:00" 等（開始時刻だけ使う）。
+'function mvDesc_(who,mtime,fromRoom,room){ var t=(mtime||"").split("-")[0];' +
+'  return (who?who+" ":"")+(t?t+"の予約を、":"")+"「"+fromRoom+"」から「"+room+"」へ移動中です"; }' +
+'function movingHtml_(who,mtime,fromRoom,room){ return "⏳ "+mvDesc_(who,mtime,fromRoom,room)+' +
 '  "<div style=\\"font-size:.82rem;font-weight:normal;margin-top:6px;line-height:1.5;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>"; }' +
 // ★待機は画面いっぱいのオーバーレイで出す（2026-07-12 ユーザー要望）。移動開始〜検出画面へ戻るまで
 //   全画面で覆う。完了時の再描画で index.html 側が #mvWaitOverlay を消す（失敗時は mvOverlayHide_）。
-'function mvOverlay_(fromRoom,room){ var ov=document.getElementById("mvWaitOverlay");' +
+'function mvOverlay_(who,mtime,fromRoom,room){ var ov=document.getElementById("mvWaitOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay";' +
 '    ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#2C7A99;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
 '    document.body.appendChild(ov); }' +
+'  var t=(mtime||"").split("-")[0];' +
 '  ov.innerHTML="<div style=\\"font-size:46px;margin-bottom:18px;\\">⏳</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.7;margin-bottom:10px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
 '    "<div style=\\"color:#fff;font-size:20px;font-weight:800;line-height:1.6;margin-bottom:16px;\\">「"+fromRoom+"」から「"+room+"」へ移動中です</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.9;max-width:360px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
 '  return ov; }' +
@@ -1591,7 +1597,7 @@ var MOVESCRIPT_ =
 '  try{ if(window.__refreshConflictView){ window.__refreshConflictView(); return; } }catch(e2){}' +
 '  location.reload(); }' +
 'function pollMove(st,id,room,fromRoom,evid){' +
-'  st.innerHTML=movingHtml_(fromRoom,room); var tries=0;' +
+'  var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
 '    statusCheck_(id,function(r){' +
 '      var s=(r&&r.status)||"";' +
