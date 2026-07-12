@@ -1865,7 +1865,8 @@ var CSS_ =
 '  .rchips { flex:1 1 auto; min-width:0; display:grid;' +
 '    grid-template-columns:repeat(2,minmax(0,1fr)); justify-items:start; gap:5px; }' +
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
-'    border-radius:7px; padding:2px 8px; font-size:.82rem; font-variant-numeric:tabular-nums; }' +
+'    border-radius:7px; padding:2px 8px; font-size:.82rem; font-variant-numeric:tabular-nums;' +
+'    white-space:nowrap; }' +
 '  .rchips .none { color:var(--real); font-size:.82rem; font-weight:700; }' +
 // 自前の確認ポップアップ（ブラウザ標準confirm/alertの代わり＝ドメイン名を表示しない）。
 '  .ccmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex;' +
