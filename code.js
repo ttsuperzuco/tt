@@ -747,6 +747,20 @@ function esc_(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// お知らせに書く「コース第N次」（来店回数とは別・体験オフセット適用済み。共有DBの
+// reservation_course_count 由来。夜間バッチがお知らせの build_one で算出）を、events.jsonの
+// payload.course_counts から event_id で引いて表示する。要確認/未算出は⚠️（[[project_course_count_unified]]）。
+function courseTag_(payload, eventId) {
+  var m = (payload && payload.course_counts) || {};
+  var c = m[eventId];
+  if (!c) return '';                       // 未算出（バッチ未実行/対象外）は何も出さない
+  var need = (c.need || !c.course);
+  var label = need ? '⚠️要確認' : esc_(c.course);
+  var col = need ? '#b45309' : '#2563eb';
+  return '<div style="margin-top:4px;font-size:12px;font-weight:700;color:' + col +
+    ';">🔔お知らせ回数：' + label + '</div>';
+}
+
 function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
   var real = conflicts.length;
   function menu_(m) {
@@ -782,6 +796,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
               '<span class="code">' + esc_(x.a_code) + '</span>' +
               '<span class="name">' + esc_(x.a_name) + '</span></div>' +
             menu_(x.a_menu) +
+            courseTag_(payload, x.a_event_id) +
           '</div>' +
           '<div class="vs"></div>' +
           '<div class="side">' +
@@ -790,6 +805,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
               '<span class="code">' + esc_(x.b_code) + '</span>' +
               '<span class="name">' + esc_(x.b_name) + '</span></div>' +
             menu_(x.b_menu) +
+            courseTag_(payload, x.b_event_id) +
           '</div>' +
         '</div>' +
         '<a class="tt" target="_top" rel="noopener"' +
