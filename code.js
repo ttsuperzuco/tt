@@ -1562,16 +1562,28 @@ var MOVESCRIPT_ =
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 '      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
 '      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.innerHTML=movingHtml_(fromRoom,room);' +
+'      mvOverlay_(fromRoom,room);' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
 '        if(r && r.ok){ pollMove(st,r.id,room,fromRoom,evid); }' +
-'        else { st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
+'        else { mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
 '      });' +
 '    });' +
 '  }' +
 '});' +
-// 「移動中」メッセージ＝主文＋「TimeTree書込完了で画面が切り替わる」旨の待機案内（2026-07-12）。
+// 「移動中」メッセージ＝主文＋「TimeTree書込完了で自動で画面が切り替わる」旨の待機案内（2026-07-12）。
 'function movingHtml_(fromRoom,room){ return "⏳ "+fromRoom+"から"+room+"に移動中です"+' +
-'  "<div style=\\"font-size:.82rem;font-weight:normal;margin-top:6px;line-height:1.5;\\">タイムツリーへの書き込みが完了したら画面が切り替わりますので、しばらくお待ちください。</div>"; }' +
+'  "<div style=\\"font-size:.82rem;font-weight:normal;margin-top:6px;line-height:1.5;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>"; }' +
+// ★待機は画面いっぱいのオーバーレイで出す（2026-07-12 ユーザー要望）。移動開始〜検出画面へ戻るまで
+//   全画面で覆う。完了時の再描画で index.html 側が #mvWaitOverlay を消す（失敗時は mvOverlayHide_）。
+'function mvOverlay_(fromRoom,room){ var ov=document.getElementById("mvWaitOverlay");' +
+'  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay";' +
+'    ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#2C7A99;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
+'    document.body.appendChild(ov); }' +
+'  ov.innerHTML="<div style=\\"font-size:46px;margin-bottom:18px;\\">⏳</div>"+' +
+'    "<div style=\\"color:#fff;font-size:20px;font-weight:800;line-height:1.6;margin-bottom:16px;\\">「"+fromRoom+"」から「"+room+"」へ移動中です</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.9;max-width:360px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
+'  return ov; }' +
+'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
 // 完了後の画面更新：★リロード画面を出さず、検出画面(showConflict)を直接再描画し、最上部へスクロールする
 //   （2026-07-12）。静的アプリが window.__refreshConflictView を公開している時はそれを使う。
 //   無い場合(GAS直アクセス等)だけ従来どおり location.reload() にフォールバック。
@@ -1584,8 +1596,8 @@ var MOVESCRIPT_ =
 '    statusCheck_(id,function(r){' +
 '      var s=(r&&r.status)||"";' +
 '      if(s==="done"){ clearInterval(timer); st.className="mvstatus ok"; showMoveDone_(st,(r.result)||(room+"へ移動しました"),evid); }' +
-'      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
-'      else if(tries>=40){ clearInterval(timer); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
+'      else if(s==="error"||s==="failed"){ clearInterval(timer); mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
+'      else if(tries>=40){ clearInterval(timer); mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
 '    });' +
 '  },3000);' +
 '}' +
