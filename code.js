@@ -1561,7 +1561,7 @@ var MOVESCRIPT_ =
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 '      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
-'      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ "+fromRoom+"から"+room+"に移動中です";' +
+'      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.innerHTML=movingHtml_(fromRoom,room);' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
 '        if(r && r.ok){ pollMove(st,r.id,room,fromRoom,evid); }' +
 '        else { st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
@@ -1569,8 +1569,17 @@ var MOVESCRIPT_ =
 '    });' +
 '  }' +
 '});' +
+// 「移動中」メッセージ＝主文＋「TimeTree書込完了で画面が切り替わる」旨の待機案内（2026-07-12）。
+'function movingHtml_(fromRoom,room){ return "⏳ "+fromRoom+"から"+room+"に移動中です"+' +
+'  "<div style=\\"font-size:.82rem;font-weight:normal;margin-top:6px;line-height:1.5;\\">タイムツリーへの書き込みが完了したら画面が切り替わりますので、しばらくお待ちください。</div>"; }' +
+// 完了後の画面更新：★リロード画面を出さず、検出画面(showConflict)を直接再描画し、最上部へスクロールする
+//   （2026-07-12）。静的アプリが window.__refreshConflictView を公開している時はそれを使う。
+//   無い場合(GAS直アクセス等)だけ従来どおり location.reload() にフォールバック。
+'function doneRefresh_(){ try{ window.scrollTo(0,0); }catch(e){}' +
+'  try{ if(window.__refreshConflictView){ window.__refreshConflictView(); return; } }catch(e2){}' +
+'  location.reload(); }' +
 'function pollMove(st,id,room,fromRoom,evid){' +
-'  st.textContent="⏳ "+fromRoom+"から"+room+"に移動中です"; var tries=0;' +
+'  st.innerHTML=movingHtml_(fromRoom,room); var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
 '    statusCheck_(id,function(r){' +
 '      var s=(r&&r.status)||"";' +
@@ -1584,8 +1593,9 @@ var MOVESCRIPT_ =
 // イベントがevents.jsonから消える）まで裏で待ってから自動でページを更新する（2026-07-12）。
 // 【なぜ】反映には数秒〜最大1分の時間差がある。ここで手動「🔄再読込」を押させると、その時差の
 //   最中は古いevents.jsonが返り、消えたはずの被りが復活して見える（「押しても消えない」の正体）。
-//   そこで、移動したevent_idがevents.jsonから消えたのを確認してから location.reload() する＝
-//   ユーザーに古い被りを一切見せず・手動リロードも不要にする。最大約60秒でタイムアウト後は更新。
+//   そこで、移動したevent_idがevents.jsonから消えたのを確認してから doneRefresh_() で検出画面を
+//   直接再描画（リロード画面を出さず最上部へスクロール）＝ユーザーに古い被りを一切見せず・手動
+//   リロードも不要にする。最大約60秒でタイムアウト後は更新。
 'function showMoveDone_(st,msg,evid){' +
 '  var card=st; while(card && !(card.classList && card.classList.contains("card"))) card=card.parentNode;' +
 '  if(card){ var kids=card.children; for(var i=0;i<kids.length;i++){ kids[i].style.display="none"; }' +
@@ -1599,9 +1609,9 @@ var MOVESCRIPT_ =
 '    var cb="__cd"+Date.now()+Math.floor(Math.random()*100000); var fired=false;' +
 '    window[cb]=function(d){ if(fired) return; fired=true; try{delete window[cb];}catch(e){}' +
 '      var gone=true; try{ var evs=(d&&d.events)||[]; for(var i=0;i<evs.length;i++){ if(evs[i].event_id===evid){ gone=false; break; } } }catch(e2){}' +
-'      if(gone||tries>=30){ location.reload(); } else { setTimeout(chk,2000); } };' +
+'      if(gone||tries>=30){ doneRefresh_(); } else { setTimeout(chk,2000); } };' +
 '    var s=document.createElement("script"); s.src=EXEC_URL_+"?action=events&callback="+cb+"&cb="+Date.now();' +
-'    s.onerror=function(){ if(fired) return; fired=true; if(tries>=30){ location.reload(); } else { setTimeout(chk,2000); } };' +
+'    s.onerror=function(){ if(fired) return; fired=true; if(tries>=30){ doneRefresh_(); } else { setTimeout(chk,2000); } };' +
 '    document.body.appendChild(s); }' +
 '  setTimeout(chk,2000);' +
 '}' +

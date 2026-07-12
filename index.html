@@ -31,8 +31,8 @@
      ★?v=... はキャッシュ避け（GitHub PagesがCache-Control: max-age=600を付けるため、
      コード更新のたびにここの番号を上げないとスマホが古いJSを最大10分キャッシュし続ける）。
      更新手順：code.js/detect_core.jsを直したら、この2行の?v=も必ず同じ値へ上げてからpushする。 -->
-<script src="detect_core.js?v=20260712c"></script>
-<script src="code.js?v=20260712c"></script>
+<script src="detect_core.js?v=20260712d"></script>
+<script src="code.js?v=20260712d"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -109,6 +109,7 @@
         if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
         var res = detect(payload.events, nail, payload.date_from);
         mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff, dev));
+        try { window.scrollTo(0, 0); } catch (e) {}   // 再描画後は一番上へ（部屋移動の完了更新でも同じ）
       } catch (e) { fail('描画エラー：' + e); }
     };
     var s = document.createElement('script');
@@ -116,6 +117,9 @@
     s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
     document.body.appendChild(s);
   }
+  // 部屋移動の完了後、ページをリロード（真っ白なリロード画面）せずに検出画面を直接再描画するため、
+  // code.js の doneRefresh_() から呼べるよう公開する（events再取得→detect→再描画→最上部へ）。
+  window.__refreshConflictView = showConflict;
 
   function showLt() {
     window.__ttLt = function (payload) {
