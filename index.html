@@ -110,6 +110,31 @@
 
     // Chrome自身が出す自動バナーも抑止（手動メニューからのインストールは引き続き可能）。
     window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); });
+
+    // ===== iPhone(Safari)対応 =====
+    // iOSはmanifest.jsonの内容を見ないので、Apple専用のmeta/linkで同じことを指定する。
+    // インストールは常に手動(共有ボタン→「ホーム画面に追加」)のみ・自動バナーはiOSに存在しない。
+    var head = document.head;
+    var appleCapable = document.createElement('meta');
+    appleCapable.name = 'apple-mobile-web-app-capable';
+    appleCapable.content = 'yes';
+    head.appendChild(appleCapable);
+
+    var appleTitle = document.createElement('meta');
+    appleTitle.name = 'apple-mobile-web-app-title';
+    appleTitle.content = 'スーパーズコ';
+    head.appendChild(appleTitle);
+
+    var appleStatusBar = document.createElement('meta');
+    appleStatusBar.name = 'apple-mobile-web-app-status-bar-style';
+    appleStatusBar.content = 'black-translucent';
+    head.appendChild(appleStatusBar);
+
+    var appleIcon = document.createElement('link');
+    appleIcon.rel = 'apple-touch-icon';
+    appleIcon.sizes = '180x180';
+    appleIcon.href = 'icons/icon-dev-180.png';
+    head.appendChild(appleIcon);
   }
 
   function esc(s){ return (typeof esc_==='function') ? esc_(s) : String(s==null?'':s); }
