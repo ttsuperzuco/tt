@@ -1245,71 +1245,95 @@ var URIAGESCRIPT_ =
 'var st=document.getElementById("ustatus");' +
 'var missBtn=document.getElementById("ubtn");' +
 'var fixBtn=document.getElementById("ufixbtn");' +
-'function wireUriageBtn(btn, submitFn, emptyMsg, confirmMsg, workingMsg){' +
-'  if(!btn || !st) return;' +
+// ★2026-07-16修正：旧実装はgoogle.script.runを直接呼んでおり、電話(静的アプリ)には
+//   google.script.runが存在しないため実は動いていなかった（GAS直リンクでしか動かない隠れた不具合）。
+//   「毎回まとめて」と同じJSONP(action=submit/status)に統一し、電話でも動くようにした。
+'var EXEC_U0_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
+'var EKEY_U0_="kx7Q2p9mVt4Zr8";' +
+'function jsonpU0_(params, onResult){' +
+'  var cb="__uu0"+Date.now()+Math.floor(Math.random()*1000);' +
+'  window[cb]=function(r){ try{ delete window[cb]; }catch(ig){} onResult(r||{}); };' +
+'  var qs="callback="+cb; for(var k in params){ qs+="&"+k+"="+encodeURIComponent(params[k]); }' +
+'  var sc=document.createElement("script"); sc.src=EXEC_U0_+"?"+qs;' +
+'  sc.onerror=function(){ onResult({ok:false,error:"通信エラー"}); };' +
+'  document.body.appendChild(sc);' +
+'}' +
+'function wireUriageBtn(btn, opName, emptyMsg, confirmMsg, workingTitle, workingSub){' +
+'  if(!btn) return;' +
 '  btn.addEventListener("click",function(){' +
 '    var empty=btn.getAttribute("data-empty")==="1";' +
 '    if(!confirm(empty?emptyMsg:confirmMsg)) return;' +
-'    if(missBtn) missBtn.disabled=true; if(fixBtn) fixBtn.disabled=true;' +
-'    st.hidden=false; st.className="ustatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
-'    google.script.run' +
-'      .withSuccessHandler(function(id){ pollU(id, workingMsg); })' +
-'      .withFailureHandler(function(e){ st.className="ustatus err"; st.textContent="⚠️ 依頼に失敗："+e; enableUriageBtns(); })' +
-'      [submitFn]();' +
+'    if(missBtn) missBtn.disabled=true; if(fixBtn) fixBtn.disabled=true; if(allBtn) allBtn.disabled=true;' +
+'    szOverlay_("#2C7A99","⏳",workingTitle,workingSub);' +
+'    jsonpU0_({action:"submit",op:opName,key:EKEY_U0_},function(r){' +
+'      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); enableUriageBtns(); return; }' +
+'      pollU(r.id);' +
+'    });' +
 '  });' +
 '}' +
-'function enableUriageBtns(){ if(missBtn) missBtn.disabled=false; if(fixBtn) fixBtn.disabled=false; }' +
-'wireUriageBtn(missBtn, "uiSubmitUriage",' +
+'function enableUriageBtns(){ if(missBtn) missBtn.disabled=false; if(fixBtn) fixBtn.disabled=false; if(allBtn) allBtn.disabled=false; }' +
+'wireUriageBtn(missBtn, "uriage",' +
 '  "追加する新規記入はありません。念のため実行しますか？",' +
 '  "今日ぶんの売上をTimeTreeに記入します。よろしいですか？\\n（新規記入のみ・既存の値は変更しません）",' +
-'  "⏳ 処理中…（帳簿を読んでTimeTreeに記入）");' +
-'wireUriageBtn(fixBtn, "uiSubmitUriageFix",' +
+'  "処理中です","帳簿を読んでTimeTreeに記入しています。\\n完了したら自動で切り替わります。");' +
+'wireUriageBtn(fixBtn, "uriage_fix",' +
 '  "修正が必要な記入ミスはありません。念のため実行しますか？",' +
 '  "上のリストの通りTimeTreeの既存の値を書き換えます。よろしいですか？\\n（内容をよく確認してから実行してください）",' +
-'  "⏳ 処理中…（TimeTreeの値を修正）");' +
-'function pollU(id, workingMsg){' +
-'  st.textContent=workingMsg; var tries=0;' +
+'  "処理中です","TimeTreeの値を修正しています。\\n完了したら自動で切り替わります。");' +
+'function pollU(id){' +
+'  var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
-'    google.script.run.withSuccessHandler(function(r){' +
+'    jsonpU0_({action:"status",key:EKEY_U0_,id:id},function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); st.className="ustatus ok"; st.textContent="✅ "+((r.result)||"完了しました"); enableUriageBtns();' +
-'        setTimeout(function(){ try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } else { location.reload(); } }catch(e3){ location.reload(); } }, 1000); }' +
-'      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); enableUriageBtns(); }' +
-'      else if(tries>=60){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; enableUriageBtns(); }' +
-'    }).withFailureHandler(function(e){}).uiStatus(id);' +
+'      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",(r.result)||"完了しました"); enableUriageBtns();' +
+'        try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }' +
+'      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",(r.result)||s); enableUriageBtns(); }' +
+'      else if(tries>=60){ clearInterval(timer); szOverlayResult_(false,"時間切れです","事務所PCの見張りが動いているか確認してください。"); enableUriageBtns(); }' +
+'    });' +
 '  },3000);' +
 '}' +
 // ★「毎回まとめて」ボタン＝売上記入＋ミス修正＋プロセル転記を一気に。電話(静的アプリ)でも動くよう
 //   google.script.runでなくJSONP(action=submit/status)で依頼・監視する。結果は複数行で表示。
-'var EXEC_U_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
-'var EKEY_U_="kx7Q2p9mVt4Zr8";' +
-'function jsonpU_(params, onResult){' +
-'  var cb="__uu"+Date.now()+Math.floor(Math.random()*1000);' +
-'  window[cb]=function(r){ try{ delete window[cb]; }catch(ig){} onResult(r||{}); };' +
-'  var qs="callback="+cb; for(var k in params){ qs+="&"+k+"="+encodeURIComponent(params[k]); }' +
-'  var sc=document.createElement("script"); sc.src=EXEC_U_+"?"+qs;' +
-'  sc.onerror=function(){ onResult({ok:false,error:"通信エラー"}); };' +
-'  document.body.appendChild(sc);' +
+//   （jsonpU0_/EKEY_U0_は上のwireUriageBtnと共用＝同じ仕組みを使い回す）
+// ★処理中～完了/失敗の見せ方は、部屋被り(mvOverlay_/showDoneOverlay_)と同じ「全画面」に統一する
+//   共通ルール（2026-07-16）。新しい画面を作る時もこの3関数(szOverlay_/szOverlayHide_/szOverlayResult_)
+//   と同じ考え方＝①処理中は全画面で待たせる②完了/失敗も全画面で見せる③一定時間 or タップで消す、
+//   をコピーして使う。
+'function szOverlay_(bg, iconHtml, titleHtml, subHtml){' +
+'  var ov=document.getElementById("szFullOverlay");' +
+'  if(!ov){ ov=document.createElement("div"); ov.id="szFullOverlay"; document.body.appendChild(ov); }' +
+'  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:"+bg+";display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
+'  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">"+iconHtml+"</div>"+' +
+'    "<div style=\\"color:#fff;font-size:26px;font-weight:800;line-height:1.5;margin-bottom:16px;\\">"+titleHtml+"</div>"+' +
+'    (subHtml?"<div style=\\"color:#eaf3f7;font-size:17px;line-height:1.8;max-width:440px;white-space:pre-line;\\">"+subHtml+"</div>":"");' +
+'  return ov;' +
+'}' +
+'function szOverlayHide_(){ var ov=document.getElementById("szFullOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
+// 完了(緑)/失敗(赤)を全画面で見せ、タップで消せるようにする（結果が長文でも読み切れるように自動では消さない）。
+'function szOverlayResult_(ok, titleHtml, subHtml){' +
+'  var ov=szOverlay_(ok?"#16a34a":"#b91c1c", ok?"✓":"⚠️", titleHtml, (subHtml||"")+"<div style=\\"margin-top:18px;font-size:14px;opacity:.85;\\">（タップで閉じます）</div>");' +
+'  ov.style.cursor="pointer";' +
+'  ov.addEventListener("click", szOverlayHide_);' +
 '}' +
 'var allBtn=document.getElementById("uallbtn");' +
 'if(allBtn && st){ allBtn.addEventListener("click",function(){' +
 '  if(!confirm("売上の記入・ミスの修正・プロセル転記をまとめて実行します。よろしいですか？\\n（ミス修正は既存の値を書き換えます／プロセルは数分かかります）")) return;' +
 '  if(missBtn)missBtn.disabled=true; if(fixBtn)fixBtn.disabled=true; allBtn.disabled=true;' +
-'  st.hidden=false; st.className="ustatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
-'  jsonpU_({action:"submit",op:"run_all",key:EKEY_U_},function(r){' +
-'    if(!r||!r.ok||!r.id){ st.className="ustatus err"; st.textContent="⚠️ 依頼に失敗："+((r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
+'  szOverlay_("#2C7A99","⏳","処理中です","売上の記入・ミス修正・プロセル転記を\\nまとめて実行しています。数分かかることがあります。\\n完了したら自動で切り替わります。");' +
+'  jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_},function(r){' +
+'    if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
 '    pollUAll(r.id);' +
 '  });' +
 '}); }' +
 'function pollUAll(id){' +
-'  st.textContent="⏳ 処理中…（売上＋プロセル。プロセルは数分かかることがあります）"; var tries=0;' +
+'  var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
-'    jsonpU_({action:"status",key:EKEY_U_,id:id},function(r){' +
+'    jsonpU0_({action:"status",key:EKEY_U0_,id:id},function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); st.className="ustatus ok"; st.textContent="✅ 完了\\n"+((r.result)||""); allBtn.disabled=false; enableUriageBtns();' +
-'        setTimeout(function(){ try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }, 1500); }' +
-'      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 失敗\\n"+((r.result)||s); allBtn.disabled=false; enableUriageBtns(); }' +
-'      else if(tries>=120){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; allBtn.disabled=false; enableUriageBtns(); }' +
+'      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",(r.result)||""); allBtn.disabled=false; enableUriageBtns();' +
+'        try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }' +
+'      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",(r.result)||s); allBtn.disabled=false; enableUriageBtns(); }' +
+'      else if(tries>=120){ clearInterval(timer); szOverlayResult_(false,"時間切れです","事務所PCの見張りが動いているか確認してください。"); allBtn.disabled=false; enableUriageBtns(); }' +
 '    });' +
 '  },3000);' +
 '}' +
