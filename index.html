@@ -21,7 +21,7 @@
     font-size:24px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.15); }
   .pk:active{ transform:scale(.97); }
   .pkbtns{ display:flex; gap:12px; justify-content:center; margin-top:6px; }
-  .pkyes,.pkno{ border:0; border-radius:12px; padding:15px 30px; font-size:16px; font-weight:800; cursor:pointer; }
+  .pkyes,.pkno{ border:0; border-radius:12px; padding:20px 36px; font-size:24px; font-weight:800; cursor:pointer; }
   .pkyes{ background:#16a34a; color:#fff; } .pkno{ background:#e5e7eb; color:#333; }
   .pknote{ margin-top:20px; font-size:12.5px; opacity:.82; line-height:1.7; }
 </style>
@@ -359,8 +359,7 @@
     var root = document.getElementById('root');
     root.innerHTML = '<div class="pkwrap"><div class="pktitle">あなたは「' + esc(label) + '」で<br>正しいですか？</div>' +
       '<div class="pkbtns"><button type="button" class="pkno">ちがう</button>' +
-      '<button type="button" class="pkyes">はい</button></div>' +
-      '<div class="pknote">「はい」を押すと、この端末はこの名前で固定されます。<br>（あとで変えられるのは開発者だけです）</div></div>';
+      '<button type="button" class="pkyes">はい</button></div></div>';
     root.querySelector('.pkyes').addEventListener('click', function () {
       lsSet(LS_WHO, pid); lsSet(LS_ROLE, 'スタッフ'); lsSet(LS_LABEL, label);
       lsSet('sz_picked_at', String(Date.now()));   // リセット合図との比較用（選んだ時刻）
