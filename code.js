@@ -1619,9 +1619,9 @@ var MOVESCRIPT_ =
 '      var s=(r&&r.status)||"";' +
 '      if(s==="done"){ clearInterval(timer); st.className="mvstatus ok"; showMoveDone_(st,(r.result)||(room+"へ移動しました"),evid); }' +
 '      else if(s==="error"||s==="failed"){ clearInterval(timer); mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
-'      else if(tries>=40){ clearInterval(timer); mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
+'      else if(tries>=120){ clearInterval(timer); mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
 '    });' +
-'  },3000);' +
+'  },1000);' +
 '}' +
 // 移動完了後：★「解消しました／更新しています」の別画面は出さず（2026-07-12 ユーザー要望）、
 //   移動中の待機案内（movingHtml_）を出したまま、移動したevent_idがevents.jsonから消えるのを
@@ -1635,11 +1635,11 @@ var MOVESCRIPT_ =
 '    var cb="__cd"+Date.now()+Math.floor(Math.random()*100000); var fired=false;' +
 '    window[cb]=function(d){ if(fired) return; fired=true; try{delete window[cb];}catch(e){}' +
 '      var gone=true; try{ var evs=(d&&d.events)||[]; for(var i=0;i<evs.length;i++){ if(evs[i].event_id===evid){ gone=false; break; } } }catch(e2){}' +
-'      if(gone||tries>=30){ doneRefresh_(); } else { setTimeout(chk,2000); } };' +
+'      if(gone||tries>=60){ doneRefresh_(); } else { setTimeout(chk,1000); } };' +
 '    var s=document.createElement("script"); s.src=EXEC_URL_+"?action=events&callback="+cb+"&cb="+Date.now();' +
-'    s.onerror=function(){ if(fired) return; fired=true; if(tries>=30){ doneRefresh_(); } else { setTimeout(chk,2000); } };' +
+'    s.onerror=function(){ if(fired) return; fired=true; if(tries>=60){ doneRefresh_(); } else { setTimeout(chk,1000); } };' +
 '    document.body.appendChild(s); }' +
-'  setTimeout(chk,2000);' +
+'  setTimeout(chk,1000);' +
 '}' +
 '})();</scr' + 'ipt>';
 
