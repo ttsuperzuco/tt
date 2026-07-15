@@ -11,6 +11,7 @@
     color:#fff; opacity:.85; font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; }
   .bootIcon { width:min(60vw,260px); height:min(60vw,260px); border-radius:20%; box-shadow:0 6px 20px rgba(0,0,0,.3); }
   .bootText { font-size:26px; font-weight:800; }
+  .bootTextLg { font-size:min(11vw,50px); font-weight:800; text-align:center; line-height:1.35; padding:0 20px; }
   /* 名前選択（スタッフURLで初回のみ） */
   .pkwrap{ max-width:520px; margin:0 auto; padding:34px 18px; color:#fff;
     font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; text-align:center; }
@@ -37,8 +38,7 @@
   if (view === 'home') {
     root.innerHTML = '<div class="boot"><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
     setTimeout(function () {
-      var b = root.querySelector('.boot');
-      if (b) b.insertAdjacentHTML('beforeend', '<div class="bootText">TTスーパーズコAppを起動中</div>');
+      root.innerHTML = '<div class="boot"><div class="bootTextLg">TTスーパーズコAppを起動中</div></div>';
     }, 600);
   } else {
     root.innerHTML = '<div class="boot"><div class="bootText">よみこみ中…</div><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
