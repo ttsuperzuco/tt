@@ -1850,8 +1850,8 @@ var AKICSS_ =
 '  .akishift{ color:var(--akisub); font-size:14.5px; font-weight:700; }' +
 '  .akirooms{ display:flex; flex-wrap:nowrap; gap:1px; flex:1 1 auto; min-width:0;' +
 '    overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }' +
-'  .akiroom{ display:inline-block; flex:0 0 auto; color:#fff; font-weight:700; font-size:10px;' +
-'    padding:2px 5px; border-radius:999px; white-space:nowrap; }' +
+'  .akiroom{ display:inline-block; flex:0 0 auto; color:#fff; font-weight:700; font-size:14px;' +
+'    padding:1px 2px; border-radius:999px; white-space:nowrap; }' +
 '  .akiroom.lg{ font-size:16px; padding:4px 13px; }' +
 '  .akinorooms{ color:#c33; font-size:14.5px; white-space:nowrap; }' +
 '  .akislot{ display:inline-block; background:var(--akibg); border:1px solid var(--akiline);' +
