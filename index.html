@@ -7,8 +7,10 @@
 <style>
   html, body { margin:0; background:#2C7A99; }
   #root { min-height:100vh; }
-  .boot { position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  .boot { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
     color:#fff; opacity:.85; font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; }
+  .bootIcon { width:96px; height:96px; border-radius:22px; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+  .bootText { font-size:26px; font-weight:800; }
   /* 名前選択（スタッフURLで初回のみ） */
   .pkwrap{ max-width:520px; margin:0 auto; padding:34px 18px; color:#fff;
     font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; text-align:center; }
@@ -24,7 +26,7 @@
 </style>
 </head>
 <body>
-<div id="root"><div class="boot">よみこみ中…</div></div>
+<div id="root"><div class="boot"><div class="bootText">よみこみ中…</div><img src="icons/icon-192.png" alt="" class="bootIcon"></div></div>
 
 <!-- 判定コア(detect)と、GASと共通の描画関数(renderHome_/renderPage_/personPerms_ など)。
      どちらも純JS。GAS専用の関数(doGet等)は同梱されるが呼ばれないだけ。
