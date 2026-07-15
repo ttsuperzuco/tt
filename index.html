@@ -65,7 +65,8 @@
   window.__SZ_ROLE_ = role;
   window.__SZ_DEVICE_ = device;
 
-  // ===== ホーム画面インストール（PWA化）。まず開発用(?dev=1)だけで試す。=====
+  // ===== ホーム画面インストール可否（PWA化）。まず開発用(?dev=1)だけで試す。=====
+  // 自動の案内帯は出さない。ホーム画面追加はChromeの「⋮」メニュー→「アプリをインストール」から手動で行う。
   if (dev) {
     var manifestLink = document.createElement('link');
     manifestLink.rel = 'manifest';
@@ -76,30 +77,8 @@
       navigator.serviceWorker.register('sw.js').catch(function () {});
     }
 
-    var deferredInstallPrompt = null;
-    window.addEventListener('beforeinstallprompt', function (e) {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      showInstallBanner();
-    });
-    function showInstallBanner() {
-      if (document.getElementById('szInstallBanner')) return;
-      var b = document.createElement('div');
-      b.id = 'szInstallBanner';
-      b.textContent = '📲 タップしてホーム画面にインストール（開発版）';
-      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;background:#16a34a;color:#fff;' +
-        'padding:14px;text-align:center;font-weight:800;z-index:99999;cursor:pointer;' +
-        'font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif;box-shadow:0 -2px 8px rgba(0,0,0,.25);';
-      b.addEventListener('click', function () {
-        b.remove();
-        if (deferredInstallPrompt) { deferredInstallPrompt.prompt(); deferredInstallPrompt = null; }
-      });
-      document.body.appendChild(b);
-    }
-    window.addEventListener('appinstalled', function () {
-      var b = document.getElementById('szInstallBanner');
-      if (b) b.remove();
-    });
+    // Chrome自身が出す自動バナーも抑止（手動メニューからのインストールは引き続き可能）。
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); });
   }
 
   function esc(s){ return (typeof esc_==='function') ? esc_(s) : String(s==null?'':s); }
