@@ -31,8 +31,39 @@
      ★?v=... はキャッシュ避け（GitHub PagesがCache-Control: max-age=600を付けるため、
      コード更新のたびにここの番号を上げないとスマホが古いJSを最大10分キャッシュし続ける）。
      更新手順：code.js/detect_core.jsを直したら、この2行の?v=も必ず同じ値へ上げてからpushする。 -->
-<script src="detect_core.js?v=20260715h"></script>
-<script src="code.js?v=20260715h"></script>
+<!-- ★被り画面の初期表示を最速化：events(被りデータ)と tilesettings(権限)の取得を、重い
+     detect_core.js/code.js の読み込みより「前」に発射する（約0.6秒早くスタート）。結果はグローバルに
+     貯め、下の本体スクリプトが code 読み込み後に拾って描画/起動する（発射だけなので code 不要）。 -->
+<script>
+(function () {
+  var EXEC = "https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";
+  var view = (new URLSearchParams(location.search)).get('view') || 'home';
+  // tilesettings（権限・名前選択に必要＝全画面で使う）
+  window.__tsResult = undefined; window.__tsWaiter = null;
+  window.__ttTileSettingsPre = function (payload) {
+    window.__tsResult = payload || {};
+    var w = window.__tsWaiter; window.__tsWaiter = null; if (w) w(window.__tsResult);
+  };
+  var s0 = document.createElement('script');
+  s0.src = EXEC + '?action=tilesettings&callback=__ttTileSettingsPre&cb=' + Date.now();
+  s0.onerror = function () { window.__ttTileSettingsPre({}); };
+  document.head.appendChild(s0);
+  // events（被りデータ・被り画面のときだけ先読み）
+  if (view === 'conflict') {
+    window.__prefetchedEvents = undefined; window.__prefetchWaiter = null; window.__prefetchStarted = true;
+    window.__ttEventsPre = function (payload) {
+      window.__prefetchedEvents = payload || null;
+      var w = window.__prefetchWaiter; window.__prefetchWaiter = null; if (w) w(window.__prefetchedEvents);
+    };
+    var sp = document.createElement('script');
+    sp.src = EXEC + '?action=events&callback=__ttEventsPre&cb=' + Date.now();
+    sp.onerror = function () { window.__ttEventsPre({ error: 'net' }); };
+    document.head.appendChild(sp);
+  }
+})();
+</script>
+<script src="detect_core.js?v=20260715i"></script>
+<script src="code.js?v=20260715i"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -284,30 +315,12 @@
     else showHome(perms);
   }
 
-  // ★被りデータの先読み：view=conflict と分かっている起動時は、tilesettings と“同時に”
-  //   events も取りに行く（GAS 1往復は約2.7秒。直列だと合計5.5秒→並行で約2.7秒に短縮）。
-  //   結果は showConflict が使い切りで拾う（初回のみ／以降は新規取得で新鮮）。
-  window.__prefetchedEvents = undefined;   // undefined=未着 / null・obj=結果
-  window.__prefetchWaiter = null;
-  window.__prefetchStarted = false;
-  window.__ttEventsPre = function (payload) {
-    window.__prefetchedEvents = payload || null;
-    var w = window.__prefetchWaiter; window.__prefetchWaiter = null;
-    if (w) w(window.__prefetchedEvents);
-  };
-  if (view === 'conflict') {
-    window.__prefetchStarted = true;
-    var sp = document.createElement('script');
-    sp.src = EXEC + '?action=events&callback=__ttEventsPre&cb=' + Date.now();
-    sp.onerror = function () { window.__ttEventsPre({ error: 'net' }); };
-    document.body.appendChild(sp);
-  }
-
-  window.__ttTileSettings = function (payload) { boot(payload || {}); };
-  var s0 = document.createElement('script');
-  s0.src = EXEC + '?action=tilesettings&callback=__ttTileSettings&cb=' + Date.now();
-  s0.onerror = function () { boot({}); };   // 取得失敗＝デフォルト権限で続行
-  document.body.appendChild(s0);
+  // ★events(被りデータ)/tilesettings(権限) はページ冒頭の早期スクリプトで既に発射済み
+  //   （重い code.js の読み込みを待たずに約0.6秒早くスタート）。ここでは先読み結果を消費するだけ：
+  //   tilesettings が届いていれば即 boot、まだなら届き次第 boot する。events は showConflict が
+  //   __prefetchedEvents を使い切りで拾う（初回のみ／部屋移動後などのリフレッシュは新規取得で新鮮）。
+  if (window.__tsResult !== undefined) { boot(window.__tsResult); }
+  else { window.__tsWaiter = function (cfg) { boot(cfg || {}); }; }
 })();
 </script>
 </body>
