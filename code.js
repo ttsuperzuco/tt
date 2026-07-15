@@ -1150,6 +1150,7 @@ function uriageBody_(d) {
     (missList ? '<div class="ublk"><b>未記入</b><ul>' + missList + '</ul></div>' : '') +
     (mistList ? '<div class="ublk warn"><b>記入ミス</b><ul>' + mistList + '</ul></div>' : '') +
   '</div>' +
+  '<button type="button" id="uallbtn" class="ubtn uall">▶ 毎回まとめて（売上＋ミス修正＋プロセル）</button>' +
   '<button type="button" id="ubtn" class="ubtn"' + (nMissing > 0 ? '' : ' data-empty="1"') + '>' + missBtnLabel + '</button>' +
   '<button type="button" id="ufixbtn" class="ubtn ufix"' + (nMistake > 0 ? '' : ' data-empty="1"') + '>' + fixBtnLabel + '</button>' +
   '<div id="ustatus" class="ustatus" hidden></div>' +
@@ -1210,6 +1211,40 @@ var URIAGESCRIPT_ =
 '    }).withFailureHandler(function(e){}).uiStatus(id);' +
 '  },3000);' +
 '}' +
+// ★「毎回まとめて」ボタン＝売上記入＋ミス修正＋プロセル転記を一気に。電話(静的アプリ)でも動くよう
+//   google.script.runでなくJSONP(action=submit/status)で依頼・監視する。結果は複数行で表示。
+'var EXEC_U_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
+'var EKEY_U_="kx7Q2p9mVt4Zr8";' +
+'function jsonpU_(params, onResult){' +
+'  var cb="__uu"+Date.now()+Math.floor(Math.random()*1000);' +
+'  window[cb]=function(r){ try{ delete window[cb]; }catch(ig){} onResult(r||{}); };' +
+'  var qs="callback="+cb; for(var k in params){ qs+="&"+k+"="+encodeURIComponent(params[k]); }' +
+'  var sc=document.createElement("script"); sc.src=EXEC_U_+"?"+qs;' +
+'  sc.onerror=function(){ onResult({ok:false,error:"通信エラー"}); };' +
+'  document.body.appendChild(sc);' +
+'}' +
+'var allBtn=document.getElementById("uallbtn");' +
+'if(allBtn && st){ allBtn.addEventListener("click",function(){' +
+'  if(!confirm("売上の記入・ミスの修正・プロセル転記をまとめて実行します。よろしいですか？\\n（ミス修正は既存の値を書き換えます／プロセルは数分かかります）")) return;' +
+'  if(missBtn)missBtn.disabled=true; if(fixBtn)fixBtn.disabled=true; allBtn.disabled=true;' +
+'  st.hidden=false; st.className="ustatus working"; st.textContent="⏳ 事務所PCに依頼中…";' +
+'  jsonpU_({action:"submit",op:"run_all",key:EKEY_U_},function(r){' +
+'    if(!r||!r.ok||!r.id){ st.className="ustatus err"; st.textContent="⚠️ 依頼に失敗："+((r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
+'    pollUAll(r.id);' +
+'  });' +
+'}); }' +
+'function pollUAll(id){' +
+'  st.textContent="⏳ 処理中…（売上＋プロセル。プロセルは数分かかることがあります）"; var tries=0;' +
+'  var timer=setInterval(function(){ tries++;' +
+'    jsonpU_({action:"status",key:EKEY_U_,id:id},function(r){' +
+'      var s=(r&&r.status)||"";' +
+'      if(s==="done"){ clearInterval(timer); st.className="ustatus ok"; st.textContent="✅ 完了\\n"+((r.result)||""); allBtn.disabled=false; enableUriageBtns();' +
+'        setTimeout(function(){ try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }, 1500); }' +
+'      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 失敗\\n"+((r.result)||s); allBtn.disabled=false; enableUriageBtns(); }' +
+'      else if(tries>=120){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; allBtn.disabled=false; enableUriageBtns(); }' +
+'    });' +
+'  },3000);' +
+'}' +
 '})();</scr' + 'ipt>';
 
 var URIAGECSS_ =
@@ -1244,7 +1279,9 @@ var URIAGECSS_ =
 '  .ubtn:active { transform:translateY(1px); }' +
 '  .ubtn:disabled { opacity:.55; }' +
 '  .ubtn.ufix { background:#2563eb; box-shadow:0 4px 14px rgba(37,99,235,.4); margin-top:10px; }' +
-'  .ustatus { margin-top:12px; padding:13px 14px; border-radius:12px; font-size:1rem; font-weight:700; }' +
+'  .ubtn.uall { background:#16a34a; box-shadow:0 4px 14px rgba(22,163,74,.4); }' +
+'  .ustatus { margin-top:12px; padding:13px 14px; border-radius:12px; font-size:1rem; font-weight:700;' +
+'    white-space:pre-line; line-height:1.6; }' +
 '  .ustatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .ustatus.ok { background:#dcfce7; color:#166534; }' +
 '  .ustatus.err { background:#fee2e2; color:#991b1b; }' +
