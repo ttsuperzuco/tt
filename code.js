@@ -1258,16 +1258,39 @@ var URIAGESCRIPT_ =
 '  sc.onerror=function(){ onResult({ok:false,error:"通信エラー"}); };' +
 '  document.body.appendChild(sc);' +
 '}' +
+// ブラウザ標準confirmは「ttsuperzuco.github.io の内容」のようにドメイン名を強制表示してしまい
+// 消せないため（部屋被り画面のccPopup_と同じ理由）、自前のポップアップ（ドメイン名なし）で代用する。
+'function uConfirm_(msg, onYes){' +
+'  var mask=document.createElement("div");' +
+'  mask.style.cssText="position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;";' +
+'  var box=document.createElement("div");' +
+'  box.style.cssText="background:#fff;border-radius:16px;padding:24px 20px;max-width:360px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3);";' +
+'  var msgEl=document.createElement("div");' +
+'  msgEl.style.cssText="font-size:16px;line-height:1.7;color:#222;white-space:pre-line;margin-bottom:20px;";' +
+'  msgEl.textContent=msg;' +
+'  var btns=document.createElement("div");' +
+'  btns.style.cssText="display:flex;gap:10px;justify-content:center;";' +
+'  var noBtn=document.createElement("button"); noBtn.type="button"; noBtn.textContent="キャンセル";' +
+'  noBtn.style.cssText="flex:1;border:0;border-radius:10px;padding:13px;font-size:15px;font-weight:700;background:#e5e7eb;color:#333;";' +
+'  var yesBtn=document.createElement("button"); yesBtn.type="button"; yesBtn.textContent="OK";' +
+'  yesBtn.style.cssText="flex:1;border:0;border-radius:10px;padding:13px;font-size:15px;font-weight:700;background:#16a34a;color:#fff;";' +
+'  btns.appendChild(noBtn); btns.appendChild(yesBtn);' +
+'  box.appendChild(msgEl); box.appendChild(btns); mask.appendChild(box);' +
+'  document.body.appendChild(mask);' +
+'  yesBtn.addEventListener("click",function(){ document.body.removeChild(mask); if(onYes) onYes(); });' +
+'  noBtn.addEventListener("click",function(){ document.body.removeChild(mask); });' +
+'}' +
 'function wireUriageBtn(btn, opName, emptyMsg, confirmMsg, workingTitle, workingSub){' +
 '  if(!btn) return;' +
 '  btn.addEventListener("click",function(){' +
 '    var empty=btn.getAttribute("data-empty")==="1";' +
-'    if(!confirm(empty?emptyMsg:confirmMsg)) return;' +
-'    if(missBtn) missBtn.disabled=true; if(fixBtn) fixBtn.disabled=true; if(allBtn) allBtn.disabled=true;' +
-'    szOverlay_("#2C7A99","⏳",workingTitle,workingSub);' +
-'    jsonpU0_({action:"submit",op:opName,key:EKEY_U0_},function(r){' +
-'      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); enableUriageBtns(); return; }' +
-'      pollU(r.id);' +
+'    uConfirm_(empty?emptyMsg:confirmMsg, function(){' +
+'      if(missBtn) missBtn.disabled=true; if(fixBtn) fixBtn.disabled=true; if(allBtn) allBtn.disabled=true;' +
+'      szOverlay_("#2C7A99","⏳",workingTitle,workingSub);' +
+'      jsonpU0_({action:"submit",op:opName,key:EKEY_U0_},function(r){' +
+'        if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); enableUriageBtns(); return; }' +
+'        pollU(r.id);' +
+'      });' +
 '    });' +
 '  });' +
 '}' +
@@ -1316,13 +1339,14 @@ var URIAGESCRIPT_ =
 '  ov.addEventListener("click", szOverlayHide_);' +
 '}' +
 'var allBtn=document.getElementById("uallbtn");' +
-'if(allBtn && st){ allBtn.addEventListener("click",function(){' +
-'  if(!confirm("売上の記入・ミスの修正・プロセル転記をまとめて実行します。よろしいですか？\\n（ミス修正は既存の値を書き換えます／プロセルは数分かかります）")) return;' +
-'  if(missBtn)missBtn.disabled=true; if(fixBtn)fixBtn.disabled=true; allBtn.disabled=true;' +
-'  szOverlay_("#2C7A99","⏳","処理中です","売上の記入・ミス修正・プロセル転記を\\nまとめて実行しています。数分かかることがあります。\\n完了したら自動で切り替わります。");' +
-'  jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_},function(r){' +
-'    if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
-'    pollUAll(r.id);' +
+'if(allBtn){ allBtn.addEventListener("click",function(){' +
+'  uConfirm_("実行します。この処理には数分かかります。", function(){' +
+'    if(missBtn)missBtn.disabled=true; if(fixBtn)fixBtn.disabled=true; allBtn.disabled=true;' +
+'    szOverlay_("#2C7A99","⏳","処理中です","売上の記入・ミス修正・プロセル転記を\\nまとめて実行しています。数分かかることがあります。\\n完了したら自動で切り替わります。");' +
+'    jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_},function(r){' +
+'      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
+'      pollUAll(r.id);' +
+'    });' +
 '  });' +
 '}); }' +
 'function pollUAll(id){' +
