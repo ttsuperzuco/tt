@@ -1716,9 +1716,9 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<input type="date" class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
     '</div>' +
     '<div class="akipresets">' +
-      '<button type="button" class="akipreset" data-preset="today">今日</button>' +
+      '<button type="button" class="akipreset on" data-preset="today">今日</button>' +
       '<button type="button" class="akipreset" data-preset="tomorrow">明日</button>' +
-      '<button type="button" class="akipreset on" data-preset="thisnext">今・来週</button>' +
+      '<button type="button" class="akipreset" data-preset="thisnext">今・来週</button>' +
       '<button type="button" class="akipreset" data-preset="month">1か月</button>' +
       '<button type="button" class="akipreset" data-preset="all">全期間</button>' +
     '</div>' +
@@ -1757,7 +1757,11 @@ var AKISCRIPT_ =
 'function clamp(v){ if(minD&&v<minD)return minD; if(maxD&&v>maxD)return maxD; return v; }' +
 'function endOfThisWeek(iso0){ var d=new Date(iso0+"T00:00:00"); var wd=(d.getDay()+6)%7; return addDays(iso0,6-wd); }' +
 'function applyFilter(){' +
-'  var f=fromEl.value||minD, t=toEl.value||maxD, shown=0;' +
+'  var f=fromEl.value||minD;' +
+'  var toRaw=toEl.value;' +
+'  var t=toRaw?toRaw:f;' +
+'  if(t<f){ var tmp=f; f=t; t=tmp; }' +
+'  var shown=0;' +
 '  days.forEach(function(el){' +
 '    var dt=el.getAttribute("data-date")||"";' +
 '    var vis = dt && dt>=f && dt<=t;' +
@@ -1767,6 +1771,7 @@ var AKISCRIPT_ =
 '  if(emptyMsg) emptyMsg.hidden = shown>0;' +
 '}' +
 'function setRange(f,t){ fromEl.value=clamp(f); toEl.value=clamp(t); applyFilter(); }' +
+'function setSingle_(f){ fromEl.value=clamp(f); toEl.value=""; applyFilter(); }' +
 'if(fromEl&&toEl){' +
 '  fromEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
 '  toEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
@@ -1776,13 +1781,13 @@ var AKISCRIPT_ =
 '    presets.forEach(function(x){ x.classList.toggle("on", x===b); });' +
 '    var kind=b.getAttribute("data-preset");' +
 '    var today=minD;' +
-'    if(kind==="today") setRange(today, today);' +
-'    else if(kind==="tomorrow") setRange(addDays(today,1), addDays(today,1));' +
+'    if(kind==="today") setSingle_(today);' +
+'    else if(kind==="tomorrow") setSingle_(addDays(today,1));' +
 '    else if(kind==="thisnext") setRange(today, addDays(endOfThisWeek(today),7));' +
 '    else if(kind==="month") setRange(today, addDays(today,29));' +
 '    else if(kind==="all") setRange(minD, maxD);' +
 '  }); });' +
-'  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今週＋来週（2026-07-16ユーザー指定）
+'  setSingle_(minD);' +   // 初期表示＝今日ピンポイント・右(to)はOFF（2026-07-16ユーザー指定）
 '}' +
 '})();</scr' + 'ipt>';
 
@@ -2178,6 +2183,7 @@ var HOMECSS_ =
 '  .tile.lt::before { background:#6366f1; }' +
 '  .tile.uriage::before { background:#f59e0b; }' +
 '  .tile.unanswered::before { background:#0d9b6c; }' +
+'  .tile.akijikan::before { background:#8b5cf6; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:52px; height:52px; border-radius:14px; font-size:28px;' +
@@ -2186,6 +2192,7 @@ var HOMECSS_ =
 '  .tile.lt .ticon { background:rgba(148,163,184,.14); }' +
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
+'  .tile.akijikan .ticon { background:rgba(139,92,246,.14); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
 '  .tname { font-size:.88rem; font-weight:800; white-space:normal; line-height:1.3;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
