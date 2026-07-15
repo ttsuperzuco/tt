@@ -1824,39 +1824,39 @@ var AKICSS_ =
 '  .akiwrap{ max-width:760px; margin:0 auto; padding:14px 14px 40px; font-family:"Yu Gothic UI","Hiragino Sans",sans-serif; color:var(--akiink); }' +
 '  .akibar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }' +
 '  .akihome{ color:var(--akiprimary); text-decoration:none; font-weight:700; font-size:14px; }' +
-'  .akigen{ color:var(--akisub); font-size:12.5px; font-weight:700; }' +
+'  .akigen{ color:var(--akisub); font-size:14px; font-weight:700; }' +
 '  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
-'  .akisub{ color:var(--akisub); font-size:12px; margin-bottom:12px; }' +
+'  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
-'  .akichip{ font-family:inherit; font-size:13.5px; font-weight:700; color:var(--akisub);' +
+'  .akichip{ font-family:inherit; font-size:17px; font-weight:700; color:var(--akisub);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:9px 14px; cursor:pointer; }' +
+'    padding:10px 16px; cursor:pointer; }' +
 '  .akichip.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akiday{ background:var(--akicard); border:1px solid var(--akiline); border-radius:14px;' +
 '    padding:12px 14px; margin-bottom:12px; }' +
-'  .akidh{ font-weight:800; font-size:15.5px; border-bottom:1px solid var(--akiline);' +
+'  .akidh{ font-weight:800; font-size:19px; border-bottom:1px solid var(--akiline);' +
 '    padding-bottom:6px; margin-bottom:8px; }' +
-'  .akiclosed{ color:#c33; font-weight:700; font-size:13.5px; }' +
+'  .akiclosed{ color:#c33; font-weight:700; font-size:16px; }' +
 '  .akisec.akihidden{ display:none; }' +
-'  .akisl{ font-size:12.5px; font-weight:800; color:var(--akiprimary); margin:8px 0 6px; }' +
-'  .akirow{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; padding:6px 0;' +
-'    border-bottom:1px solid var(--akiline); font-size:13px; }' +
+'  .akisl{ font-size:15px; font-weight:800; color:var(--akiprimary); margin:8px 0 6px; }' +
+'  .akirow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 0;' +
+'    border-bottom:1px solid var(--akiline); font-size:17px; }' +
 '  .akirow:last-child{ border-bottom:none; }' +
-'  .akitime{ font-weight:800; min-width:96px; font-variant-numeric:tabular-nums; }' +
-'  .akidur{ color:var(--akisub); font-size:11.5px; font-weight:700; min-width:34px; }' +
+'  .akitime{ font-weight:800; font-size:18px; min-width:112px; font-variant-numeric:tabular-nums; }' +
+'  .akidur{ color:var(--akisub); font-size:14.5px; font-weight:700; min-width:40px; }' +
 '  .akisep{ color:var(--akisub); font-weight:800; }' +
-'  .akibadge{ display:inline-block; color:#fff; font-weight:700; font-size:12px;' +
-'    padding:3px 10px; border-radius:999px; white-space:nowrap; }' +
-'  .akishift{ color:var(--akisub); font-size:11.5px; font-weight:700; }' +
-'  .akirooms{ display:flex; flex-wrap:wrap; gap:4px; }' +
-'  .akiroom{ display:inline-block; color:#fff; font-weight:700; font-size:11.5px;' +
-'    padding:2px 9px; border-radius:999px; white-space:nowrap; }' +
-'  .akiroom.lg{ font-size:12.5px; padding:3px 11px; }' +
-'  .akinorooms{ color:#c33; font-size:11.5px; }' +
+'  .akibadge{ display:inline-block; color:#fff; font-weight:700; font-size:16px;' +
+'    padding:4px 12px; border-radius:999px; white-space:nowrap; }' +
+'  .akishift{ color:var(--akisub); font-size:14.5px; font-weight:700; }' +
+'  .akirooms{ display:flex; flex-wrap:wrap; gap:5px; }' +
+'  .akiroom{ display:inline-block; color:#fff; font-weight:700; font-size:14.5px;' +
+'    padding:3px 11px; border-radius:999px; white-space:nowrap; }' +
+'  .akiroom.lg{ font-size:16px; padding:4px 13px; }' +
+'  .akinorooms{ color:#c33; font-size:14.5px; }' +
 '  .akislot{ display:inline-block; background:var(--akibg); border:1px solid var(--akiline);' +
-'    border-radius:8px; padding:2px 8px; font-size:12px; font-variant-numeric:tabular-nums; }' +
+'    border-radius:8px; padding:3px 10px; font-size:15px; font-variant-numeric:tabular-nums; }' +
 '  .akislot b{ font-weight:700; color:var(--akisub); margin-left:2px; }' +
-'  .akinone{ color:#c33; font-size:12.5px; padding:4px 0; }';
+'  .akinone{ color:#c33; font-size:15px; padding:4px 0; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
 // iOSは https のユニバーサルリンクのまま（Safariで開けばアプリに渡る）。
