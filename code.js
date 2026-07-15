@@ -1266,14 +1266,14 @@ var URIAGESCRIPT_ =
 '  var box=document.createElement("div");' +
 '  box.style.cssText="background:#fff;border-radius:16px;padding:24px 20px;max-width:360px;width:100%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.3);";' +
 '  var msgEl=document.createElement("div");' +
-'  msgEl.style.cssText="font-size:16px;line-height:1.7;color:#222;white-space:pre-line;margin-bottom:20px;";' +
+'  msgEl.style.cssText="font-size:21px;font-weight:800;line-height:1.6;color:#222;white-space:pre-line;margin-bottom:22px;";' +
 '  msgEl.textContent=msg;' +
 '  var btns=document.createElement("div");' +
 '  btns.style.cssText="display:flex;gap:10px;justify-content:center;";' +
 '  var noBtn=document.createElement("button"); noBtn.type="button"; noBtn.textContent="キャンセル";' +
-'  noBtn.style.cssText="flex:1;border:0;border-radius:10px;padding:13px;font-size:15px;font-weight:700;background:#e5e7eb;color:#333;";' +
+'  noBtn.style.cssText="flex:1;border:0;border-radius:12px;padding:17px;font-size:19px;font-weight:800;background:#e5e7eb;color:#333;";' +
 '  var yesBtn=document.createElement("button"); yesBtn.type="button"; yesBtn.textContent="OK";' +
-'  yesBtn.style.cssText="flex:1;border:0;border-radius:10px;padding:13px;font-size:15px;font-weight:700;background:#16a34a;color:#fff;";' +
+'  yesBtn.style.cssText="flex:1;border:0;border-radius:12px;padding:17px;font-size:19px;font-weight:800;background:#16a34a;color:#fff;";' +
 '  btns.appendChild(noBtn); btns.appendChild(yesBtn);' +
 '  box.appendChild(msgEl); box.appendChild(btns); mask.appendChild(box);' +
 '  document.body.appendChild(mask);' +
