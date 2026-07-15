@@ -2183,6 +2183,7 @@ var HOMECSS_ =
 '  .tile.lt::before { background:#6366f1; }' +
 '  .tile.uriage::before { background:#f59e0b; }' +
 '  .tile.unanswered::before { background:#0d9b6c; }' +
+'  .tile.akijikan::before { background:#8b5cf6; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:52px; height:52px; border-radius:14px; font-size:28px;' +
@@ -2191,6 +2192,7 @@ var HOMECSS_ =
 '  .tile.lt .ticon { background:rgba(148,163,184,.14); }' +
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
+'  .tile.akijikan .ticon { background:rgba(139,92,246,.14); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
 '  .tname { font-size:.88rem; font-weight:800; white-space:normal; line-height:1.3;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
