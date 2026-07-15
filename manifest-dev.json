@@ -1,6 +1,6 @@
 {
-  "name": "TTスーパーズコ（開発）",
-  "short_name": "ZUKO開発",
+  "name": "スーパーズコ",
+  "short_name": "スーパーズコ",
   "start_url": "/tt/?dev=1",
   "scope": "/tt/",
   "display": "standalone",
