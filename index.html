@@ -31,8 +31,8 @@
      ★?v=... はキャッシュ避け（GitHub PagesがCache-Control: max-age=600を付けるため、
      コード更新のたびにここの番号を上げないとスマホが古いJSを最大10分キャッシュし続ける）。
      更新手順：code.js/detect_core.jsを直したら、この2行の?v=も必ず同じ値へ上げてからpushする。 -->
-<script src="detect_core.js?v=20260715e"></script>
-<script src="code.js?v=20260715e"></script>
+<script src="detect_core.js?v=20260715f"></script>
+<script src="code.js?v=20260715f"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -114,14 +114,35 @@
     try { window.scrollTo(0, 0); } catch (e) {}   // 再描画後は一番上へ（部屋移動の完了更新でも同じ）
     try { var ov = document.getElementById('mvWaitOverlay'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); } catch (e) {}  // 部屋移動の全画面待機オーバーレイを消す
   }
+  function renderConflictPayload_(payload) {
+    try {
+      if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
+      window.__lastConflictPayload = payload;   // 完了時にこの手元データから即再描画するため保持
+      detectAndMount_(payload);
+    } catch (e) { fail('描画エラー：' + e); }
+  }
   function showConflict() {
-    window.__ttEvents = function (payload) {
-      try {
-        if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
-        window.__lastConflictPayload = payload;   // 完了時にこの手元データから即再描画するため保持
-        detectAndMount_(payload);
-      } catch (e) { fail('描画エラー：' + e); }
-    };
+    // ★初回だけ：起動時に tilesettings と並行して先読みした被りデータを使う。
+    //   従来は tilesettings の往復(約2.7秒)を待ってから events を投げる直列で、
+    //   被りが出るまで約5.5秒かかっていた。先読みで直列を解消＝待ち時間ほぼ半分。
+    //   使い切り(__prefetchStarted を false に)なので、部屋移動後などのリフレッシュは
+    //   下の通常取得を通り、必ず新鮮なデータになる。
+    if (window.__prefetchStarted) {
+      window.__prefetchStarted = false;
+      var pe = window.__prefetchedEvents;
+      if (pe !== undefined) {
+        if (pe && !pe.error) { renderConflictPayload_(pe); return; }
+        // 先読みが失敗/エラー → 下の通常取得にフォールバック
+      } else {
+        // まだ来ていない → 着信時に描画（エラーなら通常取得へリトライ）
+        window.__prefetchWaiter = function (p) {
+          if (p && !p.error) { renderConflictPayload_(p); } else { showConflict(); }
+        };
+        return;
+      }
+    }
+    // 通常（部屋移動後のリフレッシュ等）＝新鮮なデータを取り直す
+    window.__ttEvents = function (payload) { renderConflictPayload_(payload); };
     var s = document.createElement('script');
     s.src = EXEC + '?action=events&callback=__ttEvents&cb=' + Date.now();
     s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
@@ -245,6 +266,25 @@
     else if (v === 'unanswered') showUnanswered();
     else if (v === 'conflict') showConflict();
     else showHome(perms);
+  }
+
+  // ★被りデータの先読み：view=conflict と分かっている起動時は、tilesettings と“同時に”
+  //   events も取りに行く（GAS 1往復は約2.7秒。直列だと合計5.5秒→並行で約2.7秒に短縮）。
+  //   結果は showConflict が使い切りで拾う（初回のみ／以降は新規取得で新鮮）。
+  window.__prefetchedEvents = undefined;   // undefined=未着 / null・obj=結果
+  window.__prefetchWaiter = null;
+  window.__prefetchStarted = false;
+  window.__ttEventsPre = function (payload) {
+    window.__prefetchedEvents = payload || null;
+    var w = window.__prefetchWaiter; window.__prefetchWaiter = null;
+    if (w) w(window.__prefetchedEvents);
+  };
+  if (view === 'conflict') {
+    window.__prefetchStarted = true;
+    var sp = document.createElement('script');
+    sp.src = EXEC + '?action=events&callback=__ttEventsPre&cb=' + Date.now();
+    sp.onerror = function () { window.__ttEventsPre({ error: 'net' }); };
+    document.body.appendChild(sp);
   }
 
   window.__ttTileSettings = function (payload) { boot(payload || {}); };
