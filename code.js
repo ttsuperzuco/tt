@@ -949,6 +949,16 @@ function ltCard_(r) {
     ? '<div class="levi"><span class="lelab">LINE根拠</span><span>' + esc_(r.evidence) + '</span></div>'
     : '';
 
+  // AI判定（会話全文を読んだ結果。事務所PC ai_verify_step.py が書いた ai_verdicts.json 由来）。
+  var aiHtml = '';
+  if (r.ai_verdict) {
+    aiHtml = '<div class="lai laiv-' + esc_(r.ai_verdict === '真陽性' ? 'true' : (r.ai_verdict === '偽陽性' ? 'false' : 'check')) + '">' +
+      '<span class="lailab">AI判定：' + esc_(r.ai_verdict) + '</span>' +
+      (r.ai_true ? '<span class="laitrue">本当の予約：' + esc_(r.ai_true) + '</span>' : '') +
+      (r.ai_reason ? '<div class="laireason">' + esc_(r.ai_reason) + '</div>' : '') +
+    '</div>';
+  }
+
   var ttHtml = '<div class="ltt none">TimeTreeに該当予定なし</div>';
   if (r.tt_title || r.tt_url) {
     var link = '';
@@ -983,7 +993,7 @@ function ltCard_(r) {
     '<div class="lreason">' + esc_(r.reason_label || '') + '</div>' +
     '<div class="laction"><span class="ldo">✔</span>' + esc_(r.action || '') + '</div>' +
     '<div class="lchips">' + chips + '</div>' +
-    evHtml + ttHtml +
+    aiHtml + evHtml + ttHtml +
   '</article>';
 }
 
@@ -991,10 +1001,15 @@ function renderLtPage_(d, base, staff, dev) {
   var c = d.counts || {};
   var action = d.action || [];
   var oks = d.ok || [];
+  var dismissed = d.dismissed || [];
 
   var cards = action.length
     ? action.map(ltCard_).join('\n')
     : '<div class="lempty">要対応はありません 🎉</div>';
+
+  var dismissedRows = dismissed.length
+    ? dismissed.map(ltCard_).join('\n')
+    : '<div class="lempty">対応不要になった案件はありません</div>';
 
   var okRows = oks.map(function (r) {
     var srch = esc_(((r.name || '') + ' ' + (r.time || '')).toLowerCase());
@@ -1027,6 +1042,10 @@ function renderLtPage_(d, base, staff, dev) {
   '</div>' +
   '<input id="lq" type="search" placeholder="名前・番号でしぼり込み（例: 林 / M346）">' +
   '<div id="lcards">' + cards + '</div>' +
+  '<details class="loksec">' +
+    '<summary>AI除外（対応不要） ' + (c.dismissed || 0) + '件 ― タップで開く</summary>' +
+    dismissedRows +
+  '</details>' +
   '<details class="loksec">' +
     '<summary>OK（一致済み） ' + (c.ok || 0) + '件 ― タップで開く</summary>' +
     '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th><th>TimeTree予定</th></tr></thead>' +
@@ -1729,6 +1748,17 @@ var LTCSS_ =
 '  .lchip.on{ background:#e7f6ec; border-color:#bfe6cd; color:#137a3b; }' +
 '  .lchip.off{ color:var(--sub); opacity:.5; }' +
 '  @media (prefers-color-scheme:dark){ .lchip.on{ background:#12331f; border-color:#1f5133; color:#5fd08a; } }' +
+'  .lai{ border-radius:9px; padding:8px 10px; margin-top:7px; font-size:12.5px; border:1px solid var(--line); }' +
+'  .lai.laiv-true{ background:#fff7e6; border-color:#f0dca3; }' +
+'  .lai.laiv-false{ background:rgba(127,127,127,.06); opacity:.75; }' +
+'  .lai.laiv-check{ background:#eef4ff; border-color:#c9dcfa; }' +
+'  @media (prefers-color-scheme:dark){' +
+'    .lai.laiv-true{ background:#3a2f10; border-color:#5c4a1a; }' +
+'    .lai.laiv-check{ background:#152238; border-color:#233a5c; }' +
+'  }' +
+'  .lailab{ font-weight:700; margin-right:8px; }' +
+'  .laitrue{ color:var(--sub); }' +
+'  .laireason{ margin-top:4px; color:var(--sub); }' +
 '  .levi,.ltt{ background:rgba(127,127,127,.06); border:1px solid var(--line); border-radius:9px;' +
 '    padding:8px 10px; margin-top:7px; font-size:12.5px; }' +
 '  .lelab,.ltlab{ font-size:10px; color:var(--sub); margin-right:8px; }' +
