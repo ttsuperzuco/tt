@@ -96,13 +96,17 @@
   window.__SZ_ROLE_ = role;
   window.__SZ_DEVICE_ = device;
 
-  // ===== ホーム画面インストール可否（PWA化）。まず開発用(?dev=1)だけで試す。=====
-  // 自動の案内帯は出さない。ホーム画面追加はChromeの「⋮」メニュー→「アプリをインストール」から手動で行う。
-  if (dev) {
+  // ===== ホーム画面インストール可否（PWA化）。幹部用/スタッフ用/開発用の全URLで共通。=====
+  // 自動の案内帯は出さない。Android=Chromeの「⋮」メニュー→「アプリをインストール」、
+  // iPhone=共有ボタン→「ホーム画面に追加」、どちらも手動のみ。名前とアイコンは3つとも同じ。
+  (function () {
+    var manifestFile = staff ? 'manifest-staff.json' : (dev ? 'manifest-dev.json' : 'manifest-kanbu.json');
+    var head = document.head;
+
     var manifestLink = document.createElement('link');
     manifestLink.rel = 'manifest';
-    manifestLink.href = 'manifest-dev.json';
-    document.head.appendChild(manifestLink);
+    manifestLink.href = manifestFile;
+    head.appendChild(manifestLink);
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(function () {});
@@ -114,7 +118,6 @@
     // ===== iPhone(Safari)対応 =====
     // iOSはmanifest.jsonの内容を見ないので、Apple専用のmeta/linkで同じことを指定する。
     // インストールは常に手動(共有ボタン→「ホーム画面に追加」)のみ・自動バナーはiOSに存在しない。
-    var head = document.head;
     var appleCapable = document.createElement('meta');
     appleCapable.name = 'apple-mobile-web-app-capable';
     appleCapable.content = 'yes';
@@ -133,9 +136,9 @@
     var appleIcon = document.createElement('link');
     appleIcon.rel = 'apple-touch-icon';
     appleIcon.sizes = '180x180';
-    appleIcon.href = 'icons/icon-dev-180.png';
+    appleIcon.href = 'icons/icon-180.png';
     head.appendChild(appleIcon);
-  }
+  })();
 
   function esc(s){ return (typeof esc_==='function') ? esc_(s) : String(s==null?'':s); }
 
