@@ -31,8 +31,8 @@
      ★?v=... はキャッシュ避け（GitHub PagesがCache-Control: max-age=600を付けるため、
      コード更新のたびにここの番号を上げないとスマホが古いJSを最大10分キャッシュし続ける）。
      更新手順：code.js/detect_core.jsを直したら、この2行の?v=も必ず同じ値へ上げてからpushする。 -->
-<script src="detect_core.js?v=20260715b"></script>
-<script src="code.js?v=20260715b"></script>
+<script src="detect_core.js?v=20260715c"></script>
+<script src="code.js?v=20260715c"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -103,14 +103,23 @@
     } catch(e){}
   }
 
+  // 部屋移動が完了した予約は、重いevents.json(約194KB)の再生成・再取得を待たずに
+  // 「その場で手元のデータから除外して即再描画」する（体感短縮）。動かした event_id をここへためる。
+  window.__movedOut = window.__movedOut || {};
+  function detectAndMount_(payload) {
+    var evs = payload.events;
+    try { evs = evs.filter(function (e) { return !window.__movedOut[e.event_id]; }); } catch (ig) {}
+    var res = detect(evs, nail, payload.date_from);
+    mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff, dev));
+    try { window.scrollTo(0, 0); } catch (e) {}   // 再描画後は一番上へ（部屋移動の完了更新でも同じ）
+    try { var ov = document.getElementById('mvWaitOverlay'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); } catch (e) {}  // 部屋移動の全画面待機オーバーレイを消す
+  }
   function showConflict() {
     window.__ttEvents = function (payload) {
       try {
         if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
-        var res = detect(payload.events, nail, payload.date_from);
-        mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff, dev));
-        try { window.scrollTo(0, 0); } catch (e) {}   // 再描画後は一番上へ（部屋移動の完了更新でも同じ）
-        try { var ov = document.getElementById('mvWaitOverlay'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); } catch (e) {}  // 部屋移動の全画面待機オーバーレイを消す
+        window.__lastConflictPayload = payload;   // 完了時にこの手元データから即再描画するため保持
+        detectAndMount_(payload);
       } catch (e) { fail('描画エラー：' + e); }
     };
     var s = document.createElement('script');
@@ -118,9 +127,15 @@
     s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
     document.body.appendChild(s);
   }
-  // 部屋移動の完了後、ページをリロード（真っ白なリロード画面）せずに検出画面を直接再描画するため、
-  // code.js の doneRefresh_() から呼べるよう公開する（events再取得→detect→再描画→最上部へ）。
+  // 部屋移動の完了後、ページをリロード（真っ白なリロード画面）せずに検出画面を直接再描画するため公開。
   window.__refreshConflictView = showConflict;
+  // ★完了時の即時描画：サーバー再取得をせず、直近に取得済みのpayloadから __movedOut を除外して
+  //   描画する（events.json再生成待ちの数秒をまるごと省く）。手元データが無い時だけ従来の再取得へ。
+  window.__renderConflictFromCache = function () {
+    var p = window.__lastConflictPayload;
+    if (!p) { showConflict(); return; }
+    try { detectAndMount_(p); } catch (e) { showConflict(); }
+  };
 
   function showLt() {
     window.__ttLt = function (payload) {

@@ -1612,12 +1612,18 @@ var MOVESCRIPT_ =
 'function doneRefresh_(){ try{ window.scrollTo(0,0); }catch(e){}' +
 '  try{ if(window.__refreshConflictView){ window.__refreshConflictView(); return; } }catch(e2){}' +
 '  location.reload(); }' +
+// ★完了時の即時描画：重いevents.jsonの再生成・再取得を待たず、手元データから動かした予約を
+//   除外して即描画する（__renderConflictFromCache）。静的アプリに無ければ従来の再取得/リロードへ。
+'function doneRefreshFast_(){ try{ window.scrollTo(0,0); }catch(e){}' +
+'  try{ if(window.__renderConflictFromCache){ window.__renderConflictFromCache(); return; } }catch(e0){}' +
+'  try{ if(window.__refreshConflictView){ window.__refreshConflictView(); return; } }catch(e2){}' +
+'  location.reload(); }' +
 'function pollMove(st,id,room,fromRoom,evid){' +
 '  var tries=0;' +
 '  function chk(){ tries++;' +
 '    statusCheck_(id,function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ st.className="mvstatus ok"; showMoveDone_(st,(r.result)||(room+"へ移動しました"),evid); }' +
+'      if(s==="done"){ st.className="mvstatus ok"; try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e0){} doneRefreshFast_(); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
 '      else if(tries>=60){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
 '      else { setTimeout(chk,400); }' +
