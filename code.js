@@ -1596,14 +1596,20 @@ var MOVESCRIPT_ =
 '    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"", mtime=t.getAttribute("data-time")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
-// ★楽観的更新：押した瞬間にこの被りを画面から消す（Google往復の完了を待たない＝体感ほぼ0秒）。
-//   実際の移動は今まで通り裏で確実に実行し、万一失敗した時だけ画面に戻して警告する。
-'      try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e0){}' +
-'      doneRefreshFast_();' +
-'      mvToast_("⏳ "+(who?who+"を":"")+"「"+room+"」へ移動を反映中…");' +
+// ★押した瞬間に全画面「移動中」を表示（はっきりした反応）。依頼がGoogleに通った時点(約1.5〜2秒)で
+//   全画面を消し、被りを消した一覧へ切り替える（＝完了を待たず速い）。移動自体は裏で確実に実行し、
+//   万一失敗した時だけ被りを戻して警告する。全画面は最低0.8秒は見せる（速い回線でも視認できるように）。
+'      mvOverlay_(who,mtime,fromRoom,room); var t0=Date.now();' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
-'        if(r && r.ok){ confirmMove_(r.id,evid,side,who,room); }' +
-'        else { rollbackMove_(evid,(r&&r.error)||"依頼に失敗",side,who,room); }' +
+'        var wait=Math.max(0,800-(Date.now()-t0));' +
+'        setTimeout(function(){' +
+'          if(r && r.ok){ mvOverlayHide_();' +
+'            try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e0){}' +
+'            doneRefreshFast_();' +
+'            mvToast_("⏳ "+(who?who+"を":"")+"「"+room+"」へ移動を反映中…");' +
+'            confirmMove_(r.id,evid,side,who,room); }' +
+'          else { mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度お試しください。", false); }' +
+'        }, wait);' +
 '      });' +
 '    });' +
 '  }' +
@@ -1624,7 +1630,7 @@ var MOVESCRIPT_ =
 '  ov.innerHTML="<div style=\\"font-size:46px;margin-bottom:18px;\\">⏳</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.7;margin-bottom:10px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
 '    "<div style=\\"color:#fff;font-size:20px;font-weight:800;line-height:1.6;margin-bottom:16px;\\">「"+fromRoom+"」から「"+room+"」へ移動中です</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.9;max-width:360px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
+'    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.9;max-width:360px;\\">移動を受け付けています。まもなく画面が切り替わります。</div>";' +
 '  return ov; }' +
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
 // ★楽観的更新まわり：小さなトースト(body直下＝再描画で消えない)＋裏での確定確認＋失敗時のロールバック。
