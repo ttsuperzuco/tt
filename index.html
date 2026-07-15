@@ -62,10 +62,22 @@
     sp.onerror = function () { window.__ttEventsPre({ error: 'net' }); };
     document.head.appendChild(sp);
   }
+  // uriage（売上データ・売上画面のときだけ先読み。被り画面と同じ「最速化3点セット」）
+  if (view === 'uriage') {
+    window.__prefetchedUriage = undefined; window.__prefetchUriageWaiter = null; window.__prefetchUriageStarted = true;
+    window.__ttUriagePre = function (payload) {
+      window.__prefetchedUriage = payload || null;
+      var w = window.__prefetchUriageWaiter; window.__prefetchUriageWaiter = null; if (w) w(window.__prefetchedUriage);
+    };
+    var su = document.createElement('script');
+    su.src = EXEC + '?action=uriage&callback=__ttUriagePre&cb=' + Date.now();
+    su.onerror = function () { window.__ttUriagePre({ error: 'net' }); };
+    document.head.appendChild(su);
+  }
 })();
 </script>
-<script src="detect_core.js?v=20260715k"></script>
-<script src="code.js?v=20260715k"></script>
+<script src="detect_core.js?v=20260715l"></script>
+<script src="code.js?v=20260715l"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -248,18 +260,36 @@
     document.body.appendChild(s);
   }
 
+  function renderUriagePayload_(payload) {
+    try {
+      if (!payload || payload.error) { mount(renderUriageError_((payload && payload.error) || '不明', base, staff, dev)); return; }
+      mount(renderUriagePage_(payload, base, staff, dev));
+    } catch (e) { fail('描画エラー：' + e); }
+  }
   function showUriage() {
-    window.__ttUriage = function (payload) {
-      try {
-        if (!payload || payload.error) { mount(renderUriageError_((payload && payload.error) || '不明', base, staff, dev)); return; }
-        mount(renderUriagePage_(payload, base, staff, dev));
-      } catch (e) { fail('描画エラー：' + e); }
-    };
+    // ★初回だけ：起動時にtilesettingsと並行して先読みした売上データを使う（被り画面と同じ方式）。
+    //   使い切り(__prefetchUriageStartedをfalseに)なので、転記後の手動更新は必ず新鮮なデータを取り直す。
+    if (window.__prefetchUriageStarted) {
+      window.__prefetchUriageStarted = false;
+      var pu = window.__prefetchedUriage;
+      if (pu !== undefined) {
+        if (pu && !pu.error) { renderUriagePayload_(pu); return; }
+        // 先読みが失敗/エラー → 下の通常取得にフォールバック
+      } else {
+        window.__prefetchUriageWaiter = function (p) {
+          if (p && !p.error) { renderUriagePayload_(p); } else { showUriage(); }
+        };
+        return;
+      }
+    }
+    // 通常（▶更新ボタン等）＝新鮮なデータを取り直す
+    window.__ttUriage = function (payload) { renderUriagePayload_(payload); };
     var s = document.createElement('script');
     s.src = EXEC + '?action=uriage&callback=__ttUriage&cb=' + Date.now();
     s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
     document.body.appendChild(s);
   }
+  window.__refreshUriageView = showUriage;
 
   function showUnanswered() {
     window.__ttUnanswered = function (payload) {

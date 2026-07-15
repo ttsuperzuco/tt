@@ -1203,7 +1203,8 @@ var URIAGESCRIPT_ =
 '  var timer=setInterval(function(){ tries++;' +
 '    google.script.run.withSuccessHandler(function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); st.className="ustatus ok"; st.textContent="✅ "+((r.result)||"完了しました")+"（画面を更新すると最新に）"; enableUriageBtns(); }' +
+'      if(s==="done"){ clearInterval(timer); st.className="ustatus ok"; st.textContent="✅ "+((r.result)||"完了しました"); enableUriageBtns();' +
+'        setTimeout(function(){ try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } else { location.reload(); } }catch(e3){ location.reload(); } }, 1000); }' +
 '      else if(s==="error"||s==="failed"){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); enableUriageBtns(); }' +
 '      else if(tries>=60){ clearInterval(timer); st.className="ustatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; enableUriageBtns(); }' +
 '    }).withFailureHandler(function(e){}).uiStatus(id);' +
