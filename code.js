@@ -1315,11 +1315,11 @@ var URIAGECSS_ =
 '    box-shadow:0 4px 14px rgba(245,158,11,.4); }' +
 '  .ubtn:active { transform:translateY(1px); }' +
 '  .ubtn:disabled { opacity:.55; }' +
-'  .ubtn.uall { background:#16a34a; box-shadow:0 4px 14px rgba(22,163,74,.4); }' +
-'  .uallsub { display:block; font-size:.6em; font-weight:600; opacity:.92; margin-top:6px; line-height:1.4; }' +
-'  .uperbtn { width:100%; text-align:center; font-size:1.15rem; font-weight:800; color:var(--ink);' +
-'    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px;' +
-'    cursor:pointer; margin-bottom:14px; box-shadow:0 4px 12px rgba(0,0,0,.06); }' +
+'  .ubtn.uall { background:#16a34a; box-shadow:0 4px 14px rgba(22,163,74,.4); font-size:1.55rem; }' +
+'  .uallsub { display:block; font-size:.55em; font-weight:600; opacity:.92; margin-top:8px; line-height:1.4; }' +
+'  .uperbtn { width:100%; text-align:center; font-size:1.15rem; font-weight:800; color:#fff;' +
+'    background:#2563eb; border:0; border-radius:14px; padding:18px;' +
+'    cursor:pointer; margin-bottom:14px; box-shadow:0 4px 14px rgba(37,99,235,.4); }' +
 '  .uperbtn:active { transform:translateY(1px); }' +
 '  .uperpanel { background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:4px 14px; margin:-8px 0 14px; }' +
