@@ -14,10 +14,10 @@
   /* 名前選択（スタッフURLで初回のみ） */
   .pkwrap{ max-width:520px; margin:0 auto; padding:34px 18px; color:#fff;
     font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; text-align:center; }
-  .pktitle{ font-size:20px; font-weight:800; margin-bottom:22px; line-height:1.5; }
+  .pktitle{ font-size:30px; font-weight:800; margin-bottom:22px; line-height:1.5; }
   .pkgrid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .pk{ background:#fff; color:#155e75; border:0; border-radius:14px; padding:20px 10px;
-    font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.15); }
+  .pk{ background:#fff; color:#155e75; border:0; border-radius:14px; padding:22px 10px;
+    font-size:24px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.15); }
   .pk:active{ transform:scale(.97); }
   .pkbtns{ display:flex; gap:12px; justify-content:center; margin-top:6px; }
   .pkyes,.pkno{ border:0; border-radius:12px; padding:15px 30px; font-size:16px; font-weight:800; cursor:pointer; }
@@ -349,8 +349,7 @@
       return '<button type="button" class="pk" data-who="' + esc(pid) + '">' + esc(labels[pid] || pid) + '</button>';
     }).join('');
     root.innerHTML = '<div class="pkwrap"><div class="pktitle">あなたは誰ですか？</div>' +
-      '<div class="pkgrid">' + btns + '</div>' +
-      '<div class="pknote">タップして選ぶと、この端末に記憶されます。<br>次回からは自動でメニューが開きます。</div></div>';
+      '<div class="pkgrid">' + btns + '</div></div>';
     var bs = root.querySelectorAll('.pk');
     for (var i = 0; i < bs.length; i++) {
       bs[i].addEventListener('click', function () {
