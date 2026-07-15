@@ -1716,7 +1716,7 @@ function akiTimeRows_(slots) {
     return '<div class="akirow">' +
       '<span class="akitime">' + esc_(sl.s) + '-' + esc_(sl.e) + '</span>' +
       '<span class="akidur">' + sl.dur + '分</span>' + badge +
-      '<span class="akisep">/</span><span class="akirooms">' + rooms + '</span>' +
+      '<span class="akirooms">' + rooms + '</span>' +
     '</div>';
   }).join('');
 }
@@ -1834,7 +1834,7 @@ var AKICSS_ =
 '  .akichip.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akiday{ background:var(--akicard); border:1px solid var(--akiline); border-radius:14px;' +
 '    padding:12px 14px; margin-bottom:12px; }' +
-'  .akidh{ font-weight:800; font-size:22px; border-bottom:1px solid var(--akiline);' +
+'  .akidh{ font-weight:800; font-size:25px; border-bottom:1px solid var(--akiline);' +
 '    padding-bottom:6px; margin-bottom:8px; }' +
 '  .akiclosed{ color:#c33; font-weight:700; font-size:16px; }' +
 '  .akisec.akihidden{ display:none; }' +
@@ -1842,16 +1842,16 @@ var AKICSS_ =
 '  .akirow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 0;' +
 '    border-bottom:1px solid var(--akiline); font-size:17px; }' +
 '  .akirow:last-child{ border-bottom:none; }' +
-'  .akitime{ font-weight:800; font-size:21px; min-width:128px; font-variant-numeric:tabular-nums; }' +
-'  .akidur{ color:var(--akisub); font-size:21px; font-weight:700; min-width:48px; }' +
+'  .akitime{ font-weight:800; font-size:24px; min-width:142px; font-variant-numeric:tabular-nums; }' +
+'  .akidur{ color:var(--akisub); font-size:24px; font-weight:700; min-width:56px; }' +
 '  .akisep{ color:var(--akisub); font-weight:800; }' +
 '  .akibadge{ display:inline-block; color:#fff; font-weight:700; font-size:19px;' +
 '    padding:4px 12px; border-radius:999px; white-space:nowrap; }' +
 '  .akishift{ color:var(--akisub); font-size:14.5px; font-weight:700; }' +
-'  .akirooms{ display:flex; flex-wrap:nowrap; gap:6px; flex:1 1 auto; min-width:0;' +
+'  .akirooms{ display:flex; flex-wrap:nowrap; gap:1px; flex:1 1 auto; min-width:0;' +
 '    overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }' +
-'  .akiroom{ display:inline-block; flex:0 0 auto; color:#fff; font-weight:700; font-size:14.5px;' +
-'    padding:3px 11px; border-radius:999px; white-space:nowrap; }' +
+'  .akiroom{ display:inline-block; flex:0 0 auto; color:#fff; font-weight:700; font-size:10px;' +
+'    padding:2px 5px; border-radius:999px; white-space:nowrap; }' +
 '  .akiroom.lg{ font-size:16px; padding:4px 13px; }' +
 '  .akinorooms{ color:#c33; font-size:14.5px; white-space:nowrap; }' +
 '  .akislot{ display:inline-block; background:var(--akibg); border:1px solid var(--akiline);' +
