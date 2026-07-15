@@ -29,13 +29,20 @@
 <div id="root"></div>
 <script>
 (function () {
-  // 起ち上げ直後（ホーム画面のアイコンから開いた時＝view指定なし）はアイコンだけ。
-  // ボタンを押した後の画面遷移（?view=... 付き）は元通り「よみこみ中…」の文字付き。
+  // 起ち上げ直後（ホーム画面のアイコンから開いた時＝view指定なし）は
+  // まずアイコンだけを表示 → 少し間を置いてから「TTスーパーズコAppを起動中」の文字を足す。
+  // ボタンを押した後の画面遷移（?view=... 付き）は元通り「よみこみ中…」の文字付きを最初から表示。
   var view = (new URLSearchParams(location.search)).get('view') || 'home';
-  var bootHtml = (view === 'home')
-    ? '<div class="boot"><img src="icons/icon-512.png" alt="" class="bootIcon"></div>'
-    : '<div class="boot"><div class="bootText">よみこみ中…</div><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
-  document.getElementById('root').innerHTML = bootHtml;
+  var root = document.getElementById('root');
+  if (view === 'home') {
+    root.innerHTML = '<div class="boot"><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
+    setTimeout(function () {
+      var b = root.querySelector('.boot');
+      if (b) b.insertAdjacentHTML('beforeend', '<div class="bootText">TTスーパーズコAppを起動中</div>');
+    }, 600);
+  } else {
+    root.innerHTML = '<div class="boot"><div class="bootText">よみこみ中…</div><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
+  }
 })();
 </script>
 
