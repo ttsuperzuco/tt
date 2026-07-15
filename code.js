@@ -1789,15 +1789,15 @@ function renderAkijikanPage_(d, base, staff, dev) {
   '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
     '　生成: ' + esc_(d.generated_at || '—') + '</div>' +
   '<div class="akidatebar">' +
-    '<input type="date" class="akidate" id="akiFrom" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
-    '<span class="akitilde">〜</span>' +
-    '<input type="date" class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+    '<div class="akidaterow">' +
+      '<input type="date" class="akidate" id="akiFrom" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+      '<span class="akitilde">〜</span>' +
+      '<input type="date" class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+    '</div>' +
     '<div class="akipresets">' +
       '<button type="button" class="akipreset" data-preset="today">今日</button>' +
       '<button type="button" class="akipreset" data-preset="tomorrow">明日</button>' +
-      '<button type="button" class="akipreset" data-preset="week">今週</button>' +
-      '<button type="button" class="akipreset" data-preset="nextweek">来週</button>' +
-      '<button type="button" class="akipreset on" data-preset="2weeks">2週間</button>' +
+      '<button type="button" class="akipreset on" data-preset="thisnext">今・来週</button>' +
       '<button type="button" class="akipreset" data-preset="month">1か月</button>' +
       '<button type="button" class="akipreset" data-preset="all">全期間</button>' +
     '</div>' +
@@ -1834,6 +1834,7 @@ var AKISCRIPT_ =
 'function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }' +
 'function addDays(iso0,n){ var d=new Date(iso0+"T00:00:00"); d.setDate(d.getDate()+n); return iso(d); }' +
 'function clamp(v){ if(minD&&v<minD)return minD; if(maxD&&v>maxD)return maxD; return v; }' +
+'function endOfThisWeek(iso0){ var d=new Date(iso0+"T00:00:00"); var wd=(d.getDay()+6)%7; return addDays(iso0,6-wd); }' +
 'function applyFilter(){' +
 '  var f=fromEl.value||minD, t=toEl.value||maxD, shown=0;' +
 '  days.forEach(function(el){' +
@@ -1856,13 +1857,11 @@ var AKISCRIPT_ =
 '    var today=minD;' +
 '    if(kind==="today") setRange(today, today);' +
 '    else if(kind==="tomorrow") setRange(addDays(today,1), addDays(today,1));' +
-'    else if(kind==="week") setRange(today, addDays(today,6));' +
-'    else if(kind==="nextweek") setRange(addDays(today,7), addDays(today,13));' +
-'    else if(kind==="2weeks") setRange(today, addDays(today,13));' +
+'    else if(kind==="thisnext") setRange(today, addDays(endOfThisWeek(today),7));' +
 '    else if(kind==="month") setRange(today, addDays(today,29));' +
 '    else if(kind==="all") setRange(minD, maxD);' +
 '  }); });' +
-'  setRange(minD, addDays(minD,13));' +   // 初期表示＝2週間（PC版GUIの既定と同じ）
+'  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今週＋来週（2026-07-16ユーザー指定）
 '}' +
 '})();</scr' + 'ipt>';
 
@@ -1878,12 +1877,13 @@ var AKICSS_ =
 '  .akigen{ color:var(--akisub); font-size:14px; font-weight:700; }' +
 '  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
 '  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
-'  .akidatebar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }' +
+'  .akidatebar{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }' +
+'  .akidaterow{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; width:100%; }' +
 '  .akidate{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akiink);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:9px 10px; color-scheme:dark; }' +
+'    padding:9px 10px; color-scheme:dark; flex:1 1 0; min-width:0; }' +
 '  @media (prefers-color-scheme:light){ .akidate{ color-scheme:light; } }' +
-'  .akitilde{ color:var(--akisub); font-weight:800; }' +
+'  .akitilde{ color:var(--akisub); font-weight:800; flex:0 0 auto; }' +
 '  .akipresets{ display:flex; gap:6px; flex-wrap:wrap; width:100%; }' +
 '  .akipreset{ font-family:inherit; font-size:13.5px; font-weight:700; color:var(--akisub);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
