@@ -76,8 +76,8 @@
   }
 })();
 </script>
-<script src="detect_core.js?v=20260716a"></script>
-<script src="code.js?v=20260716a"></script>
+<script src="detect_core.js?v=20260716b"></script>
+<script src="code.js?v=20260716b"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -304,6 +304,19 @@
     document.body.appendChild(s);
   }
 
+  function showAkijikan() {
+    window.__ttAkijikan = function (payload) {
+      try {
+        if (!payload || payload.error) { mount(renderAkijikanError_((payload && payload.error) || '不明', base, staff, dev)); return; }
+        mount(renderAkijikanPage_(payload, base, staff, dev));
+      } catch (e) { fail('描画エラー：' + e); }
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=akijikan&callback=__ttAkijikan&cb=' + Date.now();
+    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
+    document.body.appendChild(s);
+  }
+
   // ホーム：権限(perms)＋選んだ名前(who)で出し分け（renderHomePage_は code.js＝GASと同一）。
   function showHome(perms) {
     mount(renderHomePage_({ perms: perms || (typeof defaultPerms_==='function' ? defaultPerms_() : null) },
@@ -371,6 +384,7 @@
     if (v === 'lt') showLt();
     else if (v === 'uriage') showUriage();
     else if (v === 'unanswered') showUnanswered();
+    else if (v === 'akijikan') showAkijikan();
     else if (v === 'conflict') showConflict();
     else showHome(perms);
   }
