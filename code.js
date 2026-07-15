@@ -1619,10 +1619,10 @@ var MOVESCRIPT_ =
 '    ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#2C7A99;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
 '    document.body.appendChild(ov); }' +
 '  var t=(mtime||"").split("-")[0];' +
-'  ov.innerHTML="<div style=\\"font-size:46px;margin-bottom:18px;\\">⏳</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.7;margin-bottom:10px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
-'    "<div style=\\"color:#fff;font-size:20px;font-weight:800;line-height:1.6;margin-bottom:16px;\\">「"+fromRoom+"」から「"+room+"」へ移動中です</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.9;max-width:360px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
+'  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
+'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">「"+fromRoom+"」から<br>「"+room+"」へ移動中です</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
 '  return ov; }' +
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
 // ★完了まで全画面のまま待ち、本当に完了したら全画面「✓完了」を0.5秒→被りを消して一覧へ戻す。
@@ -1630,8 +1630,8 @@ var MOVESCRIPT_ =
 'function showDoneOverlay_(room){ var ov=document.getElementById("mvWaitOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
 '  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
-'  ov.innerHTML="<div style=\\"font-size:64px;margin-bottom:12px;\\">✓</div>"+' +
-'    "<div style=\\"color:#fff;font-size:22px;font-weight:800;line-height:1.5;\\">「"+room+"」へ移動が完了しました</div>"; }' +
+'  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div>"+' +
+'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;\\">「"+room+"」へ<br>移動が完了しました</div>"; }' +
 'function waitDoneThenFinish_(id,evid,room){ var tries=0;' +
 '  function chk(){ tries++;' +
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
