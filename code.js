@@ -1635,7 +1635,9 @@ var MOVESCRIPT_ =
 'function waitDoneThenFinish_(id,evid,room){ var tries=0;' +
 '  function chk(){ tries++;' +
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
-'      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showDoneOverlay_(room); setTimeout(doneRefreshFast_,500); }' +
+'      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showDoneOverlay_(room);' +
+'        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_();' +
+'        setTimeout(function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); },1000); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
 '      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。", false); }' +
 '      else { setTimeout(chk,250); } });' +

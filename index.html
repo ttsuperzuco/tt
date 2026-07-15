@@ -62,8 +62,8 @@
   }
 })();
 </script>
-<script src="detect_core.js?v=20260715i"></script>
-<script src="code.js?v=20260715i"></script>
+<script src="detect_core.js?v=20260715j"></script>
+<script src="code.js?v=20260715j"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -159,7 +159,7 @@
     var res = detect(evs, nail, payload.date_from);
     mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff, dev));
     try { window.scrollTo(0, 0); } catch (e) {}   // 再描画後は一番上へ（部屋移動の完了更新でも同じ）
-    try { var ov = document.getElementById('mvWaitOverlay'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); } catch (e) {}  // 部屋移動の全画面待機オーバーレイを消す
+    try { if (!window.__keepMvOverlay) { var ov = document.getElementById('mvWaitOverlay'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); } } catch (e) {}  // 全画面オーバーレイを消す（完了画面を"ぴったり1秒"見せる間は__keepMvOverlayで残す）
   }
   function renderConflictPayload_(payload) {
     try {
