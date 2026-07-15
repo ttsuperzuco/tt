@@ -1,6 +1,6 @@
 {
-  "name": "スーパーズコ",
-  "short_name": "スーパーズコ",
+  "name": "TTズコ",
+  "short_name": "TTズコ",
   "start_url": "/tt/?staff=1",
   "scope": "/tt/",
   "display": "standalone",
