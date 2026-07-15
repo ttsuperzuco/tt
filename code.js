@@ -1743,17 +1743,18 @@ function akiRoomRows_(roomsFree) {
   }).join('');
 }
 
-// 1日ぶんのカード。
+// 1日ぶんのカード。data-date（ISO日付）を持たせて日にち検索の絞り込みに使う。
 function akiDayCard_(day) {
+  var dattr = ' data-date="' + esc_(day.date || '') + '"';
   if (day.kind === 'closed') {
-    return '<div class="akiday"><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    return '<div class="akiday"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
       '<div class="akiclosed">' + esc_(day.label) + '</div></div>';
   }
   if (day.empty) {
-    return '<div class="akiday"><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    return '<div class="akiday"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
       '<div class="akinone">（出勤スタッフなし）</div></div>';
   }
-  return '<div class="akiday">' +
+  return '<div class="akiday"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
     '<div class="akisec akisec-time" data-sec="time">' +
       '<div class="akisl">各時間帯の空き</div>' + akiTimeRows_(day.time_slots) +
@@ -1787,17 +1788,34 @@ function renderAkijikanPage_(d, base, staff, dev) {
   '<h1>🕑 空き時間検索</h1>' +
   '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
     '　生成: ' + esc_(d.generated_at || '—') + '</div>' +
+  '<div class="akidatebar">' +
+    '<input type="date" class="akidate" id="akiFrom" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+    '<span class="akitilde">〜</span>' +
+    '<input type="date" class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+    '<div class="akipresets">' +
+      '<button type="button" class="akipreset" data-preset="today">今日</button>' +
+      '<button type="button" class="akipreset" data-preset="tomorrow">明日</button>' +
+      '<button type="button" class="akipreset" data-preset="week">今週</button>' +
+      '<button type="button" class="akipreset" data-preset="nextweek">来週</button>' +
+      '<button type="button" class="akipreset on" data-preset="2weeks">2週間</button>' +
+      '<button type="button" class="akipreset" data-preset="month">1か月</button>' +
+      '<button type="button" class="akipreset" data-preset="all">全期間</button>' +
+    '</div>' +
+  '</div>' +
   '<div class="akichips">' +
     '<button type="button" class="akichip on" data-sec="time">各時間帯別</button>' +
     '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
     '<button type="button" class="akichip" data-sec="rooms">施術室別</button>' +
   '</div>' +
   '<div id="akidays">' + cards + '</div>' +
+  '<div class="akinone" id="akiDateEmpty" hidden>この期間には表示できるデータがありません。期間を変えてください。</div>' +
 '</div>' +
 AKISCRIPT_;
 }
 
-// 表示チップ（各時間帯別／スタッフ別／施術室別）のON/OFFで、全日カードのセクションを一括切替。
+// 表示チップ（各時間帯別／スタッフ別／施術室別）のON/OFFで全日カードのセクションを一括切替。
+// ＋日にち検索：<input type=date>2つ＋プリセットで、90日ぶん既に取得済みのデータを
+//   その場で絞り込むだけ（PCに問い合わせ直さない＝一瞬で切り替わる。[[project_superzuko_app]]方針）。
 var AKISCRIPT_ =
 '<script>(function(){' +
 'var chips=[].slice.call(document.querySelectorAll(".akichip"));' +
@@ -1808,6 +1826,44 @@ var AKISCRIPT_ =
 '    el.classList.toggle("akihidden", !on);' +
 '  });' +
 '}); });' +
+'' +
+'var fromEl=document.getElementById("akiFrom"), toEl=document.getElementById("akiTo");' +
+'var minD=fromEl?fromEl.min:"", maxD=fromEl?fromEl.max:"";' +
+'var days=[].slice.call(document.querySelectorAll("#akidays .akiday"));' +
+'var emptyMsg=document.getElementById("akiDateEmpty");' +
+'function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }' +
+'function addDays(iso0,n){ var d=new Date(iso0+"T00:00:00"); d.setDate(d.getDate()+n); return iso(d); }' +
+'function clamp(v){ if(minD&&v<minD)return minD; if(maxD&&v>maxD)return maxD; return v; }' +
+'function applyFilter(){' +
+'  var f=fromEl.value||minD, t=toEl.value||maxD, shown=0;' +
+'  days.forEach(function(el){' +
+'    var dt=el.getAttribute("data-date")||"";' +
+'    var vis = dt && dt>=f && dt<=t;' +
+'    el.classList.toggle("akidatehide", !vis);' +
+'    if(vis) shown++;' +
+'  });' +
+'  if(emptyMsg) emptyMsg.hidden = shown>0;' +
+'}' +
+'function setRange(f,t){ fromEl.value=clamp(f); toEl.value=clamp(t); applyFilter(); }' +
+'if(fromEl&&toEl){' +
+'  fromEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
+'  toEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
+'  var presets=[].slice.call(document.querySelectorAll(".akipreset"));' +
+'  function clearPresetSel(){ presets.forEach(function(b){ b.classList.remove("on"); }); }' +
+'  presets.forEach(function(b){ b.addEventListener("click",function(){' +
+'    presets.forEach(function(x){ x.classList.toggle("on", x===b); });' +
+'    var kind=b.getAttribute("data-preset");' +
+'    var today=minD;' +
+'    if(kind==="today") setRange(today, today);' +
+'    else if(kind==="tomorrow") setRange(addDays(today,1), addDays(today,1));' +
+'    else if(kind==="week") setRange(today, addDays(today,6));' +
+'    else if(kind==="nextweek") setRange(addDays(today,7), addDays(today,13));' +
+'    else if(kind==="2weeks") setRange(today, addDays(today,13));' +
+'    else if(kind==="month") setRange(today, addDays(today,29));' +
+'    else if(kind==="all") setRange(minD, maxD);' +
+'  }); });' +
+'  setRange(minD, addDays(minD,13));' +   // 初期表示＝2週間（PC版GUIの既定と同じ）
+'}' +
 '})();</scr' + 'ipt>';
 
 var AKICSS_ =
@@ -1822,6 +1878,18 @@ var AKICSS_ =
 '  .akigen{ color:var(--akisub); font-size:14px; font-weight:700; }' +
 '  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
 '  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
+'  .akidatebar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }' +
+'  .akidate{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akiink);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:9px 10px; color-scheme:dark; }' +
+'  @media (prefers-color-scheme:light){ .akidate{ color-scheme:light; } }' +
+'  .akitilde{ color:var(--akisub); font-weight:800; }' +
+'  .akipresets{ display:flex; gap:6px; flex-wrap:wrap; width:100%; }' +
+'  .akipreset{ font-family:inherit; font-size:13.5px; font-weight:700; color:var(--akisub);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
+'    padding:7px 12px; cursor:pointer; }' +
+'  .akipreset.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akiday.akidatehide{ display:none; }' +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
 '  .akichip{ font-family:inherit; font-size:17px; font-weight:700; color:var(--akisub);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
