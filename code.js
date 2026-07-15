@@ -1614,14 +1614,16 @@ var MOVESCRIPT_ =
 '  location.reload(); }' +
 'function pollMove(st,id,room,fromRoom,evid){' +
 '  var tries=0;' +
-'  var timer=setInterval(function(){ tries++;' +
+'  function chk(){ tries++;' +
 '    statusCheck_(id,function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); st.className="mvstatus ok"; showMoveDone_(st,(r.result)||(room+"へ移動しました"),evid); }' +
-'      else if(s==="error"||s==="failed"){ clearInterval(timer); mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
-'      else if(tries>=120){ clearInterval(timer); mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
+'      if(s==="done"){ st.className="mvstatus ok"; showMoveDone_(st,(r.result)||(room+"へ移動しました"),evid); }' +
+'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
+'      else if(tries>=60){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
+'      else { setTimeout(chk,400); }' +
 '    });' +
-'  },1000);' +
+'  }' +
+'  setTimeout(chk,400);' +
 '}' +
 // 移動完了後：★「解消しました／更新しています」の別画面は出さず（2026-07-12 ユーザー要望）、
 //   移動中の待機案内（movingHtml_）を出したまま、移動したevent_idがevents.jsonから消えるのを
