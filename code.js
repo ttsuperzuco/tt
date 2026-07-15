@@ -1791,7 +1791,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
   '</div>' +
   '<h1>🕑 空き時間検索</h1>' +
   '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
-    '　※TimeTreeは読むだけ　生成: ' + esc_(d.generated_at || '—') + '</div>' +
+    '　生成: ' + esc_(d.generated_at || '—') + '</div>' +
   '<div class="akichips">' +
     '<button type="button" class="akichip on" data-sec="time">各時間帯別</button>' +
     '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
@@ -1834,7 +1834,7 @@ var AKICSS_ =
 '  .akichip.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akiday{ background:var(--akicard); border:1px solid var(--akiline); border-radius:14px;' +
 '    padding:12px 14px; margin-bottom:12px; }' +
-'  .akidh{ font-weight:800; font-size:19px; border-bottom:1px solid var(--akiline);' +
+'  .akidh{ font-weight:800; font-size:22px; border-bottom:1px solid var(--akiline);' +
 '    padding-bottom:6px; margin-bottom:8px; }' +
 '  .akiclosed{ color:#c33; font-weight:700; font-size:16px; }' +
 '  .akisec.akihidden{ display:none; }' +
@@ -1842,17 +1842,18 @@ var AKICSS_ =
 '  .akirow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 0;' +
 '    border-bottom:1px solid var(--akiline); font-size:17px; }' +
 '  .akirow:last-child{ border-bottom:none; }' +
-'  .akitime{ font-weight:800; font-size:18px; min-width:112px; font-variant-numeric:tabular-nums; }' +
-'  .akidur{ color:var(--akisub); font-size:14.5px; font-weight:700; min-width:40px; }' +
+'  .akitime{ font-weight:800; font-size:21px; min-width:128px; font-variant-numeric:tabular-nums; }' +
+'  .akidur{ color:var(--akisub); font-size:21px; font-weight:700; min-width:48px; }' +
 '  .akisep{ color:var(--akisub); font-weight:800; }' +
-'  .akibadge{ display:inline-block; color:#fff; font-weight:700; font-size:16px;' +
+'  .akibadge{ display:inline-block; color:#fff; font-weight:700; font-size:19px;' +
 '    padding:4px 12px; border-radius:999px; white-space:nowrap; }' +
 '  .akishift{ color:var(--akisub); font-size:14.5px; font-weight:700; }' +
-'  .akirooms{ display:flex; flex-wrap:wrap; gap:5px; }' +
-'  .akiroom{ display:inline-block; color:#fff; font-weight:700; font-size:14.5px;' +
+'  .akirooms{ display:flex; flex-wrap:nowrap; gap:6px; flex:1 1 auto; min-width:0;' +
+'    overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }' +
+'  .akiroom{ display:inline-block; flex:0 0 auto; color:#fff; font-weight:700; font-size:14.5px;' +
 '    padding:3px 11px; border-radius:999px; white-space:nowrap; }' +
 '  .akiroom.lg{ font-size:16px; padding:4px 13px; }' +
-'  .akinorooms{ color:#c33; font-size:14.5px; }' +
+'  .akinorooms{ color:#c33; font-size:14.5px; white-space:nowrap; }' +
 '  .akislot{ display:inline-block; background:var(--akibg); border:1px solid var(--akiline);' +
 '    border-radius:8px; padding:3px 10px; font-size:15px; font-variant-numeric:tabular-nums; }' +
 '  .akislot b{ font-weight:700; color:var(--akisub); margin-left:2px; }' +
