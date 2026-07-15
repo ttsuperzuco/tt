@@ -58,7 +58,7 @@ function doPost(e) {
 function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.action) return handleAction_(p);   // 編集依頼の受付/取り出し/結果＋ログ/権限API（命令置き場API）
-  var view = p.view || 'home';   // home（メニュー）／conflict（施術室被り）／lt（L⇔T予約照合・準備中）
+  var view = p.view || 'home';   // home（メニュー）／conflict（施術室被り）／lt（L⇔T予約照合）／akijikan（空き時間検索）
   var base = getBaseUrl_();
   // スタッフ版（?staff=1）＝名前を選ぶ・権限で出し分け。未指定＝社長(幹部)。?dev=1＝開発(全表示)。
   var staff = (p.staff === '1' || p.staff === 'true');
@@ -105,6 +105,9 @@ function doGet(e) {
   } else if (view === 'unanswered') {
     title = 'LINE未回答＆返信待ち';
     html = renderUnanswered_(base, staff, dev);
+  } else if (view === 'akijikan') {
+    title = '空き時間検索';
+    html = renderAkijikan_(base, staff, dev);
   } else {
     title = staff ? 'TTスーパーズコApp（スタッフ版）' : (dev ? 'TTスーパーズコApp（開発版）' : 'TTスーパーズコApp');
     html = renderHome_(base, staff, dev, who);
@@ -198,14 +201,53 @@ function _unansweredJsonp_(p) {
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
+// akijikan.json のJSONP配信（読み取り専用・鍵不要）。事務所PCが export_akijikan_super.py で書き出す。
+function _akijikanJsonp_(p) {
+  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
+  var payload;
+  try {
+    payload = JSON.parse(getAkijikanFile_().getBlob().getDataAsString('UTF-8'));
+  } catch (e) {
+    payload = { error: String(e) };
+  }
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
 // タイル(ボタン)表示ON/OFF設定のJSONP配信（読み取り専用・鍵不要）。
 // 事務所PC「自動監視システム」の tile_settings.py が書き出す tile_settings.json を渡すだけ。
 function _tileSettingsJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
-  var payload = { tiles: getTileSettings_(), perms: getPerms_(), people: PEOPLE_,
-                  labels: PERSON_LABEL_, resets: getResets_() };
+  // ★高速化：以前は tiles/perms/resets をそれぞれ getTileSettings_/getPerms_/getResets_ で
+  //   取得しており、同じ tile_settings.json を Drive から3回読んでいた（実測 約2.7秒）。
+  //   ここで1回だけ読み、純関数(_*FromCfg_)で3種を導く（＝被り画面の初期表示が速くなる）。
+  var d = {};
+  try { d = JSON.parse(getTileSettingsFile_().getBlob().getDataAsString('UTF-8')) || {}; } catch (ignore) { d = {}; }
+  var payload = { tiles: _tilesFromCfg_(d), perms: _permsFromCfg_(d), people: PEOPLE_,
+                  labels: PERSON_LABEL_, resets: _resetsFromCfg_(d) };
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+// 上の1回読み込み結果(d=tile_settings.jsonをパースした物)から各値を導く純関数（Drive不使用）。
+function _tilesFromCfg_(d) {
+  return (d && d.tiles && typeof d.tiles === 'object') ? d.tiles : DEFAULT_TILE_SETTINGS_;
+}
+function _permsFromCfg_(d) {
+  var perms = defaultPerms_();
+  var saved = d && d.perms;
+  if (saved && typeof saved === 'object') {
+    for (var i = 0; i < PEOPLE_.length; i++) {
+      var pid = PEOPLE_[i];
+      if (saved[pid] && typeof saved[pid] === 'object') {
+        for (var t in perms[pid]) { if (t in saved[pid]) perms[pid][t] = !!saved[pid][t]; }
+      }
+    }
+  }
+  return perms;
+}
+function _resetsFromCfg_(d) {
+  var r = d && d.resets;
+  return (r && typeof r === 'object') ? r : {};
 }
 
 // ========== 部屋移動の依頼の安全弁（②静的アプリ経由でEDIT_KEYが公開されるため必須） ==========
@@ -268,6 +310,7 @@ function handleAction_(p) {
   if (p.action === 'lt') return _ltJsonp_(p);
   if (p.action === 'uriage') return _uriageJsonp_(p);
   if (p.action === 'unanswered') return _unansweredJsonp_(p);
+  if (p.action === 'akijikan') return _akijikanJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
   if (p.action === 'hit') {   // アクセスログ（②静的アプリが画面表示ごとに叩く・鍵不要・軽量）
     try {
@@ -488,6 +531,28 @@ function getUnansweredFile_() {
   return newest;
 }
 
+/** akijikan.json のファイルを取得（空き時間検索の表示。
+ *  事務所PCが export_akijikan_super.py で書き出す）。 */
+var AKIJIKAN_FILENAME = 'akijikan.json';
+function getAkijikanFile_() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('AKIJIKAN_FILE_ID');
+  if (id) {
+    try { return DriveApp.getFileById(id); } catch (ignore) { /* IDが古い→探し直す */ }
+  }
+  var it = DriveApp.getFilesByName(AKIJIKAN_FILENAME);
+  var newest = null;
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
+  }
+  if (!newest) {
+    throw new Error('akijikan.json がドライブに見つかりません。事務所PCで export_akijikan_super.py を実行し、Googleドライブの同期を待ってください。');
+  }
+  props.setProperty('AKIJIKAN_FILE_ID', newest.getId());
+  return newest;
+}
+
 /** tile_settings.json のファイルを取得（ホーム画面ボタンの表示ON/OFF設定。
  *  事務所PC「自動監視システム」の tile_settings.py が書き出す）。 */
 var TILE_SETTINGS_FILENAME = 'tile_settings.json';
@@ -514,7 +579,8 @@ var DEFAULT_TILE_SETTINGS_ = {
   conflict:   { exec: true, staff: true },
   lt:         { exec: true, staff: true },
   uriage:     { exec: true, staff: false },
-  unanswered: { exec: true, staff: true }
+  unanswered: { exec: true, staff: true },
+  akijikan:   { exec: false, staff: false }   // ★初期は開発URL(?dev=1)だけで見える（2026-07-16ユーザー指定）
 };
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
@@ -540,7 +606,7 @@ var PERSON_LABEL_ = {
 function defaultPerms_() {
   var perms = {};
   for (var i = 0; i < PEOPLE_.length; i++) {
-    perms[PEOPLE_[i]] = { conflict: true, lt: false, uriage: false, unanswered: false };
+    perms[PEOPLE_[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
   }
   return perms;
 }
@@ -579,8 +645,8 @@ function getResets_() {
 function personPerms_(perms, staff, dev, who) {
   if (dev) return null;   // null = すべて許可
   var pid = staff ? String(who || '') : 'kanbu';
-  if (PEOPLE_.indexOf(pid) < 0) return { conflict: true, lt: false, uriage: false, unanswered: false };
-  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false };
+  if (PEOPLE_.indexOf(pid) < 0) return { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
+  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
 }
 // そのviewを見る権限があるか（home/notice は常に可）。allow=null(dev)は常に可。
 function viewAllowed_(view, allow) {
@@ -888,7 +954,9 @@ var TILE_DEFS_ = [
   { id: 'uriage', cls: 'uriage', view: 'uriage',
     icon: '<span class="ticon">💰</span>', label: '売上TimeTree転記' },
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
-    icon: '<span class="ticon">💬</span>', label: 'LINE未回答＆返信待ち' }
+    icon: '<span class="ticon">💬</span>', label: 'LINE未回答＆返信待ち' },
+  { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
+    icon: '<span class="ticon">🕑</span>', label: '空き時間検索' }
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を読んで renderHomePage_ に渡すだけ。 */
@@ -1550,6 +1618,197 @@ var UNACSS_ =
 '  .unamsg.shop{ align-self:flex-end; background:var(--custbg); border:1px solid var(--cust); }' +
 '  .unats{ display:block; font-size:10px; color:var(--sub); opacity:.85; margin-top:5px; }' +
 '  .unamnote{ color:var(--sub); font-size:12.5px; padding:8px; }';
+
+/** 空き時間検索（スタッフの手空きから予約可能な時間を探す）。
+ *  事務所PCが export_akijikan_super.py で書き出した akijikan.json を読むだけ（GASは計算しない＝
+ *  判定ロジックの実体はPC版 空き時間検索\available_slots.py の build_report() 1つ）。 */
+function renderAkijikan_(base, staff, dev) {
+  try {
+    var d = JSON.parse(getAkijikanFile_().getBlob().getDataAsString('UTF-8'));
+    return renderAkijikanPage_(d, base, staff, dev);
+  } catch (err) {
+    return renderAkijikanError_(err, base, staff, dev);
+  }
+}
+
+function renderAkijikanError_(err, base, staff, dev) {
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🕑</span><span class="bname">空き時間検索</span></div>' +
+    '<div class="soon">' +
+      '<div class="soonic">📄</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">データ未生成</div>' +
+      '<div class="soondesc">' + esc_(err && err.message ? err.message : err) + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function akiStaffColor_(emoji) {
+  var p = { '🫒': '#4b8b3b', '🍊': '#e08a1e', '🍅': '#d1443c', '🥭': '#c9a227' };
+  return p[emoji] || '#666';
+}
+
+// 1件ぶんの空き枠チップ（開始-終了(長さ分)）。
+function akiSlotChip_(sl) {
+  return '<span class="akislot">' + esc_(sl.s) + '-' + esc_(sl.e) + '<b>(' + sl.dur + '分)</b></span>';
+}
+
+// 「各時間帯別」＝1枠1行（PC版available_slots.pyのconsole/HTML表示と同じ形式・並び順）。
+function akiTimeRows_(slots) {
+  if (!slots || !slots.length) return '<div class="akinone">空きなし</div>';
+  return slots.map(function (sl) {
+    var badge = '<span class="akibadge" style="background:' + akiStaffColor_(sl.emoji) + '">' +
+      esc_(sl.emoji) + ' ' + esc_(sl.name) + '</span>';
+    var rooms = (sl.rooms || []).length
+      ? sl.rooms.map(function (r) {
+          return '<span class="akiroom" style="background:' + roomColor_(r) + '">' + esc_(r) + '</span>';
+        }).join('')
+      : '<span class="akinorooms">空き部屋なし</span>';
+    return '<div class="akirow">' +
+      '<span class="akitime">' + esc_(sl.s) + '-' + esc_(sl.e) + '</span>' +
+      '<span class="akidur">' + sl.dur + '分</span>' + badge +
+      '<span class="akisep">/</span><span class="akirooms">' + rooms + '</span>' +
+    '</div>';
+  }).join('');
+}
+
+// 「スタッフ別」＝担当ごとに出勤時間＋空き枠チップ。
+function akiStaffRows_(staffList) {
+  if (!staffList || !staffList.length) return '<div class="akinone">出勤スタッフなし</div>';
+  return staffList.map(function (s) {
+    var badge = '<span class="akibadge" style="background:' + akiStaffColor_(s.emoji) + '">' +
+      esc_(s.emoji) + ' ' + esc_(s.name) + '</span>';
+    var chips = (s.slots || []).length
+      ? s.slots.map(akiSlotChip_).join('')
+      : '<span class="akinone">空きなし</span>';
+    return '<div class="akirow">' + badge +
+      '<span class="akishift">出勤' + esc_(s.shift) + esc_(s.note || '') + '</span>' + chips +
+    '</div>';
+  }).join('');
+}
+
+// 「施術室別」＝部屋ごとに空き枠チップ。
+function akiRoomRows_(roomsFree) {
+  if (!roomsFree || !roomsFree.length) return '<div class="akinone">データなし</div>';
+  return roomsFree.map(function (r) {
+    var badge = '<span class="akiroom lg" style="background:' + roomColor_(r.room) + '">' + esc_(r.room) + '</span>';
+    var chips = (r.slots || []).length
+      ? r.slots.map(akiSlotChip_).join('')
+      : '<span class="akinone">空きなし</span>';
+    return '<div class="akirow">' + badge + chips + '</div>';
+  }).join('');
+}
+
+// 1日ぶんのカード。
+function akiDayCard_(day) {
+  if (day.kind === 'closed') {
+    return '<div class="akiday"><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+      '<div class="akiclosed">' + esc_(day.label) + '</div></div>';
+  }
+  if (day.empty) {
+    return '<div class="akiday"><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+      '<div class="akinone">（出勤スタッフなし）</div></div>';
+  }
+  return '<div class="akiday">' +
+    '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    '<div class="akisec akisec-time" data-sec="time">' +
+      '<div class="akisl">各時間帯の空き</div>' + akiTimeRows_(day.time_slots) +
+    '</div>' +
+    '<div class="akisec akisec-staff akihidden" data-sec="staff">' +
+      '<div class="akisl">スタッフ別の空き</div>' + akiStaffRows_(day.staff) +
+    '</div>' +
+    '<div class="akisec akisec-rooms akihidden" data-sec="rooms">' +
+      '<div class="akisl">施術室別の空き</div>' + akiRoomRows_(day.rooms_free) +
+    '</div>' +
+  '</div>';
+}
+
+/** 空き時間検索ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの
+ *  両方から呼ばれる（他view同様「取得と描画を分離」の作法）。
+ *  表示は3つ（各時間帯別／スタッフ別／施術室別）をチップで独立にON/OFF（PC版GUIと同じ操作感・
+ *  既定は各時間帯別だけON）。データは全部JSONに入っているので、切替に読み直しは不要。 */
+function renderAkijikanPage_(d, base, staff, dev) {
+  var days = d.days || [];
+  var cards = days.length
+    ? days.map(akiDayCard_).join('\n')
+    : '<div class="akinone">データがありません</div>';
+
+  return '' +
+'<style>' + AKICSS_ + '</style>' +
+'<div class="akiwrap">' +
+  '<div class="akibar">' +
+    '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
+    '<span class="akigen">' + esc_(d.cond || '') + '</span>' +
+  '</div>' +
+  '<h1>🕑 空き時間検索</h1>' +
+  '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
+    '　※TimeTreeは読むだけ　生成: ' + esc_(d.generated_at || '—') + '</div>' +
+  '<div class="akichips">' +
+    '<button type="button" class="akichip on" data-sec="time">各時間帯別</button>' +
+    '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
+    '<button type="button" class="akichip" data-sec="rooms">施術室別</button>' +
+  '</div>' +
+  '<div id="akidays">' + cards + '</div>' +
+'</div>' +
+AKISCRIPT_;
+}
+
+// 表示チップ（各時間帯別／スタッフ別／施術室別）のON/OFFで、全日カードのセクションを一括切替。
+var AKISCRIPT_ =
+'<script>(function(){' +
+'var chips=[].slice.call(document.querySelectorAll(".akichip"));' +
+'chips.forEach(function(c){ c.addEventListener("click",function(){' +
+'  var sec=c.getAttribute("data-sec");' +
+'  var on=c.classList.toggle("on");' +
+'  [].slice.call(document.querySelectorAll(".akisec-"+sec)).forEach(function(el){' +
+'    el.classList.toggle("akihidden", !on);' +
+'  });' +
+'}); });' +
+'})();</scr' + 'ipt>';
+
+var AKICSS_ =
+'  :root{ --akibg:#16141e; --akicard:#211f2c; --akiink:#f1eef8; --akisub:#9a95a9; --akiline:#34313f;' +
+'    --akiprimary:#a79fff; }' +
+'  @media (prefers-color-scheme:light){ :root{ --akibg:#eef1f6; --akicard:#ffffff; --akiink:#1f2937;' +
+'    --akisub:#6b7280; --akiline:#d7dee8; --akiprimary:#2563eb; } }' +
+'  body{ background:var(--akibg); }' +
+'  .akiwrap{ max-width:760px; margin:0 auto; padding:14px 14px 40px; font-family:"Yu Gothic UI","Hiragino Sans",sans-serif; color:var(--akiink); }' +
+'  .akibar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }' +
+'  .akihome{ color:var(--akiprimary); text-decoration:none; font-weight:700; font-size:14px; }' +
+'  .akigen{ color:var(--akisub); font-size:12.5px; font-weight:700; }' +
+'  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
+'  .akisub{ color:var(--akisub); font-size:12px; margin-bottom:12px; }' +
+'  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
+'  .akichip{ font-family:inherit; font-size:13.5px; font-weight:700; color:var(--akisub);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:9px 14px; cursor:pointer; }' +
+'  .akichip.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akiday{ background:var(--akicard); border:1px solid var(--akiline); border-radius:14px;' +
+'    padding:12px 14px; margin-bottom:12px; }' +
+'  .akidh{ font-weight:800; font-size:15.5px; border-bottom:1px solid var(--akiline);' +
+'    padding-bottom:6px; margin-bottom:8px; }' +
+'  .akiclosed{ color:#c33; font-weight:700; font-size:13.5px; }' +
+'  .akisec.akihidden{ display:none; }' +
+'  .akisl{ font-size:12.5px; font-weight:800; color:var(--akiprimary); margin:8px 0 6px; }' +
+'  .akirow{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; padding:6px 0;' +
+'    border-bottom:1px solid var(--akiline); font-size:13px; }' +
+'  .akirow:last-child{ border-bottom:none; }' +
+'  .akitime{ font-weight:800; min-width:96px; font-variant-numeric:tabular-nums; }' +
+'  .akidur{ color:var(--akisub); font-size:11.5px; font-weight:700; min-width:34px; }' +
+'  .akisep{ color:var(--akisub); font-weight:800; }' +
+'  .akibadge{ display:inline-block; color:#fff; font-weight:700; font-size:12px;' +
+'    padding:3px 10px; border-radius:999px; white-space:nowrap; }' +
+'  .akishift{ color:var(--akisub); font-size:11.5px; font-weight:700; }' +
+'  .akirooms{ display:flex; flex-wrap:wrap; gap:4px; }' +
+'  .akiroom{ display:inline-block; color:#fff; font-weight:700; font-size:11.5px;' +
+'    padding:2px 9px; border-radius:999px; white-space:nowrap; }' +
+'  .akiroom.lg{ font-size:12.5px; padding:3px 11px; }' +
+'  .akinorooms{ color:#c33; font-size:11.5px; }' +
+'  .akislot{ display:inline-block; background:var(--akibg); border:1px solid var(--akiline);' +
+'    border-radius:8px; padding:2px 8px; font-size:12px; font-variant-numeric:tabular-nums; }' +
+'  .akislot b{ font-weight:700; color:var(--akisub); margin-left:2px; }' +
+'  .akinone{ color:#c33; font-size:12.5px; padding:4px 0; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
 // iOSは https のユニバーサルリンクのまま（Safariで開けばアプリに渡る）。
