@@ -2179,11 +2179,15 @@ var HOMECSS_ =
 '    box-shadow:0 6px 18px rgba(0,0,0,.07); position:relative; overflow:hidden; min-height:118px;' +
 '    transition:transform .12s ease, box-shadow .12s ease; }' +
 '  .tile::before { content:""; position:absolute; left:0; top:0; right:0; width:auto; height:6px; }' +
+// ★タイルの色は全部見分けが付くように離した色相を使う（共通ルール・新タイル追加時も守る）：
+//   rose #e11d48(350°)／indigo #6366f1(239°)／amber #f59e0b(38°)／emerald #0d9b6c(160°)／
+//   sky #0ea5e9(199°)。新しく足す時は上の5色と色相が近い色（±30°以内）を避けて選ぶこと
+//   （2026-07-16：akijikanの紫がindigoの紫と被って見えると指摘があり、skyに変更した実例）。
 '  .tile.conflict::before { background:#e11d48; }' +
 '  .tile.lt::before { background:#6366f1; }' +
 '  .tile.uriage::before { background:#f59e0b; }' +
 '  .tile.unanswered::before { background:#0d9b6c; }' +
-'  .tile.akijikan::before { background:#8b5cf6; }' +
+'  .tile.akijikan::before { background:#0ea5e9; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:52px; height:52px; border-radius:14px; font-size:28px;' +
@@ -2192,7 +2196,7 @@ var HOMECSS_ =
 '  .tile.lt .ticon { background:rgba(148,163,184,.14); }' +
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
-'  .tile.akijikan .ticon { background:rgba(139,92,246,.14); }' +
+'  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
 '  .tname { font-size:.88rem; font-weight:800; white-space:normal; line-height:1.3;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
