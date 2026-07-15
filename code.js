@@ -1175,29 +1175,14 @@ function uriageBody_(d) {
   var today = d.today_str || '—';
   var cum = d.cumulative_str || '—';
   var monthLabel = d.month ? ('今月（' + d.month + '月）の売上') : '今月の売上';
-  var pl = d.plan || { missing_days: 0, mistake_days: 0, done_days: 0, days: [] };
-  var days = pl.days || [];
-  var missingDays = days.filter(function (x) { return x.status === 'missing'; });
-  var mistakeDays = days.filter(function (x) { return x.status === 'mistake'; });
-
-  // 1日ぶんの項目（当日額/累計）を「・」でつないで1行に。
-  function dayLi(x) { return '<li>' + esc_(x.label) + '：' + x.items.map(esc_).join('・') + '</li>'; }
-  var missList = missingDays.map(dayLi).join('');
-  var mistList = mistakeDays.map(dayLi).join('');
   var perRows = (d.per_day || []).map(function (x) {
     return '<tr><td>' + esc_(x.date) + '</td><td class="num">' + comma_(x.total) + '</td></tr>';
   }).join('');
-
-  var nMissing = pl.missing_days || 0;
-  var nMistake = pl.mistake_days || 0;
-  // ★2026-07-16：「未記入を記入」「記入ミスを修正」の2ボタンを1つに統合。
-  //   op='uriage_fix'は元々「新規記入＋上書き修正」を両方まとめて実行する（run_flowが両方処理する
-  //   ため）ので、ボタンを分ける意味が薄かった。1つにまとめてタップ数を減らす。
-  var fixBtnLabel = (nMissing + nMistake) > 0
-    ? ('▶ 売上を記入・修正（' + (nMissing + nMistake) + '日ぶん）')
-    : '▶ 売上を記入・修正（対象なし）';
   var noteBox = d.note ? '<div class="unote">' + esc_(d.note) + '</div>' : '';
 
+  // ★2026-07-16：未記入/記入ミスの内訳欄は廃止（実行時は必ず最新を読み直すため、事前の
+  //   件数表示は目安に過ぎず不要とユーザー判断）。ボタンも1つに統合＝「帳簿売上をTimeTreeに記録」
+  //   （中身は新規記入＋上書き修正＋プロセル転記の3つをまとめて実行）。
   return '' +
   noteBox +
   '<div class="ucards">' +
@@ -1209,18 +1194,8 @@ function uriageBody_(d) {
     '<table class="upertbl"><thead><tr><th>日</th><th class="num">売上(元)</th></tr></thead>' +
     '<tbody>' + perRows + '</tbody></table>' +
   '</div>' +
-  '<div class="uplan">' +
-    '<div class="uprow">' +
-      '<span class="upc"><b class="cr">' + nMissing + '</b><span>未記入</span></span>' +
-      '<span class="upc"><b class="up">' + (pl.mistake_days || 0) + '</b><span>記入ミス</span></span>' +
-      '<span class="upc"><b class="ok">' + (pl.done_days || 0) + '</b><span>記入完了</span></span>' +
-    '</div>' +
-    (missList ? '<div class="ublk"><b>未記入</b><ul>' + missList + '</ul></div>' : '') +
-    (mistList ? '<div class="ublk warn"><b>記入ミス</b><ul>' + mistList + '</ul></div>' : '') +
-  '</div>' +
-  '<button type="button" id="uallbtn" class="ubtn uall">▶ 毎回まとめて（売上＋ミス修正＋プロセル）</button>' +
-  '<button type="button" id="ufixbtn" class="ubtn ufix"' + ((nMissing + nMistake) > 0 ? '' : ' data-empty="1"') + '>' + fixBtnLabel + '</button>' +
-  '<div id="ustatus" class="ustatus" hidden></div>' +
+  '<button type="button" id="uallbtn" class="ubtn uall">帳簿売上をTimeTreeに記録' +
+    '<span class="uallsub">（含：記載ミス修正、プロセル売上表に転記）</span></button>' +
   '<div class="ugen">最終計算：' + esc_(d.generated_at || '—') + '</div>';
 }
 
@@ -1241,11 +1216,9 @@ var URIAGESCRIPT_ =
 'if(pb){ pb.addEventListener("click",function(){' +
 '  var pn=document.getElementById("uperpanel"); if(pn) pn.hidden=!pn.hidden;' +
 '}); }' +
-'var st=document.getElementById("ustatus");' +
-'var fixBtn=document.getElementById("ufixbtn");' +
 // ★2026-07-16修正：旧実装はgoogle.script.runを直接呼んでおり、電話(静的アプリ)には
 //   google.script.runが存在しないため実は動いていなかった（GAS直リンクでしか動かない隠れた不具合）。
-//   「毎回まとめて」と同じJSONP(action=submit/status)に統一し、電話でも動くようにした。
+//   JSONP(action=submit/status)に統一し、電話でも動くようにした。
 'var EXEC_U0_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
 'var EKEY_U0_="kx7Q2p9mVt4Zr8";' +
 'function jsonpU0_(params, onResult){' +
@@ -1278,41 +1251,7 @@ var URIAGESCRIPT_ =
 '  yesBtn.addEventListener("click",function(){ document.body.removeChild(mask); if(onYes) onYes(); });' +
 '  noBtn.addEventListener("click",function(){ document.body.removeChild(mask); });' +
 '}' +
-'function wireUriageBtn(btn, opName, emptyMsg, confirmMsg, workingTitle, workingSub){' +
-'  if(!btn) return;' +
-'  btn.addEventListener("click",function(){' +
-'    var empty=btn.getAttribute("data-empty")==="1";' +
-'    uConfirm_(empty?emptyMsg:confirmMsg, function(){' +
-'      if(fixBtn) fixBtn.disabled=true; if(allBtn) allBtn.disabled=true;' +
-'      szOverlay_("#2C7A99","⏳",workingTitle,workingSub);' +
-'      jsonpU0_({action:"submit",op:opName,key:EKEY_U0_},function(r){' +
-'        if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); enableUriageBtns(); return; }' +
-'        pollU(r.id);' +
-'      });' +
-'    });' +
-'  });' +
-'}' +
-'function enableUriageBtns(){ if(fixBtn) fixBtn.disabled=false; if(allBtn) allBtn.disabled=false; }' +
-// ★2026-07-16：未記入の記入とミスの修正を1ボタンに統合（op="uriage_fix"は元々両方まとめて処理する）。
-'wireUriageBtn(fixBtn, "uriage_fix",' +
-'  "記入・修正が必要な売上はありません。念のため実行しますか？",' +
-'  "未記入の売上を記入し、記入ミスがあれば修正します。よろしいですか？\\n（記入ミスの箇所は既存の値を書き換えます）",' +
-'  "処理中です","帳簿を読んでTimeTreeへ記入・修正しています。\\n完了したら自動で切り替わります。");' +
-'function pollU(id){' +
-'  var tries=0;' +
-'  var timer=setInterval(function(){ tries++;' +
-'    jsonpU0_({action:"status",key:EKEY_U0_,id:id},function(r){' +
-'      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",(r.result)||"完了しました"); enableUriageBtns();' +
-'        try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }' +
-'      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",(r.result)||s); enableUriageBtns(); }' +
-'      else if(tries>=60){ clearInterval(timer); szOverlayResult_(false,"時間切れです","事務所PCの見張りが動いているか確認してください。"); enableUriageBtns(); }' +
-'    });' +
-'  },3000);' +
-'}' +
-// ★「毎回まとめて」ボタン＝売上記入＋ミス修正＋プロセル転記を一気に。電話(静的アプリ)でも動くよう
-//   google.script.runでなくJSONP(action=submit/status)で依頼・監視する。結果は複数行で表示。
-//   （jsonpU0_/EKEY_U0_は上のwireUriageBtnと共用＝同じ仕組みを使い回す）
+'function enableUriageBtns(){ if(allBtn) allBtn.disabled=false; }' +
 // ★処理中～完了/失敗の見せ方は、部屋被り(mvOverlay_/showDoneOverlay_)と同じ「全画面」に統一する
 //   共通ルール（2026-07-16）。新しい画面を作る時もこの3関数(szOverlay_/szOverlayHide_/szOverlayResult_)
 //   と同じ考え方＝①処理中は全画面で待たせる②完了/失敗も全画面で見せる③一定時間 or タップで消す、
@@ -1336,7 +1275,7 @@ var URIAGESCRIPT_ =
 'var allBtn=document.getElementById("uallbtn");' +
 'if(allBtn){ allBtn.addEventListener("click",function(){' +
 '  uConfirm_("実行します。この処理には数分かかります。", function(){' +
-'    if(fixBtn)fixBtn.disabled=true; allBtn.disabled=true;' +
+'    allBtn.disabled=true;' +
 '    szOverlay_("#2C7A99","⏳","処理中です","売上の記入・ミス修正・プロセル転記を\\nまとめて実行しています。数分かかることがあります。\\n完了したら自動で切り替わります。");' +
 '    jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_},function(r){' +
 '      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
@@ -1371,34 +1310,16 @@ var URIAGECSS_ =
 '  .ucard .ul { font-size:.82rem; color:var(--sub); font-weight:700; }' +
 '  .ucard .uv { font-size:1.7rem; font-weight:900; color:var(--ink); margin-top:6px;' +
 '    font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; }' +
-'  .uplan { background:var(--card); border:1px solid var(--line); border-radius:16px;' +
-'    padding:14px; box-shadow:0 4px 12px rgba(0,0,0,.06); }' +
-'  .uprow { display:flex; gap:8px; text-align:center; }' +
-'  .upc { flex:1; display:flex; flex-direction:column; gap:2px; }' +
-'  .upc b { font-size:1.5rem; font-weight:900; line-height:1; }' +
-'  .upc span { font-size:.7rem; color:var(--sub); font-weight:700; }' +
-'  .upc b.cr { color:#16a34a; } .upc b.up { color:#d97706; }' +
-'  .upc b.mn { color:#e11d48; } .upc b.ok { color:var(--sub); }' +
-'  .ublk { margin-top:12px; border-top:1px dashed var(--line); padding-top:10px; }' +
-'  .ublk b { font-size:.86rem; }' +
-'  .ublk.warn b { color:#b45309; }' +
-'  .ublk ul { margin:6px 0 0; padding-left:1.2em; }' +
-'  .ublk li { font-size:.9rem; line-height:1.5; }' +
 '  .ubtn { display:block; width:100%; margin-top:16px; font-size:1.15rem; font-weight:800;' +
 '    color:#fff; background:#f59e0b; border:0; border-radius:14px; padding:16px; cursor:pointer;' +
 '    box-shadow:0 4px 14px rgba(245,158,11,.4); }' +
 '  .ubtn:active { transform:translateY(1px); }' +
 '  .ubtn:disabled { opacity:.55; }' +
-'  .ubtn.ufix { background:#2563eb; box-shadow:0 4px 14px rgba(37,99,235,.4); margin-top:10px; }' +
 '  .ubtn.uall { background:#16a34a; box-shadow:0 4px 14px rgba(22,163,74,.4); }' +
-'  .ustatus { margin-top:12px; padding:13px 14px; border-radius:12px; font-size:1rem; font-weight:700;' +
-'    white-space:pre-line; line-height:1.6; }' +
-'  .ustatus.working { background:#fef9c3; color:#854d0e; }' +
-'  .ustatus.ok { background:#dcfce7; color:#166534; }' +
-'  .ustatus.err { background:#fee2e2; color:#991b1b; }' +
-'  .uperbtn { width:100%; text-align:center; font-size:.9rem; font-weight:700; color:var(--ink);' +
-'    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:11px;' +
-'    cursor:pointer; margin-bottom:14px; }' +
+'  .uallsub { display:block; font-size:.6em; font-weight:600; opacity:.92; margin-top:6px; line-height:1.4; }' +
+'  .uperbtn { width:100%; text-align:center; font-size:1.15rem; font-weight:800; color:var(--ink);' +
+'    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px;' +
+'    cursor:pointer; margin-bottom:14px; box-shadow:0 4px 12px rgba(0,0,0,.06); }' +
 '  .uperbtn:active { transform:translateY(1px); }' +
 '  .uperpanel { background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:4px 14px; margin:-8px 0 14px; }' +
