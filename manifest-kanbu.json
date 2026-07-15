@@ -1,7 +1,7 @@
 {
   "name": "スーパーズコ",
   "short_name": "スーパーズコ",
-  "start_url": "/tt/?dev=1",
+  "start_url": "/tt/",
   "scope": "/tt/",
   "display": "standalone",
   "background_color": "#2C7A99",
