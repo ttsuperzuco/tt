@@ -1577,12 +1577,14 @@ var MOVESCRIPT_ =
 '    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"", mtime=t.getAttribute("data-time")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
-'      var pn=mv.querySelector(".mvpanel"); if(pn) pn.hidden=true;' +
-'      var st=mv.querySelector(".mvstatus"); st.hidden=false; st.className="mvstatus working"; st.innerHTML=movingHtml_(who,mtime,fromRoom,room);' +
-'      mvOverlay_(who,mtime,fromRoom,room);' +
+// ★楽観的更新：押した瞬間にこの被りを画面から消す（Google往復の完了を待たない＝体感ほぼ0秒）。
+//   実際の移動は今まで通り裏で確実に実行し、万一失敗した時だけ画面に戻して警告する。
+'      try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e0){}' +
+'      doneRefreshFast_();' +
+'      mvToast_("⏳ "+(who?who+"を":"")+"「"+room+"」へ移動を反映中…");' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
-'        if(r && r.ok){ pollMove(st,r.id,room,fromRoom,evid); }' +
-'        else { mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 依頼に失敗しました："+((r&&r.error)||"不明"); }' +
+'        if(r && r.ok){ confirmMove_(r.id,evid,side,who,room); }' +
+'        else { rollbackMove_(evid,(r&&r.error)||"依頼に失敗",side,who,room); }' +
 '      });' +
 '    });' +
 '  }' +
@@ -1606,6 +1608,28 @@ var MOVESCRIPT_ =
 '    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.9;max-width:360px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
 '  return ov; }' +
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
+// ★楽観的更新まわり：小さなトースト(body直下＝再描画で消えない)＋裏での確定確認＋失敗時のロールバック。
+'function mvToast_(msg){ var el=document.getElementById("mvToast");' +
+'  if(!el){ el=document.createElement("div"); el.id="mvToast";' +
+'    el.style.cssText="position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;max-width:90%;background:#2C7A99;color:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:14px;line-height:1.5;text-align:center;";' +
+'    document.body.appendChild(el); }' +
+'  el.textContent=msg; el.style.background="#2C7A99"; return el; }' +
+'function mvToastDone_(msg){ var el=document.getElementById("mvToast")||mvToast_(msg); el.textContent=msg; el.style.background="#16a34a";' +
+'  setTimeout(function(){ try{ if(el&&el.parentNode) el.parentNode.removeChild(el); }catch(e){} },2500); }' +
+'function mvToastHide_(){ var el=document.getElementById("mvToast"); if(el&&el.parentNode) el.parentNode.removeChild(el); }' +
+// 裏で状態を確認：done=移動確定→トーストを✓に。error/timeout=移動失敗→被りを画面に戻して警告。
+'function confirmMove_(id,evid,side,who,room){ var tries=0;' +
+'  function chk(){ tries++;' +
+'    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
+'      if(s==="done"){ mvToastDone_("✓ "+(who?who+"を":"")+"「"+room+"」へ移動しました"); }' +
+'      else if(s==="error"||s==="failed"){ rollbackMove_(evid,(r.result)||s,side,who,room); }' +
+'      else if(tries>=60){ rollbackMove_(evid,"時間切れ（事務所PCの見張りを確認）",side,who,room); }' +
+'      else { setTimeout(chk,400); } });' +
+'  }' +
+'  setTimeout(chk,400); }' +
+'function rollbackMove_(evid,reason,side,who,room){ try{ if(window.__movedOut) delete window.__movedOut[evid]; }catch(e){}' +
+'  mvToastHide_(); doneRefreshFast_();' +
+'  ccPopup_("⚠️ 移動できませんでした："+reason+"。画面に被りを戻しました。もう一度お試しください。", false); }' +
 // 完了後の画面更新：★リロード画面を出さず、検出画面(showConflict)を直接再描画し、最上部へスクロールする
 //   （2026-07-12）。静的アプリが window.__refreshConflictView を公開している時はそれを使う。
 //   無い場合(GAS直アクセス等)だけ従来どおり location.reload() にフォールバック。
