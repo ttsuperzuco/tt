@@ -1596,20 +1596,12 @@ var MOVESCRIPT_ =
 '    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"", mtime=t.getAttribute("data-time")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
 '    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
-// ★押した瞬間に全画面「移動中」を表示（はっきりした反応）。依頼がGoogleに通った時点(約1.5〜2秒)で
-//   全画面を消し、被りを消した一覧へ切り替える（＝完了を待たず速い）。移動自体は裏で確実に実行し、
-//   万一失敗した時だけ被りを戻して警告する。全画面は最低0.8秒は見せる（速い回線でも視認できるように）。
-'      mvOverlay_(who,mtime,fromRoom,room); var t0=Date.now();' +
+// ★押した瞬間に全画面「移動中」を出し、TimeTreeへの書き込みが本当に完了するまで出したまま。
+//   完了したら全画面「✓完了」を0.5秒見せてから、被りが消えた一覧へ戻す（見た目の先行なし＝正確）。
+'      mvOverlay_(who,mtime,fromRoom,room);' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
-'        var wait=Math.max(0,800-(Date.now()-t0));' +
-'        setTimeout(function(){' +
-'          if(r && r.ok){ mvOverlayHide_();' +
-'            try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e0){}' +
-'            doneRefreshFast_();' +
-'            mvToast_("⏳ "+(who?who+"を":"")+"「"+room+"」へ移動を反映中…");' +
-'            confirmMove_(r.id,evid,side,who,room); }' +
-'          else { mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度お試しください。", false); }' +
-'        }, wait);' +
+'        if(r && r.ok){ waitDoneThenFinish_(r.id,evid,room); }' +
+'        else { mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度お試しください。", false); }' +
 '      });' +
 '    });' +
 '  }' +
@@ -1630,10 +1622,26 @@ var MOVESCRIPT_ =
 '  ov.innerHTML="<div style=\\"font-size:46px;margin-bottom:18px;\\">⏳</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.7;margin-bottom:10px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
 '    "<div style=\\"color:#fff;font-size:20px;font-weight:800;line-height:1.6;margin-bottom:16px;\\">「"+fromRoom+"」から「"+room+"」へ移動中です</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.9;max-width:360px;\\">移動を受け付けています。まもなく画面が切り替わります。</div>";' +
+'    "<div style=\\"color:#eaf3f7;font-size:15px;line-height:1.9;max-width:360px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
 '  return ov; }' +
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
-// ★楽観的更新まわり：小さなトースト(body直下＝再描画で消えない)＋裏での確定確認＋失敗時のロールバック。
+// ★完了まで全画面のまま待ち、本当に完了したら全画面「✓完了」を0.5秒→被りを消して一覧へ戻す。
+//   確認間隔はGoogleの応答速度が下限のため詰められる範囲で最短(0.25秒間隔)にしている。
+'function showDoneOverlay_(room){ var ov=document.getElementById("mvWaitOverlay");' +
+'  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
+'  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
+'  ov.innerHTML="<div style=\\"font-size:64px;margin-bottom:12px;\\">✓</div>"+' +
+'    "<div style=\\"color:#fff;font-size:22px;font-weight:800;line-height:1.5;\\">「"+room+"」へ移動が完了しました</div>"; }' +
+'function waitDoneThenFinish_(id,evid,room){ var tries=0;' +
+'  function chk(){ tries++;' +
+'    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
+'      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showDoneOverlay_(room); setTimeout(doneRefreshFast_,500); }' +
+'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
+'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。", false); }' +
+'      else { setTimeout(chk,250); } });' +
+'  }' +
+'  setTimeout(chk,250); }' +
+// ★（旧・楽観的更新の部品。現在は未使用だが残置）小さなトースト＋裏での確定確認＋失敗時のロールバック。
 'function mvToast_(msg){ var el=document.getElementById("mvToast");' +
 '  if(!el){ el=document.createElement("div"); el.id="mvToast";' +
 '    el.style.cssText="position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;max-width:90%;background:#2C7A99;color:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:14px;line-height:1.5;text-align:center;";' +
