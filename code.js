@@ -1190,12 +1190,12 @@ function uriageBody_(d) {
 
   var nMissing = pl.missing_days || 0;
   var nMistake = pl.mistake_days || 0;
-  var missBtnLabel = nMissing > 0
-    ? ('▶ 未記入売上を記入（' + nMissing + '日ぶん）')
-    : '▶ 未記入売上を記入（対象なし）';
-  var fixBtnLabel = nMistake > 0
-    ? ('🔧 記入ミスを修正（' + nMistake + '日ぶん）')
-    : '🔧 記入ミスを修正（対象なし）';
+  // ★2026-07-16：「未記入を記入」「記入ミスを修正」の2ボタンを1つに統合。
+  //   op='uriage_fix'は元々「新規記入＋上書き修正」を両方まとめて実行する（run_flowが両方処理する
+  //   ため）ので、ボタンを分ける意味が薄かった。1つにまとめてタップ数を減らす。
+  var fixBtnLabel = (nMissing + nMistake) > 0
+    ? ('▶ 売上を記入・修正（' + (nMissing + nMistake) + '日ぶん）')
+    : '▶ 売上を記入・修正（対象なし）';
   var noteBox = d.note ? '<div class="unote">' + esc_(d.note) + '</div>' : '';
 
   return '' +
@@ -1219,8 +1219,7 @@ function uriageBody_(d) {
     (mistList ? '<div class="ublk warn"><b>記入ミス</b><ul>' + mistList + '</ul></div>' : '') +
   '</div>' +
   '<button type="button" id="uallbtn" class="ubtn uall">▶ 毎回まとめて（売上＋ミス修正＋プロセル）</button>' +
-  '<button type="button" id="ubtn" class="ubtn"' + (nMissing > 0 ? '' : ' data-empty="1"') + '>' + missBtnLabel + '</button>' +
-  '<button type="button" id="ufixbtn" class="ubtn ufix"' + (nMistake > 0 ? '' : ' data-empty="1"') + '>' + fixBtnLabel + '</button>' +
+  '<button type="button" id="ufixbtn" class="ubtn ufix"' + ((nMissing + nMistake) > 0 ? '' : ' data-empty="1"') + '>' + fixBtnLabel + '</button>' +
   '<div id="ustatus" class="ustatus" hidden></div>' +
   '<div class="ugen">最終計算：' + esc_(d.generated_at || '—') + '</div>';
 }
@@ -1243,7 +1242,6 @@ var URIAGESCRIPT_ =
 '  var pn=document.getElementById("uperpanel"); if(pn) pn.hidden=!pn.hidden;' +
 '}); }' +
 'var st=document.getElementById("ustatus");' +
-'var missBtn=document.getElementById("ubtn");' +
 'var fixBtn=document.getElementById("ufixbtn");' +
 // ★2026-07-16修正：旧実装はgoogle.script.runを直接呼んでおり、電話(静的アプリ)には
 //   google.script.runが存在しないため実は動いていなかった（GAS直リンクでしか動かない隠れた不具合）。
@@ -1285,7 +1283,7 @@ var URIAGESCRIPT_ =
 '  btn.addEventListener("click",function(){' +
 '    var empty=btn.getAttribute("data-empty")==="1";' +
 '    uConfirm_(empty?emptyMsg:confirmMsg, function(){' +
-'      if(missBtn) missBtn.disabled=true; if(fixBtn) fixBtn.disabled=true; if(allBtn) allBtn.disabled=true;' +
+'      if(fixBtn) fixBtn.disabled=true; if(allBtn) allBtn.disabled=true;' +
 '      szOverlay_("#2C7A99","⏳",workingTitle,workingSub);' +
 '      jsonpU0_({action:"submit",op:opName,key:EKEY_U0_},function(r){' +
 '        if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); enableUriageBtns(); return; }' +
@@ -1294,15 +1292,12 @@ var URIAGESCRIPT_ =
 '    });' +
 '  });' +
 '}' +
-'function enableUriageBtns(){ if(missBtn) missBtn.disabled=false; if(fixBtn) fixBtn.disabled=false; if(allBtn) allBtn.disabled=false; }' +
-'wireUriageBtn(missBtn, "uriage",' +
-'  "追加する新規記入はありません。念のため実行しますか？",' +
-'  "今日ぶんの売上をTimeTreeに記入します。よろしいですか？\\n（新規記入のみ・既存の値は変更しません）",' +
-'  "処理中です","帳簿を読んでTimeTreeに記入しています。\\n完了したら自動で切り替わります。");' +
+'function enableUriageBtns(){ if(fixBtn) fixBtn.disabled=false; if(allBtn) allBtn.disabled=false; }' +
+// ★2026-07-16：未記入の記入とミスの修正を1ボタンに統合（op="uriage_fix"は元々両方まとめて処理する）。
 'wireUriageBtn(fixBtn, "uriage_fix",' +
-'  "修正が必要な記入ミスはありません。念のため実行しますか？",' +
-'  "上のリストの通りTimeTreeの既存の値を書き換えます。よろしいですか？\\n（内容をよく確認してから実行してください）",' +
-'  "処理中です","TimeTreeの値を修正しています。\\n完了したら自動で切り替わります。");' +
+'  "記入・修正が必要な売上はありません。念のため実行しますか？",' +
+'  "未記入の売上を記入し、記入ミスがあれば修正します。よろしいですか？\\n（記入ミスの箇所は既存の値を書き換えます）",' +
+'  "処理中です","帳簿を読んでTimeTreeへ記入・修正しています。\\n完了したら自動で切り替わります。");' +
 'function pollU(id){' +
 '  var tries=0;' +
 '  var timer=setInterval(function(){ tries++;' +
@@ -1341,7 +1336,7 @@ var URIAGESCRIPT_ =
 'var allBtn=document.getElementById("uallbtn");' +
 'if(allBtn){ allBtn.addEventListener("click",function(){' +
 '  uConfirm_("実行します。この処理には数分かかります。", function(){' +
-'    if(missBtn)missBtn.disabled=true; if(fixBtn)fixBtn.disabled=true; allBtn.disabled=true;' +
+'    if(fixBtn)fixBtn.disabled=true; allBtn.disabled=true;' +
 '    szOverlay_("#2C7A99","⏳","処理中です","売上の記入・ミス修正・プロセル転記を\\nまとめて実行しています。数分かかることがあります。\\n完了したら自動で切り替わります。");' +
 '    jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_},function(r){' +
 '      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
