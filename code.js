@@ -951,7 +951,7 @@ function roomIsFree_(roomBusyForDate, name, s, e) {
 }
 
 // 被りカード内「A/Bを別の空き部屋へ移す」1行（現在の部屋は候補から除く／空いてる部屋だけ表示）。
-function moveRow_(cal, event, staffMark, who, title, curRoom, roomBusyForDate, timeStr) {
+function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
   var hasId = (cal != null && cal !== '' && event != null && event !== '');
   var range = parseTimeRange_(timeStr);
   var btns = '';
@@ -973,9 +973,8 @@ function moveRow_(cal, event, staffMark, who, title, curRoom, roomBusyForDate, t
   }
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
     : (!anyFree ? '<span class="mvng">その時間、空いている部屋がありません</span>' : '');
-  var curRoomMark = '<span class="room" style="--rc:' + roomColor_(curRoom) + '">' + esc_(curRoom) + '</span>';
   return '<div class="mvrow">' +
-    '<span class="mvlabel">' + esc_(staffMark || '') + 'の予約の部屋を' + curRoomMark + 'から以下の部屋に移す</span>' +
+    '<span class="mvlabel">移動先の部屋のボタンを押してください</span>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
 }
@@ -1102,20 +1101,20 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
         '</div>' +
         '<div class="mv" data-room="' + esc_(x.room) + '">' +
           '<div class="mvtoprow">' +
-            '<button type="button" class="mvtoggle" data-side="A">' + esc_(x.a_staff || 'A') + 'の予約の<br>部屋を移動</button>' +
-            '<button type="button" class="mvtoggle" data-side="B">' + esc_(x.b_staff || 'B') + 'の予約の<br>部屋を移動</button>' +
+            '<button type="button" class="mvtoggle" data-side="A">この予約の<br>部屋を移動</button>' +
+            '<button type="button" class="mvtoggle" data-side="B">この予約の<br>部屋を移動</button>' +
           '</div>' +
           '<div class="mvpanel" data-side="A" hidden>' +
+            moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
+            '<div class="mvhint">⬆️空いている施術室のみ表示しています</div>' +
             '<button type="button" class="rstoggle">📋 空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
-            moveRow_(x.a_cal_id, x.a_event_id, x.a_staff, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
-            '<div class="mvhint">↑空いている施術室のみ表示しています</div>' +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
+            moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
+            '<div class="mvhint">⬆️空いている施術室のみ表示しています</div>' +
             '<button type="button" class="rstoggle">📋 空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
-            moveRow_(x.b_cal_id, x.b_event_id, x.b_staff, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
-            '<div class="mvhint">↑空いている施術室のみ表示しています</div>' +
           '</div>' +
           '<div class="mvstatus" hidden></div>' +
         '</div>' +
@@ -2652,7 +2651,7 @@ var CSS_ =
 '    padding:40px; text-align:center; font-size:1.15rem; color:#16a34a; }' +
 '  .mv { margin-top:8px; }' +
 '  .mvtoprow { display:flex; gap:8px; align-items:stretch; }' +
-'  .mvtoggle { flex:1 1 0; text-align:center; font-size:1.15rem; font-weight:700;' +
+'  .mvtoggle { flex:1 1 0; text-align:center; font-size:1.35rem; font-weight:700;' +
 '    line-height:1.4; white-space:normal; color:#fff; background:#2563eb; border:1px solid #2563eb;' +
 '    border-radius:10px; padding:9px 6px; cursor:pointer; }' +
 '  .mvtoggle:active { transform:translateY(1px); }' +
