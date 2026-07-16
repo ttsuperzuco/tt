@@ -2580,7 +2580,7 @@ var CSS_ =
 '  .homelink { flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--ink); text-decoration:none;' +
 '    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 14px; }' +
 '  .homelink:active { transform:translateY(1px); }' +
-'  h1 { font-size:1.05rem; margin:4px 0 8px; color:#fff; }' +
+'  h1 { font-size:2.1rem; margin:4px 0 8px; color:#fff; }' +
 '  h1 .cnt { color:#ff8fb3; font-size:1.6em; font-weight:900; }' +
 '  .meta { color:var(--sub); font-size:.82rem; line-height:1.6; margin-bottom:6px; }' +
 '  .safe { display:inline-block; font-size:.75rem; color:#16a34a;' +
