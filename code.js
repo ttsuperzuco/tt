@@ -1158,6 +1158,11 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">💬</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
     icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' },
+  // ★元祖TTアプリ＝外部サイトへのリンクだけのボタン（GAS内のviewではない）。
+  //   url指定のタイルは権限(allow)に関係なく常に表示する（tilesHtml生成側のalways:trueで対応・
+  //   下記TILE_DEFS_.filterを参照。tile_settings.jsonの人ごと権限は絡めない＝ただの外部リンクのため）。
+  { id: 'ttapp', cls: 'ttapp', url: 'https://x.gd/eaxgF', always: true,
+    icon: '<span class="ticon">🗓️</span>', label: '元祖TT\nアプリ' },
   // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
   { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
     icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' }
@@ -1182,10 +1187,15 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var subtitle = dev ? '開発版（全ボタン表示）'
     : (staff ? (labels[who] || 'スタッフ') : 'TOMATOさん版');
   var tilesHtml = TILE_DEFS_.filter(function (t) {
+    if (t.always) return true;        // 外部リンクだけのボタン等＝権限に関係なく常に表示
     if (!allow) return true;          // dev＝全部
     return allow[t.id] === true;      // 明示ONのボタンだけ表示（初期は施術室被りのみ）
   }).map(function (t) {
-    return '<a class="tile ' + t.cls + '" href="' + base + '?view=' + t.view + sfx + '" target="_top">' +
+    // url指定＝外部サイトへのリンク（新しいタブで開く）。無指定＝アプリ内view遷移（従来通り）。
+    var href = t.url ? t.url : (base + '?view=' + t.view + sfx);
+    var target = t.url ? '_blank' : '_top';
+    var rel = t.url ? ' rel="noopener"' : '';
+    return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + '>' +
       t.icon + '<span class="tname">' + esc_(t.label) + '</span></a>';
   }).join('');
   return '<style>' + HOMECSS_ + '</style>' +
@@ -2471,6 +2481,7 @@ var HOMECSS_ =
 '  .tile.uriage::before { background:#f59e0b; }' +
 '  .tile.unanswered::before { background:#0d9b6c; }' +
 '  .tile.akijikan::before { background:#0ea5e9; }' +
+'  .tile.ttapp::before { background:#c026d3; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -2481,6 +2492,7 @@ var HOMECSS_ =
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
+'  .tile.ttapp .ticon { background:rgba(192,38,211,.14); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
