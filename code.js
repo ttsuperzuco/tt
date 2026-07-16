@@ -2655,7 +2655,7 @@ var CSS_ =
 '  .who .name { font-weight:500; }' +
 '  .menuwrap { display:flex; align-items:stretch; gap:8px; margin:6px 0 4px; }' +
 '  .menutag { flex:none; writing-mode:vertical-rl; text-orientation:upright;' +
-'    background:#e0e7ff; color:#4338ca; font-size:.72rem; font-weight:800;' +
+'    background:#e0e7ff; color:#4338ca; font-size:1.08rem; font-weight:800;' +
 '    padding:6px 3px; border-radius:999px; letter-spacing:.05em; }' +
 '  @media (prefers-color-scheme: dark) { .menutag { background:#312e81; color:#c7d2fe; } }' +
 '  .menu { list-style:none; margin:0; padding:0; flex:1 1 auto; min-width:0; }' +
