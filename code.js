@@ -1711,9 +1711,9 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '　生成: ' + esc_(d.generated_at || '—') + '</div>' +
   '<div class="akidatebar">' +
     '<div class="akidaterow">' +
-      '<input type="date" class="akidate" id="akiFrom" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+      '<input type="text" readonly class="akidate" id="akiFrom" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
       '<span class="akitilde">〜</span>' +
-      '<input type="date" class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+      '<input type="text" readonly class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
     '</div>' +
     '<div class="akipresets">' +
       '<button type="button" class="akipreset" data-preset="today">今日</button>' +
@@ -1752,6 +1752,57 @@ var AKISCRIPT_ =
 'var minD=fromEl?fromEl.min:"", maxD=fromEl?fromEl.max:"";' +
 'var days=[].slice.call(document.querySelectorAll("#akidays .akiday"));' +
 'var emptyMsg=document.getElementById("akiDateEmpty");' +
+'function openAkiCal_(input){' +
+'  var pick=input.value||minD;' +
+'  var cur=new Date((pick||minD)+"T00:00:00");' +
+'  var y=cur.getFullYear(), m=cur.getMonth();' +
+'  var mask=document.createElement("div"); mask.className="akicalmask";' +
+'  var box=document.createElement("div"); box.className="akicalbox";' +
+'  mask.appendChild(box); document.body.appendChild(mask);' +
+'  function pad2(n){ return String(n).padStart(2,"0"); }' +
+'  function draw(){' +
+'    box.innerHTML="";' +
+'    var hdr=document.createElement("div"); hdr.className="akicalhdr";' +
+'    var prev=document.createElement("button"); prev.type="button"; prev.textContent="◀";' +
+'    var lbl=document.createElement("span"); lbl.textContent=y+"年 "+(m+1)+"月";' +
+'    var next=document.createElement("button"); next.type="button"; next.textContent="▶";' +
+'    prev.addEventListener("click",function(){ m--; if(m<0){m=11;y--;} draw(); });' +
+'    next.addEventListener("click",function(){ m++; if(m>11){m=0;y++;} draw(); });' +
+'    hdr.appendChild(prev); hdr.appendChild(lbl); hdr.appendChild(next);' +
+'    box.appendChild(hdr);' +
+'    var wk=document.createElement("div"); wk.className="akicalwk";' +
+'    ["月","火","水","木","金","土","日"].forEach(function(w,i){' +
+'      var s=document.createElement("span"); s.textContent=w;' +
+'      if(i===5) s.className="aki6"; if(i===6) s.className="aki0";' +
+'      wk.appendChild(s);' +
+'    });' +
+'    box.appendChild(wk);' +
+'    var grid=document.createElement("div"); grid.className="akicalgrid";' +
+'    var first=new Date(y,m,1); var startWd=(first.getDay()+6)%7;' +
+'    var daysInMonth=new Date(y,m+1,0).getDate();' +
+'    for(var i=0;i<startWd;i++){ grid.appendChild(document.createElement("span")); }' +
+'    for(var dnum=1; dnum<=daysInMonth; dnum++){' +
+'      var iso0 = y+"-"+pad2(m+1)+"-"+pad2(dnum);' +
+'      var b=document.createElement("button"); b.type="button"; b.textContent=String(dnum);' +
+'      if((minD&&iso0<minD)||(maxD&&iso0>maxD)){ b.disabled=true; }' +
+'      if(iso0===pick){ b.classList.add("sel"); }' +
+'      b.addEventListener("click",(function(iso1){ return function(){ pick=iso1; draw(); }; })(iso0));' +
+'      grid.appendChild(b);' +
+'    }' +
+'    box.appendChild(grid);' +
+'    var ftr=document.createElement("div"); ftr.className="akicalftr";' +
+'    var cancel=document.createElement("button"); cancel.type="button"; cancel.textContent="キャンセル"; cancel.className="akicalcancel";' +
+'    var ok=document.createElement("button"); ok.type="button"; ok.textContent="設定"; ok.className="akicalok";' +
+'    cancel.addEventListener("click",function(){ document.body.removeChild(mask); });' +
+'    ok.addEventListener("click",function(){' +
+'      input.value=pick; input.dispatchEvent(new Event("change"));' +
+'      document.body.removeChild(mask);' +
+'    });' +
+'    ftr.appendChild(cancel); ftr.appendChild(ok);' +
+'    box.appendChild(ftr);' +
+'  }' +
+'  draw();' +
+'}' +
 'function iso(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }' +
 'function addDays(iso0,n){ var d=new Date(iso0+"T00:00:00"); d.setDate(d.getDate()+n); return iso(d); }' +
 'function clamp(v){ if(minD&&v<minD)return minD; if(maxD&&v>maxD)return maxD; return v; }' +
@@ -1773,6 +1824,8 @@ var AKISCRIPT_ =
 'function setRange(f,t){ fromEl.value=clamp(f); toEl.value=clamp(t); applyFilter(); }' +
 'function setSingle_(f){ fromEl.value=clamp(f); toEl.value=""; applyFilter(); }' +
 'if(fromEl&&toEl){' +
+'  fromEl.addEventListener("click",function(){ openAkiCal_(fromEl); });' +
+'  toEl.addEventListener("click",function(){ openAkiCal_(toEl); });' +
 '  fromEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
 '  toEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
 '  var presets=[].slice.call(document.querySelectorAll(".akipreset"));' +
@@ -1807,9 +1860,29 @@ var AKICSS_ =
 '  .akidaterow{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; width:100%; }' +
 '  .akidate{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akiink);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:9px 10px; color-scheme:dark; flex:1 1 0; min-width:0; }' +
-'  @media (prefers-color-scheme:light){ .akidate{ color-scheme:light; } }' +
+'    padding:9px 10px; flex:1 1 0; min-width:0; cursor:pointer; caret-color:transparent; }' +
 '  .akitilde{ color:var(--akisub); font-weight:800; flex:0 0 auto; }' +
+'  .akicalmask{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex;' +
+'    align-items:center; justify-content:center; z-index:9999; padding:16px; }' +
+'  .akicalbox{ background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
+'    padding:14px; width:100%; max-width:340px; }' +
+'  .akicalhdr{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }' +
+'  .akicalhdr span{ font-weight:800; font-size:16px; color:var(--akiink); }' +
+'  .akicalhdr button{ font-family:inherit; font-size:15px; font-weight:700; color:var(--akiink);' +
+'    background:transparent; border:1px solid var(--akiline); border-radius:8px; padding:4px 10px; cursor:pointer; }' +
+'  .akicalwk{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center;' +
+'    color:var(--akisub); font-size:13px; font-weight:700; margin-bottom:4px; }' +
+'  .akicalwk .aki6{ color:#4d8fe0; } .akicalwk .aki0{ color:#e05a5a; }' +
+'  .akicalgrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }' +
+'  .akicalgrid button{ font-family:inherit; font-size:14px; font-weight:700; color:var(--akiink);' +
+'    background:transparent; border:1px solid transparent; border-radius:8px; padding:8px 0; cursor:pointer; }' +
+'  .akicalgrid button:disabled{ color:var(--akisub); opacity:.35; cursor:default; }' +
+'  .akicalgrid button.sel{ background:var(--akiprimary); color:#fff; }' +
+'  .akicalftr{ display:flex; gap:8px; margin-top:12px; }' +
+'  .akicalftr button{ flex:1 1 0; font-family:inherit; font-size:15px; font-weight:700;' +
+'    border-radius:10px; padding:10px 0; cursor:pointer; }' +
+'  .akicalcancel{ background:transparent; color:var(--akisub); border:1px solid var(--akiline); }' +
+'  .akicalok{ background:var(--akiprimary); color:#fff; border:1px solid var(--akiprimary); }' +
 '  .akipresets{ display:flex; gap:6px; flex-wrap:wrap; width:100%; }' +
 '  .akipreset{ font-family:inherit; font-size:13.5px; font-weight:700; color:var(--akisub);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
