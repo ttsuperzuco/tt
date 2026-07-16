@@ -974,7 +974,7 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
     : (!anyFree ? '<span class="mvng">その時間、空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
-    '<span class="mvlabel">移動先の部屋のボタンを押してください</span>' +
+    '<div class="mvlabel fit1line">移動先の部屋のボタンを押してください</div>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
 }
@@ -1106,13 +1106,13 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
           '</div>' +
           '<div class="mvpanel" data-side="A" hidden>' +
             moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
-            '<div class="mvhint">⬆️空いている施術室のみ表示しています</div>' +
+            '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
             '<button type="button" class="rstoggle">📋 この日の空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
             moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
-            '<div class="mvhint">⬆️空いている施術室のみ表示しています</div>' +
+            '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
             '<button type="button" class="rstoggle">📋 この日の空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
@@ -2197,18 +2197,27 @@ var TTSCRIPT_ =
 '"#Intent;scheme=https;package=works.jubilee.timetree;S.browser_fallback_url="+encodeURIComponent(w)+";end");' +
 '}})();</scr' + 'ipt>';
 
-// 被りカードの見出し2行(.fit1line＝日付+時刻／施術室名+説明文)を、はみ出さなくなるまで
-// 1pxずつ文字を縮めて必ず1行に収める（URIAGESCRIPT_の金額(.uv)自動縮小と同じ手法）。
+// .fit1line の文字を、はみ出さなくなるまで1pxずつ縮めて必ず1行に収める
+// （URIAGESCRIPT_の金額(.uv)自動縮小と同じ手法）。
+// ★隠れている要素(hidden)は幅が0のため縮小計算ができない＝開いた瞬間にもう一度かける必要がある。
+//   そのため window.szFit1Line_ として公開し、MOVESCRIPT_のパネル開閉時にも呼ぶ（2026-07-16）。
 var FIT1LINE_SCRIPT_ =
 '<script>(function(){' +
-'var els=document.querySelectorAll(".fit1line");' +
-'for(var i=0;i<els.length;i++){' +
-'  var el=els[i]; var tries=0;' +
-'  while(el.scrollWidth>el.clientWidth && tries<30){' +
-'    var cur=parseFloat(getComputedStyle(el).fontSize);' +
-'    el.style.fontSize=(cur-1)+"px"; tries++;' +
+'window.szFit1Line_=function(root){' +
+'  var els=(root||document).querySelectorAll(".fit1line");' +
+'  for(var i=0;i<els.length;i++){' +
+'    var el=els[i];' +
+'    if(!el.clientWidth) continue;' +            // 隠れている間は測れないので飛ばす
+'    if(!el.dataset.baseFont){ el.dataset.baseFont=getComputedStyle(el).fontSize; }' +
+'    el.style.fontSize=el.dataset.baseFont;' +   // 毎回いちばん大きい状態から測り直す
+'    var tries=0;' +
+'    while(el.scrollWidth>el.clientWidth && tries<40){' +
+'      var cur=parseFloat(getComputedStyle(el).fontSize);' +
+'      el.style.fontSize=(cur-1)+"px"; tries++;' +
+'    }' +
 '  }' +
-'}' +
+'};' +
+'window.szFit1Line_();' +
 '})();</scr' + 'ipt>';
 
 // 部屋付け替えのUI操作（トグル→依頼→処理中→結果）。google.script.run で同オリジン呼び出し。
@@ -2267,7 +2276,9 @@ var MOVESCRIPT_ =
 '  if(t.classList&&t.classList.contains("mvtoggle")){' +
 '    var mvw=t; while(mvw&&!(mvw.classList&&mvw.classList.contains("mv"))) mvw=mvw.parentNode; if(!mvw) return;' +
 '    var side=t.getAttribute("data-side");' +
-'    var pn=mvw.querySelector(\'.mvpanel[data-side="\'+side+\'"]\'); if(pn) pn.hidden=!pn.hidden; t.classList.toggle("open",!pn.hidden); return;' +
+'    var pn=mvw.querySelector(\'.mvpanel[data-side="\'+side+\'"]\'); if(pn) pn.hidden=!pn.hidden; t.classList.toggle("open",!pn.hidden);' +
+'    if(pn&&!pn.hidden&&window.szFit1Line_) window.szFit1Line_(pn);' +   // 開いた瞬間に1行へ収める
+'    return;' +
 '  }' +
 '  if(t.classList&&t.classList.contains("rstoggle")){' +
 '    var pnl=t; while(pnl&&!(pnl.classList&&pnl.classList.contains("mvpanel"))) pnl=pnl.parentNode; if(!pnl) return;' +
@@ -2603,9 +2614,11 @@ var CSS_ =
 '  .stat .n { font-size:1.6rem; font-weight:700; line-height:1; }' +
 '  .stat .l { font-size:.72rem; color:var(--sub); margin-top:4px; }' +
 '  .stat.real .n { color:var(--real); } .stat.dup .n { color:var(--dup); }' +
+// ★2026-07-16：以前は1件1画面(min-height:90vh)で必ず画面いっぱいに広げていたが、
+//   移動ボタンが閉じている時に下が大きく空いて次の被りが見えないため、中身の高さに合わせる方式へ変更
+//   （ユーザー指示：閉じている時は次の被りをすぐ下に、開いたら押し下がる）。
 '  .card { background:var(--card); border:1px solid var(--line); box-sizing:border-box;' +
 '    border-left:4px solid var(--real); border-radius:12px; padding:9px 11px;' +
-'    min-height:90vh; min-height:90svh;' +
 '    margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,.06); }' +
 '  .card.dup { border-left-color:var(--dup); }' +
 '  .card-h { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
@@ -2661,21 +2674,21 @@ var CSS_ =
 '    border-radius:10px; padding:8px 10px; }' +
 // ★空き部屋一覧(.rspanel)は最初は畳んでおき、この専用ボタンを押した時だけ広げる
 //   （2026-07-16ユーザー選択①：常時表示だと情報が多すぎるため）。
-'  .rstoggle { display:block; width:100%; text-align:center; font-size:.9rem; font-weight:700;' +
-'    color:var(--ink); background:var(--card); border:1px solid var(--line);' +
-'    border-radius:10px; padding:9px 6px; cursor:pointer; }' +
+'  .rstoggle { display:block; width:100%; text-align:center; font-size:1.25rem; font-weight:700;' +
+'    color:#fff; background:#2563eb; border:1px solid #2563eb;' +
+'    border-radius:10px; padding:11px 6px; cursor:pointer; }' +
 '  .rstoggle:active { transform:translateY(1px); }' +
-'  .rstoggle.open { color:#fff; background:#2563eb; border-color:#2563eb; }' +
+'  .rstoggle.open { box-shadow:inset 0 2px 5px rgba(0,0,0,.3); }' +
 '  .mvrow { display:flex; flex-direction:column; gap:6px; padding:6px 0; }' +
 '  .mvrow + .mvrow { border-top:1px dashed var(--line); }' +
-'  .mvlabel { font-size:1.25rem; font-weight:700; color:var(--ink); }' +
+'  .mvlabel { font-size:1.7rem; font-weight:700; color:var(--ink); }' +
 '  .mvbtns { display:flex; flex-wrap:wrap; gap:7px; }' +
 '  .mvbtn { font-size:.92rem; font-weight:800; color:#fff; background:var(--rc,#64748b);' +
 '    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .mvbtn:active { transform:translateY(1px); }' +
 '  .mvbtn:disabled { opacity:.4; }' +
 '  .mvng { font-size:.8rem; color:var(--sub); align-self:center; }' +
-'  .mvhint { font-size:.86rem; color:#ec4899; font-weight:800; margin-top:6px; line-height:1.5; }' +
+'  .mvhint { font-size:1.5rem; color:#ec4899; font-weight:800; margin-top:6px; line-height:1.5; }' +
 '  .mvstatus { margin-top:8px; padding:11px 12px; border-radius:10px; font-size:.95rem; font-weight:700; }' +
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .mvstatus.ok { background:#dcfce7; color:#166534; }' +
