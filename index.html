@@ -24,6 +24,14 @@
   .pkyes,.pkno{ border:0; border-radius:12px; padding:20px 36px; font-size:24px; font-weight:800; cursor:pointer; }
   .pkyes{ background:#16a34a; color:#fff; } .pkno{ background:#e5e7eb; color:#333; }
   .pknote{ margin-top:20px; font-size:12.5px; opacity:.82; line-height:1.7; }
+  /* 合言葉（スタッフURLで初回のみ・名前選択より前に出す） */
+  .pwinput2{ font-size:26px; text-align:center; padding:16px 14px; border-radius:14px; border:0;
+    width:100%; max-width:280px; box-sizing:border-box; margin:0 auto 16px; display:block; }
+  .pwgo{ background:#16a34a; color:#fff; border:0; border-radius:12px; padding:18px 40px;
+    font-size:22px; font-weight:800; cursor:pointer; }
+  .pwgo:active{ transform:scale(.97); }
+  .pwgo:disabled{ opacity:.6; }
+  .pwerr{ margin-top:16px; font-size:15px; color:#ffd7d7; min-height:1.4em; }
 </style>
 </head>
 <body>
@@ -110,7 +118,7 @@
 
   // ===== 操作者(who)＝この端末で選んだ名前。localStorageに「固定」する。=====
   // 一度選んだら本人は変更不可。変えられるのは開発者だけ＝開発URLに ?reset=1 を付けて解除する。
-  var LS_WHO='sz_who', LS_ROLE='sz_role', LS_DEV='sz_device', LS_LABEL='sz_label';
+  var LS_WHO='sz_who', LS_ROLE='sz_role', LS_DEV='sz_device', LS_LABEL='sz_label', LS_PWOK='sz_pw_ok';
   function lsGet(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
   function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
@@ -368,6 +376,39 @@
     root.querySelector('.pkno').addEventListener('click', function () { location.reload(); });
   }
 
+  // ===== 合言葉（スタッフURLのみ・名前選択より前に出す）=====
+  // ★あくまで「知らない人が適当に開けない」程度の鍵。正解の合言葉自体はここには置かず、
+  //   GAS(action=checkpw)へ問い合わせてok:true/falseだけ受け取る。合言葉は自動監視メニュー4
+  //   （tile_settings.py）から事務所PCが変更できる。一度通れば端末に記憶し、次回以降は聞かない
+  //   （名前選択のリセット合図とは別物＝合言葉を変えても既存端末の記憶は自動では消えない）。
+  function showPwGate(cfg) {
+    var root = document.getElementById('root');
+    root.innerHTML = '<div class="pkwrap"><div class="pktitle">合言葉を<br>入力してください</div>' +
+      '<input type="text" id="pwIn" class="pwinput2" autocomplete="off" autocapitalize="off">' +
+      '<button type="button" class="pwgo" id="pwGoBtn">すすむ</button>' +
+      '<div class="pwerr" id="pwErr"></div></div>';
+    var input = root.querySelector('#pwIn');
+    var btn = root.querySelector('#pwGoBtn');
+    var err = root.querySelector('#pwErr');
+    function submit() {
+      var v = input.value;
+      if (!v) return;
+      btn.disabled = true; err.textContent = '';
+      window.__ttCheckPw = function (r) {
+        btn.disabled = false;
+        if (r && r.ok) { lsSet(LS_PWOK, '1'); boot(cfg); }
+        else { err.textContent = (r && r.error) || '合言葉が違います。もう一度お試しください。'; input.value=''; input.focus(); }
+      };
+      var s = document.createElement('script');
+      s.src = EXEC + '?action=checkpw&pw=' + encodeURIComponent(v) + '&callback=__ttCheckPw&cb=' + Date.now();
+      s.onerror = function () { btn.disabled = false; err.textContent = '通信エラーです。もう一度お試しください。'; };
+      document.body.appendChild(s);
+    }
+    btn.addEventListener('click', submit);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+    input.focus();
+  }
+
   // ===== 起動：タイル設定/権限を取得 → 名前選択 or 画面表示 =====
   function boot(cfg) {
     var people = (cfg && cfg.people) || ['kanbu','ringo','mikan','olive','marron','mango','coconut','reception'];
@@ -407,8 +448,11 @@
   //   （重い code.js の読み込みを待たずに約0.6秒早くスタート）。ここでは先読み結果を消費するだけ：
   //   tilesettings が届いていれば即 boot、まだなら届き次第 boot する。events は showConflict が
   //   __prefetchedEvents を使い切りで拾う（初回のみ／部屋移動後などのリフレッシュは新規取得で新鮮）。
-  if (window.__tsResult !== undefined) { boot(window.__tsResult); }
-  else { window.__tsWaiter = function (cfg) { boot(cfg || {}); }; }
+  function bootOrGate(cfg) {
+    if (staff && !lsGet(LS_PWOK)) { showPwGate(cfg); } else { boot(cfg); }
+  }
+  if (window.__tsResult !== undefined) { bootOrGate(window.__tsResult); }
+  else { window.__tsWaiter = function (cfg) { bootOrGate(cfg || {}); }; }
 })();
 </script>
 </body>
