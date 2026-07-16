@@ -250,6 +250,45 @@ function _resetsFromCfg_(d) {
   return (r && typeof r === 'object') ? r : {};
 }
 
+// ========== スタッフ用URL(?staff=1)の入口合言葉（2026-07-16・簡易ゲート） ==========
+// ★あくまで「知らない人が適当に開けない」程度の鍵。判定はここ(サーバー側)でだけ行い、
+//   正解の合言葉そのものは②(公開コード)へは一切渡さない＝ok:true/falseだけ返す。
+// 合言葉は tile_settings.json の staffPassword（自動監視メニュー4・tile_settings.py から変更可）。
+var DEFAULT_STAFF_PASSWORD_ = 'ズコ';
+function getStaffPassword_() {
+  try {
+    var file = getTileSettingsFile_();
+    var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
+    if (d && typeof d.staffPassword === 'string' && d.staffPassword) return d.staffPassword;
+  } catch (ignore) {}
+  return DEFAULT_STAFF_PASSWORD_;
+}
+// 総当たり抑止（直近60秒に10回を超えたら弾く）。PropertiesServiceに直近の試行時刻だけ持つ。
+var PW_ATTEMPTS_PROP_ = 'PW_ATTEMPTS';
+var PW_RATE_WINDOW_MS_ = 60000, PW_RATE_LIMIT_ = 10;
+function _pwRateOk_() {
+  var raw = PropertiesService.getScriptProperties().getProperty(PW_ATTEMPTS_PROP_);
+  var arr = raw ? JSON.parse(raw) : [];
+  var now = Date.now();
+  arr = arr.filter(function (t) { return (now - t) < PW_RATE_WINDOW_MS_; });
+  var ok = arr.length < PW_RATE_LIMIT_;
+  arr.push(now);
+  if (arr.length > 30) arr = arr.slice(arr.length - 30);
+  PropertiesService.getScriptProperties().setProperty(PW_ATTEMPTS_PROP_, JSON.stringify(arr));
+  return ok;
+}
+function _checkPwJsonp_(p) {
+  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
+  var out;
+  if (!_pwRateOk_()) {
+    out = { ok: false, error: '試行回数が多すぎます。少し待ってから試してください。' };
+  } else {
+    out = { ok: String(p.pw || '') === getStaffPassword_() };
+  }
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(out) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
 // ========== 部屋移動の依頼の安全弁（②静的アプリ経由でEDIT_KEYが公開されるため必須） ==========
 // ①移動先が実在の施術部屋(ROOMS_)か ②その予定が「今まさに被り検出に出ている」か
 // ③直近に依頼が集中していないか、をサーバー側で必ず確認してからキューに積む。
@@ -312,6 +351,7 @@ function handleAction_(p) {
   if (p.action === 'unanswered') return _unansweredJsonp_(p);
   if (p.action === 'akijikan') return _akijikanJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
+  if (p.action === 'checkpw') return _checkPwJsonp_(p);
   if (p.action === 'hit') {   // アクセスログ（②静的アプリが画面表示ごとに叩く・鍵不要・軽量）
     try {
       logAccess_(String(p.who || '').replace(/[^a-z]/g, ''), String(p.role || ''),
@@ -2249,8 +2289,8 @@ var HOMECSS_ =
 // 文字は最大2行まで自動折返し（-webkit-line-clamp:2）。1行に収まる短い文言はそのまま1行で出る。
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
 '  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
-'    gap:8px; text-align:left; text-decoration:none; color:var(--ink);' +
-'    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px 8px;' +
+'    gap:6px; text-align:left; text-decoration:none; color:var(--ink);' +
+'    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 6px;' +
 '    box-shadow:0 6px 18px rgba(0,0,0,.07); position:relative; overflow:hidden;' +
 '    transition:transform .12s ease, box-shadow .12s ease; }' +
 '  .tile::before { content:""; position:absolute; left:0; top:0; bottom:0; width:6px; height:auto; }' +
@@ -2265,7 +2305,7 @@ var HOMECSS_ =
 '  .tile.akijikan::before { background:#0ea5e9; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
-'  .ticon { flex:none; width:28px; height:28px; border-radius:8px; font-size:16px;' +
+'  .ticon { flex:none; width:24px; height:24px; border-radius:7px; font-size:14px;' +
 '    display:grid; place-items:center; }' +
 '  .tile.conflict .ticon { background:rgba(225,29,72,.12); }' +
 '  .tile.lt .ticon { background:rgba(148,163,184,.14); }' +
@@ -2273,7 +2313,7 @@ var HOMECSS_ =
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
-'  .tname { flex:1; font-size:1.15rem; font-weight:800; text-align:left; white-space:pre-line; line-height:1.22;' +
+'  .tname { flex:1; font-size:1.3rem; font-weight:800; text-align:left; white-space:pre-line; line-height:1.18;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .badge { display:inline-block; font-size:.9rem; font-weight:800; color:#fff; background:#f97316;' +
 '    border-radius:999px; padding:4px 12px; vertical-align:middle;' +
