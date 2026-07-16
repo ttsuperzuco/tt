@@ -738,6 +738,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   uriage:     { exec: true, staff: false },
   unanswered: { exec: true, staff: true },
   akijikan:   { exec: false, staff: false },  // ★初期は開発URL(?dev=1)だけで見える（2026-07-16ユーザー指定）
+  ttapp:      { exec: true, staff: true },     // ★元祖TTアプリ＝以前のalways:trueと同じ「全員に見える」を初期値として維持
   // ★kanshi(自動監視)＝開発URL(?dev=1)専用。tile_settings.py の TILES にも入れない＝
   //   人ごとの権限画面に出てこない＝誰にもONにできない＝開発URLだけに出る（2026-07-16ユーザー指定）。
   kanshi:     { exec: false, staff: false }
@@ -745,7 +746,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'kanshi'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'ttapp', 'kanshi'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -772,7 +773,7 @@ function defaultPerms_(people) {
   var list = people || PEOPLE_;
   var perms = {};
   for (var i = 0; i < list.length; i++) {
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, kanshi: false };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, ttapp: true, kanshi: false };
   }
   return perms;
 }
@@ -1179,9 +1180,10 @@ var TILE_DEFS_ = [
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
     icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' },
   // ★元祖TTアプリ＝外部サイトへのリンクだけのボタン（GAS内のviewではない）。
-  //   url指定のタイルは権限(allow)に関係なく常に表示する（tilesHtml生成側のalways:trueで対応・
-  //   下記TILE_DEFS_.filterを参照。tile_settings.jsonの人ごと権限は絡めない＝ただの外部リンクのため）。
-  { id: 'ttapp', cls: 'ttapp', url: 'https://x.gd/eaxgF', always: true,
+  //   2026-07-16：他のボタンと同じく人ごとのON/OFF対象に変更（以前はalways:trueで常時表示
+  //   固定だったが、ユーザー要望で「人ごとに見せる/見せない」を選べるようにした。初期値は
+  //   全員ON＝これまでの「常に表示」と見た目上は変わらない。tile_settings.py の TILES にも追加済み）。
+  { id: 'ttapp', cls: 'ttapp', url: 'https://x.gd/eaxgF',
     icon: '<span class="ticon">🗓️</span>', label: '元祖TT\nアプリ' },
   // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
   { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
