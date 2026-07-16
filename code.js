@@ -556,12 +556,11 @@ function getAkijikanFile_() {
 /** tile_settings.json のファイルを取得（ホーム画面ボタンの表示ON/OFF設定。
  *  事務所PC「自動監視システム」の tile_settings.py が書き出す）。 */
 var TILE_SETTINGS_FILENAME = 'tile_settings.json';
+// ★他ファイル(events.json等)と違い、この設定ファイルはID固定キャッシュにしない＝
+//   毎回 名前検索→最新の1件、で必ず取る（2026-07-16：IDキャッシュだと万一Drive側に
+//   同名の別ファイルができた時、古い方のIDを固定で読み続け「保存したのに反映されない」
+//   事故になりうると判明。ボタン表示・端末リセットは正しさが最優先＝多少の速度より安全側）。
 function getTileSettingsFile_() {
-  var props = PropertiesService.getScriptProperties();
-  var id = props.getProperty('TILESET_FILE_ID');
-  if (id) {
-    try { return DriveApp.getFileById(id); } catch (ignore) { /* IDが古い→探し直す */ }
-  }
   var it = DriveApp.getFilesByName(TILE_SETTINGS_FILENAME);
   var newest = null;
   while (it.hasNext()) {
@@ -569,7 +568,6 @@ function getTileSettingsFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) throw new Error('tile_settings.json 未生成');
-  props.setProperty('TILESET_FILE_ID', newest.getId());
   return newest;
 }
 
@@ -1742,9 +1740,11 @@ var AKISCRIPT_ =
 'var chips=[].slice.call(document.querySelectorAll(".akichip"));' +
 'chips.forEach(function(c){ c.addEventListener("click",function(){' +
 '  var sec=c.getAttribute("data-sec");' +
-'  var on=c.classList.toggle("on");' +
-'  [].slice.call(document.querySelectorAll(".akisec-"+sec)).forEach(function(el){' +
-'    el.classList.toggle("akihidden", !on);' +
+'  chips.forEach(function(x){ x.classList.toggle("on", x===c); });' +
+'  ["time","staff","rooms"].forEach(function(s){' +
+'    [].slice.call(document.querySelectorAll(".akisec-"+s)).forEach(function(el){' +
+'      el.classList.toggle("akihidden", s!==sec);' +
+'    });' +
 '  });' +
 '}); });' +
 '' +
