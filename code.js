@@ -1037,12 +1037,6 @@ function esc_(s) {
 // お知らせに書く「コース第N次」（来店回数とは別・体験オフセット適用済み。共有DBの
 // reservation_course_count 由来。夜間バッチがお知らせの build_one で算出）を、events.jsonの
 // payload.course_counts から event_id で引いて表示する。要確認/未算出は⚠️（[[project_course_count_unified]]）。
-// 1〜20は丸数字、それ以上は(21)のような括弧数字にフォールバック。
-var CIRCLED_NUM_ = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩',
-  '⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
-function circledNum_(n) {
-  return (n >= 1 && n <= 20) ? CIRCLED_NUM_[n - 1] : ('(' + n + ')');
-}
 // "2026-07-19" → "7月19日(日)"（曜日は現地の年月日で計算＝タイムゾーンずれ対策でnew Date(y,m-1,d)を使う）。
 function jpDateWeekday_(iso) {
   var p = String(iso || '').split('-').map(Number);
@@ -1085,11 +1079,11 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
       '<article class="card real">' +
         '<header class="card-h">' +
           '<div class="cline">' +
-            '<span class="clineBig">' + circledNum_(idx + 1) + esc_(jpDateWeekday_(x.date)) +
-              ' ' + esc_(x.overlap_time) + ' ' +
+            '<div class="clineDate fit1line">' + esc_(jpDateWeekday_(x.date)) + ' ' + esc_(x.overlap_time) + '</div>' +
+            '<div class="clineRoom fit1line">' +
               '<span class="room" style="--rc:' + rc + '">' + esc_(x.room) + '</span>' +
-            '</span>' +
-            '<span class="clineSmall">に以下の二つの予約が入っています</span>' +
+              ' に以下の二つの予約が入ってます' +
+            '</div>' +
           '</div>' +
           (x.dup_suspect ? '<span class="dup">⚠️同一人物の疑い(二重入力?)</span>' : '') +
         '</header>' +
@@ -1147,7 +1141,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
   '<h1>⚠️ 施術室被り検出 <span class="cnt">' + real + '件</span>' + nailNote + '</h1>' +
   cards +
 '</div>' +
-identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_;
+identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
 }
 
 // ①GAS直アクセス時の操作者識別子をページに注入（②静的アプリは localStorage の値が優先される）。
@@ -2208,6 +2202,20 @@ var TTSCRIPT_ =
 '"#Intent;scheme=https;package=works.jubilee.timetree;S.browser_fallback_url="+encodeURIComponent(w)+";end");' +
 '}})();</scr' + 'ipt>';
 
+// 被りカードの見出し2行(.fit1line＝日付+時刻／施術室名+説明文)を、はみ出さなくなるまで
+// 1pxずつ文字を縮めて必ず1行に収める（URIAGESCRIPT_の金額(.uv)自動縮小と同じ手法）。
+var FIT1LINE_SCRIPT_ =
+'<script>(function(){' +
+'var els=document.querySelectorAll(".fit1line");' +
+'for(var i=0;i<els.length;i++){' +
+'  var el=els[i]; var tries=0;' +
+'  while(el.scrollWidth>el.clientWidth && tries<30){' +
+'    var cur=parseFloat(getComputedStyle(el).fontSize);' +
+'    el.style.fontSize=(cur-1)+"px"; tries++;' +
+'  }' +
+'}' +
+'})();</scr' + 'ipt>';
+
 // 部屋付け替えのUI操作（トグル→依頼→処理中→結果）。google.script.run で同オリジン呼び出し。
 var MOVESCRIPT_ =
 '<script>(function(){' +
@@ -2605,12 +2613,13 @@ var CSS_ =
 '    margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,.06); }' +
 '  .card.dup { border-left-color:var(--dup); }' +
 '  .card-h { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
-// ★2026-07-16：バラバラの丸数字/日付/バッジ表示をやめ、1つの文章として読める形に変更
-//   （1行目=丸数字＋日付＋被り時刻＋施術室名を大きい太字、2行目=説明文を小さめの字）。
+// ★2026-07-16：日付+時刻／施術室名+説明文の2行を、それぞれ横幅いっぱいまで大きく見せる。
+//   .fit1lineは開始時にわざと大きめのfont-sizeを振っておき、下のFIT_ONE_LINE_JS_が
+//   はみ出さなくなるまで1pxずつ縮めて「1行に収まる範囲で最大」を実現する（.uvの金額縮小と同じ手法）。
 '  .cline { display:flex; flex-direction:column; gap:2px; }' +
-'  .clineBig { display:flex; align-items:center; flex-wrap:wrap; gap:6px;' +
-'    font-weight:900; font-size:1.55rem; }' +
-'  .clineSmall { font-size:.95rem; font-weight:600; color:var(--sub); }' +
+'  .fit1line { white-space:nowrap; overflow:hidden; }' +
+'  .clineDate { font-weight:900; font-size:2.3rem; }' +
+'  .clineRoom { font-weight:900; font-size:1.9rem; }' +
 '  .room { background:var(--rc); color:#fff; font-weight:800; font-size:1.05rem;' +
 '    padding:4px 16px; border-radius:999px; }' +
 '  .dup { font-size:.95rem; font-weight:800; color:#92400e;' +
@@ -2618,9 +2627,9 @@ var CSS_ =
 '  @media (prefers-color-scheme: dark) { .dup { color:#1c1400; background:#fbbf24; } }' +
 '  .kind { font-size:.82rem; font-weight:600; }' +
 '  .card.real .kind { color:var(--real); } .card.dup .kind { color:var(--dup); }' +
-'  .pair { display:flex; flex-direction:column; gap:0;' +
+'  .pair { display:grid; grid-template-columns:1fr auto 1fr; align-items:start; gap:8px;' +
 '    border-top:2px solid var(--sub); padding-top:7px; margin-top:2px; }' +
-'  .side { background:var(--bg); border-radius:10px; padding:6px 10px; }' +
+'  .side { background:var(--bg); border-radius:10px; padding:6px 10px; min-width:0; }' +
 '  .time { display:flex; align-items:center; font-weight:600; font-size:1.3rem;' +
 '    font-variant-numeric:tabular-nums; }' +
 '  .ab { flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:9px;' +
@@ -2637,7 +2646,7 @@ var CSS_ =
 '    background:#4caf7d; color:#fff; font-weight:700; font-size:.85rem;' +
 '    padding:9px; border-radius:10px; }' +
 '  .tt:active { transform:translateY(1px); }' +
-'  .vs { border-top:2px dashed var(--sub); margin:6px 2px; opacity:.85; }' +
+'  .vs { border-left:2px dashed var(--sub); align-self:stretch; opacity:.85; }' +
 '  .empty { background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:40px; text-align:center; font-size:1.15rem; color:#16a34a; }' +
 '  .mv { margin-top:8px; }' +
