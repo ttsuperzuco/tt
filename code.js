@@ -2243,16 +2243,15 @@ var HOMECSS_ =
 '  .bname { font-size:2.05rem; font-weight:900; letter-spacing:.01em; color:#fb8c44; }' +
 '  .hsub { text-align:center; color:#fff; font-weight:800; font-size:1.02rem;' +
 '    letter-spacing:.06em; opacity:.92; margin:0 0 28px; }' +
-// タイルはスマホ1画面に最大8個(2列×4行)並ぶ想定のグリッド。現状4個は自然に上半分(2行)に収まる。
-// アイコン上/文字下の正方形寄りカード＝横長1行レイアウトをやめたので、文言が長くても2行で
-// 普通に読める（「LINE未回答＆返信待ち」等をこれ以上1行に収めようと縮小・省略しなくてよい）。
-'  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
-'  .tile { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
-'    gap:8px; text-align:center; text-decoration:none; color:var(--ink);' +
-'    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px 10px;' +
-'    box-shadow:0 6px 18px rgba(0,0,0,.07); position:relative; overflow:hidden; min-height:118px;' +
+// タイルは縦1列・横長の行レイアウト（左にアイコン／右に文字、2026-07-16変更）。
+// 文字は最大2行まで自動折返し（-webkit-line-clamp:2）。1行に収まる短い文言はそのまま1行で出る。
+'  .tiles { display:grid; grid-template-columns:1fr; gap:12px; }' +
+'  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
+'    gap:14px; text-align:left; text-decoration:none; color:var(--ink);' +
+'    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 18px;' +
+'    box-shadow:0 6px 18px rgba(0,0,0,.07); position:relative; overflow:hidden;' +
 '    transition:transform .12s ease, box-shadow .12s ease; }' +
-'  .tile::before { content:""; position:absolute; left:0; top:0; right:0; width:auto; height:6px; }' +
+'  .tile::before { content:""; position:absolute; left:0; top:0; bottom:0; width:6px; height:auto; }' +
 // ★タイルの色は全部見分けが付くように離した色相を使う（共通ルール・新タイル追加時も守る）：
 //   rose #e11d48(350°)／indigo #6366f1(239°)／amber #f59e0b(38°)／emerald #0d9b6c(160°)／
 //   sky #0ea5e9(199°)。新しく足す時は上の5色と色相が近い色（±30°以内）を避けて選ぶこと
@@ -2272,9 +2271,8 @@ var HOMECSS_ =
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
-'  .tname { font-size:1.06rem; font-weight:800; white-space:normal; line-height:1.3;' +
+'  .tname { flex:1; font-size:1.6rem; font-weight:800; text-align:left; white-space:normal; line-height:1.25;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
-'  .tile.unanswered .tname { font-size:.78rem; white-space:nowrap; display:block; }' +
 '  .badge { display:inline-block; font-size:.9rem; font-weight:800; color:#fff; background:#f97316;' +
 '    border-radius:999px; padding:4px 12px; vertical-align:middle;' +
 '    letter-spacing:.03em; white-space:nowrap; box-shadow:0 2px 8px rgba(249,115,22,.45); }' +
