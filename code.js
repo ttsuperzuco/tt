@@ -2239,8 +2239,8 @@ var HOMECSS_ =
 '    display:flex; flex-direction:column; }' +
 '  .hhead { display:flex; align-items:center; justify-content:center; gap:9px; margin:18px 0 4px; }' +
 '  .bmark { font-size:22px; line-height:1; }' +
-'  img.bmark { width:26px; height:26px; border-radius:50%; object-fit:cover; }' +
-'  .bname { font-size:1.66rem; font-weight:800; letter-spacing:.01em; color:#fff; }' +
+'  img.bmark { width:44px; height:44px; border-radius:50%; object-fit:cover; }' +
+'  .bname { font-size:2.05rem; font-weight:800; letter-spacing:.01em; color:#fff; }' +
 '  .hsub { text-align:center; color:#fff; font-weight:800; font-size:1.02rem;' +
 '    letter-spacing:.06em; opacity:.92; margin:0 0 28px; }' +
 // タイルはスマホ1画面に最大8個(2列×4行)並ぶ想定のグリッド。現状4個は自然に上半分(2行)に収まる。
@@ -2272,7 +2272,7 @@ var HOMECSS_ =
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
-'  .tname { font-size:.88rem; font-weight:800; white-space:normal; line-height:1.3;' +
+'  .tname { font-size:1.06rem; font-weight:800; white-space:normal; line-height:1.3;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .badge { display:inline-block; font-size:.9rem; font-weight:800; color:#fff; background:#f97316;' +
 '    border-radius:999px; padding:4px 12px; vertical-align:middle;' +
