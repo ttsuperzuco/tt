@@ -386,7 +386,8 @@ var KANSHI_CTL_KEYS_ = [
   'line_stats_timetree_check', 'ripihoryu_auto',
   'line_prefetch', 'timetree_prefetch', 'edit_worker_watchdog',
   'line_shinki_watch', 'line_yoyaku_kakutei',
-  'edit_worker', 'conflict_watcher', 'super_link'
+  'edit_worker', 'conflict_watcher', 'super_link',
+  'lt_auto_verify'   // その他の設定：L⇔T予約照合 全自動AI判定（2026-07-16・PC/App同一ルールで追加）
 ];
 var KANSHI_CTL_ACTS_ = ['on', 'off', 'run', 'setval'];
 function _validKanshiCtl_(key, act) {
@@ -1036,6 +1037,20 @@ function esc_(s) {
 // お知らせに書く「コース第N次」（来店回数とは別・体験オフセット適用済み。共有DBの
 // reservation_course_count 由来。夜間バッチがお知らせの build_one で算出）を、events.jsonの
 // payload.course_counts から event_id で引いて表示する。要確認/未算出は⚠️（[[project_course_count_unified]]）。
+// 1〜20は丸数字、それ以上は(21)のような括弧数字にフォールバック。
+var CIRCLED_NUM_ = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩',
+  '⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
+function circledNum_(n) {
+  return (n >= 1 && n <= 20) ? CIRCLED_NUM_[n - 1] : ('(' + n + ')');
+}
+// "2026-07-19" → "7月19日(日)"（曜日は現地の年月日で計算＝タイムゾーンずれ対策でnew Date(y,m-1,d)を使う）。
+function jpDateWeekday_(iso) {
+  var p = String(iso || '').split('-').map(Number);
+  if (p.length !== 3 || !p[0]) return String(iso || '');
+  var w = ['日', '月', '火', '水', '木', '金', '土'][new Date(p[0], p[1] - 1, p[2]).getDay()];
+  return p[1] + '月' + p[2] + '日(' + w + ')';
+}
+
 function courseTag_(payload, eventId) {
   var m = (payload && payload.course_counts) || {};
   var c = m[eventId];
@@ -1069,11 +1084,14 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
       return '' +
       '<article class="card real">' +
         '<header class="card-h">' +
-          '<span class="no">' + (idx + 1) + '</span>' +
-          '<span class="date">' + esc_(x.date) + '</span>' +
-          '<span class="room" style="--rc:' + rc + '">' + esc_(x.room) + '</span>' +
+          '<div class="cline">' +
+            '<span class="clineBig">' + circledNum_(idx + 1) + esc_(jpDateWeekday_(x.date)) +
+              ' ' + esc_(x.overlap_time) + ' ' +
+              '<span class="room" style="--rc:' + rc + '">' + esc_(x.room) + '</span>' +
+            '</span>' +
+            '<span class="clineSmall">に以下の二つの予約が入っています</span>' +
+          '</div>' +
           (x.dup_suspect ? '<span class="dup">⚠️同一人物の疑い(二重入力?)</span>' : '') +
-          '<span class="ov">被り時間数 ' + x.overlap_min + '分（' + esc_(x.overlap_time) + '）</span>' +
         '</header>' +
         '<div class="pair">' +
           '<div class="side">' +
@@ -2586,10 +2604,13 @@ var CSS_ =
 '    min-height:90vh; min-height:90svh;' +
 '    margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,.06); }' +
 '  .card.dup { border-left-color:var(--dup); }' +
-'  .card-h { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
-'  .no { width:34px; height:34px; border-radius:50%; background:var(--ink); color:var(--card);' +
-'    display:grid; place-items:center; font-size:1.1rem; font-weight:800; flex:none; }' +
-'  .date { font-weight:900; font-size:1.55rem; }' +
+'  .card-h { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
+// ★2026-07-16：バラバラの丸数字/日付/バッジ表示をやめ、1つの文章として読める形に変更
+//   （1行目=丸数字＋日付＋被り時刻＋施術室名を大きい太字、2行目=説明文を小さめの字）。
+'  .cline { display:flex; flex-direction:column; gap:2px; }' +
+'  .clineBig { display:flex; align-items:center; flex-wrap:wrap; gap:6px;' +
+'    font-weight:900; font-size:1.55rem; }' +
+'  .clineSmall { font-size:.95rem; font-weight:600; color:var(--sub); }' +
 '  .room { background:var(--rc); color:#fff; font-weight:800; font-size:1.05rem;' +
 '    padding:4px 16px; border-radius:999px; }' +
 '  .dup { font-size:.95rem; font-weight:800; color:#92400e;' +
@@ -2597,8 +2618,6 @@ var CSS_ =
 '  @media (prefers-color-scheme: dark) { .dup { color:#1c1400; background:#fbbf24; } }' +
 '  .kind { font-size:.82rem; font-weight:600; }' +
 '  .card.real .kind { color:var(--real); } .card.dup .kind { color:var(--dup); }' +
-'  .ov { font-size:1.05rem; font-weight:800; color:var(--real);' +
-'    background:rgba(225,29,72,.14); padding:4px 12px; border-radius:999px; }' +
 '  .pair { display:flex; flex-direction:column; gap:0;' +
 '    border-top:2px solid var(--sub); padding-top:7px; margin-top:2px; }' +
 '  .side { background:var(--bg); border-radius:10px; padding:6px 10px; }' +
