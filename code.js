@@ -109,7 +109,7 @@ function doGet(e) {
     title = '空き時間検索';
     html = renderAkijikan_(base, staff, dev);
   } else {
-    title = staff ? 'TTスーパーズコApp（スタッフ版）' : (dev ? 'TTスーパーズコApp（開発版）' : 'TTスーパーズコApp');
+    title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
   }
   return HtmlService.createHtmlOutput(html)
@@ -982,7 +982,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }).join('');
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' +
-    '<div class="hhead"><span class="bmark">🍅</span><span class="bname">TTスーパーズコApp</span></div>' +
+    '<div class="hhead"><span class="bmark">🍅</span><span class="bname">TTスーパーズコ</span></div>' +
     '<div class="hsub">' + subtitle + '</div>' +
     '<div class="tiles">' + tilesHtml + '</div>' +
   '</div>';
@@ -1716,9 +1716,9 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<input type="date" class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
     '</div>' +
     '<div class="akipresets">' +
-      '<button type="button" class="akipreset on" data-preset="today">今日</button>' +
+      '<button type="button" class="akipreset" data-preset="today">今日</button>' +
       '<button type="button" class="akipreset" data-preset="tomorrow">明日</button>' +
-      '<button type="button" class="akipreset" data-preset="thisnext">今・来週</button>' +
+      '<button type="button" class="akipreset on" data-preset="thisnext">今・来週</button>' +
       '<button type="button" class="akipreset" data-preset="month">1か月</button>' +
       '<button type="button" class="akipreset" data-preset="all">全期間</button>' +
     '</div>' +
@@ -1787,7 +1787,7 @@ var AKISCRIPT_ =
 '    else if(kind==="month") setRange(today, addDays(today,29));' +
 '    else if(kind==="all") setRange(minD, maxD);' +
 '  }); });' +
-'  setSingle_(minD);' +   // 初期表示＝今日ピンポイント・右(to)はOFF（2026-07-16ユーザー指定）
+'  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
 '}' +
 '})();</scr' + 'ipt>';
 
