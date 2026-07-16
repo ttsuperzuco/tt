@@ -944,17 +944,19 @@ var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="tru
 
 // ホームのタイル(ボタン)定義。表示ON/OFFはコードでなく tile_settings.json（幹部用／スタッフ用）で管理する。
 // ★新しいボタンを足す時はここに1件追加＋DEFAULT_TILE_SETTINGS_にも同じidで1件追加する。
+// ★ラベルの\nは狙った位置での改行（大きい文字で2行に収めるため・2026-07-16ユーザー指定）。
+//   esc_()は\nをエスケープしないので、.tname(white-space:pre-line)でそのまま改行になる。
 var TILE_DEFS_ = [
   { id: 'conflict', cls: 'conflict', view: 'conflict',
-    icon: '<span class="ticon">🛏️</span>', label: '施術室被り検出' },
+    icon: '<span class="ticon">🛏️</span>', label: '施術室\n被り検出' },
   { id: 'lt', cls: 'lt', view: 'lt',
-    icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'L⇔T予約照合' },
+    icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'L⇔T\n予約照合' },
   { id: 'uriage', cls: 'uriage', view: 'uriage',
-    icon: '<span class="ticon">💰</span>', label: '売上TimeTree転記' },
+    icon: '<span class="ticon">💰</span>', label: '売上転記\nTimeTree' },
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
-    icon: '<span class="ticon">💬</span>', label: 'LINE未回答＆返信待ち' },
+    icon: '<span class="ticon">💬</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
-    icon: '<span class="ticon">🕑</span>', label: '空き時間検索' }
+    icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' }
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を読んで renderHomePage_ に渡すだけ。 */
@@ -2271,7 +2273,7 @@ var HOMECSS_ =
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
-'  .tname { flex:1; font-size:.94rem; font-weight:800; text-align:left; white-space:normal; line-height:1.2;' +
+'  .tname { flex:1; font-size:1.15rem; font-weight:800; text-align:left; white-space:pre-line; line-height:1.22;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .badge { display:inline-block; font-size:.9rem; font-weight:800; color:#fff; background:#f97316;' +
 '    border-radius:999px; padding:4px 12px; vertical-align:middle;' +
