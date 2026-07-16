@@ -951,7 +951,7 @@ function roomIsFree_(roomBusyForDate, name, s, e) {
 }
 
 // 被りカード内「A/Bを別の空き部屋へ移す」1行（現在の部屋は候補から除く／空いてる部屋だけ表示）。
-function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
+function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr, whoShort) {
   var hasId = (cal != null && cal !== '' && event != null && event !== '');
   var range = parseTimeRange_(timeStr);
   var btns = '';
@@ -968,6 +968,7 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
       ' data-tocal="' + rm.cal + '" data-tolabel="' + rm.label + '"' +
       ' data-room="' + esc_(name) + '" data-title="' + esc_(title) + '"' +
       ' data-who="' + esc_(who) + '" data-fromroom="' + esc_(curRoom) + '"' +
+      ' data-whoshort="' + esc_(whoShort || who) + '"' +   // 確認ポップアップ用＝通し番号を抜いた「🍊 名前様」
       ' data-time="' + esc_(timeStr || '') + '"' +
       ' style="--rc:' + roomColor_(name) + '">' + esc_(name) + '</button>';
   }
@@ -1107,13 +1108,15 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
             '<button type="button" class="mvtoggle" data-side="B">この予約の<br>部屋を移動</button>' +
           '</div>' +
           '<div class="mvpanel" data-side="A" hidden>' +
-            moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
+            moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time,
+                     [x.a_staff, x.a_name].filter(Boolean).join(' ')) +
             '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
             '<button type="button" class="rstoggle fit1line">📋 念のため、この日の部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
-            moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
+            moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time,
+                     [x.b_staff, x.b_name].filter(Boolean).join(' ')) +
             '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
             '<button type="button" class="rstoggle fit1line">📋 念のため、この日の部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
@@ -2293,8 +2296,9 @@ var MOVESCRIPT_ =
 '    var toCal=t.getAttribute("data-tocal"), toLabel=t.getAttribute("data-tolabel");' +
 '    var room=t.getAttribute("data-room"), title=t.getAttribute("data-title");' +
 '    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"", mtime=t.getAttribute("data-time")||"";' +
+'    var whoShort=t.getAttribute("data-whoshort")||who;' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
-'    ccPopup_(who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
+'    ccPopup_(whoShort+"の予約を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 // ★押した瞬間に全画面「移動中」を出し、TimeTreeへの書き込みが本当に完了するまで出したまま。
 //   完了したら全画面「✓完了」を0.5秒見せてから、被りが消えた一覧へ戻す（見た目の先行なし＝正確）。
 '      mvOverlay_(who,mtime,fromRoom,room);' +
@@ -2719,12 +2723,15 @@ var CSS_ =
 // 自前の確認ポップアップ（ブラウザ標準confirm/alertの代わり＝ドメイン名を表示しない）。
 '  .ccmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex;' +
 '    align-items:center; justify-content:center; z-index:200; padding:20px; }' +
-'  .ccbox { background:var(--card); border-radius:16px; padding:20px; max-width:340px; width:100%;' +
-'    box-shadow:0 12px 40px rgba(0,0,0,.35); }' +
-'  .ccmsg { font-size:1rem; line-height:1.55; color:var(--ink); margin-bottom:18px; white-space:pre-wrap; }' +
+// 文字は4倍（2026-07-17ユーザー指示）。大きい分だけ箱も広げ、はみ出す時は箱の中で縦スクロール。
+'  .ccbox { background:var(--card); border-radius:16px; padding:20px; max-width:720px; width:100%;' +
+'    max-height:88vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.35); }' +
+'  .ccmsg { font-size:4rem; line-height:1.4; color:var(--ink); margin-bottom:18px; white-space:pre-wrap;' +
+'    overflow-wrap:anywhere; }' +
 '  .ccbtns { display:flex; gap:10px; }' +
-'  .ccno, .ccyes { flex:1; padding:12px; border-radius:10px; border:0; font-weight:700;' +
-'    font-size:.95rem; cursor:pointer; font:inherit; }' +
+// font:inherit を font-size より後に書くと大きさが打ち消される＝先に書く。
+'  .ccno, .ccyes { flex:1; font:inherit; padding:12px; border-radius:10px; border:0; font-weight:700;' +
+'    font-size:2rem; cursor:pointer; }' +
 '  .ccno { background:var(--bg); color:var(--ink); border:1px solid var(--line); }' +
 '  .ccyes { background:#2563eb; color:#fff; }' +
 '  .ccno:active, .ccyes:active { transform:translateY(1px); }' +
