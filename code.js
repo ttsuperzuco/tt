@@ -2723,15 +2723,16 @@ var CSS_ =
 // 自前の確認ポップアップ（ブラウザ標準confirm/alertの代わり＝ドメイン名を表示しない）。
 '  .ccmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex;' +
 '    align-items:center; justify-content:center; z-index:200; padding:20px; }' +
-// 文字は4倍（2026-07-17ユーザー指示）。大きい分だけ箱も広げ、はみ出す時は箱の中で縦スクロール。
+// 文字は2倍（2026-07-17ユーザー指示。4倍は大きすぎたので半分に）。大きい分だけ箱も広げ、
+// はみ出す時は箱の中で縦スクロール。
 '  .ccbox { background:var(--card); border-radius:16px; padding:20px; max-width:720px; width:100%;' +
 '    max-height:88vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.35); }' +
-'  .ccmsg { font-size:4rem; line-height:1.4; color:var(--ink); margin-bottom:18px; white-space:pre-wrap;' +
+'  .ccmsg { font-size:2rem; line-height:1.45; color:var(--ink); margin-bottom:18px; white-space:pre-wrap;' +
 '    overflow-wrap:anywhere; }' +
 '  .ccbtns { display:flex; gap:10px; }' +
 // font:inherit を font-size より後に書くと大きさが打ち消される＝先に書く。
 '  .ccno, .ccyes { flex:1; font:inherit; padding:12px; border-radius:10px; border:0; font-weight:700;' +
-'    font-size:2rem; cursor:pointer; }' +
+'    font-size:1.4rem; cursor:pointer; }' +
 '  .ccno { background:var(--bg); color:var(--ink); border:1px solid var(--line); }' +
 '  .ccyes { background:#2563eb; color:#fff; }' +
 '  .ccno:active, .ccyes:active { transform:translateY(1px); }' +
