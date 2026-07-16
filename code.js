@@ -1026,7 +1026,7 @@ function roomStatusPanel_(date, roomBusyForDate) {
     return '<div class="rstat"><span class="room" style="--rc:' + roomColor_(name) + '">' +
       esc_(shortRoomName_(name)) + '</span><span class="rchips">' + chips + '</span></div>';
   }).join('');
-  return '<div class="rspanel"><div class="rstitle">' + esc_(jpMonthDay_(date)) + 'の施術室空き状況</div>' + rows + '</div>';
+  return '<div class="rspanel" hidden><div class="rstitle">' + esc_(jpMonthDay_(date)) + 'の施術室空き状況</div>' + rows + '</div>';
 }
 
 function esc_(s) {
@@ -1106,11 +1106,13 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
             '<button type="button" class="mvtoggle" data-side="B">' + esc_(x.b_staff || 'B') + 'の予約の<br>部屋を移動</button>' +
           '</div>' +
           '<div class="mvpanel" data-side="A" hidden>' +
+            '<button type="button" class="rstoggle">📋 空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
             moveRow_(x.a_cal_id, x.a_event_id, x.a_staff, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
             '<div class="mvhint">↑空いている施術室のみ表示しています</div>' +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
+            '<button type="button" class="rstoggle">📋 空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
             moveRow_(x.b_cal_id, x.b_event_id, x.b_staff, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
             '<div class="mvhint">↑空いている施術室のみ表示しています</div>' +
@@ -2268,6 +2270,10 @@ var MOVESCRIPT_ =
 '    var side=t.getAttribute("data-side");' +
 '    var pn=mvw.querySelector(\'.mvpanel[data-side="\'+side+\'"]\'); if(pn) pn.hidden=!pn.hidden; t.classList.toggle("open",!pn.hidden); return;' +
 '  }' +
+'  if(t.classList&&t.classList.contains("rstoggle")){' +
+'    var pnl=t; while(pnl&&!(pnl.classList&&pnl.classList.contains("mvpanel"))) pnl=pnl.parentNode; if(!pnl) return;' +
+'    var pn=pnl.querySelector(".rspanel"); if(pn) pn.hidden=!pn.hidden; t.classList.toggle("open",!pn.hidden); return;' +
+'  }' +
 '  if(t.classList&&t.classList.contains("mvbtn")){' +
 '    if(t.disabled) return;' +
 '    var mv=t; while(mv&&!(mv.classList&&mv.classList.contains("mv"))) mv=mv.parentNode; if(!mv) return;' +
@@ -2654,6 +2660,13 @@ var CSS_ =
 '    box-shadow:inset 0 2px 5px rgba(0,0,0,.2); }' +
 '  .mvpanel { margin-top:8px; background:var(--bg); border:1px solid var(--line);' +
 '    border-radius:10px; padding:8px 10px; }' +
+// ★空き部屋一覧(.rspanel)は最初は畳んでおき、この専用ボタンを押した時だけ広げる
+//   （2026-07-16ユーザー選択①：常時表示だと情報が多すぎるため）。
+'  .rstoggle { display:block; width:100%; text-align:center; font-size:.9rem; font-weight:700;' +
+'    color:var(--ink); background:var(--card); border:1px solid var(--line);' +
+'    border-radius:10px; padding:9px 6px; cursor:pointer; }' +
+'  .rstoggle:active { transform:translateY(1px); }' +
+'  .rstoggle.open { color:#fff; background:#2563eb; border-color:#2563eb; }' +
 '  .mvrow { display:flex; flex-direction:column; gap:6px; padding:6px 0; }' +
 '  .mvrow + .mvrow { border-top:1px dashed var(--line); }' +
 '  .mvlabel { font-size:.86rem; font-weight:700; color:var(--ink); }' +
