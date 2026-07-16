@@ -1078,7 +1078,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
         '</header>' +
         '<div class="pair">' +
           '<div class="side">' +
-            '<div class="time"><span class="ab abA">' + esc_(x.a_staff || 'A') + '</span>' + esc_(x.a_time) + '</div>' +
+            '<div class="time"><span class="ab">' + esc_(x.a_staff || 'A') + '</span>' + esc_(x.a_time) + '</div>' +
             '<div class="who">' +
               '<span class="code">' + esc_(x.a_code) + '</span>' +
               '<span class="name">' + esc_(x.a_name) + '</span></div>' +
@@ -1086,7 +1086,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
           '</div>' +
           '<div class="vs"></div>' +
           '<div class="side">' +
-            '<div class="time"><span class="ab abB">' + esc_(x.b_staff || 'B') + '</span>' + esc_(x.b_time) + '</div>' +
+            '<div class="time"><span class="ab">' + esc_(x.b_staff || 'B') + '</span>' + esc_(x.b_time) + '</div>' +
             '<div class="who">' +
               '<span class="code">' + esc_(x.b_code) + '</span>' +
               '<span class="name">' + esc_(x.b_name) + '</span></div>' +
@@ -1125,7 +1125,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
     '</div>' +
   '</div>' +
-  '<h1>⚠️ 施術室被り検出 <span class="cnt">' + real + '件</span>' + nailNote + '</h1>' +
+  '<h1 class="fit1line">⚠️ 施術室被り検出 <span class="cnt">' + real + '件</span>' + nailNote + '</h1>' +
   cards +
 '</div>' +
 identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
@@ -2624,9 +2624,8 @@ var CSS_ =
 '    font-variant-numeric:tabular-nums; }' +
 // ★担当者を文字(A/B)でなく、TimeTreeのタイトル先頭から取れる果物マーク(x.a_staff/b_staff)で
 //   大きく見せる（2026-07-16・「そっちのほうがわかりやすい」との要望で変更）。
-'  .ab { flex:none; display:grid; place-items:center; width:56px; height:56px; border-radius:14px;' +
-'    color:#fff; font-weight:800; font-size:1.9rem; margin-right:8px; }' +
-'  .abA { background:#2563eb; } .abB { background:#0d9488; }' +
+//   ★同日追加要望：四角い背景は要らず、果物そのものだけをできるだけ大きく。
+'  .ab { flex:none; display:grid; place-items:center; font-size:3.2rem; line-height:1; margin-right:6px; }' +
 '  .who { margin:4px 0 2px; font-size:1rem; }' +
 '  .who .code { color:var(--sub); font-weight:600; margin:0 4px; }' +
 '  .who .name { font-weight:500; }' +
