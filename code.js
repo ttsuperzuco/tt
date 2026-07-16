@@ -223,8 +223,8 @@ function _tileSettingsJsonp_(p) {
   //   ここで1回だけ読み、純関数(_*FromCfg_)で3種を導く（＝被り画面の初期表示が速くなる）。
   var d = {};
   try { d = JSON.parse(getTileSettingsFile_().getBlob().getDataAsString('UTF-8')) || {}; } catch (ignore) { d = {}; }
-  var payload = { tiles: _tilesFromCfg_(d), perms: _permsFromCfg_(d), people: PEOPLE_,
-                  labels: PERSON_LABEL_, resets: _resetsFromCfg_(d) };
+  var payload = { tiles: _tilesFromCfg_(d), perms: _permsFromCfg_(d), people: _peopleFromCfg_(d),
+                  labels: _labelsFromCfg_(d), resets: _resetsFromCfg_(d), claimed: _claimedFromCfg_(d) };
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
@@ -233,11 +233,12 @@ function _tilesFromCfg_(d) {
   return (d && d.tiles && typeof d.tiles === 'object') ? d.tiles : DEFAULT_TILE_SETTINGS_;
 }
 function _permsFromCfg_(d) {
-  var perms = defaultPerms_();
+  var people = _peopleFromCfg_(d);
+  var perms = defaultPerms_(people);
   var saved = d && d.perms;
   if (saved && typeof saved === 'object') {
-    for (var i = 0; i < PEOPLE_.length; i++) {
-      var pid = PEOPLE_[i];
+    for (var i = 0; i < people.length; i++) {
+      var pid = people[i];
       if (saved[pid] && typeof saved[pid] === 'object') {
         for (var t in perms[pid]) { if (t in saved[pid]) perms[pid][t] = !!saved[pid][t]; }
       }
@@ -352,6 +353,7 @@ function handleAction_(p) {
   if (p.action === 'akijikan') return _akijikanJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
   if (p.action === 'checkpw') return _checkPwJsonp_(p);
+  if (p.action === 'claim') return _claimJsonp_(p);
   if (p.action === 'hit') {   // アクセスログ（②静的アプリが画面表示ごとに叩く・鍵不要・軽量）
     try {
       logAccess_(String(p.who || '').replace(/[^a-z]/g, ''), String(p.role || ''),
@@ -641,29 +643,83 @@ var PERSON_LABEL_ = {
   marron: '🌰マロン', mango: '🥭マンゴー', coconut: '🥥ココナッツ', reception: 'お店受付'
 };
 // 初期権限＝全員「施術室被り(conflict)」だけON（tile_settings.py DEFAULT と一致）。
-function defaultPerms_() {
+// peopleを省略した時は base8(PEOPLE_)のみ＝壊れた時の最終フォールバック用。
+function defaultPerms_(people) {
+  var list = people || PEOPLE_;
   var perms = {};
-  for (var i = 0; i < PEOPLE_.length; i++) {
-    perms[PEOPLE_[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
+  for (var i = 0; i < list.length; i++) {
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
   }
   return perms;
+}
+// ========== 自動監視メニュー4で追加した「追加スタッフ」＝base8(PEOPLE_)に追記するだけ ==========
+// tile_settings.json の extraPeople:[{id,label}] を読み、base8に無い人だけ足す。
+// ★base8自体は書き換えない＝この仕組みが壊れてもbase8(既存スタッフ)は必ず動く設計。
+function _peopleFromCfg_(d) {
+  var ids = PEOPLE_.slice();
+  var extra = (d && d.extraPeople && d.extraPeople.length) ? d.extraPeople : [];
+  for (var i = 0; i < extra.length; i++) {
+    if (extra[i] && extra[i].id && ids.indexOf(extra[i].id) < 0) ids.push(extra[i].id);
+  }
+  return ids;
+}
+function _labelsFromCfg_(d) {
+  var labels = {};
+  for (var k in PERSON_LABEL_) labels[k] = PERSON_LABEL_[k];
+  var extra = (d && d.extraPeople && d.extraPeople.length) ? d.extraPeople : [];
+  for (var i = 0; i < extra.length; i++) {
+    if (extra[i] && extra[i].id) labels[extra[i].id] = extra[i].label || extra[i].id;
+  }
+  return labels;
+}
+// 誰がどの人(pid)を選択済みか＝{pid:{device,label,at}}。一度誰かが選んだ人は他端末から選べなくする
+// （2026-07-16・重複選択防止）。実際の防止はサーバー側の_claimJsonp_のみ、これは読み取り専用。
+function _claimedFromCfg_(d) {
+  var c = d && d.claimed;
+  return (c && typeof c === 'object') ? c : {};
+}
+// 「はい、私です」を押した端末が、その人(pid)を早い者勝ちで押さえる（書込あり・鍵不要＝read/write
+// 両方とも公開度は名前選択そのものと同じ）。同じ端末が読み直した時は自分の占有として通す(idempotent)。
+// ロックは①LockServiceで直近読み書きの競合を防ぐ②tile_settings.jsonへ直接書く(TimeTree/LINEでは
+// ないためEDIT_KEY命令置き場は不要＝events.jsonのpush_events(doPost)と同じ「Drive直書き」枠)。
+function _claimJsonp_(p) {
+  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
+  var out;
+  var lock = LockService.getScriptLock();
+  try { lock.tryLock(10000); } catch (ig) {}
+  try {
+    var pid = String(p.pid || '').trim();
+    var device = String(p.device || '').trim();
+    if (!pid || !device) {
+      out = { ok: false, error: '不正な要求です' };
+    } else {
+      var file = getTileSettingsFile_();
+      var d = JSON.parse(file.getBlob().getDataAsString('UTF-8')) || {};
+      var claimed = (d.claimed && typeof d.claimed === 'object') ? d.claimed : {};
+      var cur = claimed[pid];
+      if (cur && cur.device && cur.device !== device) {
+        out = { ok: false, error: 'すでに他の人が選んでいます。画面を読み直してから選び直してください。' };
+      } else {
+        claimed[pid] = { device: device, label: String(p.label || ''), at: Date.now() };
+        d.claimed = claimed;
+        file.setContent(JSON.stringify(d));
+        out = { ok: true };
+      }
+    }
+  } catch (e) {
+    out = { ok: false, error: String(e) };
+  } finally {
+    try { lock.releaseLock(); } catch (ig) {}
+  }
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(out) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 // tile_settings.json の perms を読む（無ければ／壊れていれば初期値）。①GAS専用＝DriveApp。
 function getPerms_() {
   try {
     var file = getTileSettingsFile_();
     var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
-    var perms = defaultPerms_();
-    var saved = d && d.perms;
-    if (saved && typeof saved === 'object') {
-      for (var i = 0; i < PEOPLE_.length; i++) {
-        var pid = PEOPLE_[i];
-        if (saved[pid] && typeof saved[pid] === 'object') {
-          for (var t in perms[pid]) { if (t in saved[pid]) perms[pid][t] = !!saved[pid][t]; }
-        }
-      }
-    }
-    return perms;
+    return _permsFromCfg_(d);
   } catch (ignore) {
     return defaultPerms_();
   }
@@ -679,11 +735,11 @@ function getResets_() {
   } catch (ignore) { return {}; }
 }
 // 役割から「その人の権限オブジェクト」を返す。dev=全許可(null)。staff=who本人。無印=社長(kanbu)。
-// 不明な人(whoが空/未登録)は安全側＝施術被りだけ。
+// 不明な人(whoが空/未登録/未知のpid)は安全側＝施術被りだけ（permsに無ければ自動でこの安全側になる
+// ＝追加スタッフ(extraPeople)かどうかを判定する必要が無い＝base8限定のホワイトリストは撤去済み）。
 function personPerms_(perms, staff, dev, who) {
   if (dev) return null;   // null = すべて許可
   var pid = staff ? String(who || '') : 'kanbu';
-  if (PEOPLE_.indexOf(pid) < 0) return { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
   return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
 }
 // そのviewを見る権限があるか（home/notice は常に可）。allow=null(dev)は常に可。
@@ -698,10 +754,11 @@ function viewAllowed_(view, allow) {
 // 事務所PCが action=drainlog で回収して shared_store.sqlite へ移す（GASは drive.readonly のまま）。
 // 操作ログ（誰がどのデータをどう変えたか）は who を積んだキュー項目を edit_worker が実行時にDBへ記録する。
 var ACCESS_LOG_PROP_ = 'ACCESS_LOG';
-function roleName_(staff, dev, who) {
+function roleName_(staff, dev, who, labels) {
   if (dev) return '開発';
   if (!staff) return '社長(幹部)';
-  return PERSON_LABEL_[who] || ('スタッフ(' + (who || '未選択') + ')');
+  var L = labels || PERSON_LABEL_;
+  return L[who] || ('スタッフ(' + (who || '未選択') + ')');
 }
 function logAccess_(who, role, device, view) {
   var props = PropertiesService.getScriptProperties();
@@ -999,9 +1056,12 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' }
 ];
 
-/** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を読んで renderHomePage_ に渡すだけ。 */
+/** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
+ *  perms/labels(追加スタッフ込み)を renderHomePage_ に渡す。 */
 function renderHome_(base, staff, dev, who) {
-  return renderHomePage_({ perms: getPerms_() }, base, staff, dev, who);
+  var d = {};
+  try { d = JSON.parse(getTileSettingsFile_().getBlob().getDataAsString('UTF-8')) || {}; } catch (ignore) {}
+  return renderHomePage_({ perms: _permsFromCfg_(d), labels: _labelsFromCfg_(d) }, base, staff, dev, who);
 }
 
 /** ホーム画面の描画（純JS・GAS API不使用）。②静的アプリは JSONP で tile_settings を取得し、
@@ -1009,10 +1069,11 @@ function renderHome_(base, staff, dev, who) {
  *  dev=true（開発用URL）は tile_settings.json の設定を無視して全ボタンを表示する。 */
 function renderHomePage_(cfg, base, staff, dev, who) {
   var perms = (cfg && cfg.perms) || defaultPerms_();
+  var labels = (cfg && cfg.labels) || PERSON_LABEL_;
   var allow = personPerms_(perms, staff, dev, who);   // null=dev(全許可)
   var sfx = roleSfx_(staff, dev);
   var subtitle = dev ? '開発版（全ボタン表示）'
-    : (staff ? (PERSON_LABEL_[who] || 'スタッフ') : 'TOMATOさん版');
+    : (staff ? (labels[who] || 'スタッフ') : 'TOMATOさん版');
   var tilesHtml = TILE_DEFS_.filter(function (t) {
     if (!allow) return true;          // dev＝全部
     return allow[t.id] === true;      // 明示ONのボタンだけ表示（初期は施術室被りのみ）

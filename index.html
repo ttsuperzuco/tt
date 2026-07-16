@@ -101,7 +101,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260716r"></script>
-<script src="code.js?v=2026071701"></script>
+<script src="code.js?v=2026071702"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -348,14 +348,17 @@
   }
 
   // ===== 名前選択画面（スタッフURLで未選択のときだけ）=====
-  function showPicker(people, labels) {
+  // ★一度誰かが選んだ名前は他端末からは選べない（2026-07-16・重複選択防止）。ここでの除外は
+  //   見た目の親切だけ＝本当の防止はconfirmPickのaction=claim(サーバー側の早い者勝ちロック)。
+  function showPicker(people, labels, claimed) {
     var root = document.getElementById('root');
-    var pick = (people || []).filter(function (p) { return p !== 'kanbu'; });
+    var pick = (people || []).filter(function (p) { return p !== 'kanbu' && !(claimed && claimed[p]); });
     var btns = pick.map(function (pid) {
       return '<button type="button" class="pk" data-who="' + esc(pid) + '">' + esc(labels[pid] || pid) + '</button>';
     }).join('');
     root.innerHTML = '<div class="pkwrap"><div class="pktitle">あなたは誰ですか？</div>' +
-      '<div class="pkgrid">' + btns + '</div></div>';
+      '<div class="pkgrid">' + btns + '</div>' +
+      '<div class="pknote">すでに他の人が選んだ名前は出ません。自分の名前が無い時は、事務所の自動監視システムから新しく作ってもらってください。</div></div>';
     var bs = root.querySelectorAll('.pk');
     for (var i = 0; i < bs.length; i++) {
       bs[i].addEventListener('click', function () {
@@ -369,9 +372,29 @@
       '<div class="pkbtns"><button type="button" class="pkno">ちがう</button>' +
       '<button type="button" class="pkyes">はい</button></div></div>';
     root.querySelector('.pkyes').addEventListener('click', function () {
-      lsSet(LS_WHO, pid); lsSet(LS_ROLE, 'スタッフ'); lsSet(LS_LABEL, label);
-      lsSet('sz_picked_at', String(Date.now()));   // リセット合図との比較用（選んだ時刻）
-      location.reload();   // 記憶して読み直し→通常フローへ
+      var yesBtn = this; yesBtn.disabled = true;
+      // 早い者勝ちの確保をGASへ依頼。通ってから初めて端末に記憶する（他端末と同時に選んだ時の安全弁）。
+      window.__ttClaim = function (r) {
+        if (r && r.ok) {
+          lsSet(LS_WHO, pid); lsSet(LS_ROLE, 'スタッフ'); lsSet(LS_LABEL, label);
+          lsSet('sz_picked_at', String(Date.now()));   // リセット合図との比較用（選んだ時刻）
+          location.reload();   // 記憶して読み直し→通常フローへ
+        } else {
+          root.innerHTML = '<div class="pkwrap"><div class="pktitle">' +
+            esc((r && r.error) || 'すでに他の人が選んでいます') + '</div>' +
+            '<div class="pknote">画面を読み直して、もう一度選んでください。</div></div>';
+          setTimeout(function () { location.reload(); }, 1800);
+        }
+      };
+      var s = document.createElement('script');
+      s.src = EXEC + '?action=claim&pid=' + encodeURIComponent(pid) + '&device=' + encodeURIComponent(device) +
+        '&label=' + encodeURIComponent(label) + '&callback=__ttClaim&cb=' + Date.now();
+      s.onerror = function () {
+        root.innerHTML = '<div class="pkwrap"><div class="pktitle">通信エラーです</div>' +
+          '<div class="pknote">画面を読み直して、もう一度選んでください。</div></div>';
+        setTimeout(function () { location.reload(); }, 1800);
+      };
+      document.body.appendChild(s);
     });
     root.querySelector('.pkno').addEventListener('click', function () { location.reload(); });
   }
@@ -427,7 +450,7 @@
       }
     }
     // スタッフURLで名前が未選択なら、まず名前を選ばせる（選ぶまで他は出さない）。
-    if (staff && !who) { showPicker(people, labels); return; }
+    if (staff && !who) { showPicker(people, labels, (cfg && cfg.claimed) || {}); return; }
 
     // 権限判定は code.js の関数を再利用＝GAS(①)と完全一致。
     var allow = (typeof personPerms_ === 'function')
