@@ -951,7 +951,7 @@ function roomIsFree_(roomBusyForDate, name, s, e) {
 }
 
 // 被りカード内「A/Bを別の空き部屋へ移す」1行（現在の部屋は候補から除く／空いてる部屋だけ表示）。
-function moveRow_(side, cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
+function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
   var hasId = (cal != null && cal !== '' && event != null && event !== '');
   var range = parseTimeRange_(timeStr);
   var btns = '';
@@ -966,7 +966,7 @@ function moveRow_(side, cal, event, who, title, curRoom, roomBusyForDate, timeSt
       (hasId ? '' : ' disabled') +
       ' data-cal="' + esc_(cal) + '" data-ev="' + esc_(event) + '"' +
       ' data-tocal="' + rm.cal + '" data-tolabel="' + rm.label + '"' +
-      ' data-room="' + esc_(name) + '" data-title="' + esc_(title) + '" data-side="' + side + '"' +
+      ' data-room="' + esc_(name) + '" data-title="' + esc_(title) + '"' +
       ' data-who="' + esc_(who) + '" data-fromroom="' + esc_(curRoom) + '"' +
       ' data-time="' + esc_(timeStr || '') + '"' +
       ' style="--rc:' + roomColor_(name) + '">' + esc_(name) + '</button>';
@@ -974,7 +974,7 @@ function moveRow_(side, cal, event, who, title, curRoom, roomBusyForDate, timeSt
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
     : (!anyFree ? '<span class="mvng">その時間、空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
-    '<span class="mvlabel">' + side + '（' + esc_(who) + '）を以下の部屋に移す</span>' +
+    '<span class="mvlabel">' + esc_(who) + 'を以下の部屋に移す</span>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
 }
@@ -1025,7 +1025,7 @@ function roomStatusPanel_(date, roomBusyForDate) {
     return '<div class="rstat"><span class="room" style="--rc:' + roomColor_(name) + '">' +
       esc_(shortRoomName_(name)) + '</span><span class="rchips">' + chips + '</span></div>';
   }).join('');
-  return '<div class="rspanel" hidden><div class="rstitle">' + esc_(date) + ' の施術室別・空き時間</div>' + rows + '</div>';
+  return '<div class="rspanel"><div class="rstitle">' + esc_(date) + ' の施術室別・空き時間</div>' + rows + '</div>';
 }
 
 function esc_(s) {
@@ -1093,19 +1093,19 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
             menu_(x.b_menu) +
           '</div>' +
         '</div>' +
-        '<a class="tt" target="_top" rel="noopener"' +
-          ' data-cal="' + esc_(x.a_cal_id) + '" data-ev="' + esc_(x.a_event_id) + '"' +
-          ' href="https://timetreeapp.com/calendars/' + esc_(x.a_cal_id) + '/events/' + esc_(x.a_event_id) + '">' +
-          '📅 TimeTree Appを開く</a>' +
         '<div class="mv" data-room="' + esc_(x.room) + '">' +
           '<div class="mvtoprow">' +
-            '<button type="button" class="mvtoggle">🔀 部屋を移して<br>被りを解消</button>' +
-            '<button type="button" class="rstoggle">📋 空き部屋<br>状況を見る</button>' +
+            '<button type="button" class="mvtoggle" data-side="A">' + esc_(x.a_staff || 'A') + 'の予約の<br>部屋を移動</button>' +
+            '<button type="button" class="mvtoggle" data-side="B">' + esc_(x.b_staff || 'B') + 'の予約の<br>部屋を移動</button>' +
           '</div>' +
-          roomStatusPanel_(x.date, roomBusyForDate) +
-          '<div class="mvpanel" hidden>' +
-            moveRow_('A', x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
-            moveRow_('B', x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
+          '<div class="mvpanel" data-side="A" hidden>' +
+            roomStatusPanel_(x.date, roomBusyForDate) +
+            moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
+            '<div class="mvhint">空いている施術室のみ表示しています</div>' +
+          '</div>' +
+          '<div class="mvpanel" data-side="B" hidden>' +
+            roomStatusPanel_(x.date, roomBusyForDate) +
+            moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
             '<div class="mvhint">空いている施術室のみ表示しています</div>' +
           '</div>' +
           '<div class="mvstatus" hidden></div>' +
@@ -2256,23 +2256,20 @@ var MOVESCRIPT_ =
 '}' +
 'wrap.addEventListener("click",function(ev){' +
 '  var t=ev.target;' +
-'  if(t.classList&&t.classList.contains("rstoggle")){' +
-'    var card=t; while(card&&!(card.classList&&card.classList.contains("card"))) card=card.parentNode; if(!card) return;' +
-'    var pn=card.querySelector(".rspanel"); if(pn) pn.hidden=!pn.hidden; t.classList.toggle("open",!pn.hidden); return;' +
-'  }' +
 '  if(t.classList&&t.classList.contains("mvtoggle")){' +
 '    var mvw=t; while(mvw&&!(mvw.classList&&mvw.classList.contains("mv"))) mvw=mvw.parentNode; if(!mvw) return;' +
-'    var pn=mvw.querySelector(".mvpanel"); if(pn) pn.hidden=!pn.hidden; t.classList.toggle("open",!pn.hidden); return;' +
+'    var side=t.getAttribute("data-side");' +
+'    var pn=mvw.querySelector(\'.mvpanel[data-side="\'+side+\'"]\'); if(pn) pn.hidden=!pn.hidden; t.classList.toggle("open",!pn.hidden); return;' +
 '  }' +
 '  if(t.classList&&t.classList.contains("mvbtn")){' +
 '    if(t.disabled) return;' +
 '    var mv=t; while(mv&&!(mv.classList&&mv.classList.contains("mv"))) mv=mv.parentNode; if(!mv) return;' +
 '    var cal=t.getAttribute("data-cal"), evid=t.getAttribute("data-ev");' +
 '    var toCal=t.getAttribute("data-tocal"), toLabel=t.getAttribute("data-tolabel");' +
-'    var room=t.getAttribute("data-room"), title=t.getAttribute("data-title"), side=t.getAttribute("data-side");' +
+'    var room=t.getAttribute("data-room"), title=t.getAttribute("data-title");' +
 '    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"", mtime=t.getAttribute("data-time")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
-'    ccPopup_(side+" "+who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
+'    ccPopup_(who+"を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
 // ★押した瞬間に全画面「移動中」を出し、TimeTreeへの書き込みが本当に完了するまで出したまま。
 //   完了したら全画面「✓完了」を0.5秒見せてから、被りが消えた一覧へ戻す（見た目の先行なし＝正確）。
 '      mvOverlay_(who,mtime,fromRoom,room);' +
@@ -2642,11 +2639,11 @@ var CSS_ =
 '    padding:40px; text-align:center; font-size:1.15rem; color:#16a34a; }' +
 '  .mv { margin-top:8px; }' +
 '  .mvtoprow { display:flex; gap:8px; align-items:stretch; }' +
-'  .mvtoggle, .rstoggle { flex:1 1 0; text-align:center; font-size:.85rem; font-weight:700;' +
+'  .mvtoggle { flex:1 1 0; text-align:center; font-size:.85rem; font-weight:700;' +
 '    line-height:1.4; white-space:normal; color:#fff; background:#2563eb; border:1px solid #2563eb;' +
 '    border-radius:10px; padding:9px 6px; cursor:pointer; }' +
-'  .mvtoggle:active, .rstoggle:active { transform:translateY(1px); }' +
-'  .mvtoggle.open, .rstoggle.open { color:var(--ink); background:var(--card); border-color:var(--line);' +
+'  .mvtoggle:active { transform:translateY(1px); }' +
+'  .mvtoggle.open { color:var(--ink); background:var(--card); border-color:var(--line);' +
 '    box-shadow:inset 0 2px 5px rgba(0,0,0,.2); }' +
 '  .mvpanel { margin-top:8px; background:var(--bg); border:1px solid var(--line);' +
 '    border-radius:10px; padding:8px 10px; }' +
