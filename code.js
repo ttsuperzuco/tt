@@ -2616,8 +2616,11 @@ var CSS_ =
 // ★2026-07-16：日付+時刻／施術室名+説明文の2行を、それぞれ横幅いっぱいまで大きく見せる。
 //   .fit1lineは開始時にわざと大きめのfont-sizeを振っておき、下のFIT_ONE_LINE_JS_が
 //   はみ出さなくなるまで1pxずつ縮めて「1行に収まる範囲で最大」を実現する（.uvの金額縮小と同じ手法）。
-'  .cline { display:flex; flex-direction:column; gap:2px; }' +
-'  .fit1line { white-space:nowrap; overflow:hidden; }' +
+// ★flexboxは既定でmin-width:autoのため、白抜き(white-space:nowrap)の長い文字が
+//   親幅を無視してカードの外にはみ出す不具合があった（2026-07-16実機で発覚）。
+//   min-width:0＋flex-basis:100%で必ず親幅に収まらせてから、JSの縮小ループで文字を詰める。
+'  .cline { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 100%; }' +
+'  .fit1line { white-space:nowrap; overflow:hidden; min-width:0; }' +
 '  .clineDate { font-weight:900; font-size:2.3rem; }' +
 '  .clineRoom { font-weight:900; font-size:1.9rem; }' +
 '  .room { background:var(--rc); color:#fff; font-weight:800; font-size:1.05rem;' +
