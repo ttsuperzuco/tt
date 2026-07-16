@@ -1045,17 +1045,6 @@ function jpDateWeekday_(iso) {
   return p[1] + '月' + p[2] + '日(' + w + ')';
 }
 
-function courseTag_(payload, eventId) {
-  var m = (payload && payload.course_counts) || {};
-  var c = m[eventId];
-  if (!c) return '';                       // 未算出（バッチ未実行/対象外）は何も出さない
-  var need = (c.need || !c.course);
-  var label = need ? '⚠️要確認' : esc_(c.course);
-  var col = need ? '#b45309' : '#2563eb';
-  return '<div style="margin-top:4px;font-size:12px;font-weight:700;color:' + col +
-    ';">🔔お知らせ回数：' + label + '</div>';
-}
-
 function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
   var real = conflicts.length;
   function menu_(m) {
@@ -1089,21 +1078,19 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
         '</header>' +
         '<div class="pair">' +
           '<div class="side">' +
-            '<div class="time"><span class="ab abA">A</span>' + esc_(x.a_time) + '</div>' +
-            '<div class="who"><span class="staff">' + esc_(x.a_staff) + '</span>' +
+            '<div class="time"><span class="ab abA">' + esc_(x.a_staff || 'A') + '</span>' + esc_(x.a_time) + '</div>' +
+            '<div class="who">' +
               '<span class="code">' + esc_(x.a_code) + '</span>' +
               '<span class="name">' + esc_(x.a_name) + '</span></div>' +
             menu_(x.a_menu) +
-            courseTag_(payload, x.a_event_id) +
           '</div>' +
           '<div class="vs"></div>' +
           '<div class="side">' +
-            '<div class="time"><span class="ab abB">B</span>' + esc_(x.b_time) + '</div>' +
-            '<div class="who"><span class="staff">' + esc_(x.b_staff) + '</span>' +
+            '<div class="time"><span class="ab abB">' + esc_(x.b_staff || 'B') + '</span>' + esc_(x.b_time) + '</div>' +
+            '<div class="who">' +
               '<span class="code">' + esc_(x.b_code) + '</span>' +
               '<span class="name">' + esc_(x.b_name) + '</span></div>' +
             menu_(x.b_menu) +
-            courseTag_(payload, x.b_event_id) +
           '</div>' +
         '</div>' +
         '<a class="tt" target="_top" rel="noopener"' +
@@ -2635,14 +2622,16 @@ var CSS_ =
 '  .side { background:var(--bg); border-radius:10px; padding:6px 10px; min-width:0; }' +
 '  .time { display:flex; align-items:center; font-weight:600; font-size:1.3rem;' +
 '    font-variant-numeric:tabular-nums; }' +
-'  .ab { flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:9px;' +
-'    color:#fff; font-weight:800; font-size:1.15rem; margin-right:8px; }' +
+// ★担当者を文字(A/B)でなく、TimeTreeのタイトル先頭から取れる果物マーク(x.a_staff/b_staff)で
+//   大きく見せる（2026-07-16・「そっちのほうがわかりやすい」との要望で変更）。
+'  .ab { flex:none; display:grid; place-items:center; width:56px; height:56px; border-radius:14px;' +
+'    color:#fff; font-weight:800; font-size:1.9rem; margin-right:8px; }' +
 '  .abA { background:#2563eb; } .abB { background:#0d9488; }' +
 '  .who { margin:4px 0 2px; font-size:1rem; }' +
-'  .who .staff { font-size:1.02rem; } .who .code { color:var(--sub); font-weight:600; margin:0 4px; }' +
+'  .who .code { color:var(--sub); font-weight:600; margin:0 4px; }' +
 '  .who .name { font-weight:500; }' +
 '  .menu { list-style:none; margin:6px 0 4px; padding:0; }' +
-'  .menu li { font-size:.9rem; line-height:1.35; padding-left:1.15em; position:relative; }' +
+'  .menu li { font-size:.9rem; font-weight:700; line-height:1.35; padding-left:1.15em; position:relative; }' +
 '  .menu li::before { content:"◉"; position:absolute; left:0; color:var(--real); font-size:.7em; top:.28em; }' +
 '  .cal { font-size:.72rem; color:var(--sub); }' +
 '  .tt { display:block; margin-top:8px; text-align:center; text-decoration:none;' +
