@@ -952,7 +952,7 @@ var TILE_DEFS_ = [
   { id: 'uriage', cls: 'uriage', view: 'uriage',
     icon: '<span class="ticon">💰</span>', label: '売上TimeTree転記' },
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
-    icon: '<span class="ticon">💬</span>', label: 'LINE未回答＆返信待ち' },
+    icon: '<span class="ticon">💬</span>', label: 'LINE未回答' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
     icon: '<span class="ticon">🕑</span>', label: '空き時間検索' }
 ];
@@ -2239,8 +2239,8 @@ var HOMECSS_ =
 '    display:flex; flex-direction:column; }' +
 '  .hhead { display:flex; align-items:center; justify-content:center; gap:9px; margin:18px 0 4px; }' +
 '  .bmark { font-size:22px; line-height:1; }' +
-'  img.bmark { width:44px; height:44px; border-radius:50%; object-fit:cover; }' +
-'  .bname { font-size:2.05rem; font-weight:800; letter-spacing:.01em; color:#fff; }' +
+'  img.bmark { width:66px; height:66px; border-radius:50%; object-fit:cover; }' +
+'  .bname { font-size:2.05rem; font-weight:800; letter-spacing:.01em; color:#fb8c44; }' +
 '  .hsub { text-align:center; color:#fff; font-weight:800; font-size:1.02rem;' +
 '    letter-spacing:.06em; opacity:.92; margin:0 0 28px; }' +
 // タイルはスマホ1画面に最大8個(2列×4行)並ぶ想定のグリッド。現状4個は自然に上半分(2行)に収まる。
