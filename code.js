@@ -980,7 +980,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }).join('');
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' +
-    '<div class="hhead"><span class="bmark">🍅</span><span class="bname">TTスーパーズコ</span></div>' +
+    '<div class="hhead"><img class="bmark" src="https://ttsuperzuco.github.io/tt/icons/icon-180.png" alt=""><span class="bname">TTスーパーズコ</span></div>' +
     '<div class="hsub">' + subtitle + '</div>' +
     '<div class="tiles">' + tilesHtml + '</div>' +
   '</div>';
@@ -2239,6 +2239,7 @@ var HOMECSS_ =
 '    display:flex; flex-direction:column; }' +
 '  .hhead { display:flex; align-items:center; justify-content:center; gap:9px; margin:18px 0 4px; }' +
 '  .bmark { font-size:22px; line-height:1; }' +
+'  img.bmark { width:26px; height:26px; border-radius:50%; object-fit:cover; }' +
 '  .bname { font-size:1.66rem; font-weight:800; letter-spacing:.01em; color:#fff; }' +
 '  .hsub { text-align:center; color:#fff; font-weight:800; font-size:1.02rem;' +
 '    letter-spacing:.06em; opacity:.92; margin:0 0 28px; }' +
