@@ -52,6 +52,20 @@ function doPost(e) {
       return _actionOut_({ ok: false, error: String(err) }, null);
     }
   }
+  // ★2026-07-16追加：自動監視の状態(monitor.json)を事務所PCから直接受け取ってDriveへ書く。
+  //   push_events と同じ理由（Driveアプリの同期待ちは数秒〜10分以上と読めない＝監視画面は
+  //   鮮度がいのちなので待てない）。事務所PCの export_monitor_super.py が1分ごとに送る。
+  if (p.action === 'push_monitor') {
+    if (p.key !== EDIT_KEY) return _actionOut_({ ok: false, error: 'bad key' }, null);
+    try {
+      var mbody = (e.postData && e.postData.contents) || '';
+      JSON.parse(mbody);  // 壊れたJSONを書き込まない安全弁
+      getMonitorFile_(true).setContent(mbody);
+      return _actionOut_({ ok: true }, null);
+    } catch (err2) {
+      return _actionOut_({ ok: false, error: String(err2) }, null);
+    }
+  }
   return _actionOut_({ ok: false, error: 'unknown action' }, null);
 }
 
@@ -108,6 +122,9 @@ function doGet(e) {
   } else if (view === 'akijikan') {
     title = '空き時間検索';
     html = renderAkijikan_(base, staff, dev);
+  } else if (view === 'kanshi') {
+    title = '自動監視';
+    html = renderKanshi_(base, staff, dev);
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -209,6 +226,21 @@ function _akijikanJsonp_(p) {
     payload = JSON.parse(getAkijikanFile_().getBlob().getDataAsString('UTF-8'));
   } catch (e) {
     payload = { error: String(e) };
+  }
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
+// monitor.json のJSONP配信（読み取り専用・鍵不要）。事務所PCが export_monitor_super.py で
+// 1分ごとに書き出す＝自動監視（開発URLだけに出るボタン）の中身。
+// ★中身は「どの自動プログラムが動いているか」の状態だけで、客の個人情報は一切入らない。
+function _kanshiJsonp_(p) {
+  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
+  var payload;
+  try {
+    payload = JSON.parse(getMonitorFile_().getBlob().getDataAsString('UTF-8'));
+  } catch (e) {
+    payload = { error: String(e), groups: [] };
   }
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
@@ -324,8 +356,45 @@ function _rateOk_(q) {
   });
   return recent.length < RATE_LIMIT_;
 }
+// ========== 自動監視の操作（ON/OFF・今すぐ実行）の安全弁（2026-07-16追加） ==========
+// ★なぜ厳重にするか：②静的アプリ(GitHub上に公開)に EDIT_KEY が埋め込まれている＝鍵は誰でも
+//   読める。自動監視の操作をそのまま公開すると、URLを知った誰かが全自動プログラムを止められる。
+//   そこで「スタッフ用URLの入口合言葉」と同じ仕組みをもう一段の関門として使う（合言葉の正解値は
+//   サーバー(ここ)から一切出さない＝②の公開コードに載らない）。合言葉は自動監視メニュー4で変更可。
+// ★さらに、触ってよい項目(key)をここのホワイトリストで固定する。事務所PC側(monitor_ctl.apply)でも
+//   同じ確認を必ずもう一度行う（鍵が公開されている前提の二重の関門）。
+// ★お金・電源・データ復元に関わるもの（PotCoin解錠／PC自動スリープ／復元コピー）は入れない
+//   ＝外からは見るだけ（スマホの誤タップで動くと取り返しがつかないため）。
+var KANSHI_CTL_KEYS_ = [
+  'db_backup', 'db_backup_full', 'course_counts', 'program_backup',
+  'line_stats_timetree_check', 'ripihoryu_auto',
+  'line_prefetch', 'timetree_prefetch', 'edit_worker_watchdog',
+  'line_shinki_watch', 'line_yoyaku_kakutei',
+  'edit_worker', 'conflict_watcher', 'super_link'
+];
+var KANSHI_CTL_ACTS_ = ['on', 'off', 'run', 'setval'];
+function _validKanshiCtl_(key, act) {
+  return KANSHI_CTL_KEYS_.indexOf(String(key)) >= 0 && KANSHI_CTL_ACTS_.indexOf(String(act)) >= 0;
+}
+
 // キューへ積む共通処理（handleAction_のaction=submitと、uiSubmitMoveの両方から呼ぶ）。
 function _submitToQueue_(q, op, fields) {
+  if (op === 'kanshi_ctl') {
+    if (!_rateOk_(q)) return { ok: false, error: '依頼が集中しています。少し待ってから試してください。' };
+    if (!_pwRateOk_()) return { ok: false, error: '試行回数が多すぎます。少し待ってから試してください。' };
+    if (String(fields.pw || '') !== getStaffPassword_()) return { ok: false, error: '合言葉が違います。' };
+    if (!_validKanshiCtl_(fields.ctl_key, fields.ctl_act)) {
+      return { ok: false, error: 'この項目は外からは操作できません。' };
+    }
+    var kid = 'k' + Date.now() + Math.floor(Math.random() * 1000);
+    q.push({ id: kid, ts: new Date().toISOString(), op: op,
+      ctl_key: String(fields.ctl_key), ctl_act: String(fields.ctl_act),
+      ctl_val: String(fields.ctl_val || ''),
+      who: fields.who || '', role: fields.role || '', device: fields.device || '',
+      status: 'pending', result: '' });
+    _queueSet_(q);
+    return { ok: true, id: kid };
+  }
   if (op === 'movecal') {
     if (!_rateOk_(q)) return { ok: false, error: '依頼が集中しています。少し待ってから試してください。' };
     if (!_validRoom_(fields.to_cal, fields.to_label)) return { ok: false, error: '移動先が不正です。' };
@@ -351,6 +420,7 @@ function handleAction_(p) {
   if (p.action === 'uriage') return _uriageJsonp_(p);
   if (p.action === 'unanswered') return _unansweredJsonp_(p);
   if (p.action === 'akijikan') return _akijikanJsonp_(p);
+  if (p.action === 'kanshi') return _kanshiJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
   if (p.action === 'checkpw') return _checkPwJsonp_(p);
   if (p.action === 'claim') return _claimJsonp_(p);
@@ -371,6 +441,8 @@ function handleAction_(p) {
       out = _submitToQueue_(q, p.op || 'movecal', {
         cal: p.cal, event: p.event, to_cal: p.to_cal, to_label: Number(p.to_label),
         room: p.room || '', title: p.title || '', from_room: p.from_room || '',
+        // 自動監視の操作(op=kanshi_ctl)用。合言葉(pw)はここ(サーバー)で照合するだけで外へは出さない。
+        pw: p.pw || '', ctl_key: p.ctl_key || '', ctl_act: p.ctl_act || '', ctl_val: p.ctl_val || '',
         who: String(p.who || '').replace(/[^a-z]/g, ''), role: p.role || '', device: p.device || ''
       });
     } else if (p.action === 'pending') {
@@ -595,6 +667,35 @@ function getAkijikanFile_() {
   return newest;
 }
 
+/** monitor.json のファイルを取得（自動監視の状態。事務所PCが export_monitor_super.py で
+ *  1分ごとに書き出す＋doPost(push_monitor)で直接送ってくる）。
+ *  createIfMissing=true の時だけ、無ければ events.json と同じフォルダに作る
+ *  （＝初回のpushでいきなり書けるように。読み取り(_kanshiJsonp_)側は作らず素直に失敗させる）。 */
+var MONITOR_FILENAME = 'monitor.json';
+function getMonitorFile_(createIfMissing) {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('MONITOR_FILE_ID');
+  if (id) {
+    try { return DriveApp.getFileById(id); } catch (ignore) { /* IDが古い→探し直す */ }
+  }
+  var it = DriveApp.getFilesByName(MONITOR_FILENAME);
+  var newest = null;
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
+  }
+  if (!newest && createIfMissing) {
+    var parents = getEventsFile_().getParents();
+    var folder = parents.hasNext() ? parents.next() : DriveApp.getRootFolder();
+    newest = folder.createFile(MONITOR_FILENAME, '{}', 'application/json');
+  }
+  if (!newest) {
+    throw new Error('monitor.json がドライブに見つかりません。事務所PCで export_monitor_super.py を実行してください。');
+  }
+  props.setProperty('MONITOR_FILE_ID', newest.getId());
+  return newest;
+}
+
 /** tile_settings.json のファイルを取得（ホーム画面ボタンの表示ON/OFF設定。
  *  事務所PC「自動監視システム」の tile_settings.py が書き出す）。 */
 var TILE_SETTINGS_FILENAME = 'tile_settings.json';
@@ -620,7 +721,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   lt:         { exec: true, staff: true },
   uriage:     { exec: true, staff: false },
   unanswered: { exec: true, staff: true },
-  akijikan:   { exec: false, staff: false }   // ★初期は開発URL(?dev=1)だけで見える（2026-07-16ユーザー指定）
+  akijikan:   { exec: false, staff: false },  // ★初期は開発URL(?dev=1)だけで見える（2026-07-16ユーザー指定）
+  // ★kanshi(自動監視)＝開発URL(?dev=1)専用。tile_settings.py の TILES にも入れない＝
+  //   人ごとの権限画面に出てこない＝誰にもONにできない＝開発URLだけに出る（2026-07-16ユーザー指定）。
+  kanshi:     { exec: false, staff: false }
 };
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
@@ -648,7 +752,7 @@ function defaultPerms_(people) {
   var list = people || PEOPLE_;
   var perms = {};
   for (var i = 0; i < list.length; i++) {
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, kanshi: false };
   }
   return perms;
 }
@@ -740,7 +844,7 @@ function getResets_() {
 function personPerms_(perms, staff, dev, who) {
   if (dev) return null;   // null = すべて許可
   var pid = staff ? String(who || '') : 'kanbu';
-  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false };
+  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, kanshi: false };
 }
 // そのviewを見る権限があるか（home/notice は常に可）。allow=null(dev)は常に可。
 function viewAllowed_(view, allow) {
@@ -1053,7 +1157,10 @@ var TILE_DEFS_ = [
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
     icon: '<span class="ticon">💬</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
-    icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' }
+    icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' },
+  // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
+  { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
+    icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' }
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
@@ -2515,3 +2622,254 @@ var CSS_ =
 '  .ccyes { background:#2563eb; color:#fff; }' +
 '  .ccno:active, .ccyes:active { transform:translateY(1px); }' +
 '';
+
+// ================== 自動監視（view=kanshi・開発URL専用／2026-07-16追加） ==================
+// 事務所PCの「自動監視システム」の画面と同じ中身を、外・スマホから見る＋ON/OFF・今すぐ実行を押す。
+//
+// ★作法（共通\スーパーズコApp_必読.md）どおり「取得」と「描画」を分離：
+//   renderKanshi_     … ①GAS直アクセス専用（DriveApp で monitor.json を読む薄いラッパ）
+//   renderKanshiPage_ … 純JS・GAS API不使用（②静的アプリはJSONPで取ったデータでこれを直接呼ぶ）
+// ★状態の判定・組み立ては一切ここでやらない（PC側 monitor_snapshot.py が唯一の真実で、
+//   monitor.json には「答え」が入っている）＝PC/GASの二重管理を作らない。
+// ★操作(ON/OFF・今すぐ実行)は必ずサーバー側の関門(_submitToQueue_ の op='kanshi_ctl')を通す
+//   ＝合言葉の照合と、触ってよい項目かの確認はサーバーだけが行う。
+function renderKanshi_(base, staff, dev) {
+  var d;
+  try {
+    d = JSON.parse(getMonitorFile_().getBlob().getDataAsString('UTF-8'));
+  } catch (err) {
+    return renderKanshiError_(err, base, staff, dev);
+  }
+  return renderKanshiPage_(d, base, staff, dev);
+}
+
+function renderKanshiError_(err, base, staff, dev) {
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">📟</span><span class="bname">自動監視</span></div>' +
+    '<div class="soon">' +
+      '<div class="soonic">📄</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">状態が届いていません</div>' +
+      '<div class="soondesc">' + esc_(err && err.message ? err.message : err) + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/** 自動監視ページの描画（純JS・GAS API不使用）。
+ *  中身の組み立てはブラウザ側(KANSHISCRIPT_)に任せ、ここでは器と初期データを置くだけ
+ *  ＝30秒ごとの自動更新・操作後の再描画も同じ1本のコードで行える（描画を2重に持たない）。 */
+function renderKanshiPage_(d, base, staff, dev) {
+  return '<style>' + KANSHICSS_ + '</style>' +
+  '<div class="kwrap">' +
+    '<div class="kbar">' +
+      '<a class="khome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
+      '<button type="button" class="kref" id="kRef">更新</button>' +
+    '</div>' +
+    '<h1>📟 自動監視</h1>' +
+    '<div class="kfresh" id="kFresh"></div>' +
+    '<div id="kList"></div>' +
+    '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
+      '各行を押すと中身が開きます。ON/OFF・今すぐ実行は合言葉を1回入れると押せます。' +
+      'この画面は事務所PCが1分ごとに送ってきた状態を見ています。</div>' +
+  '</div>' +
+  '<script>window.__KANSHI_DATA__=' + JSON.stringify(d) + ';<' + '/script>' +
+  KANSHISCRIPT_;
+}
+
+var KANSHICSS_ =
+'  :root{ --bg:#2b3440; --card:#ffffff; --ink:#1c2430; --sub:#667085; --line:#e6e9ef;' +
+'    --ok:#0d9b6c; --ng:#e5484d; --off:#98a2b3; }' +
+'  @media (prefers-color-scheme:dark){ :root{ --card:#1b2430; --ink:#e8ebf0; --sub:#9aa4b2; --line:#2a3441; } }' +
+'  *{ box-sizing:border-box; }' +
+'  body{ margin:0; background:var(--bg); color:var(--ink);' +
+'    font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; line-height:1.5; }' +
+'  .kwrap{ max-width:640px; margin:0 auto; padding:16px 14px 60px; }' +
+'  .kbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }' +
+'  .khome{ color:#fff; text-decoration:none; font-weight:700; font-size:14px;' +
+'    background:rgba(255,255,255,.16); padding:7px 12px; border-radius:10px; }' +
+'  .kref{ background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:10px; padding:7px 12px;' +
+'    font:inherit; font-weight:700; font-size:14px; cursor:pointer; }' +
+'  h1{ color:#fff; font-size:16px; margin:6px 0 10px; }' +
+'  .kfresh{ font-size:12px; color:#dfe6ee; margin-bottom:12px; }' +
+'  .kfresh.old{ background:var(--ng); color:#fff; font-weight:700; padding:10px 12px; border-radius:10px; }' +
+'  .kcard{ background:var(--card); border:1px solid var(--line); border-radius:12px;' +
+'    padding:12px 14px; margin-bottom:10px; }' +
+'  .khead{ display:flex; align-items:flex-start; gap:8px; cursor:pointer; }' +
+'  .kmark{ font-size:15px; line-height:1.4; }' +
+'  .klabel{ font-weight:700; font-size:14px; flex:1; }' +
+'  .kdetail{ color:var(--sub); font-size:12px; margin-top:3px; font-weight:400; }' +
+'  .karrow{ color:var(--sub); font-size:12px; }' +
+'  .kmembers{ margin-top:10px; border-top:1px solid var(--line); padding-top:8px; }' +
+'  .kmembers[hidden]{ display:none; }' +
+'  .krow{ border-bottom:1px solid var(--line); padding:9px 0; }' +
+'  .krow:last-child{ border-bottom:0; }' +
+'  .krowhead{ display:flex; align-items:flex-start; gap:7px; }' +
+'  .krowlabel{ flex:1; font-size:13px; font-weight:600; }' +
+'  .kbtns{ display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; align-items:center; }' +
+'  .kbtn{ border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px;' +
+'    padding:6px 10px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }' +
+'  .kbtn.on{ background:var(--ok); color:#fff; border-color:var(--ok); }' +
+'  .kbtn.off{ background:var(--off); color:#fff; border-color:var(--off); }' +
+'  .kbtn:active{ transform:translateY(1px); }' +
+'  .kval{ width:74px; padding:6px 8px; border:1px solid var(--line); border-radius:8px;' +
+'    background:var(--card); color:var(--ink); font:inherit; font-size:12px; }' +
+'  .kunit{ font-size:11px; color:var(--sub); }' +
+'  .ksub{ margin:8px 0 0 14px; border-left:2px solid var(--line); padding-left:10px; }' +
+'  .kfoot{ color:#dfe6ee; font-size:11px; margin-top:14px; }' +
+'  .ktoast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:60;' +
+'    background:#111a24; color:#fff; padding:11px 16px; border-radius:10px; font-size:13px; max-width:88%; }' +
+'  .kmask{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center;' +
+'    justify-content:center; z-index:70; padding:20px; }' +
+'  .kbox{ background:var(--card); border-radius:14px; padding:18px; width:100%; max-width:330px; }' +
+'  .kbox h3{ margin:0 0 10px; font-size:15px; }' +
+'  .kbox input{ width:100%; padding:11px; border:1px solid var(--line); border-radius:9px;' +
+'    background:var(--card); color:var(--ink); font:inherit; font-size:16px; margin-bottom:12px; }' +
+'  .kboxbtns{ display:flex; gap:8px; }' +
+'  .kboxbtns button{ flex:1; padding:11px; border-radius:9px; border:0; font:inherit; font-weight:700; cursor:pointer; }' +
+'  .kno{ background:var(--bg); color:#fff; } .kyes{ background:#2563eb; color:#fff; }' +
+'';
+
+// ブラウザ側の全処理（描画・30秒ごとの自動更新・操作の依頼）。①②どちらでも同じこれが動く。
+// ★JSONPだけで完結させる（①でしか使えない google.script.run に依存しない＝分岐を持たない）。
+var KANSHISCRIPT_ =
+'<script>(function(){' +
+'var EXEC_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
+'var KEY_="kx7Q2p9mVt4Zr8";' +
+'var STALE_SEC_=180;' +
+'var PW_="";' +
+'var data_=window.__KANSHI_DATA__||{groups:[]};' +
+'var open_={};' +
+'function esc(s){ var d=document.createElement("div"); d.textContent=(s==null?"":String(s)); return d.innerHTML; }' +
+'function jsonp_(params, onDone){' +
+'  var cb="__k"+Date.now()+Math.floor(Math.random()*1000);' +
+'  window[cb]=function(r){ try{ delete window[cb]; }catch(ig){} onDone(r); };' +
+'  var qs="callback="+cb; for(var k in params){ qs+="&"+k+"="+encodeURIComponent(params[k]); }' +
+'  var s=document.createElement("script"); s.src=EXEC_+"?"+qs+"&cb="+Date.now();' +
+'  s.onerror=function(){ onDone({ok:false,error:"通信エラー"}); };' +
+'  document.body.appendChild(s);' +
+'}' +
+'function toast_(msg){' +
+'  var t=document.createElement("div"); t.className="ktoast"; t.textContent=msg;' +
+'  document.body.appendChild(t);' +
+'  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3200);' +
+'}' +
+'function mark_(st){ return st==="ok"?"🟢":(st==="off"?"⚪":(st==="unknown"?"🟡":"🔴")); }' +
+'function agoSec_(s){' +
+'  if(!s) return null;' +
+'  var t=Date.parse(String(s).replace(" ","T"));' +
+'  if(isNaN(t)) return null;' +
+'  return Math.floor((Date.now()-t)/1000);' +
+'}' +
+'function renderFresh_(){' +
+'  var el=document.getElementById("kFresh"); if(!el) return;' +
+'  var sec=agoSec_(data_.generated_at);' +
+'  if(sec===null||sec>STALE_SEC_){' +
+'    el.className="kfresh old";' +
+'    el.textContent="⚠ 事務所PCから状態が届いていません（最後に届いたのは "+(data_.generated_at||"不明")+"）。下の表示は古い可能性があります。";' +
+'  } else {' +
+'    el.className="kfresh"; el.textContent=(data_.generated_at||"")+" 時点の状態です（1分ごとに自動更新）。";' +
+'  }' +
+'}' +
+'function ctlBtns_(m){' +
+'  if(!m.ctl) return "";' +
+'  var h="<div class=\\"kbtns\\">";' +
+'  h+="<button type=\\"button\\" class=\\"kbtn "+(m.on?"on":"off")+"\\" data-act=\\""+(m.on?"off":"on")+"\\" data-key=\\""+esc(m.key)+"\\">"+(m.on?"ONにしてある → OFFにする":"OFFにしてある → ONにする")+"</button>";' +
+'  h+="<button type=\\"button\\" class=\\"kbtn\\" data-act=\\"run\\" data-key=\\""+esc(m.key)+"\\">今すぐ実行</button>";' +
+'  if(m.value!==""&&m.value!==undefined&&m.value!==null){' +
+'    h+="<input class=\\"kval\\" type=\\"text\\" value=\\""+esc(m.value)+"\\" data-val=\\""+esc(m.key)+"\\">";' +
+'    h+="<span class=\\"kunit\\">"+esc(m.unit||m.schedule_label||"")+"</span>";' +
+'    h+="<button type=\\"button\\" class=\\"kbtn\\" data-act=\\"setval\\" data-key=\\""+esc(m.key)+"\\">保存</button>";' +
+'  }' +
+'  h+="</div>"; return h;' +
+'}' +
+'function rowHtml_(m){' +
+'  var h="<div class=\\"krow\\"><div class=\\"krowhead\\"><span class=\\"kmark\\">"+mark_(m.status)+"</span>";' +
+'  h+="<span class=\\"krowlabel\\">"+esc(m.label)+"<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div></span></div>";' +
+'  h+=ctlBtns_(m);' +
+'  if(m.members&&m.members.length){' +
+'    h+="<div class=\\"ksub\\">"+m.members.map(rowHtml_).join("")+"</div>";' +
+'  }' +
+'  h+="</div>"; return h;' +
+'}' +
+'function render_(){' +
+'  renderFresh_();' +
+'  var list=document.getElementById("kList"); if(!list) return;' +
+'  var gs=data_.groups||[];' +
+'  if(!gs.length){ list.innerHTML="<div class=\\"kcard\\">状態が空です。事務所PCをご確認ください。</div>"; return; }' +
+'  list.innerHTML=gs.map(function(g,i){' +
+'    var body=(g.members&&g.members.length)?g.members.map(rowHtml_).join(""):"";' +
+'    return "<div class=\\"kcard\\"><div class=\\"khead\\" data-g=\\""+i+"\\">"+' +
+'      "<span class=\\"kmark\\">"+mark_(g.status)+"</span>"+' +
+'      "<span class=\\"klabel\\">"+esc(g.label)+"<div class=\\"kdetail\\">"+esc(g.detail||"")+"</div></span>"+' +
+'      (body?"<span class=\\"karrow\\">"+(open_[i]?"▲":"▼")+"</span>":"")+"</div>"+' +
+'      (body?"<div class=\\"kmembers\\" data-m=\\""+i+"\\""+(open_[i]?"":" hidden")+">"+body+"</div>":"")+' +
+'    "</div>";' +
+'  }).join("");' +
+'}' +
+'function reload_(onDone){' +
+'  jsonp_({action:"kanshi"}, function(r){' +
+'    if(r&&!r.error){ data_=r; render_(); }' +
+'    if(onDone) onDone();' +
+'  });' +
+'}' +
+'function askPw_(onOk){' +
+'  if(PW_){ onOk(); return; }' +
+'  var mask=document.createElement("div"); mask.className="kmask";' +
+'  mask.innerHTML="<div class=\\"kbox\\"><h3>合言葉を入れてください</h3>"+' +
+'    "<input type=\\"password\\" id=\\"kPwIn\\" autocomplete=\\"off\\">"+' +
+'    "<div class=\\"kboxbtns\\"><button type=\\"button\\" class=\\"kno\\">やめる</button>"+' +
+'    "<button type=\\"button\\" class=\\"kyes\\">OK</button></div></div>";' +
+'  document.body.appendChild(mask);' +
+'  var input=mask.querySelector("#kPwIn"); try{ input.focus(); }catch(e){}' +
+'  function close_(){ if(mask.parentNode) mask.parentNode.removeChild(mask); }' +
+'  mask.querySelector(".kno").addEventListener("click", close_);' +
+'  mask.querySelector(".kyes").addEventListener("click", function(){' +
+'    var v=input.value||"";' +
+'    jsonp_({action:"checkpw", pw:v}, function(r){' +
+'      if(r&&r.ok){ PW_=v; close_(); onOk(); }' +
+'      else { toast_((r&&r.error)||"合言葉が違います。"); }' +
+'    });' +
+'  });' +
+'  input.addEventListener("keydown", function(e){ if(e.key==="Enter") mask.querySelector(".kyes").click(); });' +
+'}' +
+'function poll_(id, tries){' +
+'  jsonp_({action:"status", key:KEY_, id:id}, function(r){' +
+'    if(r&&r.ok&&(r.status==="done"||r.status==="error")){' +
+'      toast_((r.status==="done"?"✅ ":"⚠ ")+(r.result||""));' +
+'      reload_();' +
+'      return;' +
+'    }' +
+'    if(tries<=0){ toast_("時間切れです。事務所PCの状態をご確認ください。"); return; }' +
+'    setTimeout(function(){ poll_(id, tries-1); }, 5000);' +
+'  });' +
+'}' +
+'function send_(key, act, val){' +
+'  askPw_(function(){' +
+'    toast_("受け付けました。事務所PCが実行します（最大1分）…");' +
+'    jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", pw:PW_, ctl_key:key, ctl_act:act, ctl_val:(val||"")},' +
+'      function(r){' +
+'        if(!r||!r.ok){ if(r&&r.error==="合言葉が違います。") PW_=""; toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); return; }' +
+'        poll_(r.id, 16);' +
+'      });' +
+'  });' +
+'}' +
+'document.addEventListener("click", function(ev){' +
+'  var h=ev.target.closest?ev.target.closest(".khead"):null;' +
+'  if(h){ var i=h.getAttribute("data-g"); open_[i]=!open_[i]; render_(); return; }' +
+'  var b=ev.target.closest?ev.target.closest(".kbtn"):null;' +
+'  if(!b) return;' +
+'  var key=b.getAttribute("data-key"), act=b.getAttribute("data-act");' +
+'  if(!key||!act) return;' +
+'  var val="";' +
+'  if(act==="setval"){' +
+'    var input=document.querySelector(".kval[data-val=\\""+key+"\\"]");' +
+'    val=input?input.value:"";' +
+'  }' +
+'  send_(key, act, val);' +
+'});' +
+'var ref=document.getElementById("kRef");' +
+'if(ref) ref.addEventListener("click", function(){ toast_("最新を取りに行っています…"); reload_(); });' +
+'render_();' +
+'setInterval(function(){ reload_(); }, 30000);' +
+'})();<' + '/script>';

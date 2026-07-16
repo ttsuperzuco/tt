@@ -1,0 +1,8 @@
+::ffff:127.0.0.1 - - [16/Jul/2026 16:46:06] "GET /index.html?dev=1&view=kanshi HTTP/1.1" 200 -
+::ffff:127.0.0.1 - - [16/Jul/2026 16:46:12] "GET /index.html?dev=1&view=kanshi HTTP/1.1" 200 -
+::ffff:127.0.0.1 - - [16/Jul/2026 16:46:12] "GET /code.js?v=2026071603k HTTP/1.1" 200 -
+::ffff:127.0.0.1 - - [16/Jul/2026 16:46:12] "GET /detect_core.js?v=20260716r HTTP/1.1" 200 -
+::ffff:127.0.0.1 - - [16/Jul/2026 16:46:12] "GET /icons/icon-512.png HTTP/1.1" 200 -
+::ffff:127.0.0.1 - - [16/Jul/2026 16:46:12] "GET /sw.js HTTP/1.1" 200 -
+::ffff:127.0.0.1 - - [16/Jul/2026 16:46:16] code 404, message File not found
+::ffff:127.0.0.1 - - [16/Jul/2026 16:46:16] "GET /favicon.ico HTTP/1.1" 404 -

@@ -101,7 +101,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260716r"></script>
-<script src="code.js?v=2026071702"></script>
+<script src="code.js?v=2026071603k"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -341,6 +341,22 @@
     document.body.appendChild(s);
   }
 
+  // 自動監視（開発URL ?dev=1 だけに出るボタン）。事務所PCが1分ごとに送ってくる状態を見る。
+  // ★描画・自動更新・操作は全て code.js の renderKanshiPage_ が埋め込むスクリプトが行う
+  //   （①GAS版と同じ1本＝二重管理しない）。ここは取得して渡すだけ。
+  function showKanshi() {
+    window.__ttKanshi = function (payload) {
+      try {
+        if (!payload || payload.error) { mount(renderKanshiError_((payload && payload.error) || '不明', base, staff, dev)); return; }
+        mount(renderKanshiPage_(payload, base, staff, dev));
+      } catch (e) { fail('描画エラー：' + e); }
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=kanshi&callback=__ttKanshi&cb=' + Date.now();
+    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
+    document.body.appendChild(s);
+  }
+
   // ホーム：権限(perms)＋選んだ名前(who)で出し分け（renderHomePage_は code.js＝GASと同一）。
   function showHome(perms) {
     mount(renderHomePage_({ perms: perms || (typeof defaultPerms_==='function' ? defaultPerms_() : null) },
@@ -463,6 +479,7 @@
     else if (v === 'uriage') showUriage();
     else if (v === 'unanswered') showUnanswered();
     else if (v === 'akijikan') showAkijikan();
+    else if (v === 'kanshi') showKanshi();
     else if (v === 'conflict') showConflict();
     else showHome(perms);
   }
