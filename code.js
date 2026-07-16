@@ -1107,13 +1107,13 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
           '<div class="mvpanel" data-side="A" hidden>' +
             moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
             '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
-            '<button type="button" class="rstoggle">📋 この日の空き部屋状況を見る</button>' +
+            '<button type="button" class="rstoggle">📋 念のためこの日の空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
             moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
             '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
-            '<button type="button" class="rstoggle">📋 この日の空き部屋状況を見る</button>' +
+            '<button type="button" class="rstoggle">📋 念のためこの日の空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvstatus" hidden></div>' +
