@@ -951,7 +951,7 @@ function roomIsFree_(roomBusyForDate, name, s, e) {
 }
 
 // 被りカード内「A/Bを別の空き部屋へ移す」1行（現在の部屋は候補から除く／空いてる部屋だけ表示）。
-function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
+function moveRow_(cal, event, staffMark, who, title, curRoom, roomBusyForDate, timeStr) {
   var hasId = (cal != null && cal !== '' && event != null && event !== '');
   var range = parseTimeRange_(timeStr);
   var btns = '';
@@ -973,8 +973,9 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr) {
   }
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
     : (!anyFree ? '<span class="mvng">その時間、空いている部屋がありません</span>' : '');
+  var curRoomMark = '<span class="room" style="--rc:' + roomColor_(curRoom) + '">' + esc_(curRoom) + '</span>';
   return '<div class="mvrow">' +
-    '<span class="mvlabel">' + esc_(who) + 'を以下の部屋に移す</span>' +
+    '<span class="mvlabel">' + esc_(staffMark || '') + 'の予約の部屋を' + curRoomMark + 'から以下の部屋に移す</span>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
 }
@@ -1025,7 +1026,7 @@ function roomStatusPanel_(date, roomBusyForDate) {
     return '<div class="rstat"><span class="room" style="--rc:' + roomColor_(name) + '">' +
       esc_(shortRoomName_(name)) + '</span><span class="rchips">' + chips + '</span></div>';
   }).join('');
-  return '<div class="rspanel"><div class="rstitle">' + esc_(date) + ' の施術室別・空き時間</div>' + rows + '</div>';
+  return '<div class="rspanel"><div class="rstitle">' + esc_(jpMonthDay_(date)) + 'の施術室空き状況</div>' + rows + '</div>';
 }
 
 function esc_(s) {
@@ -1043,6 +1044,12 @@ function jpDateWeekday_(iso) {
   if (p.length !== 3 || !p[0]) return String(iso || '');
   var w = ['日', '月', '火', '水', '木', '金', '土'][new Date(p[0], p[1] - 1, p[2]).getDay()];
   return p[1] + '月' + p[2] + '日(' + w + ')';
+}
+// "2026-07-19" → "7月19日"（曜日なし・空き部屋状況タイトル用）。
+function jpMonthDay_(iso) {
+  var p = String(iso || '').split('-').map(Number);
+  if (p.length !== 3 || !p[0]) return String(iso || '');
+  return p[1] + '月' + p[2] + '日';
 }
 
 function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
@@ -1100,13 +1107,13 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
           '</div>' +
           '<div class="mvpanel" data-side="A" hidden>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
-            moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
-            '<div class="mvhint">空いている施術室のみ表示しています</div>' +
+            moveRow_(x.a_cal_id, x.a_event_id, x.a_staff, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
+            '<div class="mvhint">↑空いている施術室のみ表示しています</div>' +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
-            moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
-            '<div class="mvhint">空いている施術室のみ表示しています</div>' +
+            moveRow_(x.b_cal_id, x.b_event_id, x.b_staff, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
+            '<div class="mvhint">↑空いている施術室のみ表示しています</div>' +
           '</div>' +
           '<div class="mvstatus" hidden></div>' +
         '</div>' +
@@ -2639,7 +2646,7 @@ var CSS_ =
 '    padding:40px; text-align:center; font-size:1.15rem; color:#16a34a; }' +
 '  .mv { margin-top:8px; }' +
 '  .mvtoprow { display:flex; gap:8px; align-items:stretch; }' +
-'  .mvtoggle { flex:1 1 0; text-align:center; font-size:.85rem; font-weight:700;' +
+'  .mvtoggle { flex:1 1 0; text-align:center; font-size:1.15rem; font-weight:700;' +
 '    line-height:1.4; white-space:normal; color:#fff; background:#2563eb; border:1px solid #2563eb;' +
 '    border-radius:10px; padding:9px 6px; cursor:pointer; }' +
 '  .mvtoggle:active { transform:translateY(1px); }' +
@@ -2656,7 +2663,7 @@ var CSS_ =
 '  .mvbtn:active { transform:translateY(1px); }' +
 '  .mvbtn:disabled { opacity:.4; }' +
 '  .mvng { font-size:.8rem; color:var(--sub); align-self:center; }' +
-'  .mvhint { font-size:.86rem; color:var(--real); font-weight:800; margin-top:6px; line-height:1.5; }' +
+'  .mvhint { font-size:.86rem; color:#ec4899; font-weight:800; margin-top:6px; line-height:1.5; }' +
 '  .mvstatus { margin-top:8px; padding:11px 12px; border-radius:10px; font-size:.95rem; font-weight:700; }' +
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .mvstatus.ok { background:#dcfce7; color:#166534; }' +
@@ -2666,7 +2673,10 @@ var CSS_ =
 '  .rstitle { font-size:.8rem; font-weight:700; color:var(--sub); margin-bottom:6px; }' +
 '  .rstat { display:flex; align-items:flex-start; flex-wrap:nowrap; gap:6px; padding:4px 0; }' +
 '  .rstat + .rstat { border-top:1px dashed var(--line); }' +
-'  .rstat .room { flex:0 0 auto; }' +
+// ★部屋名の長さ(FREEDOM/HAPPY/LUCKY/STAR/福)がバラバラで幅が揃わず、右の空き時間の
+//   開始位置が行ごとにズレていた不具合を修正（2026-07-16・「時間が左右バラバラ」との指摘）。
+//   幅を固定して、どの部屋名でも右側(.rchips)が必ず同じ位置から始まるようにする。
+'  .rstat .room { flex:0 0 auto; width:92px; text-align:center; padding:4px 6px; box-sizing:border-box; }' +
 '  .rchips { flex:1 1 auto; min-width:0; display:grid;' +
 '    grid-template-columns:repeat(2,minmax(0,1fr)); justify-items:start; gap:5px; }' +
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
