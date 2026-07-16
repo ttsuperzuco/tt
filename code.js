@@ -2243,12 +2243,12 @@ var HOMECSS_ =
 '  .bname { font-size:2.05rem; font-weight:900; letter-spacing:.01em; color:#fb8c44; }' +
 '  .hsub { text-align:center; color:#fff; font-weight:800; font-size:1.02rem;' +
 '    letter-spacing:.06em; opacity:.92; margin:0 0 28px; }' +
-// タイルは縦1列・横長の行レイアウト（左にアイコン／右に文字、2026-07-16変更）。
+// タイルは2列グリッドのまま、各タイル内を左アイコン／右文字の横並びに変更（2026-07-16）。
 // 文字は最大2行まで自動折返し（-webkit-line-clamp:2）。1行に収まる短い文言はそのまま1行で出る。
-'  .tiles { display:grid; grid-template-columns:1fr; gap:12px; }' +
+'  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
 '  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
-'    gap:14px; text-align:left; text-decoration:none; color:var(--ink);' +
-'    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 18px;' +
+'    gap:8px; text-align:left; text-decoration:none; color:var(--ink);' +
+'    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px 8px;' +
 '    box-shadow:0 6px 18px rgba(0,0,0,.07); position:relative; overflow:hidden;' +
 '    transition:transform .12s ease, box-shadow .12s ease; }' +
 '  .tile::before { content:""; position:absolute; left:0; top:0; bottom:0; width:6px; height:auto; }' +
@@ -2263,7 +2263,7 @@ var HOMECSS_ =
 '  .tile.akijikan::before { background:#0ea5e9; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
-'  .ticon { flex:none; width:52px; height:52px; border-radius:14px; font-size:28px;' +
+'  .ticon { flex:none; width:28px; height:28px; border-radius:8px; font-size:16px;' +
 '    display:grid; place-items:center; }' +
 '  .tile.conflict .ticon { background:rgba(225,29,72,.12); }' +
 '  .tile.lt .ticon { background:rgba(148,163,184,.14); }' +
@@ -2271,7 +2271,7 @@ var HOMECSS_ =
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
 '  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
-'  .tname { flex:1; font-size:1.6rem; font-weight:800; text-align:left; white-space:normal; line-height:1.25;' +
+'  .tname { flex:1; font-size:.94rem; font-weight:800; text-align:left; white-space:normal; line-height:1.2;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .badge { display:inline-block; font-size:.9rem; font-weight:800; color:#fff; background:#f97316;' +
 '    border-radius:999px; padding:4px 12px; vertical-align:middle;' +
