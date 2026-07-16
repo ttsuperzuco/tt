@@ -1107,13 +1107,13 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
           '<div class="mvpanel" data-side="A" hidden>' +
             moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
             '<div class="mvhint">⬆️空いている施術室のみ表示しています</div>' +
-            '<button type="button" class="rstoggle">📋 空き部屋状況を見る</button>' +
+            '<button type="button" class="rstoggle">📋 この日の空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
             moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
             '<div class="mvhint">⬆️空いている施術室のみ表示しています</div>' +
-            '<button type="button" class="rstoggle">📋 空き部屋状況を見る</button>' +
+            '<button type="button" class="rstoggle">📋 この日の空き部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvstatus" hidden></div>' +
@@ -2668,7 +2668,7 @@ var CSS_ =
 '  .rstoggle.open { color:#fff; background:#2563eb; border-color:#2563eb; }' +
 '  .mvrow { display:flex; flex-direction:column; gap:6px; padding:6px 0; }' +
 '  .mvrow + .mvrow { border-top:1px dashed var(--line); }' +
-'  .mvlabel { font-size:.86rem; font-weight:700; color:var(--ink); }' +
+'  .mvlabel { font-size:1.25rem; font-weight:700; color:var(--ink); }' +
 '  .mvbtns { display:flex; flex-wrap:wrap; gap:7px; }' +
 '  .mvbtn { font-size:.92rem; font-weight:800; color:#fff; background:var(--rc,#64748b);' +
 '    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
