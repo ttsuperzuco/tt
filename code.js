@@ -2677,8 +2677,9 @@ var CSS_ =
 //   開始位置が行ごとにズレていた不具合を修正（2026-07-16・「時間が左右バラバラ」との指摘）。
 //   幅を固定して、どの部屋名でも右側(.rchips)が必ず同じ位置から始まるようにする。
 '  .rstat .room { flex:0 0 auto; width:92px; text-align:center; padding:4px 6px; box-sizing:border-box; }' +
-'  .rchips { flex:1 1 auto; min-width:0; display:grid;' +
-'    grid-template-columns:repeat(2,minmax(0,1fr)); justify-items:start; gap:5px; }' +
+// ★2個目以降の空き時間が右端の列まで飛んで離れて見えていた不具合を修正（2026-07-16再指摘）。
+//   grid(2列固定)だと2個目が「残り幅の半分の位置」まで飛ぶ→flexにして隣に詰めて並べるだけにする。
+'  .rchips { flex:1 1 auto; min-width:0; display:flex; flex-wrap:wrap; gap:5px; }' +
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
 '    border-radius:7px; padding:2px 8px; font-size:.82rem; font-variant-numeric:tabular-nums;' +
 '    white-space:nowrap; }' +
