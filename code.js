@@ -1058,7 +1058,9 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
     if (!m) return '';
     var items = m.split('／').filter(function (s) { return s.trim(); })
       .map(function (s) { return '<li>' + esc_(s.trim()) + '</li>'; }).join('');
-    return '<ul class="menu">' + items + '</ul>';
+    // ★施術内容の左に縦書きの見出しマーク（薄い色の縦長楕円）を添える（2026-07-16ユーザー要望）。
+    return '<div class="menuwrap"><span class="menutag">施術内容</span>' +
+      '<ul class="menu">' + items + '</ul></div>';
   }
   var scope = '今日以降（' + esc_(payload.date_from) + '）';
   var roomsStr = meta.rooms_list.join('・');
@@ -1107,13 +1109,13 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
           '<div class="mvpanel" data-side="A" hidden>' +
             moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time) +
             '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
-            '<button type="button" class="rstoggle">📋 念のため、この日の部屋状況を見る</button>' +
+            '<button type="button" class="rstoggle fit1line">📋 念のため、この日の部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
             moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time) +
             '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
-            '<button type="button" class="rstoggle">📋 念のため、この日の部屋状況を見る</button>' +
+            '<button type="button" class="rstoggle fit1line">📋 念のため、この日の部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvstatus" hidden></div>' +
@@ -2651,7 +2653,12 @@ var CSS_ =
 '  .who { margin:4px 0 2px; font-size:1rem; }' +
 '  .who .code { color:var(--sub); font-weight:600; margin:0 4px; }' +
 '  .who .name { font-weight:500; }' +
-'  .menu { list-style:none; margin:6px 0 4px; padding:0; }' +
+'  .menuwrap { display:flex; align-items:stretch; gap:8px; margin:6px 0 4px; }' +
+'  .menutag { flex:none; writing-mode:vertical-rl; text-orientation:upright;' +
+'    background:#e0e7ff; color:#4338ca; font-size:.72rem; font-weight:800;' +
+'    padding:6px 3px; border-radius:999px; letter-spacing:.05em; }' +
+'  @media (prefers-color-scheme: dark) { .menutag { background:#312e81; color:#c7d2fe; } }' +
+'  .menu { list-style:none; margin:0; padding:0; flex:1 1 auto; min-width:0; }' +
 '  .menu li { font-size:.9rem; font-weight:700; line-height:1.35; padding-left:1.15em; position:relative; }' +
 '  .menu li::before { content:"◉"; position:absolute; left:0; color:var(--real); font-size:.7em; top:.28em; }' +
 '  .cal { font-size:.72rem; color:var(--sub); }' +
