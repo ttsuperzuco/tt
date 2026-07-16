@@ -101,7 +101,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260716r"></script>
-<script src="code.js?v=2026071603k"></script>
+<script src="code.js?v=2026071604o"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -358,9 +358,9 @@
   }
 
   // ホーム：権限(perms)＋選んだ名前(who)で出し分け（renderHomePage_は code.js＝GASと同一）。
-  function showHome(perms) {
-    mount(renderHomePage_({ perms: perms || (typeof defaultPerms_==='function' ? defaultPerms_() : null) },
-                          base, staff, dev, who));
+  function showHome(perms, order) {
+    mount(renderHomePage_({ perms: perms || (typeof defaultPerms_==='function' ? defaultPerms_() : null),
+                            order: order }, base, staff, dev, who));
   }
 
   // ===== 名前選択画面（スタッフURLで未選択のときだけ）=====
@@ -453,6 +453,7 @@
     var people = (cfg && cfg.people) || ['kanbu','ringo','mikan','olive','marron','mango','coconut','reception'];
     var labels = (cfg && cfg.labels) || {};
     var perms  = (cfg && cfg.perms) || null;
+    var order  = (cfg && cfg.order) || null;   // ボタンの並び順（自動監視メニュー4で変更可）
 
     // 端末リセットの合図：この端末が名前を選んだ時刻より後にリセット指示があれば、記憶を消して選び直し。
     // （PCの自動監視メニュー4で「この人を選び直し／全員を選び直し」を押すと合図が立つ。次回起動で効く）
@@ -481,7 +482,7 @@
     else if (v === 'akijikan') showAkijikan();
     else if (v === 'kanshi') showKanshi();
     else if (v === 'conflict') showConflict();
-    else showHome(perms);
+    else showHome(perms, order);
   }
 
   // ★events(被りデータ)/tilesettings(権限) はページ冒頭の早期スクリプトで既に発射済み

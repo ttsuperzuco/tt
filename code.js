@@ -256,7 +256,8 @@ function _tileSettingsJsonp_(p) {
   var d = {};
   try { d = JSON.parse(getTileSettingsFile_().getBlob().getDataAsString('UTF-8')) || {}; } catch (ignore) { d = {}; }
   var payload = { tiles: _tilesFromCfg_(d), perms: _permsFromCfg_(d), people: _peopleFromCfg_(d),
-                  labels: _labelsFromCfg_(d), resets: _resetsFromCfg_(d), claimed: _claimedFromCfg_(d) };
+                  labels: _labelsFromCfg_(d), resets: _resetsFromCfg_(d), claimed: _claimedFromCfg_(d),
+                  order: _orderFromCfg_(d) };
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
@@ -281,6 +282,21 @@ function _permsFromCfg_(d) {
 function _resetsFromCfg_(d) {
   var r = d && d.resets;
   return (r && typeof r === 'object') ? r : {};
+}
+// ホーム画面のボタン並び順。保存値(d.order)を土台に、①知らないid（消えたボタン等）は捨て
+// ②保存値に無い新しいid（新タイル追加直後で並び設定がまだ無い時）はデフォルト順の位置に足す。
+// ＝並び設定を触っていなくても新タイルは必ずどこかに表示される（消えない）。
+function _orderFromCfg_(d) {
+  var known = {};
+  for (var i = 0; i < DEFAULT_TILE_ORDER_.length; i++) known[DEFAULT_TILE_ORDER_[i]] = true;
+  var saved = (d && Array.isArray(d.order)) ? d.order.filter(function (id) { return known[id]; }) : [];
+  var seen = {};
+  for (var j = 0; j < saved.length; j++) seen[saved[j]] = true;
+  for (var k = 0; k < DEFAULT_TILE_ORDER_.length; k++) {
+    var id = DEFAULT_TILE_ORDER_[k];
+    if (!seen[id]) saved.push(id);
+  }
+  return saved;
 }
 
 // ========== スタッフ用URL(?staff=1)の入口合言葉（2026-07-16・簡易ゲート） ==========
@@ -727,6 +743,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   kanshi:     { exec: false, staff: false }
 };
 
+// ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
+// tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'kanshi'];
+
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
 function getTileSettings_() {
@@ -1158,6 +1178,11 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">💬</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
     icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' },
+  // ★元祖TTアプリ＝外部サイトへのリンクだけのボタン（GAS内のviewではない）。
+  //   url指定のタイルは権限(allow)に関係なく常に表示する（tilesHtml生成側のalways:trueで対応・
+  //   下記TILE_DEFS_.filterを参照。tile_settings.jsonの人ごと権限は絡めない＝ただの外部リンクのため）。
+  { id: 'ttapp', cls: 'ttapp', url: 'https://x.gd/eaxgF', always: true,
+    icon: '<span class="ticon">🗓️</span>', label: '元祖TT\nアプリ' },
   // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
   { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
     icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' }
@@ -1168,7 +1193,8 @@ var TILE_DEFS_ = [
 function renderHome_(base, staff, dev, who) {
   var d = {};
   try { d = JSON.parse(getTileSettingsFile_().getBlob().getDataAsString('UTF-8')) || {}; } catch (ignore) {}
-  return renderHomePage_({ perms: _permsFromCfg_(d), labels: _labelsFromCfg_(d) }, base, staff, dev, who);
+  return renderHomePage_({ perms: _permsFromCfg_(d), labels: _labelsFromCfg_(d), order: _orderFromCfg_(d) },
+                          base, staff, dev, who);
 }
 
 /** ホーム画面の描画（純JS・GAS API不使用）。②静的アプリは JSONP で tile_settings を取得し、
@@ -1181,11 +1207,29 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var sfx = roleSfx_(staff, dev);
   var subtitle = dev ? '開発版（全ボタン表示）'
     : (staff ? (labels[who] || 'スタッフ') : 'TOMATOさん版');
-  var tilesHtml = TILE_DEFS_.filter(function (t) {
+  // 並び順：自動監視メニュー4「ボタンの並びをかえれる」設定（tile_settings.py）で変更可能。
+  // TILE_DEFS_ 自体の並びは変えず、order に従って並べ替えるだけ（元の配列は他の用途でも使うため）。
+  var order = (cfg && cfg.order) || DEFAULT_TILE_ORDER_;
+  var byId = {};
+  for (var oi = 0; oi < TILE_DEFS_.length; oi++) byId[TILE_DEFS_[oi].id] = TILE_DEFS_[oi];
+  var orderedDefs = [];
+  var placed = {};
+  for (var oj = 0; oj < order.length; oj++) {
+    if (byId[order[oj]] && !placed[order[oj]]) { orderedDefs.push(byId[order[oj]]); placed[order[oj]] = true; }
+  }
+  for (var ok = 0; ok < TILE_DEFS_.length; ok++) {   // orderに無い(消し忘れ等)ものは元の並びで末尾に足す
+    if (!placed[TILE_DEFS_[ok].id]) orderedDefs.push(TILE_DEFS_[ok]);
+  }
+  var tilesHtml = orderedDefs.filter(function (t) {
+    if (t.always) return true;        // 外部リンクだけのボタン等＝権限に関係なく常に表示
     if (!allow) return true;          // dev＝全部
     return allow[t.id] === true;      // 明示ONのボタンだけ表示（初期は施術室被りのみ）
   }).map(function (t) {
-    return '<a class="tile ' + t.cls + '" href="' + base + '?view=' + t.view + sfx + '" target="_top">' +
+    // url指定＝外部サイトへのリンク（新しいタブで開く）。無指定＝アプリ内view遷移（従来通り）。
+    var href = t.url ? t.url : (base + '?view=' + t.view + sfx);
+    var target = t.url ? '_blank' : '_top';
+    var rel = t.url ? ' rel="noopener"' : '';
+    return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + '>' +
       t.icon + '<span class="tname">' + esc_(t.label) + '</span></a>';
   }).join('');
   return '<style>' + HOMECSS_ + '</style>' +
@@ -2471,6 +2515,7 @@ var HOMECSS_ =
 '  .tile.uriage::before { background:#f59e0b; }' +
 '  .tile.unanswered::before { background:#0d9b6c; }' +
 '  .tile.akijikan::before { background:#0ea5e9; }' +
+'  .tile.ttapp::before { background:#c026d3; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -2481,6 +2526,7 @@ var HOMECSS_ =
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
+'  .tile.ttapp .ticon { background:rgba(192,38,211,.14); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
