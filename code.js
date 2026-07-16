@@ -2289,8 +2289,8 @@ var HOMECSS_ =
 // 文字は最大2行まで自動折返し（-webkit-line-clamp:2）。1行に収まる短い文言はそのまま1行で出る。
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
 '  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
-'    gap:6px; text-align:left; text-decoration:none; color:var(--ink);' +
-'    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 6px;' +
+'    gap:2px; text-align:left; text-decoration:none; color:var(--ink);' +
+'    background:var(--card); border:1px solid var(--line); border-radius:16px; padding:10px 2px 10px 3px;' +
 '    box-shadow:0 6px 18px rgba(0,0,0,.07); position:relative; overflow:hidden;' +
 '    transition:transform .12s ease, box-shadow .12s ease; }' +
 '  .tile::before { content:""; position:absolute; left:0; top:0; bottom:0; width:6px; height:auto; }' +
@@ -2305,15 +2305,18 @@ var HOMECSS_ =
 '  .tile.akijikan::before { background:#0ea5e9; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
-'  .ticon { flex:none; width:24px; height:24px; border-radius:7px; font-size:14px;' +
-'    display:grid; place-items:center; }' +
+'  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
+'    display:grid; place-items:center; overflow:hidden; }' +
+'  .ticon svg { width:100%; height:100%; display:block; }' +
 '  .tile.conflict .ticon { background:rgba(225,29,72,.12); }' +
 '  .tile.lt .ticon { background:rgba(148,163,184,.14); }' +
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
-'  .lt2 { display:inline-flex; align-items:center; gap:3px; }' +
-'  .tname { flex:1; font-size:1.3rem; font-weight:800; text-align:left; white-space:pre-line; line-height:1.18;' +
+'  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
+'    gap:1px; width:100%; height:100%; }' +
+'  .lt2 svg { height:16px; width:16px; flex:none; }' +
+'  .tname { flex:1; min-width:0; font-size:1.3rem; font-weight:800; text-align:left; white-space:pre-line; line-height:1.18;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .badge { display:inline-block; font-size:.9rem; font-weight:800; color:#fff; background:#f97316;' +
 '    border-radius:999px; padding:4px 12px; vertical-align:middle;' +
