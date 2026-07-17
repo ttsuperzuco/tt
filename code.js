@@ -2952,7 +2952,8 @@ function renderKanshiPage_(d, base, staff, dev) {
     '<div class="kfresh" id="kFresh"></div>' +
     '<div id="kList"></div>' +
     '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
-      '各行を押すと中身が開きます。ON/OFF・今すぐ実行は合言葉を1回入れると押せます。' +
+      '各行を押すと中身が開きます。ON/OFF・今すぐ実行は、このスマホで最初の1回だけ合言葉を入れれば、' +
+      '次からは聞かれません。' +
       'この画面は事務所PCが1分ごとに送ってきた状態を見ています。</div>' +
   '</div>' +
   '<script>window.__KANSHI_DATA__=' + JSON.stringify(d) + ';<' + '/script>' +
@@ -3038,7 +3039,19 @@ var KANSHISCRIPT_ =
 'var EXEC_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
 'var KEY_="kx7Q2p9mVt4Zr8";' +
 'var STALE_SEC_=180;' +
-'var PW_="";' +
+// ★2026-07-17（ユーザー指示）：この画面を使うのは社長だけなのに、押すたび（画面を開くたび）に
+//   スタッフ用の合言葉を入れさせられるのはおかしい、という指摘。かといって合言葉を完全に無くすと
+//   URL(?dev=1&view=kanshi)に気づいた誰でも全自動プログラムを止められる（開くこと自体には鍵が
+//   無いため）。→ **そのスマホに1回だけ覚えさせる**方式にした（合意＝案「あ」）。
+//   ・正しく入れた時だけ端末に保存し、次からは聞かない（手間は実質ゼロ）。
+//   ・合言葉を変えた等で弾かれたら、その場で忘れさせてもう一度聞く（＝古い記憶で詰まらない）。
+//   ・保存先は端末の中だけ（この画面を開いた人にしか無い）。公開コードには正解値を載せない
+//     という既存の作法（照合はサーバー側の checkpw だけ）はそのまま。
+'var PWKEY_="kanshi_pw";' +
+'function pwLoad_(){ try{ return localStorage.getItem(PWKEY_)||""; }catch(e){ return ""; } }' +
+'function pwSave_(v){ try{ localStorage.setItem(PWKEY_, v); }catch(e){} }' +
+'function pwForget_(){ try{ localStorage.removeItem(PWKEY_); }catch(e){} }' +
+'var PW_=pwLoad_();' +
 'var data_=window.__KANSHI_DATA__||{groups:[]};' +
 'var open_={};' +
 'var CONFIRM_={};' +   // 押す前に出す確認文（事務所PCが monitor.json の row.confirm で配る）
@@ -3146,7 +3159,7 @@ var KANSHISCRIPT_ =
 '  mask.querySelector(".kyes").addEventListener("click", function(){' +
 '    var v=input.value||"";' +
 '    jsonp_({action:"checkpw", pw:v}, function(r){' +
-'      if(r&&r.ok){ PW_=v; close_(); onOk(); }' +
+'      if(r&&r.ok){ PW_=v; pwSave_(v); close_(); onOk(); }' +
 '      else { toast_((r&&r.error)||"合言葉が違います。"); }' +
 '    });' +
 '  });' +
@@ -3287,6 +3300,7 @@ var KANSHISCRIPT_ =
 '    if(!pw){ toast_("新しい合言葉を入れてください"); return true; }' +
 '    if(confirm("スタッフ用URLの合言葉を「"+pw+"」に変えます。よろしいですか？")){' +
 '      send_("tile_settings","setval", JSON.stringify({t:"pw", v:pw}));' +
+'      PW_=pw; pwSave_(pw);' +   // このスマホが覚えている合言葉も新しい方へ（次の操作で聞かれないように）
 '    }' +
 '    return true;' +
 '  }' +
@@ -3299,7 +3313,7 @@ var KANSHISCRIPT_ =
 '    toast_("受け付けました。事務所PCが実行します（最大1分）…");' +
 '    jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", pw:PW_, ctl_key:key, ctl_act:act, ctl_val:(val||"")},' +
 '      function(r){' +
-'        if(!r||!r.ok){ if(r&&r.error==="合言葉が違います。") PW_=""; toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); return; }' +
+'        if(!r||!r.ok){ if(r&&r.error==="合言葉が違います。"){ PW_=""; pwForget_(); } toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); return; }' +
 '        poll_(r.id, 16);' +
 '      });' +
 '  });' +
