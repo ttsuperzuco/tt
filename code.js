@@ -2140,10 +2140,10 @@ var AKICSS_ =
 '  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
 '  .akidatebar{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }' +
 '  .akidaterow{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; width:100%; }' +
-'  .akidate{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akiink);' +
+'  .akidate{ font-family:inherit; font-size:20px; font-weight:700; color:var(--akiink);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:9px 10px; flex:1 1 0; min-width:0; cursor:pointer; caret-color:transparent; }' +
-'  .akitilde{ color:var(--akisub); font-weight:800; flex:0 0 auto; }' +
+'    padding:12px 12px; flex:1 1 0; min-width:0; cursor:pointer; caret-color:transparent; }' +
+'  .akitilde{ color:var(--akisub); font-weight:800; flex:0 0 auto; font-size:18px; }' +
 '  .akicalmask{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex;' +
 '    align-items:center; justify-content:center; z-index:9999; padding:16px; }' +
 '  .akicalbox{ background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
@@ -2165,10 +2165,10 @@ var AKICSS_ =
 '    border-radius:10px; padding:10px 0; cursor:pointer; }' +
 '  .akicalcancel{ background:transparent; color:var(--akisub); border:1px solid var(--akiline); }' +
 '  .akicalok{ background:var(--akiprimary); color:#fff; border:1px solid var(--akiprimary); }' +
-'  .akipresets{ display:flex; gap:6px; flex-wrap:wrap; width:100%; }' +
-'  .akipreset{ font-family:inherit; font-size:13.5px; font-weight:700; color:var(--akisub);' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
-'    padding:7px 12px; cursor:pointer; }' +
+'  .akipresets{ display:flex; gap:8px; flex-wrap:wrap; width:100%; }' +
+'  .akipreset{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akisub);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:11px 16px; cursor:pointer; }' +
 '  .akipreset.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akiday.akidatehide{ display:none; }' +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
@@ -2634,7 +2634,7 @@ var CSS_ =
 '    font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; }' +
 '  .wrap { max-width:820px; margin:0 auto; padding:12px 12px 22px; }' +
 '  .bar { display:flex; align-items:center; gap:10px; flex-wrap:nowrap;' +
-'    background:#2C7A99; padding:4px 0 4px; margin-bottom:2px; }' +   // 「← 前に戻る」とタイトルの間を詰める（2026-07-17ユーザー指示）
+'    background:#2C7A99; padding:4px 0 0; margin-bottom:0; }' +   // 「← 前に戻る」とタイトルの間を詰める（2026-07-17ユーザー指示・さらに詰めた）
 '  .reload { font-size:1rem; font-weight:700; color:#fff; background:#2563eb; border:0;' +
 '    border-radius:10px; padding:12px 18px; cursor:pointer; }' +
 '  .reload:active { transform:translateY(1px); }' +
@@ -2645,7 +2645,7 @@ var CSS_ =
 '  .homelink { flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--ink); text-decoration:none;' +
 '    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 14px; }' +
 '  .homelink:active { transform:translateY(1px); }' +
-'  h1 { font-size:2.1rem; margin:0 0 8px; color:#fff; }' +
+'  h1 { font-size:2.1rem; line-height:1.1; margin:0 0 8px; color:#fff; }' +   // 大きい文字の余白分も詰める
 '  h1 .cnt { color:#ff8fb3; font-size:1.6em; font-weight:900; }' +
 '  .meta { color:var(--sub); font-size:.82rem; line-height:1.6; margin-bottom:6px; }' +
 '  .safe { display:inline-block; font-size:.75rem; color:#16a34a;' +
