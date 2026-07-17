@@ -3122,6 +3122,137 @@ var KANSHISCRIPT_ =
 '    setTimeout(function(){ poll_(id, tries-1); }, 5000);' +
 '  });' +
 '}' +
+// ========== ボタン表示設定の編集画面（2026-07-17・事務所PCの設定画面と同じことをスマホで） ==========
+// ★作法どおり「判定・保存はPC側」：ここは表を描いて、押された結果を1つの依頼にして送るだけ。
+//   保存の実処理は事務所PCの tile_settings.save_perms/set_password/add_person/reset_device
+//   （＝PCの設定画面が呼ぶのと同じ関数）が行う＝PC版とApp版で結果が食い違わない。
+// ★合言葉だけは「今の値」を画面に出さない（②静的アプリは誰でも開けるURLのため。変える事はできる）。
+'var EP_={}, EO_=[], EPEOPLE_=[], ELAB_={}, ECLAIM_={};' +
+'function tileDefs_(){' +
+'  var r=TILEROW_||{}; var out=[];' +
+'  var a=r.tiles||[], b=r.dev_tiles||[];' +
+'  for(var i=0;i<a.length;i++) out.push({id:a[i].id,label:a[i].label,color:a[i].color,dev:false});' +
+'  for(var j=0;j<b.length;j++) out.push({id:b[j].id,label:b[j].label,color:b[j].color,dev:true});' +
+'  return out;' +
+'}' +
+'function openTiles_(){' +
+'  toast_("設定を読み込んでいます…");' +
+'  jsonp_({action:"tilesettings"}, function(r){' +
+'    if(!r||r.error){ toast_("⚠ 設定を読めませんでした"); return; }' +
+'    EPEOPLE_=r.people||[]; ELAB_=r.labels||{}; ECLAIM_=r.claimed||{}; EO_=(r.order||[]).slice();' +
+'    EP_={};' +
+'    for(var i=0;i<EPEOPLE_.length;i++){' +
+'      var pid=EPEOPLE_[i]; EP_[pid]={};' +
+'      var src=(r.perms&&r.perms[pid])||{};' +
+'      for(var t in src) EP_[pid][t]=!!src[t];' +
+'    }' +
+'    drawTiles_();' +
+'  });' +
+'}' +
+'function tileRowsHtml_(){' +
+'  var defs=tileDefs_(), byId={};' +
+'  for(var i=0;i<defs.length;i++) byId[defs[i].id]=defs[i];' +
+'  var order=EO_.filter(function(id){ return byId[id]; });' +
+'  for(var j=0;j<defs.length;j++){ if(order.indexOf(defs[j].id)<0) order.push(defs[j].id); }' +
+'  EO_=order;' +
+'  return order.map(function(tid){' +
+'    var d=byId[tid];' +
+'    var h="<div class=\\"ktrow\\" data-tid=\\""+esc(tid)+"\\"><div class=\\"ktname\\">"+' +
+'      "<span class=\\"kacc\\" style=\\"background:"+esc(d.color||"#94a3b8")+"\\"></span>"+esc(d.label)+' +
+'      "<span class=\\"kord\\"><button type=\\"button\\" data-mv=\\"-1\\" data-tid=\\""+esc(tid)+"\\">▲</button>"+' +
+'      "<button type=\\"button\\" data-mv=\\"1\\" data-tid=\\""+esc(tid)+"\\">▼</button></span></div>";' +
+'    if(d.dev){' +
+'      h+="<div class=\\"kdevnote\\">開発用URLだけに出るボタンです（人ごとの設定はありません。並び順だけ変えられます）</div>";' +
+'    } else {' +
+'      h+="<div class=\\"kchips\\">"+EPEOPLE_.map(function(pid){' +
+'        var on=!!(EP_[pid]&&EP_[pid][tid]);' +
+'        var used=(pid!=="kanbu"&&ECLAIM_[pid])?"<span class=\\"kused\\">使用中</span>":"";' +
+'        return "<button type=\\"button\\" class=\\"kchip"+(on?" on":"")+"\\" data-pid=\\""+esc(pid)+"\\" data-tid=\\""+esc(tid)+"\\">"+' +
+'          esc(ELAB_[pid]||pid)+used+"</button>";' +
+'      }).join("")+"</div>";' +
+'    }' +
+'    return h+"</div>";' +
+'  }).join("");' +
+'}' +
+'function drawTiles_(){' +
+'  var old=document.getElementById("kTiles"); if(old&&old.parentNode) old.parentNode.removeChild(old);' +
+'  var mask=document.createElement("div"); mask.className="kmask"; mask.id="kTiles";' +
+'  var resets=EPEOPLE_.filter(function(p){ return p!=="kanbu"; }).map(function(pid){' +
+'    return "<button type=\\"button\\" class=\\"kchip\\" data-reset=\\""+esc(pid)+"\\">"+esc(ELAB_[pid]||pid)+"</button>";' +
+'  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠ 全員</button>";' +
+'  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
+'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください（事務所PCが受け取ってから反映まで最大1分）。</div>"+' +
+'    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
+'    "<div class=\\"ksec\\">新しいユーザーを追加</div>"+' +
+'    "<div class=\\"knote\\">新しいスタッフや、同じ人の別の名前（例：りんご2）を足します。</div>"+' +
+'    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kAdd\\" placeholder=\\"例：りんご2\\">"+' +
+'    "<button type=\\"button\\" class=\\"kbtn\\" id=\\"kAddBtn\\">追加</button></div>"+' +
+'    "<div class=\\"ksec\\">スタッフ用URLの合言葉</div>"+' +
+'    "<div class=\\"knote\\">今の合言葉は、安全のためこの画面には出しません。変えたい時だけ新しい合言葉を入れてください。</div>"+' +
+'    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kPw2\\" placeholder=\\"新しい合言葉\\">"+' +
+'    "<button type=\\"button\\" class=\\"kbtn\\" id=\\"kPwBtn\\">変更</button></div>"+' +
+'    "<div class=\\"ksec\\">名前を選び直させる（スマホごと）</div>"+' +
+'    "<div class=\\"knote\\">押した人のスマホは、次にアプリを開いた時「名前をえらぶ」画面からやり直しになります。その名前はまた選べるようになります。</div>"+' +
+'    "<div class=\\"kchips\\">"+resets+"</div>"+' +
+'    "<div class=\\"kboxbtns\\" style=\\"margin-top:18px;\\"><button type=\\"button\\" class=\\"kno\\" id=\\"kTilesClose\\">とじる</button>"+' +
+'    "<button type=\\"button\\" class=\\"kyes\\" id=\\"kTilesSave\\">保存する</button></div></div>";' +
+'  document.body.appendChild(mask);' +
+'}' +
+'function closeTiles_(){ var m=document.getElementById("kTiles"); if(m&&m.parentNode) m.parentNode.removeChild(m); }' +
+'function moveTile_(tid, dir){' +
+'  var i=EO_.indexOf(tid), j=i+dir;' +
+'  if(i<0||j<0||j>=EO_.length) return;' +
+'  var tmp=EO_[i]; EO_[i]=EO_[j]; EO_[j]=tmp;' +
+'  var box=document.getElementById("kTileRows"); if(box) box.innerHTML=tileRowsHtml_();' +
+'}' +
+'function saveTiles_(){' +
+'  var p={};' +   // ONの物だけの一覧で送る（依頼はURLで届くので短くする必要がある）
+'  for(var i=0;i<EPEOPLE_.length;i++){' +
+'    var pid=EPEOPLE_[i], on=[];' +
+'    for(var t in (EP_[pid]||{})){ if(EP_[pid][t]) on.push(t); }' +
+'    p[pid]=on;' +
+'  }' +
+'  send_("tile_settings","setval", JSON.stringify({t:"save", o:EO_, p:p}));' +
+'  closeTiles_();' +
+'}' +
+'function tilesClick_(ev){' +
+'  var t=ev.target.closest?ev.target:null; if(!t) return false;' +
+'  var chip=t.closest(".kchip");' +
+'  if(chip&&chip.getAttribute("data-pid")){' +
+'    var pid=chip.getAttribute("data-pid"), tid=chip.getAttribute("data-tid");' +
+'    if(!EP_[pid]) EP_[pid]={};' +
+'    EP_[pid][tid]=!EP_[pid][tid];' +
+'    chip.classList.toggle("on", !!EP_[pid][tid]);' +
+'    return true;' +
+'  }' +
+'  if(chip&&chip.getAttribute("data-reset")){' +
+'    var rid=chip.getAttribute("data-reset");' +
+'    if(confirm("「"+(rid==="all"?"全員":(ELAB_[rid]||rid))+"」を名前の選び直しにします。よろしいですか？")){' +
+'      send_("tile_settings","setval", JSON.stringify({t:"reset", v:rid}));' +
+'    }' +
+'    return true;' +
+'  }' +
+'  var mv=t.closest("[data-mv]");' +
+'  if(mv){ moveTile_(mv.getAttribute("data-tid"), Number(mv.getAttribute("data-mv"))); return true; }' +
+'  if(t.closest("#kAddBtn")){' +
+'    var v=(document.getElementById("kAdd").value||"").trim();' +
+'    if(!v){ toast_("名前を入れてください"); return true; }' +
+'    send_("tile_settings","setval", JSON.stringify({t:"add", v:v}));' +
+'    document.getElementById("kAdd").value="";' +
+'    return true;' +
+'  }' +
+'  if(t.closest("#kPwBtn")){' +
+'    var pw=(document.getElementById("kPw2").value||"").trim();' +
+'    if(!pw){ toast_("新しい合言葉を入れてください"); return true; }' +
+'    if(confirm("スタッフ用URLの合言葉を「"+pw+"」に変えます。よろしいですか？")){' +
+'      send_("tile_settings","setval", JSON.stringify({t:"pw", v:pw}));' +
+'    }' +
+'    return true;' +
+'  }' +
+'  if(t.closest("#kTilesClose")){ closeTiles_(); return true; }' +
+'  if(t.closest("#kTilesSave")){ saveTiles_(); return true; }' +
+'  return false;' +
+'}' +
 'function send_(key, act, val){' +
 '  askPw_(function(){' +
 '    toast_("受け付けました。事務所PCが実行します（最大1分）…");' +
@@ -3133,9 +3264,13 @@ var KANSHISCRIPT_ =
 '  });' +
 '}' +
 'document.addEventListener("click", function(ev){' +
-'  var h=ev.target.closest?ev.target.closest(".khead"):null;' +
+'  if(!ev.target.closest) return;' +
+'  if(ev.target.closest("#kTiles")){ if(tilesClick_(ev)) return; }' +
+'  var ed=ev.target.closest("[data-editor]");' +
+'  if(ed){ openTiles_(); return; }' +
+'  var h=ev.target.closest(".khead");' +
 '  if(h){ var i=h.getAttribute("data-g"); open_[i]=!open_[i]; render_(); return; }' +
-'  var b=ev.target.closest?ev.target.closest(".kbtn"):null;' +
+'  var b=ev.target.closest(".kbtn");' +
 '  if(!b) return;' +
 '  var key=b.getAttribute("data-key"), act=b.getAttribute("data-act");' +
 '  if(!key||!act) return;' +
@@ -3144,6 +3279,7 @@ var KANSHISCRIPT_ =
 '    var input=document.querySelector(".kval[data-val=\\""+key+"\\"]");' +
 '    val=input?input.value:"";' +
 '  }' +
+'  if(CONFIRM_[key]&&!confirm(CONFIRM_[key])) return;' +   // お金・電源・データ復元は押す前に必ず確認
 '  send_(key, act, val);' +
 '});' +
 'var ref=document.getElementById("kRef");' +
