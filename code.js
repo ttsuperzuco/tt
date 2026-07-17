@@ -1623,11 +1623,6 @@ function renderUnansweredError_(err, base, staff, dev) {
   '</div>';
 }
 
-function unaBadge_(kind, v) {
-  if (kind === 'cust') return '<span class="unabadge cust">客の質問</span>';
-  if (v === '要返信・依頼') return '<span class="unabadge req">要返信・依頼</span>';
-  return '<span class="unabadge q">個別質問</span>';
-}
 function unaReadPill_(read) {
   if (read === '未読') return '<span class="unapill unread">未読</span>';
   if (read === '既読') return '<span class="unapill read">既読</span>';
@@ -1661,12 +1656,12 @@ function unaCard_(r, kind) {
   return '' +
   '<article class="unacard ' + (kind === 'cust' ? 'cust' : 'ours') + '" data-search="' + search + '" data-days="' + (r.d || 0) + '">' +
     '<div class="unahead">' +
-      unaBadge_(kind, r.v) + unaReadPill_(r.read) +
+      unaReadPill_(r.read) +
+      (when ? '<span class="unawhentag">' + esc_(when) + '</span>' : '') +
       '<span class="unaname">' + esc_(name) + '</span>' +
       (tag ? '<span class="unatag">' + esc_(tag) + '</span>' : '') +
       '<span class="unadays">待ち' + (r.d || 0) + '日</span>' +
     '</div>' +
-    (when ? '<div class="unawhen">🕒 最新メッセージ ' + esc_(when) + '</div>' : '') +
     '<div class="unaq">' + esc_(r.q || '') + '</div>' +
     '<div class="unaactions">' + detail + link + '</div>' +
   '</article>';
@@ -1809,7 +1804,9 @@ var UNACSS_ =
 '  .unatab{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:10px 8px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; font-weight:700; font-size:13px; }' +
 '  .unatab .unac{ display:block; font-size:20px; font-weight:900; margin-top:2px; }' +
-'  .unatab.cust.sel{ outline:2px solid var(--cust); } .unatab.ours.sel{ outline:2px solid var(--q); }' +
+'  .unatab.cust.sel{ background:var(--cust); border-color:var(--cust); color:#fff; }' +
+'  .unatab.ours.sel{ background:var(--q); border-color:var(--q); color:#fff; }' +
+'  .unatab.sel .unac{ color:#fff; }' +
 '  .unaviewlabel{ font-size:13px; font-weight:800; margin:0 2px 10px; color:#fff; }' +
 '  .unaviewlabel.cust{ color:#d6f5e6; } .unaviewlabel.ours{ color:#dde0ff; }' +
 '  #unaperiod{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
@@ -1823,15 +1820,12 @@ var UNACSS_ =
 '  .unacard.cust{ border-left-color:var(--cust); background:var(--custbg); }' +
 '  .unacard.ours{ border-left-color:var(--q); }' +
 '  .unahead{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
-'  .unabadge{ font-size:11px; font-weight:800; color:#fff; padding:2px 9px; border-radius:999px; }' +
-'  .unabadge.cust{ background:var(--cust); } .unabadge.req{ background:var(--req); } .unabadge.q{ background:var(--q); }' +
 '  .unapill{ font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:6px; }' +
 '  .unapill.unread{ background:#fef9c3; color:#854d0e; } .unapill.read{ background:var(--line); color:var(--sub); }' +
+'  .unawhentag{ font-size:11.5px; font-weight:700; color:var(--sub); font-variant-numeric:tabular-nums; }' +
 '  .unaname{ font-weight:800; font-size:15px; }' +
 '  .unatag{ font-size:11px; color:var(--sub); }' +
 '  .unadays{ margin-left:auto; font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; }' +
-'  .unawhen{ font-size:12px; color:var(--sub); font-weight:700; margin:2px 0 4px;' +
-'    font-variant-numeric:tabular-nums; }' +
 '  .unaq{ font-size:14px; margin:2px 0 6px; line-height:1.45;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .unath{ font-size:12px; color:var(--sub); border-top:1px dashed var(--line); padding-top:6px; margin-top:2px; }' +
