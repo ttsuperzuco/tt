@@ -2003,7 +2003,6 @@ function renderAkijikanPage_(d, base, staff, dev) {
 '<div class="akiwrap">' +
   '<div class="akibar">' +
     '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="akigen">' + esc_(d.cond || '') + '</span>' +
   '</div>' +
   '<h1>🕑 空き時間検索</h1>' +
   '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
