@@ -66,6 +66,20 @@ function doPost(e) {
       return _actionOut_({ ok: false, error: String(err2) }, null);
     }
   }
+  // ★2026-07-17追加：ボタン表示設定(tile_settings.json)を事務所PCから直接受け取ってDriveへ書く。
+  //   push_events / push_monitor と同じ理由。特にスマホ(自動監視→ボタン表示設定)から保存した時、
+  //   Driveアプリの同期待ち（数十秒〜10分）だと「保存したのにアプリが変わらない」と見えるため。
+  if (p.action === 'push_tiles') {
+    if (p.key !== EDIT_KEY) return _actionOut_({ ok: false, error: 'bad key' }, null);
+    try {
+      var tbody = (e.postData && e.postData.contents) || '';
+      JSON.parse(tbody);  // 壊れたJSONを書き込まない安全弁
+      getTileSettingsFile_().setContent(tbody);
+      return _actionOut_({ ok: true }, null);
+    } catch (err3) {
+      return _actionOut_({ ok: false, error: String(err3) }, null);
+    }
+  }
   return _actionOut_({ ok: false, error: 'unknown action' }, null);
 }
 
@@ -379,16 +393,25 @@ function _rateOk_(q) {
 //   サーバー(ここ)から一切出さない＝②の公開コードに載らない）。合言葉は自動監視メニュー4で変更可。
 // ★さらに、触ってよい項目(key)をここのホワイトリストで固定する。事務所PC側(monitor_ctl.apply)でも
 //   同じ確認を必ずもう一度行う（鍵が公開されている前提の二重の関門）。
-// ★お金・電源・データ復元に関わるもの（PotCoin解錠／PC自動スリープ／復元コピー）は入れない
-//   ＝外からは見るだけ（スマホの誤タップで動くと取り返しがつかないため）。
+// ★2026-07-17：お金・電源・データ復元（PotCoin解錠／PC自動スリープ・起床／復元コピー）も
+//   ここに入れた（ユーザー指示＝PC画面で押せる物はApp版でも全部押せるようにする）。
+//   誤タップ対策は「見せない」ではなく「押す前に確認文を出す」方式に変更した
+//   （確認文は事務所PCが monitor.json の row.confirm で配る＝PC側が唯一の出どころ）。
+//   ★事務所PC側(monitor_ctl.apply)でも key と「その項目に許した操作(acts)」を再確認する。
 var KANSHI_CTL_KEYS_ = [
   'db_backup', 'db_backup_full', 'course_counts', 'program_backup',
   'line_stats_timetree_check', 'ripihoryu_auto',
   'line_prefetch', 'timetree_prefetch', 'edit_worker_watchdog',
+  'lt_match', 'lt_miss_watch', 'sales_timetree_transfer',
   'line_shinki_watch', 'line_yoyaku_kakutei',
   'edit_worker', 'conflict_watcher', 'super_link',
+  // 必要時に実行（2026-07-17追加）
+  'travel_group', 'power_schedule', 'idle_guard', 'potcoin_stake', 'restore',
+  // その他の設定
+  'tile_settings',   // スーパーズコApp ボタン表示設定（人ごと表示・並び順・合言葉・追加・選び直し）
   'lt_auto_verify',  // その他の設定：L⇔T予約照合 全自動AI判定（2026-07-16・PC/App同一ルールで追加）
-  'ai_usage_record'  // その他の設定：自動AIコスト計算（帳簿）のON/OFF（2026-07-17追加）
+  'ai_usage_record', // その他の設定：自動AIコスト計算（帳簿）のON/OFF（2026-07-17追加）
+  'stale_cleanup'    // その他の設定：固まった残骸の掃除（2026-07-17追加）
 ];
 var KANSHI_CTL_ACTS_ = ['on', 'off', 'run', 'setval'];
 function _validKanshiCtl_(key, act) {
@@ -1952,13 +1975,13 @@ function akiDayCard_(day) {
   return '<div class="akiday"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
     '<div class="akisec akisec-time" data-sec="time">' +
-      '<div class="akisl">各時間帯の空き</div>' + akiTimeRows_(day.time_slots) +
+      akiTimeRows_(day.time_slots) +
     '</div>' +
     '<div class="akisec akisec-staff akihidden" data-sec="staff">' +
-      '<div class="akisl">スタッフ別の空き</div>' + akiStaffRows_(day.staff) +
+      akiStaffRows_(day.staff) +
     '</div>' +
     '<div class="akisec akisec-rooms akihidden" data-sec="rooms">' +
-      '<div class="akisl">施術室別の空き</div>' + akiRoomRows_(day.rooms_free) +
+      akiRoomRows_(day.rooms_free) +
     '</div>' +
   '</div>';
 }
@@ -1984,17 +2007,26 @@ function renderAkijikanPage_(d, base, staff, dev) {
   '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
     '　生成: ' + esc_(d.generated_at || '—') + '</div>' +
   '<div class="akidatebar">' +
+    // ★2026-07-17ユーザー指示：期間(from〜to)選択をやめ、カレンダーで日付を好きなだけ複数選ぶ
+    //   方式に変更。終わりの日付BOXは廃止＝日付BOXは1個だけ（押すと複数選択カレンダーが開く）。
+    //   日付BOX＋今日/明日/今・来週/全期間を1行に収める（今日/明日はやや小さめ）。
     '<div class="akidaterow">' +
-      '<input type="text" readonly class="akidate" id="akiFrom" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
-      '<span class="akitilde">〜</span>' +
-      '<input type="text" readonly class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
-    '</div>' +
-    '<div class="akipresets">' +
-      '<button type="button" class="akipreset" data-preset="today">今日</button>' +
-      '<button type="button" class="akipreset" data-preset="tomorrow">明日</button>' +
+      '<input type="text" readonly class="akidate" id="akiFrom" placeholder="日付で選ぶ"' +
+        ' min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+      '<button type="button" class="akipreset sm" data-preset="today">今日</button>' +
+      '<button type="button" class="akipreset sm" data-preset="tomorrow">明日</button>' +
       '<button type="button" class="akipreset on" data-preset="thisnext">今・来週</button>' +
-      '<button type="button" class="akipreset" data-preset="month">1か月</button>' +
       '<button type="button" class="akipreset" data-preset="all">全期間</button>' +
+    '</div>' +
+    // 曜日で絞り込み（定休日の月・日は元々出ないので対象外＝2026-07-17ユーザー指示）。
+    // 既定は「全て」＝制限なし。個別の曜日を押すと複数選択でき、その時点で「全て」は外れる。
+    '<div class="akiwdrow">' +
+      '<button type="button" class="akiwd on" data-wd="all">全て</button>' +
+      '<button type="button" class="akiwd" data-wd="2">火</button>' +
+      '<button type="button" class="akiwd" data-wd="3">水</button>' +
+      '<button type="button" class="akiwd" data-wd="4">木</button>' +
+      '<button type="button" class="akiwd" data-wd="5">金</button>' +
+      '<button type="button" class="akiwd" data-wd="6">土</button>' +
     '</div>' +
   '</div>' +
   '<div class="akichips">' +
@@ -2024,13 +2056,25 @@ var AKISCRIPT_ =
 '  });' +
 '}); });' +
 '' +
-'var fromEl=document.getElementById("akiFrom"), toEl=document.getElementById("akiTo");' +
+'var fromEl=document.getElementById("akiFrom");' +
 'var minD=fromEl?fromEl.min:"", maxD=fromEl?fromEl.max:"";' +
 'var days=[].slice.call(document.querySelectorAll("#akidays .akiday"));' +
 'var emptyMsg=document.getElementById("akiDateEmpty");' +
+// ★2026-07-17ユーザー指示：期間(from〜to)選択をやめ、カレンダーで日付を好きなだけ複数選ぶ方式に。
+//   manualDates=null の時はプリセット(今日/明日/今・来週/全期間)の範囲(rangeFrom〜rangeTo)を使い、
+//   manualDates に配列が入っている時はその日付だけを表示する（プリセットとは排他）。
+'var manualDates=null;' +
+'function updateDateBoxLabel_(){' +
+'  if(!fromEl) return;' +
+'  if(!manualDates||!manualDates.length){ fromEl.value=""; return; }' +
+'  var mp=manualDates[0].slice(5).split("-");' +
+'  var f=Number(mp[0])+"/"+Number(mp[1]);' +   // 先頭の0を消して"7/18"のように表示
+'  fromEl.value = manualDates.length===1 ? f : (f+" 他"+(manualDates.length-1)+"件");' +
+'}' +
 'function openAkiCal_(input){' +
-'  var pick=input.value||minD;' +
-'  var cur=new Date((pick||minD)+"T00:00:00");' +
+'  var picks=new Set(manualDates||[]);' +
+'  var initD=(manualDates&&manualDates[0])||minD;' +
+'  var cur=new Date((initD||minD)+"T00:00:00");' +
 '  var y=cur.getFullYear(), m=cur.getMonth();' +
 '  var mask=document.createElement("div"); mask.className="akicalmask";' +
 '  var box=document.createElement("div"); box.className="akicalbox";' +
@@ -2046,6 +2090,9 @@ var AKISCRIPT_ =
 '    next.addEventListener("click",function(){ m++; if(m>11){m=0;y++;} draw(); });' +
 '    hdr.appendChild(prev); hdr.appendChild(lbl); hdr.appendChild(next);' +
 '    box.appendChild(hdr);' +
+'    var note=document.createElement("div"); note.className="akicalnote";' +
+'    note.textContent="いくつでも選べます（もう一度押すと外れます）";' +
+'    box.appendChild(note);' +
 '    var wk=document.createElement("div"); wk.className="akicalwk";' +
 '    ["月","火","水","木","金","土","日"].forEach(function(w,i){' +
 '      var s=document.createElement("span"); s.textContent=w;' +
@@ -2061,8 +2108,10 @@ var AKISCRIPT_ =
 '      var iso0 = y+"-"+pad2(m+1)+"-"+pad2(dnum);' +
 '      var b=document.createElement("button"); b.type="button"; b.textContent=String(dnum);' +
 '      if((minD&&iso0<minD)||(maxD&&iso0>maxD)){ b.disabled=true; }' +
-'      if(iso0===pick){ b.classList.add("sel"); }' +
-'      b.addEventListener("click",(function(iso1){ return function(){ pick=iso1; draw(); }; })(iso0));' +
+'      if(picks.has(iso0)){ b.classList.add("sel"); }' +
+'      b.addEventListener("click",(function(iso1){ return function(){' +
+'        if(picks.has(iso1)) picks.delete(iso1); else picks.add(iso1); draw();' +
+'      }; })(iso0));' +
 '      grid.appendChild(b);' +
 '    }' +
 '    box.appendChild(grid);' +
@@ -2071,7 +2120,11 @@ var AKISCRIPT_ =
 '    var ok=document.createElement("button"); ok.type="button"; ok.textContent="設定"; ok.className="akicalok";' +
 '    cancel.addEventListener("click",function(){ document.body.removeChild(mask); });' +
 '    ok.addEventListener("click",function(){' +
-'      input.value=pick; input.dispatchEvent(new Event("change"));' +
+'      var arr=Array.from(picks).sort();' +   // ★Set.prototype.sliceは無い＝Array.fromで配列化する（Array.prototype.slice.callだと空配列になるバグを実機検証で発見）
+'      manualDates = arr.length ? arr : null;' +
+'      updateDateBoxLabel_();' +
+'      if(manualDates) clearPresetSel();' +
+'      applyFilter();' +
 '      document.body.removeChild(mask);' +
 '    });' +
 '    ftr.appendChild(cancel); ftr.appendChild(ok);' +
@@ -2083,29 +2136,27 @@ var AKISCRIPT_ =
 'function addDays(iso0,n){ var d=new Date(iso0+"T00:00:00"); d.setDate(d.getDate()+n); return iso(d); }' +
 'function clamp(v){ if(minD&&v<minD)return minD; if(maxD&&v>maxD)return maxD; return v; }' +
 'function endOfThisWeek(iso0){ var d=new Date(iso0+"T00:00:00"); var wd=(d.getDay()+6)%7; return addDays(iso0,6-wd); }' +
+'var selectedWd=null;' +   // null=「全て」＝曜日での絞り込み無し。配列の時はその曜日番号(getDay())だけ表示。
+'function wdVisible_(dt){ if(!selectedWd) return true; var d=new Date(dt+"T00:00:00"); return selectedWd.indexOf(d.getDay())>-1; }' +
+'var rangeFrom=minD, rangeTo=minD;' +   // プリセット(今日/明日/今・来週/全期間)が使う範囲
 'function applyFilter(){' +
-'  var f=fromEl.value||minD;' +
-'  var toRaw=toEl.value;' +
-'  var t=toRaw?toRaw:f;' +
-'  if(t<f){ var tmp=f; f=t; t=tmp; }' +
 '  var shown=0;' +
 '  days.forEach(function(el){' +
 '    var dt=el.getAttribute("data-date")||"";' +
-'    var vis = dt && dt>=f && dt<=t;' +
+'    var vis;' +
+'    if(manualDates&&manualDates.length){ vis = manualDates.indexOf(dt)>-1 && wdVisible_(dt); }' +
+'    else { vis = dt && dt>=rangeFrom && dt<=rangeTo && wdVisible_(dt); }' +
 '    el.classList.toggle("akidatehide", !vis);' +
 '    if(vis) shown++;' +
 '  });' +
 '  if(emptyMsg) emptyMsg.hidden = shown>0;' +
 '}' +
-'function setRange(f,t){ fromEl.value=clamp(f); toEl.value=clamp(t); applyFilter(); }' +
-'function setSingle_(f){ fromEl.value=clamp(f); toEl.value=""; applyFilter(); }' +
-'if(fromEl&&toEl){' +
+'function setRange(f,t){ rangeFrom=clamp(f); rangeTo=clamp(t); manualDates=null; updateDateBoxLabel_(); applyFilter(); }' +
+'function setSingle_(f){ setRange(f,f); }' +
+'var presets=[].slice.call(document.querySelectorAll(".akipreset"));' +
+'function clearPresetSel(){ presets.forEach(function(b){ b.classList.remove("on"); }); }' +
+'if(fromEl){' +
 '  fromEl.addEventListener("click",function(){ openAkiCal_(fromEl); });' +
-'  toEl.addEventListener("click",function(){ openAkiCal_(toEl); });' +
-'  fromEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
-'  toEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
-'  var presets=[].slice.call(document.querySelectorAll(".akipreset"));' +
-'  function clearPresetSel(){ presets.forEach(function(b){ b.classList.remove("on"); }); }' +
 '  presets.forEach(function(b){ b.addEventListener("click",function(){' +
 '    presets.forEach(function(x){ x.classList.toggle("on", x===b); });' +
 '    var kind=b.getAttribute("data-preset");' +
@@ -2113,8 +2164,21 @@ var AKISCRIPT_ =
 '    if(kind==="today") setSingle_(today);' +
 '    else if(kind==="tomorrow") setSingle_(addDays(today,1));' +
 '    else if(kind==="thisnext") setRange(today, addDays(endOfThisWeek(today),7));' +
-'    else if(kind==="month") setRange(today, addDays(today,29));' +
 '    else if(kind==="all") setRange(minD, maxD);' +
+'  }); });' +
+// 曜日ボタン（2026-07-17ユーザー指示）：既定は「全て」。個別の曜日は複数選択でき、押した瞬間
+// 「全て」は外れる。個別選択を全部外すと「全て」に自動で戻す（何も表示されない状態を作らない）。
+'  var wdBtns=[].slice.call(document.querySelectorAll(".akiwd"));' +
+'  function setAllWd_(){ selectedWd=null; wdBtns.forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-wd")==="all"); }); applyFilter(); }' +
+'  wdBtns.forEach(function(b){ b.addEventListener("click",function(){' +
+'    var wd=b.getAttribute("data-wd");' +
+'    if(wd==="all"){ setAllWd_(); return; }' +
+'    if(!selectedWd) selectedWd=[];' +
+'    var n=Number(wd), idx=selectedWd.indexOf(n);' +
+'    if(idx>-1) selectedWd.splice(idx,1); else selectedWd.push(n);' +
+'    if(!selectedWd.length){ setAllWd_(); return; }' +
+'    wdBtns[0].classList.remove("on"); b.classList.toggle("on", idx===-1);' +
+'    applyFilter();' +
 '  }); });' +
 '  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
 '}' +
@@ -2133,11 +2197,13 @@ var AKICSS_ =
 '  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
 '  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
 '  .akidatebar{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }' +
-'  .akidaterow{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; width:100%; }' +
-'  .akidate{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akiink);' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:9px 10px; flex:1 1 0; min-width:0; cursor:pointer; caret-color:transparent; }' +
-'  .akitilde{ color:var(--akisub); font-weight:800; flex:0 0 auto; }' +
+// ★日付BOX＋今日/明日/今・来週/全期間を1行に収める（2026-07-17ユーザー指示）。
+//   幅が本当に足りない端末だけ横スクロールで逃がす（折り返して2行にはしない）。
+'  .akidaterow{ display:flex; align-items:center; gap:5px; flex-wrap:nowrap; width:100%; overflow-x:auto; }' +
+'  .akidate{ font-family:inherit; font-size:13px; font-weight:700; color:var(--akiink);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
+'    padding:9px 6px; flex:1 1 64px; min-width:64px; text-align:center; cursor:pointer; caret-color:transparent; }' +
+'  .akidate::placeholder{ color:var(--akisub); font-weight:700; }' +
 '  .akicalmask{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex;' +
 '    align-items:center; justify-content:center; z-index:9999; padding:16px; }' +
 '  .akicalbox{ background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
@@ -2146,6 +2212,7 @@ var AKICSS_ =
 '  .akicalhdr span{ font-weight:800; font-size:16px; color:var(--akiink); }' +
 '  .akicalhdr button{ font-family:inherit; font-size:15px; font-weight:700; color:var(--akiink);' +
 '    background:transparent; border:1px solid var(--akiline); border-radius:8px; padding:4px 10px; cursor:pointer; }' +
+'  .akicalnote{ color:var(--akisub); font-size:12px; margin-bottom:6px; }' +
 '  .akicalwk{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center;' +
 '    color:var(--akisub); font-size:13px; font-weight:700; margin-bottom:4px; }' +
 '  .akicalwk .aki6{ color:#4d8fe0; } .akicalwk .aki0{ color:#e05a5a; }' +
@@ -2159,11 +2226,17 @@ var AKICSS_ =
 '    border-radius:10px; padding:10px 0; cursor:pointer; }' +
 '  .akicalcancel{ background:transparent; color:var(--akisub); border:1px solid var(--akiline); }' +
 '  .akicalok{ background:var(--akiprimary); color:#fff; border:1px solid var(--akiprimary); }' +
-'  .akipresets{ display:flex; gap:6px; flex-wrap:wrap; width:100%; }' +
-'  .akipreset{ font-family:inherit; font-size:13.5px; font-weight:700; color:var(--akisub);' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
-'    padding:7px 12px; cursor:pointer; }' +
+// ★1行に収めるため縮小（2026-07-17ユーザー指示）。今日/明日は.smでさらに一段小さく。
+'  .akipreset{ flex:0 0 auto; white-space:nowrap; font-family:inherit; font-size:13px; font-weight:700;' +
+'    color:var(--akisub); background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
+'    padding:9px 11px; cursor:pointer; }' +
+'  .akipreset.sm{ font-size:12px; padding:8px 9px; }' +
 '  .akipreset.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akiwdrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
+'  .akiwd{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akisub);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:11px 16px; cursor:pointer; }' +
+'  .akiwd.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akiday.akidatehide{ display:none; }' +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
 '  .akichip{ font-family:inherit; font-size:17px; font-weight:700; color:var(--akisub);' +
@@ -2313,6 +2386,11 @@ var MOVESCRIPT_ =
 '    Array.prototype.forEach.call(mvw.querySelectorAll(".mvtoggle"),function(b){ b.classList.remove("open"); });' +
 '    if(willOpen){ pn.hidden=false; t.classList.add("open"); }' +
 '    if(!pn.hidden&&window.szFit1Line_) window.szFit1Line_(pn);' +   // 開いた瞬間に1行へ収める
+// ★移動先を選ぶ準備中は、氏名・施術内容を隠して詰める（2026-07-17ユーザー指示）。
+//   もう決まっている情報（誰の予約か）を毎回見返す必要はない＝隠すだけで下のボタンが
+//   自動的に上へ詰まる（display:noneなので特別なアニメーション処理は不要）。
+'    var crd=mvw; while(crd&&!(crd.classList&&crd.classList.contains("card"))) crd=crd.parentNode;' +
+'    if(crd) crd.classList.toggle("moving",willOpen);' +
 '    return;' +
 '  }' +
 '  if(t.classList&&t.classList.contains("rstoggle")){' +
@@ -2363,17 +2441,23 @@ var MOVESCRIPT_ =
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
 // ★完了まで全画面のまま待ち、本当に完了したら全画面「✓完了」を0.5秒→被りを消して一覧へ戻す。
 //   確認間隔はGoogleの応答速度が下限のため詰められる範囲で最短(0.25秒間隔)にしている。
+// ★「完了しました」は自動で消えず、押すまで画面に残す（2026-07-17ユーザー指示）。
+//   裏側のデータはこの時点で既に doneRefreshFast_ 済みなので、押した瞬間に最新の一覧が見える。
 'function showDoneOverlay_(room){ var ov=document.getElementById("mvWaitOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
 '  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
 '  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div>"+' +
-'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;\\">「"+room+"」へ<br>移動が完了しました</div>"; }' +
+'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">「"+room+"」へ<br>移動が完了しました</div>"+' +
+'    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">施術室被り検出画面に戻る</button>";' +
+'  document.getElementById("mvBackBtn").addEventListener("click",function(){' +
+'    try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_();' +
+'  });' +
+'  return ov; }' +
 'function waitDoneThenFinish_(id,evid,room){ var tries=0;' +
 '  function chk(){ tries++;' +
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
 '      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showDoneOverlay_(room);' +
-'        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_();' +
-'        setTimeout(function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); },2000); }' +
+'        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
 '      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください", false); }' +
 '      else { setTimeout(chk,250); } });' +
@@ -2628,7 +2712,7 @@ var CSS_ =
 '    font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; }' +
 '  .wrap { max-width:820px; margin:0 auto; padding:12px 12px 22px; }' +
 '  .bar { display:flex; align-items:center; gap:10px; flex-wrap:nowrap;' +
-'    background:#2C7A99; padding:4px 0 4px; margin-bottom:2px; }' +   // 「← 前に戻る」とタイトルの間を詰める（2026-07-17ユーザー指示）
+'    background:#2C7A99; padding:4px 0 0; margin-bottom:0; }' +   // 「← 前に戻る」とタイトルの間を詰める（2026-07-17ユーザー指示・さらに詰めた）
 '  .reload { font-size:1rem; font-weight:700; color:#fff; background:#2563eb; border:0;' +
 '    border-radius:10px; padding:12px 18px; cursor:pointer; }' +
 '  .reload:active { transform:translateY(1px); }' +
@@ -2639,7 +2723,7 @@ var CSS_ =
 '  .homelink { flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--ink); text-decoration:none;' +
 '    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 14px; }' +
 '  .homelink:active { transform:translateY(1px); }' +
-'  h1 { font-size:2.1rem; margin:0 0 8px; color:#fff; }' +
+'  h1 { font-size:2.1rem; line-height:1.1; margin:0 0 8px; color:#fff; }' +   // 大きい文字の余白分も詰める
 '  h1 .cnt { color:#ff8fb3; font-size:1.6em; font-weight:900; }' +
 '  .meta { color:var(--sub); font-size:.82rem; line-height:1.6; margin-bottom:6px; }' +
 '  .safe { display:inline-block; font-size:.75rem; color:#16a34a;' +
@@ -2691,6 +2775,8 @@ var CSS_ =
 '  .who .code { color:var(--sub); font-weight:600; margin:0 4px; }' +
 '  .who .name { font-weight:500; }' +
 '  .menuwrap { display:flex; align-items:stretch; gap:8px; margin:6px 0 4px; }' +
+// ★移動先を選んでいる間だけ、氏名・施術内容を隠して詰める（2026-07-17ユーザー指示）。
+'  .card.moving .who .code, .card.moving .who .name, .card.moving .menuwrap { display:none; }' +
 '  .menutag { flex:none; writing-mode:vertical-rl; text-orientation:upright;' +
 '    background:#e0e7ff; color:#4338ca; font-size:1.08rem; font-weight:800;' +
 '    padding:6px 3px; border-radius:999px; letter-spacing:.05em; }' +
@@ -2883,6 +2969,25 @@ var KANSHICSS_ =
 '  .kboxbtns{ display:flex; gap:8px; }' +
 '  .kboxbtns button{ flex:1; padding:11px; border-radius:9px; border:0; font:inherit; font-weight:700; cursor:pointer; }' +
 '  .kno{ background:var(--bg); color:#fff; } .kyes{ background:#2563eb; color:#fff; }' +
+// ボタン表示設定の編集画面（2026-07-17・事務所PCの設定画面と同じことをスマホでもできるように）
+'  .kbox.kwide{ max-width:520px; max-height:86vh; overflow-y:auto; }' +
+'  .knote{ font-size:12px; color:var(--sub); margin-bottom:10px; line-height:1.6; }' +
+'  .ksec{ font-size:13px; font-weight:800; margin:18px 0 8px; padding-top:12px;' +
+'    border-top:1px solid var(--line); }' +
+'  .ktrow{ padding:9px 0; border-bottom:1px solid var(--line); }' +
+'  .ktname{ display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; margin-bottom:6px; }' +
+'  .kacc{ width:5px; height:16px; border-radius:3px; flex:0 0 auto; }' +
+'  .kord{ display:flex; gap:2px; margin-left:auto; }' +
+'  .kord button{ width:24px; height:22px; padding:0; border:1px solid var(--line); background:var(--card);' +
+'    color:var(--sub); border-radius:6px; font-size:10px; cursor:pointer; }' +
+'  .kchips{ display:flex; flex-wrap:wrap; gap:5px; }' +
+'  .kchip{ border:1px solid var(--line); background:var(--card); color:var(--sub); border-radius:999px;' +
+'    padding:6px 10px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }' +
+'  .kchip.on{ background:var(--ok); border-color:var(--ok); color:#fff; }' +
+'  .kchip .kused{ font-size:9px; opacity:.75; margin-left:3px; }' +
+'  .kdevnote{ font-size:11.5px; color:var(--sub); }' +
+'  .krow2{ display:flex; gap:7px; }' +
+'  .krow2 input{ flex:1; margin-bottom:0; }' +
 '';
 
 // ブラウザ側の全処理（描画・30秒ごとの自動更新・操作の依頼）。①②どちらでも同じこれが動く。
@@ -2895,6 +3000,9 @@ var KANSHISCRIPT_ =
 'var PW_="";' +
 'var data_=window.__KANSHI_DATA__||{groups:[]};' +
 'var open_={};' +
+'var CONFIRM_={};' +   // 押す前に出す確認文（事務所PCが monitor.json の row.confirm で配る）
+'var TILEROW_=null;' + // ボタン表示設定の行（ボタンの一覧・色を持っている＝一覧をここに書き写さない）
+
 'function esc(s){ var d=document.createElement("div"); d.textContent=(s==null?"":String(s)); return d.innerHTML; }' +
 'function jsonp_(params, onDone){' +
 '  var cb="__k"+Date.now()+Math.floor(Math.random()*1000);' +
@@ -2926,12 +3034,27 @@ var KANSHISCRIPT_ =
 '    el.className="kfresh"; el.textContent=(data_.generated_at||"")+" 時点の状態です（1分ごとに自動更新）。";' +
 '  }' +
 '}' +
+// 1行に出すボタンは、事務所PCが決めた acts（その項目に許した操作）だけにする。
+// ★以前は全行に「ON/OFF」「今すぐ実行」「保存」を機械的に出していたので、押しても意味の無い
+//   ボタン（例＝L⇔T全自動AI判定の「今すぐ実行」）まで並んでいた。2026-07-17に acts 方式へ変更。
+// ★confirm（押す前の確認文）も事務所PCが配る。お金・電源・データ復元の項目に付いている。
 'function ctlBtns_(m){' +
 '  if(!m.ctl) return "";' +
+'  var acts=m.acts||["on","off","run","setval"];' +
+'  var has=function(a){ return acts.indexOf(a)>=0; };' +
+'  if(m.confirm) CONFIRM_[m.key]=m.confirm;' +
 '  var h="<div class=\\"kbtns\\">";' +
-'  h+="<button type=\\"button\\" class=\\"kbtn "+(m.on?"on":"off")+"\\" data-act=\\""+(m.on?"off":"on")+"\\" data-key=\\""+esc(m.key)+"\\">"+(m.on?"ONにしてある → OFFにする":"OFFにしてある → ONにする")+"</button>";' +
-'  h+="<button type=\\"button\\" class=\\"kbtn\\" data-act=\\"run\\" data-key=\\""+esc(m.key)+"\\">今すぐ実行</button>";' +
-'  if(m.value!==""&&m.value!==undefined&&m.value!==null){' +
+'  if(m.editor==="tiles"){' +
+'    TILEROW_=m;' +
+'    h+="<button type=\\"button\\" class=\\"kbtn\\" data-editor=\\"tiles\\">ひらいて設定する</button>";' +
+'  }' +
+'  if(has(m.on?"off":"on")){' +
+'    h+="<button type=\\"button\\" class=\\"kbtn "+(m.on?"on":"off")+"\\" data-act=\\""+(m.on?"off":"on")+"\\" data-key=\\""+esc(m.key)+"\\">"+(m.on?"ONにしてある → OFFにする":"OFFにしてある → ONにする")+"</button>";' +
+'  }' +
+'  if(has("run")){' +
+'    h+="<button type=\\"button\\" class=\\"kbtn\\" data-act=\\"run\\" data-key=\\""+esc(m.key)+"\\">今すぐ実行</button>";' +
+'  }' +
+'  if(has("setval")&&m.value!==""&&m.value!==undefined&&m.value!==null){' +
 '    h+="<input class=\\"kval\\" type=\\"text\\" value=\\""+esc(m.value)+"\\" data-val=\\""+esc(m.key)+"\\">";' +
 '    h+="<span class=\\"kunit\\">"+esc(m.unit||m.schedule_label||"")+"</span>";' +
 '    h+="<button type=\\"button\\" class=\\"kbtn\\" data-act=\\"setval\\" data-key=\\""+esc(m.key)+"\\">保存</button>";' +
