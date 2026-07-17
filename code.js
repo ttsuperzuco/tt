@@ -1541,8 +1541,10 @@ function backBar_(base, staff, dev) {
 function renderUriagePage_(d, base, staff, dev) {
   return '<style>' + HOMECSS_ + URIAGECSS_ + '</style>' +
   '<div class="home">' +
-    backBar_(base, staff, dev) +
-    '<div class="hhead"><span class="bmark">💰</span><span class="bname">売上TimeTree転記</span></div>' +
+    '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
+      '<span class="ugen2">最終計算: ' + esc_(d.generated_at || '—') + '</span>' +
+    '</div>' +
+    '<div class="hhead uttight"><span class="bmark">💰</span><span class="bname">売上転記TimeTree</span></div>' +
     uriageBody_(d) +
   '</div>' +
   URIAGESCRIPT_;
@@ -1553,7 +1555,7 @@ function renderUriageError_(err, base, staff, dev) {
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' +
     backBar_(base, staff, dev) +
-    '<div class="hhead"><span class="bmark">💰</span><span class="bname">売上TimeTree転記</span></div>' +
+    '<div class="hhead"><span class="bmark">💰</span><span class="bname">売上転記TimeTree</span></div>' +
     '<div class="soon">' +
       '<div class="soonic">📄</div>' +
       '<div class="soontitle" style="font-size:1.4rem">データ未生成</div>' +
@@ -1586,8 +1588,7 @@ function uriageBody_(d) {
     '<tbody>' + perRows + '</tbody></table>' +
   '</div>' +
   '<button type="button" id="uallbtn" class="ubtn uall">帳簿売上をTimeTreeに記録' +
-    '<span class="uallsub">（含：記載ミス修正、プロセル売上表に転記）</span></button>' +
-  '<div class="ugen">最終計算：' + esc_(d.generated_at || '—') + '</div>';
+    '<span class="uallsub">（含：記載ミス修正、プロセル売上表に転記）</span></button>';
 }
 
 // 転記ボタン：命令置き場に依頼→事務所PCが処理→uiStatusでpoll表示（部屋移動と同じ仕組み）。
@@ -1689,17 +1690,18 @@ var URIAGESCRIPT_ =
 '})();</scr' + 'ipt>';
 
 var URIAGECSS_ =
-'  .ubar { display:flex; align-items:center; gap:12px; margin:0 0 14px; }' +
-'  .uhome { font-size:.9rem; font-weight:700; color:var(--ink); text-decoration:none;' +
+'  .ubar { display:flex; align-items:center; gap:12px; margin:0 0 4px; }' +
+'  .uhome { flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--ink); text-decoration:none;' +
 '    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 14px; }' +
 '  .uhome:active { transform:translateY(1px); }' +
+'  .hhead.uttight { margin-top:2px; }' +
 '  .unote { background:#fef9c3; color:#854d0e; border-radius:12px; padding:12px 14px;' +
 '    font-weight:700; font-size:.9rem; margin-bottom:14px; }' +
 '  .ucards { display:flex; gap:12px; margin-bottom:14px; }' +
 '  .ucard { flex:1; background:var(--card); border:1px solid var(--line); border-radius:16px;' +
 '    padding:16px 14px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.06); }' +
-'  .ucard .ul { font-size:.82rem; color:var(--sub); font-weight:700; }' +
-'  .ucard .uv { font-size:1.7rem; font-weight:900; color:var(--ink); margin-top:6px;' +
+'  .ucard .ul { font-size:1.05rem; color:var(--sub); font-weight:700; }' +
+'  .ucard .uv { font-size:2.1rem; font-weight:900; color:var(--ink); margin-top:6px;' +
 '    font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; }' +
 '  .ubtn { display:block; width:100%; margin-top:16px; font-size:1.15rem; font-weight:800;' +
 '    color:#fff; background:#f59e0b; border:0; border-radius:14px; padding:16px; cursor:pointer;' +
@@ -1717,7 +1719,7 @@ var URIAGECSS_ =
 '  .upertbl { width:100%; border-collapse:collapse; margin:6px 0 10px; font-size:.92rem; }' +
 '  .upertbl th, .upertbl td { border-bottom:1px solid var(--line); padding:7px 8px; text-align:left; }' +
 '  .upertbl .num { text-align:right; font-variant-numeric:tabular-nums; }' +
-'  .ugen { text-align:center; color:rgba(255,255,255,.9); font-size:.78rem; margin-top:14px; }';
+'  .ugen2 { flex:1; text-align:right; color:var(--sub); font-size:.85rem; font-weight:700; }';
 
 /** LINE未回答＆返信待ち（GAS(/exec)からの直アクセス用ラッパ）：
  *  事務所PCが export_unanswered_super.py で書き出した unanswered.json を DriveApp で読んで
@@ -1803,12 +1805,16 @@ function unaSortAsc_(arr) {
 }
 function renderUnansweredPage_(d, base, staff, dev) {
   var cust = unaSortAsc_(d.cust), ours = unaSortAsc_(d.ours);
+  // ★2026-07-17：タブが丸ごと0件の時の「🎉」お祝い文言は廃止。空の時は下の#unaperiodempty
+  //   （期間で絞って0件の時と同じ見せ方）に一本化する＝空の理由（期間で絞ったせいか、そもそも
+  //   0件か）を分けて出し分けない。カードを1枚も置かなければ apply() の集計(nc/no)が自然に0に
+  //   なり、#unaperiodempty が自動で表示される（JS側の変更は不要）。
   var custCards = cust.length
     ? cust.map(function (r) { return unaCard_(r, 'cust'); }).join('\n')
-    : '<div class="unaempty">当店が未返信の会話はありません 🎉</div>';
+    : '';
   var oursCards = ours.length
     ? ours.map(function (r) { return unaCard_(r, 'ours'); }).join('\n')
-    : '<div class="unaempty">お客様の返事待ちはありません 🎉</div>';
+    : '';
 
   return '' +
 '<style>' + UNACSS_ + '</style>' +
@@ -1820,7 +1826,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '<h1>💬 LINE未回答＆返信待ち</h1>' +
   '<div class="unatabs">' +
     '<button type="button" class="unatab cust sel" data-v="cust">🟢 当店が未返信<span class="unac" id="unaCntCust">' + cust.length + '</span></button>' +
-    '<button type="button" class="unatab ours" data-v="ours">🔵 お客様の返事待ち<span class="unac" id="unaCntOurs">' + ours.length + '</span></button>' +
+    '<button type="button" class="unatab ours" data-v="ours">🔵 お客様の返事待<span class="unac" id="unaCntOurs">' + ours.length + '</span></button>' +
   '</div>' +
   '<select id="unaperiod">' +
     '<option value="3">3日間</option>' +
@@ -1829,7 +1835,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '</select>' +
   '<div id="unacust" class="unalist">' + custCards + '</div>' +
   '<div id="unaours" class="unalist unahidden">' + oursCards + '</div>' +
-  '<div class="unaempty" id="unaperiodempty" hidden>この期間に該当はありません。上の期間を広げてください。</div>' +
+  '<div class="unaempty unaemptybig" id="unaperiodempty" hidden>この期間に該当はありません。<br>上の期間を広げてください。</div>' +
 '</div>' +
 // 詳細モーダル（LINEに触れずに会話の中身をここで確認＝PC版ダッシュボードと同じ）
 '<div class="unamask" id="unamask" role="dialog" aria-modal="true">' +
@@ -1953,6 +1959,7 @@ var UNACSS_ =
 '  .unalink{ display:inline-block; text-decoration:none; background:#06c755; color:#fff; font-weight:700;' +
 '    font-size:12.5px; padding:8px 14px; border-radius:10px; }' +
 '  .unaempty{ text-align:center; color:#fff; padding:30px; font-weight:700; }' +
+'  .unaemptybig{ font-size:clamp(17px,5vw,22px); line-height:1.7; }' +
 // 詳細モーダル（LINEに触れず会話の中身をその場で確認）
 '  .unamask{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none;' +
 '    align-items:center; justify-content:center; padding:16px; z-index:60; }' +
