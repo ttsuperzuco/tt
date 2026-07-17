@@ -1910,12 +1910,13 @@ function akiStaffColor_(emoji) {
   return p[emoji] || '#666';
 }
 
-// 1件ぶんの空き枠チップ（開始-終了(長さ分)）。
+// 1件ぶんの空き枠チップ（開始-終了(長さ分)）。data-durは長さボタンでの絞り込み用（2026-07-17追加）。
 function akiSlotChip_(sl) {
-  return '<span class="akislot">' + esc_(sl.s) + '-' + esc_(sl.e) + '<b>(' + sl.dur + '分)</b></span>';
+  return '<span class="akislot" data-dur="' + sl.dur + '">' + esc_(sl.s) + '-' + esc_(sl.e) + '<b>(' + sl.dur + '分)</b></span>';
 }
 
 // 「各時間帯別」＝1枠1行（PC版available_slots.pyのconsole/HTML表示と同じ形式・並び順）。
+// data-durは長さボタンでの絞り込み用（2026-07-17追加）。
 function akiTimeRows_(slots) {
   if (!slots || !slots.length) return '<div class="akinone">空きなし</div>';
   return slots.map(function (sl) {
@@ -1926,7 +1927,7 @@ function akiTimeRows_(slots) {
           return '<span class="akiroom" style="background:' + roomColor_(r) + '">' + esc_(r) + '</span>';
         }).join('')
       : '<span class="akinorooms">空き部屋なし</span>';
-    return '<div class="akirow">' +
+    return '<div class="akirow" data-dur="' + sl.dur + '">' +
       '<span class="akitime">' + esc_(sl.s) + '-' + esc_(sl.e) + '</span>' +
       '<span class="akidur">' + sl.dur + '分</span>' + badge +
       '<span class="akirooms">' + rooms + '</span>' +
@@ -2027,6 +2028,15 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<button type="button" class="akiwd" data-wd="4">木</button>' +
       '<button type="button" class="akiwd" data-wd="5">金</button>' +
       '<button type="button" class="akiwd" data-wd="6">土</button>' +
+    '</div>' +
+    // 空き時間の長さで絞り込み（2026-07-17ユーザー指示）。単一選択＝1つだけON。
+    // 30分＝30分以下／60分＝31〜60分／90分＝61〜90分／120分＝91〜120分（121分以上は「全部」でのみ表示）。
+    '<div class="akidurrow">' +
+      '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
+      '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="90">90分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="120">120分</button>' +
     '</div>' +
   '</div>' +
   '<div class="akichips">' +
@@ -2186,6 +2196,24 @@ var AKISCRIPT_ =
 '    if(idx===-1){ setRange(minD, maxD); presets.forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-preset")==="all"); }); }' +
 '    applyFilter();' +
 '  }); });' +
+// 長さボタン（2026-07-17ユーザー指示）：単一選択。30分＝30分以下／60分＝31〜60分／
+// 90分＝61〜90分／120分＝91〜120分（121分以上は「全部」でのみ表示）。
+// 対象は各時間帯別の1行(.akirow[data-dur])とスタッフ別/施術室別の枠チップ(.akislot[data-dur])。
+'  var durBtns=[].slice.call(document.querySelectorAll(".akidurbtn"));' +
+'  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur]"));' +
+'  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
+'    durBtns.forEach(function(x){ x.classList.toggle("on", x===b); });' +
+'    var kind=b.getAttribute("data-dur");' +
+'    var lo=1, hi=Infinity;' +
+'    if(kind==="30"){ lo=1; hi=30; }' +
+'    else if(kind==="60"){ lo=31; hi=60; }' +
+'    else if(kind==="90"){ lo=61; hi=90; }' +
+'    else if(kind==="120"){ lo=91; hi=120; }' +
+'    durRows.forEach(function(el){' +
+'      var dur=Number(el.getAttribute("data-dur"));' +
+'      el.classList.toggle("akidurhide", kind!=="all" && (dur<lo||dur>hi));' +
+'    });' +
+'  }); });' +
 '  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
 '}' +
 '})();</scr' + 'ipt>';
@@ -2245,6 +2273,12 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px 16px; cursor:pointer; }' +
 '  .akiwd.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akidurrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
+'  .akidurbtn{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akisub);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:11px 16px; cursor:pointer; }' +
+'  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
 '  .akichip{ font-family:inherit; font-size:17px; font-weight:700; color:var(--akisub);' +
