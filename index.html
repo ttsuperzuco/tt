@@ -100,8 +100,8 @@
   }
 })();
 </script>
-<script src="detect_core.js?v=20260718d"></script>
-<script src="code.js?v=20260718d"></script>
+<script src="detect_core.js?v=20260718e"></script>
+<script src="code.js?v=20260718e"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -352,7 +352,8 @@
       } catch (e) { fail('描画エラー：' + e); }
     };
     var s = document.createElement('script');
-    s.src = EXEC + '?action=kanshi&callback=__ttKanshi&cb=' + Date.now();
+    s.src = EXEC + '?action=kanshi&device=' + encodeURIComponent(device) +
+            '&callback=__ttKanshi&cb=' + Date.now();   // ★このスマホが登録した1台か（code.js の kanshiGate_）
     s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
     document.body.appendChild(s);
   }
