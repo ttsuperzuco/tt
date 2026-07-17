@@ -2030,13 +2030,12 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<button type="button" class="akiwd" data-wd="5">金</button>' +
       '<button type="button" class="akiwd" data-wd="6">土</button>' +
     '</div>' +
-    // 空き時間の長さで絞り込み（2026-07-17ユーザー指示）。単一選択＝1つだけON。
-    // 30分＝30分以下／60分＝31〜60分／90分＝61〜90分／120分＝91〜120分（121分以上は「全部」でのみ表示）。
+    // 空き時間の長さで絞り込み（2026-07-17ユーザー指示・以上ロジックに変更）。単一選択＝1つだけON。
+    // 30分＝30分以上を全部／60分＝60分以上を全部／120分＝120分以上を全部（すべて同じ「以上」ロジック）。
     '<div class="akidurrow">' +
       '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
       '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
       '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
-      '<button type="button" class="akidurbtn" data-dur="90">90分</button>' +
       '<button type="button" class="akidurbtn" data-dur="120">120分</button>' +
     '</div>' +
   '</div>' +
@@ -2197,22 +2196,18 @@ var AKISCRIPT_ =
 '    if(idx===-1){ setRange(minD, maxD); presets.forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-preset")==="all"); }); }' +
 '    applyFilter();' +
 '  }); });' +
-// 長さボタン（2026-07-17ユーザー指示）：単一選択。30分＝30分以下／60分＝31〜60分／
-// 90分＝61〜90分／120分＝91〜120分（121分以上は「全部」でのみ表示）。
+// 長さボタン（2026-07-17ユーザー指示・「以上」ロジックに変更）：単一選択。
+// 30分＝30分以上を全部／60分＝60分以上を全部／120分＝120分以上を全部（すべて同じロジック）。
 // 対象は各時間帯別の1行(.akirow[data-dur])とスタッフ別/施術室別の枠チップ(.akislot[data-dur])。
 '  var durBtns=[].slice.call(document.querySelectorAll(".akidurbtn"));' +
 '  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur]"));' +
 '  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
 '    durBtns.forEach(function(x){ x.classList.toggle("on", x===b); });' +
 '    var kind=b.getAttribute("data-dur");' +
-'    var lo=1, hi=Infinity;' +
-'    if(kind==="30"){ lo=1; hi=30; }' +
-'    else if(kind==="60"){ lo=31; hi=60; }' +
-'    else if(kind==="90"){ lo=61; hi=90; }' +
-'    else if(kind==="120"){ lo=91; hi=120; }' +
+'    var lo = kind==="all" ? 0 : Number(kind);' +
 '    durRows.forEach(function(el){' +
 '      var dur=Number(el.getAttribute("data-dur"));' +
-'      el.classList.toggle("akidurhide", kind!=="all" && (dur<lo||dur>hi));' +
+'      el.classList.toggle("akidurhide", dur<lo);' +
 '    });' +
 '  }); });' +
 '  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
