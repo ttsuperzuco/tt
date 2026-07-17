@@ -1825,8 +1825,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '<select id="unaperiod">' +
     '<option value="3">3日間</option>' +
     '<option value="7" selected>7日間</option>' +
-    '<option value="31">1か月</option>' +
-    '<option value="9999">全期間</option>' +
+    '<option value="14">2週間</option>' +
   '</select>' +
   '<div id="unacust" class="unalist">' + custCards + '</div>' +
   '<div id="unaours" class="unalist unahidden">' + oursCards + '</div>' +

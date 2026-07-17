@@ -64,6 +64,7 @@
 (function () {
   var EXEC = "https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";
   var view = (new URLSearchParams(location.search)).get('view') || 'home';
+
   // tilesettings（権限・名前選択に必要＝全画面で使う）
   window.__tsResult = undefined; window.__tsWaiter = null;
   window.__ttTileSettingsPre = function (payload) {
@@ -74,62 +75,51 @@
   s0.src = EXEC + '?action=tilesettings&callback=__ttTileSettingsPre&cb=' + Date.now();
   s0.onerror = function () { window.__ttTileSettingsPre({}); };
   document.head.appendChild(s0);
-  // events（被りデータ・被り画面のときだけ先読み）
-  if (view === 'conflict') {
-    window.__prefetchedEvents = undefined; window.__prefetchWaiter = null; window.__prefetchStarted = true;
-    window.__ttEventsPre = function (payload) {
-      window.__prefetchedEvents = payload || null;
-      var w = window.__prefetchWaiter; window.__prefetchWaiter = null; if (w) w(window.__prefetchedEvents);
-    };
-    var sp = document.createElement('script');
-    sp.src = EXEC + '?action=events&callback=__ttEventsPre&cb=' + Date.now();
-    sp.onerror = function () { window.__ttEventsPre({ error: 'net' }); };
-    document.head.appendChild(sp);
-    // ★2026-07-17：ホーム画面に居た間に裏で先取りできていた分があれば、それを使って
-    //   「押した瞬間に出す」（下の showConflict が消費）。無ければ今まで通り上のsp取得を待つ。
-    //   実測：被りデータの取得自体は常に2.5〜2.9秒かかる（Googleの処理時間そのもの・軽い返事でも
-    //   同じ＝縮まらない）。だから「押してから取りに行く」のをやめ、ホームを見ている間に済ませておく。
+
+  // ★★2026-07-17：全ボタン共通「押してから表示までを速くする」仕組み（1本化）。
+  //   新しいボタンを足す時は、下の VIEWS 表に1行足すだけで、①このページ自身の先読み
+  //   ②ホーム画面滞在中の裏取り、の両方に自動で乗る（個別にコードを書き足す必要がない）。
+  //   ★実測：どのデータも取得はGoogleの処理時間だけで常に2〜2.9秒かかる（中身を軽くしても
+  //   縮まらない）。だから「押してから取りに行く」のをやめ、前の画面（主にホーム）に
+  //   居る間に裏で済ませておく方式に統一した（被り検出で先に実装・検証済みの型を横展開）。
+  var VIEWS = window.__SZ_VIEWS_ = {
+    conflict:   'events',
+    lt:         'lt',
+    uriage:     'uriage',
+    unanswered: 'unanswered',
+    akijikan:   'akijikan'
+    // ★kanshi(自動監視)は対象外＝開発URL専用でスタッフの目には触れず、装置の見分け(device)も
+    //   要るため。頻度も低く先取りの旨味が薄い（詳細は共通\スーパーズコApp_必読.md）。
+  };
+  window.__PF_ = window.__PF_ || {};
+
+  var action = VIEWS[view];
+  if (action) {
+    var entry = window.__PF_[view] = { payload: undefined, waiter: null, cached: null, done: false };
+    // ホーム画面滞在中に裏取りできていた分があれば使い切りで受け取る（無ければ null のまま）。
     try {
-      var raw = sessionStorage.getItem('sz_conflict_cache');
-      sessionStorage.removeItem('sz_conflict_cache');   // 使い切り＝次に来た時は必ずまた先取りし直す
+      var raw = sessionStorage.getItem('sz_prefetch_' + view);
+      sessionStorage.removeItem('sz_prefetch_' + view);   // 使い切り＝次に来た時は必ずまた取り直す
       if (raw) {
         var c = JSON.parse(raw);
-        if (c && c.payload) window.__prefetchedEventsCached = c.payload;
+        if (c && c.payload) entry.cached = c.payload;
       }
     } catch (e) {}
-  }
-  // ★2026-07-17：ホーム画面では、押される前から裏で被りデータを取りに行っておく
-  //   （ホームの表示自体はいつも通り即座＝これは表示を1ミリ秒も遅らせない裏作業）。
-  //   ボタンを押した時にはもう届いていることが多く、被り画面が待たずに出る。
-  if (view === 'home') {
-    window.__ttHomeConflictPre = function (payload) {
-      if (payload && !payload.error) {
-        try {
-          sessionStorage.setItem('sz_conflict_cache', JSON.stringify({ at: Date.now(), payload: payload }));
-        } catch (e) {}
-      }
+    // このページ自身の新しい取得も同時に発射（従来の「先読み」と同じ・被り検出で検証済み）。
+    var cb = '__ttPre_' + view;
+    window[cb] = function (payload) {
+      entry.payload = payload || null;
+      var w = entry.waiter; entry.waiter = null; if (w) w(entry.payload);
     };
-    var sh = document.createElement('script');
-    sh.src = EXEC + '?action=events&callback=__ttHomeConflictPre&cb=' + Date.now();
-    sh.onerror = function () {};
-    document.head.appendChild(sh);
-  }
-  // uriage（売上データ・売上画面のときだけ先読み。被り画面と同じ「最速化3点セット」）
-  if (view === 'uriage') {
-    window.__prefetchedUriage = undefined; window.__prefetchUriageWaiter = null; window.__prefetchUriageStarted = true;
-    window.__ttUriagePre = function (payload) {
-      window.__prefetchedUriage = payload || null;
-      var w = window.__prefetchUriageWaiter; window.__prefetchUriageWaiter = null; if (w) w(window.__prefetchedUriage);
-    };
-    var su = document.createElement('script');
-    su.src = EXEC + '?action=uriage&callback=__ttUriagePre&cb=' + Date.now();
-    su.onerror = function () { window.__ttUriagePre({ error: 'net' }); };
-    document.head.appendChild(su);
+    var sp = document.createElement('script');
+    sp.src = EXEC + '?action=' + action + '&callback=' + cb + '&cb=' + Date.now();
+    sp.onerror = function () { window[cb]({ error: 'net' }); };
+    document.head.appendChild(sp);
   }
 })();
 </script>
-<script src="detect_core.js?v=20260718j3"></script>
-<script src="code.js?v=20260718j3"></script>
+<script src="detect_core.js?v=20260718k"></script>
+<script src="code.js?v=20260718k"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -265,54 +255,10 @@
       detectAndMount_(payload);
     } catch (e) { fail('描画エラー：' + e); }
   }
-  function showConflict() {
-    // ★2026-07-17：ホーム画面に居た間に裏で先取り済みのデータ（sessionStorage経由）があれば、
-    //   Googleへの往復（実測2.5〜2.9秒・一番軽い返事でも同じ＝これが常に下限）を待たずに、
-    //   まずそれで即描画する。このページ自身も先頭で新しい取得を既に発射済み(__prefetchStarted)
-    //   なので、それが届いたら中身が違う時だけ描き直す（同じなら描き直さずちらつかせない）。
-    var usedCache = false, cacheStr = null;
-    if (window.__prefetchedEventsCached) {
-      var cached = window.__prefetchedEventsCached;
-      window.__prefetchedEventsCached = null;
-      if (cached && !cached.error) {
-        cacheStr = JSON.stringify(cached);
-        renderConflictPayload_(cached);
-        usedCache = true;
-      }
-    }
-    function renderIfDifferent_(payload) {
-      if (!payload || payload.error) return;
-      if (cacheStr !== null && JSON.stringify(payload) === cacheStr) return;   // 中身が同じ＝描き直さない
-      renderConflictPayload_(payload);
-    }
-
-    // ★以下は元々の仕組み：起動時に tilesettings と並行して先読みした被りデータを使う
-    //   （従来は tilesettings の往復を待ってから events を投げる直列で、被りが出るまで約5.5秒
-    //   かかっていた。先読みで直列を解消＝待ち時間ほぼ半分）。使い切り(__prefetchStarted を
-    //   false に)なので、部屋移動後などのリフレッシュは下の通常取得を通り、必ず新鮮になる。
-    if (window.__prefetchStarted) {
-      window.__prefetchStarted = false;
-      var pe = window.__prefetchedEvents;
-      if (pe !== undefined) {
-        if (pe && !pe.error) { renderIfDifferent_(pe); return; }
-        if (usedCache) return;   // キャッシュを既に表示中＝この失敗は無視してそのまま
-        // 先読みが失敗/エラー（かつキャッシュも無い） → 下の通常取得にフォールバック
-      } else {
-        // まだ来ていない → 着信時に描画（キャッシュ表示中でなければ失敗時に通常取得へリトライ）
-        window.__prefetchWaiter = function (p) {
-          if (p && !p.error) { renderIfDifferent_(p); }
-          else if (!usedCache) { showConflict(); }
-        };
-        return;
-      }
-    }
-    // 通常（部屋移動後のリフレッシュ等・キャッシュも先読みも無い時）＝新鮮なデータを取り直す
-    window.__ttEvents = function (payload) { renderConflictPayload_(payload); };
-    var s = document.createElement('script');
-    s.src = EXEC + '?action=events&callback=__ttEvents&cb=' + Date.now();
-    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
-    document.body.appendChild(s);
-  }
+  // ★2026-07-17：先読み・裏取りキャッシュの消費は showPrefetchable_（全ボタン共通の土台・下で定義）
+  //   に一本化した。被り検出はこの土台を最初に検証した画面＝以前はここに専用の実装があったが、
+  //   他のボタンにも同じ理屈を広げる時に共通化し、ここは3行に縮めた。
+  function showConflict() { showPrefetchable_('conflict', renderConflictPayload_); }
   // 部屋移動の完了後、ページをリロード（真っ白なリロード画面）せずに検出画面を直接再描画するため公開。
   window.__refreshConflictView = showConflict;
   // ★完了時の即時描画：サーバー再取得をせず、直近に取得済みのpayloadから __movedOut を除外して
@@ -323,17 +269,59 @@
     try { detectAndMount_(p); } catch (e) { showConflict(); }
   };
 
+  // ★★2026-07-17：全ボタン共通「先読み・裏取りキャッシュを使って即描画する」土台。
+  //   ページ冒頭の早期スクリプト（window.__PF_・window.__SZ_VIEWS_）と対になっている。
+  //   新しいボタンを足す時は、早期スクリプトのVIEWS表に1行足し、この関数でshowXxx()を
+  //   3行で書けば、先読み・裏取り・ちらつき防止（同じ中身なら描き直さない）が全部乗る。
+  function showPrefetchable_(view, onPayload) {
+    var entry = window.__PF_ && window.__PF_[view];
+
+    function runFresh_() {
+      var action = (window.__SZ_VIEWS_ || {})[view];
+      var cb = '__ttNow_' + view;
+      window[cb] = function (payload) { onPayload(payload); };
+      var s = document.createElement('script');
+      s.src = EXEC + '?action=' + action + '&callback=' + cb + '&cb=' + Date.now();
+      s.onerror = function () { onPayload({ error: '通信エラーです。通信環境をご確認ください。' }); };
+      document.body.appendChild(s);
+    }
+
+    if (!entry || entry.done) { runFresh_(); return; }   // 先読みの仕組みが無い/既に使い切り→常に新規取得
+
+    var usedCache = false, cacheStr = null;
+    if (entry.cached) {
+      cacheStr = JSON.stringify(entry.cached);
+      onPayload(entry.cached);
+      usedCache = true;
+      entry.cached = null;
+    }
+    function renderIfDifferent(payload) {
+      if (!payload || payload.error) return;
+      if (cacheStr !== null && JSON.stringify(payload) === cacheStr) return;   // 中身が同じ＝描き直さない
+      onPayload(payload);
+    }
+
+    if (entry.payload !== undefined) {
+      var pe = entry.payload; entry.payload = undefined; entry.done = true;
+      if (pe && !pe.error) { renderIfDifferent(pe); return; }
+      if (usedCache) return;   // キャッシュを既に表示中＝この失敗は無視してそのまま
+      runFresh_();
+    } else {
+      entry.waiter = function (p) {
+        entry.done = true;
+        if (p && !p.error) { renderIfDifferent(p); }
+        else if (!usedCache) { runFresh_(); }
+      };
+    }
+  }
+
   function showLt() {
-    window.__ttLt = function (payload) {
+    showPrefetchable_('lt', function (payload) {
       try {
         if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
         mount(renderLtPage_(payload, base, staff, dev));
       } catch (e) { fail('描画エラー：' + e); }
-    };
-    var s = document.createElement('script');
-    s.src = EXEC + '?action=lt&callback=__ttLt&cb=' + Date.now();
-    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
-    document.body.appendChild(s);
+    });
   }
 
   function renderUriagePayload_(payload) {
@@ -342,55 +330,25 @@
       mount(renderUriagePage_(payload, base, staff, dev));
     } catch (e) { fail('描画エラー：' + e); }
   }
-  function showUriage() {
-    // ★初回だけ：起動時にtilesettingsと並行して先読みした売上データを使う（被り画面と同じ方式）。
-    //   使い切り(__prefetchUriageStartedをfalseに)なので、転記後の手動更新は必ず新鮮なデータを取り直す。
-    if (window.__prefetchUriageStarted) {
-      window.__prefetchUriageStarted = false;
-      var pu = window.__prefetchedUriage;
-      if (pu !== undefined) {
-        if (pu && !pu.error) { renderUriagePayload_(pu); return; }
-        // 先読みが失敗/エラー → 下の通常取得にフォールバック
-      } else {
-        window.__prefetchUriageWaiter = function (p) {
-          if (p && !p.error) { renderUriagePayload_(p); } else { showUriage(); }
-        };
-        return;
-      }
-    }
-    // 通常（▶更新ボタン等）＝新鮮なデータを取り直す
-    window.__ttUriage = function (payload) { renderUriagePayload_(payload); };
-    var s = document.createElement('script');
-    s.src = EXEC + '?action=uriage&callback=__ttUriage&cb=' + Date.now();
-    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
-    document.body.appendChild(s);
-  }
+  function showUriage() { showPrefetchable_('uriage', renderUriagePayload_); }
   window.__refreshUriageView = showUriage;
 
   function showUnanswered() {
-    window.__ttUnanswered = function (payload) {
+    showPrefetchable_('unanswered', function (payload) {
       try {
         if (!payload || payload.error) { mount(renderUnansweredError_((payload && payload.error) || '不明', base, staff, dev)); return; }
         mount(renderUnansweredPage_(payload, base, staff, dev));
       } catch (e) { fail('描画エラー：' + e); }
-    };
-    var s = document.createElement('script');
-    s.src = EXEC + '?action=unanswered&callback=__ttUnanswered&cb=' + Date.now();
-    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
-    document.body.appendChild(s);
+    });
   }
 
   function showAkijikan() {
-    window.__ttAkijikan = function (payload) {
+    showPrefetchable_('akijikan', function (payload) {
       try {
         if (!payload || payload.error) { mount(renderAkijikanError_((payload && payload.error) || '不明', base, staff, dev)); return; }
         mount(renderAkijikanPage_(payload, base, staff, dev));
       } catch (e) { fail('描画エラー：' + e); }
-    };
-    var s = document.createElement('script');
-    s.src = EXEC + '?action=akijikan&callback=__ttAkijikan&cb=' + Date.now();
-    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
-    document.body.appendChild(s);
+    });
   }
 
   // 自動監視（開発URL ?dev=1 だけに出るボタン）。事務所PCが1分ごとに送ってくる状態を見る。
@@ -502,6 +460,32 @@
     input.focus();
   }
 
+  // ★★2026-07-17：ホーム画面に居る間、**その人に見えるボタンだけ**を裏で先取りしておく
+  //   （見えないボタン＝権限が無い物は無駄になるだけなので取りに行かない）。ホームの表示自体は
+  //   showHome()が既に終わった後にこれを呼ぶので、1ミリ秒も遅くならない。
+  //   結果は sessionStorage["sz_prefetch_<ボタン名>"] に保存し、そのボタンを押して画面が
+  //   切り替わった時（＝新しいページの早期スクリプト）がこれを消費して即描画する。
+  function prefetchForHome_(allow) {
+    var VIEWS = window.__SZ_VIEWS_ || {};
+    for (var v in VIEWS) {
+      if (allow && allow[v] !== true) continue;   // devは allow===null＝全部先取りしてよい
+      (function (view, action) {
+        var cb = '__ttHomePre_' + view;
+        window[cb] = function (payload) {
+          if (payload && !payload.error) {
+            try {
+              sessionStorage.setItem('sz_prefetch_' + view, JSON.stringify({ at: Date.now(), payload: payload }));
+            } catch (e) {}
+          }
+        };
+        var s = document.createElement('script');
+        s.src = EXEC + '?action=' + action + '&callback=' + cb + '&cb=' + Date.now();
+        s.onerror = function () {};
+        document.head.appendChild(s);
+      })(v, VIEWS[v]);
+    }
+  }
+
   // ===== 起動：タイル設定/権限を取得 → 名前選択 or 画面表示 =====
   function boot(cfg) {
     var people = (cfg && cfg.people) || ['kanbu','ringo','mikan','olive','marron','mango','coconut','reception'];
@@ -536,7 +520,7 @@
     else if (v === 'akijikan') showAkijikan();
     else if (v === 'kanshi') showKanshi();
     else if (v === 'conflict') showConflict();
-    else showHome(perms, order);
+    else { showHome(perms, order); prefetchForHome_(allow); }
   }
 
   // ★events(被りデータ)/tilesettings(権限) はページ冒頭の早期スクリプトで既に発射済み
