@@ -3194,65 +3194,67 @@ var KANSHICSS_ =
 '    font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; line-height:1.5; }' +
 '  .kwrap{ max-width:640px; margin:0 auto; padding:16px 14px 60px; }' +
 '  .kbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }' +
-'  .khome{ color:#fff; text-decoration:none; font-weight:700; font-size:14px;' +
-'    background:rgba(255,255,255,.16); padding:7px 12px; border-radius:10px; }' +
-'  .kref{ background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:10px; padding:7px 12px;' +
-'    font:inherit; font-weight:700; font-size:14px; cursor:pointer; }' +
-'  h1{ color:#fff; font-size:16px; margin:6px 0 10px; }' +
-'  .kfresh{ font-size:12px; color:#dfe6ee; margin-bottom:12px; }' +
+// ★2026-07-17ユーザー指摘（老眼で全部読めない）：この画面の文字は軒並み小さすぎたので全体的に拡大。
+'  .khome{ color:#fff; text-decoration:none; font-weight:700; font-size:17px;' +
+'    background:rgba(255,255,255,.16); padding:9px 14px; border-radius:10px; }' +
+'  .kref{ background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:10px; padding:9px 14px;' +
+'    font:inherit; font-weight:700; font-size:17px; cursor:pointer; }' +
+'  h1{ color:#fff; font-size:22px; margin:6px 0 10px; }' +
+'  .kfresh{ font-size:15px; color:#dfe6ee; margin-bottom:12px; }' +
 '  .kfresh.old{ background:var(--ng); color:#fff; font-weight:700; padding:10px 12px; border-radius:10px; }' +
 '  .kcard{ background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:12px 14px; margin-bottom:10px; }' +
 '  .khead{ display:flex; align-items:flex-start; gap:8px; cursor:pointer; }' +
-'  .kmark{ font-size:15px; line-height:1.4; }' +
-'  .klabel{ font-weight:700; font-size:14px; flex:1; }' +
-'  .kdetail{ color:var(--sub); font-size:12px; margin-top:3px; font-weight:400; }' +
-'  .karrow{ color:var(--sub); font-size:12px; }' +
+'  .kmark{ font-size:19px; line-height:1.4; }' +
+'  .klabel{ font-weight:700; font-size:18px; flex:1; }' +
+'  .kdetail{ color:var(--sub); font-size:15px; margin-top:3px; font-weight:400; }' +
+'  .karrow{ color:var(--sub); font-size:15px; }' +
 '  .kmembers{ margin-top:10px; border-top:1px solid var(--line); padding-top:8px; }' +
 '  .kmembers[hidden]{ display:none; }' +
 '  .krow{ border-bottom:1px solid var(--line); padding:9px 0; }' +
 '  .krow:last-child{ border-bottom:0; }' +
 '  .krowhead{ display:flex; align-items:flex-start; gap:7px; }' +
-'  .krowlabel{ flex:1; font-size:13px; font-weight:600; }' +
+'  .krowlabel{ flex:1; font-size:16px; font-weight:600; }' +
 '  .kbtns{ display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; align-items:center; }' +
 '  .kbtn{ border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px;' +
-'    padding:6px 10px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }' +
+'    padding:8px 13px; font:inherit; font-size:15px; font-weight:700; cursor:pointer; }' +
 '  .kbtn.on{ background:var(--ok); color:#fff; border-color:var(--ok); }' +
 '  .kbtn.off{ background:var(--off); color:#fff; border-color:var(--off); }' +
 '  .kbtn:active{ transform:translateY(1px); }' +
-'  .kval{ width:74px; padding:6px 8px; border:1px solid var(--line); border-radius:8px;' +
-'    background:var(--card); color:var(--ink); font:inherit; font-size:12px; }' +
-'  .kunit{ font-size:11px; color:var(--sub); }' +
+'  .kval{ width:88px; padding:8px 10px; border:1px solid var(--line); border-radius:8px;' +
+'    background:var(--card); color:var(--ink); font:inherit; font-size:15px; }' +
+'  .kunit{ font-size:14px; color:var(--sub); }' +
 '  .ksub{ margin:8px 0 0 14px; border-left:2px solid var(--line); padding-left:10px; }' +
-'  .kfoot{ color:#dfe6ee; font-size:11px; margin-top:14px; }' +
+'  .kfoot{ color:#dfe6ee; font-size:14px; margin-top:14px; }' +
 '  .ktoast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:60;' +
-'    background:#111a24; color:#fff; padding:11px 16px; border-radius:10px; font-size:13px; max-width:88%; }' +
+'    background:#111a24; color:#fff; padding:11px 16px; border-radius:10px; font-size:16px; max-width:88%; }' +
 '  .kmask{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center;' +
 '    justify-content:center; z-index:70; padding:20px; }' +
 '  .kbox{ background:var(--card); border-radius:14px; padding:18px; width:100%; max-width:330px; }' +
-'  .kbox h3{ margin:0 0 10px; font-size:15px; }' +
+'  .kbox h3{ margin:0 0 10px; font-size:19px; }' +
 '  .kbox input{ width:100%; padding:11px; border:1px solid var(--line); border-radius:9px;' +
-'    background:var(--card); color:var(--ink); font:inherit; font-size:16px; margin-bottom:12px; }' +
+'    background:var(--card); color:var(--ink); font:inherit; font-size:18px; margin-bottom:12px; }' +
 '  .kboxbtns{ display:flex; gap:8px; }' +
-'  .kboxbtns button{ flex:1; padding:11px; border-radius:9px; border:0; font:inherit; font-weight:700; cursor:pointer; }' +
+'  .kboxbtns button{ flex:1; padding:12px; border-radius:9px; border:0; font:inherit; font-weight:700;' +
+'    font-size:16px; cursor:pointer; }' +
 '  .kno{ background:var(--bg); color:#fff; } .kyes{ background:#2563eb; color:#fff; }' +
 // ボタン表示設定の編集画面（2026-07-17・事務所PCの設定画面と同じことをスマホでもできるように）
 '  .kbox.kwide{ max-width:520px; max-height:86vh; overflow-y:auto; }' +
-'  .knote{ font-size:12px; color:var(--sub); margin-bottom:10px; line-height:1.6; }' +
-'  .ksec{ font-size:13px; font-weight:800; margin:18px 0 8px; padding-top:12px;' +
+'  .knote{ font-size:15px; color:var(--sub); margin-bottom:10px; line-height:1.6; }' +
+'  .ksec{ font-size:16px; font-weight:800; margin:18px 0 8px; padding-top:12px;' +
 '    border-top:1px solid var(--line); }' +
 '  .ktrow{ padding:9px 0; border-bottom:1px solid var(--line); }' +
-'  .ktname{ display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; margin-bottom:6px; }' +
+'  .ktname{ display:flex; align-items:center; gap:7px; font-size:16px; font-weight:700; margin-bottom:6px; }' +
 '  .kacc{ width:5px; height:16px; border-radius:3px; flex:0 0 auto; }' +
 '  .kord{ display:flex; gap:2px; margin-left:auto; }' +
-'  .kord button{ width:24px; height:22px; padding:0; border:1px solid var(--line); background:var(--card);' +
-'    color:var(--sub); border-radius:6px; font-size:10px; cursor:pointer; }' +
+'  .kord button{ width:28px; height:26px; padding:0; border:1px solid var(--line); background:var(--card);' +
+'    color:var(--sub); border-radius:6px; font-size:12px; cursor:pointer; }' +
 '  .kchips{ display:flex; flex-wrap:wrap; gap:5px; }' +
 '  .kchip{ border:1px solid var(--line); background:var(--card); color:var(--sub); border-radius:999px;' +
-'    padding:6px 10px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }' +
+'    padding:8px 13px; font:inherit; font-size:15px; font-weight:700; cursor:pointer; }' +
 '  .kchip.on{ background:var(--ok); border-color:var(--ok); color:#fff; }' +
-'  .kchip .kused{ font-size:9px; opacity:.75; margin-left:3px; }' +
-'  .kdevnote{ font-size:11.5px; color:var(--sub); }' +
+'  .kchip .kused{ font-size:11px; opacity:.75; margin-left:3px; }' +
+'  .kdevnote{ font-size:14px; color:var(--sub); }' +
 '  .krow2{ display:flex; gap:7px; }' +
 '  .krow2 input{ flex:1; margin-bottom:0; }' +
 '';
