@@ -85,6 +85,34 @@
     sp.src = EXEC + '?action=events&callback=__ttEventsPre&cb=' + Date.now();
     sp.onerror = function () { window.__ttEventsPre({ error: 'net' }); };
     document.head.appendChild(sp);
+    // ★2026-07-17：ホーム画面に居た間に裏で先取りできていた分があれば、それを使って
+    //   「押した瞬間に出す」（下の showConflict が消費）。無ければ今まで通り上のsp取得を待つ。
+    //   実測：被りデータの取得自体は常に2.5〜2.9秒かかる（Googleの処理時間そのもの・軽い返事でも
+    //   同じ＝縮まらない）。だから「押してから取りに行く」のをやめ、ホームを見ている間に済ませておく。
+    try {
+      var raw = sessionStorage.getItem('sz_conflict_cache');
+      sessionStorage.removeItem('sz_conflict_cache');   // 使い切り＝次に来た時は必ずまた先取りし直す
+      if (raw) {
+        var c = JSON.parse(raw);
+        if (c && c.payload) window.__prefetchedEventsCached = c.payload;
+      }
+    } catch (e) {}
+  }
+  // ★2026-07-17：ホーム画面では、押される前から裏で被りデータを取りに行っておく
+  //   （ホームの表示自体はいつも通り即座＝これは表示を1ミリ秒も遅らせない裏作業）。
+  //   ボタンを押した時にはもう届いていることが多く、被り画面が待たずに出る。
+  if (view === 'home') {
+    window.__ttHomeConflictPre = function (payload) {
+      if (payload && !payload.error) {
+        try {
+          sessionStorage.setItem('sz_conflict_cache', JSON.stringify({ at: Date.now(), payload: payload }));
+        } catch (e) {}
+      }
+    };
+    var sh = document.createElement('script');
+    sh.src = EXEC + '?action=events&callback=__ttHomeConflictPre&cb=' + Date.now();
+    sh.onerror = function () {};
+    document.head.appendChild(sh);
   }
   // uriage（売上データ・売上画面のときだけ先読み。被り画面と同じ「最速化3点セット」）
   if (view === 'uriage') {
@@ -100,8 +128,8 @@
   }
 })();
 </script>
-<script src="detect_core.js?v=20260718h5"></script>
-<script src="code.js?v=20260718h5"></script>
+<script src="detect_core.js?v=20260718j"></script>
+<script src="code.js?v=20260718j"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -238,26 +266,47 @@
     } catch (e) { fail('描画エラー：' + e); }
   }
   function showConflict() {
-    // ★初回だけ：起動時に tilesettings と並行して先読みした被りデータを使う。
-    //   従来は tilesettings の往復(約2.7秒)を待ってから events を投げる直列で、
-    //   被りが出るまで約5.5秒かかっていた。先読みで直列を解消＝待ち時間ほぼ半分。
-    //   使い切り(__prefetchStarted を false に)なので、部屋移動後などのリフレッシュは
-    //   下の通常取得を通り、必ず新鮮なデータになる。
+    // ★2026-07-17：ホーム画面に居た間に裏で先取り済みのデータ（sessionStorage経由）があれば、
+    //   Googleへの往復（実測2.5〜2.9秒・一番軽い返事でも同じ＝これが常に下限）を待たずに、
+    //   まずそれで即描画する。このページ自身も先頭で新しい取得を既に発射済み(__prefetchStarted)
+    //   なので、それが届いたら中身が違う時だけ描き直す（同じなら描き直さずちらつかせない）。
+    var usedCache = false, cacheStr = null;
+    if (window.__prefetchedEventsCached) {
+      var cached = window.__prefetchedEventsCached;
+      window.__prefetchedEventsCached = null;
+      if (cached && !cached.error) {
+        cacheStr = JSON.stringify(cached);
+        renderConflictPayload_(cached);
+        usedCache = true;
+      }
+    }
+    function renderIfDifferent_(payload) {
+      if (!payload || payload.error) return;
+      if (cacheStr !== null && JSON.stringify(payload) === cacheStr) return;   // 中身が同じ＝描き直さない
+      renderConflictPayload_(payload);
+    }
+
+    // ★以下は元々の仕組み：起動時に tilesettings と並行して先読みした被りデータを使う
+    //   （従来は tilesettings の往復を待ってから events を投げる直列で、被りが出るまで約5.5秒
+    //   かかっていた。先読みで直列を解消＝待ち時間ほぼ半分）。使い切り(__prefetchStarted を
+    //   false に)なので、部屋移動後などのリフレッシュは下の通常取得を通り、必ず新鮮になる。
     if (window.__prefetchStarted) {
       window.__prefetchStarted = false;
       var pe = window.__prefetchedEvents;
       if (pe !== undefined) {
-        if (pe && !pe.error) { renderConflictPayload_(pe); return; }
-        // 先読みが失敗/エラー → 下の通常取得にフォールバック
+        if (pe && !pe.error) { renderIfDifferent_(pe); return; }
+        if (usedCache) return;   // キャッシュを既に表示中＝この失敗は無視してそのまま
+        // 先読みが失敗/エラー（かつキャッシュも無い） → 下の通常取得にフォールバック
       } else {
-        // まだ来ていない → 着信時に描画（エラーなら通常取得へリトライ）
+        // まだ来ていない → 着信時に描画（キャッシュ表示中でなければ失敗時に通常取得へリトライ）
         window.__prefetchWaiter = function (p) {
-          if (p && !p.error) { renderConflictPayload_(p); } else { showConflict(); }
+          if (p && !p.error) { renderIfDifferent_(p); }
+          else if (!usedCache) { showConflict(); }
         };
         return;
       }
     }
-    // 通常（部屋移動後のリフレッシュ等）＝新鮮なデータを取り直す
+    // 通常（部屋移動後のリフレッシュ等・キャッシュも先読みも無い時）＝新鮮なデータを取り直す
     window.__ttEvents = function (payload) { renderConflictPayload_(payload); };
     var s = document.createElement('script');
     s.src = EXEC + '?action=events&callback=__ttEvents&cb=' + Date.now();
