@@ -2102,7 +2102,7 @@ var AKISCRIPT_ =
 '    var ok=document.createElement("button"); ok.type="button"; ok.textContent="設定"; ok.className="akicalok";' +
 '    cancel.addEventListener("click",function(){ document.body.removeChild(mask); });' +
 '    ok.addEventListener("click",function(){' +
-'      var arr=Array.prototype.slice.call(picks).sort();' +
+'      var arr=Array.from(picks).sort();' +   // ★Set.prototype.sliceは無い＝Array.fromで配列化する（Array.prototype.slice.callだと空配列になるバグを実機検証で発見）
 '      manualDates = arr.length ? arr : null;' +
 '      updateDateBoxLabel_();' +
 '      if(manualDates) clearPresetSel();' +
