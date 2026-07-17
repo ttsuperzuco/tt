@@ -66,6 +66,20 @@ function doPost(e) {
       return _actionOut_({ ok: false, error: String(err2) }, null);
     }
   }
+  // ★2026-07-17追加：ボタン表示設定(tile_settings.json)を事務所PCから直接受け取ってDriveへ書く。
+  //   push_events / push_monitor と同じ理由。特にスマホ(自動監視→ボタン表示設定)から保存した時、
+  //   Driveアプリの同期待ち（数十秒〜10分）だと「保存したのにアプリが変わらない」と見えるため。
+  if (p.action === 'push_tiles') {
+    if (p.key !== EDIT_KEY) return _actionOut_({ ok: false, error: 'bad key' }, null);
+    try {
+      var tbody = (e.postData && e.postData.contents) || '';
+      JSON.parse(tbody);  // 壊れたJSONを書き込まない安全弁
+      getTileSettingsFile_().setContent(tbody);
+      return _actionOut_({ ok: true }, null);
+    } catch (err3) {
+      return _actionOut_({ ok: false, error: String(err3) }, null);
+    }
+  }
   return _actionOut_({ ok: false, error: 'unknown action' }, null);
 }
 
@@ -379,16 +393,25 @@ function _rateOk_(q) {
 //   サーバー(ここ)から一切出さない＝②の公開コードに載らない）。合言葉は自動監視メニュー4で変更可。
 // ★さらに、触ってよい項目(key)をここのホワイトリストで固定する。事務所PC側(monitor_ctl.apply)でも
 //   同じ確認を必ずもう一度行う（鍵が公開されている前提の二重の関門）。
-// ★お金・電源・データ復元に関わるもの（PotCoin解錠／PC自動スリープ／復元コピー）は入れない
-//   ＝外からは見るだけ（スマホの誤タップで動くと取り返しがつかないため）。
+// ★2026-07-17：お金・電源・データ復元（PotCoin解錠／PC自動スリープ・起床／復元コピー）も
+//   ここに入れた（ユーザー指示＝PC画面で押せる物はApp版でも全部押せるようにする）。
+//   誤タップ対策は「見せない」ではなく「押す前に確認文を出す」方式に変更した
+//   （確認文は事務所PCが monitor.json の row.confirm で配る＝PC側が唯一の出どころ）。
+//   ★事務所PC側(monitor_ctl.apply)でも key と「その項目に許した操作(acts)」を再確認する。
 var KANSHI_CTL_KEYS_ = [
   'db_backup', 'db_backup_full', 'course_counts', 'program_backup',
   'line_stats_timetree_check', 'ripihoryu_auto',
   'line_prefetch', 'timetree_prefetch', 'edit_worker_watchdog',
+  'lt_match', 'lt_miss_watch', 'sales_timetree_transfer',
   'line_shinki_watch', 'line_yoyaku_kakutei',
   'edit_worker', 'conflict_watcher', 'super_link',
+  // 必要時に実行（2026-07-17追加）
+  'travel_group', 'power_schedule', 'idle_guard', 'potcoin_stake', 'restore',
+  // その他の設定
+  'tile_settings',   // スーパーズコApp ボタン表示設定（人ごと表示・並び順・合言葉・追加・選び直し）
   'lt_auto_verify',  // その他の設定：L⇔T予約照合 全自動AI判定（2026-07-16・PC/App同一ルールで追加）
-  'ai_usage_record'  // その他の設定：自動AIコスト計算（帳簿）のON/OFF（2026-07-17追加）
+  'ai_usage_record', // その他の設定：自動AIコスト計算（帳簿）のON/OFF（2026-07-17追加）
+  'stale_cleanup'    // その他の設定：固まった残骸の掃除（2026-07-17追加）
 ];
 var KANSHI_CTL_ACTS_ = ['on', 'off', 'run', 'setval'];
 function _validKanshiCtl_(key, act) {
@@ -2050,7 +2073,8 @@ var AKISCRIPT_ =
 'function updateDateBoxLabel_(){' +
 '  if(!fromEl) return;' +
 '  if(!manualDates||!manualDates.length){ fromEl.value=""; return; }' +
-'  var f=manualDates[0].slice(5).replace("-","/");' +
+'  var mp=manualDates[0].slice(5).split("-");' +
+'  var f=Number(mp[0])+"/"+Number(mp[1]);' +   // 先頭の0を消して"7/18"のように表示
 '  fromEl.value = manualDates.length===1 ? f : (f+" 他"+(manualDates.length-1)+"件");' +
 '}' +
 'function openAkiCal_(input){' +
@@ -2951,6 +2975,25 @@ var KANSHICSS_ =
 '  .kboxbtns{ display:flex; gap:8px; }' +
 '  .kboxbtns button{ flex:1; padding:11px; border-radius:9px; border:0; font:inherit; font-weight:700; cursor:pointer; }' +
 '  .kno{ background:var(--bg); color:#fff; } .kyes{ background:#2563eb; color:#fff; }' +
+// ボタン表示設定の編集画面（2026-07-17・事務所PCの設定画面と同じことをスマホでもできるように）
+'  .kbox.kwide{ max-width:520px; max-height:86vh; overflow-y:auto; }' +
+'  .knote{ font-size:12px; color:var(--sub); margin-bottom:10px; line-height:1.6; }' +
+'  .ksec{ font-size:13px; font-weight:800; margin:18px 0 8px; padding-top:12px;' +
+'    border-top:1px solid var(--line); }' +
+'  .ktrow{ padding:9px 0; border-bottom:1px solid var(--line); }' +
+'  .ktname{ display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; margin-bottom:6px; }' +
+'  .kacc{ width:5px; height:16px; border-radius:3px; flex:0 0 auto; }' +
+'  .kord{ display:flex; gap:2px; margin-left:auto; }' +
+'  .kord button{ width:24px; height:22px; padding:0; border:1px solid var(--line); background:var(--card);' +
+'    color:var(--sub); border-radius:6px; font-size:10px; cursor:pointer; }' +
+'  .kchips{ display:flex; flex-wrap:wrap; gap:5px; }' +
+'  .kchip{ border:1px solid var(--line); background:var(--card); color:var(--sub); border-radius:999px;' +
+'    padding:6px 10px; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }' +
+'  .kchip.on{ background:var(--ok); border-color:var(--ok); color:#fff; }' +
+'  .kchip .kused{ font-size:9px; opacity:.75; margin-left:3px; }' +
+'  .kdevnote{ font-size:11.5px; color:var(--sub); }' +
+'  .krow2{ display:flex; gap:7px; }' +
+'  .krow2 input{ flex:1; margin-bottom:0; }' +
 '';
 
 // ブラウザ側の全処理（描画・30秒ごとの自動更新・操作の依頼）。①②どちらでも同じこれが動く。
@@ -2963,6 +3006,9 @@ var KANSHISCRIPT_ =
 'var PW_="";' +
 'var data_=window.__KANSHI_DATA__||{groups:[]};' +
 'var open_={};' +
+'var CONFIRM_={};' +   // 押す前に出す確認文（事務所PCが monitor.json の row.confirm で配る）
+'var TILEROW_=null;' + // ボタン表示設定の行（ボタンの一覧・色を持っている＝一覧をここに書き写さない）
+
 'function esc(s){ var d=document.createElement("div"); d.textContent=(s==null?"":String(s)); return d.innerHTML; }' +
 'function jsonp_(params, onDone){' +
 '  var cb="__k"+Date.now()+Math.floor(Math.random()*1000);' +
@@ -2994,12 +3040,27 @@ var KANSHISCRIPT_ =
 '    el.className="kfresh"; el.textContent=(data_.generated_at||"")+" 時点の状態です（1分ごとに自動更新）。";' +
 '  }' +
 '}' +
+// 1行に出すボタンは、事務所PCが決めた acts（その項目に許した操作）だけにする。
+// ★以前は全行に「ON/OFF」「今すぐ実行」「保存」を機械的に出していたので、押しても意味の無い
+//   ボタン（例＝L⇔T全自動AI判定の「今すぐ実行」）まで並んでいた。2026-07-17に acts 方式へ変更。
+// ★confirm（押す前の確認文）も事務所PCが配る。お金・電源・データ復元の項目に付いている。
 'function ctlBtns_(m){' +
 '  if(!m.ctl) return "";' +
+'  var acts=m.acts||["on","off","run","setval"];' +
+'  var has=function(a){ return acts.indexOf(a)>=0; };' +
+'  if(m.confirm) CONFIRM_[m.key]=m.confirm;' +
 '  var h="<div class=\\"kbtns\\">";' +
-'  h+="<button type=\\"button\\" class=\\"kbtn "+(m.on?"on":"off")+"\\" data-act=\\""+(m.on?"off":"on")+"\\" data-key=\\""+esc(m.key)+"\\">"+(m.on?"ONにしてある → OFFにする":"OFFにしてある → ONにする")+"</button>";' +
-'  h+="<button type=\\"button\\" class=\\"kbtn\\" data-act=\\"run\\" data-key=\\""+esc(m.key)+"\\">今すぐ実行</button>";' +
-'  if(m.value!==""&&m.value!==undefined&&m.value!==null){' +
+'  if(m.editor==="tiles"){' +
+'    TILEROW_=m;' +
+'    h+="<button type=\\"button\\" class=\\"kbtn\\" data-editor=\\"tiles\\">ひらいて設定する</button>";' +
+'  }' +
+'  if(has(m.on?"off":"on")){' +
+'    h+="<button type=\\"button\\" class=\\"kbtn "+(m.on?"on":"off")+"\\" data-act=\\""+(m.on?"off":"on")+"\\" data-key=\\""+esc(m.key)+"\\">"+(m.on?"ONにしてある → OFFにする":"OFFにしてある → ONにする")+"</button>";' +
+'  }' +
+'  if(has("run")){' +
+'    h+="<button type=\\"button\\" class=\\"kbtn\\" data-act=\\"run\\" data-key=\\""+esc(m.key)+"\\">今すぐ実行</button>";' +
+'  }' +
+'  if(has("setval")&&m.value!==""&&m.value!==undefined&&m.value!==null){' +
 '    h+="<input class=\\"kval\\" type=\\"text\\" value=\\""+esc(m.value)+"\\" data-val=\\""+esc(m.key)+"\\">";' +
 '    h+="<span class=\\"kunit\\">"+esc(m.unit||m.schedule_label||"")+"</span>";' +
 '    h+="<button type=\\"button\\" class=\\"kbtn\\" data-act=\\"setval\\" data-key=\\""+esc(m.key)+"\\">保存</button>";' +
