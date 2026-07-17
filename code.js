@@ -1911,12 +1911,13 @@ function akiStaffColor_(emoji) {
   return p[emoji] || '#666';
 }
 
-// 1件ぶんの空き枠チップ（開始-終了(長さ分)）。
+// 1件ぶんの空き枠チップ（開始-終了(長さ分)）。data-durは長さボタンでの絞り込み用（2026-07-17追加）。
 function akiSlotChip_(sl) {
-  return '<span class="akislot">' + esc_(sl.s) + '-' + esc_(sl.e) + '<b>(' + sl.dur + '分)</b></span>';
+  return '<span class="akislot" data-dur="' + sl.dur + '">' + esc_(sl.s) + '-' + esc_(sl.e) + '<b>(' + sl.dur + '分)</b></span>';
 }
 
 // 「各時間帯別」＝1枠1行（PC版available_slots.pyのconsole/HTML表示と同じ形式・並び順）。
+// data-durは長さボタンでの絞り込み用（2026-07-17追加）。
 function akiTimeRows_(slots) {
   if (!slots || !slots.length) return '<div class="akinone">空きなし</div>';
   return slots.map(function (sl) {
@@ -1927,7 +1928,7 @@ function akiTimeRows_(slots) {
           return '<span class="akiroom" style="background:' + roomColor_(r) + '">' + esc_(r) + '</span>';
         }).join('')
       : '<span class="akinorooms">空き部屋なし</span>';
-    return '<div class="akirow">' +
+    return '<div class="akirow" data-dur="' + sl.dur + '">' +
       '<span class="akitime">' + esc_(sl.s) + '-' + esc_(sl.e) + '</span>' +
       '<span class="akidur">' + sl.dur + '分</span>' + badge +
       '<span class="akirooms">' + rooms + '</span>' +
@@ -2029,6 +2030,15 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<button type="button" class="akiwd" data-wd="5">金</button>' +
       '<button type="button" class="akiwd" data-wd="6">土</button>' +
     '</div>' +
+    // 空き時間の長さで絞り込み（2026-07-17ユーザー指示）。単一選択＝1つだけON。
+    // 30分＝30分以下／60分＝31〜60分／90分＝61〜90分／120分＝91〜120分（121分以上は「全部」でのみ表示）。
+    '<div class="akidurrow">' +
+      '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
+      '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="90">90分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="120">120分</button>' +
+    '</div>' +
   '</div>' +
   '<div class="akichips">' +
     '<button type="button" class="akichip on" data-sec="time">各時間帯別</button>' +
@@ -2067,7 +2077,9 @@ var AKISCRIPT_ =
 'var manualDates=null;' +
 'function updateDateBoxLabel_(){' +
 '  if(!fromEl) return;' +
-'  if(!manualDates||!manualDates.length){ fromEl.value=""; return; }' +
+'  var active = manualDates&&manualDates.length;' +
+'  fromEl.classList.toggle("on", !!active);' +   // 日付が選ばれている時は他のボタンと同じ色に（2026-07-17ユーザー指示）
+'  if(!active){ fromEl.value=""; return; }' +
 '  var mp=manualDates[0].slice(5).split("-");' +
 '  var f=Number(mp[0])+"/"+Number(mp[1]);' +   // 先頭の0を消して"7/18"のように表示
 '  fromEl.value = manualDates.length===1 ? f : (f+" 他"+(manualDates.length-1)+"件");' +
@@ -2179,7 +2191,29 @@ var AKISCRIPT_ =
 '    if(idx>-1) selectedWd.splice(idx,1); else selectedWd.push(n);' +
 '    if(!selectedWd.length){ setAllWd_(); return; }' +
 '    wdBtns[0].classList.remove("on"); b.classList.toggle("on", idx===-1);' +
+// ★曜日を新しく選んだ時は、期間を「全期間」にする（2026-07-17ユーザー指示）。
+//   「全期間の中のその曜日」を見るための機能なので、「今日」等の狭い期間のままだと
+//   該当日が無く「表示できるデータがありません」になってしまう。
+'    if(idx===-1){ setRange(minD, maxD); presets.forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-preset")==="all"); }); }' +
 '    applyFilter();' +
+'  }); });' +
+// 長さボタン（2026-07-17ユーザー指示）：単一選択。30分＝30分以下／60分＝31〜60分／
+// 90分＝61〜90分／120分＝91〜120分（121分以上は「全部」でのみ表示）。
+// 対象は各時間帯別の1行(.akirow[data-dur])とスタッフ別/施術室別の枠チップ(.akislot[data-dur])。
+'  var durBtns=[].slice.call(document.querySelectorAll(".akidurbtn"));' +
+'  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur]"));' +
+'  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
+'    durBtns.forEach(function(x){ x.classList.toggle("on", x===b); });' +
+'    var kind=b.getAttribute("data-dur");' +
+'    var lo=1, hi=Infinity;' +
+'    if(kind==="30"){ lo=1; hi=30; }' +
+'    else if(kind==="60"){ lo=31; hi=60; }' +
+'    else if(kind==="90"){ lo=61; hi=90; }' +
+'    else if(kind==="120"){ lo=91; hi=120; }' +
+'    durRows.forEach(function(el){' +
+'      var dur=Number(el.getAttribute("data-dur"));' +
+'      el.classList.toggle("akidurhide", kind!=="all" && (dur<lo||dur>hi));' +
+'    });' +
 '  }); });' +
 '  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
 '}' +
@@ -2205,6 +2239,8 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
 '    padding:9px 6px; flex:1 1 64px; min-width:64px; text-align:center; cursor:pointer; caret-color:transparent; }' +
 '  .akidate::placeholder{ color:var(--akisub); font-weight:700; }' +
+'  .akidate.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akidate.on::placeholder{ color:#fff; }' +
 '  .akicalmask{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex;' +
 '    align-items:center; justify-content:center; z-index:9999; padding:16px; }' +
 '  .akicalbox{ background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
@@ -2238,6 +2274,12 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px 16px; cursor:pointer; }' +
 '  .akiwd.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akidurrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
+'  .akidurbtn{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akisub);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:11px 16px; cursor:pointer; }' +
+'  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
 '  .akichip{ font-family:inherit; font-size:17px; font-weight:700; color:var(--akisub);' +
@@ -3123,6 +3165,137 @@ var KANSHISCRIPT_ =
 '    setTimeout(function(){ poll_(id, tries-1); }, 5000);' +
 '  });' +
 '}' +
+// ========== ボタン表示設定の編集画面（2026-07-17・事務所PCの設定画面と同じことをスマホで） ==========
+// ★作法どおり「判定・保存はPC側」：ここは表を描いて、押された結果を1つの依頼にして送るだけ。
+//   保存の実処理は事務所PCの tile_settings.save_perms/set_password/add_person/reset_device
+//   （＝PCの設定画面が呼ぶのと同じ関数）が行う＝PC版とApp版で結果が食い違わない。
+// ★合言葉だけは「今の値」を画面に出さない（②静的アプリは誰でも開けるURLのため。変える事はできる）。
+'var EP_={}, EO_=[], EPEOPLE_=[], ELAB_={}, ECLAIM_={};' +
+'function tileDefs_(){' +
+'  var r=TILEROW_||{}; var out=[];' +
+'  var a=r.tiles||[], b=r.dev_tiles||[];' +
+'  for(var i=0;i<a.length;i++) out.push({id:a[i].id,label:a[i].label,color:a[i].color,dev:false});' +
+'  for(var j=0;j<b.length;j++) out.push({id:b[j].id,label:b[j].label,color:b[j].color,dev:true});' +
+'  return out;' +
+'}' +
+'function openTiles_(){' +
+'  toast_("設定を読み込んでいます…");' +
+'  jsonp_({action:"tilesettings"}, function(r){' +
+'    if(!r||r.error){ toast_("⚠ 設定を読めませんでした"); return; }' +
+'    EPEOPLE_=r.people||[]; ELAB_=r.labels||{}; ECLAIM_=r.claimed||{}; EO_=(r.order||[]).slice();' +
+'    EP_={};' +
+'    for(var i=0;i<EPEOPLE_.length;i++){' +
+'      var pid=EPEOPLE_[i]; EP_[pid]={};' +
+'      var src=(r.perms&&r.perms[pid])||{};' +
+'      for(var t in src) EP_[pid][t]=!!src[t];' +
+'    }' +
+'    drawTiles_();' +
+'  });' +
+'}' +
+'function tileRowsHtml_(){' +
+'  var defs=tileDefs_(), byId={};' +
+'  for(var i=0;i<defs.length;i++) byId[defs[i].id]=defs[i];' +
+'  var order=EO_.filter(function(id){ return byId[id]; });' +
+'  for(var j=0;j<defs.length;j++){ if(order.indexOf(defs[j].id)<0) order.push(defs[j].id); }' +
+'  EO_=order;' +
+'  return order.map(function(tid){' +
+'    var d=byId[tid];' +
+'    var h="<div class=\\"ktrow\\" data-tid=\\""+esc(tid)+"\\"><div class=\\"ktname\\">"+' +
+'      "<span class=\\"kacc\\" style=\\"background:"+esc(d.color||"#94a3b8")+"\\"></span>"+esc(d.label)+' +
+'      "<span class=\\"kord\\"><button type=\\"button\\" data-mv=\\"-1\\" data-tid=\\""+esc(tid)+"\\">▲</button>"+' +
+'      "<button type=\\"button\\" data-mv=\\"1\\" data-tid=\\""+esc(tid)+"\\">▼</button></span></div>";' +
+'    if(d.dev){' +
+'      h+="<div class=\\"kdevnote\\">開発用URLだけに出るボタンです（人ごとの設定はありません。並び順だけ変えられます）</div>";' +
+'    } else {' +
+'      h+="<div class=\\"kchips\\">"+EPEOPLE_.map(function(pid){' +
+'        var on=!!(EP_[pid]&&EP_[pid][tid]);' +
+'        var used=(pid!=="kanbu"&&ECLAIM_[pid])?"<span class=\\"kused\\">使用中</span>":"";' +
+'        return "<button type=\\"button\\" class=\\"kchip"+(on?" on":"")+"\\" data-pid=\\""+esc(pid)+"\\" data-tid=\\""+esc(tid)+"\\">"+' +
+'          esc(ELAB_[pid]||pid)+used+"</button>";' +
+'      }).join("")+"</div>";' +
+'    }' +
+'    return h+"</div>";' +
+'  }).join("");' +
+'}' +
+'function drawTiles_(){' +
+'  var old=document.getElementById("kTiles"); if(old&&old.parentNode) old.parentNode.removeChild(old);' +
+'  var mask=document.createElement("div"); mask.className="kmask"; mask.id="kTiles";' +
+'  var resets=EPEOPLE_.filter(function(p){ return p!=="kanbu"; }).map(function(pid){' +
+'    return "<button type=\\"button\\" class=\\"kchip\\" data-reset=\\""+esc(pid)+"\\">"+esc(ELAB_[pid]||pid)+"</button>";' +
+'  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠ 全員</button>";' +
+'  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
+'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください（事務所PCが受け取ってから反映まで最大1分）。</div>"+' +
+'    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
+'    "<div class=\\"ksec\\">新しいユーザーを追加</div>"+' +
+'    "<div class=\\"knote\\">新しいスタッフや、同じ人の別の名前（例：りんご2）を足します。</div>"+' +
+'    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kAdd\\" placeholder=\\"例：りんご2\\">"+' +
+'    "<button type=\\"button\\" class=\\"kbtn\\" id=\\"kAddBtn\\">追加</button></div>"+' +
+'    "<div class=\\"ksec\\">スタッフ用URLの合言葉</div>"+' +
+'    "<div class=\\"knote\\">今の合言葉は、安全のためこの画面には出しません。変えたい時だけ新しい合言葉を入れてください。</div>"+' +
+'    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kPw2\\" placeholder=\\"新しい合言葉\\">"+' +
+'    "<button type=\\"button\\" class=\\"kbtn\\" id=\\"kPwBtn\\">変更</button></div>"+' +
+'    "<div class=\\"ksec\\">名前を選び直させる（スマホごと）</div>"+' +
+'    "<div class=\\"knote\\">押した人のスマホは、次にアプリを開いた時「名前をえらぶ」画面からやり直しになります。その名前はまた選べるようになります。</div>"+' +
+'    "<div class=\\"kchips\\">"+resets+"</div>"+' +
+'    "<div class=\\"kboxbtns\\" style=\\"margin-top:18px;\\"><button type=\\"button\\" class=\\"kno\\" id=\\"kTilesClose\\">とじる</button>"+' +
+'    "<button type=\\"button\\" class=\\"kyes\\" id=\\"kTilesSave\\">保存する</button></div></div>";' +
+'  document.body.appendChild(mask);' +
+'}' +
+'function closeTiles_(){ var m=document.getElementById("kTiles"); if(m&&m.parentNode) m.parentNode.removeChild(m); }' +
+'function moveTile_(tid, dir){' +
+'  var i=EO_.indexOf(tid), j=i+dir;' +
+'  if(i<0||j<0||j>=EO_.length) return;' +
+'  var tmp=EO_[i]; EO_[i]=EO_[j]; EO_[j]=tmp;' +
+'  var box=document.getElementById("kTileRows"); if(box) box.innerHTML=tileRowsHtml_();' +
+'}' +
+'function saveTiles_(){' +
+'  var p={};' +   // ONの物だけの一覧で送る（依頼はURLで届くので短くする必要がある）
+'  for(var i=0;i<EPEOPLE_.length;i++){' +
+'    var pid=EPEOPLE_[i], on=[];' +
+'    for(var t in (EP_[pid]||{})){ if(EP_[pid][t]) on.push(t); }' +
+'    p[pid]=on;' +
+'  }' +
+'  send_("tile_settings","setval", JSON.stringify({t:"save", o:EO_, p:p}));' +
+'  closeTiles_();' +
+'}' +
+'function tilesClick_(ev){' +
+'  var t=ev.target.closest?ev.target:null; if(!t) return false;' +
+'  var chip=t.closest(".kchip");' +
+'  if(chip&&chip.getAttribute("data-pid")){' +
+'    var pid=chip.getAttribute("data-pid"), tid=chip.getAttribute("data-tid");' +
+'    if(!EP_[pid]) EP_[pid]={};' +
+'    EP_[pid][tid]=!EP_[pid][tid];' +
+'    chip.classList.toggle("on", !!EP_[pid][tid]);' +
+'    return true;' +
+'  }' +
+'  if(chip&&chip.getAttribute("data-reset")){' +
+'    var rid=chip.getAttribute("data-reset");' +
+'    if(confirm("「"+(rid==="all"?"全員":(ELAB_[rid]||rid))+"」を名前の選び直しにします。よろしいですか？")){' +
+'      send_("tile_settings","setval", JSON.stringify({t:"reset", v:rid}));' +
+'    }' +
+'    return true;' +
+'  }' +
+'  var mv=t.closest("[data-mv]");' +
+'  if(mv){ moveTile_(mv.getAttribute("data-tid"), Number(mv.getAttribute("data-mv"))); return true; }' +
+'  if(t.closest("#kAddBtn")){' +
+'    var v=(document.getElementById("kAdd").value||"").trim();' +
+'    if(!v){ toast_("名前を入れてください"); return true; }' +
+'    send_("tile_settings","setval", JSON.stringify({t:"add", v:v}));' +
+'    document.getElementById("kAdd").value="";' +
+'    return true;' +
+'  }' +
+'  if(t.closest("#kPwBtn")){' +
+'    var pw=(document.getElementById("kPw2").value||"").trim();' +
+'    if(!pw){ toast_("新しい合言葉を入れてください"); return true; }' +
+'    if(confirm("スタッフ用URLの合言葉を「"+pw+"」に変えます。よろしいですか？")){' +
+'      send_("tile_settings","setval", JSON.stringify({t:"pw", v:pw}));' +
+'    }' +
+'    return true;' +
+'  }' +
+'  if(t.closest("#kTilesClose")){ closeTiles_(); return true; }' +
+'  if(t.closest("#kTilesSave")){ saveTiles_(); return true; }' +
+'  return false;' +
+'}' +
 'function send_(key, act, val){' +
 '  askPw_(function(){' +
 '    toast_("受け付けました。事務所PCが実行します（最大1分）…");' +
@@ -3134,9 +3307,13 @@ var KANSHISCRIPT_ =
 '  });' +
 '}' +
 'document.addEventListener("click", function(ev){' +
-'  var h=ev.target.closest?ev.target.closest(".khead"):null;' +
+'  if(!ev.target.closest) return;' +
+'  if(ev.target.closest("#kTiles")){ if(tilesClick_(ev)) return; }' +
+'  var ed=ev.target.closest("[data-editor]");' +
+'  if(ed){ openTiles_(); return; }' +
+'  var h=ev.target.closest(".khead");' +
 '  if(h){ var i=h.getAttribute("data-g"); open_[i]=!open_[i]; render_(); return; }' +
-'  var b=ev.target.closest?ev.target.closest(".kbtn"):null;' +
+'  var b=ev.target.closest(".kbtn");' +
 '  if(!b) return;' +
 '  var key=b.getAttribute("data-key"), act=b.getAttribute("data-act");' +
 '  if(!key||!act) return;' +
@@ -3145,6 +3322,7 @@ var KANSHISCRIPT_ =
 '    var input=document.querySelector(".kval[data-val=\\""+key+"\\"]");' +
 '    val=input?input.value:"";' +
 '  }' +
+'  if(CONFIRM_[key]&&!confirm(CONFIRM_[key])) return;' +   // お金・電源・データ復元は押す前に必ず確認
 '  send_(key, act, val);' +
 '});' +
 'var ref=document.getElementById("kRef");' +
