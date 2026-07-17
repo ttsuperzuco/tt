@@ -1020,9 +1020,13 @@ function logAccess_(who, role, device, view) {
 var CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
 function circled_(n) { return (n >= 1 && n <= CIRCLED.length) ? CIRCLED[n - 1] : (n + '.'); }
 
+// ★2026-07-17：色をTimeTree本物のラベル色に統一（それまでは自作の配色だった＝ユーザー指摘
+//   「みんなタイムツリーでの色に慣れてる」）。ラベル一覧確認.pyでTimeTreeのAPIから実測して確定
+//   （calendar_labelsのcolor(10進int)を16進化）。★PC版room_conflict_detect.pyの_room_color()と
+//   同じ値に揃えること（片方だけ直さない＝共通ルール）。
 function roomColor_(room) {
-  var p = { 'FREEDOM': '#e11d48', 'COSMOS': '#7c3aed', 'HAPPY': '#f59e0b',
-            'LUCKY': '#16a34a', 'STAR/福/🇫🇷': '#0ea5e9' };
+  var p = { 'FREEDOM': '#2ecc87', 'COSMOS': '#3dc2c8', 'HAPPY': '#e73b3b',
+            'LUCKY': '#fdc02d', 'STAR/福/🇫🇷': '#b38bdc' };
   return p[room] || '#64748b';
 }
 
