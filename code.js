@@ -2319,6 +2319,11 @@ var MOVESCRIPT_ =
 '    Array.prototype.forEach.call(mvw.querySelectorAll(".mvtoggle"),function(b){ b.classList.remove("open"); });' +
 '    if(willOpen){ pn.hidden=false; t.classList.add("open"); }' +
 '    if(!pn.hidden&&window.szFit1Line_) window.szFit1Line_(pn);' +   // 開いた瞬間に1行へ収める
+// ★移動先を選ぶ準備中は、氏名・施術内容を隠して詰める（2026-07-17ユーザー指示）。
+//   もう決まっている情報（誰の予約か）を毎回見返す必要はない＝隠すだけで下のボタンが
+//   自動的に上へ詰まる（display:noneなので特別なアニメーション処理は不要）。
+'    var crd=mvw; while(crd&&!(crd.classList&&crd.classList.contains("card"))) crd=crd.parentNode;' +
+'    if(crd) crd.classList.toggle("moving",willOpen);' +
 '    return;' +
 '  }' +
 '  if(t.classList&&t.classList.contains("rstoggle")){' +
@@ -2697,6 +2702,8 @@ var CSS_ =
 '  .who .code { color:var(--sub); font-weight:600; margin:0 4px; }' +
 '  .who .name { font-weight:500; }' +
 '  .menuwrap { display:flex; align-items:stretch; gap:8px; margin:6px 0 4px; }' +
+// ★移動先を選んでいる間だけ、氏名・施術内容を隠して詰める（2026-07-17ユーザー指示）。
+'  .card.moving .who .name, .card.moving .menuwrap { display:none; }' +
 '  .menutag { flex:none; writing-mode:vertical-rl; text-orientation:upright;' +
 '    background:#e0e7ff; color:#4338ca; font-size:1.08rem; font-weight:800;' +
 '    padding:6px 3px; border-radius:999px; letter-spacing:.05em; }' +
