@@ -387,7 +387,8 @@ var KANSHI_CTL_KEYS_ = [
   'line_prefetch', 'timetree_prefetch', 'edit_worker_watchdog',
   'line_shinki_watch', 'line_yoyaku_kakutei',
   'edit_worker', 'conflict_watcher', 'super_link',
-  'lt_auto_verify'   // その他の設定：L⇔T予約照合 全自動AI判定（2026-07-16・PC/App同一ルールで追加）
+  'lt_auto_verify',  // その他の設定：L⇔T予約照合 全自動AI判定（2026-07-16・PC/App同一ルールで追加）
+  'ai_usage_record'  // その他の設定：自動AIコスト計算（帳簿）のON/OFF（2026-07-17追加）
 ];
 var KANSHI_CTL_ACTS_ = ['on', 'off', 'run', 'setval'];
 function _validKanshiCtl_(key, act) {
@@ -2352,7 +2353,7 @@ var MOVESCRIPT_ =
 '        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_();' +
 '        setTimeout(function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); },2000); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
-'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。", false); }' +
+'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください", false); }' +
 '      else { setTimeout(chk,250); } });' +
 '  }' +
 '  setTimeout(chk,250); }' +
