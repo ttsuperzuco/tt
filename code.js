@@ -2223,6 +2223,16 @@ var FIT1LINE_SCRIPT_ =
 '      el.style.fontSize=(cur-1)+"px"; tries++;' +
 '    }' +
 '  }' +
+// ★.mvlabel(移動先の部屋を選んでね)と.mvhint(※空いている施術室のみ...)は文字数が違うため、
+//   上のループで別々に縮めると文章の長さ次第で大きさがズレる（2026-07-17ユーザー指摘）。
+//   同じ.mvrow内のペアだけ、縮んだ結果の小さい方に両方合わせて必ず同じ大きさにする。
+'  var rows=(root||document).querySelectorAll(".mvrow");' +
+'  for(var j=0;j<rows.length;j++){' +
+'    var lb=rows[j].querySelector(".mvlabel"), hn=rows[j].querySelector(".mvhint");' +
+'    if(!lb||!hn||!lb.clientWidth||!hn.clientWidth) continue;' +
+'    var min=Math.min(parseFloat(getComputedStyle(lb).fontSize), parseFloat(getComputedStyle(hn).fontSize));' +
+'    lb.style.fontSize=min+"px"; hn.style.fontSize=min+"px";' +
+'  }' +
 '};' +
 'window.szFit1Line_();' +
 '})();</scr' + 'ipt>';
