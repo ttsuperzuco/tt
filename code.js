@@ -1825,8 +1825,9 @@ var UNACSS_ =
 '  h1{ color:#fff; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:6px 0 12px; }' +
 '  .unatabs{ display:flex; gap:8px; margin-bottom:12px; }' +
 '  .unatab{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;' +
-'    padding:10px 8px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; font-weight:700; font-size:13px; }' +
-'  .unatab .unac{ display:block; font-size:20px; font-weight:900; margin-top:2px; }' +
+'    padding:10px 8px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; font-weight:800;' +
+'    font-size:clamp(14px,4vw,18px); }' +
+'  .unatab .unac{ display:block; font-size:clamp(26px,9vw,38px); font-weight:900; margin-top:2px; }' +
 '  .unatab.cust.sel{ background:var(--cust); border-color:var(--cust); color:#fff; }' +
 '  .unatab.ours.sel{ background:var(--q); border-color:var(--q); color:#fff; }' +
 '  .unatab.sel .unac{ color:#fff; }' +
@@ -1842,14 +1843,14 @@ var UNACSS_ =
 '    border-radius:12px; padding:12px 14px; }' +
 '  .unacard.cust{ border-left-color:var(--cust); background:var(--custbg); }' +
 '  .unacard.ours{ border-left-color:var(--q); }' +
-'  .unahead{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
-'  .unapill{ font-size:10.5px; font-weight:800; padding:2px 8px; border-radius:6px; }' +
+'  .unahead{ display:flex; align-items:center; gap:4px 10px; flex-wrap:wrap; margin-bottom:6px; }' +
+'  .unapill{ font-size:clamp(10px,2.6vw,12px); font-weight:800; padding:2px 8px; border-radius:6px; }' +
 '  .unapill.unread{ background:#fef9c3; color:#854d0e; } .unapill.read{ background:var(--line); color:var(--sub); }' +
-'  .unawhentag{ font-size:11.5px; font-weight:700; color:var(--sub); font-variant-numeric:tabular-nums; }' +
-'  .unaname{ font-weight:800; font-size:15px; }' +
-'  .unatag{ font-size:11px; color:var(--sub); }' +
-'  .unadays{ margin-left:auto; font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; }' +
-'  .unaq{ font-size:14px; margin:2px 0 6px; line-height:1.45;' +
+'  .unawhentag{ font-size:clamp(13px,3.6vw,17px); font-weight:800; color:var(--sub); font-variant-numeric:tabular-nums; }' +
+'  .unaname{ font-weight:800; font-size:clamp(16px,4.4vw,21px); }' +
+'  .unatag{ font-size:clamp(11px,3vw,14px); color:var(--sub); }' +
+'  .unadays{ margin-left:auto; font-size:clamp(12px,3.2vw,15px); color:var(--sub); font-variant-numeric:tabular-nums; }' +
+'  .unaq{ font-size:clamp(15px,4.2vw,19px); margin:2px 0 6px; line-height:1.5;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .unath{ font-size:12px; color:var(--sub); border-top:1px dashed var(--line); padding-top:6px; margin-top:2px; }' +
 '  .unaactions{ margin-top:9px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }' +
