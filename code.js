@@ -2374,17 +2374,23 @@ var MOVESCRIPT_ =
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
 // ★完了まで全画面のまま待ち、本当に完了したら全画面「✓完了」を0.5秒→被りを消して一覧へ戻す。
 //   確認間隔はGoogleの応答速度が下限のため詰められる範囲で最短(0.25秒間隔)にしている。
+// ★「完了しました」は自動で消えず、押すまで画面に残す（2026-07-17ユーザー指示）。
+//   裏側のデータはこの時点で既に doneRefreshFast_ 済みなので、押した瞬間に最新の一覧が見える。
 'function showDoneOverlay_(room){ var ov=document.getElementById("mvWaitOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
 '  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
 '  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div>"+' +
-'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;\\">「"+room+"」へ<br>移動が完了しました</div>"; }' +
+'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">「"+room+"」へ<br>移動が完了しました</div>"+' +
+'    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">施術室被り検出画面に戻る</button>";' +
+'  document.getElementById("mvBackBtn").addEventListener("click",function(){' +
+'    try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_();' +
+'  });' +
+'  return ov; }' +
 'function waitDoneThenFinish_(id,evid,room){ var tries=0;' +
 '  function chk(){ tries++;' +
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
 '      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showDoneOverlay_(room);' +
-'        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_();' +
-'        setTimeout(function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); },2000); }' +
+'        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
 '      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください", false); }' +
 '      else { setTimeout(chk,250); } });' +
@@ -2703,7 +2709,7 @@ var CSS_ =
 '  .who .name { font-weight:500; }' +
 '  .menuwrap { display:flex; align-items:stretch; gap:8px; margin:6px 0 4px; }' +
 // ★移動先を選んでいる間だけ、氏名・施術内容を隠して詰める（2026-07-17ユーザー指示）。
-'  .card.moving .who .name, .card.moving .menuwrap { display:none; }' +
+'  .card.moving .who .code, .card.moving .who .name, .card.moving .menuwrap { display:none; }' +
 '  .menutag { flex:none; writing-mode:vertical-rl; text-orientation:upright;' +
 '    background:#e0e7ff; color:#4338ca; font-size:1.08rem; font-weight:800;' +
 '    padding:6px 3px; border-radius:999px; letter-spacing:.05em; }' +
