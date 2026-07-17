@@ -1990,14 +1990,14 @@ function renderAkijikanPage_(d, base, staff, dev) {
   '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
     '　生成: ' + esc_(d.generated_at || '—') + '</div>' +
   '<div class="akidatebar">' +
+    // ★2026-07-17ユーザー指示：期間(from〜to)選択をやめ、カレンダーで日付を好きなだけ複数選ぶ
+    //   方式に変更。終わりの日付BOXは廃止＝日付BOXは1個だけ（押すと複数選択カレンダーが開く）。
+    //   日付BOX＋今日/明日/今・来週/全期間を1行に収める（今日/明日はやや小さめ）。
     '<div class="akidaterow">' +
-      '<input type="text" readonly class="akidate" id="akiFrom" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
-      '<span class="akitilde">〜</span>' +
-      '<input type="text" readonly class="akidate" id="akiTo" min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
-    '</div>' +
-    '<div class="akipresets">' +
-      '<button type="button" class="akipreset" data-preset="today">今日</button>' +
-      '<button type="button" class="akipreset" data-preset="tomorrow">明日</button>' +
+      '<input type="text" readonly class="akidate" id="akiFrom" placeholder="日付で選ぶ"' +
+        ' min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
+      '<button type="button" class="akipreset sm" data-preset="today">今日</button>' +
+      '<button type="button" class="akipreset sm" data-preset="tomorrow">明日</button>' +
       '<button type="button" class="akipreset on" data-preset="thisnext">今・来週</button>' +
       '<button type="button" class="akipreset" data-preset="all">全期間</button>' +
     '</div>' +
@@ -2039,13 +2039,24 @@ var AKISCRIPT_ =
 '  });' +
 '}); });' +
 '' +
-'var fromEl=document.getElementById("akiFrom"), toEl=document.getElementById("akiTo");' +
+'var fromEl=document.getElementById("akiFrom");' +
 'var minD=fromEl?fromEl.min:"", maxD=fromEl?fromEl.max:"";' +
 'var days=[].slice.call(document.querySelectorAll("#akidays .akiday"));' +
 'var emptyMsg=document.getElementById("akiDateEmpty");' +
+// ★2026-07-17ユーザー指示：期間(from〜to)選択をやめ、カレンダーで日付を好きなだけ複数選ぶ方式に。
+//   manualDates=null の時はプリセット(今日/明日/今・来週/全期間)の範囲(rangeFrom〜rangeTo)を使い、
+//   manualDates に配列が入っている時はその日付だけを表示する（プリセットとは排他）。
+'var manualDates=null;' +
+'function updateDateBoxLabel_(){' +
+'  if(!fromEl) return;' +
+'  if(!manualDates||!manualDates.length){ fromEl.value=""; return; }' +
+'  var f=manualDates[0].slice(5).replace("-","/");' +
+'  fromEl.value = manualDates.length===1 ? f : (f+" 他"+(manualDates.length-1)+"件");' +
+'}' +
 'function openAkiCal_(input){' +
-'  var pick=input.value||minD;' +
-'  var cur=new Date((pick||minD)+"T00:00:00");' +
+'  var picks=new Set(manualDates||[]);' +
+'  var initD=(manualDates&&manualDates[0])||minD;' +
+'  var cur=new Date((initD||minD)+"T00:00:00");' +
 '  var y=cur.getFullYear(), m=cur.getMonth();' +
 '  var mask=document.createElement("div"); mask.className="akicalmask";' +
 '  var box=document.createElement("div"); box.className="akicalbox";' +
@@ -2061,6 +2072,9 @@ var AKISCRIPT_ =
 '    next.addEventListener("click",function(){ m++; if(m>11){m=0;y++;} draw(); });' +
 '    hdr.appendChild(prev); hdr.appendChild(lbl); hdr.appendChild(next);' +
 '    box.appendChild(hdr);' +
+'    var note=document.createElement("div"); note.className="akicalnote";' +
+'    note.textContent="いくつでも選べます（もう一度押すと外れます）";' +
+'    box.appendChild(note);' +
 '    var wk=document.createElement("div"); wk.className="akicalwk";' +
 '    ["月","火","水","木","金","土","日"].forEach(function(w,i){' +
 '      var s=document.createElement("span"); s.textContent=w;' +
@@ -2076,8 +2090,10 @@ var AKISCRIPT_ =
 '      var iso0 = y+"-"+pad2(m+1)+"-"+pad2(dnum);' +
 '      var b=document.createElement("button"); b.type="button"; b.textContent=String(dnum);' +
 '      if((minD&&iso0<minD)||(maxD&&iso0>maxD)){ b.disabled=true; }' +
-'      if(iso0===pick){ b.classList.add("sel"); }' +
-'      b.addEventListener("click",(function(iso1){ return function(){ pick=iso1; draw(); }; })(iso0));' +
+'      if(picks.has(iso0)){ b.classList.add("sel"); }' +
+'      b.addEventListener("click",(function(iso1){ return function(){' +
+'        if(picks.has(iso1)) picks.delete(iso1); else picks.add(iso1); draw();' +
+'      }; })(iso0));' +
 '      grid.appendChild(b);' +
 '    }' +
 '    box.appendChild(grid);' +
@@ -2086,7 +2102,11 @@ var AKISCRIPT_ =
 '    var ok=document.createElement("button"); ok.type="button"; ok.textContent="設定"; ok.className="akicalok";' +
 '    cancel.addEventListener("click",function(){ document.body.removeChild(mask); });' +
 '    ok.addEventListener("click",function(){' +
-'      input.value=pick; input.dispatchEvent(new Event("change"));' +
+'      var arr=Array.prototype.slice.call(picks).sort();' +
+'      manualDates = arr.length ? arr : null;' +
+'      updateDateBoxLabel_();' +
+'      if(manualDates) clearPresetSel();' +
+'      applyFilter();' +
 '      document.body.removeChild(mask);' +
 '    });' +
 '    ftr.appendChild(cancel); ftr.appendChild(ok);' +
@@ -2100,29 +2120,25 @@ var AKISCRIPT_ =
 'function endOfThisWeek(iso0){ var d=new Date(iso0+"T00:00:00"); var wd=(d.getDay()+6)%7; return addDays(iso0,6-wd); }' +
 'var selectedWd=null;' +   // null=「全て」＝曜日での絞り込み無し。配列の時はその曜日番号(getDay())だけ表示。
 'function wdVisible_(dt){ if(!selectedWd) return true; var d=new Date(dt+"T00:00:00"); return selectedWd.indexOf(d.getDay())>-1; }' +
+'var rangeFrom=minD, rangeTo=minD;' +   // プリセット(今日/明日/今・来週/全期間)が使う範囲
 'function applyFilter(){' +
-'  var f=fromEl.value||minD;' +
-'  var toRaw=toEl.value;' +
-'  var t=toRaw?toRaw:f;' +
-'  if(t<f){ var tmp=f; f=t; t=tmp; }' +
 '  var shown=0;' +
 '  days.forEach(function(el){' +
 '    var dt=el.getAttribute("data-date")||"";' +
-'    var vis = dt && dt>=f && dt<=t && wdVisible_(dt);' +
+'    var vis;' +
+'    if(manualDates&&manualDates.length){ vis = manualDates.indexOf(dt)>-1 && wdVisible_(dt); }' +
+'    else { vis = dt && dt>=rangeFrom && dt<=rangeTo && wdVisible_(dt); }' +
 '    el.classList.toggle("akidatehide", !vis);' +
 '    if(vis) shown++;' +
 '  });' +
 '  if(emptyMsg) emptyMsg.hidden = shown>0;' +
 '}' +
-'function setRange(f,t){ fromEl.value=clamp(f); toEl.value=clamp(t); applyFilter(); }' +
-'function setSingle_(f){ fromEl.value=clamp(f); toEl.value=""; applyFilter(); }' +
-'if(fromEl&&toEl){' +
+'function setRange(f,t){ rangeFrom=clamp(f); rangeTo=clamp(t); manualDates=null; updateDateBoxLabel_(); applyFilter(); }' +
+'function setSingle_(f){ setRange(f,f); }' +
+'var presets=[].slice.call(document.querySelectorAll(".akipreset"));' +
+'function clearPresetSel(){ presets.forEach(function(b){ b.classList.remove("on"); }); }' +
+'if(fromEl){' +
 '  fromEl.addEventListener("click",function(){ openAkiCal_(fromEl); });' +
-'  toEl.addEventListener("click",function(){ openAkiCal_(toEl); });' +
-'  fromEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
-'  toEl.addEventListener("change",function(){ clearPresetSel(); applyFilter(); });' +
-'  var presets=[].slice.call(document.querySelectorAll(".akipreset"));' +
-'  function clearPresetSel(){ presets.forEach(function(b){ b.classList.remove("on"); }); }' +
 '  presets.forEach(function(b){ b.addEventListener("click",function(){' +
 '    presets.forEach(function(x){ x.classList.toggle("on", x===b); });' +
 '    var kind=b.getAttribute("data-preset");' +
@@ -2163,11 +2179,13 @@ var AKICSS_ =
 '  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
 '  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
 '  .akidatebar{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }' +
-'  .akidaterow{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; width:100%; }' +
-'  .akidate{ font-family:inherit; font-size:20px; font-weight:700; color:var(--akiink);' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:12px 12px; flex:1 1 0; min-width:0; cursor:pointer; caret-color:transparent; }' +
-'  .akitilde{ color:var(--akisub); font-weight:800; flex:0 0 auto; font-size:18px; }' +
+// ★日付BOX＋今日/明日/今・来週/全期間を1行に収める（2026-07-17ユーザー指示）。
+//   幅が本当に足りない端末だけ横スクロールで逃がす（折り返して2行にはしない）。
+'  .akidaterow{ display:flex; align-items:center; gap:5px; flex-wrap:nowrap; width:100%; overflow-x:auto; }' +
+'  .akidate{ font-family:inherit; font-size:13px; font-weight:700; color:var(--akiink);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
+'    padding:9px 6px; flex:1 1 64px; min-width:64px; text-align:center; cursor:pointer; caret-color:transparent; }' +
+'  .akidate::placeholder{ color:var(--akisub); font-weight:700; }' +
 '  .akicalmask{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex;' +
 '    align-items:center; justify-content:center; z-index:9999; padding:16px; }' +
 '  .akicalbox{ background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
@@ -2176,6 +2194,7 @@ var AKICSS_ =
 '  .akicalhdr span{ font-weight:800; font-size:16px; color:var(--akiink); }' +
 '  .akicalhdr button{ font-family:inherit; font-size:15px; font-weight:700; color:var(--akiink);' +
 '    background:transparent; border:1px solid var(--akiline); border-radius:8px; padding:4px 10px; cursor:pointer; }' +
+'  .akicalnote{ color:var(--akisub); font-size:12px; margin-bottom:6px; }' +
 '  .akicalwk{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center;' +
 '    color:var(--akisub); font-size:13px; font-weight:700; margin-bottom:4px; }' +
 '  .akicalwk .aki6{ color:#4d8fe0; } .akicalwk .aki0{ color:#e05a5a; }' +
@@ -2189,10 +2208,11 @@ var AKICSS_ =
 '    border-radius:10px; padding:10px 0; cursor:pointer; }' +
 '  .akicalcancel{ background:transparent; color:var(--akisub); border:1px solid var(--akiline); }' +
 '  .akicalok{ background:var(--akiprimary); color:#fff; border:1px solid var(--akiprimary); }' +
-'  .akipresets{ display:flex; gap:8px; flex-wrap:wrap; width:100%; }' +
-'  .akipreset{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akisub);' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:11px 16px; cursor:pointer; }' +
+// ★1行に収めるため縮小（2026-07-17ユーザー指示）。今日/明日は.smでさらに一段小さく。
+'  .akipreset{ flex:0 0 auto; white-space:nowrap; font-family:inherit; font-size:13px; font-weight:700;' +
+'    color:var(--akisub); background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
+'    padding:9px 11px; cursor:pointer; }' +
+'  .akipreset.sm{ font-size:12px; padding:8px 9px; }' +
 '  .akipreset.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akiwdrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
 '  .akiwd{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akisub);' +
