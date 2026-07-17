@@ -1869,17 +1869,17 @@ var UNACSS_ =
 '    box-shadow:0 24px 60px rgba(0,0,0,.4); }' +
 '  .unamh{ padding:14px 16px; border-bottom:1px solid var(--line); display:flex;' +
 '    justify-content:space-between; gap:10px; align-items:flex-start; }' +
-'  .unamnm{ font-weight:800; font-size:16px; color:var(--ink); }' +
-'  .unamsub{ font-size:12px; color:var(--sub); margin-top:3px; }' +
-'  .unamx{ appearance:none; border:0; background:none; font-size:24px; line-height:1;' +
+'  .unamnm{ font-weight:800; font-size:20px; color:var(--ink); }' +
+'  .unamsub{ font-size:14px; color:var(--sub); margin-top:3px; }' +
+'  .unamx{ appearance:none; border:0; background:none; font-size:28px; line-height:1;' +
 '    color:var(--sub); cursor:pointer; padding:2px 6px; }' +
-'  .unamlog{ overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }' +
-'  .unamsg{ max-width:85%; padding:9px 12px; border-radius:12px; font-size:13.5px; line-height:1.55;' +
+'  .unamlog{ overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }' +
+'  .unamsg{ max-width:85%; padding:11px 14px; border-radius:12px; font-size:17px; line-height:1.6;' +
 '    white-space:pre-wrap; word-break:break-word; color:var(--ink); }' +
 '  .unamsg.cli{ align-self:flex-start; background:var(--line); }' +
 '  .unamsg.shop{ align-self:flex-end; background:var(--custbg); border:1px solid var(--cust); }' +
-'  .unats{ display:block; font-size:10px; color:var(--sub); opacity:.85; margin-top:5px; }' +
-'  .unamnote{ color:var(--sub); font-size:12.5px; padding:8px; }';
+'  .unats{ display:block; font-size:12.5px; color:var(--sub); opacity:.85; margin-top:6px; }' +
+'  .unamnote{ color:var(--sub); font-size:15px; padding:8px; }';
 
 /** 空き時間検索（スタッフの手空きから予約可能な時間を探す）。
  *  事務所PCが export_akijikan_super.py で書き出した akijikan.json を読むだけ（GASは計算しない＝
