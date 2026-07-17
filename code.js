@@ -1675,8 +1675,12 @@ function unaCard_(r, kind) {
 /** LINE未回答＆返信待ちページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの
  *  両方から呼ばれる（他view同様「取得と描画を分離」の作法）。
  *  cust=客の質問に店が未返信（最優先）／ ours=こちらの質問・依頼に客が未回答。 */
+function unaSortAsc_(arr) {
+  // 待ち日数が少ない＝最近の分を上に（PC版ダッシュボードの並び順と揃える）
+  return (arr || []).slice().sort(function (a, b) { return (a.d || 0) - (b.d || 0); });
+}
 function renderUnansweredPage_(d, base, staff, dev) {
-  var cust = d.cust || [], ours = d.ours || [];
+  var cust = unaSortAsc_(d.cust), ours = unaSortAsc_(d.ours);
   var custCards = cust.length
     ? cust.map(function (r) { return unaCard_(r, 'cust'); }).join('\n')
     : '<div class="unaempty">当店が未返信の会話はありません 🎉</div>';
