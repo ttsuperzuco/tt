@@ -100,8 +100,8 @@
   }
 })();
 </script>
-<script src="detect_core.js?v=20260718g"></script>
-<script src="code.js?v=20260718g"></script>
+<script src="detect_core.js?v=20260718h"></script>
+<script src="code.js?v=20260718h"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -205,7 +205,10 @@
   }
 
   // ===== アクセスログ（画面表示ごとにGASへ。GASが一旦貯め、事務所PCがDBへ回収）=====
+  var hitDone_ = false;
   function logHit(v){
+    if (hitDone_) return;   // ★覚えている設定で先に描く→新しい設定で描き直す時に二重に記録しない
+    hitDone_ = true;
     try {
       var s = document.createElement('script');
       s.src = EXEC + '?action=hit&who=' + encodeURIComponent(who) +
@@ -494,8 +497,31 @@
   function bootOrGate(cfg) {
     if (staff && !lsGet(LS_PWOK)) { showPwGate(cfg); } else { boot(cfg); }
   }
-  if (window.__tsResult !== undefined) { bootOrGate(window.__tsResult); }
-  else { window.__tsWaiter = function (cfg) { bootOrGate(cfg || {}); }; }
+
+  // ★★初期表示の最速化（2026-07-17・ユーザー要望「ホーム画面から開いてトップが出るまでを極限まで短く」）
+  //   実測：GAS(EXEC)への1往復は**中身に関係なく2.0〜2.5秒**（一番軽い返事でも同じ＝Googleの
+  //   往復そのものが遅い。ファイルを読む時間は0.2秒ほどしかない＝GAS側をいくら速くしても縮まない）。
+  //   なのに今までは、その返事（誰にどのボタンを見せるか）を**待ってから**ボタンを描いていた。
+  //   → **前回の答えをこの端末に覚えておき、待たずに即描く**。新しい答えは裏で届き、
+  //     中身が変わっていた時だけ描き直す（ふだんは変わらないので描き直しも起きない）。
+  //   ★安全側の注意：覚えている答えが古いと、権限を切ったばかりのボタンが数秒だけ見えうる。
+  //     届いた時点で必ず描き直す＝見えるのは最大2〜3秒。名前選択(claimed)・選び直し(resets)も
+  //     同じく届いた時点で正しく効く（下の useCfg_ が新しい答えで boot をやり直すため）。
+  var LS_CFG = 'sz_cfg';
+  var bootedFrom_ = null;
+  function useCfg_(cfg, fromCache) {
+    var str = JSON.stringify(cfg || {});
+    if (bootedFrom_ === str) return;          // 前回と同じ中身＝描き直さない（ふだんはこれ）
+    // 通信に失敗した時の空っぽの答えで、せっかく描いた画面を壊さない
+    if (!fromCache && (!cfg || !cfg.people) && bootedFrom_ !== null) return;
+    bootedFrom_ = str;
+    if (!fromCache && cfg && cfg.people) lsSet(LS_CFG, str);
+    bootOrGate(cfg || {});
+  }
+  var cachedCfg_ = lsGet(LS_CFG);
+  if (cachedCfg_) { try { useCfg_(JSON.parse(cachedCfg_), true); } catch (e) {} }
+  if (window.__tsResult !== undefined) { useCfg_(window.__tsResult, false); }
+  else { window.__tsWaiter = function (cfg) { useCfg_(cfg || {}, false); }; }
 })();
 </script>
 </body>
