@@ -2180,6 +2180,10 @@ var AKISCRIPT_ =
 '    if(idx>-1) selectedWd.splice(idx,1); else selectedWd.push(n);' +
 '    if(!selectedWd.length){ setAllWd_(); return; }' +
 '    wdBtns[0].classList.remove("on"); b.classList.toggle("on", idx===-1);' +
+// ★曜日を新しく選んだ時は、期間を「全期間」にする（2026-07-17ユーザー指示）。
+//   「全期間の中のその曜日」を見るための機能なので、「今日」等の狭い期間のままだと
+//   該当日が無く「表示できるデータがありません」になってしまう。
+'    if(idx===-1){ setRange(minD, maxD); presets.forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-preset")==="all"); }); }' +
 '    applyFilter();' +
 '  }); });' +
 '  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
