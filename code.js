@@ -1817,6 +1817,14 @@ function unaSortAsc_(arr) {
 }
 function renderUnansweredPage_(d, base, staff, dev) {
   var cust = unaSortAsc_(d.cust), ours = unaSortAsc_(d.ours);
+  // ★練習用カード（宛先＝オーナー本人）はスタッフには見せない（2026-07-17ユーザー指示）。
+  //   スタッフ用URL(?staff=1)では隠す＝オーナーの検証用の物が現場の邪魔をしないように。
+  //   ※これは「見せない」だけ。仮に見えて押されても、事務所PCの送信役が練習モード中は
+  //     オーナー本人以外へ送らないので事故にはならない（守りは二重）。
+  if (staff) {
+    cust = cust.filter(function (r) { return !r.reply; });
+    ours = ours.filter(function (r) { return !r.reply; });
+  }
   // ★2026-07-17：タブが丸ごと0件の時の「🎉」お祝い文言は廃止。空の時は下の#unaperiodempty
   //   （期間で絞って0件の時と同じ見せ方）に一本化する＝空の理由（期間で絞ったせいか、そもそも
   //   0件か）を分けて出し分けない。カードを1枚も置かなければ apply() の集計(nc/no)が自然に0に
