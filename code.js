@@ -2711,12 +2711,13 @@ var CSS_ =
 '  .mvrow { display:flex; flex-direction:column; gap:6px; padding:6px 0; }' +
 '  .mvrow + .mvrow { border-top:1px dashed var(--line); }' +
 '  .mvlabel { font-size:1.7rem; font-weight:700; color:var(--ink); }' +
-'  .mvbtns { display:flex; flex-wrap:wrap; gap:7px; }' +
+// 部屋マークは横に流さず、必ず2個ずつで改行する（4個なら上2つ・下2つ）＝2026-07-17ユーザー指示。
+'  .mvbtns { display:grid; grid-template-columns:1fr 1fr; gap:7px; }' +
 '  .mvbtn { font-size:.92rem; font-weight:800; color:#fff; background:var(--rc,#64748b);' +
 '    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .mvbtn:active { transform:translateY(1px); }' +
 '  .mvbtn:disabled { opacity:.4; }' +
-'  .mvng { font-size:.8rem; color:var(--sub); align-self:center; }' +
+'  .mvng { grid-column:1/-1; font-size:.8rem; color:var(--sub); align-self:center; }' +
 '  .mvhint { font-size:1.5rem; color:#ec4899; font-weight:800; margin-top:6px; line-height:1.5; }' +
 '  .mvstatus { margin-top:8px; padding:11px 12px; border-radius:10px; font-size:.95rem; font-weight:700; }' +
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
