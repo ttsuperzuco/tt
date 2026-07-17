@@ -2642,7 +2642,7 @@ var CSS_ =
 //   （ユーザー指示：閉じている時は次の被りをすぐ下に、開いたら押し下がる）。
 '  .card { background:var(--card); border:1px solid var(--line); box-sizing:border-box;' +
 '    border-left:4px solid var(--real); border-radius:12px; padding:9px 11px;' +
-'    margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,.06); }' +
+'    margin-bottom:40px; box-shadow:0 1px 3px rgba(0,0,0,.06); }' +   // 1件と次の1件の境目が分かるよう「部屋を移動ボタン」の半分の高さ空ける（2026-07-17ユーザー指示。実測80pxの半分）
 '  .card.dup { border-left-color:var(--dup); }' +
 '  .card-h { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
 // ★2026-07-16：日付+時刻／施術室名+説明文の2行を、それぞれ横幅いっぱいまで大きく見せる。
@@ -2703,7 +2703,7 @@ var CSS_ =
 // ★空き部屋一覧(.rspanel)は最初は畳んでおき、この専用ボタンを押した時だけ広げる
 //   （2026-07-16ユーザー選択①：常時表示だと情報が多すぎるため）。
 '  .rstoggle { display:block; width:100%; text-align:center; font-size:1.25rem; font-weight:700;' +
-'    color:#fff; background:#2563eb; border:1px solid #2563eb; margin-top:53px;' +   // 部屋ボタンとの間を「このボタン1個分」空ける（2026-07-17ユーザー指示。実測53px）
+'    color:#fff; background:#2563eb; border:1px solid #2563eb; margin-top:16px;' +   // 部屋ボタンの列との間を空ける（2026-07-17ユーザー：ボタン1個分は戻した）
 '    border-radius:10px; padding:11px 6px; cursor:pointer; }' +
 '  .rstoggle:active { transform:translateY(1px); }' +
 '  .rstoggle.open { box-shadow:inset 0 2px 5px rgba(0,0,0,.3); }' +
