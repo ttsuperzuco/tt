@@ -1999,8 +1999,17 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<button type="button" class="akipreset" data-preset="today">今日</button>' +
       '<button type="button" class="akipreset" data-preset="tomorrow">明日</button>' +
       '<button type="button" class="akipreset on" data-preset="thisnext">今・来週</button>' +
-      '<button type="button" class="akipreset" data-preset="month">1か月</button>' +
       '<button type="button" class="akipreset" data-preset="all">全期間</button>' +
+    '</div>' +
+    // 曜日で絞り込み（定休日の月・日は元々出ないので対象外＝2026-07-17ユーザー指示）。
+    // 既定は「全て」＝制限なし。個別の曜日を押すと複数選択でき、その時点で「全て」は外れる。
+    '<div class="akiwdrow">' +
+      '<button type="button" class="akiwd on" data-wd="all">全て</button>' +
+      '<button type="button" class="akiwd" data-wd="2">火</button>' +
+      '<button type="button" class="akiwd" data-wd="3">水</button>' +
+      '<button type="button" class="akiwd" data-wd="4">木</button>' +
+      '<button type="button" class="akiwd" data-wd="5">金</button>' +
+      '<button type="button" class="akiwd" data-wd="6">土</button>' +
     '</div>' +
   '</div>' +
   '<div class="akichips">' +
@@ -2089,6 +2098,8 @@ var AKISCRIPT_ =
 'function addDays(iso0,n){ var d=new Date(iso0+"T00:00:00"); d.setDate(d.getDate()+n); return iso(d); }' +
 'function clamp(v){ if(minD&&v<minD)return minD; if(maxD&&v>maxD)return maxD; return v; }' +
 'function endOfThisWeek(iso0){ var d=new Date(iso0+"T00:00:00"); var wd=(d.getDay()+6)%7; return addDays(iso0,6-wd); }' +
+'var selectedWd=null;' +   // null=「全て」＝曜日での絞り込み無し。配列の時はその曜日番号(getDay())だけ表示。
+'function wdVisible_(dt){ if(!selectedWd) return true; var d=new Date(dt+"T00:00:00"); return selectedWd.indexOf(d.getDay())>-1; }' +
 'function applyFilter(){' +
 '  var f=fromEl.value||minD;' +
 '  var toRaw=toEl.value;' +
@@ -2097,7 +2108,7 @@ var AKISCRIPT_ =
 '  var shown=0;' +
 '  days.forEach(function(el){' +
 '    var dt=el.getAttribute("data-date")||"";' +
-'    var vis = dt && dt>=f && dt<=t;' +
+'    var vis = dt && dt>=f && dt<=t && wdVisible_(dt);' +
 '    el.classList.toggle("akidatehide", !vis);' +
 '    if(vis) shown++;' +
 '  });' +
@@ -2119,8 +2130,21 @@ var AKISCRIPT_ =
 '    if(kind==="today") setSingle_(today);' +
 '    else if(kind==="tomorrow") setSingle_(addDays(today,1));' +
 '    else if(kind==="thisnext") setRange(today, addDays(endOfThisWeek(today),7));' +
-'    else if(kind==="month") setRange(today, addDays(today,29));' +
 '    else if(kind==="all") setRange(minD, maxD);' +
+'  }); });' +
+// 曜日ボタン（2026-07-17ユーザー指示）：既定は「全て」。個別の曜日は複数選択でき、押した瞬間
+// 「全て」は外れる。個別選択を全部外すと「全て」に自動で戻す（何も表示されない状態を作らない）。
+'  var wdBtns=[].slice.call(document.querySelectorAll(".akiwd"));' +
+'  function setAllWd_(){ selectedWd=null; wdBtns.forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-wd")==="all"); }); applyFilter(); }' +
+'  wdBtns.forEach(function(b){ b.addEventListener("click",function(){' +
+'    var wd=b.getAttribute("data-wd");' +
+'    if(wd==="all"){ setAllWd_(); return; }' +
+'    if(!selectedWd) selectedWd=[];' +
+'    var n=Number(wd), idx=selectedWd.indexOf(n);' +
+'    if(idx>-1) selectedWd.splice(idx,1); else selectedWd.push(n);' +
+'    if(!selectedWd.length){ setAllWd_(); return; }' +
+'    wdBtns[0].classList.remove("on"); b.classList.toggle("on", idx===-1);' +
+'    applyFilter();' +
 '  }); });' +
 '  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
 '}' +
@@ -2170,6 +2194,11 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px 16px; cursor:pointer; }' +
 '  .akipreset.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akiwdrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
+'  .akiwd{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akisub);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:11px 16px; cursor:pointer; }' +
+'  .akiwd.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akiday.akidatehide{ display:none; }' +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
 '  .akichip{ font-family:inherit; font-size:17px; font-weight:700; color:var(--akisub);' +
