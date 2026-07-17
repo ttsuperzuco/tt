@@ -978,7 +978,7 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr, who
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
     : (!anyFree ? '<span class="mvng">その時間、空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
-    '<div class="mvlabel fit1line">移動先の部屋のボタンを押してください</div>' +
+    '<div class="mvlabel fit1line">移動先の部屋を選んでね(下のボタンを押す）</div>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
 }
@@ -2289,8 +2289,15 @@ var MOVESCRIPT_ =
 '  if(t.classList&&t.classList.contains("mvtoggle")){' +
 '    var mvw=t; while(mvw&&!(mvw.classList&&mvw.classList.contains("mv"))) mvw=mvw.parentNode; if(!mvw) return;' +
 '    var side=t.getAttribute("data-side");' +
-'    var pn=mvw.querySelector(\'.mvpanel[data-side="\'+side+\'"]\'); if(pn) pn.hidden=!pn.hidden; t.classList.toggle("open",!pn.hidden);' +
-'    if(pn&&!pn.hidden&&window.szFit1Line_) window.szFit1Line_(pn);' +   // 開いた瞬間に1行へ収める
+'    var pn=mvw.querySelector(\'.mvpanel[data-side="\'+side+\'"]\'); if(!pn) return;' +
+'    var willOpen=pn.hidden;' +
+// ★A/B同時に開けない（2026-07-17ユーザー指摘）：片方を移動する準備中にもう片方も
+//   開けてしまうと、被りが解消したはずの時間帯がその場でズレて分かりにくくなる。
+//   押した方を開く時は、もう片方の枠を必ず閉じる（枠自体は2つとも常に表示されたまま）。
+'    Array.prototype.forEach.call(mvw.querySelectorAll(".mvpanel"),function(p){ p.hidden=true; });' +
+'    Array.prototype.forEach.call(mvw.querySelectorAll(".mvtoggle"),function(b){ b.classList.remove("open"); });' +
+'    if(willOpen){ pn.hidden=false; t.classList.add("open"); }' +
+'    if(!pn.hidden&&window.szFit1Line_) window.szFit1Line_(pn);' +   // 開いた瞬間に1行へ収める
 '    return;' +
 '  }' +
 '  if(t.classList&&t.classList.contains("rstoggle")){' +
