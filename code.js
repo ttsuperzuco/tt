@@ -970,6 +970,8 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr, who
       ' data-who="' + esc_(who) + '" data-fromroom="' + esc_(curRoom) + '"' +
       ' data-whoshort="' + esc_(whoShort || who) + '"' +   // 確認ポップアップ用＝通し番号を抜いた「🍊 名前様」
       ' data-time="' + esc_(timeStr || '') + '"' +
+      ' data-fromcolor="' + roomColor_(curRoom) + '" data-fromshort="' + esc_(shortRoomName_(curRoom)) + '"' +
+      ' data-toshort="' + esc_(shortRoomName_(name)) + '"' +   // 確認ポップアップの色付きマーク用（部屋名の色・短縮名は他の一覧と統一）
       ' style="--rc:' + roomColor_(name) + '">' + esc_(name) + '</button>';
   }
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
@@ -2266,16 +2268,21 @@ var MOVESCRIPT_ =
 '}' +
 // ブラウザ標準confirm/alertは「ttsuperzuco.github.io says」のようにドメイン名を強制表示して
 // しまい消せない（ブラウザのセキュリティ機能）ため、自前のポップアップ（ドメイン名なし）で代用する。
-'function ccPopup_(msg, showCancel, onYes){' +
+// isHtml=true の時だけ msg をタグ付きで差し込む（部屋の色付きマーク表示用）。呼び出し元が
+// 組み立てた固定文言のみに使い、ユーザー入力をそのまま渡さない（esc_ 済みの値のみ埋め込む）。
+'function ccPopup_(msg, showCancel, onYes, isHtml){' +
 '  var mask=document.createElement("div"); mask.className="ccmask";' +
 '  mask.innerHTML="<div class=\\"ccbox\\"><div class=\\"ccmsg\\"></div><div class=\\"ccbtns\\">"+' +
 '    (showCancel?"<button type=\\"button\\" class=\\"ccno\\">キャンセル</button>":"")+' +
 '    "<button type=\\"button\\" class=\\"ccyes\\">OK</button></div></div>";' +
-'  mask.querySelector(".ccmsg").textContent=msg;' +
+'  if(isHtml) mask.querySelector(".ccmsg").innerHTML=msg; else mask.querySelector(".ccmsg").textContent=msg;' +
 '  document.body.appendChild(mask);' +
 '  mask.querySelector(".ccyes").addEventListener("click",function(){ document.body.removeChild(mask); if(onYes) onYes(); });' +
 '  var no=mask.querySelector(".ccno"); if(no) no.addEventListener("click",function(){ document.body.removeChild(mask); });' +
 '}' +
+// 部屋名を確認ポップアップ用の色付きマークにする（施術室被りの他画面(.room)と同じ見た目）。
+'function ccH_(s){ return String(s==null?"":s).replace(/[&<>"\']/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\'":"&#39;"}[c]; }); }' +
+'function ccRoomBadge_(name,color){ return "<span class=\\"ccroom\\" style=\\"--rc:"+ccH_(color)+"\\">"+ccH_(name)+"</span>"; }' +
 'wrap.addEventListener("click",function(ev){' +
 '  var t=ev.target;' +
 '  if(t.classList&&t.classList.contains("mvtoggle")){' +
@@ -2297,8 +2304,11 @@ var MOVESCRIPT_ =
 '    var room=t.getAttribute("data-room"), title=t.getAttribute("data-title");' +
 '    var who=t.getAttribute("data-who")||"", fromRoom=t.getAttribute("data-fromroom")||"", mtime=t.getAttribute("data-time")||"";' +
 '    var whoShort=t.getAttribute("data-whoshort")||who;' +
+'    var fromShort=t.getAttribute("data-fromshort")||fromRoom, toShort=t.getAttribute("data-toshort")||room;' +
+'    var fromColor=t.getAttribute("data-fromcolor")||"#64748b", toColor=t.style.getPropertyValue("--rc")||"#64748b";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
-'    ccPopup_(whoShort+"の予約を「"+fromRoom+"」から「"+room+"」へ移動します。よろしいですか？", true, function(){' +
+'    ccPopup_(ccH_(whoShort)+"の予約を<br>"+ccRoomBadge_(fromShort,fromColor)+"から<br>"+' +
+'      ccRoomBadge_(toShort,toColor)+"へ<br>移動します。<br>よろしいですか？", true, function(){' +
 // ★押した瞬間に全画面「移動中」を出し、TimeTreeへの書き込みが本当に完了するまで出したまま。
 //   完了したら全画面「✓完了」を0.5秒見せてから、被りが消えた一覧へ戻す（見た目の先行なし＝正確）。
 '      mvOverlay_(who,mtime,fromRoom,room);' +
@@ -2306,7 +2316,7 @@ var MOVESCRIPT_ =
 '        if(r && r.ok){ waitDoneThenFinish_(r.id,evid,room); }' +
 '        else { mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度お試しください。", false); }' +
 '      });' +
-'    });' +
+'    }, true);' +
 '  }' +
 '});' +
 // 「移動中」の説明文＝何を動かしているか（担当者マーク＋番号＋名前 と 時刻の予約）を明示（2026-07-12
@@ -2727,8 +2737,12 @@ var CSS_ =
 // はみ出す時は箱の中で縦スクロール。
 '  .ccbox { background:var(--card); border-radius:16px; padding:20px; max-width:720px; width:100%;' +
 '    max-height:88vh; overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.35); }' +
-'  .ccmsg { font-size:2rem; line-height:1.45; color:var(--ink); margin-bottom:18px; white-space:pre-wrap;' +
+'  .ccmsg { font-size:2rem; line-height:1.9; color:var(--ink); margin-bottom:18px; white-space:pre-wrap;' +
 '    overflow-wrap:anywhere; }' +
+// 部屋名を文字でなく色付きマークにする（他画面の.roomと同じ見た目・確認ポップアップは文字が
+// 大きいのでパディング・角丸をやや控えめにして行の中に収める）。
+'  .ccmsg .ccroom { display:inline-block; background:var(--rc); color:#fff; font-weight:800;' +
+'    padding:2px 18px; border-radius:999px; }' +
 '  .ccbtns { display:flex; gap:10px; }' +
 // font:inherit を font-size より後に書くと大きさが打ち消される＝先に書く。
 '  .ccno, .ccyes { flex:1; font:inherit; padding:12px; border-radius:10px; border:0; font-weight:700;' +
