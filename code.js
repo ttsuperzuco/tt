@@ -2703,7 +2703,7 @@ var CSS_ =
 // ★空き部屋一覧(.rspanel)は最初は畳んでおき、この専用ボタンを押した時だけ広げる
 //   （2026-07-16ユーザー選択①：常時表示だと情報が多すぎるため）。
 '  .rstoggle { display:block; width:100%; text-align:center; font-size:1.25rem; font-weight:700;' +
-'    color:#fff; background:#2563eb; border:1px solid #2563eb;' +
+'    color:#fff; background:#2563eb; border:1px solid #2563eb; margin-top:16px;' +   // 部屋ボタンの列との間を空ける（2026-07-17ユーザー指示）
 '    border-radius:10px; padding:11px 6px; cursor:pointer; }' +
 '  .rstoggle:active { transform:translateY(1px); }' +
 '  .rstoggle.open { box-shadow:inset 0 2px 5px rgba(0,0,0,.3); }' +
