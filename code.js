@@ -2222,7 +2222,10 @@ var AKICSS_ =
 '  body{ background:var(--akibg); }' +
 '  .akiwrap{ max-width:760px; margin:0 auto; padding:14px 14px 40px; font-family:"Yu Gothic UI","Hiragino Sans",sans-serif; color:var(--akiink); }' +
 '  .akibar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }' +
-'  .akihome{ color:var(--akiprimary); text-decoration:none; font-weight:700; font-size:14px; }' +
+// 施術室被り検出画面の「← 前に戻る」(.homelink)と同じ見た目に統一（2026-07-17ユーザー指示）。
+'  .akihome{ flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--akiink); text-decoration:none;' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px; padding:10px 14px; }' +
+'  .akihome:active{ transform:translateY(1px); }' +
 '  .akigen{ color:var(--akisub); font-size:14px; font-weight:700; }' +
 '  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
 '  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
