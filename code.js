@@ -1925,8 +1925,8 @@ var UNACSS_ =
 '  .unatab.cust.sel{ background:var(--cust); border-color:var(--cust); color:#fff; }' +
 '  .unatab.ours.sel{ background:var(--q); border-color:var(--q); color:#fff; }' +
 '  .unatab.sel .unac{ color:#fff; }' +
-'  #unaperiod{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
-'    background:var(--card); color:var(--ink); font-size:14px; font-weight:700; margin-bottom:10px; }' +
+'  #unaperiod{ width:100%; padding:16px 16px; border:1px solid var(--line); border-radius:10px;' +
+'    background:var(--card); color:var(--ink); font-size:19px; font-weight:800; margin-bottom:10px; }' +
 '  #unaq{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
 '    background:var(--card); color:var(--ink); font-size:15px; margin-bottom:14px; }' +
 '  .unahidden{ display:none!important; } .unahide{ display:none!important; }' +
