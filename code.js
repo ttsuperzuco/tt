@@ -2066,7 +2066,9 @@ var AKISCRIPT_ =
 'var manualDates=null;' +
 'function updateDateBoxLabel_(){' +
 '  if(!fromEl) return;' +
-'  if(!manualDates||!manualDates.length){ fromEl.value=""; return; }' +
+'  var active = manualDates&&manualDates.length;' +
+'  fromEl.classList.toggle("on", !!active);' +   // 日付が選ばれている時は他のボタンと同じ色に（2026-07-17ユーザー指示）
+'  if(!active){ fromEl.value=""; return; }' +
 '  var mp=manualDates[0].slice(5).split("-");' +
 '  var f=Number(mp[0])+"/"+Number(mp[1]);' +   // 先頭の0を消して"7/18"のように表示
 '  fromEl.value = manualDates.length===1 ? f : (f+" 他"+(manualDates.length-1)+"件");' +
@@ -2204,6 +2206,8 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:9px;' +
 '    padding:9px 6px; flex:1 1 64px; min-width:64px; text-align:center; cursor:pointer; caret-color:transparent; }' +
 '  .akidate::placeholder{ color:var(--akisub); font-weight:700; }' +
+'  .akidate.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akidate.on::placeholder{ color:#fff; }' +
 '  .akicalmask{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex;' +
 '    align-items:center; justify-content:center; z-index:9999; padding:16px; }' +
 '  .akicalbox{ background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
