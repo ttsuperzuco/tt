@@ -1958,13 +1958,13 @@ function akiDayCard_(day) {
   return '<div class="akiday"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
     '<div class="akisec akisec-time" data-sec="time">' +
-      '<div class="akisl">各時間帯の空き</div>' + akiTimeRows_(day.time_slots) +
+      akiTimeRows_(day.time_slots) +
     '</div>' +
     '<div class="akisec akisec-staff akihidden" data-sec="staff">' +
-      '<div class="akisl">スタッフ別の空き</div>' + akiStaffRows_(day.staff) +
+      akiStaffRows_(day.staff) +
     '</div>' +
     '<div class="akisec akisec-rooms akihidden" data-sec="rooms">' +
-      '<div class="akisl">施術室別の空き</div>' + akiRoomRows_(day.rooms_free) +
+      akiRoomRows_(day.rooms_free) +
     '</div>' +
   '</div>';
 }
