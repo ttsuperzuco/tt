@@ -678,7 +678,7 @@ function getBaseUrl_() {
     var u = ScriptApp.getService().getUrl();
     if (u) return u;
   } catch (e) {}
-  return 'https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec';
+  return 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
 }
 
 /** events.json のファイルを取得（IDキャッシュ→なければ名前で探す）。 */
@@ -1611,7 +1611,7 @@ var URIAGESCRIPT_ =
 // ★2026-07-16修正：旧実装はgoogle.script.runを直接呼んでおり、電話(静的アプリ)には
 //   google.script.runが存在しないため実は動いていなかった（GAS直リンクでしか動かない隠れた不具合）。
 //   JSONP(action=submit/status)に統一し、電話でも動くようにした。
-'var EXEC_U0_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
+'var EXEC_U0_="https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";' +
 'var EKEY_U0_="kx7Q2p9mVt4Zr8";' +
 'function jsonpU0_(params, onResult){' +
 '  var cb="__uu0"+Date.now()+Math.floor(Math.random()*1000);' +
@@ -1778,8 +1778,20 @@ function unaCard_(r, kind) {
   var link = r.url
     ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(r.url) + '">💬 LINEを開く（返信する）</a>'
     : '';
+  // ★アプリの中から直接LINEを返す欄（事務所PCが reply:true を立てたカードにだけ出す）。
+  //   いま立つのは練習用カード（宛先＝オーナー本人）だけ。本物のお客さんのカードへ広げるのは
+  //   練習で確かめてから。送ってよい相手かの判断は事務所PC(send_reply.py)が単独で保証する。
+  var box = (r.reply && r.cid)
+    ? '<div class="unareply" data-cid="' + esc_(r.cid) + '" data-nm="' + esc_(name) + '">' +
+        '<textarea class="unartext" rows="3" maxlength="1000" placeholder="ここに返信を打つと、お店の公式LINEから送ります"></textarea>' +
+        '<div class="unarrow">' +
+          '<span class="unarnote"></span>' +
+          '<button type="button" class="unarsend">送る</button>' +
+        '</div>' +
+      '</div>'
+    : '';
   return '' +
-  '<article class="unacard ' + (kind === 'cust' ? 'cust' : 'ours') + '" data-search="' + search + '" data-days="' + (r.d || 0) + '">' +
+  '<article class="unacard ' + (kind === 'cust' ? 'cust' : 'ours') + (r.reply ? ' prac' : '') + '" data-search="' + search + '" data-days="' + (r.d || 0) + '">' +
     '<div class="unahead">' +
       '<div class="unarow1">' +
         unaReadPill_(r.read) +
@@ -1792,7 +1804,7 @@ function unaCard_(r, kind) {
       '</div>' +
     '</div>' +
     '<div class="unaq">' + esc_(r.q || '') + '</div>' +
-    '<div class="unaactions">' + detail + link + '</div>' +
+    '<div class="unaactions">' + detail + link + '</div>' + box +
   '</article>';
 }
 
@@ -1905,6 +1917,73 @@ var UNASCRIPT_ =
 'if(mask) mask.addEventListener("click",function(e){ if(e.target===mask) closeDetail(); });' +
 'var mx=document.getElementById("unaMx"); if(mx) mx.addEventListener("click",closeDetail);' +
 'document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeDetail(); });' +
+// ―― アプリの中からLINEを返す（打つ→確認→事務所PCが送る→結果を出す）――
+// Google側は中身を判断しない窓口なので、op と中身(fields)に分けて命令置き場へ積むだけ。
+// 本当に送ってよい相手かは、事務所PCの送信役(send_reply.py)が単独で判断する。
+'var EXEC_UNA_="https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";' +
+'var KEY_UNA_="kx7Q2p9mVt4Zr8";' +
+'function unaCall_(params,onResult){' +
+'  var cb="__ur"+Date.now()+Math.floor(Math.random()*1000);' +
+'  window[cb]=function(r){ try{ delete window[cb]; }catch(ig){} onResult(r); };' +
+'  var qs="key="+encodeURIComponent(KEY_UNA_)+"&callback="+cb;' +
+'  for(var k in params){ qs+="&"+k+"="+encodeURIComponent(params[k]); }' +
+'  var sc=document.createElement("script"); sc.src=EXEC_UNA_+"?"+qs;' +
+'  sc.onerror=function(){ onResult({ok:false,error:"通信エラー"}); };' +
+'  document.body.appendChild(sc);' +
+'}' +
+'function unaIdent_(){ var w="",r="",d=""; try{ w=localStorage.getItem("sz_who")||""; r=localStorage.getItem("sz_role")||""; d=localStorage.getItem("sz_device")||""; }catch(e){}' +
+'  return {who:w,role:r,device:d}; }' +
+'function unaAsk_(nm,text,onYes){' +
+'  var mask=document.createElement("div"); mask.className="unaask";' +
+'  var box=document.createElement("div"); box.className="unaaskbox";' +
+'  var h=document.createElement("div"); h.className="unaaskh"; h.textContent="この内容で送ります";' +
+'  var to=document.createElement("div"); to.className="unaaskto"; to.textContent="宛先： "+nm;' +
+'  var bd=document.createElement("div"); bd.className="unaaskbd"; bd.textContent=text;' +
+'  var bt=document.createElement("div"); bt.className="unaaskbt";' +
+'  var no=document.createElement("button"); no.type="button"; no.className="unaaskno"; no.textContent="やめる";' +
+'  var ok=document.createElement("button"); ok.type="button"; ok.className="unaaskok"; ok.textContent="送る";' +
+'  bt.appendChild(no); bt.appendChild(ok); box.appendChild(h); box.appendChild(to); box.appendChild(bd); box.appendChild(bt);' +
+'  mask.appendChild(box); document.body.appendChild(mask);' +
+'  function cls(){ try{ document.body.removeChild(mask); }catch(ig){} }' +
+'  no.addEventListener("click",cls);' +
+'  ok.addEventListener("click",function(){ cls(); onYes(); });' +
+'  mask.addEventListener("click",function(e){ if(e.target===mask) cls(); });' +
+'}' +
+'function unaSend_(wrap){' +
+'  var ta=wrap.querySelector(".unartext"), btn=wrap.querySelector(".unarsend");' +
+'  var note=wrap.querySelector(".unarnote");' +
+'  var cid=wrap.getAttribute("data-cid")||"", nm=wrap.getAttribute("data-nm")||"";' +
+'  var text=(ta&&ta.value||"").trim();' +
+'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="本文を打ってください。"; } return; }' +
+'  unaAsk_(nm,text,function(){' +
+'    btn.disabled=true; if(note){ note.className="unarnote"; note.textContent="送信中…"; }' +
+'    var idn=unaIdent_();' +
+'    unaCall_({action:"submit",op:"line_reply",who:idn.who,role:idn.role,device:idn.device,' +
+'      fields:JSON.stringify({chat:cid,text:text,title:nm})},' +
+'      function(r){' +
+'        if(!r||!r.ok){ btn.disabled=false;' +
+'          if(note){ note.className="unarnote ng"; note.textContent=(r&&r.error)||"送れませんでした。"; } return; }' +
+'        var tries=0;' +
+'        (function poll(){' +
+'          tries++;' +
+'          unaCall_({action:"status",id:r.id},function(st){' +
+'            if(st&&st.status==="done"){ btn.disabled=false; if(ta) ta.value="";' +
+'              if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } return; }' +
+'            if(st&&st.status==="error"){ btn.disabled=false;' +
+'              if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
+'            if(tries>40){ btn.disabled=false;' +
+'              if(note){ note.className="unarnote ng"; note.textContent="事務所のパソコンから返事がありません（見張りが動いているか確認してください）。"; } return; }' +
+'            setTimeout(poll,3000);' +
+'          });' +
+'        })();' +
+'      });' +
+'  });' +
+'}' +
+'document.addEventListener("click",function(e){' +
+'  var b=e.target&&e.target.closest?e.target.closest(".unarsend"):null;' +
+'  if(!b) return;' +
+'  var w=b.closest(".unareply"); if(w) unaSend_(w);' +
+'});' +
 'apply();' +
 '})();</scr' + 'ipt>';
 
@@ -1939,6 +2018,28 @@ var UNACSS_ =
 '  .unalist{ display:flex; flex-direction:column; gap:10px; }' +
 '  .unacard{ background:var(--card); border:1px solid var(--line); border-left:6px solid var(--sub);' +
 '    border-radius:12px; padding:12px 14px; }' +
+// 練習用カード（相手＝オーナー本人）は、本物のお客さんのカードと一目で区別が付くよう破線＋別色。
+'  .unacard.prac{ border:2px dashed var(--q); background:var(--card); }' +
+'  .unareply{ margin-top:10px; border-top:1px solid var(--line); padding-top:10px; }' +
+'  .unartext{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
+'    background:var(--card); color:var(--ink); font:inherit; font-size:16px; resize:vertical; }' +
+'  .unarrow{ display:flex; align-items:center; gap:10px; margin-top:8px; }' +
+'  .unarnote{ flex:1; font-size:13px; font-weight:700; color:var(--sub); }' +
+'  .unarnote.ok{ color:var(--cust); } .unarnote.ng{ color:var(--req); }' +
+'  .unarsend{ background:var(--cust); color:#fff; border:0; border-radius:10px; padding:11px 22px;' +
+'    font:inherit; font-weight:800; font-size:16px; cursor:pointer; }' +
+'  .unarsend:disabled{ opacity:.5; }' +
+'  .unaask{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center;' +
+'    justify-content:center; padding:18px; z-index:60; }' +
+'  .unaaskbox{ background:var(--card); border-radius:14px; padding:16px; max-width:420px; width:100%; }' +
+'  .unaaskh{ font-weight:900; font-size:17px; margin-bottom:8px; }' +
+'  .unaaskto{ font-size:14px; color:var(--sub); font-weight:700; margin-bottom:8px; }' +
+'  .unaaskbd{ background:var(--custbg); border-radius:10px; padding:10px 12px; font-size:15px;' +
+'    white-space:pre-wrap; max-height:40vh; overflow:auto; }' +
+'  .unaaskbt{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; }' +
+'  .unaaskno{ background:transparent; border:1px solid var(--line); color:var(--ink); }' +
+'  .unaaskok{ background:var(--cust); border:0; color:#fff; }' +
+'  .unaaskbt button{ border-radius:10px; padding:11px 22px; font:inherit; font-weight:800; font-size:15px; cursor:pointer; }' +
 '  .unacard.cust{ border-left-color:var(--cust); background:var(--custbg); }' +
 '  .unacard.ours{ border-left-color:var(--q); }' +
 '  .unahead{ display:flex; flex-direction:column; gap:5px; margin-bottom:6px; }' +
@@ -2463,7 +2564,7 @@ var MOVESCRIPT_ =
 // 同じ見た目・同じ安全弁(サーバー側_submitToQueue_)で部屋移動できるようにする共通呼び出し口。
 // ★EDIT_KEY_CLIENT_はページソースに公開される前提（②で使うため）。サーバー側で
 //   「今まさに被り検出に出ている予定か」「直近の依頼数」を必ずチェックする安全弁と対にしてある。
-'var EXEC_URL_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
+'var EXEC_URL_="https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";' +
 'var EDIT_KEY_CLIENT_="kx7Q2p9mVt4Zr8";' +
 'function callGas_(fnName, args, actionName, extraParams, onResult){' +
 '  if(typeof google!=="undefined" && google.script && google.script.run){' +
@@ -2488,8 +2589,9 @@ var MOVESCRIPT_ =
 'function submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,onDone){' +
 '  var idn=szIdent_();' +
 '  callGas_("uiSubmitMove",[cal,evid,toCal,toLabel,room,title,idn.who,idn.device,fromRoom],"submit",' +
-'    {op:"movecal",cal:cal,event:evid,to_cal:toCal,to_label:toLabel,room:room,title:title,' +
-'     from_room:fromRoom,who:idn.who,role:idn.role,device:idn.device}, onDone);' +
+'    {op:"movecal",who:idn.who,role:idn.role,device:idn.device,' +
+'     fields:JSON.stringify({cal:cal,event:evid,to_cal:toCal,to_label:toLabel,room:room,' +
+'       title:title,from_room:fromRoom})}, onDone);' +
 '}' +
 'function statusCheck_(id,onDone){' +
 '  callGas_("uiStatus",[id],"status",{id:id}, onDone);' +
@@ -3151,7 +3253,7 @@ var KANSHICSS_ =
 // ★JSONPだけで完結させる（①でしか使えない google.script.run に依存しない＝分岐を持たない）。
 var KANSHISCRIPT_ =
 '<script>(function(){' +
-'var EXEC_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
+'var EXEC_="https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";' +
 'var KEY_="kx7Q2p9mVt4Zr8";' +
 'var STALE_SEC_=180;' +
 // ★2026-07-17（ユーザー決定）：合言葉は**完全に廃止**し、「登録した1台のスマホだけ」に変えた
@@ -3411,7 +3513,8 @@ var KANSHISCRIPT_ =
 // 依頼を送る。合言葉は無い＝**登録した1台のスマホ**であることをサーバー側が見る（kanshiGate_）。
 'function send_(key, act, val){' +
 '  toast_("受け付けました。事務所PCが実行します（最大1分）…");' +
-'  jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", device:DEV_, ctl_key:key, ctl_act:act, ctl_val:(val||"")},' +
+'  jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", device:DEV_,' +
+'    fields:JSON.stringify({ctl_key:key, ctl_act:act, ctl_val:(val||"")})},' +
 '    function(r){' +
 '      if(!r||!r.ok){ toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); return; }' +
 '      poll_(r.id, 16);' +

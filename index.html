@@ -62,7 +62,7 @@
      貯め、下の本体スクリプトが code 読み込み後に拾って描画/起動する（発射だけなので code 不要）。 -->
 <script>
 (function () {
-  var EXEC = "https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";
+  var EXEC = "https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";
   var view = (new URLSearchParams(location.search)).get('view') || 'home';
 
   // tilesettings（権限・名前選択に必要＝全画面で使う）
@@ -72,7 +72,7 @@
     var w = window.__tsWaiter; window.__tsWaiter = null; if (w) w(window.__tsResult);
   };
   var s0 = document.createElement('script');
-  s0.src = EXEC + '?action=tilesettings&callback=__ttTileSettingsPre&cb=' + Date.now();
+  s0.src = EXEC + '?action=data&name=tile_settings.json&callback=__ttTileSettingsPre&cb=' + Date.now();
   s0.onerror = function () { window.__ttTileSettingsPre({}); };
   document.head.appendChild(s0);
 
@@ -83,11 +83,11 @@
   //   縮まらない）。だから「押してから取りに行く」のをやめ、前の画面（主にホーム）に
   //   居る間に裏で済ませておく方式に統一した（被り検出で先に実装・検証済みの型を横展開）。
   var VIEWS = window.__SZ_VIEWS_ = {
-    conflict:   'events',
-    lt:         'lt',
-    uriage:     'uriage',
-    unanswered: 'unanswered',
-    akijikan:   'akijikan'
+    conflict:   'events.json',
+    lt:         'lt_match.json',
+    uriage:     'uriage.json',
+    unanswered: 'unanswered.json',
+    akijikan:   'akijikan.json'
     // ★kanshi(自動監視)は対象外＝開発URL専用でスタッフの目には触れず、装置の見分け(device)も
     //   要るため。頻度も低く先取りの旨味が薄い（詳細は共通\スーパーズコApp_必読.md）。
   };
@@ -112,7 +112,7 @@
       var w = entry.waiter; entry.waiter = null; if (w) w(entry.payload);
     };
     var sp = document.createElement('script');
-    sp.src = EXEC + '?action=' + action + '&callback=' + cb + '&cb=' + Date.now();
+    sp.src = EXEC + '?action=data&name=' + action + '&callback=' + cb + '&cb=' + Date.now();
     sp.onerror = function () { window[cb]({ error: 'net' }); };
     document.head.appendChild(sp);
   }
@@ -124,7 +124,7 @@
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
   // （このページはGASを表示しないので、Googleの「別ユーザー作成」警告バーは出ない）。
-  var EXEC = "https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";
+  var EXEC = "https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";
 
   var params = new URLSearchParams(location.search);
   var view  = params.get('view') || 'home';
@@ -281,7 +281,7 @@
       var cb = '__ttNow_' + view;
       window[cb] = function (payload) { onPayload(payload); };
       var s = document.createElement('script');
-      s.src = EXEC + '?action=' + action + '&callback=' + cb + '&cb=' + Date.now();
+      s.src = EXEC + '?action=data&name=' + action + '&callback=' + cb + '&cb=' + Date.now();
       s.onerror = function () { onPayload({ error: '通信エラーです。通信環境をご確認ください。' }); };
       document.body.appendChild(s);
     }
@@ -363,7 +363,7 @@
       } catch (e) { fail('描画エラー：' + e); }
     };
     var s = document.createElement('script');
-    s.src = EXEC + '?action=kanshi&device=' + encodeURIComponent(device) +
+    s.src = EXEC + '?action=data&name=monitor.json&device=' + encodeURIComponent(device) +
             '&callback=__ttKanshi&cb=' + Date.now();   // ★このスマホが登録した1台か（code.js の kanshiGate_）
     s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
     document.body.appendChild(s);
@@ -479,7 +479,7 @@
           }
         };
         var s = document.createElement('script');
-        s.src = EXEC + '?action=' + action + '&callback=' + cb + '&cb=' + Date.now();
+        s.src = EXEC + '?action=data&name=' + action + '&callback=' + cb + '&cb=' + Date.now();
         s.onerror = function () {};
         document.head.appendChild(s);
       })(v, VIEWS[v]);
