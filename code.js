@@ -1679,11 +1679,15 @@ function unaCard_(r, kind) {
   return '' +
   '<article class="unacard ' + (kind === 'cust' ? 'cust' : 'ours') + '" data-search="' + search + '" data-days="' + (r.d || 0) + '">' +
     '<div class="unahead">' +
-      unaReadPill_(r.read) +
-      (when ? '<span class="unawhentag">' + esc_(when) + '</span>' : '') +
-      '<span class="unaname">' + esc_(name) + '</span>' +
-      (tag ? '<span class="unatag">' + esc_(tag) + '</span>' : '') +
-      '<span class="unadays">待ち' + (r.d || 0) + '日</span>' +
+      '<div class="unarow1">' +
+        unaReadPill_(r.read) +
+        (when ? '<span class="unawhentag">' + esc_(when) + '</span>' : '') +
+        '<span class="unadays">待ち' + (r.d || 0) + '日</span>' +
+      '</div>' +
+      '<div class="unarow2">' +
+        '<span class="unaname">' + esc_(name) + '</span>' +
+        (tag ? '<span class="unatag">' + esc_(tag) + '</span>' : '') +
+      '</div>' +
     '</div>' +
     '<div class="unaq">' + esc_(r.q || '') + '</div>' +
     '<div class="unaactions">' + detail + link + '</div>' +
@@ -1718,7 +1722,6 @@ function renderUnansweredPage_(d, base, staff, dev) {
     '<button type="button" class="unatab cust sel" data-v="cust">🟢 当店が未返信<span class="unac" id="unaCntCust">' + cust.length + '</span></button>' +
     '<button type="button" class="unatab ours" data-v="ours">🔵 お客様の返事待ち<span class="unac" id="unaCntOurs">' + ours.length + '</span></button>' +
   '</div>' +
-  '<div class="unaviewlabel" id="unaViewLabel"></div>' +
   '<select id="unaperiod">' +
     '<option value="3">3日間</option>' +
     '<option value="7" selected>7日間</option>' +
@@ -1728,9 +1731,6 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '<div id="unacust" class="unalist">' + custCards + '</div>' +
   '<div id="unaours" class="unalist unahidden">' + oursCards + '</div>' +
   '<div class="unaempty" id="unaperiodempty" hidden>この期間に該当はありません。上の期間を広げてください。</div>' +
-  '<div class="unafoot">緑＝こちらが返すべき（お客様が待っている）／ 青＝お客様の返事待ち。' +
-    'アフターケア確認・一斉あいさつ等の返事不要な定型は除外済み。既読/未読はLINE公式マネージャー基準。' +
-    '既定は7日間表示（PC版ダッシュボードと同じ）。古い会話は「期間」を広げると出てきます。</div>' +
 '</div>' +
 // 詳細モーダル（LINEに触れずに会話の中身をここで確認＝PC版ダッシュボードと同じ）
 '<div class="unamask" id="unamask" role="dialog" aria-modal="true">' +
@@ -1754,7 +1754,6 @@ var UNASCRIPT_ =
 'var per=document.getElementById("unaperiod");' +
 'var cntCust=document.getElementById("unaCntCust"), cntOurs=document.getElementById("unaCntOurs");' +
 'var empty=document.getElementById("unaperiodempty");' +
-'var viewLabel=document.getElementById("unaViewLabel");' +
 'function apply(){' +
 '  var pv=+(per&&per.value)||9999;' +
 '  var nc=0, no=0;' +
@@ -1769,10 +1768,6 @@ var UNASCRIPT_ =
 '  var isCust=(custEl&&!custEl.classList.contains("unahidden"));' +
 '  var activeCount=isCust?nc:no;' +
 '  if(empty) empty.hidden=(activeCount>0);' +
-'  if(viewLabel){' +
-'    viewLabel.className="unaviewlabel "+(isCust?"cust":"ours");' +
-'    viewLabel.textContent=(isCust?"🟢 今表示中：当店が未返信":"🔵 今表示中：お客様の返事待ち")+"（"+activeCount+"件）　／　並び順：待ちが少ない＝最近の分が上";' +
-'  }' +
 '}' +
 'tabs.forEach(function(t){ t.addEventListener("click",function(){' +
 '  var v=t.getAttribute("data-v");' +
@@ -1821,18 +1816,16 @@ var UNACSS_ =
 '  .unabar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }' +
 '  .unahome{ color:#fff; text-decoration:none; font-weight:700; font-size:14px;' +
 '    background:rgba(255,255,255,.16); padding:7px 12px; border-radius:10px; }' +
-'  .unagen{ color:#eaf3f7; font-size:11px; opacity:.9; }' +
+'  .unagen{ color:#eaf3f7; font-size:15px; font-weight:700; opacity:.95; }' +
 '  h1{ color:#fff; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:6px 0 12px; }' +
 '  .unatabs{ display:flex; gap:8px; margin-bottom:12px; }' +
 '  .unatab{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:10px 8px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; font-weight:800;' +
-'    font-size:clamp(14px,4vw,18px); }' +
+'    font-size:clamp(17px,5vw,22px); }' +
 '  .unatab .unac{ display:block; font-size:clamp(26px,9vw,38px); font-weight:900; margin-top:2px; }' +
 '  .unatab.cust.sel{ background:var(--cust); border-color:var(--cust); color:#fff; }' +
 '  .unatab.ours.sel{ background:var(--q); border-color:var(--q); color:#fff; }' +
 '  .unatab.sel .unac{ color:#fff; }' +
-'  .unaviewlabel{ font-size:13px; font-weight:800; margin:0 2px 10px; color:#fff; }' +
-'  .unaviewlabel.cust{ color:#d6f5e6; } .unaviewlabel.ours{ color:#dde0ff; }' +
 '  #unaperiod{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
 '    background:var(--card); color:var(--ink); font-size:14px; font-weight:700; margin-bottom:10px; }' +
 '  #unaq{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
@@ -1843,13 +1836,15 @@ var UNACSS_ =
 '    border-radius:12px; padding:12px 14px; }' +
 '  .unacard.cust{ border-left-color:var(--cust); background:var(--custbg); }' +
 '  .unacard.ours{ border-left-color:var(--q); }' +
-'  .unahead{ display:flex; align-items:center; gap:4px 10px; flex-wrap:wrap; margin-bottom:6px; }' +
-'  .unapill{ font-size:clamp(10px,2.6vw,12px); font-weight:800; padding:2px 8px; border-radius:6px; }' +
+'  .unahead{ display:flex; flex-direction:column; gap:5px; margin-bottom:6px; }' +
+'  .unarow1{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }' +
+'  .unarow2{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }' +
+'  .unapill{ font-size:clamp(18px,5vw,24px); font-weight:800; padding:3px 10px; border-radius:8px; }' +
 '  .unapill.unread{ background:#fef9c3; color:#854d0e; } .unapill.read{ background:var(--line); color:var(--sub); }' +
-'  .unawhentag{ font-size:clamp(13px,3.6vw,17px); font-weight:800; color:var(--sub); font-variant-numeric:tabular-nums; }' +
-'  .unaname{ font-weight:800; font-size:clamp(16px,4.4vw,21px); }' +
-'  .unatag{ font-size:clamp(11px,3vw,14px); color:var(--sub); }' +
-'  .unadays{ margin-left:auto; font-size:clamp(12px,3.2vw,15px); color:var(--sub); font-variant-numeric:tabular-nums; }' +
+'  .unawhentag{ font-size:clamp(26px,7.2vw,32px); font-weight:800; color:var(--sub); font-variant-numeric:tabular-nums; }' +
+'  .unaname{ font-weight:800; font-size:clamp(20px,5.6vw,26px); }' +
+'  .unatag{ font-size:clamp(14px,4vw,18px); color:var(--sub); }' +
+'  .unadays{ font-size:clamp(20px,5.5vw,26px); font-weight:700; color:var(--sub); font-variant-numeric:tabular-nums; }' +
 '  .unaq{ font-size:clamp(15px,4.2vw,19px); margin:2px 0 6px; line-height:1.5;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .unath{ font-size:12px; color:var(--sub); border-top:1px dashed var(--line); padding-top:6px; margin-top:2px; }' +
@@ -1859,7 +1854,6 @@ var UNACSS_ =
 '  .unalink{ display:inline-block; text-decoration:none; background:#06c755; color:#fff; font-weight:700;' +
 '    font-size:12.5px; padding:8px 14px; border-radius:10px; }' +
 '  .unaempty{ text-align:center; color:#fff; padding:30px; font-weight:700; }' +
-'  .unafoot{ margin-top:18px; color:rgba(255,255,255,.85); font-size:11px; line-height:1.6; }' +
 // 詳細モーダル（LINEに触れず会話の中身をその場で確認）
 '  .unamask{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none;' +
 '    align-items:center; justify-content:center; padding:16px; z-index:60; }' +
@@ -1875,7 +1869,7 @@ var UNACSS_ =
 '    color:var(--sub); cursor:pointer; padding:2px 6px; }' +
 '  .unamlog{ overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }' +
 '  .unamsg{ max-width:85%; padding:11px 14px; border-radius:12px; font-size:17px; line-height:1.6;' +
-'    white-space:pre-wrap; word-break:break-word; color:var(--ink); }' +
+'    white-space:pre-wrap; overflow-wrap:anywhere; word-break:normal; color:var(--ink); }' +
 '  .unamsg.cli{ align-self:flex-start; background:var(--line); }' +
 '  .unamsg.shop{ align-self:flex-end; background:var(--custbg); border:1px solid var(--cust); }' +
 '  .unats{ display:block; font-size:12.5px; color:var(--sub); opacity:.85; margin-top:6px; }' +
