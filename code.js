@@ -3012,7 +3012,7 @@ var CSS_ =
 // ★2026-07-17：**この画面は登録した1台のスマホだけが開ける**（合言葉は廃止）。詳細は kanshiGate_。
 function renderKanshi_(base, staff, dev, device) {
   var gate = kanshiGate_(device);
-  if (!gate.ok) return renderKanshiError_(gate.error, base, staff, dev);
+  if (!gate.ok) return renderKanshiLocked_(gate.error, base, staff, dev);
   var d;
   try {
     d = JSON.parse(getMonitorFile_().getBlob().getDataAsString('UTF-8'));
@@ -3020,6 +3020,21 @@ function renderKanshi_(base, staff, dev, device) {
     return renderKanshiError_(err, base, staff, dev);
   }
   return renderKanshiPage_(d, base, staff, dev);
+}
+
+/** 登録した1台のスマホ以外がこの画面を開いた時（＝データが届いていないのとは別物なので、
+ *  「状態が届いていません」ではなく専用の説明を出す。2026-07-17）。 */
+function renderKanshiLocked_(msg, base, staff, dev) {
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">📟</span><span class="bname">自動監視</span></div>' +
+    '<div class="soon">' +
+      '<div class="soonic">🔒</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">このスマホでは使えません</div>' +
+      '<div class="soondesc">' + esc_(msg) + '</div>' +
+    '</div>' +
+  '</div>';
 }
 
 function renderKanshiError_(err, base, staff, dev) {
