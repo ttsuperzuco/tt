@@ -1696,6 +1696,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
     '<button type="button" class="unatab cust sel" data-v="cust">🟢 当店が未返信<span class="unac" id="unaCntCust">' + cust.length + '</span></button>' +
     '<button type="button" class="unatab ours" data-v="ours">🔵 お客様の返事待ち<span class="unac" id="unaCntOurs">' + ours.length + '</span></button>' +
   '</div>' +
+  '<div class="unaviewlabel" id="unaViewLabel"></div>' +
   '<select id="unaperiod">' +
     '<option value="3">3日間</option>' +
     '<option value="7" selected>7日間</option>' +
@@ -1731,6 +1732,7 @@ var UNASCRIPT_ =
 'var per=document.getElementById("unaperiod");' +
 'var cntCust=document.getElementById("unaCntCust"), cntOurs=document.getElementById("unaCntOurs");' +
 'var empty=document.getElementById("unaperiodempty");' +
+'var viewLabel=document.getElementById("unaViewLabel");' +
 'function apply(){' +
 '  var pv=+(per&&per.value)||9999;' +
 '  var nc=0, no=0;' +
@@ -1742,9 +1744,13 @@ var UNASCRIPT_ =
 '  });' +
 '  if(cntCust) cntCust.textContent=nc;' +
 '  if(cntOurs) cntOurs.textContent=no;' +
-'  var activeEl=(custEl&&!custEl.classList.contains("unahidden"))?custEl:oursEl;' +
-'  var activeCount=(activeEl===custEl)?nc:no;' +
+'  var isCust=(custEl&&!custEl.classList.contains("unahidden"));' +
+'  var activeCount=isCust?nc:no;' +
 '  if(empty) empty.hidden=(activeCount>0);' +
+'  if(viewLabel){' +
+'    viewLabel.className="unaviewlabel "+(isCust?"cust":"ours");' +
+'    viewLabel.textContent=(isCust?"🟢 今表示中：当店が未返信":"🔵 今表示中：お客様の返事待ち")+"（"+activeCount+"件）　／　並び順：待ちが少ない＝最近の分が上";' +
+'  }' +
 '}' +
 'tabs.forEach(function(t){ t.addEventListener("click",function(){' +
 '  var v=t.getAttribute("data-v");' +
@@ -1800,6 +1806,8 @@ var UNACSS_ =
 '    padding:10px 8px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; font-weight:700; font-size:13px; }' +
 '  .unatab .unac{ display:block; font-size:20px; font-weight:900; margin-top:2px; }' +
 '  .unatab.cust.sel{ outline:2px solid var(--cust); } .unatab.ours.sel{ outline:2px solid var(--q); }' +
+'  .unaviewlabel{ font-size:13px; font-weight:800; margin:0 2px 10px; color:#fff; }' +
+'  .unaviewlabel.cust{ color:#d6f5e6; } .unaviewlabel.ours{ color:#dde0ff; }' +
 '  #unaperiod{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
 '    background:var(--card); color:var(--ink); font-size:14px; font-weight:700; margin-bottom:10px; }' +
 '  #unaq{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
