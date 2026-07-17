@@ -138,7 +138,7 @@ function doGet(e) {
     html = renderAkijikan_(base, staff, dev);
   } else if (view === 'kanshi') {
     title = '自動監視';
-    html = renderKanshi_(base, staff, dev);
+    html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -251,12 +251,98 @@ function _akijikanJsonp_(p) {
 function _kanshiJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
   var payload;
-  try {
-    payload = JSON.parse(getMonitorFile_().getBlob().getDataAsString('UTF-8'));
-  } catch (e) {
-    payload = { error: String(e), groups: [] };
+  var gate = kanshiGate_(p.device);      // ★この画面は登録した1台だけ（下の説明参照）
+  if (!gate.ok) {
+    payload = { error: gate.error, locked: true, groups: [] };
+  } else {
+    try {
+      payload = JSON.parse(getMonitorFile_().getBlob().getDataAsString('UTF-8'));
+    } catch (e) {
+      payload = { error: String(e), groups: [] };
+    }
   }
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
+// ========== 自動監視画面は「登録した1台のスマホ」だけ（2026-07-17・ユーザー決定） ==========
+// 【なぜ】この画面はスタッフのURL(?staff=1)の末尾を?dev=1に打ち替えるだけで開けてしまい、
+//   開くこと自体には鍵が無かった。合言葉で操作だけ守っていたが、社長しか使わない画面なのに
+//   毎回スタッフ用の合言葉を入れさせられるのはおかしい、という指摘。
+// 【どうした】**最初に開いたスマホを持ち主として登録**し、以後そのスマホ以外は開くことも
+//   操作することもできない（合言葉は一切不要になった）。名前選択の早い者勝ち(_claimJsonp_)と
+//   同じ考え方。機種変時は事務所PCの「登録し直す」で解除→次に開いたスマホが新しい持ち主。
+// 【置き場所】PropertiesService（tile_settings.json ではない）。理由＝あのファイルは事務所PCが
+//   まるごと上書きする(push_tiles)ので、GASだけが書く値を置くと消える恐れがある。
+// 【リセットの鍵】解除は EDIT_KEY(公開)だけでは通さない：**合言葉(staffPassword)を添えるか、
+//   持ち主のスマホ自身**のどちらかが要る。EDIT_KEYは②の公開コードに載っている＝鍵にならず、
+//   誰でも解除できると「解除→自分のスマホを登録」でいつでも乗っ取れてしまうため
+//   （事務所PCは合言葉をファイルから読んで自動で添える＝人は何も入力しない）。
+var KANSHI_DEV_PROP_ = 'KANSHI_DEVICE';
+
+function kanshiOwner_() {
+  try {
+    var raw = PropertiesService.getScriptProperties().getProperty(KANSHI_DEV_PROP_);
+    var d = raw ? JSON.parse(raw) : null;
+    return (d && d.device) ? d : null;
+  } catch (e) { return null; }
+}
+
+/** この端末に見せてよいか。持ち主が居なければ、この端末を持ち主として登録する（早い者勝ち）。 */
+function kanshiGate_(device) {
+  device = String(device || '').trim();
+  if (!device) {
+    return { ok: false, error: 'スマホ用のURL（ttsuperzuco.github.io/tt/）から開いてください。' };
+  }
+  var lock = LockService.getScriptLock();
+  try { lock.tryLock(10000); } catch (ig) {}
+  try {
+    var cur = kanshiOwner_();
+    if (!cur) {
+      PropertiesService.getScriptProperties().setProperty(KANSHI_DEV_PROP_,
+        JSON.stringify({ device: device, at: new Date().toISOString() }));
+      return { ok: true, claimed: true };
+    }
+    if (cur.device === device) return { ok: true };
+    return { ok: false, error: 'この画面は、登録したスマホからだけ開けます。'
+      + '（機種変した時は、事務所PCの自動監視で「登録し直す」を押してください）' };
+  } finally {
+    try { lock.releaseLock(); } catch (ig2) {}
+  }
+}
+
+/** 持ち主の解除（事務所PC＝合言葉を自動で添える／持ち主のスマホ自身＝下取り前などに）。 */
+function _kanshiDevResetJsonp_(p) {
+  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
+  var out;
+  if (!_pwRateOk_()) {
+    out = { ok: false, error: '試行回数が多すぎます。少し待ってから試してください。' };
+  } else {
+    var cur = kanshiOwner_();
+    var byPw = String(p.pw || '') === getStaffPassword_();
+    var byOwner = !!(cur && cur.device && cur.device === String(p.device || '').trim());
+    if (!byPw && !byOwner) {
+      out = { ok: false, error: '解除できません（事務所PCか、いま登録中のスマホから押してください）。' };
+    } else {
+      PropertiesService.getScriptProperties().deleteProperty(KANSHI_DEV_PROP_);
+      out = { ok: true, msg: '登録を解除しました。次に自動監視を開いたスマホが持ち主になります。' };
+    }
+  }
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(out) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
+/** いま誰が登録されているか（事務所PCが画面に出すために聞く。合言葉が要る＝外からは見えない）。 */
+function _kanshiDevInfoJsonp_(p) {
+  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
+  var out;
+  if (!_pwRateOk_() || String(p.pw || '') !== getStaffPassword_()) {
+    out = { ok: false, error: 'この情報は事務所PCからだけ見られます。' };
+  } else {
+    var cur = kanshiOwner_();
+    out = { ok: true, device: cur ? cur.device : '', at: cur ? cur.at : '' };
+  }
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(out) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
@@ -411,7 +497,8 @@ var KANSHI_CTL_KEYS_ = [
   'tile_settings',   // スーパーズコApp ボタン表示設定（人ごと表示・並び順・合言葉・追加・選び直し）
   'lt_auto_verify',  // その他の設定：L⇔T予約照合 全自動AI判定（2026-07-16・PC/App同一ルールで追加）
   'ai_usage_record', // その他の設定：自動AIコスト計算（帳簿）のON/OFF（2026-07-17追加）
-  'stale_cleanup'    // その他の設定：固まった残骸の掃除（2026-07-17追加）
+  'stale_cleanup',   // その他の設定：固まった残骸の掃除（2026-07-17追加）
+  'kanshi_device'    // その他の設定：監視画面を使えるスマホの登録し直し（2026-07-17追加）
 ];
 var KANSHI_CTL_ACTS_ = ['on', 'off', 'run', 'setval'];
 function _validKanshiCtl_(key, act) {
@@ -422,8 +509,14 @@ function _validKanshiCtl_(key, act) {
 function _submitToQueue_(q, op, fields) {
   if (op === 'kanshi_ctl') {
     if (!_rateOk_(q)) return { ok: false, error: '依頼が集中しています。少し待ってから試してください。' };
-    if (!_pwRateOk_()) return { ok: false, error: '試行回数が多すぎます。少し待ってから試してください。' };
-    if (String(fields.pw || '') !== getStaffPassword_()) return { ok: false, error: '合言葉が違います。' };
+    // ★2026-07-17：関門を「合言葉」から「登録した1台のスマホ」へ入れ替えた（kanshiGate_ の説明参照）。
+    //   画面を開けているのは持ち主だけなので、ここは登録済みか(=同じ端末か)の確認だけでよい
+    //   ＝社長は何も入力しない。持ち主が未登録（解除直後）の状態では操作させない
+    //   （画面を開く＝kanshiGate_ が先に登録するので、通常この分岐には来ない）。
+    var owner = kanshiOwner_();
+    if (!owner || !owner.device || owner.device !== String(fields.device || '').trim()) {
+      return { ok: false, error: 'このスマホは登録されていません。' };
+    }
     if (!_validKanshiCtl_(fields.ctl_key, fields.ctl_act)) {
       return { ok: false, error: 'この項目は外からは操作できません。' };
     }
@@ -462,6 +555,8 @@ function handleAction_(p) {
   if (p.action === 'unanswered') return _unansweredJsonp_(p);
   if (p.action === 'akijikan') return _akijikanJsonp_(p);
   if (p.action === 'kanshi') return _kanshiJsonp_(p);
+  if (p.action === 'kanshi_devreset') return _kanshiDevResetJsonp_(p);
+  if (p.action === 'kanshi_devinfo') return _kanshiDevInfoJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
   if (p.action === 'checkpw') return _checkPwJsonp_(p);
   if (p.action === 'claim') return _claimJsonp_(p);
@@ -925,9 +1020,13 @@ function logAccess_(who, role, device, view) {
 var CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
 function circled_(n) { return (n >= 1 && n <= CIRCLED.length) ? CIRCLED[n - 1] : (n + '.'); }
 
+// ★2026-07-17：色をTimeTree本物のラベル色に統一（それまでは自作の配色だった＝ユーザー指摘
+//   「みんなタイムツリーでの色に慣れてる」）。ラベル一覧確認.pyでTimeTreeのAPIから実測して確定
+//   （calendar_labelsのcolor(10進int)を16進化）。★PC版room_conflict_detect.pyの_room_color()と
+//   同じ値に揃えること（片方だけ直さない＝共通ルール）。
 function roomColor_(room) {
-  var p = { 'FREEDOM': '#e11d48', 'COSMOS': '#7c3aed', 'HAPPY': '#f59e0b',
-            'LUCKY': '#16a34a', 'STAR/福/🇫🇷': '#0ea5e9' };
+  var p = { 'FREEDOM': '#2ecc87', 'COSMOS': '#3dc2c8', 'HAPPY': '#e73b3b',
+            'LUCKY': '#fdc02d', 'STAR/福/🇫🇷': '#b38bdc' };
   return p[room] || '#64748b';
 }
 
@@ -1997,7 +2096,6 @@ function renderAkijikanPage_(d, base, staff, dev) {
 '<div class="akiwrap">' +
   '<div class="akibar">' +
     '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="akigen">' + esc_(d.cond || '') + '</span>' +
   '</div>' +
   '<h1>🕑 空き時間検索</h1>' +
   '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
@@ -2024,13 +2122,12 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<button type="button" class="akiwd" data-wd="5">金</button>' +
       '<button type="button" class="akiwd" data-wd="6">土</button>' +
     '</div>' +
-    // 空き時間の長さで絞り込み（2026-07-17ユーザー指示）。単一選択＝1つだけON。
-    // 30分＝30分以下／60分＝31〜60分／90分＝61〜90分／120分＝91〜120分（121分以上は「全部」でのみ表示）。
+    // 空き時間の長さで絞り込み（2026-07-17ユーザー指示・以上ロジックに変更）。単一選択＝1つだけON。
+    // 30分＝30分以上を全部／60分＝60分以上を全部／120分＝120分以上を全部（すべて同じ「以上」ロジック）。
     '<div class="akidurrow">' +
       '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
       '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
       '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
-      '<button type="button" class="akidurbtn" data-dur="90">90分</button>' +
       '<button type="button" class="akidurbtn" data-dur="120">120分</button>' +
     '</div>' +
   '</div>' +
@@ -2191,22 +2288,18 @@ var AKISCRIPT_ =
 '    if(idx===-1){ setRange(minD, maxD); presets.forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-preset")==="all"); }); }' +
 '    applyFilter();' +
 '  }); });' +
-// 長さボタン（2026-07-17ユーザー指示）：単一選択。30分＝30分以下／60分＝31〜60分／
-// 90分＝61〜90分／120分＝91〜120分（121分以上は「全部」でのみ表示）。
+// 長さボタン（2026-07-17ユーザー指示・「以上」ロジックに変更）：単一選択。
+// 30分＝30分以上を全部／60分＝60分以上を全部／120分＝120分以上を全部（すべて同じロジック）。
 // 対象は各時間帯別の1行(.akirow[data-dur])とスタッフ別/施術室別の枠チップ(.akislot[data-dur])。
 '  var durBtns=[].slice.call(document.querySelectorAll(".akidurbtn"));' +
 '  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur]"));' +
 '  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
 '    durBtns.forEach(function(x){ x.classList.toggle("on", x===b); });' +
 '    var kind=b.getAttribute("data-dur");' +
-'    var lo=1, hi=Infinity;' +
-'    if(kind==="30"){ lo=1; hi=30; }' +
-'    else if(kind==="60"){ lo=31; hi=60; }' +
-'    else if(kind==="90"){ lo=61; hi=90; }' +
-'    else if(kind==="120"){ lo=91; hi=120; }' +
+'    var lo = kind==="all" ? 0 : Number(kind);' +
 '    durRows.forEach(function(el){' +
 '      var dur=Number(el.getAttribute("data-dur"));' +
-'      el.classList.toggle("akidurhide", kind!=="all" && (dur<lo||dur>hi));' +
+'      el.classList.toggle("akidurhide", dur<lo);' +
 '    });' +
 '  }); });' +
 '  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
@@ -2221,7 +2314,10 @@ var AKICSS_ =
 '  body{ background:var(--akibg); }' +
 '  .akiwrap{ max-width:760px; margin:0 auto; padding:14px 14px 40px; font-family:"Yu Gothic UI","Hiragino Sans",sans-serif; color:var(--akiink); }' +
 '  .akibar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }' +
-'  .akihome{ color:var(--akiprimary); text-decoration:none; font-weight:700; font-size:14px; }' +
+// 施術室被り検出画面の「← 前に戻る」(.homelink)と同じ見た目に統一（2026-07-17ユーザー指示）。
+'  .akihome{ flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--akiink); text-decoration:none;' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px; padding:10px 14px; }' +
+'  .akihome:active{ transform:translateY(1px); }' +
 '  .akigen{ color:var(--akisub); font-size:14px; font-weight:700; }' +
 '  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
 '  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
@@ -2910,8 +3006,11 @@ var CSS_ =
 // ★状態の判定・組み立ては一切ここでやらない（PC側 monitor_snapshot.py が唯一の真実で、
 //   monitor.json には「答え」が入っている）＝PC/GASの二重管理を作らない。
 // ★操作(ON/OFF・今すぐ実行)は必ずサーバー側の関門(_submitToQueue_ の op='kanshi_ctl')を通す
-//   ＝合言葉の照合と、触ってよい項目かの確認はサーバーだけが行う。
-function renderKanshi_(base, staff, dev) {
+//   ＝登録した1台のスマホか(kanshiGate_)と、触ってよい項目かの確認はサーバーだけが行う。
+// ★2026-07-17：**この画面は登録した1台のスマホだけが開ける**（合言葉は廃止）。詳細は kanshiGate_。
+function renderKanshi_(base, staff, dev, device) {
+  var gate = kanshiGate_(device);
+  if (!gate.ok) return renderKanshiLocked_(gate.error, base, staff, dev);
   var d;
   try {
     d = JSON.parse(getMonitorFile_().getBlob().getDataAsString('UTF-8'));
@@ -2919,6 +3018,21 @@ function renderKanshi_(base, staff, dev) {
     return renderKanshiError_(err, base, staff, dev);
   }
   return renderKanshiPage_(d, base, staff, dev);
+}
+
+/** 登録した1台のスマホ以外がこの画面を開いた時（＝データが届いていないのとは別物なので、
+ *  「状態が届いていません」ではなく専用の説明を出す。2026-07-17）。 */
+function renderKanshiLocked_(msg, base, staff, dev) {
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">📟</span><span class="bname">自動監視</span></div>' +
+    '<div class="soon">' +
+      '<div class="soonic">🔒</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">このスマホでは使えません</div>' +
+      '<div class="soondesc">' + esc_(msg) + '</div>' +
+    '</div>' +
+  '</div>';
 }
 
 function renderKanshiError_(err, base, staff, dev) {
@@ -2948,7 +3062,7 @@ function renderKanshiPage_(d, base, staff, dev) {
     '<div class="kfresh" id="kFresh"></div>' +
     '<div id="kList"></div>' +
     '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
-      '各行を押すと中身が開きます。ON/OFF・今すぐ実行は合言葉を1回入れると押せます。' +
+      '各行を押すと中身が開きます。この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
       'この画面は事務所PCが1分ごとに送ってきた状態を見ています。</div>' +
   '</div>' +
   '<script>window.__KANSHI_DATA__=' + JSON.stringify(d) + ';<' + '/script>' +
@@ -3034,7 +3148,18 @@ var KANSHISCRIPT_ =
 'var EXEC_="https://script.google.com/macros/s/AKfycbwEpGPZhvGCbea6qoft-_TRCgvp5t0ieNf5kDCuFs9-1VYJi7r5RPgTPBM7AEBqPPLL4A/exec";' +
 'var KEY_="kx7Q2p9mVt4Zr8";' +
 'var STALE_SEC_=180;' +
-'var PW_="";' +
+// ★2026-07-17（ユーザー決定）：合言葉は**完全に廃止**し、「登録した1台のスマホだけ」に変えた
+//   （経緯と理由は上の kanshiGate_ の説明。社長は何も入力しない）。
+//   端末の見分け＝②静的アプリが作る `sz_device`（index.html と**同じ鍵**を読む＝同じスマホなら
+//   名前選択と同じIDになる）。①GAS直リンクで開いた時のために、無ければここで作る。
+'function devId_(){' +
+'  try{' +
+'    var v=window.__SZ_DEVICE_||localStorage.getItem("sz_device");' +
+'    if(!v){ v="d"+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem("sz_device", v); }' +
+'    return v;' +
+'  }catch(e){ return ""; }' +
+'}' +
+'var DEV_=devId_();' +
 'var data_=window.__KANSHI_DATA__||{groups:[]};' +
 'var open_={};' +
 'var CONFIRM_={};' +   // 押す前に出す確認文（事務所PCが monitor.json の row.confirm で配る）
@@ -3123,30 +3248,17 @@ var KANSHISCRIPT_ =
 '  }).join("");' +
 '}' +
 'function reload_(onDone){' +
-'  jsonp_({action:"kanshi"}, function(r){' +
+'  jsonp_({action:"kanshi", device:DEV_}, function(r){' +
+'    if(r&&r.locked){' +   // 登録が別のスマホへ移った（事務所PCで「登録し直す」等）＝その場で見せるのをやめる
+'      var l=document.getElementById("kList");' +
+'      if(l) l.innerHTML="<div class=\\"kcard\\">"+esc(r.error||"この画面は登録したスマホからだけ開けます。")+"</div>";' +
+'      var f=document.getElementById("kFresh"); if(f) f.textContent="";' +
+'      if(onDone) onDone();' +
+'      return;' +
+'    }' +
 '    if(r&&!r.error){ data_=r; render_(); }' +
 '    if(onDone) onDone();' +
 '  });' +
-'}' +
-'function askPw_(onOk){' +
-'  if(PW_){ onOk(); return; }' +
-'  var mask=document.createElement("div"); mask.className="kmask";' +
-'  mask.innerHTML="<div class=\\"kbox\\"><h3>合言葉を入れてください</h3>"+' +
-'    "<input type=\\"password\\" id=\\"kPwIn\\" autocomplete=\\"off\\">"+' +
-'    "<div class=\\"kboxbtns\\"><button type=\\"button\\" class=\\"kno\\">やめる</button>"+' +
-'    "<button type=\\"button\\" class=\\"kyes\\">OK</button></div></div>";' +
-'  document.body.appendChild(mask);' +
-'  var input=mask.querySelector("#kPwIn"); try{ input.focus(); }catch(e){}' +
-'  function close_(){ if(mask.parentNode) mask.parentNode.removeChild(mask); }' +
-'  mask.querySelector(".kno").addEventListener("click", close_);' +
-'  mask.querySelector(".kyes").addEventListener("click", function(){' +
-'    var v=input.value||"";' +
-'    jsonp_({action:"checkpw", pw:v}, function(r){' +
-'      if(r&&r.ok){ PW_=v; close_(); onOk(); }' +
-'      else { toast_((r&&r.error)||"合言葉が違います。"); }' +
-'    });' +
-'  });' +
-'  input.addEventListener("keydown", function(e){ if(e.key==="Enter") mask.querySelector(".kyes").click(); });' +
 '}' +
 'function poll_(id, tries){' +
 '  jsonp_({action:"status", key:KEY_, id:id}, function(r){' +
@@ -3290,15 +3402,14 @@ var KANSHISCRIPT_ =
 '  if(t.closest("#kTilesSave")){ saveTiles_(); return true; }' +
 '  return false;' +
 '}' +
+// 依頼を送る。合言葉は無い＝**登録した1台のスマホ**であることをサーバー側が見る（kanshiGate_）。
 'function send_(key, act, val){' +
-'  askPw_(function(){' +
-'    toast_("受け付けました。事務所PCが実行します（最大1分）…");' +
-'    jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", pw:PW_, ctl_key:key, ctl_act:act, ctl_val:(val||"")},' +
-'      function(r){' +
-'        if(!r||!r.ok){ if(r&&r.error==="合言葉が違います。") PW_=""; toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); return; }' +
-'        poll_(r.id, 16);' +
-'      });' +
-'  });' +
+'  toast_("受け付けました。事務所PCが実行します（最大1分）…");' +
+'  jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", device:DEV_, ctl_key:key, ctl_act:act, ctl_val:(val||"")},' +
+'    function(r){' +
+'      if(!r||!r.ok){ toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); return; }' +
+'      poll_(r.id, 16);' +
+'    });' +
 '}' +
 'document.addEventListener("click", function(ev){' +
 '  if(!ev.target.closest) return;' +
