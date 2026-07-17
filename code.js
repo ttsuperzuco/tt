@@ -979,6 +979,7 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr, who
     : (!anyFree ? '<span class="mvng">その時間、空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
     '<div class="mvlabel fit1line">移動先の部屋を選んでね(下のボタンを押す）</div>' +
+    '<div class="mvhint fit1line">※空いている施術室のみ表示しています</div>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
 }
@@ -1113,14 +1114,12 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
           '<div class="mvpanel" data-side="A" hidden>' +
             moveRow_(x.a_cal_id, x.a_event_id, [x.a_staff, x.a_code, x.a_name].filter(Boolean).join(' '), x.a_title, x.room, roomBusyForDate, x.a_time,
                      [x.a_staff, x.a_name].filter(Boolean).join(' ')) +
-            '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
             '<button type="button" class="rstoggle fit1line">📋 念のため、この日の部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
             moveRow_(x.b_cal_id, x.b_event_id, [x.b_staff, x.b_code, x.b_name].filter(Boolean).join(' '), x.b_title, x.room, roomBusyForDate, x.b_time,
                      [x.b_staff, x.b_name].filter(Boolean).join(' ')) +
-            '<div class="mvhint fit1line">⬆️空いている施術室のみ表示しています</div>' +
             '<button type="button" class="rstoggle fit1line">📋 念のため、この日の部屋状況を見る</button>' +
             roomStatusPanel_(x.date, roomBusyForDate) +
           '</div>' +
@@ -2710,15 +2709,17 @@ var CSS_ =
 '  .rstoggle.open { box-shadow:inset 0 2px 5px rgba(0,0,0,.3); }' +
 '  .mvrow { display:flex; flex-direction:column; gap:6px; padding:6px 0; }' +
 '  .mvrow + .mvrow { border-top:1px dashed var(--line); }' +
-'  .mvlabel { font-size:1.7rem; font-weight:700; color:var(--ink); }' +
+'  .mvlabel { font-size:1.7rem; font-weight:800; color:#ec4899; }' +
+// ※空いている施術室のみ...の行はラベルの真下・同じ文字サイズで黒に（2026-07-17ユーザー指示。
+// 色は元々ラベルとヒントで逆だったのを入れ替え、目立たせたい方＝ラベルをピンクにした）。
+'  .mvhint { font-size:1.7rem; color:var(--ink); font-weight:700; margin-top:2px; line-height:1.4; }' +
 // 部屋マークは横に流さず、必ず2個ずつで改行する（4個なら上2つ・下2つ）＝2026-07-17ユーザー指示。
-'  .mvbtns { display:grid; grid-template-columns:1fr 1fr; gap:7px; }' +
+'  .mvbtns { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:8px; }' +
 '  .mvbtn { font-size:.92rem; font-weight:800; color:#fff; background:var(--rc,#64748b);' +
 '    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .mvbtn:active { transform:translateY(1px); }' +
 '  .mvbtn:disabled { opacity:.4; }' +
 '  .mvng { grid-column:1/-1; font-size:.8rem; color:var(--sub); align-self:center; }' +
-'  .mvhint { font-size:1.5rem; color:#ec4899; font-weight:800; margin-top:6px; line-height:1.5; }' +
 '  .mvstatus { margin-top:8px; padding:11px 12px; border-radius:10px; font-size:.95rem; font-weight:700; }' +
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .mvstatus.ok { background:#dcfce7; color:#166534; }' +
