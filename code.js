@@ -1020,10 +1020,11 @@ function logAccess_(who, role, device, view) {
 var CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
 function circled_(n) { return (n >= 1 && n <= CIRCLED.length) ? CIRCLED[n - 1] : (n + '.'); }
 
-// ★2026-07-17：色をTimeTree本物のラベル色に統一（それまでは自作の配色だった＝ユーザー指摘
-//   「みんなタイムツリーでの色に慣れてる」）。ラベル一覧確認.pyでTimeTreeのAPIから実測して確定
-//   （calendar_labelsのcolor(10進int)を16進化）。★PC版room_conflict_detect.pyの_room_color()と
-//   同じ値に揃えること（片方だけ直さない＝共通ルール）。
+// ★部屋の色＝TimeTree本体が実際に使っている色（2026-07-17ユーザー決定：「みんなタイムツリーでの
+//   色に慣れてる」。それまでは自作の配色だった）。見栄えで勝手に決め直さないこと。
+// ★唯一の置き場は 共通\room_colors.py。ここはその「写し」＝Apps ScriptからPythonを読めないため
+//   同じ値を持つしかない。★色を変える時は必ず両方直す（片方だけ直さない＝共通ルール）。
+//   出どころ：TimeTreeのAPI(/api/v1/calendar/<id>/labels)のcolor。取り直しは ラベル一覧確認.py。
 function roomColor_(room) {
   var p = { 'FREEDOM': '#2ecc87', 'COSMOS': '#3dc2c8', 'HAPPY': '#e73b3b',
             'LUCKY': '#fdc02d', 'STAR/福/🇫🇷': '#b38bdc' };
@@ -2096,10 +2097,9 @@ function renderAkijikanPage_(d, base, staff, dev) {
 '<div class="akiwrap">' +
   '<div class="akibar">' +
     '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
+    '<span class="akigen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
   '</div>' +
   '<h1>🕑 空き時間検索</h1>' +
-  '<div class="akisub">' + esc_(d.date_from || '') + ' 〜 ' + esc_(d.date_to || '') +
-    '　生成: ' + esc_(d.generated_at || '—') + '</div>' +
   '<div class="akidatebar">' +
     // ★2026-07-17ユーザー指示：期間(from〜to)選択をやめ、カレンダーで日付を好きなだけ複数選ぶ
     //   方式に変更。終わりの日付BOXは廃止＝日付BOXは1個だけ（押すと複数選択カレンダーが開く）。
@@ -2228,7 +2228,7 @@ var AKISCRIPT_ =
 '      manualDates = arr.length ? arr : null;' +
 '      updateDateBoxLabel_();' +
 '      if(manualDates) clearPresetSel();' +
-'      applyFilter();' +
+'      setAllWd_();' +   // 日付を選び直したら曜日絞り込みは必ず「全て」に戻す（2026-07-17ユーザー指示）
 '      document.body.removeChild(mask);' +
 '    });' +
 '    ftr.appendChild(cancel); ftr.appendChild(ok);' +
@@ -2265,6 +2265,7 @@ var AKISCRIPT_ =
 '    presets.forEach(function(x){ x.classList.toggle("on", x===b); });' +
 '    var kind=b.getAttribute("data-preset");' +
 '    var today=minD;' +
+'    setAllWd_();' +   // 今日/明日/今・来週/全期間を選んだら曜日絞り込みは必ず「全て」に戻す（2026-07-17ユーザー指示）
 '    if(kind==="today") setSingle_(today);' +
 '    else if(kind==="tomorrow") setSingle_(addDays(today,1));' +
 '    else if(kind==="thisnext") setRange(today, addDays(endOfThisWeek(today),7));' +
@@ -2318,9 +2319,8 @@ var AKICSS_ =
 '  .akihome{ flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--akiink); text-decoration:none;' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px; padding:10px 14px; }' +
 '  .akihome:active{ transform:translateY(1px); }' +
-'  .akigen{ color:var(--akisub); font-size:14px; font-weight:700; }' +
+'  .akigen{ flex:0 0 auto; color:var(--akisub); font-size:16px; font-weight:700; text-align:right; }' +
 '  .akiwrap h1{ font-size:22px; margin:2px 0 2px; }' +
-'  .akisub{ color:var(--akisub); font-size:15px; margin-bottom:12px; line-height:1.6; }' +
 '  .akidatebar{ display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }' +
 // ★日付BOX＋今日/明日/今・来週/全期間を1行に収める（2026-07-17ユーザー指示）。
 //   幅が本当に足りない端末だけ横スクロールで逃がす（折り返して2行にはしない）。
@@ -2399,8 +2399,8 @@ var AKICSS_ =
 '  .akiroom.lg{ font-size:16px; padding:4px 13px; }' +
 '  .akinorooms{ color:#c33; font-size:14.5px; white-space:nowrap; }' +
 '  .akislot{ display:inline-block; background:var(--akibg); border:1px solid var(--akiline);' +
-'    border-radius:8px; padding:3px 10px; font-size:15px; font-variant-numeric:tabular-nums; }' +
-'  .akislot b{ font-weight:700; color:var(--akisub); margin-left:2px; }' +
+'    border-radius:8px; padding:5px 12px; font-size:19px; font-weight:700; font-variant-numeric:tabular-nums; }' +
+'  .akislot b{ font-weight:700; color:var(--akisub); margin-left:3px; font-size:15px; }' +
 '  .akinone{ color:#c33; font-size:15px; padding:4px 0; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
