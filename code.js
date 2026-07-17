@@ -1784,6 +1784,7 @@ function unaCard_(r, kind) {
   var box = (r.reply && r.cid)
     ? '<div class="unareply" data-cid="' + esc_(r.cid) + '" data-nm="' + esc_(name) + '">' +
         '<textarea class="unartext" rows="3" maxlength="1000" placeholder="ここに返信を打つと、お店の公式LINEから送ります"></textarea>' +
+        '<div class="unastamps"></div>' +
         '<div class="unarrow">' +
           '<span class="unarnote"></span>' +
           '<button type="button" class="unarsend">送る</button>' +
@@ -1992,6 +1993,78 @@ var UNASCRIPT_ =
 '  if(!b) return;' +
 '  var w=b.closest(".unareply"); if(w) unaSend_(w);' +
 '});' +
+// ―― スタンプ（自作の画像）を送る ――
+'var STAMPS_=null, STAMPS_WAIT_=[];' +
+'function loadStamps_(cb){' +
+'  if(STAMPS_){ cb(STAMPS_); return; }' +
+'  STAMPS_WAIT_.push(cb);' +
+'  if(STAMPS_WAIT_.length>1) return;' +
+'  fetch("stamps.json?cb="+Date.now()).then(function(r){return r.json();}).then(function(d){' +
+'    STAMPS_=Array.isArray(d)?d:[]; STAMPS_WAIT_.forEach(function(f){f(STAMPS_);}); STAMPS_WAIT_=[];' +
+'  }).catch(function(){ STAMPS_=[]; STAMPS_WAIT_.forEach(function(f){f(STAMPS_);}); STAMPS_WAIT_=[]; });' +
+'}' +
+'function paintStamps_(){' +
+'  var boxes=[].slice.call(document.querySelectorAll(".unastamps"));' +
+'  if(!boxes.length) return;' +
+'  loadStamps_(function(list){' +
+'    boxes.forEach(function(box){' +
+'      if(box.getAttribute("data-done")) return; box.setAttribute("data-done","1");' +
+'      if(!list.length){ return; }' +
+'      list.forEach(function(st){' +
+'        var b=document.createElement("button"); b.type="button"; b.className="unastamp";' +
+'        b.setAttribute("data-key",st.key); b.title=st.label||st.key;' +
+'        var img=document.createElement("img"); img.src=st.img; img.alt=st.label||st.key;' +
+'        b.appendChild(img); box.appendChild(b);' +
+'      });' +
+'    });' +
+'  });' +
+'}' +
+'function unaAskStamp_(nm,imgsrc,onYes){' +
+'  var mask=document.createElement("div"); mask.className="unaask";' +
+'  var box=document.createElement("div"); box.className="unaaskbox";' +
+'  var h=document.createElement("div"); h.className="unaaskh"; h.textContent="このスタンプを送ります";' +
+'  var to=document.createElement("div"); to.className="unaaskto"; to.textContent="宛先： "+nm;' +
+'  var im=document.createElement("img"); im.className="unaaskimg"; im.src=imgsrc;' +
+'  var bt=document.createElement("div"); bt.className="unaaskbt";' +
+'  var no=document.createElement("button"); no.type="button"; no.className="unaaskno"; no.textContent="やめる";' +
+'  var ok=document.createElement("button"); ok.type="button"; ok.className="unaaskok"; ok.textContent="送る";' +
+'  bt.appendChild(no); bt.appendChild(ok); box.appendChild(h); box.appendChild(to); box.appendChild(im); box.appendChild(bt);' +
+'  mask.appendChild(box); document.body.appendChild(mask);' +
+'  function cls(){ try{ document.body.removeChild(mask); }catch(ig){} }' +
+'  no.addEventListener("click",cls); ok.addEventListener("click",function(){ cls(); onYes(); });' +
+'  mask.addEventListener("click",function(e){ if(e.target===mask) cls(); });' +
+'}' +
+'function unaSendStamp_(wrap, key, imgsrc){' +
+'  var note=wrap.querySelector(".unarnote");' +
+'  var cid=wrap.getAttribute("data-cid")||"", nm=wrap.getAttribute("data-nm")||"";' +
+'  unaAskStamp_(nm, imgsrc, function(){' +
+'    if(note){ note.className="unarnote"; note.textContent="送信中…"; }' +
+'    var idn=unaIdent_();' +
+'    unaCall_({action:"submit",op:"line_reply",who:idn.who,role:idn.role,device:idn.device,' +
+'      fields:JSON.stringify({chat:cid,stamp:key})},' +
+'      function(r){' +
+'        if(!r||!r.ok){ if(note){ note.className="unarnote ng"; note.textContent=(r&&r.error)||"送れませんでした。"; } return; }' +
+'        var tries=0;' +
+'        (function poll(){' +
+'          tries++;' +
+'          unaCall_({action:"status",id:r.id},function(st){' +
+'            if(st&&st.status==="done"){ if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } return; }' +
+'            if(st&&st.status==="error"){ if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
+'            if(tries>40){ if(note){ note.className="unarnote ng"; note.textContent="事務所のパソコンから返事がありません。"; } return; }' +
+'            setTimeout(poll,3000);' +
+'          });' +
+'        })();' +
+'      });' +
+'  });' +
+'}' +
+'document.addEventListener("click",function(e){' +
+'  var b=e.target&&e.target.closest?e.target.closest(".unastamp"):null;' +
+'  if(!b) return;' +
+'  var w=b.closest(".unareply"); if(!w) return;' +
+'  var img=b.querySelector("img");' +
+'  unaSendStamp_(w, b.getAttribute("data-key"), img?img.src:"");' +
+'});' +
+'paintStamps_();' +
 'apply();' +
 '})();</scr' + 'ipt>';
 
@@ -2034,6 +2107,11 @@ var UNACSS_ =
 '  .unarrow{ display:flex; align-items:center; gap:10px; margin-top:8px; }' +
 '  .unarnote{ flex:1; font-size:13px; font-weight:700; color:var(--sub); }' +
 '  .unarnote.ok{ color:var(--cust); } .unarnote.ng{ color:var(--req); }' +
+'  .unastamps{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 2px; }' +
+'  .unastamp{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px;' +
+'    cursor:pointer; width:64px; height:64px; display:flex; align-items:center; justify-content:center; }' +
+'  .unastamp img{ max-width:100%; max-height:100%; }' +
+'  .unaaskimg{ display:block; margin:6px auto 2px; max-width:180px; max-height:180px; }' +
 '  .unarsend{ background:var(--cust); color:#fff; border:0; border-radius:10px; padding:11px 22px;' +
 '    font:inherit; font-weight:800; font-size:16px; cursor:pointer; }' +
 '  .unarsend:disabled{ opacity:.5; }' +
