@@ -2169,6 +2169,7 @@ var UNASCRIPT_ =
 '      var e2=ta.selectionEnd==null?ta.value.length:ta.selectionEnd;' +
 '      ta.value=ta.value.slice(0,s)+em+ta.value.slice(e2);' +
 '      var pos=s+em.length; ta.focus(); ta.setSelectionRange(pos,pos);' +
+'      close();' +
 '    });' +
 '    grid.appendChild(b);' +
 '  });' +
