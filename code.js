@@ -2763,7 +2763,7 @@ function renderLinksPage_(d, base, staff, dev) {
 '<style>' + LKCSS_ + '</style>' +
 '<div class="lkwrap">' +
   '<div class="lkbar">' +
-    '<a class="lkhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
+    '<a class="lkhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← TOPに戻る</a>' +
     '<span class="lkgen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
   '</div>' +
   '<h1>🔗 各種LINK</h1>' +
@@ -2788,7 +2788,7 @@ function lkTopicItem_(topic, idx) {
 function lkLangPane_(topic, idx) {
   var btns = (topic.links || []).map(lkLinkBtn_).join('');
   return '<div class="lklangpane" data-idx="' + idx + '" hidden>' +
-    '<button type="button" class="lkback">‹ 案内一覧へ戻る</button>' +
+    '<button type="button" class="lkback">‹ LINK一覧へ戻る</button>' +
     '<div class="lktitle">' + esc_(topic.name || '') + '</div>' +
     '<div class="lkhint">言語を選ぶとURLがコピーされます</div>' +
     '<div class="lklangbtns">' + btns + '</div>' +
@@ -2798,7 +2798,7 @@ function lkLangPane_(topic, idx) {
 function lkLinkBtn_(lk) {
   return '<button type="button" class="lkbtn" data-url="' + esc_(lk.url || '') + '">' +
     '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
-    '<span class="lkcopy">タップしてURLをコピー</span>' +
+    '<span class="lkcopy">タップして<br>URLをコピー</span>' +
   '</button>';
 }
 
@@ -2835,10 +2835,10 @@ var LKSCRIPT_ =
 '    var url=btn.getAttribute("data-url")||"";' +
 '    var label=btn.querySelector(".lkcopy");' +
 '    copyText_(url, function(ok){' +
-'      var prev=label.textContent;' +
+'      var prev=label.innerHTML;' +
 '      label.textContent = ok ? "✅ コピーしました" : "コピー失敗";' +
 '      btn.classList.toggle("lkok", ok);' +
-'      setTimeout(function(){ label.textContent=prev; btn.classList.remove("lkok"); }, 1500);' +
+'      setTimeout(function(){ label.innerHTML=prev; btn.classList.remove("lkok"); }, 1500);' +
 '    });' +
 '  });' +
 '}); ' +
@@ -2868,6 +2868,7 @@ var LKCSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
 '    padding:22px 22px; margin-bottom:14px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.06); }' +
 '  .lkitem:active{ transform:translateY(2px); }' +
+'  .lkitemname{ font-size:33px; font-weight:800; color:#2563eb; }' +
 '  .lkchev{ color:#2563eb; font-size:30px; font-weight:800; margin-left:10px; }' +
 // ②言語選択＝案内名を大見出しにし、言語ボタンは横並び（2026-07-18ユーザー指摘で縦積み→横並びに変更）。
 '  .lkback{ appearance:none; -webkit-appearance:none; font-family:inherit; font-size:16px;' +
@@ -2875,7 +2876,7 @@ var LKCSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:10px 16px; margin-bottom:16px; cursor:pointer; }' +
 '  .lkback:active{ transform:translateY(1px); }' +
-'  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; }' +
+'  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; color:#fff; }' +
 '  .lklangbtns{ display:flex; flex-direction:row; flex-wrap:wrap; gap:14px; margin-top:10px; }' +
 // ★言語ボタンは白背景＋濃い青文字（2026-07-18ユーザー指定＝白ベースにしてほしい）。
 //   `appearance:none`（＋Safari/LINE内蔵ブラウザ向けに`-webkit-appearance:none`）は端末標準の
@@ -2887,7 +2888,7 @@ var LKCSS_ =
 '    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkbtn:active{ transform:translateY(2px); }' +
 '  .lklang{ font-size:30px; font-weight:800; }' +
-'  .lkcopy{ font-size:16px; font-weight:800; color:#6b7280; }' +
+'  .lkcopy{ font-size:16px; font-weight:800; color:#6b7280; text-align:center; line-height:1.4; }' +
 '  .lkbtn.lkok{ background:#eafff1; border-color:#16a34a; }' +
 '  .lkbtn.lkok .lklang, .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
 '  .lknone{ color:#c33; font-size:16px; padding:8px 0; }';
