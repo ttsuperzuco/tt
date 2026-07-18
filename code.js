@@ -2877,19 +2877,19 @@ var LKCSS_ =
 '  .lkback:active{ transform:translateY(1px); }' +
 '  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; }' +
 '  .lklangbtns{ display:flex; flex-direction:row; flex-wrap:wrap; gap:14px; margin-top:10px; }' +
-// ★色を固定の濃い青にしても直らなかった＝原因は色でなく、<button>の端末標準の見た目
-//   （ネイティブのボタン装飾）がCSSの背景色の上に乗って白っぽく見せていたこと。
-//   `appearance:none`（＋Safari/LINE内蔵ブラウザ向けに`-webkit-appearance:none`）で
-//   端末標準の装飾そのものを消す（2026-07-18再指摘で特定。既存の`.unadetail`等と同じ作法）。
+// ★言語ボタンは白背景＋濃い青文字（2026-07-18ユーザー指定＝白ベースにしてほしい）。
+//   `appearance:none`（＋Safari/LINE内蔵ブラウザ向けに`-webkit-appearance:none`）は端末標準の
+//   ボタン装飾を消して指定した色を確実に出すためのもの（既存の`.unadetail`等と同じ作法）。
 '  .lkbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; display:flex;' +
 '    flex-direction:column; align-items:center;' +
-'    justify-content:center; gap:6px; flex:1 1 140px; min-width:140px; color:#fff; background:#2563eb;' +
-'    border:1px solid #2563eb; border-radius:18px; padding:26px 14px; cursor:pointer;' +
-'    box-shadow:0 4px 14px rgba(37,99,235,.35); }' +
+'    justify-content:center; gap:6px; flex:1 1 140px; min-width:140px; color:#1d4ed8; background:#ffffff;' +
+'    border:1px solid #d7dee8; border-radius:18px; padding:26px 14px; cursor:pointer;' +
+'    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkbtn:active{ transform:translateY(2px); }' +
 '  .lklang{ font-size:30px; font-weight:800; }' +
-'  .lkcopy{ font-size:16px; font-weight:700; opacity:.92; }' +
-'  .lkbtn.lkok{ background:#16a34a; border-color:#16a34a; box-shadow:0 4px 14px rgba(22,163,74,.35); }' +
+'  .lkcopy{ font-size:16px; font-weight:700; color:#6b7280; }' +
+'  .lkbtn.lkok{ background:#eafff1; border-color:#16a34a; }' +
+'  .lkbtn.lkok .lklang, .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
 '  .lknone{ color:#c33; font-size:16px; padding:8px 0; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
