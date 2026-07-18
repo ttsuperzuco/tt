@@ -2867,21 +2867,26 @@ var LKCSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
 '    padding:22px 22px; margin-bottom:14px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.06); }' +
 '  .lkitem:active{ transform:translateY(2px); }' +
-'  .lkchev{ color:var(--akiprimary); font-size:30px; font-weight:800; margin-left:10px; }' +
-// ②言語選択＝案内名を大見出しにし、言語ボタンは縦積み・フルワイド・超大きな文字。
+'  .lkchev{ color:#2563eb; font-size:30px; font-weight:800; margin-left:10px; }' +
+// ②言語選択＝案内名を大見出しにし、言語ボタンは横並び（2026-07-18ユーザー指摘で縦積み→横並びに変更）。
 '  .lkback{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akiink);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:10px 16px; margin-bottom:16px; cursor:pointer; }' +
 '  .lkback:active{ transform:translateY(1px); }' +
 '  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; }' +
-'  .lklangbtns{ display:flex; flex-direction:column; gap:16px; margin-top:10px; }' +
+'  .lklangbtns{ display:flex; flex-direction:row; flex-wrap:wrap; gap:14px; margin-top:10px; }' +
+// ★色は var(--akiprimary) 等のテーマ変数に頼らず固定の濃い青にする（2026-07-18ユーザー指摘：
+//   「白っぽくて背景に紛れて見えない」→ LINE内ブラウザ等 prefers-color-scheme を拾えない端末では
+//   ダーク用の薄紫(#a79fff)のまま出て白い背景に沈んで見えていた可能性が高いため、明暗どちらの
+//   背景でも確実に目立つ色を固定で使う）。
 '  .lkbtn{ font-family:inherit; display:flex; flex-direction:column; align-items:center;' +
-'    justify-content:center; gap:6px; width:100%; color:#fff; background:var(--akiprimary);' +
-'    border:1px solid var(--akiprimary); border-radius:18px; padding:26px 14px; cursor:pointer; }' +
+'    justify-content:center; gap:6px; flex:1 1 140px; min-width:140px; color:#fff; background:#2563eb;' +
+'    border:1px solid #2563eb; border-radius:18px; padding:26px 14px; cursor:pointer;' +
+'    box-shadow:0 4px 14px rgba(37,99,235,.35); }' +
 '  .lkbtn:active{ transform:translateY(2px); }' +
 '  .lklang{ font-size:30px; font-weight:800; }' +
 '  .lkcopy{ font-size:16px; font-weight:700; opacity:.92; }' +
-'  .lkbtn.lkok{ background:#16a34a; border-color:#16a34a; }' +
+'  .lkbtn.lkok{ background:#16a34a; border-color:#16a34a; box-shadow:0 4px 14px rgba(22,163,74,.35); }' +
 '  .lknone{ color:#c33; font-size:16px; padding:8px 0; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
