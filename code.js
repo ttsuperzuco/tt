@@ -1787,6 +1787,7 @@ function unaCard_(r, kind) {
         '<div class="unastamps"></div>' +
         '<div class="unarrow">' +
           '<span class="unarnote"></span>' +
+          '<button type="button" class="unaremoji">😊 絵文字</button>' +
           '<button type="button" class="unarpicker">😀 スタンプ</button>' +
           '<button type="button" class="unarsend">送る</button>' +
         '</div>' +
@@ -2147,6 +2148,38 @@ var UNASCRIPT_ =
 '  if(!b) return;' +
 '  var w=b.closest(".unareply"); if(w) unaStickerPanel_(w);' +
 '});' +
+// ―― 文章に絵文字を差し込む（送信はしない・打つだけ。2026-07-18追加）――
+'var EMOJI_LIST_=["😊","😀","😄","😁","😆","🙂","😉","😍","🥰","🤣","😂","😢","😭","🙏","👍",' +
+'"👌","💪","🎉","❤","💦","😅","🤔","😴","🙇","✨","🌸","☀","🌧","😱","😳"];' +
+'function unaEmojiPanel_(wrap){' +
+'  var mask=document.createElement("div"); mask.className="unaask";' +
+'  var box=document.createElement("div"); box.className="unaaskbox unastkbox";' +
+'  var h=document.createElement("div"); h.className="unaaskh"; h.textContent="絵文字を選ぶ";' +
+'  var grid=document.createElement("div"); grid.className="unaemgrid";' +
+'  var no=document.createElement("button"); no.type="button"; no.className="unaaskno"; no.textContent="閉じる";' +
+'  var bt=document.createElement("div"); bt.className="unaaskbt"; bt.appendChild(no);' +
+'  EMOJI_LIST_.forEach(function(em){' +
+'    var b=document.createElement("button"); b.type="button"; b.className="unaemitem"; b.textContent=em;' +
+'    b.addEventListener("click",function(){' +
+'      var ta=wrap.querySelector(".unartext"); if(!ta) return;' +
+'      var s=ta.selectionStart==null?ta.value.length:ta.selectionStart;' +
+'      var e2=ta.selectionEnd==null?ta.value.length:ta.selectionEnd;' +
+'      ta.value=ta.value.slice(0,s)+em+ta.value.slice(e2);' +
+'      var pos=s+em.length; ta.focus(); ta.setSelectionRange(pos,pos);' +
+'    });' +
+'    grid.appendChild(b);' +
+'  });' +
+'  box.appendChild(h); box.appendChild(grid); box.appendChild(bt);' +
+'  mask.appendChild(box); document.body.appendChild(mask);' +
+'  function close(){ try{ document.body.removeChild(mask); }catch(ig){} }' +
+'  no.addEventListener("click",close);' +
+'  mask.addEventListener("click",function(e){ if(e.target===mask) close(); });' +
+'}' +
+'document.addEventListener("click",function(e){' +
+'  var b=e.target&&e.target.closest?e.target.closest(".unaremoji"):null;' +
+'  if(!b) return;' +
+'  var w=b.closest(".unareply"); if(w) unaEmojiPanel_(w);' +
+'});' +
 'paintStamps_();' +
 'apply();' +
 '})();</scr' + 'ipt>';
@@ -2200,6 +2233,11 @@ var UNACSS_ =
 '  .unarsend:disabled{ opacity:.5; }' +
 '  .unarpicker{ background:var(--card); border:1px solid var(--line); color:var(--ink); border-radius:10px;' +
 '    padding:11px 16px; font:inherit; font-weight:700; font-size:15px; cursor:pointer; }' +
+'  .unaremoji{ background:var(--card); border:1px solid var(--line); color:var(--ink); border-radius:10px;' +
+'    padding:11px 16px; font:inherit; font-weight:700; font-size:15px; cursor:pointer; }' +
+'  .unaemgrid{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; max-height:260px; overflow-y:auto; }' +
+'  .unaemitem{ background:var(--custbg); border:1px solid var(--line); border-radius:10px;' +
+'    font-size:24px; padding:6px; cursor:pointer; aspect-ratio:1; }' +
 '  .unastkbox{ max-width:520px; }' +
 '  .unastktabs{ display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto; margin-bottom:10px;' +
 '    padding-bottom:8px; border-bottom:1px solid var(--line); }' +
