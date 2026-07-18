@@ -2749,13 +2749,15 @@ function renderLinksError_(err, base, staff, dev) {
 /** 各種LINKページの描画（純JS・GAS API不使用）。②静的アプリのJSONP経由から呼ばれる
  *  （データは事務所PCが Googleシート「ズコLINK」タブを読んで links.json に書き出したもの＝
  *  export_links_super.py。GASは計算しない＝描くだけ）。
- *  お客様にLINEで送る案内リンクを、案内名ごとにカードで並べ、言語ボタンを押すとURLを
- *  クリップボードにコピーする（そのままLINEの入力欄に貼り付けて送る想定）。 */
+ *  2段階の画面：①案内名の大きなボタン一覧 → ②押した案内の言語ボタン一覧（押すとURLを
+ *  クリップボードにコピーし、そのままLINEの入力欄に貼り付けて送る想定）。どちらも大きな文字・
+ *  大きなボタンにして遠目にも読める見た目にする（2026-07-18ユーザー指摘：見にくい→修正）。 */
 function renderLinksPage_(d, base, staff, dev) {
   var topics = (d && d.topics) || [];
-  var cards = topics.length
-    ? topics.map(lkTopicCard_).join('\n')
+  var list = topics.length
+    ? topics.map(lkTopicItem_).join('')
     : '<div class="lknone">まだ案内リンクが登録されていません。</div>';
+  var panes = topics.map(lkLangPane_).join('');
 
   return '' +
 '<style>' + LKCSS_ + '</style>' +
@@ -2765,29 +2767,44 @@ function renderLinksPage_(d, base, staff, dev) {
     '<span class="lkgen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
   '</div>' +
   '<h1>🔗 各種LINK</h1>' +
-  '<div class="lkhint">ボタンを押すとURLがコピーされます。LINEの入力欄に貼り付けて送ってください。</div>' +
-  '<div id="lktopics">' + cards + '</div>' +
+  '<div id="lklist">' +
+    '<div class="lkhint">送りたい案内を選んでください</div>' +
+    list +
+  '</div>' +
+  panes +
 '</div>' +
 LKSCRIPT_;
 }
 
-function lkTopicCard_(topic) {
-  var links = (topic.links || []).map(lkLinkBtn_).join('');
-  return '<div class="lktopic">' +
-    '<div class="lkname">' + esc_(topic.name || '') + '</div>' +
-    '<div class="lkrow">' + links + '</div>' +
+// ①一覧画面のボタン＝案内名だけの大きなボタン（押すと②へ切り替わる）。
+function lkTopicItem_(topic, idx) {
+  return '<button type="button" class="lkitem" data-idx="' + idx + '">' +
+    '<span class="lkitemname">' + esc_(topic.name || '') + '</span>' +
+    '<span class="lkchev">›</span>' +
+  '</button>';
+}
+
+// ②言語選択画面（案内ごとに1枚・既定は隠す。①のボタンを押した時だけJSで表示切替）。
+function lkLangPane_(topic, idx) {
+  var btns = (topic.links || []).map(lkLinkBtn_).join('');
+  return '<div class="lklangpane" data-idx="' + idx + '" hidden>' +
+    '<button type="button" class="lkback">‹ 案内一覧へ戻る</button>' +
+    '<div class="lktitle">' + esc_(topic.name || '') + '</div>' +
+    '<div class="lkhint">言語を選ぶとURLがコピーされます</div>' +
+    '<div class="lklangbtns">' + btns + '</div>' +
   '</div>';
 }
 
 function lkLinkBtn_(lk) {
   return '<button type="button" class="lkbtn" data-url="' + esc_(lk.url || '') + '">' +
     '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
-    '<span class="lkcopy">コピー</span>' +
+    '<span class="lkcopy">タップしてコピー</span>' +
   '</button>';
 }
 
 // クリップボードへのコピー＝navigator.clipboard（httpsのみ有効）優先、使えない端末は
 // textarea+execCommandへ自動で切り替える（LINE内ブラウザ等の古い実装向けフォールバック）。
+// ＋①案内一覧⇄②言語選択の画面切替（同じページ内でhidden属性を付け外しするだけ・再取得なし）。
 var LKSCRIPT_ =
 '<script>(function(){' +
 'function fallbackCopy_(text){' +
@@ -2802,13 +2819,24 @@ var LKSCRIPT_ =
 '    navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(fallbackCopy_(text)); });' +
 '  } else { done(fallbackCopy_(text)); }' +
 '}' +
+'var list=document.getElementById("lklist");' +
+'var panes=[].slice.call(document.querySelectorAll(".lklangpane"));' +
+'function showList_(){ if(list) list.hidden=false; panes.forEach(function(p){ p.hidden=true; }); window.scrollTo(0,0); }' +
+'function showPane_(idx){ if(list) list.hidden=true; panes.forEach(function(p){ p.hidden = p.getAttribute("data-idx")!==String(idx); }); window.scrollTo(0,0); }' +
+'[].slice.call(document.querySelectorAll(".lkitem")).forEach(function(btn){' +
+'  btn.addEventListener("click", function(){ showPane_(btn.getAttribute("data-idx")); });' +
+'});' +
+'panes.forEach(function(p){' +
+'  var back=p.querySelector(".lkback");' +
+'  if(back) back.addEventListener("click", showList_);' +
+'});' +
 '[].slice.call(document.querySelectorAll(".lkbtn")).forEach(function(btn){' +
 '  btn.addEventListener("click", function(){' +
 '    var url=btn.getAttribute("data-url")||"";' +
 '    var label=btn.querySelector(".lkcopy");' +
 '    copyText_(url, function(ok){' +
 '      var prev=label.textContent;' +
-'      label.textContent = ok ? "✅ コピー済み" : "コピー失敗";' +
+'      label.textContent = ok ? "✅ コピーしました" : "コピー失敗";' +
 '      btn.classList.toggle("lkok", ok);' +
 '      setTimeout(function(){ label.textContent=prev; btn.classList.remove("lkok"); }, 1500);' +
 '    });' +
@@ -2816,7 +2844,14 @@ var LKSCRIPT_ =
 '}); ' +
 '})();</scr' + 'ipt>';
 
+// ★見やすさ最優先（2026-07-18ユーザー指摘で全面拡大）：一覧ボタン・言語ボタンとも大きな文字・
+//   大きなタップ域にする（自動監視の「文字サイズ拡大（老眼対応）」と同じ考え方）。
+//   :root の色変数はAKICSS_と同じ値を持たせている（このページはAKICSS_を読み込まないため自前で持つ）。
 var LKCSS_ =
+'  :root{ --akibg:#16141e; --akicard:#211f2c; --akiink:#f1eef8; --akisub:#9a95a9; --akiline:#34313f;' +
+'    --akiprimary:#a79fff; }' +
+'  @media (prefers-color-scheme:light){ :root{ --akibg:#eef1f6; --akicard:#ffffff; --akiink:#1f2937;' +
+'    --akisub:#6b7280; --akiline:#d7dee8; --akiprimary:#2563eb; } }' +
 '  .lkwrap{ max-width:760px; margin:0 auto; padding:14px 14px 40px;' +
 '    font-family:"Yu Gothic UI","Hiragino Sans",sans-serif; color:var(--akiink); }' +
 '  .lkbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }' +
@@ -2824,21 +2859,30 @@ var LKCSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px; padding:10px 14px; }' +
 '  .lkhome:active{ transform:translateY(1px); }' +
 '  .lkgen{ flex:0 0 auto; color:var(--akisub); font-size:15px; font-weight:700; text-align:right; }' +
-'  .lkwrap h1{ font-size:22px; margin:2px 0 6px; }' +
-'  .lkhint{ color:var(--akisub); font-size:14px; margin-bottom:14px; }' +
-'  .lktopic{ background:var(--akicard); border:1px solid var(--akiline); border-radius:14px;' +
-'    padding:12px 14px; margin-bottom:12px; }' +
-'  .lkname{ font-weight:800; font-size:19px; margin-bottom:8px; }' +
-'  .lkrow{ display:flex; gap:8px; flex-wrap:wrap; }' +
-'  .lkbtn{ font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:2px;' +
-'    min-width:96px; color:var(--akiink); background:var(--akibg); border:1px solid var(--akiline);' +
-'    border-radius:10px; padding:9px 14px; cursor:pointer; }' +
-'  .lkbtn:active{ transform:translateY(1px); }' +
-'  .lklang{ font-weight:800; font-size:16px; }' +
-'  .lkcopy{ color:var(--akisub); font-size:12.5px; font-weight:700; }' +
-'  .lkbtn.lkok{ border-color:#22c55e; background:rgba(34,197,94,.14); }' +
-'  .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
-'  .lknone{ color:#c33; font-size:15px; padding:8px 0; }';
+'  .lkwrap h1{ font-size:24px; margin:2px 0 10px; }' +
+'  .lkhint{ color:var(--akisub); font-size:16px; margin-bottom:14px; font-weight:700; }' +
+// ①案内一覧＝1件1行、大きな文字・大きなタップ域（フルワイド）。
+'  .lkitem{ display:flex; align-items:center; justify-content:space-between; width:100%;' +
+'    font-family:inherit; font-size:22px; font-weight:800; color:var(--akiink); text-align:left;' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
+'    padding:22px 22px; margin-bottom:14px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.06); }' +
+'  .lkitem:active{ transform:translateY(2px); }' +
+'  .lkchev{ color:var(--akiprimary); font-size:30px; font-weight:800; margin-left:10px; }' +
+// ②言語選択＝案内名を大見出しにし、言語ボタンは縦積み・フルワイド・超大きな文字。
+'  .lkback{ font-family:inherit; font-size:16px; font-weight:700; color:var(--akiink);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:10px 16px; margin-bottom:16px; cursor:pointer; }' +
+'  .lkback:active{ transform:translateY(1px); }' +
+'  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; }' +
+'  .lklangbtns{ display:flex; flex-direction:column; gap:16px; margin-top:10px; }' +
+'  .lkbtn{ font-family:inherit; display:flex; flex-direction:column; align-items:center;' +
+'    justify-content:center; gap:6px; width:100%; color:#fff; background:var(--akiprimary);' +
+'    border:1px solid var(--akiprimary); border-radius:18px; padding:26px 14px; cursor:pointer; }' +
+'  .lkbtn:active{ transform:translateY(2px); }' +
+'  .lklang{ font-size:30px; font-weight:800; }' +
+'  .lkcopy{ font-size:16px; font-weight:700; opacity:.92; }' +
+'  .lkbtn.lkok{ background:#16a34a; border-color:#16a34a; }' +
+'  .lknone{ color:#c33; font-size:16px; padding:8px 0; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
 // iOSは https のユニバーサルリンクのまま（Safariで開けばアプリに渡る）。
