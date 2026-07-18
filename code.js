@@ -2798,7 +2798,7 @@ function lkLangPane_(topic, idx) {
 function lkLinkBtn_(lk) {
   return '<button type="button" class="lkbtn" data-url="' + esc_(lk.url || '') + '">' +
     '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
-    '<span class="lkcopy">タップしてコピー</span>' +
+    '<span class="lkcopy">タップしてURLをコピー</span>' +
   '</button>';
 }
 
@@ -2887,7 +2887,7 @@ var LKCSS_ =
 '    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkbtn:active{ transform:translateY(2px); }' +
 '  .lklang{ font-size:30px; font-weight:800; }' +
-'  .lkcopy{ font-size:16px; font-weight:700; color:#6b7280; }' +
+'  .lkcopy{ font-size:16px; font-weight:800; color:#6b7280; }' +
 '  .lkbtn.lkok{ background:#eafff1; border-color:#16a34a; }' +
 '  .lkbtn.lkok .lklang, .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
 '  .lknone{ color:#c33; font-size:16px; padding:8px 0; }';
