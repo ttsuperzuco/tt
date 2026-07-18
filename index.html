@@ -87,7 +87,8 @@
     lt:         'lt_match.json',
     uriage:     'uriage.json',
     unanswered: 'unanswered.json',
-    akijikan:   'akijikan.json'
+    akijikan:   'akijikan.json',
+    links:      'links.json'
     // ★kanshi(自動監視)は対象外＝開発URL専用でスタッフの目には触れず、装置の見分け(device)も
     //   要るため。頻度も低く先取りの旨味が薄い（詳細は共通\スーパーズコApp_必読.md）。
   };
@@ -118,8 +119,8 @@
   }
 })();
 </script>
-<script src="detect_core.js?v=20260718s"></script>
-<script src="code.js?v=20260718s"></script>
+<script src="detect_core.js?v=20260718t"></script>
+<script src="code.js?v=20260718t"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -351,6 +352,15 @@
     });
   }
 
+  function showLinks() {
+    showPrefetchable_('links', function (payload) {
+      try {
+        if (!payload || payload.error) { mount(renderLinksError_((payload && payload.error) || '不明', base, staff, dev)); return; }
+        mount(renderLinksPage_(payload, base, staff, dev));
+      } catch (e) { fail('描画エラー：' + e); }
+    });
+  }
+
   // 自動監視（開発URL ?dev=1 だけに出るボタン）。事務所PCが1分ごとに送ってくる状態を見る。
   // ★描画・自動更新・操作は全て code.js の renderKanshiPage_ が埋め込むスクリプトが行う
   //   （①GAS版と同じ1本＝二重管理しない）。ここは取得して渡すだけ。
@@ -518,6 +528,7 @@
     else if (v === 'uriage') showUriage();
     else if (v === 'unanswered') showUnanswered();
     else if (v === 'akijikan') showAkijikan();
+    else if (v === 'links') showLinks();
     else if (v === 'kanshi') showKanshi();
     else if (v === 'conflict') showConflict();
     else { showHome(perms, order); prefetchForHome_(allow); }

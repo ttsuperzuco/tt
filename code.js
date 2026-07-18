@@ -858,6 +858,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   uriage:     { exec: true, staff: false },
   unanswered: { exec: true, staff: true },
   akijikan:   { exec: false, staff: false },  // ★初期は開発URL(?dev=1)だけで見える（2026-07-16ユーザー指定）
+  links:      { exec: true, staff: true },    // ★各種LINK＝お客様へのLINE送信で全員が使うため初期から全員に見える（2026-07-18）
   ttapp:      { exec: true, staff: true },     // ★元祖TTアプリ＝以前のalways:trueと同じ「全員に見える」を初期値として維持
   // ★kanshi(自動監視)＝開発URL(?dev=1)専用。tile_settings.py の TILES にも入れない＝
   //   人ごとの権限画面に出てこない＝誰にもONにできない＝開発URLだけに出る（2026-07-16ユーザー指定）。
@@ -866,7 +867,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'ttapp', 'kanshi'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'kanshi'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -893,7 +894,7 @@ function defaultPerms_(people) {
   var list = people || PEOPLE_;
   var perms = {};
   for (var i = 0; i < list.length; i++) {
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, ttapp: true, kanshi: false };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, kanshi: false };
   }
   return perms;
 }
@@ -985,7 +986,7 @@ function getResets_() {
 function personPerms_(perms, staff, dev, who) {
   if (dev) return null;   // null = すべて許可
   var pid = staff ? String(who || '') : 'kanbu';
-  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, kanshi: false };
+  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: false, kanshi: false };
 }
 // そのviewを見る権限があるか（home/notice は常に可）。allow=null(dev)は常に可。
 function viewAllowed_(view, allow) {
@@ -1316,6 +1317,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">💬</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
     icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' },
+  { id: 'links', cls: 'links', view: 'links',
+    icon: '<span class="ticon">🔗</span>', label: '各種\nLINK' },
   // ★元祖TTアプリ＝外部サイトへのリンクだけのボタン（GAS内のviewではない）。
   //   2026-07-16：他のボタンと同じく人ごとのON/OFF対象に変更（以前はalways:trueで常時表示
   //   固定だったが、ユーザー要望で「人ごとに見せる/見せない」を選べるようにした。初期値は
@@ -2730,6 +2733,113 @@ var AKICSS_ =
 '  .akislot b{ font-weight:700; color:var(--akisub); margin-left:3px; font-size:15px; }' +
 '  .akinone{ color:#c33; font-size:15px; padding:4px 0; }';
 
+function renderLinksError_(err, base, staff, dev) {
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🔗</span><span class="bname">各種LINK</span></div>' +
+    '<div class="soon">' +
+      '<div class="soonic">📄</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">データ未生成</div>' +
+      '<div class="soondesc">' + esc_(err && err.message ? err.message : err) + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/** 各種LINKページの描画（純JS・GAS API不使用）。②静的アプリのJSONP経由から呼ばれる
+ *  （データは事務所PCが Googleシート「ズコLINK」タブを読んで links.json に書き出したもの＝
+ *  export_links_super.py。GASは計算しない＝描くだけ）。
+ *  お客様にLINEで送る案内リンクを、案内名ごとにカードで並べ、言語ボタンを押すとURLを
+ *  クリップボードにコピーする（そのままLINEの入力欄に貼り付けて送る想定）。 */
+function renderLinksPage_(d, base, staff, dev) {
+  var topics = (d && d.topics) || [];
+  var cards = topics.length
+    ? topics.map(lkTopicCard_).join('\n')
+    : '<div class="lknone">まだ案内リンクが登録されていません。</div>';
+
+  return '' +
+'<style>' + LKCSS_ + '</style>' +
+'<div class="lkwrap">' +
+  '<div class="lkbar">' +
+    '<a class="lkhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
+    '<span class="lkgen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
+  '</div>' +
+  '<h1>🔗 各種LINK</h1>' +
+  '<div class="lkhint">ボタンを押すとURLがコピーされます。LINEの入力欄に貼り付けて送ってください。</div>' +
+  '<div id="lktopics">' + cards + '</div>' +
+'</div>' +
+LKSCRIPT_;
+}
+
+function lkTopicCard_(topic) {
+  var links = (topic.links || []).map(lkLinkBtn_).join('');
+  return '<div class="lktopic">' +
+    '<div class="lkname">' + esc_(topic.name || '') + '</div>' +
+    '<div class="lkrow">' + links + '</div>' +
+  '</div>';
+}
+
+function lkLinkBtn_(lk) {
+  return '<button type="button" class="lkbtn" data-url="' + esc_(lk.url || '') + '">' +
+    '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
+    '<span class="lkcopy">コピー</span>' +
+  '</button>';
+}
+
+// クリップボードへのコピー＝navigator.clipboard（httpsのみ有効）優先、使えない端末は
+// textarea+execCommandへ自動で切り替える（LINE内ブラウザ等の古い実装向けフォールバック）。
+var LKSCRIPT_ =
+'<script>(function(){' +
+'function fallbackCopy_(text){' +
+'  var ta=document.createElement("textarea"); ta.value=text;' +
+'  ta.style.position="fixed"; ta.style.opacity="0";' +
+'  document.body.appendChild(ta); ta.focus(); ta.select();' +
+'  var ok=false; try{ ok=document.execCommand("copy"); }catch(e){}' +
+'  document.body.removeChild(ta); return ok;' +
+'}' +
+'function copyText_(text, done){' +
+'  if(navigator.clipboard && navigator.clipboard.writeText){' +
+'    navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(fallbackCopy_(text)); });' +
+'  } else { done(fallbackCopy_(text)); }' +
+'}' +
+'[].slice.call(document.querySelectorAll(".lkbtn")).forEach(function(btn){' +
+'  btn.addEventListener("click", function(){' +
+'    var url=btn.getAttribute("data-url")||"";' +
+'    var label=btn.querySelector(".lkcopy");' +
+'    copyText_(url, function(ok){' +
+'      var prev=label.textContent;' +
+'      label.textContent = ok ? "✅ コピー済み" : "コピー失敗";' +
+'      btn.classList.toggle("lkok", ok);' +
+'      setTimeout(function(){ label.textContent=prev; btn.classList.remove("lkok"); }, 1500);' +
+'    });' +
+'  });' +
+'}); ' +
+'})();</scr' + 'ipt>';
+
+var LKCSS_ =
+'  .lkwrap{ max-width:760px; margin:0 auto; padding:14px 14px 40px;' +
+'    font-family:"Yu Gothic UI","Hiragino Sans",sans-serif; color:var(--akiink); }' +
+'  .lkbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }' +
+'  .lkhome{ flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--akiink); text-decoration:none;' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px; padding:10px 14px; }' +
+'  .lkhome:active{ transform:translateY(1px); }' +
+'  .lkgen{ flex:0 0 auto; color:var(--akisub); font-size:15px; font-weight:700; text-align:right; }' +
+'  .lkwrap h1{ font-size:22px; margin:2px 0 6px; }' +
+'  .lkhint{ color:var(--akisub); font-size:14px; margin-bottom:14px; }' +
+'  .lktopic{ background:var(--akicard); border:1px solid var(--akiline); border-radius:14px;' +
+'    padding:12px 14px; margin-bottom:12px; }' +
+'  .lkname{ font-weight:800; font-size:19px; margin-bottom:8px; }' +
+'  .lkrow{ display:flex; gap:8px; flex-wrap:wrap; }' +
+'  .lkbtn{ font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:2px;' +
+'    min-width:96px; color:var(--akiink); background:var(--akibg); border:1px solid var(--akiline);' +
+'    border-radius:10px; padding:9px 14px; cursor:pointer; }' +
+'  .lkbtn:active{ transform:translateY(1px); }' +
+'  .lklang{ font-weight:800; font-size:16px; }' +
+'  .lkcopy{ color:var(--akisub); font-size:12.5px; font-weight:700; }' +
+'  .lkbtn.lkok{ border-color:#22c55e; background:rgba(34,197,94,.14); }' +
+'  .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
+'  .lknone{ color:#c33; font-size:15px; padding:8px 0; }';
+
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
 // iOSは https のユニバーサルリンクのまま（Safariで開けばアプリに渡る）。
 var TTSCRIPT_ =
@@ -3134,6 +3244,7 @@ var HOMECSS_ =
 '  .tile.uriage::before { background:#f59e0b; }' +
 '  .tile.unanswered::before { background:#0d9b6c; }' +
 '  .tile.akijikan::before { background:#0ea5e9; }' +
+'  .tile.links::before { background:#65a30d; }' +
 '  .tile.ttapp::before { background:#c026d3; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -3145,6 +3256,7 @@ var HOMECSS_ =
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
 '  .tile.unanswered .ticon { background:rgba(13,155,108,.12); }' +
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
+'  .tile.links .ticon { background:rgba(101,163,13,.16); }' +
 '  .tile.ttapp .ticon { background:rgba(192,38,211,.14); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
