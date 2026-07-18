@@ -119,8 +119,8 @@
   }
 })();
 </script>
-<script src="detect_core.js?v=20260718w"></script>
-<script src="code.js?v=20260718w"></script>
+<script src="detect_core.js?v=20260718x"></script>
+<script src="code.js?v=20260718x"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -166,7 +166,20 @@
     head.appendChild(manifestLink);
 
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(function () {});
+      // ★2026-07-18：スタッフが手で「完全に閉じて開き直す」「アイコンを削除して入れ直す」等を
+      //   しなくても新しい版が届くようにする。ブラウザは既定だと保存係(sw.js)の中身を
+      //   最大24時間チェックしないことがある＝普通に開き直すだけでは新しくならない場合がある。
+      //   対策：①毎回開いた瞬間に明示的に更新確認(update())を強制②新しい保存係に交代した瞬間
+      //   (controllerchange)に1回だけ自動で画面を作り直す(location.reload)。人の操作は不要。
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        try { reg.update(); } catch (e) {}
+      }).catch(function () {});
+      var szReloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (szReloaded) return;
+        szReloaded = true;
+        location.reload();
+      });
     }
 
     // Chrome自身が出す自動バナーも抑止（手動メニューからのインストールは引き続き可能）。
