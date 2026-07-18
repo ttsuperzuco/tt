@@ -1787,6 +1787,7 @@ function unaCard_(r, kind) {
         '<div class="unastamps"></div>' +
         '<div class="unarrow">' +
           '<span class="unarnote"></span>' +
+          '<button type="button" class="unarpicker">😀 スタンプ</button>' +
           '<button type="button" class="unarsend">送る</button>' +
         '</div>' +
       '</div>'
@@ -2064,6 +2065,88 @@ var UNASCRIPT_ =
 '  var img=b.querySelector("img");' +
 '  unaSendStamp_(w, b.getAttribute("data-key"), img?img.src:"");' +
 '});' +
+// ―― 本物のLINEスタンプを選ぶ（オーナー本人が持っている物。2026-07-18追加）――
+// 一覧はGoogle側の窓口から読む(action=data&name=line_stickers.json)。買い足せば次に開いた時
+// 自動で増える＝静的ファイルに書き出さない。束(パッケージ)ごとにタブを分け、押すと確認→送信。
+'var REALSTICKERS_=null, REALSTICKERS_WAIT_=[];' +
+'function loadRealStickers_(cb){' +
+'  if(REALSTICKERS_){ cb(REALSTICKERS_); return; }' +
+'  REALSTICKERS_WAIT_.push(cb);' +
+'  if(REALSTICKERS_WAIT_.length>1) return;' +
+'  unaCall_({action:"data",name:"line_stickers.json"},function(d){' +
+'    REALSTICKERS_=(d&&d.packs)||[]; REALSTICKERS_WAIT_.forEach(function(f){f(REALSTICKERS_);}); REALSTICKERS_WAIT_=[];' +
+'  });' +
+'}' +
+'function unaStickerPanel_(wrap){' +
+'  var mask=document.createElement("div"); mask.className="unaask";' +
+'  var box=document.createElement("div"); box.className="unaaskbox unastkbox";' +
+'  var h=document.createElement("div"); h.className="unaaskh"; h.textContent="スタンプを選ぶ";' +
+'  var tabs=document.createElement("div"); tabs.className="unastktabs";' +
+'  var grid=document.createElement("div"); grid.className="unastkgrid"; grid.textContent="読み込み中…";' +
+'  var no=document.createElement("button"); no.type="button"; no.className="unaaskno"; no.textContent="閉じる";' +
+'  var bt=document.createElement("div"); bt.className="unaaskbt"; bt.appendChild(no);' +
+'  box.appendChild(h); box.appendChild(tabs); box.appendChild(grid); box.appendChild(bt);' +
+'  mask.appendChild(box); document.body.appendChild(mask);' +
+'  function close(){ try{ document.body.removeChild(mask); }catch(ig){} }' +
+'  no.addEventListener("click",close);' +
+'  mask.addEventListener("click",function(e){ if(e.target===mask) close(); });' +
+'  function paintPack(pack){' +
+'    grid.innerHTML="";' +
+'    pack.stickers.forEach(function(st){' +
+'      var b=document.createElement("button"); b.type="button"; b.className="unastkitem";' +
+'      var img=document.createElement("img"); img.src=st.thumb; img.loading="lazy";' +
+'      b.appendChild(img);' +
+'      b.addEventListener("click",function(){' +
+'        close();' +
+'        unaSendRealSticker_(wrap, pack.packageId, st.stickerId, st.thumb);' +
+'      });' +
+'      grid.appendChild(b);' +
+'    });' +
+'  }' +
+'  loadRealStickers_(function(packs){' +
+'    if(!packs.length){ grid.textContent="スタンプが見つかりません。"; return; }' +
+'    tabs.innerHTML="";' +
+'    packs.forEach(function(pack,i){' +
+'      var t=document.createElement("button"); t.type="button"; t.className="unastktab"+(i===0?" sel":"");' +
+'      var timg=document.createElement("img"); timg.src=pack.stickers[0].thumb;' +
+'      t.appendChild(timg);' +
+'      t.addEventListener("click",function(){' +
+'        [].slice.call(tabs.children).forEach(function(x){ x.classList.remove("sel"); });' +
+'        t.classList.add("sel"); paintPack(pack);' +
+'      });' +
+'      tabs.appendChild(t);' +
+'    });' +
+'    paintPack(packs[0]);' +
+'  });' +
+'}' +
+'function unaSendRealSticker_(wrap, packageId, stickerId, imgsrc){' +
+'  var note=wrap.querySelector(".unarnote");' +
+'  var cid=wrap.getAttribute("data-cid")||"", nm=wrap.getAttribute("data-nm")||"";' +
+'  unaAskStamp_(nm, imgsrc, function(){' +
+'    if(note){ note.className="unarnote"; note.textContent="送信中…（少し時間がかかります）"; }' +
+'    var idn=unaIdent_();' +
+'    unaCall_({action:"submit",op:"line_reply",who:idn.who,role:idn.role,device:idn.device,' +
+'      fields:JSON.stringify({chat:cid,package_id:packageId,sticker_id:stickerId})},' +
+'      function(r){' +
+'        if(!r||!r.ok){ if(note){ note.className="unarnote ng"; note.textContent=(r&&r.error)||"送れませんでした。"; } return; }' +
+'        var tries=0;' +
+'        (function poll(){' +
+'          tries++;' +
+'          unaCall_({action:"status",id:r.id},function(st){' +
+'            if(st&&st.status==="done"){ if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } return; }' +
+'            if(st&&st.status==="error"){ if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
+'            if(tries>60){ if(note){ note.className="unarnote ng"; note.textContent="事務所のパソコンから返事がありません。"; } return; }' +
+'            setTimeout(poll,3000);' +
+'          });' +
+'        })();' +
+'      });' +
+'  });' +
+'}' +
+'document.addEventListener("click",function(e){' +
+'  var b=e.target&&e.target.closest?e.target.closest(".unarpicker"):null;' +
+'  if(!b) return;' +
+'  var w=b.closest(".unareply"); if(w) unaStickerPanel_(w);' +
+'});' +
 'paintStamps_();' +
 'apply();' +
 '})();</scr' + 'ipt>';
@@ -2115,6 +2198,19 @@ var UNACSS_ =
 '  .unarsend{ background:var(--cust); color:#fff; border:0; border-radius:10px; padding:11px 22px;' +
 '    font:inherit; font-weight:800; font-size:16px; cursor:pointer; }' +
 '  .unarsend:disabled{ opacity:.5; }' +
+'  .unarpicker{ background:var(--card); border:1px solid var(--line); color:var(--ink); border-radius:10px;' +
+'    padding:11px 16px; font:inherit; font-weight:700; font-size:15px; cursor:pointer; }' +
+'  .unastkbox{ max-width:520px; }' +
+'  .unastktabs{ display:flex; flex-wrap:wrap; gap:6px; max-height:110px; overflow-y:auto; margin-bottom:10px;' +
+'    padding-bottom:8px; border-bottom:1px solid var(--line); }' +
+'  .unastktab{ width:40px; height:40px; padding:2px; border-radius:8px; border:2px solid transparent;' +
+'    background:var(--custbg); cursor:pointer; display:flex; align-items:center; justify-content:center; }' +
+'  .unastktab img{ max-width:100%; max-height:100%; }' +
+'  .unastktab.sel{ border-color:var(--cust); }' +
+'  .unastkgrid{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; max-height:280px; overflow-y:auto; }' +
+'  .unastkitem{ background:var(--custbg); border:1px solid var(--line); border-radius:10px; padding:4px;' +
+'    cursor:pointer; aspect-ratio:1; display:flex; align-items:center; justify-content:center; }' +
+'  .unastkitem img{ max-width:100%; max-height:100%; }' +
 '  .unaask{ position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center;' +
 '    justify-content:center; padding:18px; z-index:60; }' +
 '  .unaaskbox{ background:var(--card); border-radius:14px; padding:16px; max-width:420px; width:100%; }' +
