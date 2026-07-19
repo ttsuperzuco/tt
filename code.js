@@ -1683,10 +1683,8 @@ function renderRirekiPage_(base, staff, dev) {
   'var room=r.rm?("<span class=\\"rkroom\\">"+esc(r.rm)+"</span>"):"";' +
   'var cname=r.cu?("<div class=\\"rkcname\\">"+esc(r.cu)+"</div>"):"";' +
   'var treat=r.tr?("<div class=\\"rktreat\\">"+esc(r.tr)+"</div>"):"<div class=\\"rktreat empty\\">（施術内容メモなし）</div>";' +
-  'var link=r.tt?("<div><a class=\\"rkttl\\" href=\\""+esc(r.tt)+"\\" target=\\"_blank\\" rel=\\"noopener\\">TimeTreeで開く ↗</a></div>"):"";' +
-  'var memo=r.no?("<details class=\\"rkmemo\\"><summary>メモ全文を見る</summary><pre class=\\"rkfull\\">"+esc(r.no)+"</pre></details>"):"";' +
   'return "<div class=\\"rkrec\\"><div><span class=\\"rkdd\\">"+esc(r.d)+"（"+esc(r.w)+"）</span><span class=\\"rktt\\">"+tspan+"</span></div>"+' +
-  'badge+room+"<span class=\\"rkkind\\">"+esc(r.ki)+"</span>"+cname+treat+link+memo+"</div>";}' +
+  'badge+room+"<span class=\\"rkkind\\">"+esc(r.ki)+"</span>"+cname+treat+"</div>";}' +
   'function custHtml(c){var up=[],pa=[],i;for(i=0;i<(c.recs||[]).length;i++){(c.recs[i].up?up:pa).push(c.recs[i]);}' +
   'var ph=c.ph?("<span class=\\"rkph\\">"+esc(c.ph)+"</span>"):"";' +
   'var head="<div class=\\"rkwho\\"><span class=\\"rkcode\\">"+esc(c.code)+"</span>"+esc(c.name||"（名前メモなし）")+ph+"</div>"+' +
