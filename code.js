@@ -1646,18 +1646,20 @@ var RIREKI_CSS_ =
   '.rkfull{white-space:pre-wrap;word-break:break-word;margin:5px 0 0;padding:9px 11px;background:#f1f5f9;border-radius:8px;font-size:.84rem;line-height:1.5;}' +
   '.rknone{color:#94a3b8;font-size:.84rem;padding:4px 0;}' +
   '.rkpick{display:block;width:100%;text-align:left;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:13px 15px;margin-bottom:10px;font-size:1rem;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.12);}' +
-  '.rkstep{color:#eaf3f7;font-weight:800;font-size:.96rem;margin:0 2px 8px;}' +
-  '.rkstep2{margin-top:26px;}' +
+  '.rkstep{color:#fff;font-weight:800;font-size:1.25rem;margin:0 2px 10px;}' +
+  '.rkstep2{margin-top:28px;}' +
   '.rkkp{max-width:340px;margin:2px auto 18px;}' +
   '.rkpfx{display:flex;gap:8px;margin:2px 0 14px;}' +
   '.rkpfx button{flex:1;font-size:.9rem;font-weight:800;padding:11px 6px;border-radius:999px;border:0;background:rgba(255,255,255,.90);color:#0f172a;cursor:pointer;white-space:nowrap;transition:transform .06s,background .15s,color .15s,box-shadow .15s;}' +
   '.rkpfx button:active{transform:translateY(1px);}' +
   '.rkpfx button.on{background:#2563eb;color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.28);}' +
-  '.rkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}' +
-  '.rkgrid button{font-size:1.55rem;font-weight:800;padding:16px 0;border-radius:16px;border:0;background:#fff;color:#0f172a;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.16);transition:transform .06s,box-shadow .12s,background .12s;}' +
+  '.rkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}' +
+  '.rkgrid button{font-size:1.25rem;font-weight:800;padding:11px 0;border-radius:14px;border:0;background:#fff;color:#0f172a;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.16);transition:transform .06s,box-shadow .12s,background .12s;}' +
   '.rkgrid button:active{transform:translateY(2px) scale(.97);box-shadow:0 1px 4px rgba(0,0,0,.18);}' +
   '.rkgrid button.del,.rkgrid button.clr{background:#ffe6e4;color:#d1443c;}' +
-  '.rkgrid button.del{font-size:1.3rem;}';
+  '.rkgrid button.del{font-size:1.05rem;}' +
+  '.rkgo2{display:block;width:100%;margin:14px 0 2px;font-size:1.15rem;font-weight:800;padding:15px;border:0;border-radius:14px;background:#2563eb;color:#fff;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.22);}' +
+  '.rkgo2:active{transform:translateY(1px);}';
 
 function renderRirekiPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
@@ -1715,6 +1717,7 @@ function renderRirekiPage_(base, staff, dev) {
   'var pfxBtns=document.querySelectorAll(".rkpfx button");for(var pi=0;pi<pfxBtns.length;pi++){pfxBtns[pi].addEventListener("click",function(){kpParseBox();kpPrefix=this.getAttribute("data-pfx")||"";kpWrite();});}' +
   'var gridBtns=document.querySelectorAll(".rkgrid button");for(var gi=0;gi<gridBtns.length;gi++){gridBtns[gi].addEventListener("click",function(){kpParseBox();var d=this.getAttribute("data-d"),act=this.getAttribute("data-act");if(d!=null){kpDigits+=d;}else if(act==="del"){kpDigits=kpDigits.slice(0,-1);}else if(act==="clr"){kpDigits="";kpPrefix="";}kpWrite();});}' +
   'qEl.addEventListener("input",kpParseBox);kpParseBox();' +
+  'var go2El=document.getElementById("rkgo2");if(go2El){go2El.addEventListener("click",function(){doSearch();});}' +
   '})();</script>';
   return '<style>' + HOMECSS_ + RIREKI_CSS_ + '</style>' +
   '<div class="home">' +
@@ -1747,6 +1750,7 @@ function renderRirekiPage_(base, staff, dev) {
           '<button type="button" data-d="0">0</button>' +
           '<button type="button" class="clr" data-act="clr">C</button>' +
         '</div>' +
+        '<button id="rkgo2" type="button" class="rkgo2">🔎 この番号で検索</button>' +
       '</div>' +
       '<div class="rkstatus" id="rkstatus">顧客番号（例 F227・数字だけ 227 でも可）か、お名前の一部で検索。</div>' +
       '<div id="rkres"></div>' +
