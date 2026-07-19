@@ -1658,8 +1658,8 @@ var RIREKI_CSS_ =
   '.rkgrid button:active{transform:translateY(2px) scale(.97);box-shadow:0 1px 4px rgba(0,0,0,.18);}' +
   '.rkgrid button.del,.rkgrid button.clr{background:#ffe6e4;color:#d1443c;}' +
   '.rkgrid button.del{font-size:1.05rem;}' +
-  '.rkecho{margin:14px 0 2px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.16);color:#fff;font-size:1.7rem;font-weight:800;letter-spacing:.04em;text-align:center;min-height:1.4em;}' +
-  '.rkecho.empty{color:rgba(255,255,255,.45);font-weight:600;font-size:1.15rem;}' +
+  '.rkecho{margin:14px 0 2px;padding:14px;border-radius:14px;background:#0f2b38;color:#ffd400;font-size:2.1rem;font-weight:900;letter-spacing:.06em;text-align:center;min-height:1.4em;box-shadow:0 4px 14px rgba(0,0,0,.28);}' +
+  '.rkecho.empty{background:rgba(255,255,255,.10);color:rgba(255,255,255,.5);font-weight:600;font-size:1.15rem;box-shadow:none;}' +
   '.rkgo2{display:block;width:100%;margin:12px 0 2px;font-size:1.15rem;font-weight:800;padding:15px;border:0;border-radius:14px;background:#2563eb;color:#fff;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.22);}' +
   '.rkgo2:active{transform:translateY(1px);}';
 
@@ -1696,11 +1696,12 @@ function renderRirekiPage_(base, staff, dev) {
   'return "<div class=\\"rkcust\\">"+head+"<div class=\\"rksec\\"><div class=\\"rklbl\\">🔔 今回の予約（今日以降）</div>"+upB+"</div>"+' +
   '"<div class=\\"rksec past\\"><div class=\\"rklbl\\">🕘 前回までの予約一覧</div>"+paB+"</div></div>";}' +
   'function pickHtml(c){return "<button type=\\"button\\" class=\\"rkpick\\" data-code=\\""+esc(c.code)+"\\"><span class=\\"rkcode\\">"+esc(c.code)+"</span>"+esc(c.name||"（名前メモなし）")+" ・ 来店"+c.v+"回</button>";}' +
+  'function toTop(){setTimeout(function(){try{stEl.scrollIntoView({behavior:"smooth",block:"start"});}catch(e){stEl.scrollIntoView();}},80);}' +
   'function render(res){if(!res||!res.ok){stEl.textContent="エラー："+((res&&res.error)||"不明");return;}' +
-  'var cs=res.customers||[];if(!cs.length){stEl.textContent="一致する客が見つかりませんでした。";resEl.innerHTML="";return;}' +
+  'var cs=res.customers||[];if(!cs.length){stEl.textContent="一致する客が見つかりませんでした。";resEl.innerHTML="";toTop();return;}' +
   'if(res.multi){stEl.textContent=cs.length+" 人ヒット（タップで詳しく）";resEl.innerHTML=cs.map(pickHtml).join("");' +
-  'var bs=resEl.querySelectorAll(".rkpick");for(var i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){doSearch(this.getAttribute("data-code"));});}return;}' +
-  'stEl.textContent=cs.length+" 人ヒット";resEl.innerHTML=cs.map(custHtml).join("");}' +
+  'var bs=resEl.querySelectorAll(".rkpick");for(var i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){doSearch(this.getAttribute("data-code"));});}toTop();return;}' +
+  'stEl.textContent=cs.length+" 人ヒット";resEl.innerHTML=cs.map(custHtml).join("");toTop();}' +
   'var polls=0;function poll(id){polls++;if(polls>30){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");return;}' +
   'if(r.status==="pending"){setTimeout(function(){poll(id);},1200);return;}' +
@@ -1712,16 +1713,15 @@ function renderRirekiPage_(base, staff, dev) {
   'function(r){if(!r||!r.ok||!r.id){stEl.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){poll(r.id);},1000);});}' +
   'goEl.addEventListener("click",function(){doSearch();});' +
   'qEl.addEventListener("keydown",function(ev){if(ev.key==="Enter")doSearch();});' +
-  'var kpPrefix="",kpDigits="",kpTimer=null;var rkechoEl=document.getElementById("rkecho");' +
-  'function kpEcho(){if(!rkechoEl)return;var v=(qEl.value||"").trim();rkechoEl.textContent=v||"—";if(v){rkechoEl.classList.remove("empty");}else{rkechoEl.classList.add("empty");}}' +
+  'var kpPrefix="M",kpDigits="",kpTimer=null;var rkechoEl=document.getElementById("rkecho");' +
+  'function kpValue(){return kpPrefix+kpDigits;}' +
+  'function kpEcho(){if(!rkechoEl)return;var v=kpValue();rkechoEl.textContent=v||"—";if(v){rkechoEl.classList.remove("empty");}else{rkechoEl.classList.add("empty");}}' +
   'function kpRenderPrefix(){var bs=document.querySelectorAll(".rkpfx button");for(var i=0;i<bs.length;i++){if((bs[i].getAttribute("data-pfx")||"")===kpPrefix){bs[i].classList.add("on");}else{bs[i].classList.remove("on");}}}' +
-  'function kpParseBox(){var mm=(qEl.value||"").trim().match(/^([MFmf])?\\s*(\\d*)$/);if(mm){kpPrefix=mm[1]?mm[1].toUpperCase():"";kpDigits=mm[2]||"";}kpRenderPrefix();kpEcho();}' +
-  'function kpWrite(){qEl.value=kpPrefix+kpDigits;kpRenderPrefix();kpEcho();if(kpTimer)clearTimeout(kpTimer);kpTimer=setTimeout(function(){if(kpDigits.length)doSearch();},350);}' +
-  'var pfxBtns=document.querySelectorAll(".rkpfx button");for(var pi=0;pi<pfxBtns.length;pi++){pfxBtns[pi].addEventListener("click",function(){kpParseBox();kpPrefix=this.getAttribute("data-pfx")||"";kpWrite();});}' +
-  'var gridBtns=document.querySelectorAll(".rkgrid button");for(var gi=0;gi<gridBtns.length;gi++){gridBtns[gi].addEventListener("click",function(){kpParseBox();var d=this.getAttribute("data-d"),act=this.getAttribute("data-act");if(d!=null){kpDigits+=d;}else if(act==="del"){kpDigits=kpDigits.slice(0,-1);}else if(act==="clr"){kpDigits="";kpPrefix="";}kpWrite();});}' +
-  'qEl.addEventListener("input",kpParseBox);kpParseBox();' +
-  'if(!(qEl.value||"").trim()){kpPrefix="M";kpDigits="";qEl.value="M";kpRenderPrefix();kpEcho();}' +
-  'var go2El=document.getElementById("rkgo2");if(go2El){go2El.addEventListener("click",function(){doSearch();});}' +
+  'function kpRefresh(){kpRenderPrefix();kpEcho();if(kpTimer)clearTimeout(kpTimer);kpTimer=setTimeout(function(){if(kpDigits.length)doSearch(kpValue());},350);}' +
+  'var pfxBtns=document.querySelectorAll(".rkpfx button");for(var pi=0;pi<pfxBtns.length;pi++){pfxBtns[pi].addEventListener("click",function(){kpPrefix=this.getAttribute("data-pfx")||"";kpRefresh();});}' +
+  'var gridBtns=document.querySelectorAll(".rkgrid button");for(var gi=0;gi<gridBtns.length;gi++){gridBtns[gi].addEventListener("click",function(){var d=this.getAttribute("data-d"),act=this.getAttribute("data-act");if(d!=null){kpDigits+=d;}else if(act==="del"){kpDigits=kpDigits.slice(0,-1);}else if(act==="clr"){kpDigits="";}kpRefresh();});}' +
+  'kpRenderPrefix();kpEcho();' +
+  'var go2El=document.getElementById("rkgo2");if(go2El){go2El.addEventListener("click",function(){doSearch(kpValue());});}' +
   '})();</script>';
   return '<style>' + HOMECSS_ + RIREKI_CSS_ + '</style>' +
   '<div class="home">' +
