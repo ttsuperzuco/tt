@@ -1658,7 +1658,9 @@ var RIREKI_CSS_ =
   '.rkgrid button:active{transform:translateY(2px) scale(.97);box-shadow:0 1px 4px rgba(0,0,0,.18);}' +
   '.rkgrid button.del,.rkgrid button.clr{background:#ffe6e4;color:#d1443c;}' +
   '.rkgrid button.del{font-size:1.05rem;}' +
-  '.rkgo2{display:block;width:100%;margin:14px 0 2px;font-size:1.15rem;font-weight:800;padding:15px;border:0;border-radius:14px;background:#2563eb;color:#fff;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.22);}' +
+  '.rkecho{margin:14px 0 2px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.16);color:#fff;font-size:1.7rem;font-weight:800;letter-spacing:.04em;text-align:center;min-height:1.4em;}' +
+  '.rkecho.empty{color:rgba(255,255,255,.45);font-weight:600;font-size:1.15rem;}' +
+  '.rkgo2{display:block;width:100%;margin:12px 0 2px;font-size:1.15rem;font-weight:800;padding:15px;border:0;border-radius:14px;background:#2563eb;color:#fff;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.22);}' +
   '.rkgo2:active{transform:translateY(1px);}';
 
 function renderRirekiPage_(base, staff, dev) {
@@ -1710,13 +1712,15 @@ function renderRirekiPage_(base, staff, dev) {
   'function(r){if(!r||!r.ok||!r.id){stEl.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){poll(r.id);},1000);});}' +
   'goEl.addEventListener("click",function(){doSearch();});' +
   'qEl.addEventListener("keydown",function(ev){if(ev.key==="Enter")doSearch();});' +
-  'var kpPrefix="",kpDigits="",kpTimer=null;' +
+  'var kpPrefix="",kpDigits="",kpTimer=null;var rkechoEl=document.getElementById("rkecho");' +
+  'function kpEcho(){if(!rkechoEl)return;var v=(qEl.value||"").trim();rkechoEl.textContent=v||"—";if(v){rkechoEl.classList.remove("empty");}else{rkechoEl.classList.add("empty");}}' +
   'function kpRenderPrefix(){var bs=document.querySelectorAll(".rkpfx button");for(var i=0;i<bs.length;i++){if((bs[i].getAttribute("data-pfx")||"")===kpPrefix){bs[i].classList.add("on");}else{bs[i].classList.remove("on");}}}' +
-  'function kpParseBox(){var mm=(qEl.value||"").trim().match(/^([MFmf])?\\s*(\\d*)$/);if(mm){kpPrefix=mm[1]?mm[1].toUpperCase():"";kpDigits=mm[2]||"";}kpRenderPrefix();}' +
-  'function kpWrite(){qEl.value=kpPrefix+kpDigits;kpRenderPrefix();if(kpTimer)clearTimeout(kpTimer);kpTimer=setTimeout(function(){if(kpDigits.length)doSearch();},350);}' +
+  'function kpParseBox(){var mm=(qEl.value||"").trim().match(/^([MFmf])?\\s*(\\d*)$/);if(mm){kpPrefix=mm[1]?mm[1].toUpperCase():"";kpDigits=mm[2]||"";}kpRenderPrefix();kpEcho();}' +
+  'function kpWrite(){qEl.value=kpPrefix+kpDigits;kpRenderPrefix();kpEcho();if(kpTimer)clearTimeout(kpTimer);kpTimer=setTimeout(function(){if(kpDigits.length)doSearch();},350);}' +
   'var pfxBtns=document.querySelectorAll(".rkpfx button");for(var pi=0;pi<pfxBtns.length;pi++){pfxBtns[pi].addEventListener("click",function(){kpParseBox();kpPrefix=this.getAttribute("data-pfx")||"";kpWrite();});}' +
   'var gridBtns=document.querySelectorAll(".rkgrid button");for(var gi=0;gi<gridBtns.length;gi++){gridBtns[gi].addEventListener("click",function(){kpParseBox();var d=this.getAttribute("data-d"),act=this.getAttribute("data-act");if(d!=null){kpDigits+=d;}else if(act==="del"){kpDigits=kpDigits.slice(0,-1);}else if(act==="clr"){kpDigits="";kpPrefix="";}kpWrite();});}' +
   'qEl.addEventListener("input",kpParseBox);kpParseBox();' +
+  'if(!(qEl.value||"").trim()){kpPrefix="M";kpDigits="";qEl.value="M";kpRenderPrefix();kpEcho();}' +
   'var go2El=document.getElementById("rkgo2");if(go2El){go2El.addEventListener("click",function(){doSearch();});}' +
   '})();</script>';
   return '<style>' + HOMECSS_ + RIREKI_CSS_ + '</style>' +
@@ -1750,6 +1754,7 @@ function renderRirekiPage_(base, staff, dev) {
           '<button type="button" data-d="0">0</button>' +
           '<button type="button" class="clr" data-act="clr">C</button>' +
         '</div>' +
+        '<div id="rkecho" class="rkecho empty">—</div>' +
         '<button id="rkgo2" type="button" class="rkgo2">🔎 この番号で検索</button>' +
       '</div>' +
       '<div class="rkstatus" id="rkstatus">顧客番号（例 F227・数字だけ 227 でも可）か、お名前の一部で検索。</div>' +
