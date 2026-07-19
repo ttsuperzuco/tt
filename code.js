@@ -1549,6 +1549,25 @@ function backBar_(base, staff, dev) {
     roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a></div>';
 }
 
+/** 前日お知らせ（純JS・GAS API不使用）。社長確認用の内部ツールで、実際の確認・下書き作成は
+ *  事務所PCの「前日お知らせ」ボタンで動く（契約台帳を読んでHTMLを作る）。スマホ側は開発URL
+ *  (?dev=1)専用で、何をする物か・どこで確認するかの案内だけを出す（PC版と並びをそろえるため）。 */
+function renderZenjitsuPage_(base, staff, dev) {
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
+    '<div class="soon">' +
+      '<div class="soonic">🔔</div>' +
+      '<div class="soontitle" style="font-size:1.35rem">確認は事務所PCで</div>' +
+      '<div class="soondesc">明日ご来店のお客様へ送る「前日お知らせ」を、送る前に一人ずつ確かめる画面です。' +
+        '契約台帳（予約メモとLINEを全部読んで正した記録）の施術・回数を主役に出し、まだ人が確認していない方は赤で目立たせます。<br><br>' +
+        '実際の確認・下書き作成は<b>事務所PCの「前日お知らせ」ボタン</b>で行います（お客様のLINEには送りません＝見てコピーするだけ）。' +
+        'このスマホ画面は、PC版と並びをそろえるための入口で、開発用URLだけに表示されます。</div>' +
+    '</div>' +
+  '</div>';
+}
+
 /** 売上ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの両方から呼ばれる。 */
 function renderUriagePage_(d, base, staff, dev) {
   return '<style>' + HOMECSS_ + URIAGECSS_ + '</style>' +
@@ -3322,6 +3341,7 @@ var HOMECSS_ =
 '  .tile.akijikan::before { background:#0ea5e9; }' +
 '  .tile.links::before { background:#65a30d; }' +
 '  .tile.ttapp::before { background:#c026d3; }' +
+'  .tile.zenjitsu::before { background:#db2777; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -3334,6 +3354,7 @@ var HOMECSS_ =
 '  .tile.akijikan .ticon { background:rgba(14,165,233,.16); }' +
 '  .tile.links .ticon { background:rgba(101,163,13,.16); }' +
 '  .tile.ttapp .ticon { background:rgba(192,38,211,.14); }' +
+'  .tile.zenjitsu .ticon { background:rgba(219,39,119,.14); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
