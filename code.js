@@ -1594,10 +1594,17 @@ function uriageBody_(d, dev) {
   // ★開発者の画面(dev)にだけ、このボタンが実際に何をするかを①②③で全部出す（2026-07-19ユーザー要望）。
   //   スタッフ用の画面には出さない（ボタン内の「含：…」の一行も廃止）。
   (dev ? '<div class="udev"><div class="udevt">🛠 このボタンを押すと実行する内容（開発者向け）</div>' +
+    '<div class="udevh">A. 売上をTimeTreeへ</div>' +
     '<ol class="udevl">' +
-      '<li>帳簿の「まだTimeTreeに書いていない売上」を、TimeTreeに新しく記入する（すでに入っている値は触らない）。</li>' +
-      '<li>TimeTreeにすでに入っている売上に記入ミスがあれば、帳簿の正しい金額に上書きして直す。</li>' +
-      '<li>プロセルの売上表（在庫管理シート）にも、同じ売上を書き写す（転記する）。</li>' +
+      '<li>今月の帳簿（売上表）を読む。</li>' +
+      '<li>月初のときは先月も：今月の初日がまだTimeTreeに未記入なら、先月ぶんの締めもここで点検して記入・修正する（記入漏れ／記入ミスを拾う）。</li>' +
+      '<li>各営業日（売上あり）ごとに：まだ無ければ新しく記入（終日イベント＝その日の売上＋その月の累計）／すでに有って金額が違えば帳簿の正しい値に上書き修正／自動で判断できない分は「要手動」として人に回す（書かない）／売上0の日（未記入・空タブ）は書かない。</li>' +
+      '<li>削除は一切しない。既存の正しい値は触らない。</li>' +
+    '</ol>' +
+    '<div class="udevh">B. プロセルの売上表（在庫管理シート）へ</div>' +
+    '<ol class="udevl">' +
+      '<li>売上をプロセルの売上表にも書き写す（今月ぶん。※Aの月初「先月も」判定はBには渡していない＝先月ぶんのプロセル転記は今は自動では行わない）。</li>' +
+      '<li>部位・回数が確実な分だけ自動記入。あやふやな分は書かず「要確認」として理由つきで残す。</li>' +
     '</ol></div>' : '');
 }
 
@@ -1723,6 +1730,7 @@ var URIAGECSS_ =
 '  .udev { margin-top:12px; background:var(--card); border:1px dashed var(--line);' +
 '    border-radius:12px; padding:12px 14px; }' +
 '  .udevt { font-size:.92rem; font-weight:800; color:var(--sub); margin-bottom:6px; }' +
+'  .udevh { font-size:.9rem; font-weight:800; color:var(--ink); margin:10px 0 2px; }' +
 '  .udevl { margin:0; padding-left:1.4em; }' +
 '  .udevl li { font-size:.95rem; font-weight:600; color:var(--ink); line-height:1.55; margin:4px 0; }' +
 '  .uperbtn { width:100%; text-align:center; font-size:1.45rem; font-weight:800; color:#fff;' +
