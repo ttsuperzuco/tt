@@ -1032,10 +1032,10 @@ function circled_(n) { return (n >= 1 && n <= CIRCLED.length) ? CIRCLED[n - 1] :
 // ★唯一の置き場は 共通\room_colors.py。ここはその「写し」＝Apps ScriptからPythonを読めないため
 //   同じ値を持つしかない。★色を変える時は必ず両方直す（片方だけ直さない＝共通ルール）。
 //   出どころ：TimeTreeのAPI(/api/v1/calendar/<id>/labels)のcolor。取り直しは ラベル一覧確認.py。
+var ROOM_COLORS_ = { 'FREEDOM': '#2ecc87', 'COSMOS': '#3dc2c8', 'HAPPY': '#e73b3b',
+                     'LUCKY': '#fdc02d', 'STAR/福/🇫🇷': '#b38bdc' };
 function roomColor_(room) {
-  var p = { 'FREEDOM': '#2ecc87', 'COSMOS': '#3dc2c8', 'HAPPY': '#e73b3b',
-            'LUCKY': '#fdc02d', 'STAR/福/🇫🇷': '#b38bdc' };
-  return p[room] || '#64748b';
+  return ROOM_COLORS_[room] || '#64748b';
 }
 
 // 部屋名 → 移動先の (カレンダーID, ラベルID)。config.ROOM と同じ（部屋も揃えて移動＝B方式）。
@@ -1678,7 +1678,12 @@ var RIREKI_CSS_ =
   '.rkdd{font-size:1.5rem;}' +
   '.rktt{color:#cbd5e1;font-size:1.23rem;}' +
   '.rkbadge{font-size:1.17rem;}' +
-  '.rkroom{color:#cbd5e1;border-color:rgba(255,255,255,.3);font-size:1.17rem;}' +
+  '.rkroom{color:#fff;border:0;font-weight:700;padding:2px 10px;font-size:1.17rem;}' +
+  '.rkmemo2{margin-top:8px;}' +
+  '.rkmemo2 summary{cursor:pointer;color:#7cc0ff;font-weight:800;font-size:1.2rem;list-style:none;margin-bottom:4px;}' +
+  '.rkmemo2 summary::-webkit-details-marker{display:none;}' +
+  '.rkmemo2 summary::before{content:"\\25BC ";font-size:.85em;}' +
+  '.rkmemo2:not([open]) summary::before{content:"\\25B6 ";}' +
   '.rkkind{color:#cbd5e1;font-size:1.11rem;}' +
   '.rkcname{font-size:1.35rem;}' +
   '.rktreat{font-size:1.4rem;}' +
@@ -1696,19 +1701,21 @@ function renderRirekiPage_(base, staff, dev) {
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
   'var slot=(idn.device||"d0").toLowerCase().replace(/[^a-z0-9_]/g,"").slice(0,32)||"default";' +
   'var STAFFCOLOR={"\\uD83E\\uDED2":"#4b8b3b","\\uD83C\\uDF4A":"#e08a1e","\\uD83C\\uDF45":"#d1443c","\\uD83E\\uDD6D":"#c9a227"};' +
+  'var RCOLOR=' + JSON.stringify(ROOM_COLORS_) + ';' +
   'var qEl=document.getElementById("rkq"),goEl=document.getElementById("rkgo"),stEl=document.getElementById("rkstatus"),resEl=document.getElementById("rkres");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function jsonp(params,onR){var cb="__rk"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
   'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
   'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
+  'function trimNote(n){if(!n)return "";var i=n.indexOf("現在進行中");if(i<0)return n;var ls=n.lastIndexOf("\\n",i);return n.slice(ls>=0?ls+1:0);}' +
   'function recHtml(r){var color=STAFFCOLOR[r.se]||"#999";' +
   'var badge=r.se?("<span class=\\"rkbadge\\" style=\\"background:"+color+"\\">"+esc(r.se)+esc(r.sn)+"</span>"):"<span class=\\"rkbadge\\" style=\\"background:#999\\">担当不明</span>";' +
-  'var tspan=r.s?(esc(r.s)+(r.e?"–"+esc(r.e):"")+(r.du?"（"+r.du+"分）":"")):"";' +
-  'var room=r.rm?("<span class=\\"rkroom\\">"+esc(r.rm)+"</span>"):"";' +
-  'var cname=r.cu?("<div class=\\"rkcname\\">"+esc(r.cu)+"</div>"):"";' +
-  'var memo=r.no?("<pre class=\\"rkfull\\">"+esc(r.no)+"</pre>"):"<div class=\\"rktreat empty\\">（予約メモなし）</div>";' +
+  'var tspan=r.s?(esc(r.s)+(r.e?"–"+esc(r.e):"")):"";' +
+  'var room=r.rm?("<span class=\\"rkroom\\" style=\\"background:"+(RCOLOR[r.rm]||"#64748b")+"\\">"+esc(r.rm)+"</span>"):"";' +
+  'var nt=trimNote(r.no);' +
+  'var memo=nt?("<details class=\\"rkmemo2\\" open><summary>予約メモ</summary><pre class=\\"rkfull\\">"+esc(nt)+"</pre></details>"):"<div class=\\"rktreat empty\\">（予約メモなし）</div>";' +
   'return "<div class=\\"rkrec\\"><div><span class=\\"rkdd\\">"+esc(r.d)+"（"+esc(r.w)+"）</span><span class=\\"rktt\\">"+tspan+"</span></div>"+' +
-  'badge+room+"<span class=\\"rkkind\\">"+esc(r.ki)+"</span>"+cname+memo+"</div>";}' +
+  'badge+room+memo+"</div>";}' +
   'function custHtml(c){var up=[],pa=[],i;for(i=0;i<(c.recs||[]).length;i++){(c.recs[i].up?up:pa).push(c.recs[i]);}' +
   'var ph=c.ph?("<span class=\\"rkph\\">"+esc(c.ph)+"</span>"):"";' +
   'var head="<div class=\\"rkwho\\"><span class=\\"rkcode\\">"+esc(c.code)+"</span>"+esc(c.name||"（名前メモなし）")+ph+"</div>"+' +
