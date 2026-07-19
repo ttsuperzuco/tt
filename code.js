@@ -1548,7 +1548,7 @@ function renderUriagePage_(d, base, staff, dev) {
       '<span class="ugen2">最終計算: ' + esc_(d.generated_at || '—') + '</span>' +
     '</div>' +
     '<div class="hhead uttight"><span class="bmark">💰</span><span class="bname">売上転記TimeTree</span></div>' +
-    uriageBody_(d) +
+    uriageBody_(d, dev) +
   '</div>' +
   URIAGESCRIPT_;
 }
@@ -1567,7 +1567,7 @@ function renderUriageError_(err, base, staff, dev) {
   '</div>';
 }
 
-function uriageBody_(d) {
+function uriageBody_(d, dev) {
   var today = d.today_str || '—';
   var cum = d.cumulative_str || '—';
   var monthLabel = d.month ? ('今月（' + d.month + '月）の売上') : '今月の売上';
@@ -1590,8 +1590,15 @@ function uriageBody_(d) {
     '<table class="upertbl"><thead><tr><th>日</th><th class="num">売上(元)</th></tr></thead>' +
     '<tbody>' + perRows + '</tbody></table>' +
   '</div>' +
-  '<button type="button" id="uallbtn" class="ubtn uall">帳簿売上をTimeTreeに記録' +
-    '<span class="uallsub">（含：記載ミス修正、プロセル売上表に転記）</span></button>';
+  '<button type="button" id="uallbtn" class="ubtn uall">帳簿売上をTimeTreeに記録</button>' +
+  // ★開発者の画面(dev)にだけ、このボタンが実際に何をするかを①②③で全部出す（2026-07-19ユーザー要望）。
+  //   スタッフ用の画面には出さない（ボタン内の「含：…」の一行も廃止）。
+  (dev ? '<div class="udev"><div class="udevt">🛠 このボタンを押すと実行する内容（開発者向け）</div>' +
+    '<ol class="udevl">' +
+      '<li>帳簿の「まだTimeTreeに書いていない売上」を、TimeTreeに新しく記入する（すでに入っている値は触らない）。</li>' +
+      '<li>TimeTreeにすでに入っている売上に記入ミスがあれば、帳簿の正しい金額に上書きして直す。</li>' +
+      '<li>プロセルの売上表（在庫管理シート）にも、同じ売上を書き写す（転記する）。</li>' +
+    '</ol></div>' : '');
 }
 
 // 転記ボタン：命令置き場に依頼→事務所PCが処理→uiStatusでpoll表示（部屋移動と同じ仕組み）。
@@ -1713,6 +1720,11 @@ var URIAGECSS_ =
 '  .ubtn:disabled { opacity:.55; }' +
 '  .ubtn.uall { background:#16a34a; box-shadow:0 4px 14px rgba(22,163,74,.4); font-size:1.55rem; }' +
 '  .uallsub { display:block; font-size:.55em; font-weight:600; opacity:.92; margin-top:8px; line-height:1.4; }' +
+'  .udev { margin-top:12px; background:var(--card); border:1px dashed var(--line);' +
+'    border-radius:12px; padding:12px 14px; }' +
+'  .udevt { font-size:.92rem; font-weight:800; color:var(--sub); margin-bottom:6px; }' +
+'  .udevl { margin:0; padding-left:1.4em; }' +
+'  .udevl li { font-size:.95rem; font-weight:600; color:var(--ink); line-height:1.55; margin:4px 0; }' +
 '  .uperbtn { width:100%; text-align:center; font-size:1.45rem; font-weight:800; color:#fff;' +
 '    background:#2563eb; border:0; border-radius:14px; padding:18px;' +
 '    cursor:pointer; margin-bottom:14px; box-shadow:0 4px 14px rgba(37,99,235,.4); }' +
