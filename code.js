@@ -1619,7 +1619,7 @@ function renderZenjitsuPage_(base, staff, dev) {
 //   ★事務所PCが動いている時間だけ結果が返る（止まっていれば「時間切れ」を出す）。
 var RIREKI_CSS_ =
   '.rk{max-width:760px;margin:0 auto;padding:6px 12px 60px;}' +
-  '.rksearch{display:flex;gap:8px;position:sticky;top:0;background:var(--bg,#2C7A99);padding:8px 0 12px;z-index:5;}' +
+  '.rksearch{display:flex;gap:8px;background:var(--bg,#2C7A99);padding:8px 0 12px;}' +
   '#rkq{flex:1;font-size:1.05rem;padding:12px 14px;border-radius:12px;border:0;}' +
   '#rkgo{font-size:1rem;font-weight:800;padding:12px 20px;border:0;border-radius:12px;background:#2563eb;color:#fff;}' +
   '.rkstatus{color:#eaf3f7;font-size:.9rem;margin:2px 2px 12px;min-height:1.2em;}' +
