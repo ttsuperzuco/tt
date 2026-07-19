@@ -1661,7 +1661,27 @@ var RIREKI_CSS_ =
   '.rkecho{margin:14px 0 2px;padding:14px;border-radius:14px;background:#0f2b38;color:#ffd400;font-size:2.1rem;font-weight:900;letter-spacing:.06em;text-align:center;min-height:1.4em;box-shadow:0 4px 14px rgba(0,0,0,.28);}' +
   '.rkecho.empty{background:rgba(255,255,255,.10);color:rgba(255,255,255,.5);font-weight:600;font-size:1.15rem;box-shadow:none;}' +
   '.rkgo2{display:block;width:100%;margin:12px 0 2px;font-size:1.15rem;font-weight:800;padding:15px;border:0;border-radius:14px;background:#2563eb;color:#fff;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.22);}' +
-  '.rkgo2:active{transform:translateY(1px);}';
+  '.rkgo2:active{transform:translateY(1px);}' +
+  /* 結果表示：黒バック・白文字・文字1.5倍（2026-07-19ユーザー指示） */
+  '.rkcust{background:#0d1117;color:#fff;box-shadow:0 5px 16px rgba(0,0,0,.45);}' +
+  '.rkwho{font-size:1.72rem;}' +
+  '.rkcode{color:#7cc0ff;}' +
+  '.rkph{color:#cbd5e1;font-size:1.3rem;}' +
+  '.rkmeta{color:#cbd5e1;font-size:1.26rem;}' +
+  '.rksec>.rklbl{font-size:1.44rem;}' +
+  '.rksec.past>.rklbl{border-left-color:#cbd5e1;}' +
+  '.rkrec{border-top-color:rgba(255,255,255,.18);}' +
+  '.rkdd{font-size:1.5rem;}' +
+  '.rktt{color:#cbd5e1;font-size:1.23rem;}' +
+  '.rkbadge{font-size:1.17rem;}' +
+  '.rkroom{color:#cbd5e1;border-color:rgba(255,255,255,.3);font-size:1.17rem;}' +
+  '.rkkind{color:#cbd5e1;font-size:1.11rem;}' +
+  '.rkcname{font-size:1.35rem;}' +
+  '.rktreat{font-size:1.4rem;}' +
+  '.rktreat.empty{color:#cbd5e1;}' +
+  '.rkfull{background:rgba(255,255,255,.08);color:#fff;font-size:1.26rem;}' +
+  '.rknone{color:#cbd5e1;font-size:1.26rem;}' +
+  '.rkpick{background:#0d1117;color:#fff;font-size:1.5rem;}';
 
 function renderRirekiPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
