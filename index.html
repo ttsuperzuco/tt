@@ -393,18 +393,9 @@
   }
 
   // 前日お知らせ（開発URL専用）。データ取得は不要＝code.jsの静的な案内をそのまま描くだけ。
-  // 前日お知らせ（開発URL専用）。事務所PCが作った確認画面(notice_compare.json)を取りに行き、
-  // その中身(body_html)を code.js の renderZenjitsuPage_ が枠(iframe)に入れて出す＝PC版と同じ画面。
-  function showZenjitsu() {
-    window.__ttNotice = function (payload) {
-      try { mount(renderZenjitsuPage_(payload || {}, base, staff, dev)); }
-      catch (e) { fail('描画エラー：' + e); }
-    };
-    var s = document.createElement('script');
-    s.src = EXEC + '?action=data&name=notice_compare.json&callback=__ttNotice&cb=' + Date.now();
-    s.onerror = function () { mount(renderZenjitsuPage_({ error: '通信エラーです。通信環境をご確認ください。' }, base, staff, dev)); };
-    document.body.appendChild(s);
-  }
+  // 前日お知らせ（開発URL専用）。PC版と同じ「来店日を選ぶ」入口を出すだけ（純JS）。
+  // 押した後の「PCへ依頼→結果を枠で表示」は code.js の renderZenjitsuPage_ 内スクリプトが行う。
+  function showZenjitsu() { mount(renderZenjitsuPage_(base, staff, dev)); }
 
   // 顧客履歴検索。画面(入力欄)を先に出し、検索は画面内スクリプトが事務所PCへ依頼→結果を読む
   //   （events等の先読みは不要＝押してから探すため）。renderRirekiPage_ は code.js＝GASと同一。

@@ -140,11 +140,8 @@ function doGet(e) {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
   } else if (view === 'zenjitsu') {
-    title = '前日お知らせ';
-    var zd;                                             // ★開発URL(?dev=1)専用。事務所PCが作った確認画面(body_html)をそのまま出す
-    try { zd = JSON.parse(getNoticeFile_().getBlob().getDataAsString('UTF-8')); }
-    catch (ze) { zd = { error: String(ze) }; }
-    html = renderZenjitsuPage_(zd, base, staff, dev);
+    title = '前日お知らせ';                             // ★開発URL(?dev=1)専用。日付を選ぶ→PCが作る→枠で表示（対話式・純JS）
+    html = renderZenjitsuPage_(base, staff, dev);
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -1557,45 +1554,61 @@ function backBar_(base, staff, dev) {
     roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a></div>';
 }
 
-// 前日お知らせ画面の枠のCSS＋高さ自動調整スクリプト。中身は事務所PCが作ったHTMLを
-// そのまま枠(iframe)に流し込む＝PC版とまったく同じ見た目にする（描画を二重に持たない）。
+// 前日お知らせ画面のCSS。日付を選ぶ帯＋状態表示＋確認画面の枠(iframe)。
 var ZENJITSUCSS_ =
-  '  .zjframe { width:100%; min-height:70vh; border:0; border-radius:14px; background:#fff;' +
-  '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; }' +
-  '  .zjnote { color:rgba(255,255,255,.9); font-size:12.5px; text-align:center; margin:8px 4px 0; line-height:1.6; }';
-var ZENJITSUSCRIPT_ =
-  '<script>(function(){var f=document.getElementById("zjframe");if(!f)return;' +
-  // ★測る前に一度高さを0にする＝documentElement.scrollHeightが枠自身の高さを含んで
-  //   「一度大きくなると縮められない」暴走を防ぐ（実測で54000px化→中身は約6000pxだった）。
-  'function fit(){try{f.style.height="0";var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
-  'f.addEventListener("load",fit);setTimeout(fit,300);setTimeout(fit,1200);setTimeout(fit,2500);' +
-  'window.addEventListener("resize",fit);})();</script>';
+  '  .zjbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:sticky; top:0;' +
+  '    background:var(--bg,#2C7A99); padding:8px 0 10px; z-index:5; }' +
+  '  #zjdate { font-size:1.05rem; padding:11px 12px; border-radius:12px; border:0; }' +
+  '  #zjgo { font-size:1rem; font-weight:800; padding:11px 18px; border:0; border-radius:12px; background:#db2777; color:#fff; }' +
+  '  #zjgo:disabled { opacity:.6; }' +
+  '  .zjstatus { color:#eaf3f7; font-size:.92rem; margin:2px 2px 10px; min-height:1.2em; }' +
+  '  .zjframe { width:100%; min-height:60vh; border:0; border-radius:14px; background:#fff;' +
+  '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; }';
 
-/** 前日お知らせ（社長確認用・開発URL専用）。事務所PCが作った確認画面のHTML(body_html)を
- *  そのまま枠(iframe)に入れて表示する＝PC版とまったく同じ画面。データは notice_compare.json
- *  （PCが `export_zenjitsu_super.py`／確認画面作成時に書き出し）。まだ無い時は案内を出す。 */
-function renderZenjitsuPage_(d, base, staff, dev) {
-  var bar = '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +
-    roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="ugen2">' + (d && d.generated_at ? '最終作成: ' + esc_(d.generated_at) : '') + '</span></div>';
-  if (d && d.body_html) {
-    return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
-      '<div class="home">' + bar +
-        '<iframe id="zjframe" class="zjframe" srcdoc="' + esc_(d.body_html) + '"></iframe>' +
-        '<div class="zjnote">この画面は事務所PCが作った確認内容をそのまま表示しています（お客様には送りません）。</div>' +
-      '</div>' + ZENJITSUSCRIPT_;
-  }
-  return '<style>' + HOMECSS_ + '</style>' +
-    '<div class="home">' + bar +
-      '<div class="hhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
-      '<div class="soon">' +
-        '<div class="soonic">🔔</div>' +
-        '<div class="soontitle" style="font-size:1.3rem">まだ作られていません</div>' +
-        '<div class="soondesc">' + esc_((d && d.error) ? d.error : '確認画面がまだ作られていません。') +
-          '<br><br>事務所PCの「前日お知らせ」ボタンで確認画面を作ると、ここに<b>PCとまったく同じ画面</b>が出ます' +
-          '（明日ご来店のお客様の施術・回数を、送る前に一人ずつ確認できます。お客様には送りません＝見てコピーするだけ）。</div>' +
-      '</div>' +
-    '</div>';
+/** 前日お知らせ（社長確認用・開発URL専用）。PC版と同じ「来店日を選ぶ」入口。
+ *  日付を選んで押す→事務所PCへ依頼(op=zenjitsu)→PCが確認画面HTMLを notice_<端末>.json に書き出す
+ *  →それを枠(iframe)に入れて表示＝PC版とまったく同じ画面。顧客履歴検索(cust_search)と同じ往復方式。 */
+function renderZenjitsuPage_(base, staff, dev) {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  var KEY = 'kx7Q2p9mVt4Zr8';
+  var script =
+  '<script>(function(){' +
+  'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
+  'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
+  'var slot=(idn.device||"d0").toLowerCase().replace(/[^a-z0-9_]/g,"").slice(0,32)||"default";' +
+  'var dEl=document.getElementById("zjdate"),goEl=document.getElementById("zjgo"),stEl=document.getElementById("zjstatus"),resEl=document.getElementById("zjres");' +
+  'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
+  'function jsonp(params,onR){var cb="__zj"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
+  'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
+  'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
+  'function fit(f){try{f.style.height="0";var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
+  'function showResult(d){if(!d||!d.body_html){stEl.textContent=(d&&d.error)?("エラー："+d.error):"この日は予約がありませんでした。";resEl.innerHTML="";return;}' +
+  'stEl.textContent="この日の確認（"+esc(d.date||"")+"・"+((d.count!=null)?d.count:"?")+"件）／作成 "+esc(d.generated_at||"");' +
+  'resEl.innerHTML="<iframe id=\\"zjframe\\" class=\\"zjframe\\" srcdoc=\\""+esc(d.body_html)+"\\"></iframe>";' +
+  'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);}' +
+  'var polls=0;function poll(id){polls++;if(polls>40){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";goEl.disabled=false;return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");goEl.disabled=false;return;}' +
+  'if(r.status==="pending"){setTimeout(function(){poll(id);},1300);return;}' +
+  'goEl.disabled=false;' +
+  'if(r.status!=="done"){stEl.textContent="作成に失敗しました："+esc(r.result||r.status);return;}' +
+  'jsonp({action:"data",name:"notice_"+slot+".json"},function(d){showResult(d);});});}' +
+  'function run(){var date=(dEl.value||"").trim();if(!date){stEl.textContent="来店日を選んでください。";return;}' +
+  'goEl.disabled=true;stEl.textContent="事務所PCで作成中…（十数秒かかります）";resEl.innerHTML="";polls=0;' +
+  'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot})},' +
+  'function(r){if(!r||!r.ok||!r.id){stEl.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");goEl.disabled=false;return;}setTimeout(function(){poll(r.id);},1000);});}' +
+  'var t=new Date();t.setDate(t.getDate()+2);dEl.value=t.toISOString().slice(0,10);' +
+  'goEl.addEventListener("click",run);dEl.addEventListener("change",run);' +
+  'run();' +
+  '})();</script>';
+  return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
+    '<div class="zjbar"><label style="color:#fff;font-weight:700;">来店日 <input type="date" id="zjdate"></label>' +
+      '<button id="zjgo" type="button">この日で確認</button></div>' +
+    '<div class="zjstatus" id="zjstatus">来店日を選ぶと、事務所PCが確認画面を作って表示します（お客様には送りません＝見るだけ）。</div>' +
+    '<div id="zjres"></div>' +
+  '</div>' + script;
 }
 
 // ★顧客履歴検索：番号 or 氏名（一部一致OK）で客を探し、今回の予約と過去予約(メモ込み)を見る。
