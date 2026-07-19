@@ -254,20 +254,6 @@ function _akijikanJsonp_(p) {
 // monitor.json のJSONP配信（読み取り専用・鍵不要）。事務所PCが export_monitor_super.py で
 // 1分ごとに書き出す＝自動監視（開発URLだけに出るボタン）の中身。
 // ★中身は「どの自動プログラムが動いているか」の状態だけで、客の個人情報は一切入らない。
-// 前日お知らせ確認画面(notice_compare.json＝事務所PCが作ったbody_html)のJSONP配信。
-// ②静的アプリ(ttsuperzuco.github.io)がDriveAppを直接呼べないため、events等と同じ経路でHTMLだけ渡す。
-function _noticeJsonp_(p) {
-  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
-  var payload;
-  try {
-    payload = JSON.parse(getNoticeFile_().getBlob().getDataAsString('UTF-8'));
-  } catch (e) {
-    payload = { error: '確認画面がまだ作られていません（事務所PCで作成してください）。' };
-  }
-  return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
-    .setMimeType(ContentService.MimeType.JAVASCRIPT);
-}
-
 function _kanshiJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
   var payload;
@@ -575,7 +561,6 @@ function handleAction_(p) {
   if (p.action === 'unanswered') return _unansweredJsonp_(p);
   if (p.action === 'akijikan') return _akijikanJsonp_(p);
   if (p.action === 'kanshi') return _kanshiJsonp_(p);
-  if (p.action === 'notice') return _noticeJsonp_(p);
   if (p.action === 'kanshi_devreset') return _kanshiDevResetJsonp_(p);
   if (p.action === 'kanshi_devinfo') return _kanshiDevInfoJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
