@@ -1646,10 +1646,11 @@ var RIREKI_CSS_ =
   '.rkfull{white-space:pre-wrap;word-break:break-word;margin:5px 0 0;padding:9px 11px;background:#f1f5f9;border-radius:8px;font-size:.84rem;line-height:1.5;}' +
   '.rknone{color:#94a3b8;font-size:.84rem;padding:4px 0;}' +
   '.rkpick{display:block;width:100%;text-align:left;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:13px 15px;margin-bottom:10px;font-size:1rem;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.12);}' +
+  '.rkstep{color:#eaf3f7;font-weight:800;font-size:.96rem;margin:0 2px 8px;}' +
+  '.rkstep2{margin-top:26px;}' +
   '.rkkp{max-width:340px;margin:2px auto 18px;}' +
-  '.rkpfx{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:2px 0 14px;}' +
-  '.rkpfx .rkpfxl{color:#eaf3f7;font-size:.86rem;font-weight:700;}' +
-  '.rkpfx button{font-size:.92rem;font-weight:800;padding:9px 16px;border-radius:999px;border:0;background:rgba(255,255,255,.90);color:#0f172a;cursor:pointer;transition:transform .06s,background .15s,color .15s,box-shadow .15s;}' +
+  '.rkpfx{display:flex;gap:8px;margin:2px 0 14px;}' +
+  '.rkpfx button{flex:1;font-size:.9rem;font-weight:800;padding:11px 6px;border-radius:999px;border:0;background:rgba(255,255,255,.90);color:#0f172a;cursor:pointer;white-space:nowrap;transition:transform .06s,background .15s,color .15s,box-shadow .15s;}' +
   '.rkpfx button:active{transform:translateY(1px);}' +
   '.rkpfx button.on{background:#2563eb;color:#fff;box-shadow:0 5px 14px rgba(0,0,0,.28);}' +
   '.rkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}' +
@@ -1720,16 +1721,17 @@ function renderRirekiPage_(base, staff, dev) {
     backBar_(base, staff, dev) +
     '<div class="hhead"><span class="bmark">🔎</span><span class="bname">顧客履歴検索</span></div>' +
     '<div class="rk">' +
+      '<div class="rkstep">① 検索文字を入力</div>' +
       '<div class="rksearch">' +
         '<input id="rkq" type="search" placeholder="F227 / 227 / 小森 …" autocomplete="off">' +
         '<button id="rkgo" type="button">検索</button>' +
       '</div>' +
       '<div class="rkkp">' +
+        '<div class="rkstep rkstep2">② ボタンで顧客番号を検索</div>' +
         '<div class="rkpfx">' +
-          '<span class="rkpfxl">番号の頭：</span>' +
           '<button type="button" data-pfx="M">M（男）</button>' +
           '<button type="button" data-pfx="F">F（女）</button>' +
-          '<button type="button" data-pfx="">文字なし</button>' +
+          '<button type="button" data-pfx="">頭文字なし</button>' +
         '</div>' +
         '<div class="rkgrid">' +
           '<button type="button" data-d="1">1</button>' +
