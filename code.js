@@ -1565,8 +1565,11 @@ var ZENJITSUCSS_ =
   '  .zjnote { color:rgba(255,255,255,.9); font-size:12.5px; text-align:center; margin:8px 4px 0; line-height:1.6; }';
 var ZENJITSUSCRIPT_ =
   '<script>(function(){var f=document.getElementById("zjframe");if(!f)return;' +
-  'function fit(){try{var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
-  'f.addEventListener("load",fit);setTimeout(fit,300);setTimeout(fit,1200);setTimeout(fit,2500);})();</script>';
+  // ★測る前に一度高さを0にする＝documentElement.scrollHeightが枠自身の高さを含んで
+  //   「一度大きくなると縮められない」暴走を防ぐ（実測で54000px化→中身は約6000pxだった）。
+  'function fit(){try{f.style.height="0";var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
+  'f.addEventListener("load",fit);setTimeout(fit,300);setTimeout(fit,1200);setTimeout(fit,2500);' +
+  'window.addEventListener("resize",fit);})();</script>';
 
 /** 前日お知らせ（社長確認用・開発URL専用）。事務所PCが作った確認画面のHTML(body_html)を
  *  そのまま枠(iframe)に入れて表示する＝PC版とまったく同じ画面。データは notice_compare.json
