@@ -1585,7 +1585,9 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function showResult(d){if(!d||!d.body_html){stEl.textContent=(d&&d.error)?("エラー："+d.error):"この日は予約がありませんでした。";resEl.innerHTML="";return;}' +
   'stEl.textContent="この日の確認（"+esc(d.date||"")+"・"+((d.count!=null)?d.count:"?")+"件）／作成 "+esc(d.generated_at||"");' +
   'resEl.innerHTML="<iframe id=\\"zjframe\\" class=\\"zjframe\\" srcdoc=\\""+esc(d.body_html)+"\\"></iframe>";' +
-  'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);}' +
+  'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});' +
+  'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);setTimeout(function(){fit(f);},3200);' +
+  'window.addEventListener("resize",function(){fit(f);});}' +
   'var polls=0;function poll(id){polls++;if(polls>40){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";goEl.disabled=false;return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");goEl.disabled=false;return;}' +
   'if(r.status==="pending"){setTimeout(function(){poll(id);},1300);return;}' +
