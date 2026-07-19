@@ -867,12 +867,13 @@ var DEFAULT_TILE_SETTINGS_ = {
   //   人ごとの権限画面に出てこない＝誰にもONにできない＝開発URLだけに出る（2026-07-16ユーザー指定）。
   kanshi:     { exec: false, staff: false },
   // ★前日お知らせ＝社長確認用。kanshiと同じく開発URL(?dev=1)専用（tile_settings.py にも入れない）。
-  zenjitsu:   { exec: false, staff: false }
+  zenjitsu:   { exec: false, staff: false },
+  rireki:     { exec: true, staff: true }    // ★顧客履歴検索＝全員に見せる（スタッフの日常業務）
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'kanshi', 'zenjitsu'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -899,7 +900,7 @@ function defaultPerms_(people) {
   var list = people || PEOPLE_;
   var perms = {};
   for (var i = 0; i < list.length; i++) {
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, kanshi: false };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: true, kanshi: false };
   }
   return perms;
 }
@@ -991,7 +992,7 @@ function getResets_() {
 function personPerms_(perms, staff, dev, who) {
   if (dev) return null;   // null = すべて許可
   var pid = staff ? String(who || '') : 'kanbu';
-  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: false, kanshi: false };
+  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: false, rireki: true, kanshi: false };
 }
 // そのviewを見る権限があるか（home/notice は常に可）。allow=null(dev)は常に可。
 function viewAllowed_(view, allow) {
@@ -1336,7 +1337,11 @@ var TILE_DEFS_ = [
   // ★前日お知らせ＝社長確認用の内部ツール。開発URL(?dev=1)専用（PC版と並びをそろえる・2026-07-19）。
   //   実際の確認作業は事務所PCで動くので、この画面は要点と案内だけ（renderZenjitsuPage_）。
   { id: 'zenjitsu', cls: 'zenjitsu', view: 'zenjitsu',
-    icon: '<span class="ticon">🔔</span>', label: '前日\nお知らせ' }
+    icon: '<span class="ticon">🔔</span>', label: '前日\nお知らせ' },
+  // ★顧客履歴検索＝番号/氏名で客を探し、今回の予約と過去予約(メモ込み)を見る。事務所PCが検索
+  //   （op=cust_search）＝日中(事務所PC稼働中)に使える。PC版スーパーズコと並びをそろえる(2026-07-19)。
+  { id: 'rireki', cls: 'rireki', view: 'rireki',
+    icon: '<span class="ticon">🔎</span>', label: '顧客履歴\n検索' }
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
@@ -1566,6 +1571,106 @@ function renderZenjitsuPage_(base, staff, dev) {
         'このスマホ画面は、PC版と並びをそろえるための入口で、開発用URLだけに表示されます。</div>' +
     '</div>' +
   '</div>';
+}
+
+// ★顧客履歴検索：番号 or 氏名（一部一致OK）で客を探し、今回の予約と過去予約(メモ込み)を見る。
+//   検索は事務所PCが実行（op=cust_search）＝依頼を命令置き場に積み、結果は custsearch_<端末>.json
+//   としてDriveに置かれる（events.json と同じ「Driveのjsonをアプリが読む」方式）。書き込みは無い。
+//   ★事務所PCが動いている時間だけ結果が返る（止まっていれば「時間切れ」を出す）。
+var RIREKI_CSS_ =
+  '.rk{max-width:760px;margin:0 auto;padding:6px 12px 60px;}' +
+  '.rksearch{display:flex;gap:8px;position:sticky;top:0;background:var(--bg,#2C7A99);padding:8px 0 12px;z-index:5;}' +
+  '#rkq{flex:1;font-size:1.05rem;padding:12px 14px;border-radius:12px;border:0;}' +
+  '#rkgo{font-size:1rem;font-weight:800;padding:12px 20px;border:0;border-radius:12px;background:#2563eb;color:#fff;}' +
+  '.rkstatus{color:#eaf3f7;font-size:.9rem;margin:2px 2px 12px;min-height:1.2em;}' +
+  '.rkcust{background:#fff;color:#0f172a;border-radius:14px;padding:14px 16px;margin-bottom:16px;box-shadow:0 5px 16px rgba(0,0,0,.15);}' +
+  '.rkwho{font-size:1.15rem;font-weight:800;}' +
+  '.rkcode{color:#2563eb;font-weight:800;margin-right:8px;}' +
+  '.rkph{color:#64748b;font-weight:400;font-size:.86rem;margin-left:8px;}' +
+  '.rkmeta{color:#64748b;font-size:.84rem;margin:4px 0 10px;}' +
+  '.rksec>.rklbl{font-weight:800;font-size:.96rem;margin:12px 0 7px;padding-left:8px;border-left:4px solid #2563eb;}' +
+  '.rksec.past>.rklbl{border-left-color:#94a3b8;}' +
+  '.rkrec{padding:9px 0;border-top:1px dashed #e2e8f0;}' +
+  '.rkdd{font-weight:800;}' +
+  '.rktt{color:#64748b;font-size:.82rem;margin-left:8px;}' +
+  '.rkbadge{display:inline-block;padding:1px 9px;border-radius:10px;color:#fff;font-weight:700;font-size:.78rem;}' +
+  '.rkroom{display:inline-block;border:1px solid #e2e8f0;border-radius:7px;padding:1px 8px;font-size:.78rem;margin-left:6px;color:#64748b;}' +
+  '.rkkind{font-size:.74rem;color:#94a3b8;margin-left:6px;}' +
+  '.rkcname{font-weight:700;font-size:.9rem;margin-top:3px;}' +
+  '.rktreat{margin-top:3px;font-size:.93rem;line-height:1.5;}' +
+  '.rktreat.empty{color:#94a3b8;}' +
+  '.rkttl{display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:700;font-size:.78rem;padding:3px 11px;border-radius:8px;margin-top:6px;}' +
+  '.rkmemo{margin-top:5px;}' +
+  '.rkmemo summary{cursor:pointer;color:#2563eb;font-size:.78rem;font-weight:700;list-style:none;}' +
+  '.rkmemo summary::-webkit-details-marker{display:none;}' +
+  '.rkfull{white-space:pre-wrap;word-break:break-word;margin:5px 0 0;padding:9px 11px;background:#f1f5f9;border-radius:8px;font-size:.84rem;line-height:1.5;}' +
+  '.rknone{color:#94a3b8;font-size:.84rem;padding:4px 0;}' +
+  '.rkpick{display:block;width:100%;text-align:left;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:13px 15px;margin-bottom:10px;font-size:1rem;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.12);}';
+
+function renderRirekiPage_(base, staff, dev) {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  var KEY = 'kx7Q2p9mVt4Zr8';
+  var script =
+  '<script>(function(){' +
+  'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
+  'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
+  'var slot=(idn.device||"d0").toLowerCase().replace(/[^a-z0-9_]/g,"").slice(0,32)||"default";' +
+  'var STAFFCOLOR={"\\uD83E\\uDED2":"#4b8b3b","\\uD83C\\uDF4A":"#e08a1e","\\uD83C\\uDF45":"#d1443c","\\uD83E\\uDD6D":"#c9a227"};' +
+  'var qEl=document.getElementById("rkq"),goEl=document.getElementById("rkgo"),stEl=document.getElementById("rkstatus"),resEl=document.getElementById("rkres");' +
+  'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
+  'function jsonp(params,onR){var cb="__rk"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
+  'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
+  'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
+  'function recHtml(r){var color=STAFFCOLOR[r.se]||"#999";' +
+  'var badge=r.se?("<span class=\\"rkbadge\\" style=\\"background:"+color+"\\">"+esc(r.se)+esc(r.sn)+"</span>"):"<span class=\\"rkbadge\\" style=\\"background:#999\\">担当不明</span>";' +
+  'var tspan=r.s?(esc(r.s)+(r.e?"–"+esc(r.e):"")+(r.du?"（"+r.du+"分）":"")):"";' +
+  'var room=r.rm?("<span class=\\"rkroom\\">"+esc(r.rm)+"</span>"):"";' +
+  'var cname=r.cu?("<div class=\\"rkcname\\">"+esc(r.cu)+"</div>"):"";' +
+  'var treat=r.tr?("<div class=\\"rktreat\\">"+esc(r.tr)+"</div>"):"<div class=\\"rktreat empty\\">（施術内容メモなし）</div>";' +
+  'var link=r.tt?("<div><a class=\\"rkttl\\" href=\\""+esc(r.tt)+"\\" target=\\"_blank\\" rel=\\"noopener\\">TimeTreeで開く ↗</a></div>"):"";' +
+  'var memo=r.no?("<details class=\\"rkmemo\\"><summary>メモ全文を見る</summary><pre class=\\"rkfull\\">"+esc(r.no)+"</pre></details>"):"";' +
+  'return "<div class=\\"rkrec\\"><div><span class=\\"rkdd\\">"+esc(r.d)+"（"+esc(r.w)+"）</span><span class=\\"rktt\\">"+tspan+"</span></div>"+' +
+  'badge+room+"<span class=\\"rkkind\\">"+esc(r.ki)+"</span>"+cname+treat+link+memo+"</div>";}' +
+  'function custHtml(c){var up=[],pa=[],i;for(i=0;i<(c.recs||[]).length;i++){(c.recs[i].up?up:pa).push(c.recs[i]);}' +
+  'var ph=c.ph?("<span class=\\"rkph\\">"+esc(c.ph)+"</span>"):"";' +
+  'var head="<div class=\\"rkwho\\"><span class=\\"rkcode\\">"+esc(c.code)+"</span>"+esc(c.name||"（名前メモなし）")+ph+"</div>"+' +
+  '"<div class=\\"rkmeta\\">来店 "+c.v+" 回 ／ 初回 "+esc(c.f)+" ／ 最終 "+esc(c.l)+"</div>";' +
+  'var upB=up.length?up.map(recHtml).join(""):"<div class=\\"rknone\\">今日以降の予約はありません。</div>";' +
+  'var paB=pa.length?pa.map(recHtml).join(""):"<div class=\\"rknone\\">過去の予約はありません。</div>";' +
+  'return "<div class=\\"rkcust\\">"+head+"<div class=\\"rksec\\"><div class=\\"rklbl\\">🔔 今回の予約（今日以降）</div>"+upB+"</div>"+' +
+  '"<div class=\\"rksec past\\"><div class=\\"rklbl\\">🕘 前回までの予約一覧</div>"+paB+"</div></div>";}' +
+  'function pickHtml(c){return "<button type=\\"button\\" class=\\"rkpick\\" data-code=\\""+esc(c.code)+"\\"><span class=\\"rkcode\\">"+esc(c.code)+"</span>"+esc(c.name||"（名前メモなし）")+" ・ 来店"+c.v+"回</button>";}' +
+  'function render(res){if(!res||!res.ok){stEl.textContent="エラー："+((res&&res.error)||"不明");return;}' +
+  'var cs=res.customers||[];if(!cs.length){stEl.textContent="一致する客が見つかりませんでした。";resEl.innerHTML="";return;}' +
+  'if(res.multi){stEl.textContent=cs.length+" 人ヒット（タップで詳しく）";resEl.innerHTML=cs.map(pickHtml).join("");' +
+  'var bs=resEl.querySelectorAll(".rkpick");for(var i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){doSearch(this.getAttribute("data-code"));});}return;}' +
+  'stEl.textContent=cs.length+" 人ヒット";resEl.innerHTML=cs.map(custHtml).join("");}' +
+  'var polls=0;function poll(id){polls++;if(polls>30){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");return;}' +
+  'if(r.status==="pending"){setTimeout(function(){poll(id);},1200);return;}' +
+  'if(r.status!=="done"){stEl.textContent="検索に失敗しました："+esc(r.result||r.status);return;}' +
+  'jsonp({action:"data",name:"custsearch_"+slot+".json"},function(d){render(d);});});}' +
+  'function doSearch(q){q=(q||qEl.value||"").trim();if(!q){stEl.textContent="番号か氏名を入れてください。";return;}' +
+  'stEl.textContent="事務所PCで検索中…（数秒）";resEl.innerHTML="";polls=0;' +
+  'jsonp({action:"submit",key:KEY,op:"cust_search",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({q:q,slot:slot})},' +
+  'function(r){if(!r||!r.ok||!r.id){stEl.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){poll(r.id);},1000);});}' +
+  'goEl.addEventListener("click",function(){doSearch();});' +
+  'qEl.addEventListener("keydown",function(ev){if(ev.key==="Enter")doSearch();});' +
+  '})();</script>';
+  return '<style>' + HOMECSS_ + RIREKI_CSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🔎</span><span class="bname">顧客履歴検索</span></div>' +
+    '<div class="rk">' +
+      '<div class="rksearch">' +
+        '<input id="rkq" type="search" placeholder="F227 / 227 / 小森 …" autocomplete="off">' +
+        '<button id="rkgo" type="button">検索</button>' +
+      '</div>' +
+      '<div class="rkstatus" id="rkstatus">顧客番号（例 F227・数字だけ 227 でも可）か、お名前の一部で検索。</div>' +
+      '<div id="rkres"></div>' +
+    '</div>' +
+  '</div>' +
+  script;
 }
 
 /** 売上ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの両方から呼ばれる。 */

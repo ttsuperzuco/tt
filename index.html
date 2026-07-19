@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260718zd"></script>
-<script src="code.js?v=20260719d"></script>
+<script src="code.js?v=20260719e"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -395,6 +395,10 @@
   // 前日お知らせ（開発URL専用）。データ取得は不要＝code.jsの静的な案内をそのまま描くだけ。
   function showZenjitsu() { mount(renderZenjitsuPage_(base, staff, dev)); }
 
+  // 顧客履歴検索。画面(入力欄)を先に出し、検索は画面内スクリプトが事務所PCへ依頼→結果を読む
+  //   （events等の先読みは不要＝押してから探すため）。renderRirekiPage_ は code.js＝GASと同一。
+  function showRireki() { mount(renderRirekiPage_(base, staff, dev)); }
+
   // ホーム：権限(perms)＋選んだ名前(who)で出し分け（renderHomePage_は code.js＝GASと同一）。
   function showHome(perms, order) {
     mount(renderHomePage_({ perms: perms || (typeof defaultPerms_==='function' ? defaultPerms_() : null),
@@ -547,6 +551,7 @@
     else if (v === 'links') showLinks();
     else if (v === 'kanshi') showKanshi();
     else if (v === 'zenjitsu') showZenjitsu();
+    else if (v === 'rireki') showRireki();
     else if (v === 'conflict') showConflict();
     else { showHome(perms, order); prefetchForHome_(allow); }
   }
