@@ -139,6 +139,9 @@ function doGet(e) {
   } else if (view === 'kanshi') {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
+  } else if (view === 'zenjitsu') {
+    title = '前日お知らせ';
+    html = renderZenjitsuPage_(base, staff, dev);      // ★開発URL(?dev=1)専用。中身は静的な案内（確認は事務所PC）
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -862,12 +865,14 @@ var DEFAULT_TILE_SETTINGS_ = {
   ttapp:      { exec: true, staff: true },     // ★元祖TTアプリ＝以前のalways:trueと同じ「全員に見える」を初期値として維持
   // ★kanshi(自動監視)＝開発URL(?dev=1)専用。tile_settings.py の TILES にも入れない＝
   //   人ごとの権限画面に出てこない＝誰にもONにできない＝開発URLだけに出る（2026-07-16ユーザー指定）。
-  kanshi:     { exec: false, staff: false }
+  kanshi:     { exec: false, staff: false },
+  // ★前日お知らせ＝社長確認用。kanshiと同じく開発URL(?dev=1)専用（tile_settings.py にも入れない）。
+  zenjitsu:   { exec: false, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'kanshi'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'kanshi', 'zenjitsu'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1327,7 +1332,11 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🗓️</span>', label: '元祖TT\nアプリ' },
   // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
   { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
-    icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' }
+    icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' },
+  // ★前日お知らせ＝社長確認用の内部ツール。開発URL(?dev=1)専用（PC版と並びをそろえる・2026-07-19）。
+  //   実際の確認作業は事務所PCで動くので、この画面は要点と案内だけ（renderZenjitsuPage_）。
+  { id: 'zenjitsu', cls: 'zenjitsu', view: 'zenjitsu',
+    icon: '<span class="ticon">🔔</span>', label: '前日\nお知らせ' }
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
@@ -1594,17 +1603,10 @@ function uriageBody_(d, dev) {
   // ★開発者の画面(dev)にだけ、このボタンが実際に何をするかを①②③で全部出す（2026-07-19ユーザー要望）。
   //   スタッフ用の画面には出さない（ボタン内の「含：…」の一行も廃止）。
   (dev ? '<div class="udev"><div class="udevt">🛠 このボタンを押すと実行する内容（開発者向け）</div>' +
-    '<div class="udevh">A. 売上をTimeTreeへ</div>' +
     '<ol class="udevl">' +
-      '<li>今月の帳簿（売上表）を読む。</li>' +
-      '<li>月初のときは先月も：今月の初日がまだTimeTreeに未記入なら、先月ぶんの締めもここで点検して記入・修正する（記入漏れ／記入ミスを拾う）。</li>' +
-      '<li>各営業日（売上あり）ごとに：まだ無ければ新しく記入（終日イベント＝その日の売上＋その月の累計）／すでに有って金額が違えば帳簿の正しい値に上書き修正／自動で判断できない分は「要手動」として人に回す（書かない）／売上0の日（未記入・空タブ）は書かない。</li>' +
-      '<li>削除は一切しない。既存の正しい値は触らない。</li>' +
-    '</ol>' +
-    '<div class="udevh">B. プロセルの売上表（在庫管理シート）へ</div>' +
-    '<ol class="udevl">' +
-      '<li>売上をプロセルの売上表にも書き写す（今月ぶん。※Aの月初「先月も」判定はBには渡していない＝先月ぶんのプロセル転記は今は自動では行わない）。</li>' +
-      '<li>部位・回数が確実な分だけ自動記入。あやふやな分は書かず「要確認」として理由つきで残す。</li>' +
+      '<li>帳簿の「まだTimeTreeに書いていない売上」を、TimeTreeに新しく記入する（すでに入っている値は触らない）。</li>' +
+      '<li>TimeTreeにすでに入っている売上に記入ミスがあれば、帳簿の正しい金額に上書きして直す。</li>' +
+      '<li>プロセルの売上表（在庫管理シート）にも、同じ売上を書き写す（転記する）。</li>' +
     '</ol></div>' : '');
 }
 
