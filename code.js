@@ -141,7 +141,10 @@ function doGet(e) {
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
   } else if (view === 'zenjitsu') {
     title = '前日お知らせ';
-    html = renderZenjitsuPage_(base, staff, dev);      // ★開発URL(?dev=1)専用。中身は静的な案内（確認は事務所PC）
+    var zd;                                             // ★開発URL(?dev=1)専用。事務所PCが作った確認画面(body_html)をそのまま出す
+    try { zd = JSON.parse(getNoticeFile_().getBlob().getDataAsString('UTF-8')); }
+    catch (ze) { zd = { error: String(ze) }; }
+    html = renderZenjitsuPage_(zd, base, staff, dev);
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -251,6 +254,20 @@ function _akijikanJsonp_(p) {
 // monitor.json のJSONP配信（読み取り専用・鍵不要）。事務所PCが export_monitor_super.py で
 // 1分ごとに書き出す＝自動監視（開発URLだけに出るボタン）の中身。
 // ★中身は「どの自動プログラムが動いているか」の状態だけで、客の個人情報は一切入らない。
+// 前日お知らせ確認画面(notice_compare.json＝事務所PCが作ったbody_html)のJSONP配信。
+// ②静的アプリ(ttsuperzuco.github.io)がDriveAppを直接呼べないため、events等と同じ経路でHTMLだけ渡す。
+function _noticeJsonp_(p) {
+  var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
+  var payload;
+  try {
+    payload = JSON.parse(getNoticeFile_().getBlob().getDataAsString('UTF-8'));
+  } catch (e) {
+    payload = { error: '確認画面がまだ作られていません（事務所PCで作成してください）。' };
+  }
+  return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
 function _kanshiJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
   var payload;
@@ -558,6 +575,7 @@ function handleAction_(p) {
   if (p.action === 'unanswered') return _unansweredJsonp_(p);
   if (p.action === 'akijikan') return _akijikanJsonp_(p);
   if (p.action === 'kanshi') return _kanshiJsonp_(p);
+  if (p.action === 'notice') return _noticeJsonp_(p);
   if (p.action === 'kanshi_devreset') return _kanshiDevResetJsonp_(p);
   if (p.action === 'kanshi_devinfo') return _kanshiDevInfoJsonp_(p);
   if (p.action === 'tilesettings') return _tileSettingsJsonp_(p);
@@ -1554,23 +1572,42 @@ function backBar_(base, staff, dev) {
     roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a></div>';
 }
 
-/** 前日お知らせ（純JS・GAS API不使用）。社長確認用の内部ツールで、実際の確認・下書き作成は
- *  事務所PCの「前日お知らせ」ボタンで動く（契約台帳を読んでHTMLを作る）。スマホ側は開発URL
- *  (?dev=1)専用で、何をする物か・どこで確認するかの案内だけを出す（PC版と並びをそろえるため）。 */
-function renderZenjitsuPage_(base, staff, dev) {
+// 前日お知らせ画面の枠のCSS＋高さ自動調整スクリプト。中身は事務所PCが作ったHTMLを
+// そのまま枠(iframe)に流し込む＝PC版とまったく同じ見た目にする（描画を二重に持たない）。
+var ZENJITSUCSS_ =
+  '  .zjframe { width:100%; min-height:70vh; border:0; border-radius:14px; background:#fff;' +
+  '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; }' +
+  '  .zjnote { color:rgba(255,255,255,.9); font-size:12.5px; text-align:center; margin:8px 4px 0; line-height:1.6; }';
+var ZENJITSUSCRIPT_ =
+  '<script>(function(){var f=document.getElementById("zjframe");if(!f)return;' +
+  'function fit(){try{var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
+  'f.addEventListener("load",fit);setTimeout(fit,300);setTimeout(fit,1200);setTimeout(fit,2500);})();</script>';
+
+/** 前日お知らせ（社長確認用・開発URL専用）。事務所PCが作った確認画面のHTML(body_html)を
+ *  そのまま枠(iframe)に入れて表示する＝PC版とまったく同じ画面。データは notice_compare.json
+ *  （PCが `export_zenjitsu_super.py`／確認画面作成時に書き出し）。まだ無い時は案内を出す。 */
+function renderZenjitsuPage_(d, base, staff, dev) {
+  var bar = '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +
+    roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
+    '<span class="ugen2">' + (d && d.generated_at ? '最終作成: ' + esc_(d.generated_at) : '') + '</span></div>';
+  if (d && d.body_html) {
+    return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
+      '<div class="home">' + bar +
+        '<iframe id="zjframe" class="zjframe" srcdoc="' + esc_(d.body_html) + '"></iframe>' +
+        '<div class="zjnote">この画面は事務所PCが作った確認内容をそのまま表示しています（お客様には送りません）。</div>' +
+      '</div>' + ZENJITSUSCRIPT_;
+  }
   return '<style>' + HOMECSS_ + '</style>' +
-  '<div class="home">' +
-    backBar_(base, staff, dev) +
-    '<div class="hhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
-    '<div class="soon">' +
-      '<div class="soonic">🔔</div>' +
-      '<div class="soontitle" style="font-size:1.35rem">確認は事務所PCで</div>' +
-      '<div class="soondesc">明日ご来店のお客様へ送る「前日お知らせ」を、送る前に一人ずつ確かめる画面です。' +
-        '契約台帳（予約メモとLINEを全部読んで正した記録）の施術・回数を主役に出し、まだ人が確認していない方は赤で目立たせます。<br><br>' +
-        '実際の確認・下書き作成は<b>事務所PCの「前日お知らせ」ボタン</b>で行います（お客様のLINEには送りません＝見てコピーするだけ）。' +
-        'このスマホ画面は、PC版と並びをそろえるための入口で、開発用URLだけに表示されます。</div>' +
-    '</div>' +
-  '</div>';
+    '<div class="home">' + bar +
+      '<div class="hhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
+      '<div class="soon">' +
+        '<div class="soonic">🔔</div>' +
+        '<div class="soontitle" style="font-size:1.3rem">まだ作られていません</div>' +
+        '<div class="soondesc">' + esc_((d && d.error) ? d.error : '確認画面がまだ作られていません。') +
+          '<br><br>事務所PCの「前日お知らせ」ボタンで確認画面を作ると、ここに<b>PCとまったく同じ画面</b>が出ます' +
+          '（明日ご来店のお客様の施術・回数を、送る前に一人ずつ確認できます。お客様には送りません＝見てコピーするだけ）。</div>' +
+      '</div>' +
+    '</div>';
 }
 
 // ★顧客履歴検索：番号 or 氏名（一部一致OK）で客を探し、今回の予約と過去予約(メモ込み)を見る。
