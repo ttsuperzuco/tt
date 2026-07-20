@@ -360,7 +360,8 @@ function _tileSettingsJsonp_(p) {
   try { d = JSON.parse(getTileSettingsFile_().getBlob().getDataAsString('UTF-8')) || {}; } catch (ignore) { d = {}; }
   var payload = { tiles: _tilesFromCfg_(d), perms: _permsFromCfg_(d), people: _peopleFromCfg_(d),
                   labels: _labelsFromCfg_(d), resets: _resetsFromCfg_(d), claimed: _claimedFromCfg_(d),
-                  order: _orderFromCfg_(d) };
+                  order: _orderFromCfg_(d),
+                  pcHidden: (Array.isArray(d.pcHidden) ? d.pcHidden : []) };
   return ContentService.createTextOutput(cb + '(' + JSON.stringify(payload) + ');')
     .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
@@ -4042,7 +4043,7 @@ var KANSHISCRIPT_ =
 //   保存の実処理は事務所PCの tile_settings.save_perms/set_password/add_person/reset_device
 //   （＝PCの設定画面が呼ぶのと同じ関数）が行う＝PC版とApp版で結果が食い違わない。
 // ★合言葉だけは「今の値」を画面に出さない（②静的アプリは誰でも開けるURLのため。変える事はできる）。
-'var EP_={}, EO_=[], EPEOPLE_=[], ELAB_={}, ECLAIM_={};' +
+'var EP_={}, EO_=[], EPEOPLE_=[], ELAB_={}, ECLAIM_={}, EPCHIDDEN_=[];' +
 'function tileDefs_(){' +
 '  var r=TILEROW_||{}; var out=[];' +
 '  var a=r.tiles||[], b=r.dev_tiles||[];' +
@@ -4055,6 +4056,7 @@ var KANSHISCRIPT_ =
 '  jsonp_({action:"tilesettings"}, function(r){' +
 '    if(!r||r.error){ toast_("⚠ 設定を読めませんでした"); return; }' +
 '    EPEOPLE_=r.people||[]; ELAB_=r.labels||{}; ECLAIM_=r.claimed||{}; EO_=(r.order||[]).slice();' +
+'    EPCHIDDEN_=(r.pcHidden||[]).slice();' +
 '    EP_={};' +
 '    for(var i=0;i<EPEOPLE_.length;i++){' +
 '      var pid=EPEOPLE_[i]; EP_[pid]={};' +
@@ -4089,6 +4091,15 @@ var KANSHISCRIPT_ =
 '    return h+"</div>";' +
 '  }).join("");' +
 '}' +
+// PC版スーパーズコ（事務所PCのホーム）で表示するボタン。チェック＝表示／外す＝PC版だけで隠す。
+'function pcRowsHtml_(){' +
+'  var defs=(TILEROW_&&TILEROW_.pc_tiles)||[];' +
+'  return defs.map(function(d){' +
+'    var on=(EPCHIDDEN_.indexOf(d.id)<0);' +   // 隠す一覧に居ない＝表示中
+'    return "<button type=\\"button\\" class=\\"kchip pcchip"+(on?" on":"")+"\\" data-pc=\\""+esc(d.id)+"\\">"+' +
+'      "<span class=\\"kacc\\" style=\\"background:"+esc(d.color||"#94a3b8")+"\\"></span>"+esc(d.label)+"</button>";' +
+'  }).join("");' +
+'}' +
 'function drawTiles_(){' +
 '  var old=document.getElementById("kTiles"); if(old&&old.parentNode) old.parentNode.removeChild(old);' +
 '  var mask=document.createElement("div"); mask.className="kmask"; mask.id="kTiles";' +
@@ -4098,6 +4109,9 @@ var KANSHISCRIPT_ =
 '  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
 '    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください（事務所PCが受け取ってから反映まで最大1分）。</div>"+' +
 '    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
+'    "<div class=\\"ksec\\">PC版で表示するボタン</div>"+' +
+'    "<div class=\\"knote\\">事務所PCのホーム画面（PC版スーパーズコ）に出すボタンです。押して緑がPC版に表示、灰色はPC版だけで隠れます（スタッフのスマホには関係ありません）。</div>"+' +
+'    "<div class=\\"kchips\\" id=\\"kPcRows\\">"+pcRowsHtml_()+"</div>"+' +
 '    "<div class=\\"ksec\\">新しいユーザーを追加</div>"+' +
 '    "<div class=\\"knote\\">新しいスタッフや、同じ人の別の名前（例：りんご2）を足します。</div>"+' +
 '    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kAdd\\" placeholder=\\"例：りんご2\\">"+' +
@@ -4127,7 +4141,7 @@ var KANSHISCRIPT_ =
 '    for(var t in (EP_[pid]||{})){ if(EP_[pid][t]) on.push(t); }' +
 '    p[pid]=on;' +
 '  }' +
-'  send_("tile_settings","setval", JSON.stringify({t:"save", o:EO_, p:p}));' +
+'  send_("tile_settings","setval", JSON.stringify({t:"save", o:EO_, p:p, ph:EPCHIDDEN_}));' +
 '  closeTiles_();' +
 '}' +
 'function tilesClick_(ev){' +
@@ -4138,6 +4152,12 @@ var KANSHISCRIPT_ =
 '    if(!EP_[pid]) EP_[pid]={};' +
 '    EP_[pid][tid]=!EP_[pid][tid];' +
 '    chip.classList.toggle("on", !!EP_[pid][tid]);' +
+'    return true;' +
+'  }' +
+'  if(chip&&chip.getAttribute("data-pc")){' +
+'    var pcid=chip.getAttribute("data-pc"), k=EPCHIDDEN_.indexOf(pcid);' +
+'    if(k<0){ EPCHIDDEN_.push(pcid); chip.classList.remove("on"); }' +   // 表示→隠す
+'    else { EPCHIDDEN_.splice(k,1); chip.classList.add("on"); }' +       // 隠す→表示
 '    return true;' +
 '  }' +
 '  if(chip&&chip.getAttribute("data-reset")){' +
