@@ -868,7 +868,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   kanshi:     { exec: false, staff: false },
   // ★前日お知らせ＝社長確認用。kanshiと同じく開発URL(?dev=1)専用（tile_settings.py にも入れない）。
   zenjitsu:   { exec: false, staff: false },
-  rireki:     { exec: true, staff: true }    // ★顧客履歴検索＝全員に見せる（スタッフの日常業務）
+  rireki:     { exec: false, staff: false }    // ★顧客履歴検索＝初期は開発URL(?dev=1)だけ（共通ルール16＝新ボタンは既定で開発者だけ表示。自動監視からONにして開放）
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
@@ -900,7 +900,7 @@ function defaultPerms_(people) {
   var list = people || PEOPLE_;
   var perms = {};
   for (var i = 0; i < list.length; i++) {
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: true, kanshi: false };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false };
   }
   return perms;
 }
@@ -992,7 +992,7 @@ function getResets_() {
 function personPerms_(perms, staff, dev, who) {
   if (dev) return null;   // null = すべて許可
   var pid = staff ? String(who || '') : 'kanbu';
-  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: false, rireki: true, kanshi: false };
+  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: false, rireki: false, kanshi: false };
 }
 // そのviewを見る権限があるか（home/notice は常に可）。allow=null(dev)は常に可。
 function viewAllowed_(view, allow) {
