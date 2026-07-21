@@ -3019,15 +3019,13 @@ function renderLinksError_(err, base, staff, dev) {
 /** 各種LINKページの描画（純JS・GAS API不使用）。②静的アプリのJSONP経由から呼ばれる
  *  （データは事務所PCが Googleシート「ズコLINK」タブを読んで links.json に書き出したもの＝
  *  export_links_super.py。GASは計算しない＝描くだけ）。
- *  2段階の画面：①案内名の大きなボタン一覧 → ②押した案内の言語ボタン一覧（押すとURLを
- *  クリップボードにコピーし、そのままLINEの入力欄に貼り付けて送る想定）。どちらも大きな文字・
- *  大きなボタンにして遠目にも読める見た目にする（2026-07-18ユーザー指摘：見にくい→修正）。 */
+ *  ★2026-07-21：画面を1枚にした。以前は「案内名を押す→言語を選ぶ」の2段階だったが、案内名の
+ *  すぐ下に言語ボタンを並べて、1画面で押せば即コピーできるようにした（ユーザー指示）。 */
 function renderLinksPage_(d, base, staff, dev) {
   var topics = (d && d.topics) || [];
   var list = topics.length
-    ? topics.map(lkTopicItem_).join('')
+    ? topics.map(lkTopicBlock_).join('')
     : '<div class="lknone">まだ案内リンクが登録されていません。</div>';
-  var panes = topics.map(lkLangPane_).join('');
 
   return '' +
 '<style>' + LKCSS_ + '</style>' +
@@ -3038,29 +3036,18 @@ function renderLinksPage_(d, base, staff, dev) {
   '</div>' +
   '<h1>🔗 各種LINK</h1>' +
   '<div id="lklist">' +
-    '<div class="lkhint">送りたい案内を選んでください</div>' +
+    '<div class="lkhint">言語を選ぶとURLがコピーされます</div>' +
     list +
   '</div>' +
-  panes +
 '</div>' +
 LKSCRIPT_;
 }
 
-// ①一覧画面のボタン＝案内名だけの大きなボタン（押すと②へ切り替わる）。
-function lkTopicItem_(topic, idx) {
-  return '<button type="button" class="lkitem" data-idx="' + idx + '">' +
-    '<span class="lkitemname">' + esc_(topic.name || '') + '</span>' +
-    '<span class="lkchev">›</span>' +
-  '</button>';
-}
-
-// ②言語選択画面（案内ごとに1枚・既定は隠す。①のボタンを押した時だけJSで表示切替）。
-function lkLangPane_(topic, idx) {
+// 案内1件＝白い見出し（案内名）＋その下に言語ボタンを横並び（押すとURLをコピー）。
+function lkTopicBlock_(topic) {
   var btns = (topic.links || []).map(lkLinkBtn_).join('');
-  return '<div class="lklangpane" data-idx="' + idx + '" hidden>' +
-    '<button type="button" class="lkback">‹ LINK一覧へ戻る</button>' +
+  return '<div class="lktopic">' +
     '<div class="lktitle">' + esc_(topic.name || '') + '</div>' +
-    '<div class="lkhint">言語を選ぶとURLがコピーされます</div>' +
     '<div class="lklangbtns">' + btns + '</div>' +
   '</div>';
 }
@@ -3074,7 +3061,6 @@ function lkLinkBtn_(lk) {
 
 // クリップボードへのコピー＝navigator.clipboard（httpsのみ有効）優先、使えない端末は
 // textarea+execCommandへ自動で切り替える（LINE内ブラウザ等の古い実装向けフォールバック）。
-// ＋①案内一覧⇄②言語選択の画面切替（同じページ内でhidden属性を付け外しするだけ・再取得なし）。
 var LKSCRIPT_ =
 '<script>(function(){' +
 'function fallbackCopy_(text){' +
@@ -3089,17 +3075,6 @@ var LKSCRIPT_ =
 '    navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(fallbackCopy_(text)); });' +
 '  } else { done(fallbackCopy_(text)); }' +
 '}' +
-'var list=document.getElementById("lklist");' +
-'var panes=[].slice.call(document.querySelectorAll(".lklangpane"));' +
-'function showList_(){ if(list) list.hidden=false; panes.forEach(function(p){ p.hidden=true; }); window.scrollTo(0,0); }' +
-'function showPane_(idx){ if(list) list.hidden=true; panes.forEach(function(p){ p.hidden = p.getAttribute("data-idx")!==String(idx); }); window.scrollTo(0,0); }' +
-'[].slice.call(document.querySelectorAll(".lkitem")).forEach(function(btn){' +
-'  btn.addEventListener("click", function(){ showPane_(btn.getAttribute("data-idx")); });' +
-'});' +
-'panes.forEach(function(p){' +
-'  var back=p.querySelector(".lkback");' +
-'  if(back) back.addEventListener("click", showList_);' +
-'});' +
 '[].slice.call(document.querySelectorAll(".lkbtn")).forEach(function(btn){' +
 '  btn.addEventListener("click", function(){' +
 '    var url=btn.getAttribute("data-url")||"";' +
@@ -3131,21 +3106,8 @@ var LKCSS_ =
 '  .lkgen{ flex:0 0 auto; color:var(--akisub); font-size:15px; font-weight:700; text-align:right; }' +
 '  .lkwrap h1{ font-size:24px; margin:2px 0 10px; }' +
 '  .lkhint{ color:var(--akisub); font-size:16px; margin-bottom:14px; font-weight:700; }' +
-// ①案内一覧＝1件1行、大きな文字・大きなタップ域（フルワイド）。
-'  .lkitem{ appearance:none; -webkit-appearance:none; display:flex; align-items:center;' +
-'    justify-content:space-between; width:100%;' +
-'    font-family:inherit; font-size:22px; font-weight:800; color:var(--akiink); text-align:left;' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:16px;' +
-'    padding:22px 22px; margin-bottom:14px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.06); }' +
-'  .lkitem:active{ transform:translateY(2px); }' +
-'  .lkitemname{ font-size:33px; font-weight:800; color:#2563eb; }' +
-'  .lkchev{ color:#2563eb; font-size:30px; font-weight:800; margin-left:10px; }' +
-// ②言語選択＝案内名を大見出しにし、言語ボタンは横並び（2026-07-18ユーザー指摘で縦積み→横並びに変更）。
-'  .lkback{ appearance:none; -webkit-appearance:none; font-family:inherit; font-size:16px;' +
-'    font-weight:700; color:var(--akiink);' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:10px 16px; margin-bottom:16px; cursor:pointer; }' +
-'  .lkback:active{ transform:translateY(1px); }' +
+// 案内1件のまとまり＝白い見出し＋言語ボタン（1画面に並ぶので間隔をあけて区切る）。
+'  .lktopic{ margin-bottom:28px; }' +
 '  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; color:#fff; }' +
 '  .lklangbtns{ display:flex; flex-direction:row; flex-wrap:wrap; gap:14px; margin-top:10px; }' +
 // ★言語ボタンは白背景＋濃い青文字（2026-07-18ユーザー指定＝白ベースにしてほしい）。
