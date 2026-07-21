@@ -3107,7 +3107,7 @@ var LKCSS_ =
 // 見出し「🔗 各種LINK」と、その右に説明（言語を選ぶと…）を並べる（2026-07-21ユーザー指示）。
 '  .lkhead{ display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; margin-bottom:14px; }' +
 '  .lkwrap h1{ font-size:24px; margin:2px 0; font-weight:800; }' +
-'  .lkhint{ color:var(--akisub); font-size:16px; font-weight:800; }' +
+'  .lkhint{ color:#ffffff; font-size:16px; font-weight:800; }' +
 // 案内1件のまとまり＝白い見出し＋言語ボタン（1画面に並ぶので間隔をあけて区切る）。
 '  .lktopic{ margin-bottom:28px; }' +
 '  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; color:#fff; }' +
