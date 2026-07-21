@@ -96,9 +96,19 @@
   });
 
   var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  tip.innerHTML = isIOS
-    ? 'iPhoneの方：「この画像をまとめて送る」を押すと送り先が選べます。写真に残したい時は「画像を保存」を選んでください。'
-    : '「この画像をまとめて送る」が出ない機種では「まとめて保存する」を押し、写真アルバムから選んで送ってください。';
+
+  function setTip(){
+    if (!shareBtn.hidden){
+      tip.innerHTML = isIOS
+        ? '「この画像をまとめて送る」を押すと送り先が選べます。LINEを選べばそのまま送れます。写真に残したい時は「画像を保存」を選んでください。'
+        : '「この画像をまとめて送る」を押すと送り先が選べます。LINEを選べばそのまま送れます。';
+    } else {
+      tip.innerHTML = 'パソコンの方：<b>「まとめて保存する」</b>を押すとダウンロードのフォルダに'
+        + urls.length + '枚入ります。そのフォルダを開いて'
+        + urls.length + '枚を選び、パソコン版LINEの入力らんに<b>そのまま引っぱって落とす</b>と、'
+        + urls.length + '枚まとめて送れます。（写真は1枚ずつしかコピーできないため、この形が一番早いです）';
+    }
+  }
 
   function fetchFiles(){
     return Promise.all(urls.map(function(u, i){
@@ -115,6 +125,7 @@
       if (navigator.canShare({ files: [probe] })) shareBtn.hidden = false;
     }catch(e){}
   }
+  setTip();
 
   shareBtn.onclick = function(){
     shareBtn.disabled = true;
