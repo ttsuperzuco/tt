@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>画像をまとめて送る</title>
+<style>
+  :root{ color-scheme: light; }
+  body{
+    font-family:sans-serif;
+    background:#e6f7ff;
+    color:#123;
+    text-align:center;
+    margin:0;
+    padding:14px 12px 40px;
+  }
+  h1{ color:#007acc; font-size:26px; margin:6px 0 14px; }
+  .btn{
+    display:block;
+    width:100%;
+    box-sizing:border-box;
+    margin:10px auto;
+    padding:18px 12px;
+    font-size:26px;
+    font-weight:700;
+    border:none;
+    border-radius:18px;
+    cursor:pointer;
+    color:#1d4ed8;
+    background:#fff;
+    box-shadow:4px 4px 8px rgba(0,0,0,0.18);
+  }
+  .btn.main{ color:#fff; background:#2563eb; }
+  .btn.back{ font-size:20px; padding:12px; }
+  .btn:disabled{ opacity:.55; }
+  .wrap{ max-width:520px; margin:0 auto; }
+  .note{ color:#555; font-size:15px; line-height:1.6; margin:14px 4px; text-align:left; }
+  .shots{ margin-top:18px; }
+  .shots img{
+    width:100%;
+    display:block;
+    margin:10px 0;
+    border-radius:12px;
+    box-shadow:2px 2px 8px rgba(0,0,0,.15);
+    background:#fff;
+  }
+  .num{ text-align:left; font-size:15px; color:#555; margin:14px 0 -6px; }
+  #msg{ font-size:17px; color:#0a7; min-height:24px; margin:6px 0; font-weight:700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>画像をまとめて送る</h1>
+
+  <button class="btn main" id="shareBtn" hidden>この画像をまとめて送る</button>
+  <button class="btn" id="saveBtn">まとめて保存する</button>
+  <div id="msg"></div>
+
+  <div class="note" id="tip"></div>
+
+  <div class="shots" id="shots"></div>
+
+  <button class="btn back" id="backBtn">← 戻る</button>
+</div>
+
+<script>
+(function(){
+  var params = new URLSearchParams(location.search);
+  var raw = params.get('u') || '';
+  var urls = raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean)
+                .map(function(u){ return new URL(u, location.href).href; })
+                // 自分のサイトの画像だけを扱う（他所の住所は無視する）
+                .filter(function(u){ return u.indexOf(location.origin + '/') === 0; });
+
+  var shots = document.getElementById('shots');
+  var msg = document.getElementById('msg');
+  var shareBtn = document.getElementById('shareBtn');
+  var saveBtn = document.getElementById('saveBtn');
+  var tip = document.getElementById('tip');
+
+  if (!urls.length){
+    msg.textContent = '画像が指定されていません。';
+    saveBtn.disabled = true;
+  }
+
+  urls.forEach(function(u, i){
+    var t = document.createElement('div');
+    t.className = 'num';
+    t.textContent = (i+1) + '枚目';
+    shots.appendChild(t);
+    var img = document.createElement('img');
+    img.src = u;
+    img.alt = (i+1) + '枚目';
+    shots.appendChild(img);
+  });
+
+  var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  tip.innerHTML = isIOS
+    ? 'iPhoneの方：「この画像をまとめて送る」を押すと送り先が選べます。写真に残したい時は「画像を保存」を選んでください。'
+    : '「この画像をまとめて送る」が出ない機種では「まとめて保存する」を押し、写真アルバムから選んで送ってください。';
+
+  function fetchFiles(){
+    return Promise.all(urls.map(function(u, i){
+      return fetch(u).then(function(r){ return r.blob(); }).then(function(b){
+        return new File([b], (i+1) + '.jpg', { type: b.type || 'image/jpeg' });
+      });
+    }));
+  }
+
+  if (urls.length && navigator.canShare && navigator.share){
+    // 判定用のダミーで対応可否を見る
+    try{
+      var probe = new File([new Blob(['x'],{type:'image/jpeg'})], 'a.jpg', {type:'image/jpeg'});
+      if (navigator.canShare({ files: [probe] })) shareBtn.hidden = false;
+    }catch(e){}
+  }
+
+  shareBtn.onclick = function(){
+    shareBtn.disabled = true;
+    msg.textContent = '準備しています…';
+    fetchFiles().then(function(files){
+      msg.textContent = '';
+      return navigator.share({ files: files });
+    }).catch(function(e){
+      msg.textContent = (e && e.name === 'AbortError') ? '' : 'うまくいきませんでした。保存を試してください。';
+    }).then(function(){ shareBtn.disabled = false; });
+  };
+
+  saveBtn.onclick = function(){
+    saveBtn.disabled = true;
+    msg.textContent = '保存しています…';
+    var n = 0;
+    (function step(i){
+      if (i >= urls.length){
+        msg.textContent = n + '枚を保存しました。';
+        saveBtn.disabled = false;
+        return;
+      }
+      fetch(urls[i]).then(function(r){ return r.blob(); }).then(function(b){
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(b);
+        a.download = (i+1) + '.jpg';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+        n++;
+      }).catch(function(){}).then(function(){
+        setTimeout(function(){ step(i+1); }, 700);
+      });
+    })(0);
+  };
+
+  document.getElementById('backBtn').onclick = function(){
+    if (history.length > 1) history.back();
+    else window.close();
+  };
+})();
+</script>
+</body>
+</html>
