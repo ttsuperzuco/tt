@@ -3853,6 +3853,12 @@ var KANSHICSS_ =
 '  .kfresh.old{ background:var(--ng); color:#fff; font-weight:700; padding:10px 12px; border-radius:10px; }' +
 '  .kcard{ background:var(--card); border:1px solid var(--line); border-radius:12px;' +
 '    padding:12px 14px; margin-bottom:10px; }' +
+/* ★2026-07-21：PC画面と同じ2段分け。「監視のみシステム」＝入切のつまみが無く見るだけ＝点線の枠 */
+'  .ksec{ font-size:13px; letter-spacing:.12em; color:var(--sub); font-weight:800;' +
+'    margin:22px 2px 10px; }' +
+'  .ksecnote{ font-size:14px; color:var(--sub); margin:-6px 2px 10px; line-height:1.6; }' +
+'  .kcard.kwatch{ background:transparent; border-style:dashed; }' +
+'  .kcard.kwatch .klabel{ font-weight:600; }' +
 '  .khead{ display:flex; align-items:flex-start; gap:8px; cursor:pointer; }' +
 '  .kmark{ font-size:19px; line-height:1.4; }' +
 '  .klabel{ font-weight:700; font-size:18px; flex:1; }' +
@@ -4004,9 +4010,16 @@ var KANSHISCRIPT_ =
 '  var list=document.getElementById("kList"); if(!list) return;' +
 '  var gs=data_.groups||[];' +
 '  if(!gs.length){ list.innerHTML="<div class=\\"kcard\\">状態が空です。事務所PCをご確認ください。</div>"; return; }' +
+'  var sec_="";' +   /* ★2026-07-21：PC画面と同じく「ONOFFシステム／監視のみシステム」の見出しを出す */
 '  list.innerHTML=gs.map(function(g,i){' +
 '    var body=(g.members&&g.members.length)?g.members.map(rowHtml_).join(""):"";' +
-'    return "<div class=\\"kcard\\"><div class=\\"khead\\" data-g=\\""+i+"\\">"+' +
+'    var head_="";' +
+'    if(g.section && g.section!==sec_){' +
+'      sec_=g.section;' +
+'      head_="<div class=\\"ksec\\">"+esc(sec_)+"</div>";' +
+'      if(g.watch_only){ head_+="<div class=\\"ksecnote\\">ここは入切のつまみがありません。うまくいっているかを見るだけの欄です。</div>"; }' +
+'    }' +
+'    return head_+"<div class=\\"kcard"+(g.watch_only?" kwatch":"")+"\\"><div class=\\"khead\\" data-g=\\""+i+"\\">"+' +
 '      "<span class=\\"kmark\\">"+mark_(g.status)+"</span>"+' +
 '      "<span class=\\"klabel\\">"+esc(g.label)+"<div class=\\"kdetail\\">"+esc(g.detail||"")+"</div></span>"+' +
 '      (body?"<span class=\\"karrow\\">"+(open_[i]?"▲":"▼")+"</span>":"")+"</div>"+' +
