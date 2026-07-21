@@ -497,12 +497,12 @@ var KANSHI_CTL_KEYS_ = [
   'edit_worker', 'conflict_watcher', 'super_link',
   // 必要時に実行（2026-07-17追加）
   'travel_group', 'power_schedule', 'idle_guard', 'potcoin_stake', 'restore',
-  // その他の設定
+  // ★2026-07-21：旧「その他の設定」＝いまは「必要時に実行」の中／「スーパーズコApp関連」の中
   'tile_settings',   // スーパーズコApp ボタン表示設定（人ごと表示・並び順・合言葉・追加・選び直し）
-  'lt_auto_verify',  // その他の設定：L⇔T予約照合 全自動AI判定（2026-07-16・PC/App同一ルールで追加）
-  'ai_usage_record', // その他の設定：自動AIコスト計算（帳簿）のON/OFF（2026-07-17追加）
-  'stale_cleanup',   // その他の設定：固まった残骸の掃除（2026-07-17追加）
-  'kanshi_device'    // その他の設定：監視画面を使えるスマホの登録し直し（2026-07-17追加）
+  'lt_auto_verify',  // 必要時に実行：L⇔T予約照合 全自動AI判定（2026-07-16・PC/App同一ルールで追加）
+  'ai_usage_record', // 必要時に実行：自動AIコスト計算（帳簿）のON/OFF（2026-07-17追加）
+  'stale_cleanup',   // 必要時に実行：固まった残骸の掃除（2026-07-17追加）
+  'kanshi_device'    // スーパーズコApp関連：監視画面を使えるスマホの登録し直し（2026-07-17追加）
 ];
 var KANSHI_CTL_ACTS_ = ['on', 'off', 'run', 'setval'];
 function _validKanshiCtl_(key, act) {
