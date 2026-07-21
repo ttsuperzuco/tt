@@ -3055,7 +3055,7 @@ function lkTopicBlock_(topic) {
 function lkLinkBtn_(lk) {
   return '<button type="button" class="lkbtn" data-url="' + esc_(lk.url || '') + '">' +
     '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
-    '<span class="lkcopy">タップして<br>URLをコピー</span>' +
+    '<span class="lkcopy">タップしてURLをコピー</span>' +
   '</button>';
 }
 
@@ -3118,11 +3118,11 @@ var LKCSS_ =
 '  .lkbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; display:flex;' +
 '    flex-direction:column; align-items:center; font-weight:800;' +
 '    justify-content:center; gap:2px; flex:1 1 140px; min-width:140px; color:#1d4ed8; background:#ffffff;' +
-'    border:1px solid #d7dee8; border-radius:18px; padding:14px 14px; cursor:pointer;' +
+'    border:1px solid #d7dee8; border-radius:18px; padding:12px 10px; cursor:pointer;' +
 '    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkbtn:active{ transform:translateY(2px); }' +
 '  .lklang{ font-size:30px; font-weight:800; }' +
-'  .lkcopy{ font-size:16px; font-weight:800; color:#6b7280; text-align:center; line-height:1.4; }' +
+'  .lkcopy{ font-size:15px; font-weight:800; color:#6b7280; text-align:center; line-height:1.3; white-space:nowrap; }' +
 '  .lkbtn.lkok{ background:#eafff1; border-color:#16a34a; }' +
 '  .lkbtn.lkok .lklang, .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
 '  .lknone{ color:#c33; font-size:16px; font-weight:800; padding:8px 0; }';
