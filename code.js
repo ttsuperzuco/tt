@@ -489,7 +489,7 @@ function _rateOk_(q) {
 //   （確認文は事務所PCが monitor.json の row.confirm で配る＝PC側が唯一の出どころ）。
 //   ★事務所PC側(monitor_ctl.apply)でも key と「その項目に許した操作(acts)」を再確認する。
 var KANSHI_CTL_KEYS_ = [
-  'db_backup', 'db_backup_full', 'course_counts', 'program_backup',
+  'db_backup', 'db_backup_full', 'program_backup',
   'line_stats_timetree_check', 'ripihoryu_auto',
   'line_prefetch', 'timetree_prefetch', 'edit_worker_watchdog',
   'lt_match', 'lt_miss_watch', 'sales_timetree_transfer',
@@ -1170,9 +1170,9 @@ function esc_(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-// お知らせに書く「コース第N次」（来店回数とは別・体験オフセット適用済み。共有DBの
-// reservation_course_count 由来。夜間バッチがお知らせの build_one で算出）を、events.jsonの
-// payload.course_counts から event_id で引いて表示する。要確認/未算出は⚠️（[[project_course_count_unified]]）。
+// ★2026-07-21：夜間バッチが別に算出していた「コース第N次」(course_counts)は廃止。
+// 施術内容も回数も契約台帳(treatment_db)一本に統一した（2026-07-19の台帳移行で実際には
+// もう描画していなかった＝このコメントだけが残っていた。オーナー指示で元も止めた）。
 // "2026-07-19" → "7月19日(日)"（曜日は現地の年月日で計算＝タイムゾーンずれ対策でnew Date(y,m-1,d)を使う）。
 function jpDateWeekday_(iso) {
   var p = String(iso || '').split('-').map(Number);
