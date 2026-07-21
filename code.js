@@ -3044,28 +3044,24 @@ LKSCRIPT_;
 }
 
 // 案内1件＝白い見出し（案内名）＋その下に言語ボタンを横並び（押すとURLをコピー）。
-// ★見出しの右端に「プレビュー」＝送る前に中身を自分で見て確かめるための別タブ表示（2026-07-21）。
-//   開くのは先頭の言語のURL（シートの並び順＝通常は日本語）。
 function lkTopicBlock_(topic) {
-  var links = topic.links || [];
-  var btns = links.map(lkLinkBtn_).join('');
-  var first = links.length ? (links[0].url || '') : '';
-  var prev = first
-    ? '<a class="lkprev" href="' + esc_(first) + '" target="_blank" rel="noopener">プレビュー</a>'
-    : '';
+  var btns = (topic.links || []).map(lkLinkBtn_).join('');
   return '<div class="lktopic">' +
-    '<div class="lktoprow">' +
-      '<div class="lktitle">' + esc_(topic.name || '') + '</div>' + prev +
-    '</div>' +
+    '<div class="lktitle">' + esc_(topic.name || '') + '</div>' +
     '<div class="lklangbtns">' + btns + '</div>' +
   '</div>';
 }
 
+// 言語1つ＝上に大きなコピーボタン、その下に背の低い「プレビュー」（別画面で中身を確認）。
 function lkLinkBtn_(lk) {
-  return '<button type="button" class="lkbtn" data-url="' + esc_(lk.url || '') + '">' +
-    '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
-    '<span class="lkcopy">URLをコピー</span>' +
-  '</button>';
+  var url = esc_(lk.url || '');
+  return '<div class="lkcell">' +
+    '<button type="button" class="lkbtn" data-url="' + url + '">' +
+      '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
+      '<span class="lkcopy"></span>' +
+    '</button>' +
+    '<a class="lkprev" href="' + url + '" target="_blank" rel="noopener">プレビュー</a>' +
+  '</div>';
 }
 
 // クリップボードへのコピー＝navigator.clipboard（httpsのみ有効）優先、使えない端末は
@@ -3119,9 +3115,10 @@ var LKCSS_ =
 '  .lkhint{ color:#ffb3d9; font-size:16px; font-weight:800; }' +
 // 案内1件のまとまり＝白い見出し＋言語ボタン（1画面に並ぶので間隔をあけて区切る）。
 '  .lktopic{ margin-bottom:28px; }' +
-'  .lktoprow{ display:flex; align-items:center; justify-content:space-between; gap:12px; }' +
-'  .lkprev{ flex:0 0 auto; font-size:16px; font-weight:800; color:#1d4ed8; text-decoration:none;' +
-'    background:#ffffff; border:1px solid #d7dee8; border-radius:12px; padding:10px 16px; }' +
+'  .lkcell{ display:flex; flex-direction:column; gap:8px; flex:1 1 140px; min-width:140px; }' +
+'  .lkprev{ display:block; text-align:center; font-size:15px; font-weight:800; color:#1d4ed8;' +
+'    text-decoration:none; background:#ffffff; border:1px solid #d7dee8; border-radius:12px;' +
+'    padding:6px 10px; }' +
 '  .lkprev:active{ transform:translateY(1px); }' +
 '  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; color:#fff; }' +
 '  .lklangbtns{ display:flex; flex-direction:row; flex-wrap:wrap; gap:14px; margin-top:10px; }' +
@@ -3130,12 +3127,13 @@ var LKCSS_ =
 //   ボタン装飾を消して指定した色を確実に出すためのもの（既存の`.unadetail`等と同じ作法）。
 '  .lkbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; display:flex;' +
 '    flex-direction:column; align-items:center; font-weight:800;' +
-'    justify-content:center; gap:2px; flex:1 1 140px; min-width:140px; color:#1d4ed8; background:#ffffff;' +
-'    border:1px solid #d7dee8; border-radius:18px; padding:12px 10px; cursor:pointer;' +
+'    justify-content:center; gap:2px; width:100%; color:#1d4ed8; background:#ffffff;' +
+'    border:1px solid #d7dee8; border-radius:18px; padding:8px 10px; cursor:pointer;' +
 '    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkbtn:active{ transform:translateY(2px); }' +
 '  .lklang{ font-size:30px; font-weight:800; }' +
 '  .lkcopy{ font-size:15px; font-weight:800; color:#6b7280; text-align:center; line-height:1.3; white-space:nowrap; }' +
+'  .lkcopy:empty{ display:none; }' +
 '  .lkbtn.lkok{ background:#eafff1; border-color:#16a34a; }' +
 '  .lkbtn.lkok .lklang, .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
 '  .lknone{ color:#c33; font-size:16px; font-weight:800; padding:8px 0; }';
