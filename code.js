@@ -3802,7 +3802,7 @@ function renderKanshiPage_(d, base, staff, dev) {
     '<div class="kfresh" id="kFresh"></div>' +
     '<div id="kList"></div>' +
     '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
-      '各行を押すと中身が開きます。この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
+      '各行を押すとその中身の画面に移ります（上の「← 一覧に戻る」で戻れます）。この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
       'この画面は事務所PCが1分ごとに送ってきた状態を見ています。</div>' +
   '</div>' +
   '<script>window.__KANSHI_DATA__=' + JSON.stringify(d) + ';<' + '/script>' +
@@ -3835,6 +3835,9 @@ var KANSHICSS_ =
 '  .kcard.kwatch{ background:transparent; border-style:dashed; }' +
 '  .kcard.kwatch .klabel{ font-weight:600; }' +
 '  .khead{ display:flex; align-items:flex-start; gap:8px; cursor:pointer; }' +
+'  .khead.nohit{ cursor:default; }' +
+'  .kback{ margin-bottom:10px; }' +
+'  .kback .kbtn{ font-size:16px; padding:9px 14px; }' +
 '  .kmark{ font-size:19px; line-height:1.4; }' +
 '  .klabel{ font-weight:700; font-size:18px; flex:1; }' +
 '  .kdetail{ color:var(--sub); font-size:15px; margin-top:3px; font-weight:400; }' +
@@ -3909,7 +3912,9 @@ var KANSHISCRIPT_ =
 '}' +
 'var DEV_=devId_();' +
 'var data_=window.__KANSHI_DATA__||{groups:[]};' +
-'var open_={};' +
+/* ★2026-07-21（オーナー指示）：以前は押すとその場で下に開く形だったが、事務所PCの画面と同じ
+   「押したら、その中身だけの画面に移る」形にそろえた。cur_=いま開いている枠の番号（null＝一覧）。 */
+'var cur_=null;' +
 'var CONFIRM_={};' +   // 押す前に出す確認文（事務所PCが monitor.json の row.confirm で配る）
 'var TILEROW_=null;' + // ボタン表示設定の行（ボタンの一覧・色を持っている＝一覧をここに書き写さない）
 
@@ -3985,9 +3990,20 @@ var KANSHISCRIPT_ =
 '  var list=document.getElementById("kList"); if(!list) return;' +
 '  var gs=data_.groups||[];' +
 '  if(!gs.length){ list.innerHTML="<div class=\\"kcard\\">状態が空です。事務所PCをご確認ください。</div>"; return; }' +
+/* いま1つの枠の中を見ている＝その中身だけの画面（上に「← 一覧に戻る」） */
+'  if(cur_!==null && gs[cur_]){' +
+'    var g=gs[cur_];' +
+'    var body=(g.members&&g.members.length)?g.members.map(rowHtml_).join(""):"<div class=\\"kdetail\\">中身はありません。</div>";' +
+'    list.innerHTML="<div class=\\"kback\\"><button type=\\"button\\" class=\\"kbtn\\" id=\\"kBack\\">← 一覧に戻る</button></div>"+' +
+'      "<div class=\\"kcard"+(g.watch_only?" kwatch":"")+"\\"><div class=\\"khead nohit\\">"+' +
+'      "<span class=\\"kmark\\">"+mark_(g.status)+"</span>"+' +
+'      "<span class=\\"klabel\\">"+esc(g.label)+"<div class=\\"kdetail\\">"+esc(g.detail||"")+"</div></span></div>"+' +
+'      "<div class=\\"kmembers\\">"+body+"</div></div>";' +
+'    return;' +
+'  }' +
 '  var sec_="";' +   /* ★2026-07-21：PC画面と同じく「ONOFFシステム／監視のみシステム」の見出しを出す */
 '  list.innerHTML=gs.map(function(g,i){' +
-'    var body=(g.members&&g.members.length)?g.members.map(rowHtml_).join(""):"";' +
+'    var has=(g.members&&g.members.length)?1:0;' +
 '    var head_="";' +
 '    if(g.section && g.section!==sec_){' +
 '      sec_=g.section;' +
@@ -3997,9 +4013,7 @@ var KANSHISCRIPT_ =
 '    return head_+"<div class=\\"kcard"+(g.watch_only?" kwatch":"")+"\\"><div class=\\"khead\\" data-g=\\""+i+"\\">"+' +
 '      "<span class=\\"kmark\\">"+mark_(g.status)+"</span>"+' +
 '      "<span class=\\"klabel\\">"+esc(g.label)+"<div class=\\"kdetail\\">"+esc(g.detail||"")+"</div></span>"+' +
-'      (body?"<span class=\\"karrow\\">"+(open_[i]?"▲":"▼")+"</span>":"")+"</div>"+' +
-'      (body?"<div class=\\"kmembers\\" data-m=\\""+i+"\\""+(open_[i]?"":" hidden")+">"+body+"</div>":"")+' +
-'    "</div>";' +
+'      (has?"<span class=\\"karrow\\">›</span>":"")+"</div></div>";' +
 '  }).join("");' +
 '}' +
 'function reload_(onDone){' +
@@ -4191,8 +4205,11 @@ var KANSHISCRIPT_ =
 '  if(ev.target.closest("#kTiles")){ if(tilesClick_(ev)) return; }' +
 '  var ed=ev.target.closest("[data-editor]");' +
 '  if(ed){ openTiles_(); return; }' +
+'  if(ev.target.closest("#kBack")){ cur_=null; render_(); window.scrollTo(0,0); return; }' +
 '  var h=ev.target.closest(".khead");' +
-'  if(h){ var i=h.getAttribute("data-g"); open_[i]=!open_[i]; render_(); return; }' +
+'  if(h&&h.getAttribute("data-g")!==null&&h.getAttribute("data-g")!==undefined){' +
+'    cur_=Number(h.getAttribute("data-g")); render_(); window.scrollTo(0,0); return;' +
+'  }' +
 '  var b=ev.target.closest(".kbtn");' +
 '  if(!b) return;' +
 '  var key=b.getAttribute("data-key"), act=b.getAttribute("data-act");' +
