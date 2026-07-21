@@ -3034,9 +3034,9 @@ function renderLinksPage_(d, base, staff, dev) {
     '<a class="lkhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← TOPに戻る</a>' +
     '<span class="lkgen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
   '</div>' +
-  '<h1>🔗 各種LINK</h1>' +
+  '<div class="lkhead"><h1>🔗 各種LINK</h1>' +
+    '<span class="lkhint">言語を選ぶとURLがコピーされます</span></div>' +
   '<div id="lklist">' +
-    '<div class="lkhint">言語を選ぶとURLがコピーされます</div>' +
     list +
   '</div>' +
 '</div>' +
@@ -3100,12 +3100,14 @@ var LKCSS_ =
 '  .lkwrap{ max-width:760px; margin:0 auto; padding:14px 14px 40px;' +
 '    font-family:"Yu Gothic UI","Hiragino Sans",sans-serif; color:var(--akiink); }' +
 '  .lkbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }' +
-'  .lkhome{ flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--akiink); text-decoration:none;' +
+'  .lkhome{ flex:0 0 auto; font-size:.9rem; font-weight:800; color:var(--akiink); text-decoration:none;' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px; padding:10px 14px; }' +
 '  .lkhome:active{ transform:translateY(1px); }' +
-'  .lkgen{ flex:0 0 auto; color:var(--akisub); font-size:15px; font-weight:700; text-align:right; }' +
-'  .lkwrap h1{ font-size:24px; margin:2px 0 10px; }' +
-'  .lkhint{ color:var(--akisub); font-size:16px; margin-bottom:14px; font-weight:700; }' +
+'  .lkgen{ flex:0 0 auto; color:var(--akisub); font-size:15px; font-weight:800; text-align:right; }' +
+// 見出し「🔗 各種LINK」と、その右に説明（言語を選ぶと…）を並べる（2026-07-21ユーザー指示）。
+'  .lkhead{ display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; margin-bottom:14px; }' +
+'  .lkwrap h1{ font-size:24px; margin:2px 0; font-weight:800; }' +
+'  .lkhint{ color:var(--akisub); font-size:16px; font-weight:800; }' +
 // 案内1件のまとまり＝白い見出し＋言語ボタン（1画面に並ぶので間隔をあけて区切る）。
 '  .lktopic{ margin-bottom:28px; }' +
 '  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; color:#fff; }' +
@@ -3114,16 +3116,16 @@ var LKCSS_ =
 //   `appearance:none`（＋Safari/LINE内蔵ブラウザ向けに`-webkit-appearance:none`）は端末標準の
 //   ボタン装飾を消して指定した色を確実に出すためのもの（既存の`.unadetail`等と同じ作法）。
 '  .lkbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; display:flex;' +
-'    flex-direction:column; align-items:center;' +
-'    justify-content:center; gap:6px; flex:1 1 140px; min-width:140px; color:#1d4ed8; background:#ffffff;' +
-'    border:1px solid #d7dee8; border-radius:18px; padding:26px 14px; cursor:pointer;' +
+'    flex-direction:column; align-items:center; font-weight:800;' +
+'    justify-content:center; gap:2px; flex:1 1 140px; min-width:140px; color:#1d4ed8; background:#ffffff;' +
+'    border:1px solid #d7dee8; border-radius:18px; padding:14px 14px; cursor:pointer;' +
 '    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkbtn:active{ transform:translateY(2px); }' +
 '  .lklang{ font-size:30px; font-weight:800; }' +
 '  .lkcopy{ font-size:16px; font-weight:800; color:#6b7280; text-align:center; line-height:1.4; }' +
 '  .lkbtn.lkok{ background:#eafff1; border-color:#16a34a; }' +
 '  .lkbtn.lkok .lklang, .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
-'  .lknone{ color:#c33; font-size:16px; padding:8px 0; }';
+'  .lknone{ color:#c33; font-size:16px; font-weight:800; padding:8px 0; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
 // iOSは https のユニバーサルリンクのまま（Safariで開けばアプリに渡る）。
