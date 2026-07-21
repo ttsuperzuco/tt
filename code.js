@@ -3044,10 +3044,19 @@ LKSCRIPT_;
 }
 
 // 案内1件＝白い見出し（案内名）＋その下に言語ボタンを横並び（押すとURLをコピー）。
+// ★見出しの右端に「プレビュー」＝送る前に中身を自分で見て確かめるための別タブ表示（2026-07-21）。
+//   開くのは先頭の言語のURL（シートの並び順＝通常は日本語）。
 function lkTopicBlock_(topic) {
-  var btns = (topic.links || []).map(lkLinkBtn_).join('');
+  var links = topic.links || [];
+  var btns = links.map(lkLinkBtn_).join('');
+  var first = links.length ? (links[0].url || '') : '';
+  var prev = first
+    ? '<a class="lkprev" href="' + esc_(first) + '" target="_blank" rel="noopener">プレビュー</a>'
+    : '';
   return '<div class="lktopic">' +
-    '<div class="lktitle">' + esc_(topic.name || '') + '</div>' +
+    '<div class="lktoprow">' +
+      '<div class="lktitle">' + esc_(topic.name || '') + '</div>' + prev +
+    '</div>' +
     '<div class="lklangbtns">' + btns + '</div>' +
   '</div>';
 }
@@ -3055,7 +3064,7 @@ function lkTopicBlock_(topic) {
 function lkLinkBtn_(lk) {
   return '<button type="button" class="lkbtn" data-url="' + esc_(lk.url || '') + '">' +
     '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
-    '<span class="lkcopy">タップしてURLをコピー</span>' +
+    '<span class="lkcopy">URLをコピー</span>' +
   '</button>';
 }
 
@@ -3107,9 +3116,13 @@ var LKCSS_ =
 // 見出し「🔗 各種LINK」と、その右に説明（言語を選ぶと…）を並べる（2026-07-21ユーザー指示）。
 '  .lkhead{ display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; margin-bottom:14px; }' +
 '  .lkwrap h1{ font-size:24px; margin:2px 0; font-weight:800; }' +
-'  .lkhint{ color:#ffffff; font-size:16px; font-weight:800; }' +
+'  .lkhint{ color:#ffb3d9; font-size:16px; font-weight:800; }' +
 // 案内1件のまとまり＝白い見出し＋言語ボタン（1画面に並ぶので間隔をあけて区切る）。
 '  .lktopic{ margin-bottom:28px; }' +
+'  .lktoprow{ display:flex; align-items:center; justify-content:space-between; gap:12px; }' +
+'  .lkprev{ flex:0 0 auto; font-size:16px; font-weight:800; color:#1d4ed8; text-decoration:none;' +
+'    background:#ffffff; border:1px solid #d7dee8; border-radius:12px; padding:10px 16px; }' +
+'  .lkprev:active{ transform:translateY(1px); }' +
 '  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; color:#fff; }' +
 '  .lklangbtns{ display:flex; flex-direction:row; flex-wrap:wrap; gap:14px; margin-top:10px; }' +
 // ★言語ボタンは白背景＋濃い青文字（2026-07-18ユーザー指定＝白ベースにしてほしい）。
