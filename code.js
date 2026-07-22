@@ -291,9 +291,17 @@ function kanshiOwner_() {
   } catch (e) { return null; }
 }
 
+// ★★開発中だけ true。作業が終わったら必ず false に戻すこと（2026-07-22 オーナー了承）★★
+//   true の間は「登録した1台だけ」の縛りを外して誰でも開ける（画面を直しながら確認するため）。
+//   ★重要：true でも“持ち主の登録は絶対に書き換えない”＝オーナーのスマホの登録は残る。
+//   戻し方：この値を false にして commit→push するだけ。
+var KANSHI_DEV_OPEN_ = true;
+
 /** この端末に見せてよいか。持ち主が居なければ、この端末を持ち主として登録する（早い者勝ち）。 */
 function kanshiGate_(device) {
   device = String(device || '').trim();
+  // 開発中の一時開放：登録は一切いじらず、開くことだけ許す。
+  if (KANSHI_DEV_OPEN_) return { ok: true, devOpen: true };
   if (!device) {
     return { ok: false, error: 'スマホ用のURL（ttsuperzuco.github.io/tt/）から開いてください。' };
   }
