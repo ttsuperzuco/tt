@@ -3806,7 +3806,7 @@ function renderKanshiPage_(d, base, staff, dev) {
   '<div class="kwrap">' +
     '<div class="kbar">' +
       '<a class="khome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-      '<button type="button" class="kref" id="kRef">更新</button>' +
+      '<button type="button" class="kref" id="kRef">今すぐ更新</button>' +
     '</div>' +
     '<h1>📟 自動監視</h1>' +
     '<div class="kfresh" id="kFresh"></div>' +
@@ -3852,6 +3852,12 @@ var KANSHICSS_ =
 '  .klabel{ font-weight:700; font-size:18px; flex:1; }' +
 '  .kdetail{ color:var(--sub); font-size:15px; margin-top:3px; font-weight:400; }' +
 '  .karrow{ color:var(--sub); font-size:15px; }' +
+/* ★2026-07-22：PC画面(.mcard .st / .mini.gear)と同じ見え方にそろえる。 */
+'  .kslabel{ font-size:15px; font-weight:600; margin-top:2px; color:var(--ok); }' +
+'  .kslabel.k_stale,.kslabel.k_error{ color:var(--ng); }' +
+'  .kslabel.k_off,.kslabel.k_unknown{ color:var(--off); }' +
+'  .kgear{ flex-shrink:0; align-self:center; font-size:15px; font-weight:700; color:var(--ink);' +
+'    background:var(--line); border-radius:10px; padding:9px 13px; white-space:nowrap; }' +
 '  .kmembers{ margin-top:10px; border-top:1px solid var(--line); padding-top:8px; }' +
 '  .kmembers[hidden]{ display:none; }' +
 '  .krow{ border-bottom:1px solid var(--line); padding:9px 0; }' +
@@ -3956,7 +3962,7 @@ var KANSHISCRIPT_ =
 '    el.className="kfresh old";' +
 '    el.textContent="⚠ 事務所PCから状態が届いていません（最後に届いたのは "+(data_.generated_at||"不明")+"）。下の表示は古い可能性があります。";' +
 '  } else {' +
-'    el.className="kfresh"; el.textContent=(data_.generated_at||"")+" 時点の状態です（1分ごとに自動更新）。";' +
+'    el.className="kfresh"; el.textContent="最終更新 "+(data_.generated_at||"");' +
 '  }' +
 '}' +
 // 1行に出すボタンは、事務所PCが決めた acts（その項目に許した操作）だけにする。
@@ -3988,7 +3994,9 @@ var KANSHISCRIPT_ =
 '}' +
 'function rowHtml_(m){' +
 '  var h="<div class=\\"krow\\"><div class=\\"krowhead\\"><span class=\\"kmark\\">"+mark_(m.status)+"</span>";' +
-'  h+="<span class=\\"krowlabel\\">"+esc(m.label)+"<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div></span></div>";' +
+'  h+="<span class=\\"krowlabel\\">"+esc(m.label)+' +
+'    "<div class=\\"kslabel k_"+esc(m.status||"")+"\\">"+esc(m.slabel||"")+"</div>"+' +
+'    "<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div></span></div>";' +
 '  h+=ctlBtns_(m);' +
 '  if(m.members&&m.members.length){' +
 '    h+="<div class=\\"ksub\\">"+m.members.map(rowHtml_).join("")+"</div>";' +
@@ -4018,12 +4026,17 @@ var KANSHISCRIPT_ =
 '    if(g.section && g.section!==sec_){' +
 '      sec_=g.section;' +
 '      head_="<div class=\\"ksec\\">"+esc(sec_)+"</div>";' +
-'      if(g.watch_only){ head_+="<div class=\\"ksecnote\\">ここは入切のつまみがありません。うまくいっているかを見るだけの欄です。</div>"; }' +
+'      if(g.watch_only){ head_+="<div class=\\"ksecnote\\">ここは入切のつまみがありません。うまくいっているかを見るだけの欄です（赤くなったら、予約とLINEが取り込めていません）。</div>"; }' +
 '    }' +
 '    return head_+"<div class=\\"kcard"+(g.watch_only?" kwatch":"")+"\\"><div class=\\"khead\\" data-g=\\""+i+"\\">"+' +
+/* ★2026-07-22：PC画面と同じ形にそろえた（オーナー指示「PC版と同じにして」）。
+   ①状態の日本語（正常に動作中 等）を名前の下に出す ②右端は「›」でなくPCと同じ
+   「⚙ 設定」／見るだけの欄は「🔍 見る」のボタン。文言の元はPC側 monitor_snapshot の slabel。 */
 '      "<span class=\\"kmark\\">"+mark_(g.status)+"</span>"+' +
-'      "<span class=\\"klabel\\">"+esc(g.label)+"<div class=\\"kdetail\\">"+esc(g.detail||"")+"</div></span>"+' +
-'      (has?"<span class=\\"karrow\\">›</span>":"")+"</div></div>";' +
+'      "<span class=\\"klabel\\">"+esc(g.label)+' +
+'        "<div class=\\"kslabel k_"+esc(g.status||"")+"\\">"+esc(g.slabel||"")+"</div>"+' +
+'        "<div class=\\"kdetail\\">"+esc(g.detail||"")+"</div></span>"+' +
+'      (has?"<span class=\\"kgear\\">"+(g.watch_only?"🔍 見る":"⚙ 設定")+"</span>":"")+"</div></div>";' +
 '  }).join("");' +
 '}' +
 'function reload_(onDone){' +
