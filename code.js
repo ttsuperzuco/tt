@@ -3860,10 +3860,13 @@ var KANSHICSS_ =
 '    background:var(--line); border-radius:10px; padding:9px 13px; white-space:nowrap; }' +
 '  .kmembers{ margin-top:10px; border-top:1px solid var(--line); padding-top:8px; }' +
 '  .kmembers[hidden]{ display:none; }' +
-'  .krow{ border-bottom:1px solid var(--line); padding:9px 0; }' +
-'  .krow:last-child{ border-bottom:0; }' +
-'  .krowhead{ display:flex; align-items:flex-start; gap:7px; }' +
-'  .krowlabel{ flex:1; font-size:16px; font-weight:600; }' +
+/* ★2026-07-22：PC画面は「中を開いた一覧」もトップと同じカードの形（.mcard）で出している。
+   スマホ側だけ細い一行の並びで別物だったので、同じカードの形にそろえた。 */
+'  .krow{ background:var(--card); border:1px solid var(--line); border-radius:12px;' +
+'    padding:12px 14px; margin-bottom:10px; }' +
+'  .krow:last-child{ margin-bottom:0; }' +
+'  .krowhead{ display:flex; align-items:flex-start; gap:8px; }' +
+'  .krowlabel{ flex:1; font-size:18px; font-weight:700; }' +
 '  .kbtns{ display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; align-items:center; }' +
 '  .kbtn{ border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px;' +
 '    padding:8px 13px; font:inherit; font-size:15px; font-weight:700; cursor:pointer; }' +
@@ -3873,7 +3876,7 @@ var KANSHICSS_ =
 '  .kval{ width:88px; padding:8px 10px; border:1px solid var(--line); border-radius:8px;' +
 '    background:var(--card); color:var(--ink); font:inherit; font-size:15px; }' +
 '  .kunit{ font-size:14px; color:var(--sub); }' +
-'  .ksub{ margin:8px 0 0 14px; border-left:2px solid var(--line); padding-left:10px; }' +
+'  .ksub{ margin:10px 0 0; border:1px solid var(--line); border-radius:10px; padding:10px 10px 1px; }' +
 '  .kfoot{ color:#dfe6ee; font-size:14px; margin-top:14px; }' +
 '  .ktoast{ position:fixed; left:50%; transform:translateX(-50%); bottom:22px; z-index:60;' +
 '    background:#111a24; color:#fff; padding:11px 16px; border-radius:10px; font-size:16px; max-width:88%; }' +
@@ -4015,7 +4018,9 @@ var KANSHISCRIPT_ =
 '    list.innerHTML="<div class=\\"kback\\"><button type=\\"button\\" class=\\"kbtn\\" id=\\"kBack\\">← 一覧に戻る</button></div>"+' +
 '      "<div class=\\"kcard"+(g.watch_only?" kwatch":"")+"\\"><div class=\\"khead nohit\\">"+' +
 '      "<span class=\\"kmark\\">"+mark_(g.status)+"</span>"+' +
-'      "<span class=\\"klabel\\">"+esc(g.label)+"<div class=\\"kdetail\\">"+esc(g.detail||"")+"</div></span></div>"+' +
+'      "<span class=\\"klabel\\">"+esc(g.label)+' +
+'        "<div class=\\"kslabel k_"+esc(g.status||"")+"\\">"+esc(g.slabel||"")+"</div>"+' +
+'        "<div class=\\"kdetail\\">"+esc(g.detail||"")+"</div></span></div>"+' +
 '      "<div class=\\"kmembers\\">"+body+"</div></div>";' +
 '    return;' +
 '  }' +
