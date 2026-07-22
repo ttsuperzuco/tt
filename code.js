@@ -3812,7 +3812,9 @@ function renderKanshiPage_(d, base, staff, dev) {
     '<div class="kfresh" id="kFresh"></div>' +
     '<div id="kList"></div>' +
     '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
-      '各行を押すとその中身の画面に移ります（上の「← 一覧に戻る」で戻れます）。この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
+      'カードの「⚙ 設定」で中身の一覧へ、さらに各行の「詳細」でその項目の画面へ進みます' +
+      '（上の「← 一覧に戻る」で戻れます）。入切や実行はいちばん奥の画面にあります（事務所PCと同じ場所）。' +
+      'この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
       'この画面は事務所PCが1分ごとに送ってきた状態を見ています。</div>' +
   '</div>' +
   '<script>window.__KANSHI_DATA__=' + JSON.stringify(d) + ';<' + '/script>' +
@@ -3933,6 +3935,7 @@ var KANSHISCRIPT_ =
 'var data_=window.__KANSHI_DATA__||{groups:[]};' +
 /* ★2026-07-21（オーナー指示）：以前は押すとその場で下に開く形だったが、事務所PCの画面と同じ
    「押したら、その中身だけの画面に移る」形にそろえた。cur_=いま開いている枠の番号（null＝一覧）。 */
+'var item_=null;' +   /* 「詳細」で開いている項目の場所（"2.0" のような文字）。null＝一覧を見ている */
 'var cur_=null;' +
 'var CONFIRM_={};' +   // 押す前に出す確認文（事務所PCが monitor.json の row.confirm で配る）
 'var TILEROW_=null;' + // ボタン表示設定の行（ボタンの一覧・色を持っている＝一覧をここに書き写さない）
@@ -3995,16 +3998,40 @@ var KANSHISCRIPT_ =
 '  }' +
 '  h+="</div>"; return h;' +
 '}' +
-'function rowHtml_(m){' +
+/* ★2026-07-22（オーナー指示「PCと全部同じにして」）：一覧の行には入切のつまみを出さず、
+   PC画面と同じく「詳細」ボタンだけを出す。つまみは詳細を押した先の画面（下の itemHtml_）に置く。
+   ＝PCとスマホで押す場所が同じになる（両方違うと操作しづらい、という指摘による）。 */
+'function rowHtml_(m, path){' +
+'  var has=(m.ctl||(m.members&&m.members.length));' +
 '  var h="<div class=\\"krow\\"><div class=\\"krowhead\\"><span class=\\"kmark\\">"+mark_(m.status)+"</span>";' +
 '  h+="<span class=\\"krowlabel\\">"+esc(m.label)+' +
 '    "<div class=\\"kslabel k_"+esc(m.status||"")+"\\">"+esc(m.slabel||"")+"</div>"+' +
+'    "<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div></span>";' +
+'  h+=(has?"<span class=\\"kgear\\" data-item=\\""+esc(path)+"\\">詳細</span>":"");' +
+'  h+="</div></div>"; return h;' +
+'}' +
+/* 「詳細」を押した先＝その項目1つだけの画面。つまみ・今すぐ実行・数値の保存はここに置く
+   （PCの個別設定画面と同じ役割）。中にさらに項目があるものは、その一覧も下に出す。 */
+'function itemHtml_(m, path){' +
+'  var h="<div class=\\"kcard\\"><div class=\\"khead nohit\\"><span class=\\"kmark\\">"+mark_(m.status)+"</span>";' +
+'  h+="<span class=\\"klabel\\">"+esc(m.label)+' +
+'    "<div class=\\"kslabel k_"+esc(m.status||"")+"\\">"+esc(m.slabel||"")+"</div>"+' +
 '    "<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div></span></div>";' +
 '  h+=ctlBtns_(m);' +
+'  h+="</div>";' +
 '  if(m.members&&m.members.length){' +
-'    h+="<div class=\\"ksub\\">"+m.members.map(rowHtml_).join("")+"</div>";' +
+'    h+=m.members.map(function(x,j){ return rowHtml_(x, path+"."+j); }).join("");' +
 '  }' +
-'  h+="</div>"; return h;' +
+'  return h;' +
+'}' +
+/* path（"2.0" のような文字）から、その項目を取り出す */
+'function itemAt_(path){' +
+'  var parts=String(path||"").split(".");' +
+'  var g=(data_.groups||[])[Number(parts[0])]; if(!g) return null;' +
+'  var cur=g.members||[];' +
+'  var m=null;' +
+'  for(var i=1;i<parts.length;i++){ m=cur[Number(parts[i])]; if(!m) return null; cur=m.members||[]; }' +
+'  return m;' +
 '}' +
 'function render_(){' +
 '  renderFresh_();' +
@@ -4014,7 +4041,15 @@ var KANSHISCRIPT_ =
 /* いま1つの枠の中を見ている＝その中身だけの画面（上に「← 一覧に戻る」） */
 '  if(cur_!==null && gs[cur_]){' +
 '    var g=gs[cur_];' +
-'    var body=(g.members&&g.members.length)?g.members.map(rowHtml_).join(""):"<div class=\\"kdetail\\">中身はありません。</div>";' +
+'    if(item_!==null){' +
+'      var im=itemAt_(item_);' +
+'      if(im){' +
+'        list.innerHTML="<div class=\\"kback\\"><button type=\\"button\\" class=\\"kbtn\\" id=\\"kBackItem\\">← 一覧に戻る</button></div>"+itemHtml_(im, item_);' +
+'        return;' +
+'      }' +
+'      item_=null;' +
+'    }' +
+'    var body=(g.members&&g.members.length)?g.members.map(function(m,j){ return rowHtml_(m, cur_+"."+j); }).join(""):"<div class=\\"kdetail\\">中身はありません。</div>";' +
 '    list.innerHTML="<div class=\\"kback\\"><button type=\\"button\\" class=\\"kbtn\\" id=\\"kBack\\">← 一覧に戻る</button></div>"+' +
 '      "<div class=\\"kcard"+(g.watch_only?" kwatch":"")+"\\"><div class=\\"khead nohit\\">"+' +
 '      "<span class=\\"kmark\\">"+mark_(g.status)+"</span>"+' +
@@ -4233,10 +4268,13 @@ var KANSHISCRIPT_ =
 '  if(ev.target.closest("#kTiles")){ if(tilesClick_(ev)) return; }' +
 '  var ed=ev.target.closest("[data-editor]");' +
 '  if(ed){ openTiles_(); return; }' +
-'  if(ev.target.closest("#kBack")){ cur_=null; render_(); window.scrollTo(0,0); return; }' +
+'  if(ev.target.closest("#kBackItem")){ item_=null; render_(); window.scrollTo(0,0); return; }' +
+'  if(ev.target.closest("#kBack")){ cur_=null; item_=null; render_(); window.scrollTo(0,0); return; }' +
+'  var it=ev.target.closest("[data-item]");' +
+'  if(it){ item_=it.getAttribute("data-item"); render_(); window.scrollTo(0,0); return; }' +
 '  var h=ev.target.closest(".khead");' +
 '  if(h&&h.getAttribute("data-g")!==null&&h.getAttribute("data-g")!==undefined){' +
-'    cur_=Number(h.getAttribute("data-g")); render_(); window.scrollTo(0,0); return;' +
+'    cur_=Number(h.getAttribute("data-g")); item_=null; render_(); window.scrollTo(0,0); return;' +
 '  }' +
 '  var b=ev.target.closest(".kbtn");' +
 '  if(!b) return;' +
