@@ -4080,7 +4080,10 @@ var KANSHISCRIPT_ =
 '  }).join("");' +
 '}' +
 'function reload_(onDone){' +
-'  jsonp_({action:"kanshi", device:DEV_}, function(r){' +
+// ★2026-07-23：初回表示(index.htmlのshowKanshi)と同じく設定ファイルを直接読む。
+//   古い action=kanshi は今の窓口が知らず bad key を返す＝自動更新が効かず画面が固まっていた。
+//   monitor.json は「登録した1台だけ」に見せる設定なので device を必ず添える（窓口が確認する）。
+'  jsonp_({action:"data", name:"monitor.json", device:DEV_}, function(r){' +
 '    if(r&&r.locked){' +   // 登録が別のスマホへ移った（事務所PCで「登録し直す」等）＝その場で見せるのをやめる
 '      var l=document.getElementById("kList");' +
 '      if(l) l.innerHTML="<div class=\\"kcard\\">"+esc(r.error||"この画面は登録したスマホからだけ開けます。")+"</div>";' +
