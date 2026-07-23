@@ -4118,15 +4118,25 @@ var KANSHISCRIPT_ =
 '}' +
 'function openTiles_(){' +
 '  toast_("設定を読み込んでいます…");' +
-'  jsonp_({action:"tilesettings"}, function(r){' +
+// ★2026-07-23：窓口は「中身を問わない」方式になり、古い action=tilesettings は使えない
+//   （知らない action なので bad key が返る＝「設定を読めませんでした」の原因だった）。
+//   今は設定ファイルを直接読み、人・名前・権限・並び順は code.js の共通関数
+//   （_peopleFromCfg_ 等＝ホーム起動と同じ導出）でこの場で組み立てる。
+'  jsonp_({action:"data", name:"tile_settings.json"}, function(r){' +
 '    if(!r||r.error){ toast_("⚠ 設定を読めませんでした"); return; }' +
-'    EPEOPLE_=r.people||[]; ELAB_=r.labels||{}; ECLAIM_=r.claimed||{}; EO_=(r.order||[]).slice();' +
+'    EPEOPLE_=(typeof _peopleFromCfg_==="function")?_peopleFromCfg_(r):(r.people||[]);' +
+'    ELAB_=(typeof _labelsFromCfg_==="function")?_labelsFromCfg_(r):(r.labels||{});' +
+'    ECLAIM_=r.claimed||{};' +
+'    EO_=((typeof _orderFromCfg_==="function")?_orderFromCfg_(r):(r.order||[])).slice();' +
 '    EPCHIDDEN_=(r.pcHidden||[]).slice();' +
-'    EP_={};' +
-'    for(var i=0;i<EPEOPLE_.length;i++){' +
-'      var pid=EPEOPLE_[i]; EP_[pid]={};' +
-'      var src=(r.perms&&r.perms[pid])||{};' +
-'      for(var t in src) EP_[pid][t]=!!src[t];' +
+'    if(typeof _permsFromCfg_==="function"){ EP_=_permsFromCfg_(r); }' +
+'    else {' +
+'      EP_={};' +
+'      for(var i=0;i<EPEOPLE_.length;i++){' +
+'        var pid=EPEOPLE_[i]; EP_[pid]={};' +
+'        var src=(r.perms&&r.perms[pid])||{};' +
+'        for(var t in src) EP_[pid][t]=!!src[t];' +
+'      }' +
 '    }' +
 '    drawTiles_();' +
 '  });' +
