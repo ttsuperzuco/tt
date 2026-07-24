@@ -1829,8 +1829,18 @@ function uriageBody_(d, dev) {
   var today = d.today_str || '—';
   var cum = d.cumulative_str || '—';
   var monthLabel = d.month ? ('今月（' + d.month + '月）の売上') : '今月の売上';
+  // 各営業日の売上に曜日を添える（例「7/1（火）」）。年は表示中データの today から取り、
+  // 無ければ今の年で代用（per_day の日付は「月/日」で年が入っていないため）。
+  var uyear_ = parseInt(String(d.today || '').slice(0, 4), 10) || (new Date()).getFullYear();
+  var UWD_ = ['日', '月', '火', '水', '木', '金', '土'];
   var perRows = (d.per_day || []).map(function (x) {
-    return '<tr><td>' + esc_(x.date) + '</td><td class="num">' + comma_(x.total) + '</td></tr>';
+    var p = String(x.date).split('/');
+    var wd = '';
+    if (p.length === 2) {
+      var dt = new Date(uyear_, parseInt(p[0], 10) - 1, parseInt(p[1], 10));
+      wd = '（' + UWD_[dt.getDay()] + '）';
+    }
+    return '<tr><td>' + esc_(x.date) + wd + '</td><td class="num">' + comma_(x.total) + '</td></tr>';
   }).join('');
   var noteBox = d.note ? '<div class="unote">' + esc_(d.note) + '</div>' : '';
 
