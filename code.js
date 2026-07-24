@@ -1833,14 +1833,22 @@ function uriageBody_(d, dev) {
   // 無ければ今の年で代用（per_day の日付は「月/日」で年が入っていないため）。
   var uyear_ = parseInt(String(d.today || '').slice(0, 4), 10) || (new Date()).getFullYear();
   var UWD_ = ['日', '月', '火', '水', '木', '金', '土'];
+  // 台湾の祝日（月/日）。旧正月・端午・中秋は毎年ずれるので年ごとに書く（毎年更新すること）。
+  var TW_HOL_ = {
+    2026: ['1/1', '2/16', '2/17', '2/18', '2/19', '2/20', '2/28',
+           '4/4', '4/5', '5/1', '6/19', '9/25', '10/10']
+  };
+  var holList = TW_HOL_[uyear_] || [];
   var perRows = (d.per_day || []).map(function (x) {
     var p = String(x.date).split('/');
     var wd = '';
+    var mark = false;   // 土曜または台湾の祝日は背景色を変えて目立たせる
     if (p.length === 2) {
       var dt = new Date(uyear_, parseInt(p[0], 10) - 1, parseInt(p[1], 10));
       wd = '（' + UWD_[dt.getDay()] + '）';
+      mark = (dt.getDay() === 6) || (holList.indexOf(x.date) >= 0);
     }
-    return '<tr><td>' + esc_(x.date) + wd + '</td><td class="num">' + comma_(x.total) + '</td></tr>';
+    return '<tr' + (mark ? ' class="sat"' : '') + '><td>' + esc_(x.date) + wd + '</td><td class="num">' + comma_(x.total) + '</td></tr>';
   }).join('');
   var noteBox = d.note ? '<div class="unote">' + esc_(d.note) + '</div>' : '';
 
@@ -2005,6 +2013,7 @@ var URIAGECSS_ =
 '  .upertbl { width:100%; border-collapse:collapse; margin:6px 0 10px; font-size:.92rem; }' +
 '  .upertbl th, .upertbl td { border-bottom:1px solid var(--line); padding:7px 8px; text-align:left; }' +
 '  .upertbl .num { text-align:right; font-variant-numeric:tabular-nums; }' +
+'  .upertbl tr.sat td { background:rgba(56,132,255,.20); font-weight:700; }' +
 '  .ugen2 { flex:1; text-align:right; color:var(--sub); font-size:.85rem; font-weight:700; }';
 
 /** LINE未回答＆返信待ち（GAS(/exec)からの直アクセス用ラッパ）：
