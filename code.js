@@ -2286,7 +2286,8 @@ function unaCard_(r, kind, dev) {
   var canR = (r.reply && r.cid && dev) ? '1' : '';
   var detail = '<button type="button" class="unadetail" data-nm="' + esc_(name) +
     '" data-sub="' + esc_(sub) + '" data-full="' + full +
-    '" data-cid="' + esc_(r.cid || '') + '" data-reply="' + canR + '">🔍 詳細（内容を見る）</button>';
+    '" data-cid="' + esc_(r.cid || '') + '" data-reply="' + canR +
+    '" data-sex="' + esc_(r.sex || '') + '">🔍 詳細（内容を見る）</button>';
   var link = r.url
     ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(r.url) + '">💬 LINEを開く（返信する）</a>'
     : '';
@@ -2451,6 +2452,41 @@ var UNASCRIPT_ =
 'function unaGrow(t){ if(!t) return; t.style.height="auto"; t.style.height=Math.min(t.scrollHeight,340)+"px"; }' +
 'document.addEventListener("input",function(e){' +
 '  var t=e.target; if(t&&t.classList&&t.classList.contains("unartext")) unaGrow(t); });' +
+// ―― 中文翻訳ボタン：打った日本語を台湾中国語に訳して下の箱に出す（事務所PCで訳す・数秒）――
+'document.addEventListener("click",function(e){' +
+'  var b=e.target&&e.target.closest?e.target.closest(".unartrans"):null; if(!b) return;' +
+'  var wrap=b.closest(".unareply"); if(!wrap) return;' +
+'  var ta=wrap.querySelector(".unartext"), box=wrap.querySelector(".unartrbox"), zt=wrap.querySelector(".unartrtext");' +
+'  var note=wrap.querySelector(".unarnote");' +
+'  var text=(ta&&ta.value||"").trim();' +
+'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="先に日本語を打ってください。"; } return; }' +
+'  if(box) box.style.display="block";' +
+'  if(zt){ zt.value="翻訳中…しばらくお待ちください。"; unaGrow(zt); }' +
+'  var idn=unaIdent_();' +
+'  unaCall_({action:"submit",op:"translate",who:idn.who,role:idn.role,device:idn.device,' +
+'    fields:JSON.stringify({text:text,gender:(wrap.getAttribute("data-sex")||"")})},' +
+'    function(r){' +
+'      if(!r||!r.ok){ if(zt){ zt.value=(r&&r.error)||"翻訳できませんでした。"; unaGrow(zt); } return; }' +
+'      var tries=0;' +
+'      (function poll(){ tries++;' +
+'        unaCall_({action:"status",id:r.id},function(st){' +
+'          if(st&&st.status==="done"){ if(zt){ zt.value=st.result||""; unaGrow(zt); } return; }' +
+'          if(st&&st.status==="error"){ if(zt){ zt.value=st.result||"翻訳できませんでした。"; unaGrow(zt); } return; }' +
+'          if(tries>60){ if(zt){ zt.value="事務所のパソコンから返事がありません。"; unaGrow(zt); } return; }' +
+'          setTimeout(poll,1200); }); })();' +
+'    });' +
+'});' +
+// ―― この中文を送る：訳した中国語を、いつもの送信（押した瞬間に出す）で送る ――
+'document.addEventListener("click",function(e){' +
+'  var b=e.target&&e.target.closest?e.target.closest(".unartrsend"):null; if(!b) return;' +
+'  var wrap=b.closest(".unareply"); if(!wrap) return;' +
+'  var ta=wrap.querySelector(".unartext"), zt=wrap.querySelector(".unartrtext"), box=wrap.querySelector(".unartrbox");' +
+'  var zh=(zt&&zt.value||"").trim();' +
+'  if(!zh||zh.indexOf("翻訳中")===0){ return; }' +
+'  if(ta){ ta.value=zh; unaGrow(ta); }' +
+'  if(box) box.style.display="none";' +
+'  unaSend_(wrap);' +
+'});' +
 'function escH(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}' +
 'function openDetail(btn){' +
 '  if(!mask||!mlog)return;' +
@@ -2469,15 +2505,21 @@ var UNASCRIPT_ =
 // ★会話の下に「その場返信」欄を出す（開発者かつ返信OKの会話だけ＝data-reply=="1"）。
 // カード側の返信欄と同じ .unareply なので、既存の送信処理(unaSend_)がそのまま効く。
 '  if(mreply){' +
-'    var canR=(btn.getAttribute("data-reply")==="1"), cid=btn.getAttribute("data-cid")||"", nm=btn.getAttribute("data-nm")||"";' +
+'    var canR=(btn.getAttribute("data-reply")==="1"), cid=btn.getAttribute("data-cid")||"", nm=btn.getAttribute("data-nm")||"", sex=btn.getAttribute("data-sex")||"";' +
 '    mreply.innerHTML=(canR&&cid)?' +
-'      "<div class=\\"unareply\\" data-cid=\\""+escH(cid)+"\\" data-nm=\\""+escH(nm)+"\\">"+' +
+'      "<div class=\\"unareply\\" data-cid=\\""+escH(cid)+"\\" data-nm=\\""+escH(nm)+"\\" data-sex=\\""+escH(sex)+"\\">"+' +
 '        "<textarea class=\\"unartext\\" rows=\\"2\\" maxlength=\\"1000\\" placeholder=\\"ここに返信を打つと、お店の公式LINEから送ります\\"></textarea>"+' +
 '        "<div class=\\"unastamps\\"></div>"+' +
-'        "<div class=\\"unarrow\\"><span class=\\"unarnote\\"></span>"+' +
+'        "<div class=\\"unarrow\\">"+' +
+'          "<button type=\\"button\\" class=\\"unartrans\\">🀄 中文翻訳</button>"+' +
+'          "<span class=\\"unarnote\\"></span>"+' +
 '          "<button type=\\"button\\" class=\\"unaremoji\\">😊 絵文字</button>"+' +
 '          "<button type=\\"button\\" class=\\"unarpicker\\">😀 スタンプ</button>"+' +
 '          "<button type=\\"button\\" class=\\"unarsend\\">送る</button></div>"+' +
+// ★中文翻訳を押すと出る箱（中国語訳＋この中文を送る）。ふだんは隠しておく。
+'        "<div class=\\"unartrbox\\" style=\\"display:none\\">"+' +
+'          "<textarea class=\\"unartrtext\\" readonly placeholder=\\"ここに中国語訳が出ます\\"></textarea>"+' +
+'          "<button type=\\"button\\" class=\\"unartrsend\\">この中文を送る</button></div>"+' +
 '      "</div>":"";' +
 // 自作スタンプ（画像）を返信欄の置き場所に並べる。カード側と同じ処理をそのまま呼ぶ。
 '    if(canR&&cid) paintStamps_();' +
@@ -2798,6 +2840,15 @@ var UNACSS_ =
 '    box-sizing:border-box; min-height:52px; max-height:340px; overflow-y:auto; }' +
 '  .unarrow{ display:flex; align-items:center; gap:10px; margin-top:8px; }' +
 '  .unarnote{ flex:1; font-size:13px; font-weight:700; color:var(--sub); }' +
+// 中文翻訳ボタン（絵文字の左・左寄せ）と、訳文の箱＋この中文を送る
+'  .unartrans{ appearance:none; border:1px solid #b45309; background:#fffbeb; color:#b45309; font:inherit;' +
+'    font-weight:800; font-size:14px; padding:8px 12px; border-radius:10px; cursor:pointer; }' +
+'  .unartrbox{ margin-top:8px; }' +
+'  .unartrtext{ width:100%; box-sizing:border-box; min-height:60px; max-height:300px; overflow-y:auto;' +
+'    padding:10px 12px; border:1px solid #06c755; border-radius:10px; background:#f0fff4; color:#111;' +
+'    font:inherit; font-size:16px; font-weight:700; resize:none; }' +
+'  .unartrsend{ appearance:none; border:0; background:#06c755; color:#fff; font:inherit; font-weight:800;' +
+'    font-size:15px; padding:11px 20px; border-radius:10px; cursor:pointer; margin-top:8px; }' +
 '  .unarnote.ok{ color:var(--cust); } .unarnote.ng{ color:var(--req); }' +
 '  .unastamps{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 2px; }' +
 '  .unastamp{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px;' +
@@ -4066,6 +4117,10 @@ var CSS_ =
 '    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .mvbtn:active { transform:translateY(1px); }' +
 '  .mvbtn:disabled { opacity:.4; }' +
+'  .smvbtn { font-size:.92rem; font-weight:800; color:#fff; background:var(--sc,#7c3aed);' +
+'    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
+'  .smvbtn:active { transform:translateY(1px); }' +
+'  .smvbtn:disabled { opacity:.4; }' +
 '  .mvng { grid-column:1/-1; font-size:.8rem; color:var(--sub); align-self:center; }' +
 '  .mvstatus { margin-top:8px; padding:11px 12px; border-radius:10px; font-size:.95rem; font-weight:700; }' +
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
