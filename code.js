@@ -2448,6 +2448,10 @@ var UNASCRIPT_ =
 '  var sz=b.getAttribute("data-fs"); try{ localStorage.setItem(UNA_FS_KEY,sz); }catch(ig){}' +
 '  unaApplyFs(sz);' +
 '});' +
+// ―― 返信の箱：打つ行が増えるほど自動で下に伸ばす（打った文が全部見えるように）――
+'function unaGrow(t){ if(!t) return; t.style.height="auto"; t.style.height=Math.min(t.scrollHeight,340)+"px"; }' +
+'document.addEventListener("input",function(e){' +
+'  var t=e.target; if(t&&t.classList&&t.classList.contains("unartext")) unaGrow(t); });' +
 'function escH(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}' +
 'function openDetail(btn){' +
 '  if(!mask||!mlog)return;' +
@@ -2541,7 +2545,7 @@ var UNASCRIPT_ =
 '        (function poll(){' +
 '          tries++;' +
 '          unaCall_({action:"status",id:r.id},function(st){' +
-'            if(st&&st.status==="done"){ btn.disabled=false; if(ta) ta.value="";' +
+'            if(st&&st.status==="done"){ btn.disabled=false; if(ta){ ta.value=""; unaGrow(ta); }' +
 '              if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; }' +
 '              var lg=document.getElementById("unaMlog");' +
 '              if(lg && wrap.closest && wrap.closest(".unamodal")){' +
@@ -2788,7 +2792,9 @@ var UNACSS_ =
 '  .unacard.prac{ border:2px dashed var(--q); background:var(--card); }' +
 '  .unareply{ margin-top:10px; border-top:1px solid var(--line); padding-top:10px; }' +
 '  .unartext{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
-'    background:var(--card); color:var(--ink); font:inherit; font-size:16px; resize:vertical; }' +
+'    background:var(--card); color:var(--ink); font:inherit; font-size:16px; resize:none;' +
+// 打つ行が増えるほど自動で下に伸びる（打った文が全部見える）。伸びすぎたら中でスクロール。
+'    box-sizing:border-box; min-height:52px; max-height:340px; overflow-y:auto; }' +
 '  .unarrow{ display:flex; align-items:center; gap:10px; margin-top:8px; }' +
 '  .unarnote{ flex:1; font-size:13px; font-weight:700; color:var(--sub); }' +
 '  .unarnote.ok{ color:var(--cust); } .unarnote.ng{ color:var(--req); }' +
