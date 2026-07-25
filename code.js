@@ -3608,7 +3608,8 @@ var MOVESCRIPT_ =
 'function submitMoveStaff_(cal,evid,newFruit,onDone){' +
 '  var idn=szIdent_();' +
 '  callGas_("uiSubmitMoveStaff",[cal,evid,newFruit,idn.who,idn.device],"submit",' +
-'    {op:"movestaff",new_fruit:newFruit,cal:cal,event:evid,who:idn.who,role:idn.role,device:idn.device}, onDone);' +
+'    {op:"movestaff",who:idn.who,role:idn.role,device:idn.device,' +
+'     fields:JSON.stringify({cal:cal,event:evid,new_fruit:newFruit})}, onDone);' +
 '}' +
 'function statusCheck_(id,onDone){' +
 '  callGas_("uiStatus",[id],"status",{id:id}, onDone);' +
@@ -3697,7 +3698,7 @@ var MOVESCRIPT_ =
 '      mvStaffOverlay_(swho,stime,of,onm,nf,nm);' +
 '      submitMoveStaff_(cal,evid,nf,function(r){' +
 '        if(r && r.ok){ waitStaffDoneFinish_(r.id,evid,nf,nm); }' +
-'        else { mvOverlayHide_(); ccPopup_("⚠️ 担当を変えられませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度お試しください。", false); }' +
+'        else { mvOverlayHide_(); ccPopup_("⚠️ 担当を変えられませんでした：もう一度お試しください。二度続けてこのエラーがでた場合は、Ryuさんに連絡してください。", false); }' +
 '      });' +
 '    }, true);' +
 '  }' +
@@ -3741,7 +3742,7 @@ var MOVESCRIPT_ =
 '      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showDoneOverlay_(room);' +
 '        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
-'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください", false); }' +
+'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 担当を変えられませんでした：もう一度お試しください。二度続けてこのエラーがでた場合は、Ryuさんに連絡してください。", false); }' +
 '      else { setTimeout(chk,250); } });' +
 '  }' +
 '  setTimeout(chk,250); }' +
@@ -3770,7 +3771,7 @@ var MOVESCRIPT_ =
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
 '      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showStaffDoneOverlay_(nf,nm);' +
 '        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
-'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 担当を変えられませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
+'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 担当を変えられませんでした：もう一度お試しください。二度続けてこのエラーがでた場合は、Ryuさんに連絡してください。", false); }' +
 '      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください", false); }' +
 '      else { setTimeout(chk,250); } });' +
 '  }' +
