@@ -2360,11 +2360,14 @@ var UNASCRIPT_ =
 '  var full=[]; try{ full=JSON.parse(btn.getAttribute("data-full")||"[]"); }catch(e){ full=[]; }' +
 '  if(mnm) mnm.textContent=btn.getAttribute("data-nm")||"";' +
 '  if(msub) msub.textContent=btn.getAttribute("data-sub")||"";' +
-'  mlog.innerHTML=full.length? full.map(function(m){' +
+'  var lastShop=-1; for(var li=0;li<full.length;li++){ if(full[li].w!=="客") lastShop=li; }' +
+'  mlog.innerHTML=full.length? full.map(function(m,idx){' +
 '    var side=(m.w==="客"?"cli":"shop");' +
+// ★お客さんが「こちらの最後の送信」を読んでいたら、その下だけに「既読」を出す（LINEと同じ）。
+'    var seen=(idx===lastShop&&m.seen)?"<span class=\\"unaseen\\">既読</span>":"";' +
 '    return "<div class=\\"unamsgrow "+side+"\\">"+' +
 '      "<div class=\\"unamsg "+side+"\\">"+escH(m.x)+"</div>"+' +
-'      "<span class=\\"unats\\">"+escH(m.t)+"</span></div>";' +
+'      "<span class=\\"unats\\">"+seen+escH(m.t)+"</span></div>";' +
 '  }).join(""):"<div class=\\"unamnote\\">本文がありません（画像・スタンプのみ等）。</div>";' +
 // ★会話の下に「その場返信」欄を出す（開発者かつ返信OKの会話だけ＝data-reply=="1"）。
 // カード側の返信欄と同じ .unareply なので、既存の送信処理(unaSend_)がそのまま効く。
@@ -2775,6 +2778,7 @@ var UNACSS_ =
 '  .unamsg.cli{ background:var(--card); border:1px solid var(--line); border-bottom-left-radius:5px; }' +
 '  .unamsg.shop{ background:#06c755; color:#fff; border-bottom-right-radius:5px; }' +
 '  .unats{ display:block; font-size:11.5px; color:var(--sub); opacity:.8; margin:3px 4px 0; }' +
+'  .unaseen{ color:#06c755; font-weight:700; margin-right:5px; }' +
 '  .unamnote{ color:var(--sub); font-size:15px; padding:8px; }' +
 '  .unamreply{ padding:0 16px 12px; }' +
 '  .unamreply .unareply{ margin-top:0; }';
