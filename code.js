@@ -104,13 +104,14 @@ function doGet(e) {
   try { logAccess_(who, roleName_(staff, dev, who), device, view); } catch (ig) {}
   var html, title;
   if (view === 'conflict') {
-    title = '施術室被り検出';
+    title = '施術室＆施術者 被り検出';
     var withNail = (p.nail === '1' || p.nail === 'true');
     try {
       var file = getEventsFile_();
       var d = JSON.parse(file.getBlob().getDataAsString('UTF-8'));
       var res = detect(d.events, withNail, d.date_from);
-      html = renderPage_(res.conflicts, res.meta, d, withNail, base, staff, dev);
+      var sres = detectStaff(d.events, d.date_from);   // 施術者(担当)被りも同じ画面に出す
+      html = renderPage_(res.conflicts, res.meta, d, withNail, base, staff, dev, sres.conflicts);
     } catch (err) {
       html = renderError_(err, base, staff, dev);
     }
@@ -1049,6 +1050,13 @@ function roomColor_(room) {
   return ROOM_COLORS_[room] || '#64748b';
 }
 
+// 担当スタッフの色（果物マーク別）。TimeTree側に対応物が無いので自前定義
+// ＝room_conflict_detect.py の _STAFF_COLOR と同じ値にすること（PC版⇔アプリの二重メンテ）。
+var STAFF_COLORS_ = { '🍅': '#d1443c', '🍊': '#e08a1e', '🫒': '#4b8b3b', '🥭': '#c9a227' };
+function staffColor_(fruit) {
+  return STAFF_COLORS_[fruit] || '#64748b';
+}
+
 // 部屋名 → 移動先の (カレンダーID, ラベルID)。config.ROOM と同じ（部屋も揃えて移動＝B方式）。
 // ★config.py の ROOM_LABELS と一致させること（片方直したら両方）。
 // ★NAIL(ネイル)はうちの部屋管理の対象外（外部の間借りの方のサービス）＝共通ルールで恒久的に除外。
@@ -1197,8 +1205,9 @@ function jpMonthDay_(iso) {
   return p[1] + '月' + p[2] + '日';
 }
 
-function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
+function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staffConflicts) {
   var real = conflicts.length;
+  staffConflicts = staffConflicts || [];
   function menu_(m) {
     m = (m || '').trim();
     if (!m) return '';
@@ -1270,6 +1279,41 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
     }).join('\n');
   }
 
+  // ―― 施術者（担当スタッフ）被りのカード（①では表示のみ＝移動ボタンは付けない）――
+  var staffCards;
+  if (!staffConflicts.length) {
+    staffCards = '<div class="empty">✅ 施術者（担当）被りはありませんでした</div>';
+  } else {
+    staffCards = staffConflicts.map(function (x) {
+      var sc = staffColor_(x.staff);
+      var pill = ((x.staff || '') + (x.staff_name || '')).trim() || '担当';
+      function side_(ab) {
+        var room = x[ab + '_room'] || '';
+        var roomChip = room ? '<span class="sroom" style="--rc:' + roomColor_(room) + '">' + esc_(room) + '</span>' : '';
+        return '<div class="side">' +
+          '<div class="time"><span class="ab">' + esc_(x[ab + '_staff'] || '') + '</span>' + esc_(x[ab + '_time']) + roomChip + '</div>' +
+          '<div class="who"><span class="code">' + esc_(x[ab + '_code']) + '</span>' +
+          '<span class="name">' + esc_(x[ab + '_name']) + '</span></div>' +
+          menu_(x[ab + '_menu']) +
+        '</div>';
+      }
+      return '' +
+      '<article class="card staff" style="--sc:' + sc + '">' +
+        '<header class="card-h">' +
+          '<div class="cline">' +
+            '<div class="clineDate fit1line">' + esc_(jpDateWeekday_(x.date)) + ' ' + esc_(x.overlap_time) + '</div>' +
+            '<div class="clineRoom fit1line">' +
+              '<span class="staffpill" style="--sc:' + sc + '">' + esc_(pill) + '</span>' +
+              ' が同じ時間に2件を掛け持ちしています' +
+            '</div>' +
+          '</div>' +
+          (x.dup_suspect ? '<span class="dup">⚠️同一人物の疑い(二重入力?)</span>' : '') +
+        '</header>' +
+        '<div class="pair">' + side_('a') + '<div class="vs"></div>' + side_('b') + '</div>' +
+      '</article>';
+    }).join('\n');
+  }
+
   var nailNote = withNail ? '（NAIL含む）' : '';
   return '' +
 '<style>' + CSS_ + '</style>' +
@@ -1281,8 +1325,11 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev) {
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
     '</div>' +
   '</div>' +
-  '<h1 class="fit1line">⚠️ 施術室被り検出 <span class="cnt">' + real + '件</span>' + nailNote + '</h1>' +
+  '<h1 class="fit1line">⚠️ 施術室＆施術者 被り検出 <span class="cnt">' + (real + staffConflicts.length) + '件</span>' + nailNote + '</h1>' +
+  '<h2 class="sec">🚪 施術室（部屋）の被り <span class="cnt">' + real + '件</span></h2>' +
   cards +
+  '<h2 class="sec">🧑‍🔧 施術者（担当）の被り <span class="cnt">' + staffConflicts.length + '件</span></h2>' +
+  staffCards +
 '</div>' +
 identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
 }
@@ -1325,7 +1372,7 @@ var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="tru
 //   esc_()は\nをエスケープしないので、.tname(white-space:pre-line)でそのまま改行になる。
 var TILE_DEFS_ = [
   { id: 'conflict', cls: 'conflict', view: 'conflict',
-    icon: '<span class="ticon">🛏️</span>', label: '施術室\n被り検出' },
+    icon: '<span class="ticon">🛏️</span>', label: '施術室＆施術者\n被り検出' },
   { id: 'lt', cls: 'lt', view: 'lt',
     icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'L⇔T\n予約照合' },
   { id: 'uriage', cls: 'uriage', view: 'uriage',
@@ -3782,6 +3829,14 @@ var CSS_ =
 '    border-left:4px solid var(--real); border-radius:12px; padding:9px 11px;' +
 '    margin-bottom:40px; box-shadow:0 1px 3px rgba(0,0,0,.06); }' +   // 1件と次の1件の境目が分かるよう「部屋を移動ボタン」の半分の高さ空ける（2026-07-17ユーザー指示。実測80pxの半分）
 '  .card.dup { border-left-color:var(--dup); }' +
+'  .card.staff { border-left-color:var(--sc,#7c3aed); }' +
+'  h2.sec { color:#fff; font-size:1.25rem; margin:6px 0 12px; font-weight:900;' +
+'    border-bottom:2px solid rgba(255,255,255,.35); padding-bottom:5px; }' +
+'  h2.sec .cnt { color:#ff8fb3; font-weight:900; }' +
+'  .staffpill { background:var(--sc,#7c3aed); color:#fff; font-weight:900; font-size:1.05rem;' +
+'    padding:4px 16px; border-radius:999px; }' +
+'  .sroom { margin-left:8px; background:var(--rc,#64748b); color:#fff; font-weight:800;' +
+'    font-size:.8rem; padding:2px 10px; border-radius:999px; vertical-align:middle; }' +
 '  .card-h { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
 // ★2026-07-16：日付+時刻／施術室名+説明文の2行を、それぞれ横幅いっぱいまで大きく見せる。
 //   .fit1lineは開始時にわざと大きめのfont-sizeを振っておき、下のFIT_ONE_LINE_JS_が
