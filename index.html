@@ -119,8 +119,8 @@
   }
 })();
 </script>
-<script src="detect_core.js?v=20260718zd"></script>
-<script src="code.js?v=20260725e"></script>
+<script src="detect_core.js?v=20260725staff"></script>
+<script src="code.js?v=20260725staff"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -258,7 +258,8 @@
     var evs = payload.events;
     try { evs = evs.filter(function (e) { return !window.__movedOut[e.event_id]; }); } catch (ig) {}
     var res = detect(evs, nail, payload.date_from);
-    mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff, dev));
+    var sres = detectStaff(evs, payload.date_from);   // 施術者(担当)被りも同じ画面に出す
+    mount(renderPage_(res.conflicts, res.meta, payload, nail, base, staff, dev, sres.conflicts));
     try { window.scrollTo(0, 0); } catch (e) {}   // 再描画後は一番上へ（部屋移動の完了更新でも同じ）
     try { if (!window.__keepMvOverlay) { var ov = document.getElementById('mvWaitOverlay'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); } } catch (e) {}  // 全画面オーバーレイを消す（完了画面を"ぴったり1秒"見せる間は__keepMvOverlayで残す）
   }
