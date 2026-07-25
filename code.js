@@ -1220,14 +1220,11 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
   var scope = '今日以降（' + esc_(payload.date_from) + '）';
   var roomsStr = meta.rooms_list.join('・');
 
-  var cards;
-  if (!conflicts.length) {
-    cards = '<div class="empty">✅ 施術室被りはありませんでした</div>';
-  } else {
-    cards = conflicts.map(function (x, idx) {
+  var items = [];   // 部屋かぶり・人かぶりを混ぜて時刻順の1リストで出す（2026-07-25まるちゃん指示）。
+  conflicts.forEach(function (x, idx) {
       var rc = roomColor_(x.room);
       var roomBusyForDate = (payload.room_busy && payload.room_busy[x.date]) || {};
-      return '' +
+      var h = '' +
       '<article class="card real">' +
         '<header class="card-h">' +
           '<div class="cline">' +
@@ -1276,28 +1273,26 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
           '<div class="mvstatus" hidden></div>' +
         '</div>' +
       '</article>';
-    }).join('\n');
-  }
+    items.push({ key: [x.date || '', x.overlap_time || '', 0], html: h });
+  });
 
-  // ―― 施術者（担当スタッフ）被りのカード（①では表示のみ＝移動ボタンは付けない）――
-  var staffCards;
-  if (!staffConflicts.length) {
-    staffCards = '<div class="empty">✅ 施術者（担当）被りはありませんでした</div>';
-  } else {
-    staffCards = staffConflicts.map(function (x) {
+  // ―― 施術者（担当スタッフ）被り：同じ担当なので各予約の左は担当マークでなく『部屋マーク』を出す ――
+  staffConflicts.forEach(function (x) {
       var sc = staffColor_(x.staff);
       var pill = ((x.staff || '') + (x.staff_name || '')).trim() || '担当';
       function side_(ab) {
         var room = x[ab + '_room'] || '';
-        var roomChip = room ? '<span class="sroom" style="--rc:' + roomColor_(room) + '">' + esc_(room) + '</span>' : '';
+        var roomMark = room
+          ? '<span class="ab" style="background:' + roomColor_(room) + ';color:#fff;font-weight:800">' + esc_(room) + '</span>'
+          : '<span class="ab">' + esc_(ab.toUpperCase()) + '</span>';
         return '<div class="side">' +
-          '<div class="time"><span class="ab">' + esc_(x[ab + '_staff'] || '') + '</span>' + esc_(x[ab + '_time']) + roomChip + '</div>' +
+          '<div class="time">' + roomMark + esc_(x[ab + '_time']) + '</div>' +
           '<div class="who"><span class="code">' + esc_(x[ab + '_code']) + '</span>' +
           '<span class="name">' + esc_(x[ab + '_name']) + '</span></div>' +
           menu_(x[ab + '_menu']) +
         '</div>';
       }
-      return '' +
+      var h = '' +
       '<article class="card staff" style="--sc:' + sc + '">' +
         '<header class="card-h">' +
           '<div class="cline">' +
@@ -1311,8 +1306,17 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
         '</header>' +
         '<div class="pair">' + side_('a') + '<div class="vs"></div>' + side_('b') + '</div>' +
       '</article>';
-    }).join('\n');
-  }
+      items.push({ key: [x.date || '', x.overlap_time || '', 1], html: h });
+  });
+
+  items.sort(function (a, b) {
+    for (var i = 0; i < 3; i++) { if (a.key[i] < b.key[i]) return -1; if (a.key[i] > b.key[i]) return 1; }
+    return 0;
+  });
+  var total = real + staffConflicts.length;
+  var bodyCards = items.length
+    ? items.map(function (it) { return it.html; }).join('\n')
+    : '<div class="empty">✅ 施術室・施術者の被りはありませんでした</div>';
 
   var nailNote = withNail ? '（NAIL含む）' : '';
   return '' +
@@ -1326,10 +1330,8 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
     '</div>' +
   '</div>' +
   '<h1 class="fit1line">⚠️ 施術室＆施術者 被り検出 <span class="cnt">' + (real + staffConflicts.length) + '件</span>' + nailNote + '</h1>' +
-  '<h2 class="sec">🚪 施術室（部屋）の被り <span class="cnt">' + real + '件</span></h2>' +
-  cards +
-  '<h2 class="sec">🧑‍🔧 施術者（担当）の被り <span class="cnt">' + staffConflicts.length + '件</span></h2>' +
-  staffCards +
+  '<h2 class="sec">⚠️ 被り（施術室・施術者） <span class="cnt">' + total + '件</span></h2>' +
+  bodyCards +
 '</div>' +
 identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
 }
