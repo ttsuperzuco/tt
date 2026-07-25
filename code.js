@@ -2326,9 +2326,14 @@ var UNASCRIPT_ =
 '    mreply.innerHTML=(canR&&cid)?' +
 '      "<div class=\\"unareply\\" data-cid=\\""+escH(cid)+"\\" data-nm=\\""+escH(nm)+"\\">"+' +
 '        "<textarea class=\\"unartext\\" rows=\\"2\\" maxlength=\\"1000\\" placeholder=\\"ここに返信を打つと、お店の公式LINEから送ります\\"></textarea>"+' +
+'        "<div class=\\"unastamps\\"></div>"+' +
 '        "<div class=\\"unarrow\\"><span class=\\"unarnote\\"></span>"+' +
+'          "<button type=\\"button\\" class=\\"unaremoji\\">😊 絵文字</button>"+' +
+'          "<button type=\\"button\\" class=\\"unarpicker\\">😀 スタンプ</button>"+' +
 '          "<button type=\\"button\\" class=\\"unarsend\\">送る</button></div>"+' +
 '      "</div>":"";' +
+// 自作スタンプ（画像）を返信欄の置き場所に並べる。カード側と同じ処理をそのまま呼ぶ。
+'    if(canR&&cid) paintStamps_();' +
 '  }' +
 '  mask.classList.add("on");' +
 '  setTimeout(function(){ mlog.scrollTop=mlog.scrollHeight; },0);' +
