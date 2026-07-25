@@ -3694,7 +3694,7 @@ var MOVESCRIPT_ =
 '    var swho=t.getAttribute("data-who")||"", stime=t.getAttribute("data-time")||"";' +
 '    var of=t.getAttribute("data-oldfruit")||"", onm=t.getAttribute("data-oldname")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず担当を変えられません", false); return; }' +
-'    ccPopup_(ccH_(swho)+"の予約の担当を<br>"+ccRoomBadge_(of+onm, staffColor_(of))+"から<br>"+ccRoomBadge_(nf+nm, staffColor_(nf))+"へ<br>変えます。<br>よろしいですか？<br><span style=\\"font-size:.8rem\\">（予約名の先頭マークだけを書き換えます・削除はしません）</span>", true, function(){' +
+'    ccPopup_(ccH_(swho)+"の予約の担当を<br>"+ccRoomBadge_(of+onm, staffColor_(of))+"から<br>"+ccRoomBadge_(nf+nm, staffColor_(nf))+"へ<br>変えます。<br>よろしいですか？", true, function(){' +
 '      mvStaffOverlay_(swho,stime,of,onm,nf,nm);' +
 '      submitMoveStaff_(cal,evid,nf,function(r){' +
 '        if(r && r.ok){ waitStaffDoneFinish_(r.id,evid,nf,nm); }' +
