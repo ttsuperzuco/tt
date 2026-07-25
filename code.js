@@ -1401,7 +1401,6 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
     '</div>' +
   '</div>' +
   '<h1 class="fit1line">⚠️ 施術室＆施術者 被り検出 <span class="cnt">' + (real + staffConflicts.length) + '件</span>' + nailNote + '</h1>' +
-  '<h2 class="sec">⚠️ 被り（施術室・施術者） <span class="cnt">' + total + '件</span></h2>' +
   bodyCards +
 '</div>' +
 identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
