@@ -1225,7 +1225,7 @@ function jpMonthDay_(iso) {
 }
 
 // ―― 担当（施術者）の異動：候補ボタンと「この日の担当状況」（payload.staff_free を使う）――
-function staffMoveRow_(cal, event, title, oldFruit, timeStr, dayStaff) {
+function staffMoveRow_(cal, event, title, oldFruit, timeStr, who, dayStaff) {
   var hasId = !!cal && !!event;
   var range = parseTimeRange_(timeStr);
   var btns = '', anyFree = false;
@@ -1237,6 +1237,7 @@ function staffMoveRow_(cal, event, title, oldFruit, timeStr, dayStaff) {
     btns += '<button type="button" class="smvbtn"' + (hasId ? '' : ' disabled') +
       ' data-cal="' + esc_(cal || '') + '" data-ev="' + esc_(event || '') + '"' +
       ' data-newfruit="' + esc_(f) + '" data-name="' + esc_(name) + '"' +
+      ' data-who="' + esc_(who || '') + '" data-time="' + esc_(timeStr || '') + '"' +
       ' style="--sc:' + staffColor_(f) + '">' + esc_(f) + esc_(name) + '</button>';
   });
   var note = !hasId ? '<span class="mvng">IDが取れず異動できません</span>'
@@ -1365,12 +1366,12 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
             '<button type="button" class="mvtoggle" data-side="B">この予約の<br>担当を異動</button>' +
           '</div>' +
           '<div class="mvpanel" data-side="A" hidden>' +
-            staffMoveRow_(x.a_cal_id, x.a_event_id, x.a_title || '', x.staff, x.a_time, dayStaff) +
+            staffMoveRow_(x.a_cal_id, x.a_event_id, x.a_title || '', x.staff, x.a_time, [x.a_code, x.a_name].filter(Boolean).join(' '), dayStaff) +
             '<button type="button" class="rstoggle fit1line">📋 念のため、この日の担当状況を見る</button>' +
             staffStatusPanel_(x.date, dayStaff) +
           '</div>' +
           '<div class="mvpanel" data-side="B" hidden>' +
-            staffMoveRow_(x.b_cal_id, x.b_event_id, x.b_title || '', x.staff, x.b_time, dayStaff) +
+            staffMoveRow_(x.b_cal_id, x.b_event_id, x.b_title || '', x.staff, x.b_time, [x.b_code, x.b_name].filter(Boolean).join(' '), dayStaff) +
             '<button type="button" class="rstoggle fit1line">📋 念のため、この日の担当状況を見る</button>' +
             staffStatusPanel_(x.date, dayStaff) +
           '</div>' +
@@ -3688,13 +3689,13 @@ var MOVESCRIPT_ =
 '    var mv=t; while(mv&&!(mv.classList&&mv.classList.contains("mv"))) mv=mv.parentNode; if(!mv) return;' +
 '    var cal=t.getAttribute("data-cal"), evid=t.getAttribute("data-ev");' +
 '    var nf=t.getAttribute("data-newfruit"), nm=t.getAttribute("data-name")||"";' +
+'    var swho=t.getAttribute("data-who")||"", stime=t.getAttribute("data-time")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず担当を変えられません", false); return; }' +
 '    ccPopup_("この予約の担当を<br><b>"+ccH_(nf)+ccH_(nm)+"</b>に変えます。<br>よろしいですか？<br><span style=\\"font-size:.8rem\\">（予約名の先頭マークだけを書き換えます・削除はしません）</span>", true, function(){' +
-'      var spn=t; while(spn&&!(spn.classList&&spn.classList.contains("mvpanel"))) spn=spn.parentNode; if(spn) spn.hidden=true;' +
-'      var st=mv.querySelector(".mvstatus"); if(st){ st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 処理中…（担当を"+nf+"へ）"; }' +
+'      mvStaffOverlay_(swho,stime,nf,nm);' +
 '      submitMoveStaff_(cal,evid,nf,function(r){' +
-'        if(r && r.ok){ waitStaffDone_(r.id, st, nf); }' +
-'        else { if(st){ st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r&&r.error)||"依頼に失敗"); } }' +
+'        if(r && r.ok){ waitStaffDoneFinish_(r.id,evid,nf,nm); }' +
+'        else { mvOverlayHide_(); ccPopup_("⚠️ 担当を変えられませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度お試しください。", false); }' +
 '      });' +
 '    }, true);' +
 '  }' +
@@ -3743,6 +3744,35 @@ var MOVESCRIPT_ =
 '  }' +
 '  setTimeout(chk,250); }' +
 // ★（旧・楽観的更新の部品。現在は未使用だが残置）小さなトースト＋裏での確定確認＋失敗時のロールバック。
+// ―― 担当の異動：部屋移動と全く同じ流れ（全画面「変更中」→完了「✓」＋戻る→最新一覧）――
+'function mvStaffOverlay_(who,mtime,nf,nm){ var ov=document.getElementById("mvWaitOverlay");' +
+'  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay";' +
+'    ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#2C7A99;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
+'    document.body.appendChild(ov); }' +
+'  var t=(mtime||"").split("-")[0];' +
+'  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
+'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">担当を「"+nf+nm+"」へ<br>変更中です</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
+'  return ov; }' +
+'function showStaffDoneOverlay_(nf,nm){ var ov=document.getElementById("mvWaitOverlay");' +
+'  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
+'  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
+'  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div>"+' +
+'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">担当を「"+nf+nm+"」へ<br>変更が完了しました</div>"+' +
+'    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">被り検出画面に戻る</button>";' +
+'  document.getElementById("mvBackBtn").addEventListener("click",function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); });' +
+'  return ov; }' +
+'function waitStaffDoneFinish_(id,evid,nf,nm){ var tries=0;' +
+'  function chk(){ tries++;' +
+'    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
+'      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showStaffDoneOverlay_(nf,nm);' +
+'        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
+'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 担当を変えられませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
+'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください", false); }' +
+'      else { setTimeout(chk,250); } });' +
+'  }' +
+'  setTimeout(chk,250); }' +
 'function mvToast_(msg){ var el=document.getElementById("mvToast");' +
 '  if(!el){ el=document.createElement("div"); el.id="mvToast";' +
 '    el.style.cssText="position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;max-width:90%;background:#2C7A99;color:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);font-size:14px;line-height:1.5;text-align:center;";' +
