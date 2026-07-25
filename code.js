@@ -554,6 +554,7 @@ function _submitToQueue_(q, op, fields) {
   q.push({ id: id, ts: new Date().toISOString(), op: op,
     cal: fields.cal, event: fields.event, to_cal: fields.to_cal, to_label: fields.to_label,
     room: fields.room || '', title: fields.title || '', from_room: fields.from_room || '',
+    new_fruit: fields.new_fruit || '',   // 担当の異動(op=movestaff)＝誰に変えるか（果物マーク）
     who: fields.who || '', role: fields.role || '', device: fields.device || '',
     status: 'pending', result: '' });
   _queueSet_(q);
@@ -589,6 +590,7 @@ function handleAction_(p) {
       out = _submitToQueue_(q, p.op || 'movecal', {
         cal: p.cal, event: p.event, to_cal: p.to_cal, to_label: Number(p.to_label),
         room: p.room || '', title: p.title || '', from_room: p.from_room || '',
+        new_fruit: p.new_fruit || '',   // 担当の異動(op=movestaff)
         // 自動監視の操作(op=kanshi_ctl)用。合言葉(pw)はここ(サーバー)で照合するだけで外へは出さない。
         pw: p.pw || '', ctl_key: p.ctl_key || '', ctl_act: p.ctl_act || '', ctl_val: p.ctl_val || '',
         who: String(p.who || '').replace(/[^a-z]/g, ''), role: p.role || '', device: p.device || ''
@@ -638,6 +640,23 @@ function uiSubmitMove(cal, event, toCal, toLabel, room, title, who, device, from
     return _submitToQueue_(q, 'movecal', {
       cal: cal, event: event, to_cal: toCal, to_label: Number(toLabel), room: room, title: title,
       from_room: fromRoom || '', who: String(who || '').replace(/[^a-z]/g, ''), role: '', device: device || ''
+    });
+  } finally {
+    try { lock.releaseLock(); } catch (ig2) {}
+  }
+}
+
+// 担当の異動（①GAS直リンク用）。②静的アプリは action=submit(JSONP)＋op=movestaff で同じキューに積む。
+// アプリからは「誰に変えるか(new_fruit)」だけ受け取り、実際のタイトル差し替えは事務所PCのedit_workerが行う
+// （被り中の予約か・正しい担当かをPC側で確認＝部屋移動と同じ安全側）。
+function uiSubmitMoveStaff(cal, event, newFruit, who, device) {
+  var lock = LockService.getScriptLock();
+  try { lock.tryLock(10000); } catch (ig) {}
+  try {
+    var q = _queueGet_();
+    return _submitToQueue_(q, 'movestaff', {
+      cal: cal, event: event, new_fruit: newFruit,
+      who: String(who || '').replace(/[^a-z]/g, ''), role: '', device: device || ''
     });
   } finally {
     try { lock.releaseLock(); } catch (ig2) {}
@@ -1205,6 +1224,41 @@ function jpMonthDay_(iso) {
   return p[1] + '月' + p[2] + '日';
 }
 
+// ―― 担当（施術者）の異動：候補ボタンと「この日の担当状況」（payload.staff_free を使う）――
+function staffMoveRow_(cal, event, title, oldFruit, timeStr, dayStaff) {
+  var hasId = !!cal && !!event;
+  var range = parseTimeRange_(timeStr);
+  var btns = '', anyFree = false;
+  (dayStaff || []).forEach(function (row) {
+    var f = row[0], name = row[1], slots = row[3] || [];
+    if (f === oldFruit) return;
+    if (range && !slots.some(function (iv) { return iv[0] <= range[0] && range[1] <= iv[1]; })) return;
+    anyFree = true;
+    btns += '<button type="button" class="smvbtn"' + (hasId ? '' : ' disabled') +
+      ' data-cal="' + esc_(cal || '') + '" data-ev="' + esc_(event || '') + '"' +
+      ' data-newfruit="' + esc_(f) + '" data-name="' + esc_(name) + '"' +
+      ' style="--sc:' + staffColor_(f) + '">' + esc_(f) + esc_(name) + '</button>';
+  });
+  var note = !hasId ? '<span class="mvng">IDが取れず異動できません</span>'
+    : (anyFree ? '' : '<span class="mvng">その時間に空いている担当がいません</span>');
+  return '<div class="mvrow"><div class="mvlabel fit1line">異動先の担当を選んでね（下のボタンを押す）</div>' +
+    '<div class="mvhint fit1line">※その時間に空いている担当のみ表示しています</div>' +
+    '<span class="mvbtns">' + btns + note + '</span></div>';
+}
+
+function staffStatusPanel_(date, dayStaff) {
+  var rows = (dayStaff || []).map(function (row) {
+    var f = row[0], name = row[1], shift = row[2], slots = row[3] || [];
+    var chips = slots.length
+      ? slots.map(function (iv) { return '<span class="slot">' + toHm_(iv[0]) + '-' + toHm_(iv[1]) + '</span>'; }).join('')
+      : '<span class="none">空きなし</span>';
+    return '<div class="rstat"><span class="staffpill" style="--sc:' + staffColor_(f) + '">' + esc_(f) + esc_(name) + '</span>' +
+      '<span class="rchips"><span class="slot" style="opacity:.7">勤務 ' + esc_(shift) + '</span>' + chips + '</span></div>';
+  }).join('');
+  if (!rows) rows = '<div class="rstat"><span class="none">この日の出勤者の情報がありません</span></div>';
+  return '<div class="rspanel" hidden><div class="rstitle">' + esc_(jpMonthDay_(date)) + 'の担当の空き状況</div>' + rows + '</div>';
+}
+
 function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staffConflicts) {
   var real = conflicts.length;
   staffConflicts = staffConflicts || [];
@@ -1280,6 +1334,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
   staffConflicts.forEach(function (x) {
       var sc = staffColor_(x.staff);
       var pill = ((x.staff || '') + (x.staff_name || '')).trim() || '担当';
+      var dayStaff = (payload.staff_free && payload.staff_free[x.date]) || [];
       function side_(ab) {
         var room = x[ab + '_room'] || '';
         var roomMark = '<span class="lroom" style="--rc:' + roomColor_(room || '') + '">' +
@@ -1304,6 +1359,23 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
           (x.dup_suspect ? '<span class="dup">⚠️同一人物の疑い(二重入力?)</span>' : '') +
         '</header>' +
         '<div class="pair">' + side_('a') + '<div class="vs"></div>' + side_('b') + '</div>' +
+        '<div class="mv">' +
+          '<div class="mvtoprow">' +
+            '<button type="button" class="mvtoggle" data-side="A">この予約の<br>担当を異動</button>' +
+            '<button type="button" class="mvtoggle" data-side="B">この予約の<br>担当を異動</button>' +
+          '</div>' +
+          '<div class="mvpanel" data-side="A" hidden>' +
+            staffMoveRow_(x.a_cal_id, x.a_event_id, x.a_title || '', x.staff, x.a_time, dayStaff) +
+            '<button type="button" class="rstoggle fit1line">📋 念のため、この日の担当状況を見る</button>' +
+            staffStatusPanel_(x.date, dayStaff) +
+          '</div>' +
+          '<div class="mvpanel" data-side="B" hidden>' +
+            staffMoveRow_(x.b_cal_id, x.b_event_id, x.b_title || '', x.staff, x.b_time, dayStaff) +
+            '<button type="button" class="rstoggle fit1line">📋 念のため、この日の担当状況を見る</button>' +
+            staffStatusPanel_(x.date, dayStaff) +
+          '</div>' +
+          '<div class="mvstatus" hidden></div>' +
+        '</div>' +
       '</article>';
       items.push({ key: [x.date || '', x.overlap_time || '', 1], html: h });
   });
@@ -2315,6 +2387,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
           '<button type="button" class="unafsb" data-fs="sm">小</button>' +
           '<button type="button" class="unafsb" data-fs="md">中</button>' +
           '<button type="button" class="unafsb" data-fs="lg">大</button>' +
+          '<button type="button" class="unafsb" data-fs="xl">特</button>' +
         '</div>' +
         '<button type="button" class="unamx" id="unaMx" aria-label="閉じる">&times;</button>' +
       '</div>' +
@@ -2365,8 +2438,8 @@ var UNASCRIPT_ =
 'var mreply=document.getElementById("unaMreply");' +
 // ―― 会話の文字の大きさ（小・中・大）＝端末に覚えて、どの会話を開いても同じ大きさで出す ――
 'var UNA_FS_KEY="sz_una_fs";' +
-'function unaGetFs(){ try{ var v=localStorage.getItem(UNA_FS_KEY); return (v==="sm"||v==="lg")?v:"md"; }catch(e){ return "md"; } }' +
-'function unaApplyFs(sz){ if(sz!=="sm"&&sz!=="lg") sz="md";' +
+'function unaGetFs(){ try{ var v=localStorage.getItem(UNA_FS_KEY); return (v==="sm"||v==="lg"||v==="xl")?v:"md"; }catch(e){ return "md"; } }' +
+'function unaApplyFs(sz){ if(sz!=="sm"&&sz!=="lg"&&sz!=="xl") sz="md";' +
 '  if(mlog) mlog.setAttribute("data-fs",sz);' +
 '  var bs=document.querySelectorAll(".unafsb");' +
 '  for(var i=0;i<bs.length;i++){ bs[i].classList.toggle("on", bs[i].getAttribute("data-fs")===sz); } }' +
@@ -2807,8 +2880,11 @@ var UNACSS_ =
 '  .unamlog[data-fs="sm"] .unamsg{ font-size:14px; }' +
 '  .unamlog[data-fs="md"] .unamsg{ font-size:17px; }' +
 '  .unamlog[data-fs="lg"] .unamsg{ font-size:21px; }' +
-'  .unamsg.cli{ background:var(--card); border:1px solid var(--line); border-bottom-left-radius:5px; }' +
-'  .unamsg.shop{ background:#06c755; color:#fff; border-bottom-right-radius:5px; }' +
+'  .unamlog[data-fs="xl"] .unamsg{ font-size:26px; }' +
+// ★会話の文字は黒の太字＝読みやすく。黒が読めるよう吹き出しは明るい色（客=白／店=薄い緑・LINE風）。
+'  .unamsg{ color:#111 !important; font-weight:700; }' +
+'  .unamsg.cli{ background:#ffffff; border:1px solid #d7dbe3; border-bottom-left-radius:5px; }' +
+'  .unamsg.shop{ background:#d6f5c8; border-bottom-right-radius:5px; }' +
 '  .unats{ display:block; font-size:11.5px; color:var(--sub); opacity:.8; margin:3px 4px 0; }' +
 '  .unaseen{ color:#06c755; font-weight:700; margin-right:5px; }' +
 '  .unamnote{ color:var(--sub); font-size:15px; padding:8px; }' +
@@ -3467,9 +3543,22 @@ var MOVESCRIPT_ =
 '     fields:JSON.stringify({cal:cal,event:evid,to_cal:toCal,to_label:toLabel,room:room,' +
 '       title:title,from_room:fromRoom})}, onDone);' +
 '}' +
+'function submitMoveStaff_(cal,evid,newFruit,onDone){' +
+'  var idn=szIdent_();' +
+'  callGas_("uiSubmitMoveStaff",[cal,evid,newFruit,idn.who,idn.device],"submit",' +
+'    {op:"movestaff",new_fruit:newFruit,cal:cal,event:evid,who:idn.who,role:idn.role,device:idn.device}, onDone);' +
+'}' +
 'function statusCheck_(id,onDone){' +
 '  callGas_("uiStatus",[id],"status",{id:id}, onDone);' +
 '}' +
+'function waitStaffDone_(id,st,nf){ var tries=0;' +
+'  var iv=setInterval(function(){ tries++;' +
+'    statusCheck_(id,function(r){' +
+'      if(r && r.status==="done"){ clearInterval(iv); if(st){ st.className="mvstatus ok"; st.textContent="\\u2705 "+((r.result)||("\\u62c5\\u5f53\\u3092"+nf+"\\u3078\\u5909\\u3048\\u307e\\u3057\\u305f")); } setTimeout(function(){ location.reload(); },900); }' +
+'      else if(r && r.status==="error"){ clearInterval(iv); if(st){ st.className="mvstatus err"; st.textContent="\\u26a0\\ufe0f "+((r.result)||"\\u5931\\u6557\\u3057\\u307e\\u3057\\u305f"); } }' +
+'      else if(tries>40){ clearInterval(iv); if(st){ st.className="mvstatus err"; st.textContent="\\u26a0\\ufe0f \\u6642\\u9593\\u5207\\u308c\\u3002\\u4e8b\\u52d9\\u6240PC\\u306e\\u5b9f\\u884c\\u4fc2\\u3092\\u78ba\\u8a8d\\u3057\\u3066\\u304f\\u3060\\u3055\\u3044\\u3002"; } }' +
+'    });' +
+'  }, 1500); }' +
 // ブラウザ標準confirm/alertは「ttsuperzuco.github.io says」のようにドメイン名を強制表示して
 // しまい消せない（ブラウザのセキュリティ機能）ため、自前のポップアップ（ドメイン名なし）で代用する。
 // isHtml=true の時だけ msg をタグ付きで差し込む（部屋の色付きマーク表示用）。呼び出し元が
@@ -3531,6 +3620,21 @@ var MOVESCRIPT_ =
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
 '        if(r && r.ok){ waitDoneThenFinish_(r.id,evid,room); }' +
 '        else { mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度お試しください。", false); }' +
+'      });' +
+'    }, true);' +
+'  }' +
+'  if(t.classList&&t.classList.contains("smvbtn")){' +
+'    if(t.disabled) return;' +
+'    var mv=t; while(mv&&!(mv.classList&&mv.classList.contains("mv"))) mv=mv.parentNode; if(!mv) return;' +
+'    var cal=t.getAttribute("data-cal"), evid=t.getAttribute("data-ev");' +
+'    var nf=t.getAttribute("data-newfruit"), nm=t.getAttribute("data-name")||"";' +
+'    if(!cal||!evid){ ccPopup_("この予約のIDが取れず担当を変えられません", false); return; }' +
+'    ccPopup_("この予約の担当を<br><b>"+ccH_(nf)+ccH_(nm)+"</b>に変えます。<br>よろしいですか？<br><span style=\\"font-size:.8rem\\">（予約名の先頭マークだけを書き換えます・削除はしません）</span>", true, function(){' +
+'      var spn=t; while(spn&&!(spn.classList&&spn.classList.contains("mvpanel"))) spn=spn.parentNode; if(spn) spn.hidden=true;' +
+'      var st=mv.querySelector(".mvstatus"); if(st){ st.hidden=false; st.className="mvstatus working"; st.textContent="⏳ 処理中…（担当を"+nf+"へ）"; }' +
+'      submitMoveStaff_(cal,evid,nf,function(r){' +
+'        if(r && r.ok){ waitStaffDone_(r.id, st, nf); }' +
+'        else { if(st){ st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r&&r.error)||"依頼に失敗"); } }' +
 '      });' +
 '    }, true);' +
 '  }' +
