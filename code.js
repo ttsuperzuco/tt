@@ -2534,29 +2534,31 @@ var UNASCRIPT_ =
 '  var text=(ta&&ta.value||"").trim();' +
 '  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="本文を打ってください。"; } return; }' +
 '  unaAsk_(nm,text,function(){' +
-'    btn.disabled=true; if(note){ note.className="unarnote"; note.textContent="送信中…"; }' +
+'    if(note){ note.className="unarnote"; note.textContent="送信中…"; }' +
 '    var idn=unaIdent_();' +
+// ★押した瞬間に自分の吹き出しを出す（LINEと同じ＝体感すぐ）。実際に届いたら下の印を「送信済み」に変える。
+'    var rw=null, lg=document.getElementById("unaMlog");' +
+'    if(lg && wrap.closest && wrap.closest(".unamodal")){' +
+'      rw=document.createElement("div"); rw.className="unamsgrow shop";' +
+'      rw.innerHTML="<div class=\\"unamsg shop\\">"+escH(text)+"</div><span class=\\"unats\\"><span class=\\"unasend0\\">送信中…</span></span>";' +
+'      lg.appendChild(rw); lg.scrollTop=lg.scrollHeight; }' +
+'    if(ta){ ta.value=""; unaGrow(ta); }' +
+'    function mark(t,c){ if(!rw) return; var s=rw.querySelector(".unats"); if(s) s.innerHTML=c?("<span class=\\""+c+"\\">"+t+"</span>"):t; }' +
 '    unaCall_({action:"submit",op:"line_reply",who:idn.who,role:idn.role,device:idn.device,' +
 '      fields:JSON.stringify({chat:cid,text:text,title:nm})},' +
 '      function(r){' +
-'        if(!r||!r.ok){ btn.disabled=false;' +
-'          if(note){ note.className="unarnote ng"; note.textContent=(r&&r.error)||"送れませんでした。"; } return; }' +
+'        if(!r||!r.ok){ if(note){ note.className="unarnote ng"; note.textContent=(r&&r.error)||"送れませんでした。"; } mark("送れませんでした","unafail"); return; }' +
 '        var tries=0;' +
 '        (function poll(){' +
 '          tries++;' +
 '          unaCall_({action:"status",id:r.id},function(st){' +
-'            if(st&&st.status==="done"){ btn.disabled=false; if(ta){ ta.value=""; unaGrow(ta); }' +
-'              if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; }' +
-'              var lg=document.getElementById("unaMlog");' +
-'              if(lg && wrap.closest && wrap.closest(".unamodal")){' +
-'                var rw=document.createElement("div"); rw.className="unamsgrow shop";' +
-'                rw.innerHTML="<div class=\\"unamsg shop\\">"+escH(text)+"</div><span class=\\"unats\\">たった今</span>";' +
-'                lg.appendChild(rw); lg.scrollTop=lg.scrollHeight; } return; }' +
-'            if(st&&st.status==="error"){ btn.disabled=false;' +
-'              if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
-'            if(tries>40){ btn.disabled=false;' +
-'              if(note){ note.className="unarnote ng"; note.textContent="事務所のパソコンから返事がありません（見張りが動いているか確認してください）。"; } return; }' +
-'            setTimeout(poll,3000);' +
+'            if(st&&st.status==="done"){' +
+'              if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } mark("送信済み・たった今",""); return; }' +
+'            if(st&&st.status==="error"){' +
+'              if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } mark("送れませんでした","unafail"); return; }' +
+'            if(tries>60){' +
+'              if(note){ note.className="unarnote ng"; note.textContent="事務所のパソコンから返事がありません（見張りが動いているか確認してください）。"; } mark("未確認","unafail"); return; }' +
+'            setTimeout(poll,1200);' +
 '          });' +
 '        })();' +
 '      });' +
@@ -2893,6 +2895,8 @@ var UNACSS_ =
 '  .unamsg.shop{ background:#d6f5c8; border-bottom-right-radius:5px; }' +
 '  .unats{ display:block; font-size:11.5px; color:var(--sub); opacity:.8; margin:3px 4px 0; }' +
 '  .unaseen{ color:#06c755; font-weight:700; margin-right:5px; }' +
+'  .unasend0{ color:var(--sub); }' +
+'  .unafail{ color:#e5484d; font-weight:700; }' +
 '  .unamnote{ color:var(--sub); font-size:15px; padding:8px; }' +
 '  .unamreply{ padding:0 16px 12px; }' +
 '  .unamreply .unareply{ margin-top:0; }';
