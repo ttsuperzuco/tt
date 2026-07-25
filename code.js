@@ -1282,9 +1282,8 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
       var pill = ((x.staff || '') + (x.staff_name || '')).trim() || '担当';
       function side_(ab) {
         var room = x[ab + '_room'] || '';
-        var roomMark = room
-          ? '<span class="ab" style="background:' + roomColor_(room) + ';color:#fff;font-weight:800">' + esc_(room) + '</span>'
-          : '<span class="ab">' + esc_(ab.toUpperCase()) + '</span>';
+        var roomMark = '<span class="lroom" style="--rc:' + roomColor_(room || '') + '">' +
+          esc_(room ? shortRoomName_(room) : ab.toUpperCase()) + '</span>';
         return '<div class="side">' +
           '<div class="time">' + roomMark + esc_(x[ab + '_time']) + '</div>' +
           '<div class="who"><span class="code">' + esc_(x[ab + '_code']) + '</span>' +
@@ -3874,6 +3873,9 @@ var CSS_ =
 '    padding:4px 16px; border-radius:999px; }' +
 '  .sroom { margin-left:8px; background:var(--rc,#64748b); color:#fff; font-weight:800;' +
 '    font-size:.8rem; padding:2px 10px; border-radius:999px; vertical-align:middle; }' +
+// ★人かぶりカードで各予約の左に置く小さな部屋チップ（担当絵文字用の .ab は大きすぎて時間を押し出すため別に用意）。
+'  .lroom { flex:none; margin-right:8px; background:var(--rc,#64748b); color:#fff; font-weight:800;' +
+'    font-size:.95rem; padding:3px 11px; border-radius:999px; white-space:nowrap; }' +
 '  .card-h { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
 // ★2026-07-16：日付+時刻／施術室名+説明文の2行を、それぞれ横幅いっぱいまで大きく見せる。
 //   .fit1lineは開始時にわざと大きめのfont-sizeを振っておき、下のFIT_ONE_LINE_JS_が
