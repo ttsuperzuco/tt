@@ -2308,7 +2308,15 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '<div class="unamodal">' +
     '<div class="unamh">' +
       '<div><div class="unamnm" id="unaMnm"></div><div class="unamsub" id="unaMsub"></div></div>' +
-      '<button type="button" class="unamx" id="unaMx" aria-label="閉じる">&times;</button>' +
+      '<div class="unamhr">' +
+        // ★文字の大きさ切り替え（小・中・大）。選ぶと端末に覚えて、次にどの会話を開いても同じ大きさで出す。
+        '<div class="unafs">' +
+          '<button type="button" class="unafsb" data-fs="sm">小</button>' +
+          '<button type="button" class="unafsb" data-fs="md">中</button>' +
+          '<button type="button" class="unafsb" data-fs="lg">大</button>' +
+        '</div>' +
+        '<button type="button" class="unamx" id="unaMx" aria-label="閉じる">&times;</button>' +
+      '</div>' +
     '</div>' +
     '<div class="unamlog" id="unaMlog"></div>' +
     // ★2026-07-25：会話の下にその場返信欄を出す置き場所（開発者かつ返信OKの会話の時だけ中身が入る）。
@@ -2354,6 +2362,18 @@ var UNASCRIPT_ =
 'var mask=document.getElementById("unamask");' +
 'var mlog=document.getElementById("unaMlog"),mnm=document.getElementById("unaMnm"),msub=document.getElementById("unaMsub");' +
 'var mreply=document.getElementById("unaMreply");' +
+// ―― 会話の文字の大きさ（小・中・大）＝端末に覚えて、どの会話を開いても同じ大きさで出す ――
+'var UNA_FS_KEY="sz_una_fs";' +
+'function unaGetFs(){ try{ var v=localStorage.getItem(UNA_FS_KEY); return (v==="sm"||v==="lg")?v:"md"; }catch(e){ return "md"; } }' +
+'function unaApplyFs(sz){ if(sz!=="sm"&&sz!=="lg") sz="md";' +
+'  if(mlog) mlog.setAttribute("data-fs",sz);' +
+'  var bs=document.querySelectorAll(".unafsb");' +
+'  for(var i=0;i<bs.length;i++){ bs[i].classList.toggle("on", bs[i].getAttribute("data-fs")===sz); } }' +
+'document.addEventListener("click",function(e){' +
+'  var b=e.target&&e.target.closest?e.target.closest(".unafsb"):null; if(!b) return;' +
+'  var sz=b.getAttribute("data-fs"); try{ localStorage.setItem(UNA_FS_KEY,sz); }catch(ig){}' +
+'  unaApplyFs(sz);' +
+'});' +
 'function escH(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}' +
 'function openDetail(btn){' +
 '  if(!mask||!mlog)return;' +
@@ -2385,6 +2405,7 @@ var UNASCRIPT_ =
 // 自作スタンプ（画像）を返信欄の置き場所に並べる。カード側と同じ処理をそのまま呼ぶ。
 '    if(canR&&cid) paintStamps_();' +
 '  }' +
+'  unaApplyFs(unaGetFs());' +   // 覚えている文字の大きさをこの会話にも当てる
 '  mask.classList.add("on");' +
 '  setTimeout(function(){ mlog.scrollTop=mlog.scrollHeight; },0);' +
 '}' +
@@ -2768,6 +2789,12 @@ var UNACSS_ =
 '  .unamsub{ font-size:14px; color:var(--sub); margin-top:3px; }' +
 '  .unamx{ appearance:none; border:0; background:none; font-size:28px; line-height:1;' +
 '    color:var(--sub); cursor:pointer; padding:2px 6px; }' +
+// 文字サイズ切り替え（小・中・大）＝小窓の右上
+'  .unamhr{ display:flex; align-items:center; gap:8px; flex:none; }' +
+'  .unafs{ display:flex; gap:2px; background:var(--line); border-radius:9px; padding:2px; }' +
+'  .unafsb{ appearance:none; border:0; background:none; font:inherit; font-weight:800; cursor:pointer;' +
+'    padding:5px 10px; border-radius:7px; color:var(--sub); font-size:14px; line-height:1; }' +
+'  .unafsb.on{ background:var(--card); color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.15); }' +
 '  .unamlog{ overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px;' +
 '    background:var(--bg); }' +
 '  .unamsgrow{ display:flex; flex-direction:column; max-width:82%; }' +
@@ -2775,6 +2802,10 @@ var UNACSS_ =
 '  .unamsgrow.shop{ align-self:flex-end; align-items:flex-end; }' +
 '  .unamsg{ max-width:100%; padding:11px 14px; border-radius:16px; font-size:17px; line-height:1.55;' +
 '    white-space:pre-wrap; overflow-wrap:anywhere; word-break:normal; color:var(--ink); }' +
+// 覚えた文字サイズを会話の吹き出しに反映（小=14 / 中=17 / 大=21）
+'  .unamlog[data-fs="sm"] .unamsg{ font-size:14px; }' +
+'  .unamlog[data-fs="md"] .unamsg{ font-size:17px; }' +
+'  .unamlog[data-fs="lg"] .unamsg{ font-size:21px; }' +
 '  .unamsg.cli{ background:var(--card); border:1px solid var(--line); border-bottom-left-radius:5px; }' +
 '  .unamsg.shop{ background:#06c755; color:#fff; border-bottom-right-radius:5px; }' +
 '  .unats{ display:block; font-size:11.5px; color:var(--sub); opacity:.8; margin:3px 4px 0; }' +
