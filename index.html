@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260718zd"></script>
-<script src="code.js?v=20260724b"></script>
+<script src="code.js?v=20260725a"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -401,6 +401,10 @@
   //   （events等の先読みは不要＝押してから探すため）。renderRirekiPage_ は code.js＝GASと同一。
   function showRireki() { mount(renderRirekiPage_(base, staff, dev)); }
 
+  // 台湾トマト 売上・コスト（開発URL専用）。データ取得は不要＝code.jsの純JSをそのまま描くだけ
+  //   （「月間コスト計算」ボタン→コスト表の表示は renderCostPage_ 内スクリプトが行う）。
+  function showCost() { mount(renderCostPage_(base, staff, dev)); }
+
   // ホーム：権限(perms)＋選んだ名前(who)で出し分け（renderHomePage_は code.js＝GASと同一）。
   function showHome(perms, order) {
     mount(renderHomePage_({ perms: perms || (typeof defaultPerms_==='function' ? defaultPerms_() : null),
@@ -553,6 +557,7 @@
     else if (v === 'links') showLinks();
     else if (v === 'kanshi') showKanshi();
     else if (v === 'zenjitsu') showZenjitsu();
+    else if (v === 'cost') showCost();
     else if (v === 'rireki') showRireki();
     else if (v === 'conflict') showConflict();
     else { showHome(perms, order); prefetchForHome_(allow); }

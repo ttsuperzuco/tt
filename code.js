@@ -142,6 +142,9 @@ function doGet(e) {
   } else if (view === 'zenjitsu') {
     title = '前日お知らせ';                             // ★開発URL(?dev=1)専用。日付を選ぶ→PCが作る→枠で表示（対話式・純JS）
     html = renderZenjitsuPage_(base, staff, dev);
+  } else if (view === 'cost') {
+    title = '台湾トマト 売上・コスト';                    // ★開発URL(?dev=1)専用。「月間コスト計算」を押すとコスト表を出す（純JS）
+    html = renderCostPage_(base, staff, dev);
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -873,12 +876,15 @@ var DEFAULT_TILE_SETTINGS_ = {
   kanshi:     { exec: false, staff: false },
   // ★前日お知らせ＝社長確認用。kanshiと同じく開発URL(?dev=1)専用（tile_settings.py にも入れない）。
   zenjitsu:   { exec: false, staff: false },
-  rireki:     { exec: false, staff: false }    // ★顧客履歴検索＝初期は開発URL(?dev=1)だけ（共通ルール16＝新ボタンは既定で開発者だけ表示。自動監視からONにして開放）
+  rireki:     { exec: false, staff: false },   // ★顧客履歴検索＝初期は開発URL(?dev=1)だけ（共通ルール16＝新ボタンは既定で開発者だけ表示。自動監視からONにして開放）
+  // ★台湾トマト 売上・コスト＝オーナー(開発者)専用の内部ツール。kanshi/zenjitsuと同じく
+  //   開発URL(?dev=1)専用（tile_settings.py の TILES にも入れない＝誰もONにできない）。
+  cost:       { exec: false, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1346,7 +1352,11 @@ var TILE_DEFS_ = [
   // ★顧客履歴検索＝番号/氏名で客を探し、今回の予約と過去予約(メモ込み)を見る。事務所PCが検索
   //   （op=cust_search）＝日中(事務所PC稼働中)に使える。PC版スーパーズコと並びをそろえる(2026-07-19)。
   { id: 'rireki', cls: 'rireki', view: 'rireki',
-    icon: '<span class="ticon">🔎</span>', label: '顧客履歴\n検索' }
+    icon: '<span class="ticon">🔎</span>', label: '顧客履歴\n検索' },
+  // ★台湾トマト 売上・コスト＝オーナー(開発者)専用の内部ツール。開発URL(?dev=1)専用
+  //   （kanshi/zenjitsuと同じ。tile_settings.py にも入れない）。押すと「月間コスト計算」ボタン→コスト表。
+  { id: 'cost', cls: 'cost', view: 'cost',
+    icon: '<span class="ticon">🍅</span>', label: '台湾トマト\n売上・コスト' }
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
@@ -1616,6 +1626,90 @@ function renderZenjitsuPage_(base, staff, dev) {
     '<div class="zjstatus" id="zjstatus">来店日を選ぶと、事務所PCが確認画面を作って表示します（お客様には送りません＝見るだけ）。</div>' +
     '<div id="zjres"></div>' +
   '</div>' + script;
+}
+
+// ====== 台湾トマト 売上・コスト（view=cost・開発URL専用／2026-07-25追加） ======
+// ★開発URL(?dev=1)専用＝オーナー(開発者)だけが見られる内部ツール（kanshi/zenjitsuと同じ）。
+//   tile_settings.py の TILES には入れない＝人ごとの権限画面に出ない＝誰もONにできない。
+// ★コストの費目・金額はオーナーから随時教わって、下の COST_ITEMS_ に1件ずつ足していく：
+//     { name:'費目名', amount:金額(数字・元), note:'補足(任意・無ければ省略)' }
+//   足したら必ず index.html の code.js?v= と sw.js の CACHE 名を1つ上げて push すること
+//   （でないとスマホに新しい費目が届かない＝スーパーズコApp_必読.md「キャッシュ」参照）。
+var COST_ITEMS_ = [
+  // 例) { name:'家賃', amount:30000, note:'毎月1日引き落とし' },
+];
+
+var COSTCSS_ =
+  '  .ctwrap { max-width:640px; margin:0 auto; }' +
+  '  .cbtnrow { text-align:center; margin:20px 0 4px; }' +
+  '  #cgo { font-size:1.28rem; font-weight:900; padding:17px 32px; border:0; border-radius:16px;' +
+  '    background:#e0533d; color:#fff; cursor:pointer; box-shadow:0 6px 18px rgba(224,83,61,.42); letter-spacing:.04em; }' +
+  '  #cgo:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(224,83,61,.32); }' +
+  '  .costcard { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:16px; overflow:hidden;' +
+  '    box-shadow:0 6px 18px rgba(0,0,0,.14); margin-top:16px; }' +
+  '  .costcard.hidden { display:none; }' +
+  '  .ctitle { font-size:1.18rem; font-weight:900; padding:16px 18px 4px; }' +
+  '  .csub { color:var(--sub,#64748b); font-size:.86rem; padding:0 18px 10px; }' +
+  '  table.ctab { width:100%; border-collapse:collapse; }' +
+  '  table.ctab th { color:var(--sub,#64748b); font-size:.82rem; font-weight:700; text-align:left; padding:8px 18px; }' +
+  '  table.ctab td { padding:14px 18px; text-align:left; border-top:1px solid var(--line,#e2e8f0); vertical-align:top; }' +
+  '  table.ctab th.amt, table.ctab td.amt { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }' +
+  '  table.ctab td.cname { font-weight:700; }' +
+  '  table.ctab .cnote { color:var(--sub,#64748b); font-size:.78rem; font-weight:400; margin-top:3px; }' +
+  '  table.ctab tr.total td { border-top:2px solid var(--ink,#0f172a); font-weight:900; font-size:1.16rem;' +
+  '    background:rgba(224,83,61,.09); }' +
+  '  .cempty { padding:36px 22px; text-align:center; color:var(--sub,#64748b); line-height:1.8; font-size:.96rem; }';
+
+// 数字を「1,234 元」の見やすい形にする（3桁ごとに区切り＋単位）。
+function _costYen_(n) {
+  var s = String(Math.round(Number(n) || 0));
+  var neg = (s.charAt(0) === '-'); if (neg) s = s.slice(1);
+  var out = '', c = 0;
+  for (var i = s.length - 1; i >= 0; i--) { out = s.charAt(i) + out; if (++c % 3 === 0 && i > 0) out = ',' + out; }
+  return (neg ? '-' : '') + out + ' 元';
+}
+
+/** 台湾トマト 売上・コスト（オーナー専用・開発URL専用）。
+ *  最初は「月間コスト計算」ボタンだけ。押すと COST_ITEMS_ の費目一覧＋合計の表を出す。
+ *  純JS（GAS API不使用）＝①GAS直も②静的アプリも同じこの関数を呼ぶ。 */
+function renderCostPage_(base, staff, dev) {
+  var rows = '', total = 0;
+  for (var i = 0; i < COST_ITEMS_.length; i++) {
+    var it = COST_ITEMS_[i] || {}, amt = Number(it.amount) || 0;
+    total += amt;
+    rows += '<tr><td class="cname">' + esc_(it.name || '') +
+      (it.note ? '<div class="cnote">' + esc_(it.note) + '</div>' : '') + '</td>' +
+      '<td class="amt">' + esc_(_costYen_(amt)) + '</td></tr>';
+  }
+  var body;
+  if (COST_ITEMS_.length === 0) {
+    body = '<div class="cempty">まだ費目が登録されていません。<br>これから1つずつ足していきます。</div>';
+  } else {
+    body = '<table class="ctab"><thead><tr><th>費目</th><th class="amt">金額</th></tr></thead><tbody>' +
+      rows +
+      '<tr class="total"><td>月間コスト合計</td><td class="amt">' + esc_(_costYen_(total)) + '</td></tr>' +
+      '</tbody></table>';
+  }
+  var script =
+    '<script>(function(){' +
+    'var b=document.getElementById("cgo"),c=document.getElementById("ccard");' +
+    'if(b&&c){b.addEventListener("click",function(){c.classList.remove("hidden");' +
+    'try{c.scrollIntoView({behavior:"smooth",block:"start"});}catch(e){}});}' +
+    '})();</script>';
+  return '<style>' + HOMECSS_ + COSTCSS_ + '</style>' +
+    '<div class="home">' +
+      backBar_(base, staff, dev) +
+      '<div class="hhead"><span class="bmark">🍅</span><span class="bname">台湾トマト</span></div>' +
+      '<div class="hsub" style="color:#fff;text-align:center;font-weight:700;margin:0 0 6px;letter-spacing:.06em;">売上・コスト</div>' +
+      '<div class="ctwrap">' +
+        '<div class="cbtnrow"><button id="cgo" type="button">月間コスト計算</button></div>' +
+        '<div id="ccard" class="costcard hidden">' +
+          '<div class="ctitle">🍅 台湾トマト 月間コスト</div>' +
+          '<div class="csub">毎月かかる決まった費用の一覧です。</div>' +
+          body +
+        '</div>' +
+      '</div>' +
+    '</div>' + script;
 }
 
 // ★顧客履歴検索：番号 or 氏名（一部一致OK）で客を探し、今回の予約と過去予約(メモ込み)を見る。
@@ -3574,6 +3668,7 @@ var HOMECSS_ =
 '  .tile.links::before { background:#65a30d; }' +
 '  .tile.ttapp::before { background:#c026d3; }' +
 '  .tile.zenjitsu::before { background:#db2777; }' +
+'  .tile.cost::before { background:#e0533d; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -3587,6 +3682,7 @@ var HOMECSS_ =
 '  .tile.links .ticon { background:rgba(101,163,13,.16); }' +
 '  .tile.ttapp .ticon { background:rgba(192,38,211,.14); }' +
 '  .tile.zenjitsu .ticon { background:rgba(219,39,119,.14); }' +
+'  .tile.cost .ticon { background:rgba(224,83,61,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
