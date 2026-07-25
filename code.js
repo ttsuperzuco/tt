@@ -2154,7 +2154,7 @@ function unaWhen_(s) {
 // モーダルでその場に表示する（LINEに触れない＝既読を付けずに内容確認できる）。
 // 詳細でいつでも中身を見られるので、カード上部の要約は短く（.unaq は2行でクランプ・
 // 直近のやりとり.unath は詳細と重複するので省略）＝PC版の行と同じ見せ方に揃える。
-function unaCard_(r, kind) {
+function unaCard_(r, kind, dev) {
   var name = r.nm || '🆕 新規（番号未設定）';
   var tag = [r.nat, r.sex].filter(Boolean).join('・');
   var search = esc_(((name) + ' ' + (r.q || '')).toLowerCase());
@@ -2170,7 +2170,10 @@ function unaCard_(r, kind) {
   // ★アプリの中から直接LINEを返す欄（事務所PCが reply:true を立てたカードにだけ出す）。
   //   いま立つのは練習用カード（宛先＝オーナー本人）だけ。本物のお客さんのカードへ広げるのは
   //   練習で確かめてから。送ってよい相手かの判断は事務所PC(send_reply.py)が単独で保証する。
-  var box = (r.reply && r.cid)
+  // ★2026-07-25（ユーザー方針）：返信できる本物の画面（返信欄・絵文字・スタンプ・送るボタン）は
+  //   「開発者(dev=1)だけ」に出す。スタッフ・幹部には出さず、情報を見るだけの一歩手前の画面のまま
+  //   にする（これから対話式の返信画面を作り込む間、現場には押せる物を出さない）。＝dev を必須条件に足す。
+  var box = (r.reply && r.cid && dev)
     ? '<div class="unareply" data-cid="' + esc_(r.cid) + '" data-nm="' + esc_(name) + '">' +
         '<textarea class="unartext" rows="3" maxlength="1000" placeholder="ここに返信を打つと、お店の公式LINEから送ります"></textarea>' +
         '<div class="unastamps"></div>' +
@@ -2222,10 +2225,10 @@ function renderUnansweredPage_(d, base, staff, dev) {
   //   0件か）を分けて出し分けない。カードを1枚も置かなければ apply() の集計(nc/no)が自然に0に
   //   なり、#unaperiodempty が自動で表示される（JS側の変更は不要）。
   var custCards = cust.length
-    ? cust.map(function (r) { return unaCard_(r, 'cust'); }).join('\n')
+    ? cust.map(function (r) { return unaCard_(r, 'cust', dev); }).join('\n')
     : '';
   var oursCards = ours.length
-    ? ours.map(function (r) { return unaCard_(r, 'ours'); }).join('\n')
+    ? ours.map(function (r) { return unaCard_(r, 'ours', dev); }).join('\n')
     : '';
 
   return '' +
