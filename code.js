@@ -104,7 +104,7 @@ function doGet(e) {
   try { logAccess_(who, roleName_(staff, dev, who), device, view); } catch (ig) {}
   var html, title;
   if (view === 'conflict') {
-    title = '施術室＆施術者 被り検出';
+    title = '部屋＆担当 被り検出';
     var withNail = (p.nail === '1' || p.nail === 'true');
     try {
       var file = getEventsFile_();
@@ -1400,7 +1400,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
     '</div>' +
   '</div>' +
-  '<h1 class="fit1line">⚠️ 施術室＆施術者 被り検出 <span class="cnt">' + (real + staffConflicts.length) + '件</span>' + nailNote + '</h1>' +
+  '<h1 class="fit1line">⚠️ 部屋＆担当 被り検出 <span class="cnt">' + (real + staffConflicts.length) + '件</span>' + nailNote + '</h1>' +
   bodyCards +
 '</div>' +
 identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
@@ -1444,7 +1444,7 @@ var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="tru
 //   esc_()は\nをエスケープしないので、.tname(white-space:pre-line)でそのまま改行になる。
 var TILE_DEFS_ = [
   { id: 'conflict', cls: 'conflict', view: 'conflict',
-    icon: '<span class="ticon">🛏️</span>', label: '施術室＆施術者\n被り検出' },
+    icon: '<span class="ticon">🛏️</span>', label: '部屋＆担当\n被り検出' },
   { id: 'lt', cls: 'lt', view: 'lt',
     icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'L⇔T\n予約照合' },
   { id: 'uriage', cls: 'uriage', view: 'uriage',
