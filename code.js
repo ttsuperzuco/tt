@@ -2162,8 +2162,12 @@ function unaCard_(r, kind, dev) {
     .filter(Boolean).join('　/　');
   var full = esc_(JSON.stringify(r.full || []));
   var when = unaWhen_((r.full && r.full.length) ? r.full[r.full.length - 1].t : r.t);
+  // ★2026-07-25：会話の小窓に「その場返信」を出すため、相手(cid)と「返信してよいか(canR)」を渡す。
+  //   canR は開発者(dev)かつ事務所PCが返信OK(r.reply)にした会話の時だけ "1"。他の人・他の会話では空。
+  var canR = (r.reply && r.cid && dev) ? '1' : '';
   var detail = '<button type="button" class="unadetail" data-nm="' + esc_(name) +
-    '" data-sub="' + esc_(sub) + '" data-full="' + full + '">🔍 詳細（内容を見る）</button>';
+    '" data-sub="' + esc_(sub) + '" data-full="' + full +
+    '" data-cid="' + esc_(r.cid || '') + '" data-reply="' + canR + '">🔍 詳細（内容を見る）</button>';
   var link = r.url
     ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(r.url) + '">💬 LINEを開く（返信する）</a>'
     : '';
@@ -2260,6 +2264,8 @@ function renderUnansweredPage_(d, base, staff, dev) {
       '<button type="button" class="unamx" id="unaMx" aria-label="閉じる">&times;</button>' +
     '</div>' +
     '<div class="unamlog" id="unaMlog"></div>' +
+    // ★2026-07-25：会話の下にその場返信欄を出す置き場所（開発者かつ返信OKの会話の時だけ中身が入る）。
+    '<div class="unamreply" id="unaMreply"></div>' +
   '</div>' +
 '</div>' +
 UNASCRIPT_;
@@ -2300,6 +2306,7 @@ var UNASCRIPT_ =
 // ―― 詳細モーダル（LINEに触れず全文をここで確認＝PC版ダッシュボードと同じ）――
 'var mask=document.getElementById("unamask");' +
 'var mlog=document.getElementById("unaMlog"),mnm=document.getElementById("unaMnm"),msub=document.getElementById("unaMsub");' +
+'var mreply=document.getElementById("unaMreply");' +
 'function escH(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}' +
 'function openDetail(btn){' +
 '  if(!mask||!mlog)return;' +
@@ -2312,6 +2319,17 @@ var UNASCRIPT_ =
 '      "<div class=\\"unamsg "+side+"\\">"+escH(m.x)+"</div>"+' +
 '      "<span class=\\"unats\\">"+escH(m.t)+"</span></div>";' +
 '  }).join(""):"<div class=\\"unamnote\\">本文がありません（画像・スタンプのみ等）。</div>";' +
+// ★会話の下に「その場返信」欄を出す（開発者かつ返信OKの会話だけ＝data-reply=="1"）。
+// カード側の返信欄と同じ .unareply なので、既存の送信処理(unaSend_)がそのまま効く。
+'  if(mreply){' +
+'    var canR=(btn.getAttribute("data-reply")==="1"), cid=btn.getAttribute("data-cid")||"", nm=btn.getAttribute("data-nm")||"";' +
+'    mreply.innerHTML=(canR&&cid)?' +
+'      "<div class=\\"unareply\\" data-cid=\\""+escH(cid)+"\\" data-nm=\\""+escH(nm)+"\\">"+' +
+'        "<textarea class=\\"unartext\\" rows=\\"2\\" maxlength=\\"1000\\" placeholder=\\"ここに返信を打つと、お店の公式LINEから送ります\\"></textarea>"+' +
+'        "<div class=\\"unarrow\\"><span class=\\"unarnote\\"></span>"+' +
+'          "<button type=\\"button\\" class=\\"unarsend\\">送る</button></div>"+' +
+'      "</div>":"";' +
+'  }' +
 '  mask.classList.add("on");' +
 '  setTimeout(function(){ mlog.scrollTop=mlog.scrollHeight; },0);' +
 '}' +
@@ -2374,7 +2392,12 @@ var UNASCRIPT_ =
 '          tries++;' +
 '          unaCall_({action:"status",id:r.id},function(st){' +
 '            if(st&&st.status==="done"){ btn.disabled=false; if(ta) ta.value="";' +
-'              if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } return; }' +
+'              if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; }' +
+'              var lg=document.getElementById("unaMlog");' +
+'              if(lg && wrap.closest && wrap.closest(".unamodal")){' +
+'                var rw=document.createElement("div"); rw.className="unamsgrow shop";' +
+'                rw.innerHTML="<div class=\\"unamsg shop\\">"+escH(text)+"</div><span class=\\"unats\\">たった今</span>";' +
+'                lg.appendChild(rw); lg.scrollTop=lg.scrollHeight; } return; }' +
 '            if(st&&st.status==="error"){ btn.disabled=false;' +
 '              if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
 '            if(tries>40){ btn.disabled=false;' +
@@ -2700,7 +2723,9 @@ var UNACSS_ =
 '  .unamsg.cli{ background:var(--card); border:1px solid var(--line); border-bottom-left-radius:5px; }' +
 '  .unamsg.shop{ background:#06c755; color:#fff; border-bottom-right-radius:5px; }' +
 '  .unats{ display:block; font-size:11.5px; color:var(--sub); opacity:.8; margin:3px 4px 0; }' +
-'  .unamnote{ color:var(--sub); font-size:15px; padding:8px; }';
+'  .unamnote{ color:var(--sub); font-size:15px; padding:8px; }' +
+'  .unamreply{ padding:0 16px 12px; }' +
+'  .unamreply .unareply{ margin-top:0; }';
 
 /** 空き時間検索（スタッフの手空きから予約可能な時間を探す）。
  *  事務所PCが export_akijikan_super.py で書き出した akijikan.json を読むだけ（GASは計算しない＝
