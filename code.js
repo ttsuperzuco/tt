@@ -2307,7 +2307,10 @@ var UNASCRIPT_ =
 '  if(mnm) mnm.textContent=btn.getAttribute("data-nm")||"";' +
 '  if(msub) msub.textContent=btn.getAttribute("data-sub")||"";' +
 '  mlog.innerHTML=full.length? full.map(function(m){' +
-'    return "<div class=\\"unamsg "+(m.w==="客"?"cli":"shop")+"\\">"+escH(m.x)+"<span class=\\"unats\\">"+escH(m.w)+" "+escH(m.t)+"</span></div>";' +
+'    var side=(m.w==="客"?"cli":"shop");' +
+'    return "<div class=\\"unamsgrow "+side+"\\">"+' +
+'      "<div class=\\"unamsg "+side+"\\">"+escH(m.x)+"</div>"+' +
+'      "<span class=\\"unats\\">"+escH(m.t)+"</span></div>";' +
 '  }).join(""):"<div class=\\"unamnote\\">本文がありません（画像・スタンプのみ等）。</div>";' +
 '  mask.classList.add("on");' +
 '  setTimeout(function(){ mlog.scrollTop=mlog.scrollHeight; },0);' +
@@ -2687,12 +2690,16 @@ var UNACSS_ =
 '  .unamsub{ font-size:14px; color:var(--sub); margin-top:3px; }' +
 '  .unamx{ appearance:none; border:0; background:none; font-size:28px; line-height:1;' +
 '    color:var(--sub); cursor:pointer; padding:2px 6px; }' +
-'  .unamlog{ overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px; }' +
-'  .unamsg{ max-width:85%; padding:11px 14px; border-radius:12px; font-size:17px; line-height:1.6;' +
+'  .unamlog{ overflow-y:auto; padding:14px 16px; display:flex; flex-direction:column; gap:10px;' +
+'    background:var(--bg); }' +
+'  .unamsgrow{ display:flex; flex-direction:column; max-width:82%; }' +
+'  .unamsgrow.cli{ align-self:flex-start; align-items:flex-start; }' +
+'  .unamsgrow.shop{ align-self:flex-end; align-items:flex-end; }' +
+'  .unamsg{ max-width:100%; padding:11px 14px; border-radius:16px; font-size:17px; line-height:1.55;' +
 '    white-space:pre-wrap; overflow-wrap:anywhere; word-break:normal; color:var(--ink); }' +
-'  .unamsg.cli{ align-self:flex-start; background:var(--line); }' +
-'  .unamsg.shop{ align-self:flex-end; background:var(--custbg); border:1px solid var(--cust); }' +
-'  .unats{ display:block; font-size:12.5px; color:var(--sub); opacity:.85; margin-top:6px; }' +
+'  .unamsg.cli{ background:var(--card); border:1px solid var(--line); border-bottom-left-radius:5px; }' +
+'  .unamsg.shop{ background:#06c755; color:#fff; border-bottom-right-radius:5px; }' +
+'  .unats{ display:block; font-size:11.5px; color:var(--sub); opacity:.8; margin:3px 4px 0; }' +
 '  .unamnote{ color:var(--sub); font-size:15px; padding:8px; }';
 
 /** 空き時間検索（スタッフの手空きから予約可能な時間を探す）。
