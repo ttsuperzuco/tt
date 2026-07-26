@@ -171,7 +171,7 @@
       //   最大24時間チェックしないことがある＝普通に開き直すだけでは新しくならない場合がある。
       //   対策：①毎回開いた瞬間に明示的に更新確認(update())を強制②新しい保存係に交代した瞬間
       //   (controllerchange)に1回だけ自動で画面を作り直す(location.reload)。人の操作は不要。
-      navigator.serviceWorker.register('sw.js').then(function (reg) {
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
         try { reg.update(); } catch (e) {}
       }).catch(function () {});
       var szReloaded = false;

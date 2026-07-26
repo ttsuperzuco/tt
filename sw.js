@@ -17,7 +17,7 @@
 //
 // 【困った時】アプリが古いまま直らない等があれば、この保管を丸ごと捨てればよい
 //   （下の CACHE の名前を変えて配る＝古い保管は自動で消える）。
-var CACHE = 'ttzuko-shell-v27';   // ★2026-07-25：台湾トマト 売上・コスト画面を追加したので保管を作り直す
+var CACHE = 'ttzuko-shell-v28';   // ★2026-07-26：入口/本体を毎回ネットから取り直す(no-store)ように変更＝古い保管を捨てる
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();   // 新しい保管係にすぐ交代する
@@ -51,8 +51,13 @@ self.addEventListener('fetch', function (e) {
   var isShell = isNav || /\.(html|js)$/.test(url.pathname);
 
   if (isShell) {
+    // ★2026-07-26：入口(index.html)や本体(*.js)を、端末やブラウザの一時保存(HTTPキャッシュ)を
+    //   一切通さず必ずネットの最新から取り直す(no-store)。以前は普通のfetchだったため、
+    //   GitHub Pagesが付ける「10分は使い回してよい」の一時保存を先に返してしまい、直したのに
+    //   スマホで古い入口が開き→古い本体を読む＝「すぐ反映されない」原因になっていた。
+    //   ネット不通の時だけ手元の保管を出す（保険）。
     e.respondWith(
-      fetch(req).then(function (res) {
+      fetch(req.url, { cache: 'no-store' }).then(function (res) {
         if (res && res.ok && res.type === 'basic') {
           var copy = res.clone();
           caches.open(CACHE).then(function (c) { try { c.put(key, copy); } catch (e2) {} });
