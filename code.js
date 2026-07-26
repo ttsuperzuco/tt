@@ -4158,14 +4158,15 @@ var CSS_ =
 '    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .smvbtn:active { transform:translateY(1px); }' +
 '  .smvbtn:disabled { opacity:.4; }' +
-'  .mvng { grid-column:1/-1; font-size:.8rem; color:var(--sub); align-self:center; }' +
+'  .mvng { grid-column:1/-1; font-size:1.5rem; font-weight:900; color:var(--real);' +
+'    align-self:center; text-align:center; padding:8px 4px; line-height:1.3; }' +
 '  .mvstatus { margin-top:8px; padding:11px 12px; border-radius:10px; font-size:.95rem; font-weight:700; }' +
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .mvstatus.ok { background:#dcfce7; color:#166534; }' +
 '  .mvstatus.err { background:#fee2e2; color:#991b1b; }' +
 '  .rspanel { margin:8px 0 0; background:var(--bg); border:1px solid var(--line);' +
 '    border-radius:10px; padding:8px 10px; }' +
-'  .rstitle { font-size:.8rem; font-weight:700; color:var(--sub); margin-bottom:6px; }' +
+'  .rstitle { font-size:1.05rem; font-weight:700; color:var(--sub); margin-bottom:6px; }' +
 '  .rstat { display:flex; align-items:flex-start; flex-wrap:nowrap; gap:6px; padding:4px 0; }' +
 '  .rstat + .rstat { border-top:1px dashed var(--line); }' +
 // ★部屋名の長さ(FREEDOM/HAPPY/LUCKY/STAR/福)がバラバラで幅が揃わず、右の空き時間の
@@ -4177,9 +4178,9 @@ var CSS_ =
 //   grid(2列固定)だと2個目が「残り幅の半分の位置」まで飛ぶ→flexにして隣に詰めて並べるだけにする。
 '  .rchips { flex:1 1 auto; min-width:0; display:flex; flex-wrap:wrap; gap:5px; }' +
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
-'    border-radius:7px; padding:2px 8px; font-size:.82rem; font-variant-numeric:tabular-nums;' +
+'    border-radius:7px; padding:3px 9px; font-size:1.07rem; font-variant-numeric:tabular-nums;' +
 '    white-space:nowrap; }' +
-'  .rchips .none { color:var(--real); font-size:.82rem; font-weight:700; }' +
+'  .rchips .none { color:var(--real); font-size:1.07rem; font-weight:700; }' +
 // 自前の確認ポップアップ（ブラウザ標準confirm/alertの代わり＝ドメイン名を表示しない）。
 '  .ccmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex;' +
 '    align-items:center; justify-content:center; z-index:200; padding:20px; }' +
