@@ -4154,7 +4154,7 @@ var CSS_ =
 '    border:0; border-radius:999px; padding:24px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .mvbtn:active { transform:translateY(1px); }' +
 '  .mvbtn:disabled { opacity:.4; }' +
-'  .smvbtn { font-size:.92rem; font-weight:800; color:#fff; background:var(--sc,#7c3aed);' +
+'  .smvbtn { font-size:1.6rem; font-weight:800; color:#fff; background:var(--sc,#7c3aed);' +   /* ★2026-07-26 ボタンの大きさに合わせて文字・果物マークを大きく（オーナー指定） */
 '    border:0; border-radius:999px; padding:24px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .smvbtn:active { transform:translateY(1px); }' +
 '  .smvbtn:disabled { opacity:.4; }' +
