@@ -4164,7 +4164,7 @@ var CSS_ =
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .mvstatus.ok { background:#dcfce7; color:#166534; }' +
 '  .mvstatus.err { background:#fee2e2; color:#991b1b; }' +
-'  .rspanel { margin:8px 0 0; background:var(--bg); border:1px solid var(--line);' +
+'  .rspanel { margin:8px 0 0; background:#0a1740; border:1px solid #1e2f66;' +   /* ★2026-07-26 濃い深いブルー（オーナー指定） */
 '    border-radius:10px; padding:8px 10px; }' +
 '  .rstitle { font-size:1.37rem; font-weight:800; color:var(--sub); margin-bottom:6px; }' +
 '  .rstat { display:flex; align-items:flex-start; flex-wrap:nowrap; gap:6px; padding:4px 0; }' +
@@ -4176,7 +4176,7 @@ var CSS_ =
 '    font-size:.95rem; display:inline-block; }' +
 // ★2個目以降の空き時間が右端の列まで飛んで離れて見えていた不具合を修正（2026-07-16再指摘）。
 //   grid(2列固定)だと2個目が「残り幅の半分の位置」まで飛ぶ→flexにして隣に詰めて並べるだけにする。
-'  .rchips { flex:1 1 auto; min-width:0; display:flex; flex-wrap:wrap; gap:5px; }' +
+'  .rchips { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:5px; }' +   /* ★2026-07-26 全員たて並び（オーナー指定・横並びに揃えない） */
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
 '    border-radius:7px; padding:3px 9px; font-size:1.39rem; font-weight:800; font-variant-numeric:tabular-nums;' +
 '    white-space:nowrap; }' +
