@@ -1355,7 +1355,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
             '<div class="clineDate fit1line">' + esc_(jpDateWeekday_(x.date)) + ' ' + esc_(x.overlap_time) + '</div>' +
             '<div class="clineRoom staffLine">' +
               '<span class="staffpill" style="--sc:' + sc + '">' + esc_(pill) + '</span>' +
-              '<span class="cmsg">が同じ時間に<br>2件を掛け持ちしています</span>' +
+              '<span class="cmsg">が同じ時間に2件を掛け持ちしています</span>' +
             '</div>' +
           '</div>' +
           (x.dup_suspect ? '<span class="dup">⚠️同一人物の疑い(二重入力?)</span>' : '') +
@@ -4066,15 +4066,16 @@ var CSS_ =
 '  h2.sec { color:#fff; font-size:1.25rem; margin:6px 0 12px; font-weight:900;' +
 '    border-bottom:2px solid rgba(255,255,255,.35); padding-bottom:5px; }' +
 '  h2.sec .cnt { color:#ff8fb3; font-weight:900; }' +
-'  .staffpill { background:var(--sc,#7c3aed); color:#fff; font-weight:900; font-size:1.3rem;' +
-'    padding:14px 24px; border-radius:999px; display:inline-flex; align-items:center; line-height:1; }' +
-'  .staffLine { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }' +
-'  .cmsg { font-weight:900; font-size:1.6rem; line-height:1.25; }' +
+'  .staffpill { flex:none; background:var(--sc,#7c3aed); color:#fff; font-weight:900; font-size:1.2rem;' +
+'    padding:14px 16px; border-radius:999px; display:inline-flex; align-items:center; line-height:1; }' +
+'  .staffLine { display:flex; align-items:center; gap:10px; flex-wrap:nowrap; }' +
+'  .cmsg { flex:1 1 auto; min-width:0; font-weight:900; font-size:1.2rem; line-height:1.3; }' +
 '  .sroom { margin-left:8px; background:var(--rc,#64748b); color:#fff; font-weight:800;' +
 '    font-size:.8rem; padding:2px 10px; border-radius:999px; vertical-align:middle; }' +
 // ★人かぶりカードで各予約の左に置く小さな部屋チップ（担当絵文字用の .ab は大きすぎて時間を押し出すため別に用意）。
 '  .lroom { flex:none; margin-right:8px; background:var(--rc,#64748b); color:#fff; font-weight:800;' +
-'    font-size:.95rem; padding:3px 11px; border-radius:999px; white-space:nowrap; }' +
+'    font-size:1rem; padding:13px 14px; border-radius:999px; white-space:nowrap;' +
+'    display:inline-flex; align-items:center; line-height:1; }' +
 '  .card-h { display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:6px; }' +
 // ★2026-07-16：日付+時刻／施術室名+説明文の2行を、それぞれ横幅いっぱいまで大きく見せる。
 //   .fit1lineは開始時にわざと大きめのfont-sizeを振っておき、下のFIT_ONE_LINE_JS_が
