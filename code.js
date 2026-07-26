@@ -1144,7 +1144,7 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr, who
       ' style="--rc:' + roomColor_(name) + '">' + esc_(name) + '</button>';
   }
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
-    : (!anyFree ? '<span class="mvng">その時間、空いている部屋がありません</span>' : '');
+    : (!anyFree ? '<span class="mvng">空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
     '<div class="mvlabel fit1line">移動先の部屋を選んでね(下のボタンを押す）</div>' +
     '<div class="mvhint fit1line">※空いている施術室のみ表示しています</div>' +
@@ -1193,12 +1193,12 @@ function roomStatusPanel_(date, roomBusyForDate) {
     var busy = (roomBusyForDate && roomBusyForDate[name]) || [];
     var gaps = freeGaps_(busy, DAY_WIN_S_, DAY_WIN_E_);
     var chips = gaps.length
-      ? gaps.map(function (iv) { return '<span class="slot">' + toHm_(iv[0]) + '-' + toHm_(iv[1]) + '</span>'; }).join('')
+      ? gaps.map(function (iv) { return '<span class="slot free">空き ' + toHm_(iv[0]) + '-' + toHm_(iv[1]) + '</span>'; }).join('')
       : '<span class="none">空きなし</span>';
     return '<div class="rstat"><span class="room" style="--rc:' + roomColor_(name) + '">' +
       esc_(shortRoomName_(name)) + '</span><span class="rchips">' + chips + '</span></div>';
   }).join('');
-  return '<div class="rspanel" hidden><div class="rstitle">' + esc_(jpMonthDay_(date)) + 'の空いてる時間帯</div>' + rows + '</div>';
+  return '<div class="rspanel" hidden><div class="rstitle">' + esc_(jpMonthDay_(date)) + 'の部屋の空き状況</div>' + rows + '</div>';
 }
 
 function esc_(s) {
@@ -4151,11 +4151,11 @@ var CSS_ =
 // 部屋マークは横に流さず、必ず2個ずつで改行する（4個なら上2つ・下2つ）＝2026-07-17ユーザー指示。
 '  .mvbtns { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:8px; }' +
 '  .mvbtn { font-size:.92rem; font-weight:800; color:#fff; background:var(--rc,#64748b);' +
-'    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
+'    border:0; border-radius:999px; padding:24px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .mvbtn:active { transform:translateY(1px); }' +
 '  .mvbtn:disabled { opacity:.4; }' +
 '  .smvbtn { font-size:.92rem; font-weight:800; color:#fff; background:var(--sc,#7c3aed);' +
-'    border:0; border-radius:999px; padding:9px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
+'    border:0; border-radius:999px; padding:24px 14px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.18); }' +
 '  .smvbtn:active { transform:translateY(1px); }' +
 '  .smvbtn:disabled { opacity:.4; }' +
 '  .mvng { grid-column:1/-1; font-size:1.5rem; font-weight:900; color:var(--real);' +
