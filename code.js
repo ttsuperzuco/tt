@@ -1353,9 +1353,9 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
         '<header class="card-h">' +
           '<div class="cline">' +
             '<div class="clineDate fit1line">' + esc_(jpDateWeekday_(x.date)) + ' ' + esc_(x.overlap_time) + '</div>' +
-            '<div class="clineRoom fit1line">' +
+            '<div class="clineRoom staffLine">' +
               '<span class="staffpill" style="--sc:' + sc + '">' + esc_(pill) + '</span>' +
-              ' が同じ時間に2件を掛け持ちしています' +
+              '<span class="cmsg">が同じ時間に<br>2件を掛け持ちしています</span>' +
             '</div>' +
           '</div>' +
           (x.dup_suspect ? '<span class="dup">⚠️同一人物の疑い(二重入力?)</span>' : '') +
@@ -4066,8 +4066,10 @@ var CSS_ =
 '  h2.sec { color:#fff; font-size:1.25rem; margin:6px 0 12px; font-weight:900;' +
 '    border-bottom:2px solid rgba(255,255,255,.35); padding-bottom:5px; }' +
 '  h2.sec .cnt { color:#ff8fb3; font-weight:900; }' +
-'  .staffpill { background:var(--sc,#7c3aed); color:#fff; font-weight:900; font-size:1.05rem;' +
-'    padding:4px 16px; border-radius:999px; }' +
+'  .staffpill { background:var(--sc,#7c3aed); color:#fff; font-weight:900; font-size:1.3rem;' +
+'    padding:14px 24px; border-radius:999px; display:inline-flex; align-items:center; line-height:1; }' +
+'  .staffLine { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }' +
+'  .cmsg { font-weight:900; font-size:1.6rem; line-height:1.25; }' +
 '  .sroom { margin-left:8px; background:var(--rc,#64748b); color:#fff; font-weight:800;' +
 '    font-size:.8rem; padding:2px 10px; border-radius:999px; vertical-align:middle; }' +
 // ★人かぶりカードで各予約の左に置く小さな部屋チップ（担当絵文字用の .ab は大きすぎて時間を押し出すため別に用意）。
@@ -4084,8 +4086,9 @@ var CSS_ =
 '  .fit1line { white-space:nowrap; overflow:hidden; min-width:0; }' +
 '  .clineDate { font-weight:900; font-size:2.3rem; }' +
 '  .clineRoom { font-weight:900; font-size:1.9rem; }' +
-'  .room { background:var(--rc); color:#fff; font-weight:800; font-size:1.05rem;' +
-'    padding:4px 16px; border-radius:999px; }' +
+'  .room { background:var(--rc); color:#fff; font-weight:800; font-size:1.3rem;' +
+'    padding:14px 24px; border-radius:999px; display:inline-flex; align-items:center;' +
+'    line-height:1; vertical-align:middle; }' +
 '  .dup { font-size:.95rem; font-weight:800; color:#92400e;' +
 '    background:#fde68a; padding:4px 12px; border-radius:999px; }' +
 '  @media (prefers-color-scheme: dark) { .dup { color:#1c1400; background:#fbbf24; } }' +
@@ -4167,7 +4170,8 @@ var CSS_ =
 // ★部屋名の長さ(FREEDOM/HAPPY/LUCKY/STAR/福)がバラバラで幅が揃わず、右の空き時間の
 //   開始位置が行ごとにズレていた不具合を修正（2026-07-16・「時間が左右バラバラ」との指摘）。
 //   幅を固定して、どの部屋名でも右側(.rchips)が必ず同じ位置から始まるようにする。
-'  .rstat .room { flex:0 0 auto; width:92px; text-align:center; padding:4px 6px; box-sizing:border-box; }' +
+'  .rstat .room { flex:0 0 auto; width:92px; text-align:center; padding:4px 6px; box-sizing:border-box;' +
+'    font-size:.95rem; display:inline-block; }' +
 // ★2個目以降の空き時間が右端の列まで飛んで離れて見えていた不具合を修正（2026-07-16再指摘）。
 //   grid(2列固定)だと2個目が「残り幅の半分の位置」まで飛ぶ→flexにして隣に詰めて並べるだけにする。
 '  .rchips { flex:1 1 auto; min-width:0; display:flex; flex-wrap:wrap; gap:5px; }' +
