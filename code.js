@@ -1252,7 +1252,7 @@ function staffStatusPanel_(date, dayStaff) {
   var rows = (dayStaff || []).map(function (row) {
     var f = row[0], name = row[1], shift = row[2], slots = row[3] || [];
     var chips = slots.length
-      ? slots.map(function (iv) { return '<span class="slot">' + toHm_(iv[0]) + '-' + toHm_(iv[1]) + '</span>'; }).join('')
+      ? slots.map(function (iv) { return '<span class="slot free">空き ' + toHm_(iv[0]) + '-' + toHm_(iv[1]) + '</span>'; }).join('')
       : '<span class="none">空きなし</span>';
     return '<div class="rstat"><span class="staffpill" style="--sc:' + staffColor_(f) + '">' + esc_(f) + esc_(name) + '</span>' +
       '<span class="rchips"><span class="slot" style="opacity:.7">勤務 ' + esc_(shift) + '</span>' + chips + '</span></div>';
@@ -4180,6 +4180,7 @@ var CSS_ =
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
 '    border-radius:7px; padding:3px 9px; font-size:1.39rem; font-weight:800; font-variant-numeric:tabular-nums;' +
 '    white-space:nowrap; }' +
+'  .rchips .slot.free { background:#166534; color:#fff; border-color:#166534; }' +
 '  .rchips .none { color:var(--real); font-size:1.39rem; font-weight:800; }' +
 // 自前の確認ポップアップ（ブラウザ標準confirm/alertの代わり＝ドメイン名を表示しない）。
 '  .ccmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex;' +
