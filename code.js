@@ -4164,7 +4164,7 @@ var CSS_ =
 '  .mvstatus.working { background:#fef9c3; color:#854d0e; }' +
 '  .mvstatus.ok { background:#dcfce7; color:#166534; }' +
 '  .mvstatus.err { background:#fee2e2; color:#991b1b; }' +
-'  .rspanel { margin:8px 0 0; background:#0a1740; border:1px solid #1e2f66;' +   /* ★2026-07-26 濃い深いブルー（オーナー指定） */
+'  .rspanel { margin:8px 0 0; background:var(--bg); border:1px solid var(--line);' +
 '    border-radius:10px; padding:8px 10px; }' +
 '  .rstitle { font-size:1.37rem; font-weight:800; color:var(--sub); margin-bottom:6px; }' +
 '  .rstat { display:flex; align-items:flex-start; flex-wrap:nowrap; gap:6px; padding:4px 0; }' +
@@ -4180,7 +4180,7 @@ var CSS_ =
 '  .rchips .slot { display:inline-block; background:var(--card); border:1px solid var(--line);' +
 '    border-radius:7px; padding:3px 9px; font-size:1.39rem; font-weight:800; font-variant-numeric:tabular-nums;' +
 '    white-space:nowrap; }' +
-'  .rchips .slot.free { background:#166534; color:#fff; border-color:#166534; }' +
+'  .rchips .slot.free { background:#0a1740; color:#fff; border-color:#1e2f66; }' +   /* ★2026-07-26 空きの札を濃い深いブルーに（オーナー指定・元は緑） */
 '  .rchips .none { color:var(--real); font-size:1.39rem; font-weight:800; }' +
 // 自前の確認ポップアップ（ブラウザ標準confirm/alertの代わり＝ドメイン名を表示しない）。
 '  .ccmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex;' +
