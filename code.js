@@ -3835,7 +3835,7 @@ var MOVESCRIPT_ =
 '    window[cb]=function(d){ if(fired) return; fired=true; try{delete window[cb];}catch(e){}' +
 '      var gone=true; try{ var evs=(d&&d.events)||[]; for(var i=0;i<evs.length;i++){ if(evs[i].event_id===evid){ gone=false; break; } } }catch(e2){}' +
 '      if(gone||tries>=60){ doneRefresh_(); } else { setTimeout(chk,1000); } };' +
-'    var s=document.createElement("script"); s.src=EXEC_URL_+"?action=events&callback="+cb+"&cb="+Date.now();' +
+'    var s=document.createElement("script"); s.src=EXEC_URL_+"?action=data&name=events.json&callback="+cb+"&cb="+Date.now();' +
 '    s.onerror=function(){ if(fired) return; fired=true; if(tries>=60){ doneRefresh_(); } else { setTimeout(chk,1000); } };' +
 '    document.body.appendChild(s); }' +
 '  setTimeout(chk,1000);' +
