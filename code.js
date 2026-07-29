@@ -146,6 +146,9 @@ function doGet(e) {
   } else if (view === 'cost') {
     title = '台湾トマト 売上・コスト';                    // ★開発URL(?dev=1)専用。「月間コスト計算」を押すとコスト表を出す（純JS）
     html = renderCostPage_(base, staff, dev);
+  } else if (view === 'timedsend') {
+    title = '時間指定LINE送信';                          // ★開発URL(?dev=1)専用。決めた時刻に文章＋画像を送る予約（純JS）
+    html = renderTimedSendPage_(base, staff, dev);
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -904,7 +907,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'timedsend'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1477,7 +1480,11 @@ var TILE_DEFS_ = [
   // ★台湾トマト 売上・コスト＝オーナー(開発者)専用の内部ツール。開発URL(?dev=1)専用
   //   （kanshi/zenjitsuと同じ。tile_settings.py にも入れない）。押すと「月間コスト計算」ボタン→コスト表。
   { id: 'cost', cls: 'cost', view: 'cost',
-    icon: '<span class="ticon">🍅</span>', label: '台湾トマト\n売上・コスト' }
+    icon: '<span class="ticon">🍅</span>', label: '台湾トマト\n売上・コスト' },
+  // ★時間指定LINE送信＝決めた時刻に文章＋画像を公式LINEから送る予約画面。開発URL(?dev=1)専用
+  //   （kanshi/zenjitsu/costと同じ＝tile_settings.pyに入れないので開発者だけに出る）。PC版と並びをそろえる。
+  { id: 'timedsend', cls: 'timedsend', view: 'timedsend',
+    icon: '<span class="ticon">⏰</span>', label: '時間指定\nLINE送信' }
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
@@ -2008,6 +2015,102 @@ function renderRirekiPage_(base, staff, dev) {
       '</div>' +
       '<div class="rkstatus" id="rkstatus">顧客番号（例 F227・数字だけ 227 でも可）か、お名前の一部で検索。</div>' +
       '<div id="rkres"></div>' +
+    '</div>' +
+  '</div>' +
+  script;
+}
+
+/** 時間指定LINE送信ページ（純JS・GAS API不使用）。開発URL(?dev=1)専用の内部ツール。
+ *  文章・画像・送る日時・送る相手を決めて「予約」を積む。画像は窓口へ base64 で直接書き込み(no-cors)、
+ *  依頼(op=timed_line_send)は JSONP で積む＝事務所PC(intake.py)が受け取り、見張り(watcher.py)が時刻に送る。 */
+function renderTimedSendPage_(base, staff, dev) {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  var KEY = 'kx7Q2p9mVt4Zr8';
+  var css = '.ts{max-width:560px;margin:0 auto;padding:0 6px 48px;text-align:left;}' +
+    '.tslbl{font-weight:800;margin:16px 4px 6px;font-size:16px;}' +
+    '.ts textarea,.ts input[type=text],.ts input[type=date],.ts input[type=time],.ts select{' +
+    'width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;}' +
+    '.ts textarea{min-height:96px;}' +
+    '.tsrow{display:flex;gap:10px;}.tsrow>div{flex:1;}' +
+    '.tsmode{display:block;margin:10px 0 2px;font-size:16px;font-weight:700;}' +
+    '.tssub{margin:0 0 6px 26px;}' +
+    '.tsbanner{padding:10px 12px;border-radius:12px;font-weight:800;margin:6px 4px 4px;font-size:14px;}' +
+    '.tsthumb{margin:8px 2px 0;}.tsthumb img{height:70px;border-radius:8px;margin:0 8px 8px 0;vertical-align:top;box-shadow:0 1px 4px rgba(0,0,0,.2);}' +
+    '.tsgo{display:block;width:100%;margin:22px 0 8px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#0f766e;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
+    '.tsgo:disabled{opacity:.5;}' +
+    '.tsstatus{font-weight:800;color:#0a7;min-height:24px;margin:10px 4px;font-size:15px;}' +
+    '.tsclr{font-size:13px;padding:6px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;margin-top:6px;}';
+  var script =
+  '<script>(function(){' +
+  'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
+  'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
+  'var imgs=[],GROUPS={};' +
+  'var msgEl=document.getElementById("tsmsg"),fileEl=document.getElementById("tsfile"),thumbEl=document.getElementById("tsthumb");' +
+  'var dateEl=document.getElementById("tsdate"),timeEl=document.getElementById("tstime"),codesEl=document.getElementById("tscodes");' +
+  'var groupEl=document.getElementById("tsgroup"),stEl=document.getElementById("tsstatus"),goEl=document.getElementById("tsgo"),banEl=document.getElementById("tsbanner");' +
+  'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
+  'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
+  'function jsonp(params,onR){var cb="__ts"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
+  'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
+  'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
+  'function pushImage(name,obj){return fetch(EXEC+"?action=push&key="+KEY+"&name="+name,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(obj)});}' +
+  'function rnd(){var s="timedsend_img_",c="abcdefghijklmnopqrstuvwxyz0123456789",i;for(i=0;i<12;i++)s+=c[Math.floor(Math.random()*36)];return s+".json";}' +
+  'function two(n){return ("0"+n).slice(-2);}' +
+  'var now=new Date();dateEl.value=now.getFullYear()+"-"+two(now.getMonth()+1)+"-"+two(now.getDate());timeEl.value=two((now.getHours()+1)%24)+":00";' +
+  'function renderThumbs(){thumbEl.innerHTML=imgs.map(function(o){return "<img src=\\"data:"+o.mime+";base64,"+o.b64+"\\">";}).join("")+(imgs.length?"<div><button type=\\"button\\" class=\\"tsclr\\" id=\\"tsimgclr\\">画像を消す</button></div>":"");' +
+  'var cl=document.getElementById("tsimgclr");if(cl)cl.addEventListener("click",function(){imgs=[];fileEl.value="";renderThumbs();});}' +
+  'function addFiles(files){Array.prototype.slice.call(files).forEach(function(f){if(!/^image\\//.test(f.type))return;var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){var mx=1280,w=im.width,h=im.height;if(w>mx||h>mx){if(w>=h){h=Math.round(h*mx/w);w=mx;}else{w=Math.round(w*mx/h);h=mx;}}var cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);var durl=cv.toDataURL("image/jpeg",0.82);imgs.push({b64:durl.split(",")[1],mime:"image/jpeg"});renderThumbs();};im.src=fr.result;};fr.readAsDataURL(f);});}' +
+  'fileEl.addEventListener("change",function(){addFiles(fileEl.files);});' +
+  'function getMode(){var r=document.querySelectorAll("input[name=tsmode]");for(var i=0;i<r.length;i++)if(r[i].checked)return r[i].value;return "person";}' +
+  'function setMode(m){var r=document.querySelectorAll("input[name=tsmode]");for(var i=0;i<r.length;i++)r[i].checked=(r[i].value===m);}' +
+  'codesEl.addEventListener("focus",function(){setMode("person");});' +
+  'groupEl.addEventListener("focus",function(){setMode("group");});' +
+  'jsonp({action:"data",name:"timedsend_groups.json"},function(d){' +
+  'if(d&&d.groups){var o="";for(var i=0;i<d.groups.length;i++){GROUPS[d.groups[i].id]=d.groups[i];o+="<option value=\\""+esc(d.groups[i].id)+"\\">"+esc(d.groups[i].name)+"（"+d.groups[i].count+"人）</option>";}groupEl.innerHTML=o;}' +
+  'if(d&&d.enabled===false){banEl.style.background="#f8d7da";banEl.textContent="いま送信はOFFです。事務所PCの自動監視でONにするまで、予約しても送られません。";}' +
+  'else if(d&&d.practice){banEl.style.background="#fff3cd";banEl.textContent="いまは練習モードです。誰を選んでも、実際にはオーナー本人にしか送りません。";}' +
+  'else if(d){banEl.style.background="#d1e7dd";banEl.textContent="いまは本番モードです。選んだ相手に実際に送られます。";}});' +
+  'var polls=0;function poll(id){polls++;if(polls>30){status("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。",true);goEl.disabled=false;return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}' +
+  'if(r.status==="pending"){setTimeout(function(){poll(id);},1200);return;}' +
+  'if(r.status!=="done"){status("予約できませんでした："+esc(r.result||r.status),true);goEl.disabled=false;return;}' +
+  'status("予約しました。"+esc(r.result||""),false);msgEl.value="";imgs=[];fileEl.value="";renderThumbs();codesEl.value="";goEl.disabled=false;});}' +
+  'function go(){var msg=(msgEl.value||"").trim();if(!msg&&!imgs.length){status("文章か画像のどちらかは必要です。",true);return;}' +
+  'var dv=dateEl.value,tv=timeEl.value;if(!dv||!tv){status("送る日と時刻を入れてください。",true);return;}var send_at=dv+" "+tv;' +
+  'var mode=getMode(),target;' +
+  'if(mode==="person"){var codes=(codesEl.value||"").split(/[\\s,\\u3001\\uFF0C]+/).filter(Boolean);if(!codes.length){status("番号を入れてください（例 M123）。",true);return;}target={type:"person",codes:codes};}' +
+  'else if(mode==="group"){var val=groupEl.value;if(!val){status("グループを選んでください。",true);return;}var g=GROUPS[val];target={type:"tag",tag_id:val,tag_name:g?g.name:""};}' +
+  'else if(mode==="all"){target={type:"all"};}else{target={type:"owner"};}' +
+  'goEl.disabled=true;status("送っています…（画像があると少しかかります）",false);' +
+  'var names=[],ups=imgs.map(function(o){var n=rnd();names.push(n);return pushImage(n,o);});' +
+  'Promise.all(ups).then(function(){' +
+  'jsonp({action:"submit",key:KEY,op:"timed_line_send",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({message:msg,send_at:send_at,target:target,images:names})},' +
+  'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}setTimeout(function(){poll(r.id);},1000);});' +
+  '}).catch(function(){status("画像の送信でつまずきました。もう一度お試しください。",true);goEl.disabled=false;});}' +
+  'goEl.addEventListener("click",go);' +
+  '})();</script>';
+  return '<style>' + HOMECSS_ + css + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">⏰</span><span class="bname">時間指定LINE送信</span></div>' +
+    '<div class="ts">' +
+      '<div class="tsbanner" id="tsbanner">読み込み中…</div>' +
+      '<div class="tslbl">送る文章（画像だけ送る時は空でもOK）</div>' +
+      '<textarea id="tsmsg" placeholder="お客様へのメッセージ"></textarea>' +
+      '<div class="tslbl">送る画像</div>' +
+      '<input type="file" id="tsfile" accept="image/*" multiple>' +
+      '<div class="tsthumb" id="tsthumb"></div>' +
+      '<div class="tslbl">送る日時</div>' +
+      '<div class="tsrow"><div><input type="date" id="tsdate"></div><div><input type="time" id="tstime"></div></div>' +
+      '<div class="tslbl">送る相手</div>' +
+      '<label class="tsmode"><input type="radio" name="tsmode" value="person" checked> 個人に送る（番号 例 M123）</label>' +
+      '<div class="tssub"><input type="text" id="tscodes" placeholder="M123, F45（カンマや空白で複数可）"></div>' +
+      '<label class="tsmode"><input type="radio" name="tsmode" value="group"> グループに送る</label>' +
+      '<div class="tssub"><select id="tsgroup"><option value="">（グループ一覧を読み込み中…）</option></select></div>' +
+      '<label class="tsmode"><input type="radio" name="tsmode" value="all"> やり取りのある全員</label>' +
+      '<label class="tsmode"><input type="radio" name="tsmode" value="owner"> オーナー本人だけ（練習・確認用）</label>' +
+      '<button type="button" class="tsgo" id="tsgo">この内容で予約する</button>' +
+      '<div class="tsstatus" id="tsstatus">決めた時刻に、選んだ相手へ自動で送ります。</div>' +
     '</div>' +
   '</div>' +
   script;
