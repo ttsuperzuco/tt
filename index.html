@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260726move"></script>
-<script src="code.js?v=20260727refresh"></script>
+<script src="code.js?v=20260730timedsend"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -406,6 +406,9 @@
   //   （「月間コスト計算」ボタン→コスト表の表示は renderCostPage_ 内スクリプトが行う）。
   function showCost() { mount(renderCostPage_(base, staff, dev)); }
 
+  // ★時間指定LINE送信＝開発URL専用。決めた時刻に文章＋画像を送る予約（renderTimedSendPage_ 内スクリプトが窓口へ依頼）。
+  function showTimedSend() { mount(renderTimedSendPage_(base, staff, dev)); }
+
   // ホーム：権限(perms)＋選んだ名前(who)で出し分け（renderHomePage_は code.js＝GASと同一）。
   function showHome(perms, order) {
     mount(renderHomePage_({ perms: perms || (typeof defaultPerms_==='function' ? defaultPerms_() : null),
@@ -559,6 +562,7 @@
     else if (v === 'kanshi') showKanshi();
     else if (v === 'zenjitsu') showZenjitsu();
     else if (v === 'cost') showCost();
+    else if (v === 'timedsend') showTimedSend();
     else if (v === 'rireki') showRireki();
     else if (v === 'conflict') showConflict();
     else { showHome(perms, order); prefetchForHome_(allow); }
