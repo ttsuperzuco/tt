@@ -330,13 +330,30 @@
     }
   }
 
+  // ★記入漏れ画面は「開いている間だけ」15秒ごとに取り直す（2026-07-30）。
+  //   スタッフがTimeTreeに入れた予約は、見張り→書き出しが数秒で記入漏れから外すので、
+  //   ここで取り直せば入れた直後にその1件がスッと消える。中身が同じ時は描き直さない（ちらつき防止）。
+  var __ltTimer = null, __ltLast = null;
   function showLt() {
+    if (__ltTimer) { clearInterval(__ltTimer); __ltTimer = null; }
+    function draw(payload) {
+      if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
+      var key = JSON.stringify(payload.action || []);   // 記入漏れの一覧が変わった時だけ描き直す
+      if (key === __ltLast) return;
+      __ltLast = key;
+      mount(renderLtPage_(payload, base, staff, dev));
+    }
     showPrefetchable_('lt', function (payload) {
-      try {
-        if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
-        mount(renderLtPage_(payload, base, staff, dev));
-      } catch (e) { fail('描画エラー：' + e); }
+      try { draw(payload); } catch (e) { fail('描画エラー：' + e); }
     });
+    __ltTimer = setInterval(function () {
+      var cb = '__ltRe_' + Date.now();
+      window[cb] = function (p) { try { delete window[cb]; } catch (e) {} try { if (p && !p.error) draw(p); } catch (e) {} };
+      var s = document.createElement('script');
+      s.src = EXEC + '?action=data&name=lt_match.json&callback=' + cb + '&cb=' + Date.now();
+      s.onerror = function () {};
+      document.body.appendChild(s);
+    }, 15000);
   }
 
   function renderUriagePayload_(payload) {
