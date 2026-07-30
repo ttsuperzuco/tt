@@ -1855,7 +1855,8 @@ function renderCostPage_(base, staff, dev) {
 // ★出している広告はオーナーから教わって、下の ADS_INSTA_ に1件ずつ足す：
 //     { name:'広告名', nat:'tw'|'jp'(台湾人/日本人), sex:'m'|'f'(男性/女性),
 //       from:'YYYY-MM-DD'(開始日), to:null(継続中) または 'YYYY-MM-DD'(終了日),
-//       day:1日の予算(数字・台湾ドル/元), img:'ファイル名.jpg'(koukoku_img/内) または null }
+//       day:1日の予算(数字・台湾ドル/元), img:'ファイル名.jpg'(koukoku_img/内) または null,
+//       target:'狙っているお客さん'(インスタの「オーディエンス」をそのまま。例 男性・23〜52歳・台北市／新北市) }
 //   ・国籍×性別の表（日本人/台湾人 × 男性/女性）に、今出している(継続中)広告の金額を合算して出す。
 //     小計（日本人だけ・台湾人だけ・男性だけ・女性だけ）と総合計も自動。1日あたり／1か月あたりを切替。
 //   ・広告ごとの明細＝画像・対象・期間（いつからいつまで）・これまで使った額（1日予算×日数）・1日の予算。
@@ -1866,7 +1867,8 @@ var KOUKOKU_IMG_BASE_ = 'https://ttsuperzuco.github.io/tt/koukoku_img/';
 var ADS_INSTA_ = [
   // 2026-07-30 オーナーから：台湾人男性向け・7/1〜継続中・1日97元
   { name: '純正日本男士 無痛除毛（台北公館）', nat: 'tw', sex: 'm',
-    from: '2026-07-01', to: null, day: 97, img: 'ad_tw_male_1.png' }
+    from: '2026-07-01', to: null, day: 97, img: 'ad_tw_male_1.png',
+    target: '男性・23〜52歳・台北市／新北市' }
 ];
 
 var KOUKOKUCSS_ =
@@ -1901,6 +1903,8 @@ var KOUKOKUCSS_ =
   '  .kkname { font-weight:800; font-size:1.02rem; align-self:end; }' +
   '  .kktag { font-size:.75rem; font-weight:800; padding:2px 9px; border-radius:999px;' +
   '    align-self:start; justify-self:end; white-space:nowrap; }' +
+  '  .kktarget { grid-column:2 / span 2; color:var(--ink,#0f172a); font-size:.82rem; font-weight:700;' +
+  '    background:rgba(124,58,237,.10); border-radius:8px; padding:5px 9px; margin:2px 0; }' +
   '  .kkper { color:var(--sub,#64748b); font-size:.82rem; }' +
   '  .kkspend { justify-self:end; text-align:right; font-size:.82rem; color:var(--sub,#64748b);' +
   '    grid-column:2 / span 2; }' +
@@ -1984,6 +1988,7 @@ function renderKoukokuPage_(base, staff, dev) {
         '<div class="kkad">' + thumb +
         '<div class="kkname">' + esc_(ad.name || '') + '</div>' +
         '<div class="kktag" style="background:' + COL[kk] + '22;color:' + COL[kk] + '">' + CAT[kk] + '</div>' +
+        (ad.target ? '<div class="kktarget">🎯 対象：' + esc_(ad.target) + '</div>' : '') +
         '<div class="kkper">' + per + '</div>' +
         '<div class="kkspend">これまで <b>' + esc_(_costYen_(spend)) + '</b> ／ 1日 ' + esc_(_costYen_(Number(ad.day) || 0)) + '</div>' +
         '</div>';
