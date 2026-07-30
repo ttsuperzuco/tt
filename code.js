@@ -147,8 +147,8 @@ function doGet(e) {
     title = '台湾トマト 売上・コスト';                    // ★開発URL(?dev=1)専用。「月間コスト計算」を押すとコスト表を出す（純JS）
     html = renderCostPage_(base, staff, dev);
   } else if (view === 'koukoku') {
-    title = '広告費管理';                                // ★開発URL(?dev=1)専用。国籍×性別の広告費＋広告ごとの明細（純JS）
-    html = renderKoukokuPage_(base, staff, dev);
+    title = '広告費管理';                                // ★開発URL(?dev=1)専用。自動で読み取った広告ごとの実額・成果
+    html = renderKoukoku_(base, staff, dev);
   } else if (view === 'timedsend') {
     title = '時間指定LINE送信';                          // ★開発URL(?dev=1)専用。決めた時刻に文章＋画像を送る予約（純JS）
     html = renderTimedSendPage_(base, staff, dev);
@@ -1824,211 +1824,105 @@ function renderCostPage_(base, staff, dev) {
     '</div>' + script;
 }
 
-// ====== 広告費管理 ／ インスタグラム広告（view=koukoku・開発URL専用／2026-07-30追加） ======
-// ★開発URL(?dev=1)専用＝オーナー(開発者)だけが見られる内部ツール（cost/kanshi/zenjitsuと同じ）。
-//   tile_settings.py の TILES には入れない＝人ごとの権限画面に出ない＝誰もONにできない。
-// ★出している広告はオーナーから教わって、下の ADS_INSTA_ に1件ずつ足す：
-//     { name:'広告名', nat:'tw'|'jp'(台湾人/日本人), sex:'m'|'f'(男性/女性),
-//       from:'YYYY-MM-DD'(開始日), to:null(継続中) または 'YYYY-MM-DD'(終了日),
-//       day:1日の予算(数字・台湾ドル/元), img:'ファイル名.jpg'(koukoku_img/内) または null,
-//       target:'狙っているお客さん'(インスタの「オーディエンス」をそのまま。例 男性・23〜52歳・台北市／新北市) }
-//   ・国籍×性別の表（日本人/台湾人 × 男性/女性）に、今出している(継続中)広告の金額を合算して出す。
-//     小計（日本人だけ・台湾人だけ・男性だけ・女性だけ）と総合計も自動。1日あたり／1か月あたりを切替。
-//   ・広告ごとの明細＝画像・対象・期間（いつからいつまで）・これまで使った額（1日予算×日数）・1日の予算。
-//   ★足したら必ず index.html の code.js?v= と sw.js の CACHE 名を1つ上げて push すること
-//     （でないとスマホに新しい広告が届かない＝スーパーズコApp_必読.md「キャッシュ」参照）。
-//   ★広告画像は ttsuperzuco/tt/koukoku_img/ に置く（github.io がそのまま配信＝下の IMG_BASE で参照）。
-var KOUKOKU_IMG_BASE_ = 'https://ttsuperzuco.github.io/tt/koukoku_img/';
-// 1ヶ月＝31日で計算する（オーナー指定・2026-07-30）。「1か月あたり」も下の31日試算もこの日数を使う。
-var KOUKOKU_MONTH_DAYS_ = 31;
-var ADS_INSTA_ = [
-  // 2026-07-30 オーナーから：台湾人男性向け・7/1〜継続中・1日97元
-  { name: '純正日本男士 無痛除毛（台北公館）', nat: 'tw', sex: 'm',
-    from: '2026-07-01', to: null, day: 97, img: 'ad_tw_male_1.png',
-    target: '男性・23〜52歳・台北市／新北市' },
-  // 2026-07-30 オーナーから：日本人男性向け・7/21〜継続中・1日98元（メンズ脱毛30%OFFサマーキャンペーン）
-  { name: 'メンズ脱毛 最大30%OFF サマーキャンペーン（ピカピカプラン）', nat: 'jp', sex: 'm',
-    from: '2026-07-21', to: null, day: 98, img: 'ad_jp_male_1.png',
-    target: '男性・23〜52歳・新北市／台北市' },
-  // 2026-07-30 オーナーから：日本人女性向け・7/1〜継続中・1日96元（日本の無痛脱毛と美容エステ）
-  { name: '日本の無痛脱毛と美容エステ（台北公館）', nat: 'jp', sex: 'f',
-    from: '2026-07-01', to: null, day: 96, img: 'ad_jp_female_1.png',
-    target: '女性・18〜60歳・台北市／新北市' },
-  // 2026-07-30 オーナーから：日本人男性向け・7/1〜継続中・1日96元（台北公館で 日本のメンズ無痛脱毛を！）
-  { name: '日本のメンズ無痛脱毛を！（台北公館）', nat: 'jp', sex: 'm',
-    from: '2026-07-01', to: null, day: 96, img: 'ad_jp_male_2.png',
-    target: '男性・23〜50歳・新北市／台北市' }
-];
-
+// ====== 広告費管理 ／ インスタグラム広告（view=koukoku・開発URL専用／2026-07-30） ======
+// ★開発URL(?dev=1)専用＝オーナー(開発者)だけが見られる内部ツール（cost/kanshiと同じ）。
+// ★中身は「インスタ広告読み取り」が毎日1回、裏でインスタのダッシュボードから自動で読み取った
+//   実際の数字（状態・使った実額・見られた回数・プロフィール来訪・広告画像）。事務所PCが
+//   koukoku.json に書き出す（画像は写真そのものを埋め込み）→ このアプリはそれを読んで並べるだけ。
+//   ・合計金額は出さない（オーナー指示・2026-07-30）。
+//   ・データの元＝read_ads.py の _export_app（施術室被り検出\web\koukoku.json ＋ Google側へ push）。
+//   ★見た目を直したら index.html の code.js?v= と sw.js の CACHE 名を1つ上げて push すること。
 var KOUKOKUCSS_ =
-  '  .kk { max-width:720px; margin:0 auto; }' +
-  '  .kkseg { display:inline-flex; background:var(--card,#fff); border:1px solid var(--line,#e2e8f0);' +
-  '    border-radius:999px; padding:4px; gap:4px; margin:6px 0 16px; }' +
-  '  .kkseg button { border:0; background:transparent; color:var(--sub,#64748b); font-size:1rem;' +
-  '    font-weight:800; padding:9px 20px; border-radius:999px; cursor:pointer; }' +
-  '  .kkseg button.on { background:#e0533d; color:#fff; }' +
-  '  .kkcard { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:16px;' +
-  '    box-shadow:0 6px 18px rgba(0,0,0,.14); padding:14px 12px 10px; margin-bottom:16px; }' +
-  '  table.kktab { width:100%; border-collapse:collapse; }' +
-  '  table.kktab th, table.kktab td { padding:12px 5px; text-align:center; font-size:1.02rem; }' +
-  '  table.kktab thead th { color:var(--sub,#64748b); font-size:.82rem; font-weight:700;' +
-  '    border-bottom:1px solid var(--line,#e2e8f0); }' +
-  '  table.kktab tbody th { text-align:left; color:var(--ink,#0f172a); font-weight:800;' +
-  '    font-size:.92rem; white-space:nowrap; }' +
-  '  .kkcell { border-radius:10px; font-weight:800; color:#fff; padding:11px 3px; display:block;' +
-  '    font-variant-numeric:tabular-nums; }' +
-  '  .kktot { color:#0ea5e9; font-weight:800; font-variant-numeric:tabular-nums; }' +
-  '  .kkgrand { color:#f59e0b; font-weight:900; font-variant-numeric:tabular-nums; }' +
-  '  table.kktab tr.kktotrow th, table.kktab tr.kktotrow td { border-top:1px solid var(--line,#e2e8f0); }' +
-  '  .kkleg { color:var(--sub,#64748b); font-size:.72rem; text-align:right; margin:4px 2px 8px; }' +
-  '  .kkest { margin:6px 2px 0; padding:12px 14px; border-radius:12px; background:rgba(245,158,11,.12);' +
-  '    border:1px solid rgba(245,158,11,.35); color:var(--ink,#0f172a); font-size:.96rem;' +
-  '    font-weight:700; line-height:1.6; text-align:center; }' +
-  '  .kkest b { color:var(--ink,#0f172a); }' +
-  '  .kkest .kkestday { color:#e0533d; font-weight:900; }' +
-  '  .kkest .kkestbig { color:#f59e0b; font-size:1.35rem; font-weight:900; margin:0 2px; }' +
-  '  .kkest .kkestnote { color:var(--sub,#64748b); font-weight:700; font-size:.8rem; }' +
-  '  .kklist h4 { color:#fff; font-size:1.12rem; font-weight:900; margin:18px 2px 10px; }' +
-  '  .kkad { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:14px; padding:11px 12px;' +
-  '    margin-bottom:10px; display:grid; grid-template-columns:64px 1fr auto; gap:3px 12px;' +
-  '    align-items:center; box-shadow:0 4px 14px rgba(0,0,0,.10); }' +
-  '  .kkthumb { grid-row:1 / span 3; width:64px; height:88px; border-radius:8px; overflow:hidden;' +
-  '    background:var(--line,#e2e8f0); display:flex; align-items:center; justify-content:center; }' +
-  '  .kkthumb img { width:100%; height:100%; object-fit:cover; }' +
-  '  .kkthumb.ph { color:var(--sub,#64748b); font-size:.62rem; text-align:center; padding:4px; line-height:1.35; }' +
-  '  .kkname { font-weight:800; font-size:1.02rem; align-self:end; }' +
-  '  .kktag { font-size:.75rem; font-weight:800; padding:2px 9px; border-radius:999px;' +
-  '    align-self:start; justify-self:end; white-space:nowrap; }' +
-  '  .kktarget { grid-column:2 / span 2; color:var(--ink,#0f172a); font-size:.82rem; font-weight:700;' +
-  '    background:rgba(124,58,237,.10); border-radius:8px; padding:5px 9px; margin:2px 0; }' +
-  '  .kkper { color:var(--sub,#64748b); font-size:.82rem; }' +
-  '  .kkspend { justify-self:end; text-align:right; font-size:.82rem; color:var(--sub,#64748b);' +
-  '    grid-column:2 / span 2; }' +
-  '  .kkspend b { color:var(--ink,#0f172a); font-size:1.02rem; }' +
-  '  .kklive { color:#16a34a; font-weight:800; }' +
-  '  .kkempty { padding:30px 20px; text-align:center; color:var(--sub,#64748b); line-height:1.8; font-size:.96rem; }' +
-  '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.82); font-size:.74rem; text-align:center; line-height:1.6; }';
+  '  .kk { max-width:640px; margin:0 auto; }' +
+  '  .kkbadge { display:inline-block; background:rgba(22,163,74,.16); color:#16a34a; font-size:.8rem;' +
+  '    font-weight:800; padding:4px 12px; border-radius:999px; margin:2px 0 6px; }' +
+  '  .kkwhen { color:#fff; opacity:.85; font-size:.82rem; margin:0 2px 16px; }' +
+  '  .kkad { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:14px; padding:11px;' +
+  '    margin-bottom:11px; display:flex; gap:12px; align-items:center; box-shadow:0 4px 14px rgba(0,0,0,.12); }' +
+  '  .kkth { width:74px; height:74px; border-radius:10px; object-fit:cover; flex:none; }' +
+  '  .kkth.ph { background:var(--line,#e2e8f0); display:flex; align-items:center; justify-content:center;' +
+  '    color:var(--sub,#64748b); font-size:.7rem; }' +
+  '  .kkinfo { flex:1; min-width:0; }' +
+  '  .kkr1 { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:5px; }' +
+  '  .kkst { font-size:.7rem; font-weight:800; padding:2px 9px; border-radius:999px; }' +
+  '  .kklive2 { background:rgba(22,163,74,.16); color:#16a34a; }' +
+  '  .kkstop { background:rgba(148,163,184,.22); color:#64748b; }' +
+  '  .kkspend { font-weight:900; font-size:1.08rem; color:var(--ink,#0f172a); }' +
+  '  .kkspend small { color:var(--sub,#64748b); font-weight:700; font-size:.7rem; }' +
+  '  .kkkv { color:var(--sub,#64748b); font-size:.82rem; }' +
+  '  .kkkv b { color:var(--ink,#0f172a); font-weight:700; }' +
+  '  .kkempty { padding:34px 20px; text-align:center; color:#fff; opacity:.9; line-height:1.9; font-size:.98rem; }' +
+  '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.8); font-size:.72rem; text-align:center; line-height:1.6; }';
 
-// 広告の掲載日数（開始日〜終了日、継続中は今日まで。両端を含める）。②静的アプリでは端末の今日。
-function _adDays_(from, to) {
-  var a = new Date(from + 'T00:00:00');
-  var b = to ? new Date(to + 'T00:00:00') : new Date();
-  var d = Math.floor((b.getTime() - a.getTime()) / 86400000) + 1;
-  return d < 1 ? 1 : d;
-}
-// 赤の濃淡（金額が多いほど濃い）。1日でも1か月でも金額の比は同じなので濃さは共通。
-function _adShade_(v, mx) {
-  var r = mx ? v / mx : 0;
-  return 'background:rgba(224,83,61,' + (0.16 + r * 0.62).toFixed(2) + ')';
-}
-// 表の1マス（1日・1か月の両方の金額を持たせ、切替は下のスクリプトが data- を差し替えるだけ）。
-function _adCell_(v, mx, id) {
-  return '<span class="kkcell kkval" id="' + id + '" style="' + _adShade_(v, mx) + '"' +
-    ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * KOUKOKU_MONTH_DAYS_)) + '">' +
-    esc_(_costYen_(v)) + '</span>';
-}
-function _adTot_(v, id, cls) {
-  return '<td class="' + cls + ' kkval" id="' + id + '"' +
-    ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * KOUKOKU_MONTH_DAYS_)) + '">' +
-    esc_(_costYen_(v)) + '</td>';
-}
+var KOUKOKU_FILENAME = 'koukoku.json';
 
-/** 広告費管理／インスタグラム広告（オーナー専用・開発URL専用）。
- *  国籍×性別の表（今出している広告の金額）＋広告ごとの明細（画像つき）を出す純JS。
- *  ①GAS直も②静的アプリも同じこの関数を呼ぶ（GAS API不使用）。 */
-function renderKoukokuPage_(base, staff, dev) {
-  var CAT = { jm: '日本人・男性', jf: '日本人・女性', tm: '台湾人・男性', tf: '台湾人・女性' };
-  var COL = { jm: '#38bdf8', jf: '#8b5cf6', tm: '#22d3ee', tf: '#ec4899' };
-  // 今出している(継続中)広告の1日あたり金額を、国籍×性別ごとに合算。
-  var S = { jm: 0, jf: 0, tm: 0, tf: 0 };
-  for (var i = 0; i < ADS_INSTA_.length; i++) {
-    var a = ADS_INSTA_[i] || {};
-    if (a.to) continue;                              // 終了した広告は「今の金額」に含めない
-    var k = (a.nat === 'jp' ? 'j' : 't') + (a.sex === 'f' ? 'f' : 'm');
-    S[k] = (S[k] || 0) + (Number(a.day) || 0);
+// ①GAS直アクセス専用：koukoku.json を読んで renderKoukokuPage_ に渡す薄いラッパ（DriveApp使用）。
+function getKoukokuFile_() {
+  var it = DriveApp.getFilesByName(KOUKOKU_FILENAME);
+  var newest = null;
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
-  var mx = Math.max(S.jm, S.jf, S.tm, S.tf);
-  var table =
-    '<div class="kkcard"><table class="kktab">' +
-    '<thead><tr><th></th><th>男性</th><th>女性</th><th>国籍ごと</th></tr></thead><tbody>' +
-    '<tr><th>🇯🇵 日本人</th>' +
-      '<td>' + _adCell_(S.jm, mx, 'kc-jm') + '</td>' +
-      '<td>' + _adCell_(S.jf, mx, 'kc-jf') + '</td>' +
-      _adTot_(S.jm + S.jf, 'kt-jp', 'kktot') + '</tr>' +
-    '<tr><th>🇹🇼 台湾人</th>' +
-      '<td>' + _adCell_(S.tm, mx, 'kc-tm') + '</td>' +
-      '<td>' + _adCell_(S.tf, mx, 'kc-tf') + '</td>' +
-      _adTot_(S.tm + S.tf, 'kt-tw', 'kktot') + '</tr>' +
-    '<tr class="kktotrow"><th>性別ごと</th>' +
-      _adTot_(S.jm + S.tm, 'kt-m', 'kktot') +
-      _adTot_(S.jf + S.tf, 'kt-f', 'kktot') +
-      _adTot_(S.jm + S.jf + S.tm + S.tf, 'kt-all', 'kkgrand') + '</tr>' +
-    '</tbody></table>' +
-    '<div class="kkleg">■ 色が濃い＝1日に使っている金額が多い</div>' +
-    '<div class="kkest">🧮 このペース（1日 合計 <b>' + esc_(_costYen_(S.jm + S.jf + S.tm + S.tf)) + '</b>）で' +
-      '<span class="kkestday">' + KOUKOKU_MONTH_DAYS_ + '日</span>つづけると＝' +
-      '<b class="kkestbig">' + esc_(_costYen_((S.jm + S.jf + S.tm + S.tf) * KOUKOKU_MONTH_DAYS_)) + '</b>' +
-      '<span class="kkestnote">（1ヶ月の目安）</span></div></div>';
+  if (!newest) throw new Error('koukoku.json が見つかりません');
+  return newest;
+}
+function renderKoukoku_(base, staff, dev) {
+  try {
+    var d = JSON.parse(getKoukokuFile_().getBlob().getDataAsString('UTF-8'));
+    return renderKoukokuPage_(d, base, staff, dev);
+  } catch (err) {
+    return renderKoukokuPage_({ ads: [] }, base, staff, dev);
+  }
+}
 
-  var list = '';
-  if (ADS_INSTA_.length === 0) {
-    list = '<div class="kkempty">まだ広告が登録されていません。<br>出している広告を1つずつ足していきます。</div>';
+/** 広告費管理（オーナー専用・開発URL専用）。読み取ったデータ d.ads を並べるだけの純JS。
+ *  ②静的アプリは koukoku.json を JSONP(action=data) で取ってこの関数を直接呼ぶ。 */
+function renderKoukokuPage_(d, base, staff, dev) {
+  d = d || {};
+  var ads = d.ads || [];
+  // 数字を見やすく：1万以上は「◯万」、それ未満は3桁区切り。
+  function fig(n) {
+    n = Number(n) || 0;
+    if (n >= 10000) { var s = Math.round(n / 1000) / 10; return (s % 1 === 0 ? String(s) : s.toFixed(1)) + '万'; }
+    var t = String(n), o = '', c = 0;
+    for (var i = t.length - 1; i >= 0; i--) { o = t.charAt(i) + o; if (++c % 3 === 0 && i > 0) o = ',' + o; }
+    return o;
+  }
+  var list;
+  if (!ads.length) {
+    list = '<div class="kkempty">まだ読み取っていません。<br>毎日1回、自動でインスタから読み取ります。</div>';
   } else {
-    for (var j = 0; j < ADS_INSTA_.length; j++) {
-      var ad = ADS_INSTA_[j] || {};
-      var kk = (ad.nat === 'jp' ? 'j' : 't') + (ad.sex === 'f' ? 'f' : 'm');
-      var day1 = Number(ad.day) || 0;
-      var hasFrom = !!ad.from;
-      var days = hasFrom ? _adDays_(ad.from, ad.to) : 0;
-      var per = !hasFrom
-        ? '開始日 <b style="color:#d97706">未確認</b>（いつからか教えてください）'
-        : (ad.to
-            ? esc_(ad.from) + ' 〜 ' + esc_(ad.to) + '（終了・' + days + '日間）'
-            : esc_(ad.from) + ' 〜 <span class="kklive">継続中</span>（' + days + '日目）');
-      var spendHtml = !day1
-        ? '1日の予算 <b style="color:#d97706">未確認</b>（1日いくらか教えてください）'
-        : (hasFrom
-            ? 'これまで <b>' + esc_(_costYen_(day1 * days)) + '</b> ／ 1日 ' + esc_(_costYen_(day1))
-            : '1日 <b>' + esc_(_costYen_(day1)) + '</b>（これまでの合計は開始日が分かってから）');
-      var thumb = ad.img
-        ? '<div class="kkthumb"><img src="' + KOUKOKU_IMG_BASE_ + esc_(ad.img) + '" alt=""></div>'
-        : '<div class="kkthumb ph">画像<br>これから</div>';
-      list +=
-        '<div class="kkad">' + thumb +
-        '<div class="kkname">' + esc_(ad.name || '') + '</div>' +
-        '<div class="kktag" style="background:' + COL[kk] + '22;color:' + COL[kk] + '">' + CAT[kk] + '</div>' +
-        (ad.target ? '<div class="kktarget">🎯 対象：' + esc_(ad.target) + '</div>' : '') +
-        '<div class="kkper">' + per + '</div>' +
-        '<div class="kkspend">' + spendHtml + '</div>' +
-        '</div>';
-    }
+    list = ads.map(function (a) {
+      var live = (a.status === '配信中');
+      var badge = '<span class="kkst ' + (live ? 'kklive2' : 'kkstop') + '">' + esc_(a.status || '') + '</span>';
+      var img = a.image_data
+        ? '<img class="kkth" src="' + a.image_data + '" alt="">'
+        : '<div class="kkth ph">画像</div>';
+      return '<div class="kkad">' + img +
+        '<div class="kkinfo">' +
+          '<div class="kkr1">' + badge +
+            '<span class="kkspend">' + esc_(_costYen_(a.spend_ntd)) + ' <small>使った実額</small></span></div>' +
+          '<div class="kkkv">見られた <b>' + fig(a.views) + '</b>　プロフィール来訪 <b>' + fig(a.profile_visits) + '</b></div>' +
+        '</div></div>';
+    }).join('');
   }
-
-  var script =
-    '<script>(function(){' +
-    'var mode="day";' +
-    'function apply(){var xs=document.querySelectorAll(".kkval");for(var i=0;i<xs.length;i++){' +
-    'var t=xs[i].getAttribute("data-"+mode);if(t!=null)xs[i].innerHTML=t;}' +
-    'var bd=document.getElementById("kk-day"),bm=document.getElementById("kk-month");' +
-    'if(bd)bd.className=(mode==="day"?"on":"");if(bm)bm.className=(mode==="month"?"on":"");}' +
-    'var bd=document.getElementById("kk-day"),bm=document.getElementById("kk-month");' +
-    'if(bd)bd.addEventListener("click",function(){mode="day";apply();});' +
-    'if(bm)bm.addEventListener("click",function(){mode="month";apply();});' +
-    '})();</script>';
+  var when = d.read_at
+    ? '最終読み取り：' + esc_(d.read_at) + '　／　広告 ' + ads.length + '件'
+    : '広告 ' + ads.length + '件';
 
   return '<style>' + HOMECSS_ + KOUKOKUCSS_ + '</style>' +
     '<div class="home">' +
       backBar_(base, staff, dev) +
       '<div class="hhead"><span class="bmark">📣</span><span class="bname">広告費管理</span></div>' +
-      '<div class="hsub" style="color:#fff;text-align:center;font-weight:700;margin:0 0 10px;letter-spacing:.06em;">インスタグラム広告</div>' +
+      '<div class="hsub" style="color:#fff;text-align:center;font-weight:700;margin:0 0 8px;letter-spacing:.06em;">インスタグラム広告</div>' +
       '<div class="kk">' +
-        '<div class="kkseg"><button id="kk-day" class="on" type="button">1日あたり</button>' +
-          '<button id="kk-month" type="button">1か月あたり</button></div>' +
-        table +
-        '<div class="kklist"><h4>広告ごとの明細</h4>' + list + '</div>' +
-        '<div class="kknote">金額は台湾ドル（元）。使った額は「1日の予算 × 出した日数」で計算しています。</div>' +
+        '<div style="text-align:center;"><span class="kkbadge">✓ 毎日1回 自動で読み取り</span></div>' +
+        '<div class="kkwhen">' + when + '</div>' +
+        list +
+        '<div class="kknote">画像も数字も、自動で読み取った本物です。金額は台湾ドル（元）＝実際に使った額。</div>' +
       '</div>' +
-    '</div>' + script;
+    '</div>';
 }
 
 // ★顧客履歴検索：番号 or 氏名（一部一致OK）で客を探し、今回の予約と過去予約(メモ込み)を見る。

@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260726move"></script>
-<script src="code.js?v=20260730kinyumore5"></script>
+<script src="code.js?v=20260730koukokuauto"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -406,9 +406,20 @@
   //   （「月間コスト計算」ボタン→コスト表の表示は renderCostPage_ 内スクリプトが行う）。
   function showCost() { mount(renderCostPage_(base, staff, dev)); }
 
-  // 広告費管理（開発URL専用）。データ取得は不要＝code.jsの純JSをそのまま描くだけ
-  //   （1日/1か月の切替は renderKoukokuPage_ 内スクリプトが行う）。
-  function showKoukoku() { mount(renderKoukokuPage_(base, staff, dev)); }
+  // 広告費管理（開発URL専用）。事務所PCが書き出した koukoku.json（自動読み取り結果・画像込み）を
+  //   窓口(action=data)で取ってきて、renderKoukokuPage_ で並べる。
+  function showKoukoku() {
+    var cb = '__kk' + Date.now();
+    window[cb] = function (payload) {
+      try { delete window[cb]; } catch (e) {}
+      try { mount(renderKoukokuPage_(payload || { ads: [] }, base, staff, dev)); }
+      catch (e) { fail('描画エラー：' + e); }
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=data&name=koukoku.json&callback=' + cb + '&cb=' + Date.now();
+    s.onerror = function () { try { mount(renderKoukokuPage_({ ads: [] }, base, staff, dev)); } catch (e) {} };
+    document.head.appendChild(s);
+  }
 
   // ★時間指定LINE送信＝開発URL専用。決めた時刻に文章＋画像を送る予約（renderTimedSendPage_ 内スクリプトが窓口へ依頼）。
   function showTimedSend() { mount(renderTimedSendPage_(base, staff, dev)); }
