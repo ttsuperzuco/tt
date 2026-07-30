@@ -1864,6 +1864,8 @@ function renderCostPage_(base, staff, dev) {
 //     （でないとスマホに新しい広告が届かない＝スーパーズコApp_必読.md「キャッシュ」参照）。
 //   ★広告画像は ttsuperzuco/tt/koukoku_img/ に置く（github.io がそのまま配信＝下の IMG_BASE で参照）。
 var KOUKOKU_IMG_BASE_ = 'https://ttsuperzuco.github.io/tt/koukoku_img/';
+// 1ヶ月＝31日で計算する（オーナー指定・2026-07-30）。「1か月あたり」も下の31日試算もこの日数を使う。
+var KOUKOKU_MONTH_DAYS_ = 31;
 var ADS_INSTA_ = [
   // 2026-07-30 オーナーから：台湾人男性向け・7/1〜継続中・1日97元
   { name: '純正日本男士 無痛除毛（台北公館）', nat: 'tw', sex: 'm',
@@ -1903,7 +1905,14 @@ var KOUKOKUCSS_ =
   '  .kktot { color:#0ea5e9; font-weight:800; font-variant-numeric:tabular-nums; }' +
   '  .kkgrand { color:#f59e0b; font-weight:900; font-variant-numeric:tabular-nums; }' +
   '  table.kktab tr.kktotrow th, table.kktab tr.kktotrow td { border-top:1px solid var(--line,#e2e8f0); }' +
-  '  .kkleg { color:var(--sub,#64748b); font-size:.72rem; text-align:right; margin:4px 2px 0; }' +
+  '  .kkleg { color:var(--sub,#64748b); font-size:.72rem; text-align:right; margin:4px 2px 8px; }' +
+  '  .kkest { margin:6px 2px 0; padding:12px 14px; border-radius:12px; background:rgba(245,158,11,.12);' +
+  '    border:1px solid rgba(245,158,11,.35); color:var(--ink,#0f172a); font-size:.96rem;' +
+  '    font-weight:700; line-height:1.6; text-align:center; }' +
+  '  .kkest b { color:var(--ink,#0f172a); }' +
+  '  .kkest .kkestday { color:#e0533d; font-weight:900; }' +
+  '  .kkest .kkestbig { color:#f59e0b; font-size:1.35rem; font-weight:900; margin:0 2px; }' +
+  '  .kkest .kkestnote { color:var(--sub,#64748b); font-weight:700; font-size:.8rem; }' +
   '  .kklist h4 { color:#fff; font-size:1.12rem; font-weight:900; margin:18px 2px 10px; }' +
   '  .kkad { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:14px; padding:11px 12px;' +
   '    margin-bottom:10px; display:grid; grid-template-columns:64px 1fr auto; gap:3px 12px;' +
@@ -1940,12 +1949,12 @@ function _adShade_(v, mx) {
 // 表の1マス（1日・1か月の両方の金額を持たせ、切替は下のスクリプトが data- を差し替えるだけ）。
 function _adCell_(v, mx, id) {
   return '<span class="kkcell kkval" id="' + id + '" style="' + _adShade_(v, mx) + '"' +
-    ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * 30)) + '">' +
+    ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * KOUKOKU_MONTH_DAYS_)) + '">' +
     esc_(_costYen_(v)) + '</span>';
 }
 function _adTot_(v, id, cls) {
   return '<td class="' + cls + ' kkval" id="' + id + '"' +
-    ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * 30)) + '">' +
+    ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * KOUKOKU_MONTH_DAYS_)) + '">' +
     esc_(_costYen_(v)) + '</td>';
 }
 
@@ -1980,7 +1989,11 @@ function renderKoukokuPage_(base, staff, dev) {
       _adTot_(S.jf + S.tf, 'kt-f', 'kktot') +
       _adTot_(S.jm + S.jf + S.tm + S.tf, 'kt-all', 'kkgrand') + '</tr>' +
     '</tbody></table>' +
-    '<div class="kkleg">■ 色が濃い＝1日に使っている金額が多い</div></div>';
+    '<div class="kkleg">■ 色が濃い＝1日に使っている金額が多い</div>' +
+    '<div class="kkest">🧮 このペース（1日 合計 <b>' + esc_(_costYen_(S.jm + S.jf + S.tm + S.tf)) + '</b>）で' +
+      '<span class="kkestday">' + KOUKOKU_MONTH_DAYS_ + '日</span>つづけると＝' +
+      '<b class="kkestbig">' + esc_(_costYen_((S.jm + S.jf + S.tm + S.tf) * KOUKOKU_MONTH_DAYS_)) + '</b>' +
+      '<span class="kkestnote">（1ヶ月の目安）</span></div></div>';
 
   var list = '';
   if (ADS_INSTA_.length === 0) {
