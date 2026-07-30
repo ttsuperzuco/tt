@@ -1240,6 +1240,7 @@ function staffMoveRow_(cal, event, title, oldFruit, oldName, timeStr, who, daySt
   (dayStaff || []).forEach(function (row) {
     var f = row[0], name = row[1], slots = row[3] || [];
     if (f === oldFruit) return;
+    if (f === '🍍') return;   // ★脱毛をやらない担当(パイン🍍=眉/マツエク専門)は付け替え候補に出さない(2026-07-30オーナー・PC版room_conflict_detectと同内容)
     if (range && !slots.some(function (iv) { return iv[0] <= range[0] && range[1] <= iv[1]; })) return;
     anyFree = true;
     btns += '<button type="button" class="smvbtn"' + (hasId ? '' : ' disabled') +
@@ -1597,7 +1598,7 @@ function ltCard_(r) {
   if (!bubbles) bubbles = '<div class="lqnone">会話の記録が見つかりませんでした</div>';
 
   var lineBtn = r.line_url
-    ? '<a class="lqline" href="' + esc_(r.line_url) + '" target="_top" rel="noopener">このお客様のLINEに飛ぶ ↗</a>'
+    ? '<a class="lqline" href="' + esc_(r.line_url) + '" target="_top" rel="noopener">このお客様の<br>LINEに飛ぶ ↗</a>'
     : '';
 
   return '' +
