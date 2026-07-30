@@ -1567,7 +1567,10 @@ function ltCard_(r) {
   var cls = esc_(r.cls || 'add');
   var name = r.name || '（名前不明）';
   var search = esc_(((name) + ' ' + (r.code || '')).toLowerCase());
-  var codeHtml = r.code ? '<span class="lcode">' + esc_(r.code) + '</span>' : '';
+  // 氏名(display_name)は既に「F758廣田貴絵様」のように番号を含むことが多い。
+  // 含む時は番号チップを重ねて出さない（"F758 F758廣田様"の二重表示を防ぐ）。
+  var codeHtml = (r.code && name.indexOf(r.code) < 0)
+    ? '<span class="lcode">' + esc_(r.code) + '</span>' : '';
 
   // 予約内容（契約台帳）。無い時は出さない。
   var treatHtml = r.treatment
