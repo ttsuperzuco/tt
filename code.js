@@ -1872,7 +1872,15 @@ var ADS_INSTA_ = [
   // 2026-07-30 オーナーから：日本人男性向け・7/21〜継続中・1日98元（メンズ脱毛30%OFFサマーキャンペーン）
   { name: 'メンズ脱毛 最大30%OFF サマーキャンペーン（ピカピカプラン）', nat: 'jp', sex: 'm',
     from: '2026-07-21', to: null, day: 98, img: 'ad_jp_male_1.png',
-    target: '男性・23〜52歳・新北市／台北市' }
+    target: '男性・23〜52歳・新北市／台北市' },
+  // 2026-07-30 オーナーから：日本人女性向け・1日96元（日本の無痛脱毛と美容エステ）。★開始日は未確認（from:null）＝オーナーに要確認。
+  { name: '日本の無痛脱毛と美容エステ（台北公館）', nat: 'jp', sex: 'f',
+    from: null, to: null, day: 96, img: 'ad_jp_female_1.png',
+    target: '女性・18〜60歳・台北市／新北市' },
+  // 2026-07-30 オーナーから：日本人男性向け（台北公館で 日本のメンズ無痛脱毛を！）。★1日の予算(day)と開始日(from)は未確認＝オーナーに要確認。
+  { name: '日本のメンズ無痛脱毛を！（台北公館）', nat: 'jp', sex: 'm',
+    from: null, to: null, day: null, img: 'ad_jp_male_2.png',
+    target: '男性・23〜50歳・新北市／台北市' }
 ];
 
 var KOUKOKUCSS_ =
@@ -1981,10 +1989,19 @@ function renderKoukokuPage_(base, staff, dev) {
     for (var j = 0; j < ADS_INSTA_.length; j++) {
       var ad = ADS_INSTA_[j] || {};
       var kk = (ad.nat === 'jp' ? 'j' : 't') + (ad.sex === 'f' ? 'f' : 'm');
-      var days = _adDays_(ad.from, ad.to), spend = (Number(ad.day) || 0) * days;
-      var per = ad.to
-        ? esc_(ad.from) + ' 〜 ' + esc_(ad.to) + '（終了・' + days + '日間）'
-        : esc_(ad.from) + ' 〜 <span class="kklive">継続中</span>（' + days + '日目）';
+      var day1 = Number(ad.day) || 0;
+      var hasFrom = !!ad.from;
+      var days = hasFrom ? _adDays_(ad.from, ad.to) : 0;
+      var per = !hasFrom
+        ? '開始日 <b style="color:#d97706">未確認</b>（いつからか教えてください）'
+        : (ad.to
+            ? esc_(ad.from) + ' 〜 ' + esc_(ad.to) + '（終了・' + days + '日間）'
+            : esc_(ad.from) + ' 〜 <span class="kklive">継続中</span>（' + days + '日目）');
+      var spendHtml = !day1
+        ? '1日の予算 <b style="color:#d97706">未確認</b>（1日いくらか教えてください）'
+        : (hasFrom
+            ? 'これまで <b>' + esc_(_costYen_(day1 * days)) + '</b> ／ 1日 ' + esc_(_costYen_(day1))
+            : '1日 <b>' + esc_(_costYen_(day1)) + '</b>（これまでの合計は開始日が分かってから）');
       var thumb = ad.img
         ? '<div class="kkthumb"><img src="' + KOUKOKU_IMG_BASE_ + esc_(ad.img) + '" alt=""></div>'
         : '<div class="kkthumb ph">画像<br>これから</div>';
@@ -1994,7 +2011,7 @@ function renderKoukokuPage_(base, staff, dev) {
         '<div class="kktag" style="background:' + COL[kk] + '22;color:' + COL[kk] + '">' + CAT[kk] + '</div>' +
         (ad.target ? '<div class="kktarget">🎯 対象：' + esc_(ad.target) + '</div>' : '') +
         '<div class="kkper">' + per + '</div>' +
-        '<div class="kkspend">これまで <b>' + esc_(_costYen_(spend)) + '</b> ／ 1日 ' + esc_(_costYen_(Number(ad.day) || 0)) + '</div>' +
+        '<div class="kkspend">' + spendHtml + '</div>' +
         '</div>';
     }
   }
