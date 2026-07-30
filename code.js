@@ -1572,13 +1572,20 @@ function ltCard_(r) {
   var codeHtml = (r.code && name.indexOf(r.code) < 0)
     ? '<span class="lcode">' + esc_(r.code) + '</span>' : '';
 
-  // 予約内容（契約台帳）。無い時は出さない。
+  // 予約内容（契約台帳）。無い時は出さない。ラベルは2行「予約／内容」。
   var treatHtml = r.treatment
-    ? '<div class="lmeta"><span class="ltag">予約内容</span><span class="ltxt">' + esc_(r.treatment) + '</span></div>'
+    ? '<div class="lmeta"><span class="ltag">予約<br>内容</span><span class="ltxt">' + esc_(r.treatment) + '</span></div>'
     : '';
 
+  // 会話の頭がスタンプ/画像などで始まる時は、その並びを飛ばす（頭にスタンプが並ぶのを消す）。
+  var conv = r.conv || [];
+  var MARK = {'[スタンプ]': 1, '[画像]': 1, '[動画]': 1, '[ファイル]': 1, '[送信取消]': 1};
+  var st = 0;
+  while (st < conv.length && MARK[conv[st].text]) st++;
+  conv = conv.slice(st);
+
   // 根拠のLINE会話（予約日周辺の抜粋）を吹き出しで再現。店＝右(緑)／客＝左(白)。
-  var bubbles = (r.conv || []).map(function (m) {
+  var bubbles = conv.map(function (m) {
     var shop = (m.who === '店');
     var who = shop ? 'TaiwanTomato' : esc_(name);
     var t = esc_(m.t || '');
@@ -1599,7 +1606,7 @@ function ltCard_(r) {
     '<div class="ldt">' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.line_time || '') + '</div>' +
     treatHtml +
     '<div class="lconv">' +
-      '<div class="lconvh"><span class="lconvlab">根拠のLINE会話（抜粋）</span>' + lineBtn + '</div>' +
+      '<div class="lconvh"><span class="lconvlab">根拠のLINE会話</span>' + lineBtn + '</div>' +
       '<div class="lconvb">' + bubbles + '</div>' +
     '</div>' +
   '</article>';
@@ -1648,9 +1655,8 @@ function renderLtPage_(d, base, staff, dev) {
     '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>' +
   '</div>' +
   '<h1>TimeTree予約記入漏れ</h1>' +
-  '<p class="lsub">LINEで予約を受けたのに、TimeTreeにまだ書いていない予約が ' +
+  '<p class="lsub">LINEで予約を受けたのに、TimeTreeにまだ書いてない予約が ' +
     '<span class="lcnt">' + (c.action || 0) + '</span> 件あります</p>' +
-  '<input id="lq" type="search" placeholder="名前・番号でしぼり込み（例: 廣田 / M06）">' +
   '<div id="lcards">' + cards + '</div>' +
   '<details class="loksec">' +
     '<summary>まだ予約前・対応不要 ' + (c.dismissed || 0) + '件 ― タップで開く</summary>' +
@@ -1662,8 +1668,7 @@ function renderLtPage_(d, base, staff, dev) {
     '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th><th>TimeTree予定</th></tr></thead>' +
     '<tbody>' + okRows + '</tbody></table>' +
   '</details>' +
-'</div>' +
-LTSCRIPT_;
+'</div>';
 }
 
 // 数字にカンマ（GAS側で self-completeに。toLocaleStringに頼らない）。
@@ -4167,17 +4172,18 @@ var LTCSS_ =
 '  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
 '  .lname{ font-weight:700; font-size:1.15rem; }' +
 '  .ldt{ font-weight:900; font-size:1.7rem; letter-spacing:.02em; }' +
-'  .lmeta{ display:flex; align-items:stretch; gap:8px; margin:8px 0 14px; }' +
-'  .ltag{ flex:0 0 auto; background:#312e81; color:#c7d2fe; font-size:.72rem; font-weight:700;' +
-'    border-radius:8px; padding:6px 7px; display:flex; align-items:center;' +
-'    writing-mode:vertical-rl; text-orientation:upright; letter-spacing:.08em; }' +
-'  .ltxt{ flex:1 1 auto; font-size:1rem; font-weight:700; display:flex; align-items:center; }' +
+'  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
+'  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
+'    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
+'    justify-content:center; text-align:center; line-height:1.25; letter-spacing:.04em; }' +
+'  .ltxt{ flex:1 1 auto; font-size:1.5rem; font-weight:700; display:flex; align-items:center; }' +
 '  .lconv{ border:2px solid #06C755; border-radius:12px; overflow:hidden; }' +
-'  .lconvh{ display:flex; align-items:center; justify-content:space-between; gap:8px;' +
-'    background:#06C755; padding:8px 10px; }' +
-'  .lconvlab{ font-size:1.02rem; font-weight:900; color:#fff; }' +
-'  .lqline{ flex:0 0 auto; background:#fff; color:#06962f; font-weight:800; font-size:.8rem;' +
-'    text-decoration:none; border-radius:9px; padding:7px 11px; white-space:nowrap; }' +
+'  .lconvh{ display:flex; flex-direction:column; align-items:stretch; gap:9px;' +
+'    background:#06C755; padding:10px 10px 12px; }' +
+'  .lconvlab{ font-size:1.33rem; font-weight:900; color:#fff; }' +
+'  .lqline{ display:block; width:100%; text-align:center; box-sizing:border-box; background:#fff;' +
+'    color:#06962f; font-weight:800; font-size:1.2rem; text-decoration:none; border-radius:11px;' +
+'    padding:14px 12px; }' +
 '  .lconvb{ background:#eef3f6; padding:11px 10px 6px; }' +
 '  @media (prefers-color-scheme:dark){ .lconvb{ background:#0f1a24; } }' +
 '  .lqt{ font-size:.72rem; color:var(--sub); margin:0 2px 1px; }' +
