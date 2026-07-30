@@ -152,6 +152,9 @@ function doGet(e) {
   } else if (view === 'timedsend') {
     title = '時間指定LINE送信';                          // ★開発URL(?dev=1)専用。決めた時刻に文章＋画像を送る予約（純JS）
     html = renderTimedSendPage_(base, staff, dev);
+  } else if (view === 'yoyaku') {
+    title = '予約入力';                                  // ★開発URL(?dev=1)専用。貼って選ぶ→事務所PCが新規予約を作る（純JS）
+    html = renderNewReservationPage_(base, staff, dev);
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -912,7 +915,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'timedsend'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'timedsend', 'yoyaku'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1494,7 +1497,11 @@ var TILE_DEFS_ = [
   // ★時間指定LINE送信＝決めた時刻に文章＋画像を公式LINEから送る予約画面。開発URL(?dev=1)専用
   //   （kanshi/zenjitsu/costと同じ＝tile_settings.pyに入れないので開発者だけに出る）。PC版と並びをそろえる。
   { id: 'timedsend', cls: 'timedsend', view: 'timedsend',
-    icon: '<span class="ticon">⏰</span>', label: '時間指定\nLINE送信' }
+    icon: '<span class="ticon">⏰</span>', label: '時間指定\nLINE送信' },
+  // ★予約入力＝貼って選ぶだけで新規予約を1件作る。開発URL(?dev=1)専用（kanshi/zenjitsu/costと同じ＝
+  //   tile_settings.py に入れないので開発者だけに出る）。登録は事務所PC(edit_worker op=new_reservation)が実行。
+  { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
+    icon: '<span class="ticon">📝</span>', label: '予約\n入力' }
 ];
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
@@ -2191,6 +2198,97 @@ function renderTimedSendPage_(base, staff, dev) {
       '<label class="tsmode"><input type="radio" name="tsmode" value="owner"> オーナー本人だけ（練習・確認用）</label>' +
       '<button type="button" class="tsgo" id="tsgo">この内容で予約する</button>' +
       '<div class="tsstatus" id="tsstatus">決めた時刻に、選んだ相手へ自動で送ります。</div>' +
+    '</div>' +
+  '</div>' +
+  script;
+}
+
+/** 予約入力（スマホ版）。貼って選ぶだけ→事務所PC(edit_worker op=new_reservation)が新規予約を1件作る。
+ *  読み取り(性別自動判定)・予定組み立て(カウンセリング＋施術)・登録はすべて事務所PC側でPC版と同じ
+ *  prep_reservation を使う（スマホは入力を集めて送るだけ）。時間指定LINE送信と同じ「依頼→poll→結果」型。 */
+function renderNewReservationPage_(base, staff, dev) {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  var KEY = 'kx7Q2p9mVt4Zr8';
+  var STAFF = [['1', '🍅', 'トマト'], ['2', '🍊', 'みかん'], ['3', '🫒', 'オリーブ'], ['4', '🥭', 'マンゴー']];
+  var ROOMS = [['FREEDOM', 'FREEDOM'], ['HAPPY', 'HAPPY'], ['LUCKY', 'LUCKY'], ['STAR', 'STAR/福/🇫🇷']];
+  var DURS = [20, 30, 40, 45, 50, 60, 70, 80, 90, 120];
+  function staffPills(grp, defVal) {
+    var h = '';
+    for (var i = 0; i < STAFF.length; i++) {
+      var s = STAFF[i];
+      h += '<button type="button" class="nrpill' + (s[0] === defVal ? ' sel' : '') + '" data-grp="' + grp +
+        '" data-val="' + s[0] + '" style="background:' + staffColor_(s[1]) + '">' + s[1] + ' ' + s[2] + '</button>';
+    }
+    return h;
+  }
+  var roomPills = '';
+  for (var ri = 0; ri < ROOMS.length; ri++) {
+    roomPills += '<button type="button" class="nrpill' + (ri === 0 ? ' sel' : '') + '" data-grp="room" data-val="' +
+      esc_(ROOMS[ri][1]) + '" style="background:' + roomColor_(ROOMS[ri][1]) + '">' + esc_(ROOMS[ri][0]) + '</button>';
+  }
+  var durPills = '';
+  for (var di = 0; di < DURS.length; di++) {
+    durPills += '<button type="button" class="nrpill plain' + (DURS[di] === 60 ? ' sel' : '') +
+      '" data-grp="dur" data-val="' + DURS[di] + '">' + DURS[di] + '</button>';
+  }
+  var genderPills = '<button type="button" class="nrpill plain sel" data-grp="gender" data-val="">自動</button>' +
+    '<button type="button" class="nrpill" data-grp="gender" data-val="M" style="background:#2563eb">男</button>' +
+    '<button type="button" class="nrpill" data-grp="gender" data-val="F" style="background:#db2777">女</button>';
+  var natPills = '<button type="button" class="nrpill plain sel" data-grp="tw" data-val="auto">自動</button>' +
+    '<button type="button" class="nrpill" data-grp="tw" data-val="0" style="background:#64748b">日本</button>' +
+    '<button type="button" class="nrpill" data-grp="tw" data-val="1" style="background:#0d9b6c">台湾 🇹🇼</button>';
+  var css = '.nr{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+    '.nrnote{background:#fff3cd;color:#5b4a00;padding:10px 12px;border-radius:12px;font-weight:700;font-size:13px;margin:6px 4px 4px;}' +
+    '.nrsec{font-weight:800;margin:16px 4px 8px;font-size:16px;}' +
+    '.nr textarea{width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;min-height:120px;}' +
+    '.nrpills{display:flex;flex-wrap:wrap;gap:8px;}' +
+    '.nrpill{border:0;border-radius:999px;padding:12px 18px;font-weight:800;font-size:15px;color:#fff;opacity:.6;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15);}' +
+    '.nrpill.plain{background:#475569;}' +
+    '.nrpill.sel{opacity:1;outline:3px solid #fff;outline-offset:-3px;}' +
+    '.nrgo{display:block;width:100%;margin:24px 0 8px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
+    '.nrgo:disabled{opacity:.5;}' +
+    '.nrstatus{font-weight:800;color:#0a7;min-height:24px;margin:12px 4px;font-size:15px;}';
+  var script = '<script>(function(){' +
+    'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
+    'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
+    'var sel={dur:"60",staff:"1",counsel:"1",room:"FREEDOM",gender:"",tw:"auto"};' +
+    'var stEl=document.getElementById("nrstatus"),goEl=document.getElementById("nrgo"),txtEl=document.getElementById("nrtext");' +
+    'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
+    'function esc(s){return (s==null?"":String(s));}' +
+    'var pills=document.querySelectorAll(".nrpill");' +
+    'for(var i=0;i<pills.length;i++){pills[i].addEventListener("click",function(){var g=this.getAttribute("data-grp"),v=this.getAttribute("data-val");sel[g]=v;' +
+    'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");this.classList.add("sel");});}' +
+    'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
+    'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
+    'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
+    'var polls=0;function poll(id){polls++;if(polls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);goEl.disabled=false;return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}' +
+    'if(r.status==="pending"){setTimeout(function(){poll(id);},1500);return;}' +
+    'if(r.status!=="done"){status("登録できませんでした："+esc(r.result||r.status),true);goEl.disabled=false;return;}' +
+    'status("✅ "+esc(r.result||"登録しました")+" TimeTreeで内容をご確認ください。",false);txtEl.value="";goEl.disabled=false;});}' +
+    'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼ってください。",true);return;}' +
+    'goEl.disabled=true;status("登録を事務所パソコンへ送っています…",false);' +
+    'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,' +
+    'fields:JSON.stringify({text:text,dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw})},' +
+    'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}setTimeout(function(){poll(r.id);},1200);});}' +
+    'goEl.addEventListener("click",go);' +
+    '})();</script>';
+  return '<style>' + HOMECSS_ + css + '</style>' +
+    '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">📝</span><span class="bname">予約入力</span></div>' +
+    '<div class="nr">' +
+      '<div class="nrnote">貼って選ぶだけ。登録は事務所パソコンが動いている時に実行されます。</div>' +
+      '<div class="nrsec">① 予約フォームを貼る</div>' +
+      '<textarea id="nrtext" placeholder="予約フォームの内容をここに貼り付け"></textarea>' +
+      '<div class="nrsec">② 所要時間（分）</div><div class="nrpills">' + durPills + '</div>' +
+      '<div class="nrsec">③ 施術担当</div><div class="nrpills">' + staffPills('staff', '1') + '</div>' +
+      '<div class="nrsec">④ カウンセリング担当（新規・脱毛のときだけ使います）</div><div class="nrpills">' + staffPills('counsel', '1') + '</div>' +
+      '<div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div>' +
+      '<div class="nrsec">⑥ 性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div>' +
+      '<div class="nrsec">⑦ 国籍</div><div class="nrpills">' + natPills + '</div>' +
+      '<button type="button" class="nrgo" id="nrgo">この内容で登録する</button>' +
+      '<div class="nrstatus" id="nrstatus">「自動」のままなら、性別・国籍は事務所パソコンがLINEから調べて入れます。</div>' +
     '</div>' +
   '</div>' +
   script;
@@ -4133,6 +4231,7 @@ var HOMECSS_ =
 '  .tile.zenjitsu::before { background:#db2777; }' +
 '  .tile.cost::before { background:#e0533d; }' +
 '  .tile.koukoku::before { background:#7c3aed; }' +
+'  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -4148,6 +4247,7 @@ var HOMECSS_ =
 '  .tile.zenjitsu .ticon { background:rgba(219,39,119,.14); }' +
 '  .tile.cost .ticon { background:rgba(224,83,61,.16); }' +
 '  .tile.koukoku .ticon { background:rgba(124,58,237,.16); }' +
+'  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
