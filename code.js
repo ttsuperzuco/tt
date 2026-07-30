@@ -1864,9 +1864,9 @@ function renderCostPage_(base, staff, dev) {
 //   ★広告画像は ttsuperzuco/tt/koukoku_img/ に置く（github.io がそのまま配信＝下の IMG_BASE で参照）。
 var KOUKOKU_IMG_BASE_ = 'https://ttsuperzuco.github.io/tt/koukoku_img/';
 var ADS_INSTA_ = [
-  // 2026-07-30 オーナーから：台湾人男性向け・7/1〜継続中・1日97元（画像はこれから koukoku_img/ に置く）
+  // 2026-07-30 オーナーから：台湾人男性向け・7/1〜継続中・1日97元
   { name: '純正日本男士 無痛除毛（台北公館）', nat: 'tw', sex: 'm',
-    from: '2026-07-01', to: null, day: 97, img: null }
+    from: '2026-07-01', to: null, day: 97, img: 'ad_tw_male_1.png' }
 ];
 
 var KOUKOKUCSS_ =
