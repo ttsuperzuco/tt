@@ -330,7 +330,7 @@
     }
   }
 
-  // ★記入漏れ画面は「開いている間だけ」15秒ごとに取り直す（2026-07-30）。
+  // ★記入漏れ画面は「開いている間だけ」5秒ごとに取り直す（2026-07-30）。
   //   スタッフがTimeTreeに入れた予約は、見張り→書き出しが数秒で記入漏れから外すので、
   //   ここで取り直せば入れた直後にその1件がスッと消える。中身が同じ時は描き直さない（ちらつき防止）。
   var __ltTimer = null, __ltLast = null;
@@ -353,7 +353,7 @@
       s.src = EXEC + '?action=data&name=lt_match.json&callback=' + cb + '&cb=' + Date.now();
       s.onerror = function () {};
       document.body.appendChild(s);
-    }, 15000);
+    }, 5000);
   }
 
   function renderUriagePayload_(payload) {
