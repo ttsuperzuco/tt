@@ -116,7 +116,7 @@ function doGet(e) {
       html = renderError_(err, base, staff, dev);
     }
   } else if (view === 'lt') {
-    title = 'L⇔T予約照合';
+    title = 'TimeTree予約記入漏れ';
     html = renderLT_(base, staff, dev);
   } else if (view === 'notice') {
     title = '前日お知らせ 確認';
@@ -1457,7 +1457,7 @@ var TILE_DEFS_ = [
   { id: 'conflict', cls: 'conflict', view: 'conflict',
     icon: '<span class="ticon">🛏️</span>', label: '部屋＆担当\n被り検出' },
   { id: 'lt', cls: 'lt', view: 'lt',
-    icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'L⇔T\n予約照合' },
+    icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'TimeTree\n予約記入漏れ' },
   { id: 'uriage', cls: 'uriage', view: 'uriage',
     icon: '<span class="ticon">💰</span>', label: '売上転記\nTimeTree' },
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
@@ -1639,15 +1639,6 @@ function renderLtPage_(d, base, staff, dev) {
       }).join('\n')
     : '<tr><td colspan="4">なし</td></tr>';
 
-  var okRows = oks.map(function (r) {
-    var srch = esc_(((r.name || '') + ' ' + (r.time || '')).toLowerCase());
-    return '<tr data-search="' + srch + '">' +
-      '<td>' + esc_(r.date || '') + '</td>' +
-      '<td>' + esc_(r.time || '') + '</td>' +
-      '<td>' + esc_(r.name || '') + '</td>' +
-      '<td class="ttc">' + esc_(r.tt_title || '') + '</td></tr>';
-  }).join('\n');
-
   return '' +
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +
@@ -1663,11 +1654,6 @@ function renderLtPage_(d, base, staff, dev) {
     '<summary>まだ予約前・対応不要 ' + (c.dismissed || 0) + '件 ― タップで開く</summary>' +
     '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th><th>状態</th></tr></thead>' +
     '<tbody>' + dismRows + '</tbody></table>' +
-  '</details>' +
-  '<details class="loksec">' +
-    '<summary>TimeTreeと一致済み ' + (c.ok || 0) + '件 ― タップで開く</summary>' +
-    '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th><th>TimeTree予定</th></tr></thead>' +
-    '<tbody>' + okRows + '</tbody></table>' +
   '</details>' +
 '</div>';
 }
@@ -4179,19 +4165,18 @@ var LTCSS_ =
 '    justify-content:center; text-align:center; line-height:1.25; letter-spacing:.04em; }' +
 '  .ltxt{ flex:1 1 auto; font-size:1.5rem; font-weight:700; display:flex; align-items:center; }' +
 '  .lconv{ border:2px solid #06C755; border-radius:12px; overflow:hidden; }' +
-'  .lconvh{ display:flex; flex-direction:column; align-items:stretch; gap:9px;' +
-'    background:#06C755; padding:10px 10px 12px; }' +
+'  .lconvh{ display:flex; flex-direction:row; align-items:center; justify-content:space-between;' +
+'    gap:10px; background:#06C755; padding:9px 10px; }' +
 '  .lconvlab{ font-size:1.33rem; font-weight:900; color:#fff; }' +
-'  .lqline{ display:block; width:100%; text-align:center; box-sizing:border-box; background:#fff;' +
-'    color:#06962f; font-weight:800; font-size:1.2rem; text-decoration:none; border-radius:11px;' +
-'    padding:14px 12px; }' +
+'  .lqline{ flex:0 0 auto; text-align:center; background:#fff; color:#06962f; font-weight:800;' +
+'    font-size:1.2rem; line-height:1.25; text-decoration:none; border-radius:11px; padding:11px 15px; }' +
 '  .lconvb{ background:#eef3f6; padding:11px 10px 6px; }' +
 '  @media (prefers-color-scheme:dark){ .lconvb{ background:#0f1a24; } }' +
 '  .lqt{ font-size:.72rem; color:var(--sub); margin:0 2px 1px; }' +
 '  .lqt.s{ text-align:right; }' +
 '  .lqrow{ display:flex; margin-bottom:9px; }' +
 '  .lqrow.s{ justify-content:flex-end; }' +
-'  .lqb{ max-width:80%; font-size:.94rem; padding:8px 12px; }' +
+'  .lqb{ max-width:80%; font-size:1.12rem; padding:9px 13px; }' +
 '  .lqb.c{ background:#fff; color:#0f172a; border:1px solid #dbe3ea; border-radius:14px 14px 14px 3px; }' +
 '  .lqb.s{ background:#06C755; color:#fff; border-radius:14px 14px 3px 14px; }' +
 '  .lqnone{ color:var(--sub); font-size:13px; padding:6px 2px; }' +
