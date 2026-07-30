@@ -1635,9 +1635,9 @@ function renderLtPage_(d, base, staff, dev) {
     ? dismissed.map(function (r) {
         return '<tr data-search="' + esc_(((r.name || '') + ' ' + (r.code || '')).toLowerCase()) + '">' +
           '<td>' + esc_(r.date || '') + '</td><td>' + esc_(r.line_time || '') + '</td>' +
-          '<td>' + esc_(r.name || '') + '</td><td class="ttc">' + esc_(ltDismLabel_(r)) + '</td></tr>';
+          '<td>' + esc_(r.name || '') + '</td></tr>';
       }).join('\n')
-    : '<tr><td colspan="4">なし</td></tr>';
+    : '<tr><td colspan="3">なし</td></tr>';
 
   return '' +
 '<style>' + LTCSS_ + '</style>' +
@@ -1651,8 +1651,8 @@ function renderLtPage_(d, base, staff, dev) {
     '<span class="lcnt">' + (c.action || 0) + '</span> 件あります</p>' +
   '<div id="lcards">' + cards + '</div>' +
   '<details class="loksec">' +
-    '<summary>まだ予約前・対応不要 ' + (c.dismissed || 0) + '件 ― タップで開く</summary>' +
-    '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th><th>状態</th></tr></thead>' +
+    '<summary>まだ予約前（客の返事待ち） ' + (c.dismissed || 0) + '件 ― タップで開く</summary>' +
+    '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th></tr></thead>' +
     '<tbody>' + dismRows + '</tbody></table>' +
   '</details>' +
 '</div>';
