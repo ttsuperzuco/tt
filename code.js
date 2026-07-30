@@ -1650,11 +1650,6 @@ function renderLtPage_(d, base, staff, dev) {
   '<p class="lsub">LINEで予約を受けたのに、TimeTreeにまだ書いてない予約が ' +
     '<span class="lcnt">' + (c.action || 0) + '</span> 件あります</p>' +
   '<div id="lcards">' + cards + '</div>' +
-  '<details class="loksec">' +
-    '<summary>まだ予約前（客の返事待ち） ' + (c.dismissed || 0) + '件 ― タップで開く</summary>' +
-    '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th></tr></thead>' +
-    '<tbody>' + dismRows + '</tbody></table>' +
-  '</details>' +
 '</div>';
 }
 
