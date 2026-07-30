@@ -1560,69 +1560,54 @@ function renderLT_(base, staff, dev) {
   }
 }
 
-// L⇔T照合の1件カード（PC版ダッシュボード build_report_web.render_card のスマホ版）。
+// TimeTree予約記入漏れの1件カード（スタッフが一目で分かる形。2026-07-30作り替え）。
+//   出す物＝通し番号＋氏名／予約日時／予約内容／根拠のLINE会話(吹き出し・抜粋)＋その客のLINEへ飛ぶボタン。
+//   ★システム内部の言葉（AI判定名・再照合・一致マーク・別人の予定）は出さない（スタッフに不要）。
 function ltCard_(r) {
-  var cls = esc_(r.cls || 'check');
-  var status = esc_(r.status || '');
+  var cls = esc_(r.cls || 'add');
   var name = r.name || '（名前不明）';
-  var search = esc_(((name) + ' ' + (r.code || '') + ' ' + (r.evidence || '')).toLowerCase());
-
+  var search = esc_(((name) + ' ' + (r.code || '')).toLowerCase());
   var codeHtml = r.code ? '<span class="lcode">' + esc_(r.code) + '</span>' : '';
 
-  var chips = (r.chips || []).map(function (c) {
-    return '<span class="lchip ' + (c.on ? 'on' : 'off') + '">' + esc_(c.label) + '</span>';
-  }).join('');
-
-  var evHtml = r.evidence
-    ? '<div class="levi"><span class="lelab">LINE根拠</span><span>' + esc_(r.evidence) + '</span></div>'
+  // 予約内容（契約台帳）。無い時は出さない。
+  var treatHtml = r.treatment
+    ? '<div class="lmeta"><span class="ltag">予約内容</span><span class="ltxt">' + esc_(r.treatment) + '</span></div>'
     : '';
 
-  // AI判定（会話全文を読んだ結果。事務所PC ai_verify_step.py が書いた ai_verdicts.json 由来）。
-  var aiHtml = '';
-  if (r.ai_verdict) {
-    aiHtml = '<div class="lai laiv-' + esc_(r.ai_verdict === '真陽性' ? 'true' : (r.ai_verdict === '偽陽性' ? 'false' : 'check')) + '">' +
-      '<span class="lailab">AI判定：' + esc_(r.ai_verdict) + '</span>' +
-      (r.ai_true ? '<span class="laitrue">本当の予約：' + esc_(r.ai_true) + '</span>' : '') +
-      (r.ai_reason ? '<div class="laireason">' + esc_(r.ai_reason) + '</div>' : '') +
-    '</div>';
-  }
+  // 根拠のLINE会話（予約日周辺の抜粋）を吹き出しで再現。店＝右(緑)／客＝左(白)。
+  var bubbles = (r.conv || []).map(function (m) {
+    var shop = (m.who === '店');
+    var who = shop ? 'TaiwanTomato' : esc_(name);
+    var t = esc_(m.t || '');
+    var meta = shop ? (who + '　' + t) : (t + '　' + who);
+    var side = shop ? 's' : 'c';
+    return '<div class="lqt ' + side + '">' + meta + '</div>' +
+           '<div class="lqrow ' + side + '"><span class="lqb ' + side + '">' + esc_(m.text || '') + '</span></div>';
+  }).join('');
+  if (!bubbles) bubbles = '<div class="lqnone">会話の記録が見つかりませんでした</div>';
 
-  var ttHtml = '<div class="ltt none">TimeTreeに該当予定なし</div>';
-  if (r.tt_title || r.tt_url) {
-    var link = '';
-    if (r.tt_url) {
-      // class="tt" ＋ data-cal/data-ev で TTSCRIPT_（Androidアプリ直起動）が効く。
-      link = '<a class="tt ltlink" target="_top" rel="noopener"' +
-             ' data-cal="' + esc_(r.calendar_id) + '" data-ev="' + esc_(r.event_id) + '"' +
-             ' href="' + esc_(r.tt_url) + '">TimeTreeで開く ↗</a>';
-    }
-    var body = r.tt_body
-      ? '<details class="ltbody"><summary>予定の内容を見る</summary><div>' + esc_(r.tt_body) + '</div></details>'
-      : '';
-    ttHtml = '<div class="ltt">' +
-      '<div class="ltrow"><span class="ltlab">TimeTree</span>' +
-      '<span class="lttime">' + esc_(r.tt_time || '—') + '</span>' + link + '</div>' +
-      '<div class="lttitle">' + esc_(r.tt_title || '') + '</div>' + body +
-    '</div>';
-  }
+  var lineBtn = r.line_url
+    ? '<a class="lqline" href="' + esc_(r.line_url) + '" target="_top" rel="noopener">このお客様のLINEに飛ぶ ↗</a>'
+    : '';
 
   return '' +
-  '<article class="lcard ' + cls + '" data-status="' + status + '" data-search="' + search + '">' +
-    '<div class="lhead">' +
-      '<span class="lbadge ' + cls + '">' + esc_(r.status_label || status) + '</span>' +
-      '<span class="ldate">' + esc_(r.date || '') + '</span>' +
-      '<span class="lname">' + esc_(name) + '</span>' + codeHtml +
+  '<article class="lcard ' + cls + '" data-search="' + search + '">' +
+    '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
+    '<div class="ldt">' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.line_time || '') + '</div>' +
+    treatHtml +
+    '<div class="lconv">' +
+      '<div class="lconvh"><span class="lconvlab">根拠のLINE会話（抜粋）</span>' + lineBtn + '</div>' +
+      '<div class="lconvb">' + bubbles + '</div>' +
     '</div>' +
-    '<div class="ltimes">' +
-      '<div class="tcol"><span class="tlab">LINE予約</span><span class="tval line">' + esc_(r.line_time || '—') + '</span></div>' +
-      '<span class="arr">→</span>' +
-      '<div class="tcol"><span class="tlab">TimeTree</span><span class="tval">' + esc_(r.tt_time || '—') + '</span></div>' +
-    '</div>' +
-    '<div class="lreason">' + esc_(r.reason_label || '') + '</div>' +
-    '<div class="laction"><span class="ldo">✔</span>' + esc_(r.action || '') + '</div>' +
-    '<div class="lchips">' + chips + '</div>' +
-    aiHtml + evHtml + ttHtml +
   '</article>';
+}
+
+// 下にまとめる「まだ予約前・対応不要」の1行の状態ラベル（記入漏れではない物）。
+function ltDismLabel_(r) {
+  var rc = r.recheck_disposition || '';
+  if (rc === 'awaiting_reply') return 'まだ予約前（客の返事待ち）';
+  if (rc === 'confirmed_ok') return 'もう入っている';
+  return '対応不要';
 }
 
 function renderLtPage_(d, base, staff, dev) {
@@ -1633,11 +1618,15 @@ function renderLtPage_(d, base, staff, dev) {
 
   var cards = action.length
     ? action.map(ltCard_).join('\n')
-    : '<div class="lempty">要対応はありません 🎉</div>';
+    : '<div class="lempty">記入漏れはありません 🎉</div>';
 
-  var dismissedRows = dismissed.length
-    ? dismissed.map(ltCard_).join('\n')
-    : '<div class="lempty">対応不要になった案件はありません</div>';
+  var dismRows = dismissed.length
+    ? dismissed.map(function (r) {
+        return '<tr data-search="' + esc_(((r.name || '') + ' ' + (r.code || '')).toLowerCase()) + '">' +
+          '<td>' + esc_(r.date || '') + '</td><td>' + esc_(r.line_time || '') + '</td>' +
+          '<td>' + esc_(r.name || '') + '</td><td class="ttc">' + esc_(ltDismLabel_(r)) + '</td></tr>';
+      }).join('\n')
+    : '<tr><td colspan="4">なし</td></tr>';
 
   var okRows = oks.map(function (r) {
     var srch = esc_(((r.name || '') + ' ' + (r.time || '')).toLowerCase());
@@ -1648,39 +1637,30 @@ function renderLtPage_(d, base, staff, dev) {
       '<td class="ttc">' + esc_(r.tt_title || '') + '</td></tr>';
   }).join('\n');
 
-  function stat(f, n, lab, kcls) {
-    return '<button type="button" class="lstat" data-f="' + f + '">' +
-      '<b class="' + (kcls || '') + '">' + (n || 0) + '</b><span>' + lab + '</span></button>';
-  }
-
   return '' +
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +
   '<div class="lbar">' +
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="lgen">照合: ' + esc_(d.generated_at || '—') + '</span>' +
+    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>' +
   '</div>' +
-  '<h1>🔗 L⇔T予約照合 <span class="lcnt">要対応 ' + (c.action || 0) + '件</span></h1>' +
-  '<div class="lsummary">' +
-    stat('all', c.action, '要対応', '') +
-    stat('time_mismatch', c.fix, '要修正', 'k-fix') +
-    stat('not_found', c.add, '要追加', 'k-add') +
-    stat('need_check', c.check, '要確認', 'k-chk') +
-    stat('ok', c.ok, 'OK', 'k-ok') +
-  '</div>' +
-  '<input id="lq" type="search" placeholder="名前・番号でしぼり込み（例: 林 / M346）">' +
+  '<h1>TimeTree予約記入漏れ</h1>' +
+  '<p class="lsub">LINEで予約を受けたのに、TimeTreeにまだ書いていない予約が ' +
+    '<span class="lcnt">' + (c.action || 0) + '</span> 件あります</p>' +
+  '<input id="lq" type="search" placeholder="名前・番号でしぼり込み（例: 廣田 / M06）">' +
   '<div id="lcards">' + cards + '</div>' +
   '<details class="loksec">' +
-    '<summary>AI除外（対応不要） ' + (c.dismissed || 0) + '件 ― タップで開く</summary>' +
-    dismissedRows +
+    '<summary>まだ予約前・対応不要 ' + (c.dismissed || 0) + '件 ― タップで開く</summary>' +
+    '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th><th>状態</th></tr></thead>' +
+    '<tbody>' + dismRows + '</tbody></table>' +
   '</details>' +
   '<details class="loksec">' +
-    '<summary>OK（一致済み） ' + (c.ok || 0) + '件 ― タップで開く</summary>' +
+    '<summary>TimeTreeと一致済み ' + (c.ok || 0) + '件 ― タップで開く</summary>' +
     '<table><thead><tr><th>日付</th><th>時刻</th><th>お客様</th><th>TimeTree予定</th></tr></thead>' +
     '<tbody>' + okRows + '</tbody></table>' +
   '</details>' +
 '</div>' +
-TTSCRIPT_ + LTSCRIPT_;
+LTSCRIPT_;
 }
 
 // 数字にカンマ（GAS側で self-completeに。toLocaleStringに頼らない）。
@@ -4163,81 +4143,51 @@ var MOVESCRIPT_ =
 
 // L⇔T予約照合ページ用スタイル（自己完結・ダーク/ライト対応・スマホ第一）。
 var LTCSS_ =
-'  :root{ --bg:#2C7A99; --card:#ffffff; --ink:#1c2430; --sub:#667085; --line:#e6e9ef;' +
-'    --fix:#e5484d; --add:#d97706; --chk:#eab308; --ok:#16a34a;' +
-'    --fixbg:#fff1f1; --addbg:#fff6ea; --chkbg:#fffbe6; }' +
-'  @media (prefers-color-scheme:dark){ :root{ --card:#1b2430; --ink:#e8ebf0; --sub:#9aa4b2;' +
-'    --line:#2a3441; --fixbg:#2a1416; --addbg:#2a1f10; --chkbg:#26230f; } }' +
+'  :root{ --card:#ffffff; --ink:#0f172a; --sub:#64748b; --line:#e2e8f0; --add:#d97706; }' +
+'  @media (prefers-color-scheme:dark){ :root{ --card:#131c2e; --ink:#e8eef7; --sub:#94a3b8; --line:#26324a; } }' +
 '  *{ box-sizing:border-box; }' +
-'  body{ margin:0; background:var(--bg); color:var(--ink);' +
+'  body{ margin:0; background:#2C7A99; color:var(--ink);' +
 '    font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; line-height:1.5; }' +
-'  .lwrap{ max-width:640px; margin:0 auto; padding:16px 14px 60px; }' +
-'  .lbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }' +
-'  .lhome{ color:#fff; text-decoration:none; font-weight:700; font-size:14px;' +
-'    background:rgba(255,255,255,.16); padding:7px 12px; border-radius:10px; }' +
-'  .lgen{ color:#eaf3f7; font-size:11px; opacity:.9; }' +
-'  h1{ color:#fff; font-size:19px; margin:6px 0 12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }' +
-'  .lcnt{ font-size:13px; background:rgba(255,255,255,.18); padding:2px 10px; border-radius:999px; font-weight:700; }' +
-'  .lsummary{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }' +
-'  .lstat{ flex:1 1 auto; min-width:78px; background:var(--card); border:1px solid var(--line);' +
-'    border-radius:12px; padding:8px 6px; cursor:pointer; text-align:center; color:var(--ink); font:inherit; }' +
-'  .lstat b{ display:block; font-size:22px; line-height:1.1; }' +
-'  .lstat span{ font-size:11px; color:var(--sub); }' +
-'  .lstat.sel{ outline:2px solid var(--ink); }' +
-'  .lstat .k-fix{ color:var(--fix); } .lstat .k-add{ color:var(--add); }' +
-'  .lstat .k-chk{ color:var(--chk); } .lstat .k-ok{ color:var(--ok); }' +
-'  #lq{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;' +
+'  .lwrap{ max-width:640px; margin:0 auto; padding:12px 12px 40px; }' +
+'  .lbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }' +
+'  .lhome{ flex:0 0 auto; color:var(--ink); text-decoration:none; font-weight:700; font-size:14px;' +
+'    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 14px; }' +
+'  .lgen{ color:rgba(255,255,255,.85); font-size:12px; }' +
+'  h1{ color:#fff; font-size:1.7rem; font-weight:900; margin:6px 0 4px; }' +
+'  .lsub{ color:#fff; font-weight:700; font-size:1rem; margin:0 0 14px; }' +
+'  .lsub .lcnt{ color:#ff8fb3; font-size:1.5em; font-weight:900; }' +
+'  #lq{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px;' +
 '    background:var(--card); color:var(--ink); font-size:15px; margin-bottom:14px; }' +
-'  .lcard{ background:var(--card); border:1px solid var(--line); border-left:6px solid var(--sub);' +
-'    border-radius:12px; padding:12px 14px; margin-bottom:10px; }' +
-'  .lcard.fix{ border-left-color:var(--fix); background:var(--fixbg); }' +
-'  .lcard.add{ border-left-color:var(--add); background:var(--addbg); }' +
-'  .lcard.check{ border-left-color:var(--chk); background:var(--chkbg); }' +
-'  .lhead{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; }' +
-'  .lbadge{ font-size:11px; font-weight:800; color:#fff; padding:2px 9px; border-radius:999px; }' +
-'  .lbadge.fix{ background:var(--fix); } .lbadge.add{ background:var(--add); }' +
-'  .lbadge.check{ background:var(--chk); color:#5a4a00; }' +
-'  .ldate{ color:var(--sub); font-size:12px; font-variant-numeric:tabular-nums; }' +
-'  .lname{ font-weight:800; font-size:15px; }' +
-'  .lcode{ font-size:11px; color:var(--sub); border:1px solid var(--line); border-radius:6px; padding:0 6px; }' +
-'  .ltimes{ display:flex; align-items:center; gap:12px; margin:10px 0 8px; }' +
-'  .tcol{ display:flex; flex-direction:column; }' +
-'  .tlab{ font-size:10px; color:var(--sub); }' +
-'  .tval{ font-size:19px; font-weight:800; font-variant-numeric:tabular-nums; }' +
-'  .tval.line{ color:var(--fix); }' +
-'  .lcard.ok .tval.line,.lcard.check .tval.line{ color:inherit; }' +
-'  .arr{ color:var(--sub); font-size:17px; }' +
-'  .lreason{ font-size:12.5px; color:var(--sub); margin-bottom:5px; }' +
-'  .laction{ font-size:14px; font-weight:700; display:flex; gap:7px; align-items:flex-start; margin-bottom:9px; }' +
-'  .ldo{ color:var(--ok); }' +
-'  .lchips{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }' +
-'  .lchip{ font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); }' +
-'  .lchip.on{ background:#e7f6ec; border-color:#bfe6cd; color:#137a3b; }' +
-'  .lchip.off{ color:var(--sub); opacity:.5; }' +
-'  @media (prefers-color-scheme:dark){ .lchip.on{ background:#12331f; border-color:#1f5133; color:#5fd08a; } }' +
-'  .lai{ border-radius:9px; padding:8px 10px; margin-top:7px; font-size:12.5px; border:1px solid var(--line); }' +
-'  .lai.laiv-true{ background:#fff7e6; border-color:#f0dca3; }' +
-'  .lai.laiv-false{ background:rgba(127,127,127,.06); opacity:.75; }' +
-'  .lai.laiv-check{ background:#eef4ff; border-color:#c9dcfa; }' +
-'  @media (prefers-color-scheme:dark){' +
-'    .lai.laiv-true{ background:#3a2f10; border-color:#5c4a1a; }' +
-'    .lai.laiv-check{ background:#152238; border-color:#233a5c; }' +
-'  }' +
-'  .lailab{ font-weight:700; margin-right:8px; }' +
-'  .laitrue{ color:var(--sub); }' +
-'  .laireason{ margin-top:4px; color:var(--sub); }' +
-'  .levi,.ltt{ background:rgba(127,127,127,.06); border:1px solid var(--line); border-radius:9px;' +
-'    padding:8px 10px; margin-top:7px; font-size:12.5px; }' +
-'  .lelab,.ltlab{ font-size:10px; color:var(--sub); margin-right:8px; }' +
-'  .ltrow{ display:flex; align-items:center; gap:10px; margin-bottom:2px; }' +
-'  .lttime{ font-weight:800; } .lttitle{ font-size:13.5px; }' +
-'  .ltt.none{ color:var(--sub); }' +
-'  .ltlink{ margin-left:auto; font-size:12px; color:#2563eb; text-decoration:none; font-weight:700; }' +
-'  .ltbody{ margin-top:6px; } .ltbody summary{ cursor:pointer; color:var(--sub); font-size:12px; }' +
-'  .ltbody div{ margin-top:6px; color:var(--sub); font-size:12px; white-space:pre-wrap; }' +
+'  .lcard{ background:var(--card); border:1px solid var(--line); border-left:4px solid var(--add);' +
+'    border-radius:12px; padding:11px 13px; margin-bottom:22px; box-shadow:0 1px 3px rgba(0,0,0,.15); }' +
+'  .lhead{ margin-bottom:2px; }' +
+'  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
+'  .lname{ font-weight:700; font-size:1.15rem; }' +
+'  .ldt{ font-weight:900; font-size:1.7rem; letter-spacing:.02em; }' +
+'  .lmeta{ display:flex; align-items:stretch; gap:8px; margin:8px 0 14px; }' +
+'  .ltag{ flex:0 0 auto; background:#312e81; color:#c7d2fe; font-size:.72rem; font-weight:700;' +
+'    border-radius:8px; padding:6px 7px; display:flex; align-items:center;' +
+'    writing-mode:vertical-rl; text-orientation:upright; letter-spacing:.08em; }' +
+'  .ltxt{ flex:1 1 auto; font-size:1rem; font-weight:700; display:flex; align-items:center; }' +
+'  .lconv{ border:2px solid #06C755; border-radius:12px; overflow:hidden; }' +
+'  .lconvh{ display:flex; align-items:center; justify-content:space-between; gap:8px;' +
+'    background:#06C755; padding:8px 10px; }' +
+'  .lconvlab{ font-size:1.02rem; font-weight:900; color:#fff; }' +
+'  .lqline{ flex:0 0 auto; background:#fff; color:#06962f; font-weight:800; font-size:.8rem;' +
+'    text-decoration:none; border-radius:9px; padding:7px 11px; white-space:nowrap; }' +
+'  .lconvb{ background:#eef3f6; padding:11px 10px 6px; }' +
+'  @media (prefers-color-scheme:dark){ .lconvb{ background:#0f1a24; } }' +
+'  .lqt{ font-size:.72rem; color:var(--sub); margin:0 2px 1px; }' +
+'  .lqt.s{ text-align:right; }' +
+'  .lqrow{ display:flex; margin-bottom:9px; }' +
+'  .lqrow.s{ justify-content:flex-end; }' +
+'  .lqb{ max-width:80%; font-size:.94rem; padding:8px 12px; }' +
+'  .lqb.c{ background:#fff; color:#0f172a; border:1px solid #dbe3ea; border-radius:14px 14px 14px 3px; }' +
+'  .lqb.s{ background:#06C755; color:#fff; border-radius:14px 14px 3px 14px; }' +
+'  .lqnone{ color:var(--sub); font-size:13px; padding:6px 2px; }' +
 '  .lempty{ text-align:center; color:#fff; padding:26px; font-weight:700; }' +
-'  .loksec{ margin-top:18px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px 12px; }' +
-'  .loksec summary{ cursor:pointer; font-weight:800; padding:9px 0; }' +
+'  .loksec{ margin-top:14px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px 12px; }' +
+'  .loksec summary{ cursor:pointer; font-weight:800; padding:10px 0; }' +
 '  .loksec table{ width:100%; border-collapse:collapse; font-size:12.5px; }' +
 '  .loksec th,.loksec td{ text-align:left; padding:6px 6px; border-bottom:1px solid var(--line); vertical-align:top; }' +
 '  .loksec th{ color:var(--sub); font-weight:700; } .loksec td.ttc{ color:var(--sub); }' +
@@ -4248,24 +4198,14 @@ var LTSCRIPT_ =
 '<script>(function(){' +
 'var q=document.getElementById("lq"); if(!q) return;' +
 'var cards=[].slice.call(document.querySelectorAll(".lcard"));' +
-'var stats=[].slice.call(document.querySelectorAll(".lstat"));' +
-'var filter="all";' +
 'function apply(){' +
 '  var kw=(q.value||"").trim().toLowerCase();' +
 '  cards.forEach(function(c){' +
-'    var okS=(filter==="all"||c.getAttribute("data-status")===filter);' +
 '    var okK=(!kw||(c.getAttribute("data-search")||"").indexOf(kw)>=0);' +
-'    c.classList.toggle("lhidden",!(okS&&okK));' +
+'    c.classList.toggle("lhidden",!okK);' +
 '  });' +
 '}' +
 'q.addEventListener("input",apply);' +
-'stats.forEach(function(s){ s.addEventListener("click",function(){' +
-'  var f=s.getAttribute("data-f");' +
-'  if(f==="ok"){ var ok=document.querySelector(".loksec"); if(ok){ ok.open=true; ok.scrollIntoView({behavior:"smooth"}); } return; }' +
-'  filter=(filter===f)?"all":f;' +
-'  stats.forEach(function(x){ x.classList.toggle("sel", x.getAttribute("data-f")===filter && filter!=="all"); });' +
-'  apply();' +
-'}); });' +
 '})();</scr' + 'ipt>';
 
 // メニュー／準備中ページ用のおしゃれスタイル（自己完結・ダーク/ライト対応）
