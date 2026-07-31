@@ -1631,13 +1631,8 @@ function ltCard_(r) {
       ttInner +
     '</div>';
 
-  var statTitle = (r.status === 'time_mismatch') ? 'TimeTree予約ズレ'
-                : (r.status === 'not_found') ? '記入もれ'
-                : (r.status_label || '要確認');
-
   return '' +
   '<article class="lcard ' + cls + '" data-search="' + search + '">' +
-    '<div class="lstat ' + cls + '">' + esc_(statTitle) + '</div>' +
     '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
     '<div class="ldtwrap">' + lineCell + ttCell + '</div>' +
     treatHtml +
@@ -1662,9 +1657,28 @@ function renderLtPage_(d, base, staff, dev) {
   var oks = d.ok || [];
   var dismissed = d.dismissed || [];
 
-  var cards = action.length
-    ? action.map(ltCard_).join('\n')
-    : '<div class="lempty">記入漏れはありません 🎉</div>';
+  // ★状態ごとに見出しを分ける（時刻ズレ／記入もれ／要確認）。「⚠️ TimeTree予約ズレ ◯件」の形。
+  var LTGROUPS = [
+    { st: 'time_mismatch', title: 'TimeTree予約ズレ' },
+    { st: 'not_found',     title: '記入もれ' },
+    { st: 'need_check',    title: '要確認' }
+  ];
+  var cards = '';
+  LTGROUPS.forEach(function (g) {
+    var rows = action.filter(function (r) { return r.status === g.st; });
+    if (!rows.length) return;
+    cards += '<h1>⚠️ ' + g.title + ' <span class="lcnt">' + rows.length + '件</span></h1>' +
+             '<div class="lcards">' + rows.map(ltCard_).join('\n') + '</div>';
+  });
+  var _known = LTGROUPS.map(function (g) { return g.st; });
+  var _others = action.filter(function (r) { return _known.indexOf(r.status) < 0; });
+  if (_others.length) {
+    cards += '<h1>⚠️ 要確認 <span class="lcnt">' + _others.length + '件</span></h1>' +
+             '<div class="lcards">' + _others.map(ltCard_).join('\n') + '</div>';
+  }
+  if (!action.length) {
+    cards = '<h1>TimeTree予約 記入漏れ</h1><div class="lempty">記入漏れはありません 🎉</div>';
+  }
 
   var dismRows = dismissed.length
     ? dismissed.map(function (r) {
@@ -1681,8 +1695,7 @@ function renderLtPage_(d, base, staff, dev) {
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
     '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>' +
   '</div>' +
-  '<h1>⚠️ TimeTree予約記入漏れ <span class="lcnt">' + (c.action || 0) + '件</span></h1>' +
-  '<div id="lcards">' + cards + '</div>' +
+  cards +
 '</div>';
 }
 
@@ -4259,10 +4272,6 @@ var LTCSS_ =
 '  .lhead{ margin-bottom:2px; }' +
 '  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
 '  .lname{ font-weight:800; font-size:1.55rem; }' +
-'  .lstat{ font-size:1.15rem; font-weight:900; margin:0 0 4px; }' +
-'  .lstat.fix{ color:#ff5fa2; }' +
-'  .lstat.add{ color:#f59e0b; }' +
-'  .lstat.check{ color:#facc15; }' +
 '  .ldtwrap{ display:flex; gap:16px; flex-wrap:wrap; margin-top:5px; }' +
 '  .ldtcell{ display:flex; align-items:center; gap:9px; }' +
 '  .lbadge2{ display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:9px; color:#fff; padding:5px 9px; line-height:1.1; }' +
@@ -4274,7 +4283,7 @@ var LTCSS_ =
 '  .ldtd{ font-size:1rem; font-weight:800; }' +
 '  .ldtt{ font-size:1.5rem; font-weight:900; letter-spacing:.02em; }' +
 '  .ldtdiff{ color:#ff5fa2; }' +
-'  .ldtnone{ color:#f59e0b; font-size:1.15rem; }' +
+'  .ldtnone{ color:#111; background:#fff; font-size:1.72rem; font-weight:900; padding:0 9px; border-radius:7px; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
