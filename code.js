@@ -1693,7 +1693,7 @@ function renderLtPage_(d, base, staff, dev) {
 '<div class="lwrap">' +
   '<div class="lbar">' +
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版15</b></span>' +
+    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版16</b></span>' +
   '</div>' +
   cards +
 '</div>';
@@ -4296,11 +4296,11 @@ var LTCSS_ =
 '  .lqline{ flex:0 0 auto; text-align:center; background:#06C755; color:#fff; font-weight:800;' +
 '    font-size:1.2rem; line-height:1.25; text-decoration:none; border-radius:11px; padding:11px 15px; }' +
 '  .lconvb{ background:#06C755; padding:11px 10px 6px; }' +
-'  .lqt{ font-size:.98rem; color:rgba(255,255,255,.92); margin:0 2px 2px; }' +
+'  .lqt{ font-size:.72rem; color:rgba(255,255,255,.92); margin:0 2px 1px; }' +
 '  .lqt.s{ text-align:right; }' +
 '  .lqrow{ display:flex; margin-bottom:9px; }' +
 '  .lqrow.s{ justify-content:flex-end; }' +
-'  .lqb{ max-width:80%; font-size:1.38rem; padding:10px 14px; }' +
+'  .lqb{ max-width:80%; font-size:1.12rem; padding:9px 13px; }' +
 '  .lqb.c{ background:#fff; color:#0f172a; border:1px solid #dbe3ea; border-radius:14px 14px 14px 3px; }' +
 '  .lqb.s{ background:#0b6e3b; color:#fff; border-radius:14px 14px 3px 14px; }' +
 '  .lqnone{ color:var(--sub); font-size:13px; padding:6px 2px; }' +
