@@ -4274,7 +4274,7 @@ var LTCSS_ =
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
 '    justify-content:center; text-align:center; line-height:1.25; letter-spacing:.04em; }' +
 '  .ltxt{ flex:1 1 auto; font-size:1.5rem; font-weight:700; display:flex; align-items:center; }' +
-'  .lconv{ border:2px solid #06C755; border-radius:12px; overflow:hidden; }' +
+'  .lconv{ border:2px solid #06C755; border-radius:12px; overflow:hidden; margin-top:16px; }' +
 '  .lconvh{ display:flex; flex-direction:row; align-items:center; justify-content:space-between;' +
 '    gap:10px; background:#06C755; padding:9px 10px; }' +
 '  .lconvlab{ font-size:1.33rem; font-weight:900; color:#fff; }' +
