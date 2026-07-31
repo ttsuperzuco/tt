@@ -4270,20 +4270,20 @@ var LTCSS_ =
 '  .lcard{ background:var(--card); border:1px solid var(--line); border-left:4px solid var(--add);' +
 '    border-radius:12px; padding:11px 13px; margin-bottom:22px; box-shadow:0 1px 3px rgba(0,0,0,.15); }' +
 '  .lhead{ margin-bottom:2px; }' +
-'  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
-'  .lname{ font-weight:800; font-size:1.55rem; }' +
+'  .lcode{ color:var(--sub); font-weight:700; font-size:1.3rem; margin-right:6px; }' +
+'  .lname{ font-weight:800; font-size:2rem; }' +
 '  .ldtwrap{ display:flex; gap:7px; flex-wrap:nowrap; margin-top:5px; }' +
 '  .ldtcell{ display:flex; align-items:center; gap:7px; min-width:0; }' +
-'  .lbadge2{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; color:#fff; padding:4px 7px; line-height:1.1; }' +
-'  .lbadge2 .b1{ font-size:.8rem; font-weight:800; letter-spacing:.02em; }' +
-'  .lbadge2 .b2{ font-size:.66rem; font-weight:700; }' +
+'  .lbadge2{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; color:#fff; padding:5px 8px; line-height:1.1; }' +
+'  .lbadge2 .b1{ font-size:.9rem; font-weight:800; letter-spacing:.02em; }' +
+'  .lbadge2 .b2{ font-size:.74rem; font-weight:700; }' +
 '  .lbadge2.line{ background:#06c755; }' +
 '  .lbadge2.tt{ background:#3b82f6; }' +
 '  .ldtdt{ display:flex; flex-direction:column; line-height:1.1; }' +
 '  .ldtd{ font-size:.92rem; font-weight:800; white-space:nowrap; }' +
-'  .ldtt{ font-size:1.35rem; font-weight:900; letter-spacing:.02em; white-space:nowrap; }' +
+'  .ldtt{ font-size:1.6rem; font-weight:900; letter-spacing:.02em; white-space:nowrap; }' +
 '  .ldtdiff{ color:#ff5fa2; }' +
-'  .ldtnone{ color:#111; background:#fff; font-size:1.3rem; font-weight:900; padding:0 5px; border-radius:7px; white-space:nowrap; }' +
+'  .ldtnone{ color:#111; background:#fff; font-size:1.2rem; font-weight:900; padding:0 6px; border-radius:7px; white-space:nowrap; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
@@ -4296,11 +4296,11 @@ var LTCSS_ =
 '  .lqline{ flex:0 0 auto; text-align:center; background:#06C755; color:#fff; font-weight:800;' +
 '    font-size:1.2rem; line-height:1.25; text-decoration:none; border-radius:11px; padding:11px 15px; }' +
 '  .lconvb{ background:#06C755; padding:11px 10px 6px; }' +
-'  .lqt{ font-size:.72rem; color:rgba(255,255,255,.9); margin:0 2px 1px; }' +
+'  .lqt{ font-size:.98rem; color:rgba(255,255,255,.92); margin:0 2px 2px; }' +
 '  .lqt.s{ text-align:right; }' +
 '  .lqrow{ display:flex; margin-bottom:9px; }' +
 '  .lqrow.s{ justify-content:flex-end; }' +
-'  .lqb{ max-width:80%; font-size:1.12rem; padding:9px 13px; }' +
+'  .lqb{ max-width:80%; font-size:1.38rem; padding:10px 14px; }' +
 '  .lqb.c{ background:#fff; color:#0f172a; border:1px solid #dbe3ea; border-radius:14px 14px 14px 3px; }' +
 '  .lqb.s{ background:#0b6e3b; color:#fff; border-radius:14px 14px 3px 14px; }' +
 '  .lqnone{ color:var(--sub); font-size:13px; padding:6px 2px; }' +
