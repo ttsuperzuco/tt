@@ -1631,8 +1631,13 @@ function ltCard_(r) {
       ttInner +
     '</div>';
 
+  var statTitle = (r.status === 'time_mismatch') ? 'TimeTree予約ズレ'
+                : (r.status === 'not_found') ? '記入もれ'
+                : (r.status_label || '要確認');
+
   return '' +
   '<article class="lcard ' + cls + '" data-search="' + search + '">' +
+    '<div class="lstat ' + cls + '">' + esc_(statTitle) + '</div>' +
     '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
     '<div class="ldtwrap">' + lineCell + ttCell + '</div>' +
     treatHtml +
@@ -4254,6 +4259,10 @@ var LTCSS_ =
 '  .lhead{ margin-bottom:2px; }' +
 '  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
 '  .lname{ font-weight:800; font-size:1.55rem; }' +
+'  .lstat{ font-size:1.15rem; font-weight:900; margin:0 0 4px; }' +
+'  .lstat.fix{ color:#ff5fa2; }' +
+'  .lstat.add{ color:#f59e0b; }' +
+'  .lstat.check{ color:#facc15; }' +
 '  .ldtwrap{ display:flex; gap:16px; flex-wrap:wrap; margin-top:5px; }' +
 '  .ldtcell{ display:flex; align-items:center; gap:9px; }' +
 '  .lbadge2{ display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:9px; color:#fff; padding:5px 9px; line-height:1.1; }' +
@@ -4284,7 +4293,7 @@ var LTCSS_ =
 '  .lqrow.s{ justify-content:flex-end; }' +
 '  .lqb{ max-width:80%; font-size:1.12rem; padding:9px 13px; }' +
 '  .lqb.c{ background:#fff; color:#0f172a; border:1px solid #dbe3ea; border-radius:14px 14px 14px 3px; }' +
-'  .lqb.s{ background:#4b5563; color:#fff; border-radius:14px 14px 3px 14px; }' +
+'  .lqb.s{ background:#0b6e3b; color:#fff; border-radius:14px 14px 3px 14px; }' +
 '  .lqnone{ color:var(--sub); font-size:13px; padding:6px 2px; }' +
 '  .lempty{ text-align:center; color:#fff; padding:26px; font-weight:700; }' +
 '  .loksec{ margin-top:14px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px 12px; }' +
