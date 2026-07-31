@@ -1854,6 +1854,9 @@ var KOUKOKUCSS_ =
   '  .kkkv { color:var(--sub,#64748b); font-size:.82rem; }' +
   '  .kkkv b { color:var(--ink,#0f172a); font-weight:700; }' +
   '  .kkempty { padding:34px 20px; text-align:center; color:#fff; opacity:.9; line-height:1.9; font-size:.98rem; }' +
+  '  .kkacc { color:#fff; font-weight:800; font-size:1.02rem; margin:20px 2px 9px; padding-left:10px; border-left:4px solid #7c3aed; }' +
+  '  .kkacc small { opacity:.82; font-weight:600; font-size:.76rem; margin-left:6px; }' +
+  '  .kkempty2 { color:rgba(255,255,255,.85); font-size:.86rem; padding:4px 2px 12px; }' +
   '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.8); font-size:.72rem; text-align:center; line-height:1.6; }';
 
 var KOUKOKU_FILENAME = 'koukoku.json';
@@ -1891,27 +1894,45 @@ function renderKoukokuPage_(d, base, staff, dev) {
     for (var i = t.length - 1; i >= 0; i--) { o = t.charAt(i) + o; if (++c % 3 === 0 && i > 0) o = ',' + o; }
     return o;
   }
-  var list;
-  if (!ads.length) {
-    list = '<div class="kkempty">まだ読み取っていません。<br>毎日1回、自動でインスタから読み取ります。</div>';
-  } else {
-    list = ads.map(function (a) {
-      var live = (a.status === '配信中');
-      var badge = '<span class="kkst ' + (live ? 'kklive2' : 'kkstop') + '">' + esc_(a.status || '') + '</span>';
-      var img = a.image_data
-        ? '<img class="kkth" src="' + a.image_data + '" alt="">'
-        : '<div class="kkth ph">画像</div>';
-      return '<div class="kkad">' + img +
-        '<div class="kkinfo">' +
-          '<div class="kkr1">' + badge +
-            '<span class="kkspend">' + esc_(_costYen_(a.spend_ntd)) + ' <small>使った実額</small></span></div>' +
-          '<div class="kkkv">見られた <b>' + fig(a.views) + '</b>　プロフィール来訪 <b>' + fig(a.profile_visits) + '</b></div>' +
-        '</div></div>';
+  // 広告1件のカード（3アカウント共通で使う）。
+  function adCard(a) {
+    var live = (a.status === '配信中');
+    var badge = '<span class="kkst ' + (live ? 'kklive2' : 'kkstop') + '">' + esc_(a.status || '') + '</span>';
+    var img = a.image_data
+      ? '<img class="kkth" src="' + a.image_data + '" alt="">'
+      : '<div class="kkth ph">画像</div>';
+    return '<div class="kkad">' + img +
+      '<div class="kkinfo">' +
+        '<div class="kkr1">' + badge +
+          '<span class="kkspend">' + esc_(_costYen_(a.spend_ntd)) + ' <small>使った実額</small></span></div>' +
+        '<div class="kkkv">見られた <b>' + fig(a.views) + '</b>　プロフィール来訪 <b>' + fig(a.profile_visits) + '</b></div>' +
+      '</div></div>';
+  }
+
+  var list, totalAds = 0;
+  var accounts = d.accounts;
+  if (accounts && accounts.length) {
+    // ★新しい形＝3アカウントを、アカウントごとに見出しを付けて並べる。
+    list = accounts.map(function (acc) {
+      var aads = acc.ads || [];
+      totalAds += aads.length;
+      var head = '<div class="kkacc">' + esc_(acc.label || '') +
+        '<small>@' + esc_(acc.handle || '') + '・' + aads.length + '件</small></div>';
+      var inner = aads.length
+        ? aads.map(adCard).join('')
+        : '<div class="kkempty2">読み取れませんでした（ログイン切れ等の疑い）。</div>';
+      return head + inner;
     }).join('');
+  } else {
+    // 旧い形（1アカウントだけの d.ads）にも一応対応。
+    totalAds = ads.length;
+    list = ads.length
+      ? ads.map(adCard).join('')
+      : '<div class="kkempty">まだ読み取っていません。<br>毎日1回、自動でインスタから読み取ります。</div>';
   }
   var when = d.read_at
-    ? '最終読み取り：' + esc_(d.read_at) + '　／　広告 ' + ads.length + '件'
-    : '広告 ' + ads.length + '件';
+    ? '最終読み取り：' + esc_(d.read_at) + '　／　広告 ' + totalAds + '件'
+    : '広告 ' + totalAds + '件';
 
   return '<style>' + HOMECSS_ + KOUKOKUCSS_ + '</style>' +
     '<div class="home">' +
