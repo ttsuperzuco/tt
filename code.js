@@ -1617,15 +1617,24 @@ function ltCard_(r) {
   var _diff = (r.status === 'time_mismatch') ? ' ldtdiff' : '';
   var dateStr = esc_(jpDateWeekday_(r.date));
 
-  var ttLine = _ttHas
-    ? '<div class="ldtrow"><span class="lbadge lbadge-tt">TimeTree予約</span><span class="ldtval ttval">' + dateStr + ' <span class="ldttime' + _diff + '">' + esc_(ttStart) + '</span></span></div>'
-    : '<div class="ldtrow"><span class="lbadge lbadge-tt">TimeTree予約</span><span class="ldtval ttval ldtnone">記入なし</span></div>';
+  var lineCell =
+    '<div class="ldtcell">' +
+      '<span class="lbadge2 line"><span class="b1">LINE</span><span class="b2">予約</span></span>' +
+      '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(r.line_time || '') + '</span></span>' +
+    '</div>';
+  var ttInner = _ttHas
+    ? '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(ttStart) + '</span></span>'
+    : '<span class="ldtdt"><span class="ldtd">&nbsp;</span><span class="ldtt ldtnone">記入なし</span></span>';
+  var ttCell =
+    '<div class="ldtcell">' +
+      '<span class="lbadge2 tt"><span class="b1">TimeTree</span><span class="b2">予約</span></span>' +
+      ttInner +
+    '</div>';
 
   return '' +
   '<article class="lcard ' + cls + '" data-search="' + search + '">' +
     '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
-    '<div class="ldtrow"><span class="lbadge lbadge-line">LINE予約</span><span class="ldtval">' + dateStr + ' <span class="ldttime' + _diff + '">' + esc_(r.line_time || '') + '</span></span></div>' +
-    ttLine +
+    '<div class="ldtwrap">' + lineCell + ttCell + '</div>' +
     treatHtml +
     '<div class="lconv">' +
       '<div class="lconvh"><span class="lconvlab">根拠のLINE会話</span>' + lineBtn + '</div>' +
@@ -4248,14 +4257,18 @@ var LTCSS_ =
 '  .lhead{ margin-bottom:2px; }' +
 '  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
 '  .lname{ font-weight:800; font-size:1.55rem; }' +
-'  .ldtrow{ display:flex; align-items:center; gap:.5em; margin-top:4px; }' +
-'  .lbadge{ flex:none; font-size:.74rem; font-weight:800; padding:3px 9px; border-radius:999px; color:#fff; letter-spacing:.03em; }' +
-'  .lbadge-line{ background:#06c755; }' +
-'  .lbadge-tt{ background:#3b82f6; }' +
-'  .ldtval{ font-weight:900; font-size:1.55rem; letter-spacing:.02em; }' +
-'  .ttval{ font-size:1.3rem; font-weight:800; }' +
+'  .ldtwrap{ display:flex; gap:16px; flex-wrap:wrap; margin-top:5px; }' +
+'  .ldtcell{ display:flex; align-items:center; gap:9px; }' +
+'  .lbadge2{ display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:9px; color:#fff; padding:5px 9px; line-height:1.1; }' +
+'  .lbadge2 .b1{ font-size:.9rem; font-weight:800; letter-spacing:.02em; }' +
+'  .lbadge2 .b2{ font-size:.72rem; font-weight:700; }' +
+'  .lbadge2.line{ background:#06c755; }' +
+'  .lbadge2.tt{ background:#3b82f6; }' +
+'  .ldtdt{ display:flex; flex-direction:column; line-height:1.12; }' +
+'  .ldtd{ font-size:1rem; font-weight:800; }' +
+'  .ldtt{ font-size:1.5rem; font-weight:900; letter-spacing:.02em; }' +
 '  .ldtdiff{ color:#ff5fa2; }' +
-'  .ldtnone{ color:#f59e0b; }' +
+'  .ldtnone{ color:#f59e0b; font-size:1.15rem; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
