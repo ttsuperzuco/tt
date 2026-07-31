@@ -1693,7 +1693,7 @@ function renderLtPage_(d, base, staff, dev) {
 '<div class="lwrap">' +
   '<div class="lbar">' +
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>' +
+    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版15</b></span>' +
   '</div>' +
   cards +
 '</div>';
