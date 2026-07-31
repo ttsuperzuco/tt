@@ -1611,14 +1611,20 @@ function ltCard_(r) {
   // ★2026-07-31：日時を「LINE予約」「TimeTree予約」の2行にする（どちらが正か一目で分かるように）。
   //   タイムツリーに予約が無い時は「TimeTree予約　記入なし」と出す。
   var _ttHas = r.tt_time && r.tt_time !== '—' && r.tt_time !== '';
+  // TimeTreeは終わりの時刻を出さない＝始まりの時刻だけにする（「12:00–13:20」→「12:00」）。
+  var ttStart = (r.tt_time || '').split(/[–—〜~-]/)[0].trim();
+  // LINEとTimeTreeで時刻がズレている時（要修正）は、両方の時刻をピンクで強調する。
+  var _diff = (r.status === 'time_mismatch') ? ' ldtdiff' : '';
+  var dateStr = esc_(jpDateWeekday_(r.date));
+
   var ttLine = _ttHas
-    ? '<div class="ldtrow"><span class="lbadge lbadge-tt">TimeTree予約</span><span class="ldtval ttval">' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.tt_time) + '</span></div>'
+    ? '<div class="ldtrow"><span class="lbadge lbadge-tt">TimeTree予約</span><span class="ldtval ttval">' + dateStr + ' <span class="ldttime' + _diff + '">' + esc_(ttStart) + '</span></span></div>'
     : '<div class="ldtrow"><span class="lbadge lbadge-tt">TimeTree予約</span><span class="ldtval ttval ldtnone">記入なし</span></div>';
 
   return '' +
   '<article class="lcard ' + cls + '" data-search="' + search + '">' +
     '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
-    '<div class="ldtrow"><span class="lbadge lbadge-line">LINE予約</span><span class="ldtval">' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.line_time || '') + '</span></div>' +
+    '<div class="ldtrow"><span class="lbadge lbadge-line">LINE予約</span><span class="ldtval">' + dateStr + ' <span class="ldttime' + _diff + '">' + esc_(r.line_time || '') + '</span></span></div>' +
     ttLine +
     treatHtml +
     '<div class="lconv">' +
@@ -4248,6 +4254,7 @@ var LTCSS_ =
 '  .lbadge-tt{ background:#3b82f6; }' +
 '  .ldtval{ font-weight:900; font-size:1.55rem; letter-spacing:.02em; }' +
 '  .ttval{ font-size:1.3rem; font-weight:800; }' +
+'  .ldtdiff{ color:#ff5fa2; }' +
 '  .ldtnone{ color:#f59e0b; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
@@ -4268,7 +4275,7 @@ var LTCSS_ =
 '  .lqrow.s{ justify-content:flex-end; }' +
 '  .lqb{ max-width:80%; font-size:1.12rem; padding:9px 13px; }' +
 '  .lqb.c{ background:#fff; color:#0f172a; border:1px solid #dbe3ea; border-radius:14px 14px 14px 3px; }' +
-'  .lqb.s{ background:#06C755; color:#fff; border-radius:14px 14px 3px 14px; }' +
+'  .lqb.s{ background:#4b5563; color:#fff; border-radius:14px 14px 3px 14px; }' +
 '  .lqnone{ color:var(--sub); font-size:13px; padding:6px 2px; }' +
 '  .lempty{ text-align:center; color:#fff; padding:26px; font-weight:700; }' +
 '  .loksec{ margin-top:14px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px 12px; }' +
