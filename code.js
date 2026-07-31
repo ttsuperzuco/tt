@@ -4272,7 +4272,7 @@ var LTCSS_ =
 '  .lhead{ margin-bottom:2px; }' +
 '  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
 '  .lname{ font-weight:800; font-size:1.55rem; }' +
-'  .ldtwrap{ display:flex; gap:10px; flex-wrap:nowrap; margin-top:5px; }' +
+'  .ldtwrap{ display:flex; gap:7px; flex-wrap:nowrap; margin-top:5px; }' +
 '  .ldtcell{ display:flex; align-items:center; gap:7px; min-width:0; }' +
 '  .lbadge2{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; color:#fff; padding:4px 7px; line-height:1.1; }' +
 '  .lbadge2 .b1{ font-size:.8rem; font-weight:800; letter-spacing:.02em; }' +
@@ -4283,7 +4283,7 @@ var LTCSS_ =
 '  .ldtd{ font-size:.92rem; font-weight:800; white-space:nowrap; }' +
 '  .ldtt{ font-size:1.35rem; font-weight:900; letter-spacing:.02em; white-space:nowrap; }' +
 '  .ldtdiff{ color:#ff5fa2; }' +
-'  .ldtnone{ color:#111; background:#fff; font-size:1.3rem; font-weight:900; padding:0 7px; border-radius:7px; white-space:nowrap; }' +
+'  .ldtnone{ color:#111; background:#fff; font-size:1.3rem; font-weight:900; padding:0 5px; border-radius:7px; white-space:nowrap; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
