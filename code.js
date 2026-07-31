@@ -1624,7 +1624,7 @@ function ltCard_(r) {
     '</div>';
   var ttInner = _ttHas
     ? '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(ttStart) + '</span></span>'
-    : '<span class="ldtdt"><span class="ldtd">&nbsp;</span><span class="ldtt ldtnone">記入なし</span></span>';
+    : '<span class="ldtdt"><span class="ldtt ldtnone">記入なし</span></span>';
   var ttCell =
     '<div class="ldtcell">' +
       '<span class="lbadge2 tt"><span class="b1">TimeTree</span><span class="b2">予約</span></span>' +
@@ -4279,11 +4279,11 @@ var LTCSS_ =
 '  .lbadge2 .b2{ font-size:.72rem; font-weight:700; }' +
 '  .lbadge2.line{ background:#06c755; }' +
 '  .lbadge2.tt{ background:#3b82f6; }' +
-'  .ldtdt{ display:flex; flex-direction:column; line-height:1.12; }' +
+'  .ldtdt{ display:flex; align-items:baseline; gap:7px; }' +
 '  .ldtd{ font-size:1rem; font-weight:800; }' +
 '  .ldtt{ font-size:1.5rem; font-weight:900; letter-spacing:.02em; }' +
 '  .ldtdiff{ color:#ff5fa2; }' +
-'  .ldtnone{ color:#111; background:#fff; font-size:1.72rem; font-weight:900; padding:0 9px; border-radius:7px; }' +
+'  .ldtnone{ color:#111; background:#fff; font-size:1.5rem; font-weight:900; padding:0 9px; border-radius:7px; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
