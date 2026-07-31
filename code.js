@@ -1608,10 +1608,18 @@ function ltCard_(r) {
     ? '<a class="lqline" href="' + esc_(r.line_url) + '" target="_top" rel="noopener">このお客様の<br>LINEに飛ぶ ↗</a>'
     : '';
 
+  // ★2026-07-31：日時を「LINE予約」「TimeTree予約」の2行にする（どちらが正か一目で分かるように）。
+  //   タイムツリーに予約が無い時は「TimeTree予約　記入なし」と出す。
+  var _ttHas = r.tt_time && r.tt_time !== '—' && r.tt_time !== '';
+  var ttLine = _ttHas
+    ? '<div class="ldt2"><span class="ldtlab">TimeTree予約</span>' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.tt_time) + '</div>'
+    : '<div class="ldt2 ldtnone"><span class="ldtlab">TimeTree予約</span>記入なし</div>';
+
   return '' +
   '<article class="lcard ' + cls + '" data-search="' + search + '">' +
     '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
-    '<div class="ldt">' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.line_time || '') + '</div>' +
+    '<div class="ldt"><span class="ldtlab">LINE予約</span>' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.line_time || '') + '</div>' +
+    ttLine +
     treatHtml +
     '<div class="lconv">' +
       '<div class="lconvh"><span class="lconvlab">根拠のLINE会話</span>' + lineBtn + '</div>' +
@@ -4235,6 +4243,9 @@ var LTCSS_ =
 '  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
 '  .lname{ font-weight:700; font-size:1.15rem; }' +
 '  .ldt{ font-weight:900; font-size:1.7rem; letter-spacing:.02em; }' +
+'  .ldt2{ font-weight:800; font-size:1.28rem; letter-spacing:.02em; margin-top:2px; }' +
+'  .ldtlab{ display:inline-block; font-size:.8rem; font-weight:700; opacity:.6; margin-right:.45em; vertical-align:.15em; }' +
+'  .ldtnone{ color:#f59e0b; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
