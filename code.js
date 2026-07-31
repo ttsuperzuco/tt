@@ -1857,6 +1857,22 @@ var KOUKOKUCSS_ =
   '  .kkacc { color:#fff; font-weight:800; font-size:1.02rem; margin:20px 2px 9px; padding-left:10px; border-left:4px solid #7c3aed; }' +
   '  .kkacc small { opacity:.82; font-weight:600; font-size:.76rem; margin-left:6px; }' +
   '  .kkempty2 { color:rgba(255,255,255,.85); font-size:.86rem; padding:4px 2px 12px; }' +
+  '  .kkseg { display:inline-flex; background:var(--card,#fff); border:1px solid var(--line,#e2e8f0); border-radius:999px; padding:4px; gap:4px; margin:4px 0 14px; }' +
+  '  .kkseg button { border:0; background:transparent; color:var(--sub,#64748b); font-size:.95rem; font-weight:800; padding:8px 18px; border-radius:999px; cursor:pointer; }' +
+  '  .kkseg button.on { background:#e0533d; color:#fff; }' +
+  '  .kkcard { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:16px; box-shadow:0 6px 18px rgba(0,0,0,.14); padding:14px 12px 10px; margin-bottom:16px; }' +
+  '  table.kktab { width:100%; border-collapse:collapse; }' +
+  '  table.kktab th, table.kktab td { padding:12px 5px; text-align:center; font-size:1.02rem; }' +
+  '  table.kktab thead th { color:var(--sub,#64748b); font-size:.82rem; font-weight:700; border-bottom:1px solid var(--line,#e2e8f0); }' +
+  '  table.kktab tbody th { text-align:left; color:var(--ink,#0f172a); font-weight:800; font-size:.92rem; white-space:nowrap; }' +
+  '  .kkcell { border-radius:10px; font-weight:800; color:#fff; padding:11px 3px; display:block; font-variant-numeric:tabular-nums; }' +
+  '  .kktot { color:#0ea5e9; font-weight:800; font-variant-numeric:tabular-nums; }' +
+  '  .kkgrand { color:#f59e0b; font-weight:900; font-variant-numeric:tabular-nums; }' +
+  '  table.kktab tr.kktotrow th, table.kktab tr.kktotrow td { border-top:1px solid var(--line,#e2e8f0); }' +
+  '  .kkleg { color:var(--sub,#64748b); font-size:.72rem; text-align:right; margin:4px 2px 8px; }' +
+  '  .kkest { margin:6px 2px 0; padding:12px 14px; border-radius:12px; background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.35); color:var(--ink,#0f172a); font-size:.95rem; font-weight:700; line-height:1.6; text-align:center; }' +
+  '  .kkest .kkestbig { color:#f59e0b; font-size:1.35rem; font-weight:900; margin:0 2px; }' +
+  '  .kksex { font-size:.7rem; font-weight:800; padding:2px 9px; border-radius:999px; margin-left:6px; }' +
   '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.8); font-size:.72rem; text-align:center; line-height:1.6; }';
 
 var KOUKOKU_FILENAME = 'koukoku.json';
@@ -1881,12 +1897,24 @@ function renderKoukoku_(base, staff, dev) {
   }
 }
 
-/** 広告費管理（オーナー専用・開発URL専用）。読み取ったデータ d.ads を並べるだけの純JS。
- *  ②静的アプリは koukoku.json を JSONP(action=data) で取ってこの関数を直接呼ぶ。 */
+var KOUKOKU_MONTH_DAYS_ = 31;   // 1ヶ月＝31日で試算（オーナー指定）
+// 4マスの1マス（金額が多いほど赤が濃い）。1日/1ヶ月の両方を持たせ、切替はdata-差し替え。
+function _kkShade_(v, mx) { var r = mx ? v / mx : 0; return 'background:rgba(224,83,61,' + (0.16 + r * 0.62).toFixed(2) + ')'; }
+function _kkCell_(v, mx, id) {
+  return '<span class="kkcell kkval" id="' + id + '" style="' + _kkShade_(v, mx) + '"' +
+    ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * KOUKOKU_MONTH_DAYS_)) + '">' +
+    esc_(_costYen_(v)) + '</span>';
+}
+function _kkTot_(v, id, cls) {
+  return '<td class="' + cls + ' kkval" id="' + id + '"' +
+    ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * KOUKOKU_MONTH_DAYS_)) + '">' +
+    esc_(_costYen_(v)) + '</td>';
+}
+
+/** 広告費管理（オーナー専用・開発URL専用）。国籍×性別の4マス（今出している広告の1日予算合計）＋
+ *  アカウントごとの広告明細を出す。データは自動読み取りの koukoku.json（d.accounts）。 */
 function renderKoukokuPage_(d, base, staff, dev) {
   d = d || {};
-  var ads = d.ads || [];
-  // 数字を見やすく：1万以上は「◯万」、それ未満は3桁区切り。
   function fig(n) {
     n = Number(n) || 0;
     if (n >= 10000) { var s = Math.round(n / 1000) / 10; return (s % 1 === 0 ? String(s) : s.toFixed(1)) + '万'; }
@@ -1894,45 +1922,79 @@ function renderKoukokuPage_(d, base, staff, dev) {
     for (var i = t.length - 1; i >= 0; i--) { o = t.charAt(i) + o; if (++c % 3 === 0 && i > 0) o = ',' + o; }
     return o;
   }
-  // 広告1件のカード（3アカウント共通で使う）。
+  var SEXCOL = { m: '#38bdf8', f: '#ec4899' }, SEXLBL = { m: '男性', f: '女性' };
+
+  // 全広告を1つに集める（アカウント＝国籍、各広告の男女＝見た人の男女比から判定済み）。
+  var allads = [];
+  var accounts = d.accounts || [];
+  if (accounts.length) {
+    accounts.forEach(function (acc) {
+      (acc.ads || []).forEach(function (a) { a._label = acc.label; a._handle = acc.handle; allads.push(a); });
+    });
+  } else { allads = d.ads || []; }
+
+  // 4マス：今出している(配信中)広告の「1日の予算」を国籍×性別ごとに合算。
+  var S = { jm: 0, jf: 0, tm: 0, tf: 0 }, unknown = 0;
+  allads.forEach(function (a) {
+    if (a.status !== '配信中') return;                 // 停止中・未配信は「今の1日支出」に入れない
+    var day = Number(a.day_budget) || 0;
+    if (!a.sex) { unknown += day; return; }            // 男女が読めなかった分は別に注記
+    S[(a.nat === 'jp' ? 'j' : 't') + (a.sex === 'f' ? 'f' : 'm')] += day;
+  });
+  var mx = Math.max(S.jm, S.jf, S.tm, S.tf);
+  var grand = S.jm + S.jf + S.tm + S.tf;
+  var table =
+    '<div class="kkcard"><table class="kktab">' +
+    '<thead><tr><th></th><th>男性</th><th>女性</th><th>国籍ごと</th></tr></thead><tbody>' +
+    '<tr><th>🇯🇵 日本人</th><td>' + _kkCell_(S.jm, mx, 'kc-jm') + '</td><td>' + _kkCell_(S.jf, mx, 'kc-jf') + '</td>' +
+      _kkTot_(S.jm + S.jf, 'kt-jp', 'kktot') + '</tr>' +
+    '<tr><th>🇹🇼 台湾人</th><td>' + _kkCell_(S.tm, mx, 'kc-tm') + '</td><td>' + _kkCell_(S.tf, mx, 'kc-tf') + '</td>' +
+      _kkTot_(S.tm + S.tf, 'kt-tw', 'kktot') + '</tr>' +
+    '<tr class="kktotrow"><th>性別ごと</th>' + _kkTot_(S.jm + S.tm, 'kt-m', 'kktot') +
+      _kkTot_(S.jf + S.tf, 'kt-f', 'kktot') + _kkTot_(grand, 'kt-all', 'kkgrand') + '</tr>' +
+    '</tbody></table>' +
+    '<div class="kkleg">■ 色が濃い＝1日に使っている金額が多い</div>' +
+    '<div class="kkest">🧮 このペース（1日 合計 <b>' + esc_(_costYen_(grand)) + '</b>）で' + KOUKOKU_MONTH_DAYS_ + '日つづけると＝' +
+      '<b class="kkestbig">' + esc_(_costYen_(grand * KOUKOKU_MONTH_DAYS_)) + '</b>（1ヶ月の目安）</div>' +
+    (unknown ? '<div class="kkleg" style="text-align:center;color:#d97706;">※ 男女を読めなかった配信中の広告 1日 ' + esc_(_costYen_(unknown)) + ' 分は4マスに入れていません</div>' : '') +
+    '</div>';
+
+  // 広告1件のカード（男女の印つき）。
   function adCard(a) {
     var live = (a.status === '配信中');
-    var badge = '<span class="kkst ' + (live ? 'kklive2' : 'kkstop') + '">' + esc_(a.status || '') + '</span>';
-    var img = a.image_data
-      ? '<img class="kkth" src="' + a.image_data + '" alt="">'
-      : '<div class="kkth ph">画像</div>';
+    var st = '<span class="kkst ' + (live ? 'kklive2' : 'kkstop') + '">' + esc_(a.status || '') + '</span>';
+    var sex = a.sex ? '<span class="kksex" style="background:' + SEXCOL[a.sex] + '22;color:' + SEXCOL[a.sex] + '">' + SEXLBL[a.sex] + '向け</span>' : '';
+    var day = a.day_budget ? '　1日 ' + esc_(_costYen_(a.day_budget)) : '';
+    var img = a.image_data ? '<img class="kkth" src="' + a.image_data + '" alt="">' : '<div class="kkth ph">画像</div>';
     return '<div class="kkad">' + img +
       '<div class="kkinfo">' +
-        '<div class="kkr1">' + badge +
-          '<span class="kkspend">' + esc_(_costYen_(a.spend_ntd)) + ' <small>使った実額</small></span></div>' +
+        '<div class="kkr1">' + st + sex +
+          '<span class="kkspend">' + esc_(_costYen_(a.spend_ntd)) + ' <small>使った実額' + day + '</small></span></div>' +
         '<div class="kkkv">見られた <b>' + fig(a.views) + '</b>　プロフィール来訪 <b>' + fig(a.profile_visits) + '</b></div>' +
       '</div></div>';
   }
 
-  var list, totalAds = 0;
-  var accounts = d.accounts;
-  if (accounts && accounts.length) {
-    // ★新しい形＝3アカウントを、アカウントごとに見出しを付けて並べる。
+  var totalAds = 0, list;
+  if (accounts.length) {
     list = accounts.map(function (acc) {
       var aads = acc.ads || [];
       totalAds += aads.length;
-      var head = '<div class="kkacc">' + esc_(acc.label || '') +
-        '<small>@' + esc_(acc.handle || '') + '・' + aads.length + '件</small></div>';
-      var inner = aads.length
-        ? aads.map(adCard).join('')
-        : '<div class="kkempty2">読み取れませんでした（ログイン切れ等の疑い）。</div>';
-      return head + inner;
+      var head = '<div class="kkacc">' + esc_(acc.label || '') + '<small>@' + esc_(acc.handle || '') + '・' + aads.length + '件</small></div>';
+      return head + (aads.length ? aads.map(adCard).join('') : '<div class="kkempty2">読み取れませんでした（ログイン切れ等の疑い）。</div>');
     }).join('');
   } else {
-    // 旧い形（1アカウントだけの d.ads）にも一応対応。
-    totalAds = ads.length;
-    list = ads.length
-      ? ads.map(adCard).join('')
-      : '<div class="kkempty">まだ読み取っていません。<br>毎日1回、自動でインスタから読み取ります。</div>';
+    totalAds = allads.length;
+    list = allads.length ? allads.map(adCard).join('') : '<div class="kkempty">まだ読み取っていません。<br>毎日1回、自動でインスタから読み取ります。</div>';
   }
-  var when = d.read_at
-    ? '最終読み取り：' + esc_(d.read_at) + '　／　広告 ' + totalAds + '件'
-    : '広告 ' + totalAds + '件';
+  var when = d.read_at ? '最終読み取り：' + esc_(d.read_at) + '　／　広告 ' + totalAds + '件' : '広告 ' + totalAds + '件';
+
+  var script = '<script>(function(){var mode="day";function apply(){var xs=document.querySelectorAll(".kkval");' +
+    'for(var i=0;i<xs.length;i++){var t=xs[i].getAttribute("data-"+mode);if(t!=null)xs[i].innerHTML=t;}' +
+    'var bd=document.getElementById("kk-day"),bm=document.getElementById("kk-month");' +
+    'if(bd)bd.className=(mode==="day"?"on":"");if(bm)bm.className=(mode==="month"?"on":"");}' +
+    'var bd=document.getElementById("kk-day"),bm=document.getElementById("kk-month");' +
+    'if(bd)bd.addEventListener("click",function(){mode="day";apply();});' +
+    'if(bm)bm.addEventListener("click",function(){mode="month";apply();});})();</script>';
 
   return '<style>' + HOMECSS_ + KOUKOKUCSS_ + '</style>' +
     '<div class="home">' +
@@ -1942,10 +2004,14 @@ function renderKoukokuPage_(d, base, staff, dev) {
       '<div class="kk">' +
         '<div style="text-align:center;"><span class="kkbadge">✓ 毎日1回 自動で読み取り</span></div>' +
         '<div class="kkwhen">' + when + '</div>' +
+        '<div class="kkseg"><button id="kk-day" class="on" type="button">1日あたり</button>' +
+          '<button id="kk-month" type="button">1か月あたり</button></div>' +
+        table +
+        '<div class="kkacc" style="border-left-color:#7c3aed;">広告ごとの明細</div>' +
         list +
-        '<div class="kknote">画像も数字も、自動で読み取った本物です。金額は台湾ドル（元）＝実際に使った額。</div>' +
+        '<div class="kknote">4マスは「今 配信中の広告の1日予算」を国籍×性別で合算。男女は各広告を見た人の割合から自動判定。金額は台湾ドル（元）。</div>' +
       '</div>' +
-    '</div>';
+    '</div>' + script;
 }
 
 // ★顧客履歴検索：番号 or 氏名（一部一致OK）で客を探し、今回の予約と過去予約(メモ込み)を見る。
