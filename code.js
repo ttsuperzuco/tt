@@ -1676,9 +1676,7 @@ function renderLtPage_(d, base, staff, dev) {
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
     '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>' +
   '</div>' +
-  '<h1>TimeTree予約記入漏れ</h1>' +
-  '<p class="lsub">LINEで予約を受けたのに、TimeTreeにまだ書いてない予約が ' +
-    '<span class="lcnt">' + (c.action || 0) + '</span> 件あります</p>' +
+  '<h1>⚠️ TimeTree予約記入漏れ <span class="lcnt">' + (c.action || 0) + '件</span></h1>' +
   '<div id="lcards">' + cards + '</div>' +
 '</div>';
 }
@@ -4247,9 +4245,8 @@ var LTCSS_ =
 '  .lhome{ flex:0 0 auto; color:var(--ink); text-decoration:none; font-weight:700; font-size:14px;' +
 '    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 14px; }' +
 '  .lgen{ color:rgba(255,255,255,.85); font-size:12px; }' +
-'  h1{ color:#fff; font-size:1.7rem; font-weight:900; margin:6px 0 4px; }' +
-'  .lsub{ color:#fff; font-weight:700; font-size:1rem; margin:0 0 14px; }' +
-'  .lsub .lcnt{ color:#ff8fb3; font-size:1.5em; font-weight:900; }' +
+'  h1{ color:#fff; font-size:1.7rem; font-weight:900; margin:6px 0 14px; }' +
+'  .lcnt{ color:#ff8fb3; font-size:1.4em; font-weight:900; }' +
 '  #lq{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px;' +
 '    background:var(--card); color:var(--ink); font-size:15px; margin-bottom:14px; }' +
 '  .lcard{ background:var(--card); border:1px solid var(--line); border-left:4px solid var(--add);' +
