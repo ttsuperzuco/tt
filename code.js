@@ -1612,13 +1612,13 @@ function ltCard_(r) {
   //   タイムツリーに予約が無い時は「TimeTree予約　記入なし」と出す。
   var _ttHas = r.tt_time && r.tt_time !== '—' && r.tt_time !== '';
   var ttLine = _ttHas
-    ? '<div class="ldt2"><span class="ldtlab">TimeTree予約</span>' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.tt_time) + '</div>'
-    : '<div class="ldt2 ldtnone"><span class="ldtlab">TimeTree予約</span>記入なし</div>';
+    ? '<div class="ldtrow"><span class="lbadge lbadge-tt">TimeTree予約</span><span class="ldtval ttval">' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.tt_time) + '</span></div>'
+    : '<div class="ldtrow"><span class="lbadge lbadge-tt">TimeTree予約</span><span class="ldtval ttval ldtnone">記入なし</span></div>';
 
   return '' +
   '<article class="lcard ' + cls + '" data-search="' + search + '">' +
     '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
-    '<div class="ldt"><span class="ldtlab">LINE予約</span>' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.line_time || '') + '</div>' +
+    '<div class="ldtrow"><span class="lbadge lbadge-line">LINE予約</span><span class="ldtval">' + esc_(jpDateWeekday_(r.date)) + ' ' + esc_(r.line_time || '') + '</span></div>' +
     ttLine +
     treatHtml +
     '<div class="lconv">' +
@@ -4241,10 +4241,13 @@ var LTCSS_ =
 '    border-radius:12px; padding:11px 13px; margin-bottom:22px; box-shadow:0 1px 3px rgba(0,0,0,.15); }' +
 '  .lhead{ margin-bottom:2px; }' +
 '  .lcode{ color:var(--sub); font-weight:600; font-size:1rem; margin-right:6px; }' +
-'  .lname{ font-weight:700; font-size:1.15rem; }' +
-'  .ldt{ font-weight:900; font-size:1.7rem; letter-spacing:.02em; }' +
-'  .ldt2{ font-weight:800; font-size:1.28rem; letter-spacing:.02em; margin-top:2px; }' +
-'  .ldtlab{ display:inline-block; font-size:.8rem; font-weight:700; opacity:.6; margin-right:.45em; vertical-align:.15em; }' +
+'  .lname{ font-weight:800; font-size:1.55rem; }' +
+'  .ldtrow{ display:flex; align-items:center; gap:.5em; margin-top:4px; }' +
+'  .lbadge{ flex:none; font-size:.74rem; font-weight:800; padding:3px 9px; border-radius:999px; color:#fff; letter-spacing:.03em; }' +
+'  .lbadge-line{ background:#06c755; }' +
+'  .lbadge-tt{ background:#3b82f6; }' +
+'  .ldtval{ font-weight:900; font-size:1.55rem; letter-spacing:.02em; }' +
+'  .ttval{ font-size:1.3rem; font-weight:800; }' +
 '  .ldtnone{ color:#f59e0b; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
