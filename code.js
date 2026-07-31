@@ -4276,13 +4276,12 @@ var LTCSS_ =
 '  .ltxt{ flex:1 1 auto; font-size:1.5rem; font-weight:700; display:flex; align-items:center; }' +
 '  .lconv{ border:2px solid #06C755; border-radius:12px; overflow:hidden; margin-top:16px; }' +
 '  .lconvh{ display:flex; flex-direction:row; align-items:center; justify-content:space-between;' +
-'    gap:10px; background:#06C755; padding:9px 10px; }' +
-'  .lconvlab{ font-size:1.33rem; font-weight:900; color:#fff; }' +
-'  .lqline{ flex:0 0 auto; text-align:center; background:#fff; color:#06962f; font-weight:800;' +
+'    gap:10px; background:#fff; padding:9px 10px; }' +
+'  .lconvlab{ font-size:1.33rem; font-weight:900; color:#06C755; }' +
+'  .lqline{ flex:0 0 auto; text-align:center; background:#06C755; color:#fff; font-weight:800;' +
 '    font-size:1.2rem; line-height:1.25; text-decoration:none; border-radius:11px; padding:11px 15px; }' +
-'  .lconvb{ background:#eef3f6; padding:11px 10px 6px; }' +
-'  @media (prefers-color-scheme:dark){ .lconvb{ background:#0f1a24; } }' +
-'  .lqt{ font-size:.72rem; color:var(--sub); margin:0 2px 1px; }' +
+'  .lconvb{ background:#06C755; padding:11px 10px 6px; }' +
+'  .lqt{ font-size:.72rem; color:rgba(255,255,255,.9); margin:0 2px 1px; }' +
 '  .lqt.s{ text-align:right; }' +
 '  .lqrow{ display:flex; margin-bottom:9px; }' +
 '  .lqrow.s{ justify-content:flex-end; }' +
