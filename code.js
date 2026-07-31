@@ -4272,9 +4272,9 @@ var LTCSS_ =
 '  .lhead{ margin-bottom:2px; }' +
 '  .lcode{ color:var(--sub); font-weight:700; font-size:1.3rem; margin-right:6px; }' +
 '  .lname{ font-weight:800; font-size:2rem; }' +
-'  .ldtwrap{ display:flex; gap:7px; flex-wrap:nowrap; margin-top:5px; }' +
-'  .ldtcell{ display:flex; align-items:center; gap:7px; min-width:0; }' +
-'  .lbadge2{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; color:#fff; padding:5px 8px; line-height:1.1; }' +
+'  .ldtwrap{ display:flex; gap:5px; flex-wrap:nowrap; margin-top:5px; }' +
+'  .ldtcell{ display:flex; align-items:center; gap:6px; min-width:0; }' +
+'  .lbadge2{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; color:#fff; padding:4px 5px; line-height:1.1; }' +
 '  .lbadge2 .b1{ font-size:.9rem; font-weight:800; letter-spacing:.02em; }' +
 '  .lbadge2 .b2{ font-size:.74rem; font-weight:700; }' +
 '  .lbadge2.line{ background:#06c755; }' +
