@@ -4047,24 +4047,15 @@ var MOVESCRIPT_ =
 '    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">被り検出画面に戻る</button>";' +
 '  document.getElementById("mvBackBtn").addEventListener("click",function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); });' +
 '  return ov; }' +
-// ★2026-07-31：担当変更が失敗した時は、成功画面と同じ大きさの「赤い失敗画面」を出す（小さな警告から格上げ）。
-//   成功(緑)とハッキリ見分けられるようにし、戻ると被り一覧を作り直して残っているかぶりを正しく見せる。
-'function showStaffFailOverlay_(reason){ var ov=document.getElementById("mvWaitOverlay");' +
-'  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
-'  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#dc2626;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
-'  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:12px;color:#fff;\\">✕</div>"+' +
-'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:12px;\\">担当を変更できませんでした</div>"+' +
-'    "<div style=\\"color:#ffe4e6;font-size:20px;line-height:1.7;max-width:420px;margin-bottom:26px;\\">"+(reason||"もう一度お試しください。")+"<br>二度続けて失敗する時はRyuさんに連絡してください。</div>"+' +
-'    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#dc2626;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">被り検出画面に戻る</button>";' +
-'  document.getElementById("mvBackBtn").addEventListener("click",function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); doneRefreshFast_(); });' +
-'  return ov; }' +
+// ★共通ルール(2026-07-31 オーナー決定)：スーパーズコAppのエラーは「小さな警告」で統一する（大きな全画面は出さない）。
+//   成功は大きな画面(緑)のままでよいが、失敗は必ず小さな警告(ccPopup_)で出す。
 'function waitStaffDoneFinish_(id,evid,nf,nm){ var tries=0;' +
 '  function chk(){ tries++;' +
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
 '      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showStaffDoneOverlay_(nf,nm);' +
 '        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
-'      else if(s==="error"||s==="failed"){ try{ window.__keepMvOverlay=true; }catch(e2){} showStaffFailOverlay_((r&&r.result)||"もう一度お試しください。"); }' +
-'      else if(tries>=90){ try{ window.__keepMvOverlay=true; }catch(e2){} showStaffFailOverlay_("時間切れです。事務所のパソコンの見張りが動いているか確認してください。"); }' +
+'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 担当を変えられませんでした：もう一度お試しください。二度続けてこのエラーがでた場合は、Ryuさんに連絡してください。", false); }' +
+'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください", false); }' +
 '      else { setTimeout(chk,250); } });' +
 '  }' +
 '  setTimeout(chk,250); }' +
