@@ -4288,7 +4288,7 @@ var LTCSS_ =
 '  .ldtt{ font-size:1.6rem; font-weight:900; letter-spacing:.02em; white-space:nowrap; }' +
 '  .ldtdiff{ color:#ff5fa2; }' +
 '  .ldtnone{ color:#111; background:#fff; font-size:1.2rem; font-weight:900; padding:0 6px; border-radius:7px; white-space:nowrap; }' +
-'  .ltroomx{ color:#fff; background:#f59e0b; font-size:1.2rem; font-weight:900; padding:1px 9px; border-radius:8px; white-space:nowrap; }' +
+'  .ltroomx{ color:#ff5fa2; font-size:1.6rem; font-weight:900; white-space:nowrap; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
