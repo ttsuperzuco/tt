@@ -1622,9 +1622,12 @@ function ltCard_(r) {
       '<span class="lbadge2 line"><span class="b1">LINE</span><span class="b2">予約</span></span>' +
       '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(r.line_time || '') + '</span></span>' +
     '</div>';
-  var ttInner = _ttHas
-    ? '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(ttStart) + '</span></span>'
-    : '<span class="ldtdt"><span class="ldtt ldtnone">記入なし</span></span>';
+  // ★予約自体はパインのカレンダーに有るが、お店の部屋の枠が未確保＝「部屋未定」（2026-08-01オーナー）。
+  var ttInner = r.room_undecided
+    ? '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt ltroomx">部屋未定</span></span>'
+    : (_ttHas
+      ? '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(ttStart) + '</span></span>'
+      : '<span class="ldtdt"><span class="ldtt ldtnone">記入なし</span></span>');
   var ttCell =
     '<div class="ldtcell">' +
       '<span class="lbadge2 tt"><span class="b1">TimeTree</span><span class="b2">予約</span></span>' +
@@ -4285,6 +4288,7 @@ var LTCSS_ =
 '  .ldtt{ font-size:1.6rem; font-weight:900; letter-spacing:.02em; white-space:nowrap; }' +
 '  .ldtdiff{ color:#ff5fa2; }' +
 '  .ldtnone{ color:#111; background:#fff; font-size:1.2rem; font-weight:900; padding:0 6px; border-radius:7px; white-space:nowrap; }' +
+'  .ltroomx{ color:#fff; background:#f59e0b; font-size:1.2rem; font-weight:900; padding:1px 9px; border-radius:8px; white-space:nowrap; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
