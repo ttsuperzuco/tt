@@ -1693,7 +1693,7 @@ function renderLtPage_(d, base, staff, dev) {
 '<div class="lwrap">' +
   '<div class="lbar">' +
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版19</b></span>' +
+    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版20</b></span>' +
   '</div>' +
   cards +
 '</div>' + LTFIT_SCRIPT_;
@@ -4337,7 +4337,7 @@ var LTFIT_SCRIPT_ =
 '  for(var i=0;i<ins.length;i++){' +
 '    var el=ins[i]; el.style.transform="none"; el.parentElement.style.height="";' +
 '    var p=el.parentElement; if(!p.clientWidth||!el.offsetWidth) continue;' +
-'    var k=p.clientWidth/el.offsetWidth; if(k>1.9)k=1.9; if(k<1)k=1;' +
+'    var k=p.clientWidth/el.offsetWidth; if(k>1.9)k=1.9; if(k<0.8)k=0.8;' +
 '    el.style.transform="scale("+k.toFixed(3)+")";' +
 '    p.style.height=Math.ceil(el.getBoundingClientRect().height)+"px";' +
 '  }' +
