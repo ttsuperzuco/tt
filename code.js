@@ -1634,7 +1634,7 @@ function ltCard_(r) {
   return '' +
   '<article class="lcard ' + cls + '" data-search="' + search + '">' +
     '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
-    '<div class="ldtwrap">' + lineCell + ttCell + '</div>' +
+    '<div class="ldtwrap"><div class="ldtin">' + lineCell + ttCell + '</div></div>' +
     treatHtml +
     '<div class="lconv">' +
       '<div class="lconvh"><span class="lconvlab">根拠のLINE会話</span>' + lineBtn + '</div>' +
@@ -1693,10 +1693,10 @@ function renderLtPage_(d, base, staff, dev) {
 '<div class="lwrap">' +
   '<div class="lbar">' +
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版18</b></span>' +
+    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版19</b></span>' +
   '</div>' +
   cards +
-'</div>';
+'</div>' + LTFIT_SCRIPT_;
 }
 
 // 数字にカンマ（GAS側で self-completeに。toLocaleStringに頼らない）。
@@ -4272,8 +4272,9 @@ var LTCSS_ =
 '  .lhead{ margin-bottom:2px; }' +
 '  .lcode{ color:var(--sub); font-weight:700; font-size:1.3rem; margin-right:6px; }' +
 '  .lname{ font-weight:800; font-size:2rem; }' +
-'  .ldtwrap{ display:flex; gap:5px; flex-wrap:nowrap; margin-top:5px; }' +
-'  .ldtcell{ display:flex; align-items:center; gap:6px; min-width:0; }' +
+'  .ldtwrap{ margin-top:6px; overflow:hidden; }' +
+'  .ldtin{ display:inline-flex; align-items:center; gap:8px; flex-wrap:nowrap; white-space:nowrap; transform-origin:left top; }' +
+'  .ldtcell{ display:flex; align-items:center; gap:6px; }' +
 '  .lbadge2{ flex:0 0 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:8px; color:#fff; padding:4px 5px; line-height:1.1; }' +
 '  .lbadge2 .b1{ font-size:.9rem; font-weight:800; letter-spacing:.02em; }' +
 '  .lbadge2 .b2{ font-size:.74rem; font-weight:700; }' +
@@ -4325,6 +4326,25 @@ var LTSCRIPT_ =
 '  });' +
 '}' +
 'q.addEventListener("input",apply);' +
+'})();</scr' + 'ipt>';
+
+// ★予約の行(LINE予約/TimeTree予約と日時)を、スマホの幅いっぱいまで自動で最大化する
+//   （一行に収まる範囲で、中身の自然な幅と枠の幅を測って拡大＝どの機種でも常に最大）。
+var LTFIT_SCRIPT_ =
+'<script>(function(){' +
+'window.szLtFit_=function(root){' +
+'  var ins=(root||document).querySelectorAll(".ldtin");' +
+'  for(var i=0;i<ins.length;i++){' +
+'    var el=ins[i]; el.style.transform="none"; el.parentElement.style.height="";' +
+'    var p=el.parentElement; if(!p.clientWidth||!el.offsetWidth) continue;' +
+'    var k=p.clientWidth/el.offsetWidth; if(k>1.9)k=1.9; if(k<1)k=1;' +
+'    el.style.transform="scale("+k.toFixed(3)+")";' +
+'    p.style.height=Math.ceil(el.getBoundingClientRect().height)+"px";' +
+'  }' +
+'};' +
+'window.szLtFit_();' +
+'setTimeout(window.szLtFit_,60); setTimeout(window.szLtFit_,250);' +
+'window.addEventListener("resize",function(){ if(window.szLtFit_) window.szLtFit_(); });' +
 '})();</scr' + 'ipt>';
 
 // メニュー／準備中ページ用のおしゃれスタイル（自己完結・ダーク/ライト対応）
