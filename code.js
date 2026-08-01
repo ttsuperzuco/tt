@@ -1693,7 +1693,7 @@ function renderLtPage_(d, base, staff, dev) {
 '<div class="lwrap">' +
   '<div class="lbar">' +
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a>' +
-    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版16</b></span>' +
+    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '　<b style="color:#ffe600">版17</b></span>' +
   '</div>' +
   cards +
 '</div>';
@@ -4296,7 +4296,7 @@ var LTCSS_ =
 '  .lqline{ flex:0 0 auto; text-align:center; background:#06C755; color:#fff; font-weight:800;' +
 '    font-size:1.2rem; line-height:1.25; text-decoration:none; border-radius:11px; padding:11px 15px; }' +
 '  .lconvb{ background:#06C755; padding:11px 10px 6px; }' +
-'  .lqt{ font-size:.72rem; color:rgba(255,255,255,.92); margin:0 2px 1px; }' +
+'  .lqt{ font-size:.95rem; color:rgba(255,255,255,.95); font-weight:600; margin:0 2px 2px; }' +
 '  .lqt.s{ text-align:right; }' +
 '  .lqrow{ display:flex; margin-bottom:9px; }' +
 '  .lqrow.s{ justify-content:flex-end; }' +
