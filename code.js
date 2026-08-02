@@ -4832,6 +4832,9 @@ var KANSHICSS_ =
 '  .knote{ font-size:15px; color:var(--sub); margin-bottom:10px; line-height:1.6; }' +
 '  .ksec{ font-size:16px; font-weight:800; margin:18px 0 8px; padding-top:12px;' +
 '    border-top:1px solid var(--line); }' +
+// ★2026-08-02：3部屋の見出し（管理者用／実務者用／開発者用）＋トマト＝ピンクの「幹部」（PC設定画面とそろえる）。
+'  .kroom{ font-size:16px; font-weight:800; color:#f59e0b; margin:16px 0 8px; padding-top:12px; border-top:1px solid var(--line); }' +
+'  .kchip .kexec{ font-size:11px; color:#ec4899; font-weight:800; margin-left:3px; }' +
 '  .ktrow{ padding:9px 0; border-bottom:1px solid var(--line); }' +
 '  .ktname{ display:flex; align-items:center; gap:7px; font-size:16px; font-weight:700; margin-bottom:6px; }' +
 '  .kacc{ width:5px; height:16px; border-radius:3px; flex:0 0 auto; }' +
@@ -5079,30 +5082,38 @@ var KANSHISCRIPT_ =
 '    drawTiles_();' +
 '  });' +
 '}' +
+'function tileGrp_(id){ return (typeof tileGroup_==="function")?tileGroup_(id):"jitsumu"; }' +
 'function tileRowsHtml_(){' +
 '  var defs=tileDefs_(), byId={};' +
 '  for(var i=0;i<defs.length;i++) byId[defs[i].id]=defs[i];' +
 '  var order=EO_.filter(function(id){ return byId[id]; });' +
 '  for(var j=0;j<defs.length;j++){ if(order.indexOf(defs[j].id)<0) order.push(defs[j].id); }' +
 '  EO_=order;' +
-'  return order.map(function(tid){' +
+'  function rowH_(tid){' +
 '    var d=byId[tid];' +
 '    var h="<div class=\\"ktrow\\" data-tid=\\""+esc(tid)+"\\"><div class=\\"ktname\\">"+' +
 '      "<span class=\\"kacc\\" style=\\"background:"+esc(d.color||"#94a3b8")+"\\"></span>"+esc(d.label)+' +
 '      "<span class=\\"kord\\"><button type=\\"button\\" data-mv=\\"-1\\" data-tid=\\""+esc(tid)+"\\">▲</button>"+' +
 '      "<button type=\\"button\\" data-mv=\\"1\\" data-tid=\\""+esc(tid)+"\\">▼</button></span></div>";' +
 '    if(d.dev){' +
-'      h+="<div class=\\"kdevnote\\">開発用URLだけに出るボタンです（人ごとの設定はありません。並び順だけ変えられます）</div>";' +
+'      h+="<div class=\\"kdevnote\\">開発画面だけに出るボタンです（オーナー専用・人ごとの設定はありません。並び順だけ変えられます）</div>";' +
 '    } else {' +
 '      h+="<div class=\\"kchips\\">"+EPEOPLE_.map(function(pid){' +
 '        var on=!!(EP_[pid]&&EP_[pid][tid]);' +
-'        var used=(pid!=="kanbu"&&ECLAIM_[pid])?"<span class=\\"kused\\">使用中</span>":"";' +
+'        var suf=(pid==="kanbu")?"<span class=\\"kexec\\">幹部</span>":((ECLAIM_[pid])?"<span class=\\"kused\\">使用中</span>":"");' +
 '        return "<button type=\\"button\\" class=\\"kchip"+(on?" on":"")+"\\" data-pid=\\""+esc(pid)+"\\" data-tid=\\""+esc(tid)+"\\">"+' +
-'          esc(ELAB_[pid]||pid)+used+"</button>";' +
+'          esc(ELAB_[pid]||pid)+suf+"</button>";' +
 '      }).join("")+"</div>";' +
 '    }' +
 '    return h+"</div>";' +
-'  }).join("");' +
+'  }' +
+'  var groups={kanri:[],jitsumu:[],kaihatsu:[]};' +
+'  for(var k=0;k<order.length;k++){ var g=tileGrp_(order[k]); (groups[g]||groups.jitsumu).push(order[k]); }' +
+'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_:[{id:"kanri",icon:"🛠️",title:"管理者用"},{id:"jitsumu",icon:"💼",title:"実務者用"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発者用"}];' +
+'  var out="";' +
+'  for(var r=0;r<roles.length;r++){ var R=roles[r], ids=groups[R.id]||[]; if(!ids.length) continue;' +
+'    out+="<div class=\\"kroom\\">"+R.icon+" "+R.title+"</div>"+ids.map(rowH_).join(""); }' +
+'  return out;' +
 '}' +
 // PC版スーパーズコ（事務所PCのホーム）で表示するボタン。チェック＝表示／外す＝PC版だけで隠す。
 'function pcRowsHtml_(){' +
@@ -5122,9 +5133,6 @@ var KANSHISCRIPT_ =
 '  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
 '    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください（事務所PCが受け取ってから反映まで最大1分）。</div>"+' +
 '    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
-'    "<div class=\\"ksec\\">PC版で表示するボタン</div>"+' +
-'    "<div class=\\"knote\\">事務所PCのホーム画面（PC版スーパーズコ）に出すボタンです。押して緑がPC版に表示、灰色はPC版だけで隠れます（スタッフのスマホには関係ありません）。</div>"+' +
-'    "<div class=\\"kchips\\" id=\\"kPcRows\\">"+pcRowsHtml_()+"</div>"+' +
 '    "<div class=\\"ksec\\">新しいユーザーを追加</div>"+' +
 '    "<div class=\\"knote\\">新しいスタッフや、同じ人の別の名前（例：りんご2）を足します。</div>"+' +
 '    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kAdd\\" placeholder=\\"例：りんご2\\">"+' +
@@ -5142,8 +5150,9 @@ var KANSHISCRIPT_ =
 '}' +
 'function closeTiles_(){ var m=document.getElementById("kTiles"); if(m&&m.parentNode) m.parentNode.removeChild(m); }' +
 'function moveTile_(tid, dir){' +
-'  var i=EO_.indexOf(tid), j=i+dir;' +
-'  if(i<0||j<0||j>=EO_.length) return;' +
+'  var g=tileGrp_(tid), i=EO_.indexOf(tid); if(i<0) return;' +
+'  var j=i+dir; while(j>=0&&j<EO_.length&&tileGrp_(EO_[j])!==g) j+=dir;' +   // 同じ部屋の中だけ
+'  if(j<0||j>=EO_.length) return;' +
 '  var tmp=EO_[i]; EO_[i]=EO_[j]; EO_[j]=tmp;' +
 '  var box=document.getElementById("kTileRows"); if(box) box.innerHTML=tileRowsHtml_();' +
 '}' +
