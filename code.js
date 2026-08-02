@@ -910,12 +910,14 @@ var DEFAULT_TILE_SETTINGS_ = {
   //   開発URL(?dev=1)専用（tile_settings.py の TILES にも入れない＝誰もONにできない）。
   cost:       { exec: false, staff: false },
   // ★広告費管理＝オーナー専用。cost と同じく開発URL(?dev=1)専用（tile_settings.py に入れない）。
-  koukoku:    { exec: false, staff: false }
+  koukoku:    { exec: false, staff: false },
+  // ★IGのDM＝オーナー専用。koukoku と同じく開発URL(?dev=1)専用（tile_settings.py に入れない）。
+  instadm:    { exec: false, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'timedsend', 'yoyaku'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'instadm', 'timedsend', 'yoyaku'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1494,6 +1496,10 @@ var TILE_DEFS_ = [
   //   tile_settings.py に入れないので開発者だけに出る）。国籍×性別で広告費を見る＋広告ごとの明細。
   { id: 'koukoku', cls: 'koukoku', view: 'koukoku',
     icon: '<span class="ticon">📣</span>', label: '広告費\n管理' },
+  // ★IGのDM＝3つのインスタに来たDMを読む（既読を付けずに一覧だけ）。開発URL(?dev=1)専用
+  //   （koukoku/kanshiと同じ＝tile_settings.py に入れないので開発者だけに出る）。2026-08-02 第一弾。
+  { id: 'instadm', cls: 'instadm', view: 'instadm',
+    icon: '<span class="ticon">📩</span>', label: 'IGの\nDM' },
   // ★時間指定LINE送信＝決めた時刻に文章＋画像を公式LINEから送る予約画面。開発URL(?dev=1)専用
   //   （kanshi/zenjitsu/costと同じ＝tile_settings.pyに入れないので開発者だけに出る）。PC版と並びをそろえる。
   { id: 'timedsend', cls: 'timedsend', view: 'timedsend',
@@ -1510,6 +1516,7 @@ var TILE_DEFS_ = [
 //   GROUP_OF と一致させる（片方直したら必ず両方）。
 var TILE_GROUP_ = {
   uriage: 'kanri', kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
+  instadm: 'kanri',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', timedsend: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
@@ -1964,6 +1971,94 @@ var KOUKOKUCSS_ =
   '  .kkest .kkestbig { color:#f59e0b; font-size:1.35rem; font-weight:900; margin:0 2px; }' +
   '  .kksex { font-size:.7rem; font-weight:800; padding:2px 9px; border-radius:999px; margin-left:6px; }' +
   '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.8); font-size:.72rem; text-align:center; line-height:1.6; }';
+
+// ====== IGのDM（view=instadm・開発URL専用／2026-08-02 第一弾） ======
+//   事務所PCが read_dms.py で3アカウントのDM一覧を読み（会話は開かない＝既読を付けない）、
+//   insta_dm.json に書き出す→このアプリは窓口(action=data)で取ってきて並べるだけ（読むだけ）。
+//   見た目はLINE未回答に寄せる。返信・削除は第一弾では付けない。
+var INSTADM_CSS_ =
+'  .idmwrap { max-width:720px; margin:0 auto; }' +
+'  .idmwrap h1 { font-size:1.3rem; margin:6px 2px 12px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }' +
+'  .idmgen { color:#cfe3ec; font-size:.82rem; font-weight:600; }' +
+'  .idmacc { margin:18px 0 6px; font-size:1.08rem; font-weight:800; color:#fff;' +
+'    display:flex; align-items:center; gap:8px; flex-wrap:wrap; }' +
+'  .idmbadge { font-size:.76rem; font-weight:700; padding:2px 9px; border-radius:999px;' +
+'    background:rgba(255,255,255,.16); color:#fff; }' +
+'  .idmsec { font-size:.92rem; font-weight:700; color:#eaf3f7; margin:12px 2px 4px; }' +
+'  .idmnote { color:#cfe3ec; font-size:.83rem; background:rgba(255,255,255,.06);' +
+'    border-radius:10px; padding:8px 11px; margin:4px 2px 6px; line-height:1.5; }' +
+'  .idmcard { background:var(--card,#0f2f3d); border:1px solid rgba(255,255,255,.08);' +
+'    border-radius:14px; padding:12px 14px; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,.12); }' +
+'  .idmcard.wait { border-left:5px solid #e1306c; }' +
+'  .idmnm { font-weight:800; font-size:1.02rem; color:#fff; word-break:break-word; }' +
+'  .idmpv { color:#dbe9f0; font-size:.95rem; margin-top:4px; line-height:1.45; word-break:break-word; }' +
+'  .idmmeta { display:flex; gap:8px; align-items:center; margin-top:7px; flex-wrap:wrap; }' +
+'  .idmtag { font-size:.74rem; font-weight:700; padding:2px 9px; border-radius:999px; }' +
+'  .idmtag.wait { background:#e1306c; color:#fff; }' +
+'  .idmtag.done { background:rgba(255,255,255,.14); color:#cfe3ec; }' +
+'  .idmtag.new  { background:#f59e0b; color:#3a2500; }' +
+'  .idmts { color:#9fb8c4; font-size:.8rem; }' +
+'  .idmempty { color:#cfe3ec; text-align:center; padding:12px; font-size:.9rem; }';
+
+/** IGのDM（オーナー専用・開発URL専用）。3アカウントの受信箱と初めての人フォルダを、
+ *  お客さんが最後に送った物（返事待ち）を上に、既読を付けずに並べる。データ＝insta_dm.json。 */
+function renderInstaDmPage_(d, base, staff, dev) {
+  d = d || {};
+  var accounts = d.accounts || [];
+  function isOut(p) {
+    p = (p || '').replace(/^\s+/, '');
+    return p.indexOf('あなた:') === 0 || p.indexOf('あなた：') === 0 ||
+           p.indexOf('You:') === 0 || p.indexOf('You：') === 0;
+  }
+  function card(name, preview, ts, cls, tagHtml) {
+    return '<div class="idmcard ' + cls + '">' +
+      '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
+      '<div class="idmpv">' + esc_(preview || '（本文なし）') + '</div>' +
+      '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span></div>' +
+    '</div>';
+  }
+  var body = '';
+  if (!accounts.length) {
+    body = '<div class="idmempty">まだ読み取っていません。<br>事務所PCの2時間ごとの読み取りを待ってください。</div>';
+  } else {
+    for (var i = 0; i < accounts.length; i++) {
+      var a = accounts[i], inbox = a.inbox || [], reqs = a.requests || [];
+      var waiting = [], done = [];
+      for (var k = 0; k < inbox.length; k++) { (isOut(inbox[k].preview) ? done : waiting).push(inbox[k]); }
+      body += '<div class="idmacc">📷 ' + esc_(a.label || '') +
+        ' <span class="idmbadge">返事待ち ' + waiting.length + '</span>' +
+        ' <span class="idmbadge">初めての人 ' + reqs.length + '</span></div>';
+      body += '<div class="idmsec">🟢 お客さんが最後に送った（返事待ち）</div>';
+      if (waiting.length) {
+        for (var w = 0; w < waiting.length; w++) {
+          body += card(waiting[w].name, waiting[w].preview, waiting[w].ts, 'wait',
+                       '<span class="idmtag wait">返事待ち</span>');
+        }
+      } else { body += '<div class="idmempty">返事待ちはありません。</div>'; }
+      body += '<div class="idmsec">✉️ 初めての人（リクエスト）</div>';
+      body += '<div class="idmnote">知らない人からの最初のメッセージです。スパムが混じります（より分け・削除は第二弾）。</div>';
+      if (reqs.length) {
+        for (var r = 0; r < reqs.length; r++) {
+          var un = reqs[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
+          body += card(reqs[r].name, reqs[r].preview, reqs[r].ts, '', un);
+        }
+      } else { body += '<div class="idmempty">初めての人はいません。</div>'; }
+      if (done.length) {
+        body += '<div class="idmsec">🔵 やり取り済み</div>';
+        for (var q = 0; q < done.length; q++) {
+          body += card(done[q].name, done[q].preview, done[q].ts, '',
+                       '<span class="idmtag done">返事済み</span>');
+        }
+      }
+    }
+  }
+  return '<style>' + INSTADM_CSS_ + '</style>' +
+    backBar_(base, staff, dev) +
+    '<div class="idmwrap">' +
+      '<h1>📩 IGのDM<span class="idmgen">' + esc_(d.read_at || '—') + ' 時点</span></h1>' +
+      body +
+    '</div>';
+}
 
 var KOUKOKU_FILENAME = 'koukoku.json';
 
@@ -4464,6 +4559,7 @@ var HOMECSS_ =
 '  .tile.zenjitsu::before { background:#db2777; }' +
 '  .tile.cost::before { background:#e0533d; }' +
 '  .tile.koukoku::before { background:#7c3aed; }' +
+'  .tile.instadm::before { background:#e1306c; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -4480,6 +4576,7 @@ var HOMECSS_ =
 '  .tile.zenjitsu .ticon { background:rgba(219,39,119,.14); }' +
 '  .tile.cost .ticon { background:rgba(224,83,61,.16); }' +
 '  .tile.koukoku .ticon { background:rgba(124,58,237,.16); }' +
+'  .tile.instadm .ticon { background:rgba(225,48,108,.16); }' +
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
