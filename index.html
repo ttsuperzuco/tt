@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802spam1"></script>
+<script src="code.js?v=20260802reply1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -476,6 +476,39 @@
   }
   window.idmSubmit = function (pw) { pw = (pw || '').trim(); if (!pw) return; lsSet(LS_IDMPW, pw); idmFetch(pw); };
   window.idmClear = function () { lsSet(LS_IDMPW, ''); (window.__idmReshow || showInstaDm)(); };
+  // お客さんへ返信を送る（DM再現の会話の下の返信欄から）。事務所PCへ依頼→結果を下に出す。
+  //   ★実際に送ってよいかは事務所PCの send_dm.py（reply.json の enabled）が決める＝既定はカギ。
+  window.igdmReply = function (account, thread, text, statusFn) {
+    var fields = JSON.stringify({ account: account, thread: thread, text: text });
+    var cbS = '__idmSub' + Date.now();
+    window[cbS] = function (r) {
+      try { delete window[cbS]; } catch (e) {}
+      if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '送信を受け付けられませんでした'); return; }
+      igdmPoll_(r.id, statusFn, 0);
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
+      '&op=instadm_reply&fields=' + encodeURIComponent(fields) +
+      '&device=' + encodeURIComponent(device) + '&callback=' + cbS + '&cb=' + Date.now();
+    s.onerror = function () { statusFn('つながりませんでした。'); };
+    document.head.appendChild(s);
+  };
+  function igdmPoll_(id, statusFn, n) {
+    if (n > 40) { statusFn('時間がかかっています。あとで会話を更新して確かめてください。'); return; }
+    var cb = '__idmSt' + Date.now();
+    window[cb] = function (r) {
+      try { delete window[cb]; } catch (e) {}
+      if (r && r.status && r.status !== 'pending' && r.status !== 'notfound') {
+        statusFn(r.result || (r.status === 'done' ? '送りました' : '送れませんでした'));
+        return;
+      }
+      setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 1500);
+    };
+    var ss = document.createElement('script');
+    ss.src = EXEC + '?action=status&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
+    ss.onerror = function () { setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 1500); };
+    document.head.appendChild(ss);
+  }
   // 「今すぐ最新にする」＝事務所PCに読み直しを依頼しつつ、貯まっている最新を取り直す。
   window.igdmRefresh = function () {
     try {
