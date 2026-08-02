@@ -1504,6 +1504,31 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">📝</span>', label: '予約\n入力' }
 ];
 
+// ★2026-08-02 まるちゃん決定：開発版(?dev=1)とPC版のホームは、まず「管理者用／実務者用／開発者用」の
+//   3つの大ボタンを出し、押すとその仲間だけを見せる（上の「← 戻る」で3ボタンに戻る）。普通のスタッフ版・
+//   社長版は今まで通り一覧のまま。どのボタンがどの部屋か（ここに無いidは実務者用）＝PC版 super_pc.py の
+//   GROUP_OF と一致させる（片方直したら必ず両方）。
+var TILE_GROUP_ = {
+  uriage: 'kanri', kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', timedsend: 'kaihatsu'
+};
+var ROLE_DEFS_ = [
+  { id: 'kanri', icon: '🛠️', title: '管理者用' },
+  { id: 'jitsumu', icon: '💼', title: '実務者用' },
+  { id: 'kaihatsu', icon: '🧑‍💻', title: '開発者用' }
+];
+function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
+
+// 3つの大ボタン⇔仲間の切り替え（差し込んだ<script>はrunScriptsで実行される）。
+var ROLEMENU_SCRIPT_ =
+'<script>(function(){' +
+'var menu=document.getElementById("rolemenu");if(!menu)return;' +
+'function showMenu(){menu.style.display="";var g=document.querySelectorAll(".group");for(var i=0;i<g.length;i++)g[i].style.display="none";window.scrollTo(0,0);}' +
+'function showGroup(id){menu.style.display="none";var g=document.querySelectorAll(".group");for(var i=0;i<g.length;i++)g[i].style.display=(g[i].id==="group-"+id)?"":"none";window.scrollTo(0,0);}' +
+'var rb=menu.querySelectorAll(".rolebtn");for(var i=0;i<rb.length;i++){(function(b){b.addEventListener("click",function(){showGroup(b.getAttribute("data-role"));});})(rb[i]);}' +
+'var bb=document.querySelectorAll(".backbtn");for(var j=0;j<bb.length;j++){bb[j].addEventListener("click",showMenu);}' +
+'})();</script>';
+
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
  *  perms/labels(追加スタッフ込み)を renderHomePage_ に渡す。 */
 function renderHome_(base, staff, dev, who) {
@@ -1536,23 +1561,46 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   for (var ok = 0; ok < TILE_DEFS_.length; ok++) {   // orderに無い(消し忘れ等)ものは元の並びで末尾に足す
     if (!placed[TILE_DEFS_[ok].id]) orderedDefs.push(TILE_DEFS_[ok]);
   }
-  var tilesHtml = orderedDefs.filter(function (t) {
+  var shown = orderedDefs.filter(function (t) {
     if (t.always) return true;        // 外部リンクだけのボタン等＝権限に関係なく常に表示
     if (!allow) return true;          // dev＝全部
     return allow[t.id] === true;      // 明示ONのボタンだけ表示（初期は施術室被りのみ）
-  }).map(function (t) {
+  });
+  function tileA_(t) {
     // url指定＝外部サイトへのリンク（新しいタブで開く）。無指定＝アプリ内view遷移（従来通り）。
     var href = t.url ? t.url : (base + '?view=' + t.view + sfx);
     var target = t.url ? '_blank' : '_top';
     var rel = t.url ? ' rel="noopener"' : '';
     return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + '>' +
       t.icon + '<span class="tname">' + esc_(t.label) + '</span></a>';
-  }).join('');
-  return '<style>' + HOMECSS_ + '</style>' +
-  '<div class="home">' +
+  }
+  var head =
     '<div class="hhead"><img class="bmark" src="https://ttsuperzuco.github.io/tt/icons/icon-180.png" alt=""><span class="bname">TTスーパーズコ</span></div>' +
-    '<div class="hsub">' + subtitle + '</div>' +
-    '<div class="tiles">' + tilesHtml + '</div>' +
+    '<div class="hsub">' + subtitle + '</div>';
+  // 開発版(?dev=1)＝まず3つの大ボタン、押すとその仲間だけ表示（PC版と同じ見せ方）。それ以外は今まで通り一覧。
+  if (dev) {
+    var byG = { kanri: [], jitsumu: [], kaihatsu: [] };
+    for (var gi = 0; gi < shown.length; gi++) { (byG[tileGroup_(shown[gi].id)] || byG.jitsumu).push(shown[gi]); }
+    var menuHtml = '', groupsHtml = '';
+    for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
+      var R = ROLE_DEFS_[ri], list = byG[R.id] || [];
+      menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
+        '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
+        '<span class="rcount">' + list.length + '個</span></button>';
+      groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
+        '<div class="backbar"><button type="button" class="backbtn">← 戻る</button></div>' +
+        '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
+        '<div class="tiles">' + list.map(tileA_).join('') + '</div></div>';
+    }
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="home">' + head +
+        '<div class="rolemenu" id="rolemenu">' + menuHtml + '</div>' +
+        groupsHtml +
+      '</div>' + ROLEMENU_SCRIPT_;
+  }
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="home">' + head +
+    '<div class="tiles">' + shown.map(tileA_).join('') + '</div>' +
   '</div>';
 }
 
@@ -4371,6 +4419,30 @@ var HOMECSS_ =
 '    letter-spacing:.06em; opacity:.92; margin:0 0 28px; }' +
 // タイルは2列グリッドのまま、各タイル内を左アイコン／右文字の横並びに変更（2026-07-16）。
 // 文字は最大2行まで自動折返し（-webkit-line-clamp:2）。1行に収まる短い文言はそのまま1行で出る。
+// ★開発版(?dev=1)の「管理者用／実務者用／開発者用」の3つの大ボタンと、その中の戻るボタン（PC版と同じ見た目）。
+'  .rolemenu { display:flex; flex-direction:column; gap:14px; }' +
+'  .rolebtn { display:flex; flex-direction:row; align-items:center; gap:14px; text-align:left;' +
+'    color:var(--ink); cursor:pointer; background:var(--card); border:1px solid var(--line);' +
+'    border-radius:18px; padding:22px 18px; box-shadow:0 6px 18px rgba(0,0,0,.09); position:relative;' +
+'    overflow:hidden; width:100%; transition:transform .12s ease, box-shadow .12s ease; }' +
+'  .rolebtn::before { content:""; position:absolute; left:0; top:0; bottom:0; width:8px; }' +
+'  .rolebtn.kanri::before { background:#f59e0b; }' +
+'  .rolebtn.jitsumu::before { background:#16a34a; }' +
+'  .rolebtn.kaihatsu::before { background:#6366f1; }' +
+'  .rolebtn:active { transform:translateY(2px); }' +
+'  @media (hover:hover){ .rolebtn:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.14); } }' +
+'  .ricon { flex:none; width:52px; height:52px; border-radius:13px; font-size:30px; display:grid; place-items:center; }' +
+'  .rolebtn.kanri .ricon { background:rgba(245,158,11,.16); }' +
+'  .rolebtn.jitsumu .ricon { background:rgba(22,163,74,.15); }' +
+'  .rolebtn.kaihatsu .ricon { background:rgba(99,102,241,.15); }' +
+'  .rname { flex:1; min-width:0; font-size:1.6rem; font-weight:900; }' +
+'  .rcount { flex:none; color:var(--sub); font-size:.95rem; font-weight:700; }' +
+'  .backbar { margin:0 0 16px; }' +
+'  .backbtn { display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:var(--card);' +
+'    color:var(--ink); border:1px solid var(--line); border-radius:999px; padding:9px 18px;' +
+'    font-size:1rem; font-weight:800; box-shadow:0 4px 12px rgba(0,0,0,.08); }' +
+'  .backbtn:active { transform:translateY(1px); }' +
+'  .grouptitle { font-size:1.15rem; font-weight:900; color:#fff; margin:2px 0 14px; letter-spacing:.02em; }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
 '  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
 '    gap:2px; text-align:left; text-decoration:none; color:var(--ink);' +
