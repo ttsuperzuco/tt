@@ -2118,14 +2118,8 @@ function renderInstaDmPage_(d, base, staff, dev) {
           body += rcard(reqs[r].name, reqs[r].preview, reqs[r].ts, un);
         }
       } else { body += '<div class="idmempty">初めての人はいません。</div>'; }
-      if (done.length) {
-        body += '<div class="idmsec">🔵 やり取り済み</div>';
-        for (var q = 0; q < done.length; q++) {
-          var td = done[q].t;
-          body += tcard(i, done[q].j, td.title, td.last_text, td.last_ts, '',
-                        '<span class="idmtag done">返事済み</span>');
-        }
-      }
+      // ★2026-08-02 まるちゃん決定：IGのDMには「やり取り済み（こちらが返事した会話）」は出さない
+      //   （返事待ち＋初めての人＝要対応だけにする）。全部見たい時は「DM再現」を使う。
     }
   }
   return '<style>' + INSTADM_CSS_ + '</style>' +
