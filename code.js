@@ -2222,6 +2222,13 @@ var IGDM_CSS_ =
 '  .igdmth-nm { font-weight:800; color:#fff; word-break:break-word; }' +
 '  .igdmth-back { display:none; background:none; border:0; color:#f0a5c0; font-size:1rem; font-weight:800; cursor:pointer; }' +
 '  .igdmth-log { padding:14px; display:flex; flex-direction:column; gap:8px; }' +
+'  .igdmreply { border-top:1px solid rgba(255,255,255,.12); padding:10px 12px; background:var(--bg,#123); }' +
+'  .igdmrtxt { width:100%; box-sizing:border-box; min-height:56px; border-radius:10px; border:0;' +
+'    padding:10px 12px; font-size:1rem; resize:vertical; }' +
+'  .igdmrrow { display:flex; align-items:center; gap:10px; margin-top:8px; }' +
+'  .igdmrsend { background:#e1306c; color:#fff; border:0; border-radius:10px; padding:10px 20px;' +
+'    font-size:1rem; font-weight:800; cursor:pointer; }' +
+'  .igdmrstatus { color:#cfe3ec; font-size:.86rem; }' +
 '  @media (max-width:760px) {' +
 '    .igdmlist { width:100%; }' +
 '    .igdmthread { display:none; }' +
@@ -2332,9 +2339,28 @@ function igdmSelect(i) {
       '</div><div class="idmmt">' + esc_(m.ts) + '</div></div>';
   }
   body += '</div>';
+  if (!t.req && t.id) {
+    // ★返信欄（本物の会話だけ／初めての人は会話IDが無いので出さない）。送るとお客さんに届く。
+    body += '<div class="igdmreply">' +
+      '<textarea id="igdmReplyTxt" class="igdmrtxt" placeholder="返信を入力（送るとお客さんに届きます）"></textarea>' +
+      '<div class="igdmrrow"><button type="button" class="igdmrsend" onclick="igdmDoReply()">送る</button>' +
+      '<span class="igdmrstatus" id="igdmRStatus"></span></div>' +
+    '</div>';
+  }
   pane.innerHTML = body;
   var pn = document.getElementById('igdmPane'); if (pn) pn.classList.add('showthread');
   var lg = pane.querySelector('.igdmth-log'); if (lg) lg.scrollTop = lg.scrollHeight;
+}
+
+// 返信を送る（本物の会話だけ）。確認してから、事務所PCへ送信を依頼し、結果を下に出す。
+function igdmDoReply() {
+  var t = (IGDM_STATE_.items || [])[IGDM_STATE_.sel]; if (!t || t.req || !t.id) return;
+  var ta = document.getElementById('igdmReplyTxt'); var txt = ta ? ta.value.trim() : '';
+  if (!txt) return;
+  if (!confirm('このお客さんに送りますか？\n\n' + txt)) return;
+  var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
+  var st = document.getElementById('igdmRStatus'); if (st) st.textContent = '送信中…';
+  if (window.igdmReply) window.igdmReply(acc, t.id, txt, function (m) { if (st) st.textContent = m; });
 }
 
 function igdmBackList() { var pn = document.getElementById('igdmPane'); if (pn) pn.classList.remove('showthread'); }
