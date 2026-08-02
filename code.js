@@ -1990,28 +1990,81 @@ var INSTADM_CSS_ =
 '  .idmcard { background:var(--card,#0f2f3d); border:1px solid rgba(255,255,255,.08);' +
 '    border-radius:14px; padding:12px 14px; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,.12); }' +
 '  .idmcard.wait { border-left:5px solid #e1306c; }' +
+'  .idmcard.tap { cursor:pointer; }' +
+'  .idmcard.tap:active { transform:translateY(1px); }' +
+'  @media (hover:hover){ .idmcard.tap:hover { border-color:rgba(225,48,108,.5); } }' +
 '  .idmnm { font-weight:800; font-size:1.02rem; color:#fff; word-break:break-word; }' +
-'  .idmpv { color:#dbe9f0; font-size:.95rem; margin-top:4px; line-height:1.45; word-break:break-word; }' +
+'  .idmpv { color:#dbe9f0; font-size:.95rem; margin-top:4px; line-height:1.45; word-break:break-word;' +
+'    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .idmmeta { display:flex; gap:8px; align-items:center; margin-top:7px; flex-wrap:wrap; }' +
 '  .idmtag { font-size:.74rem; font-weight:700; padding:2px 9px; border-radius:999px; }' +
 '  .idmtag.wait { background:#e1306c; color:#fff; }' +
 '  .idmtag.done { background:rgba(255,255,255,.14); color:#cfe3ec; }' +
 '  .idmtag.new  { background:#f59e0b; color:#3a2500; }' +
 '  .idmts { color:#9fb8c4; font-size:.8rem; }' +
-'  .idmempty { color:#cfe3ec; text-align:center; padding:12px; font-size:.9rem; }';
+'  .idmopen { margin-left:auto; color:#f0a5c0; font-size:.8rem; font-weight:700; }' +
+'  .idmempty { color:#cfe3ec; text-align:center; padding:12px; font-size:.9rem; }' +
+// 全文の小窓（会話を吹き出しで・既読は付かない＝事務所PCが裏データで取った物を見るだけ）
+'  .idmmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none;' +
+'    align-items:flex-end; justify-content:center; z-index:50; }' +
+'  .idmmask.show { display:flex; }' +
+'  .idmmodal { background:var(--bg,#123); width:100%; max-width:720px; max-height:88vh;' +
+'    border-radius:18px 18px 0 0; display:flex; flex-direction:column; box-shadow:0 -6px 24px rgba(0,0,0,.4); }' +
+'  .idmmh { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.1); }' +
+'  .idmmnm { font-weight:800; color:#fff; font-size:1.02rem; word-break:break-word; flex:1; }' +
+'  .idmmx { background:none; border:0; color:#fff; font-size:1.7rem; line-height:1; padding:0 4px; cursor:pointer; }' +
+'  .idmmlog { padding:14px 14px 20px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }' +
+'  .idmmsg { max-width:82%; display:flex; flex-direction:column; }' +
+'  .idmmsg.them { align-self:flex-start; align-items:flex-start; }' +
+'  .idmmsg.me { align-self:flex-end; align-items:flex-end; }' +
+'  .idmbub { padding:9px 12px; border-radius:14px; font-size:.96rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }' +
+'  .idmmsg.them .idmbub { background:#e9eef2; color:#12222b; border-bottom-left-radius:4px; }' +
+'  .idmmsg.me .idmbub { background:#e1306c; color:#fff; border-bottom-right-radius:4px; }' +
+'  .idmmt { color:#9fb8c4; font-size:.72rem; margin:2px 4px; }';
 
-/** IGのDM（オーナー専用・開発URL専用）。3アカウントの受信箱と初めての人フォルダを、
- *  お客さんが最後に送った物（返事待ち）を上に、既読を付けずに並べる。データ＝insta_dm.json。 */
+// 小窓（会話の全文）を出す仕掛け。データは showInstaDm が window.__idmData に置いた物を読む。
+var INSTADM_SCRIPT_ =
+'(function(){' +
+'  var data = window.__idmData || {accounts:[]};' +
+'  var mask = document.getElementById("idmMask"); if(!mask) return;' +
+'  function esc(s){ var d=document.createElement("div"); d.textContent=(s==null?"":String(s)); return d.innerHTML; }' +
+'  function open(ai, th){' +
+'    var a=data.accounts[ai]; if(!a) return; var t=(a.threads||[])[th]; if(!t) return;' +
+'    document.getElementById("idmMnm").textContent = (a.label||"") + " ／ " + (t.title||"");' +
+'    var log=document.getElementById("idmMlog"); log.innerHTML="";' +
+'    var ms=t.msgs||[];' +
+'    if(!ms.length){ log.innerHTML = "<div class=\\"idmempty\\">この会話の中身はまだ取れていません。</div>"; }' +
+'    for(var i=0;i<ms.length;i++){ var m=ms[i];' +
+'      var row=document.createElement("div"); row.className="idmmsg "+(m.me?"me":"them");' +
+'      row.innerHTML = "<div class=\\"idmbub\\">"+esc(m.text)+"</div><div class=\\"idmmt\\">"+esc(m.ts)+"</div>";' +
+'      log.appendChild(row);' +
+'    }' +
+'    mask.classList.add("show"); log.scrollTop=log.scrollHeight;' +
+'  }' +
+'  function close(){ mask.classList.remove("show"); }' +
+'  [].slice.call(document.querySelectorAll(".idmcard.tap")).forEach(function(c){' +
+'    c.addEventListener("click", function(){ open(+c.getAttribute("data-acc"), +c.getAttribute("data-th")); });' +
+'  });' +
+'  var x=document.getElementById("idmMx"); if(x) x.addEventListener("click", close);' +
+'  mask.addEventListener("click", function(e){ if(e.target===mask) close(); });' +
+'})();';
+
+/** IGのDM（オーナー専用・開発URL専用）。3アカウントの会話を、お客さんが最後に送った物（返事待ち）を
+ *  上に、既読を付けずに並べる。カードを押すと会話の全文が小窓で出る（事務所PCが裏データで取った物）。
+ *  データ＝insta_dm.json（accounts[].threads[]＝全文つき／requests[]＝初めての人）。 */
 function renderInstaDmPage_(d, base, staff, dev) {
   d = d || {};
   var accounts = d.accounts || [];
-  function isOut(p) {
-    p = (p || '').replace(/^\s+/, '');
-    return p.indexOf('あなた:') === 0 || p.indexOf('あなた：') === 0 ||
-           p.indexOf('You:') === 0 || p.indexOf('You：') === 0;
+  function tcard(ai, j, name, snippet, ts, cls, tagHtml) {
+    return '<div class="idmcard tap ' + cls + '" data-acc="' + ai + '" data-th="' + j + '">' +
+      '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
+      '<div class="idmpv">' + esc_(snippet || '（本文なし）') + '</div>' +
+      '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
+      '<span class="idmopen">タップで全文 ›</span></div>' +
+    '</div>';
   }
-  function card(name, preview, ts, cls, tagHtml) {
-    return '<div class="idmcard ' + cls + '">' +
+  function rcard(name, preview, ts, tagHtml) {
+    return '<div class="idmcard">' +
       '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
       '<div class="idmpv">' + esc_(preview || '（本文なし）') + '</div>' +
       '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span></div>' +
@@ -2019,20 +2072,24 @@ function renderInstaDmPage_(d, base, staff, dev) {
   }
   var body = '';
   if (!accounts.length) {
-    body = '<div class="idmempty">まだ読み取っていません。<br>事務所PCの2時間ごとの読み取りを待ってください。</div>';
+    body = '<div class="idmempty">まだ読み取っていません。<br>事務所PCの読み取りを待ってください。</div>';
   } else {
     for (var i = 0; i < accounts.length; i++) {
-      var a = accounts[i], inbox = a.inbox || [], reqs = a.requests || [];
+      var a = accounts[i], threads = a.threads || [], reqs = a.requests || [];
       var waiting = [], done = [];
-      for (var k = 0; k < inbox.length; k++) { (isOut(inbox[k].preview) ? done : waiting).push(inbox[k]); }
+      for (var k = 0; k < threads.length; k++) {
+        var item = { t: threads[k], j: k };
+        (threads[k].waiting ? waiting : done).push(item);
+      }
       body += '<div class="idmacc">📷 ' + esc_(a.label || '') +
         ' <span class="idmbadge">返事待ち ' + waiting.length + '</span>' +
         ' <span class="idmbadge">初めての人 ' + reqs.length + '</span></div>';
       body += '<div class="idmsec">🟢 お客さんが最後に送った（返事待ち）</div>';
       if (waiting.length) {
         for (var w = 0; w < waiting.length; w++) {
-          body += card(waiting[w].name, waiting[w].preview, waiting[w].ts, 'wait',
-                       '<span class="idmtag wait">返事待ち</span>');
+          var tw = waiting[w].t;
+          body += tcard(i, waiting[w].j, tw.title, tw.last_text, tw.last_ts, 'wait',
+                        '<span class="idmtag wait">返事待ち</span>');
         }
       } else { body += '<div class="idmempty">返事待ちはありません。</div>'; }
       body += '<div class="idmsec">✉️ 初めての人（リクエスト）</div>';
@@ -2040,14 +2097,15 @@ function renderInstaDmPage_(d, base, staff, dev) {
       if (reqs.length) {
         for (var r = 0; r < reqs.length; r++) {
           var un = reqs[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
-          body += card(reqs[r].name, reqs[r].preview, reqs[r].ts, '', un);
+          body += rcard(reqs[r].name, reqs[r].preview, reqs[r].ts, un);
         }
       } else { body += '<div class="idmempty">初めての人はいません。</div>'; }
       if (done.length) {
         body += '<div class="idmsec">🔵 やり取り済み</div>';
         for (var q = 0; q < done.length; q++) {
-          body += card(done[q].name, done[q].preview, done[q].ts, '',
-                       '<span class="idmtag done">返事済み</span>');
+          var td = done[q].t;
+          body += tcard(i, done[q].j, td.title, td.last_text, td.last_ts, '',
+                        '<span class="idmtag done">返事済み</span>');
         }
       }
     }
@@ -2057,7 +2115,15 @@ function renderInstaDmPage_(d, base, staff, dev) {
     '<div class="idmwrap">' +
       '<h1>📩 IGのDM<span class="idmgen">' + esc_(d.read_at || '—') + ' 時点</span></h1>' +
       body +
-    '</div>';
+    '</div>' +
+    '<div class="idmmask" id="idmMask" role="dialog" aria-modal="true">' +
+      '<div class="idmmodal">' +
+        '<div class="idmmh"><div class="idmmnm" id="idmMnm"></div>' +
+          '<button type="button" class="idmmx" id="idmMx" aria-label="閉じる">&times;</button></div>' +
+        '<div class="idmmlog" id="idmMlog"></div>' +
+      '</div>' +
+    '</div>' +
+    '<script>' + INSTADM_SCRIPT_ + '<\/script>';
 }
 
 var KOUKOKU_FILENAME = 'koukoku.json';
