@@ -2005,6 +2005,7 @@ var INSTADM_CSS_ =
 '  .idmtag.wait { background:#e1306c; color:#fff; }' +
 '  .idmtag.done { background:rgba(255,255,255,.14); color:#cfe3ec; }' +
 '  .idmtag.new  { background:#f59e0b; color:#3a2500; }' +
+'  .idmtag.spam { background:#dc2626; color:#fff; }' +
 '  .idmts { color:#9fb8c4; font-size:.8rem; }' +
 '  .idmopen { margin-left:auto; color:#f0a5c0; font-size:.8rem; font-weight:700; }' +
 '  .idmempty { color:#cfe3ec; text-align:center; padding:12px; font-size:.9rem; }' +
@@ -2134,7 +2135,8 @@ function renderInstaDmPage_(d, base, staff, dev) {
       if (reqsShown.length) {
         for (var r = 0; r < reqsShown.length; r++) {
           var un = reqsShown[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
-          body += rcard(reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, un);
+          var sp = reqsShown[r].spam ? '<span class="idmtag spam">🚫 スパムかも</span>' : '';
+          body += rcard(reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un);
         }
       } else { body += '<div class="idmempty">1ヶ月以内の初めての人はいません。</div>'; }
       // ★2026-08-02 まるちゃん決定：IGのDMには「やり取り済み（こちらが返事した会話）」は出さない
@@ -2264,7 +2266,7 @@ function igdmBuildItems_(a) {
   var items = [], reqs = a.requests || [];
   for (var r = 0; r < reqs.length; r++) {
     var q = reqs[r];
-    items.push({ req: true, title: q.name, unread: q.unread, waiting: true,
+    items.push({ req: true, title: q.name, unread: q.unread, waiting: true, spam: q.spam,
       last_text: q.preview, last_ts: q.ts || '',
       msgs: [{ me: false, text: q.preview || '（本文なし）', ts: q.ts || '' }] });
   }
@@ -2304,6 +2306,7 @@ function igdmRenderList_() {
       '<div class="igdmrp">' + esc_((t.last_text || '').slice(0, 46)) + '</div>' +
       '<div class="igdmrt">' + esc_(t.last_ts || '') + (!t.req && t.waiting ? '　・返事待ち' : '') + '</div>' +
       (t.req ? '<span class="igdmreq">初めての人' + (t.unread ? '・未読' : '') + '</span>' : '') +
+      (t.req && t.spam ? '<span class="igdmreq" style="background:#dc2626;color:#fff;">🚫 スパムかも</span>' : '') +
     '</div>';
   }
   if (items.length > n) {
