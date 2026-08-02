@@ -2020,7 +2020,21 @@ var INSTADM_CSS_ =
 '  .idmbub { padding:9px 12px; border-radius:14px; font-size:.96rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }' +
 '  .idmmsg.them .idmbub { background:#e9eef2; color:#12222b; border-bottom-left-radius:4px; }' +
 '  .idmmsg.me .idmbub { background:#e1306c; color:#fff; border-bottom-right-radius:4px; }' +
-'  .idmmt { color:#9fb8c4; font-size:.72rem; margin:2px 4px; }';
+'  .idmmt { color:#9fb8c4; font-size:.72rem; margin:2px 4px; }' +
+// 合言葉を入れる小画面
+'  .idmgate { max-width:420px; margin:8vh auto 0; background:var(--card,#0f2f3d);' +
+'    border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:22px 20px;' +
+'    box-shadow:0 8px 24px rgba(0,0,0,.2); text-align:center; }' +
+'  .idmgt { font-size:1.15rem; font-weight:800; color:#fff; margin-bottom:8px; }' +
+'  .idmgm { color:#cfe3ec; font-size:.86rem; line-height:1.55; margin-bottom:14px; }' +
+'  .idmgerr { color:#ffd0d8; background:rgba(225,48,108,.18); border-radius:10px;' +
+'    padding:8px 10px; font-size:.85rem; margin-bottom:12px; }' +
+'  .idmginput { width:100%; box-sizing:border-box; padding:13px 14px; border-radius:12px;' +
+'    border:0; font-size:1.05rem; margin-bottom:12px; }' +
+'  .idmgbtn { width:100%; padding:13px; border:0; border-radius:12px; background:#e1306c;' +
+'    color:#fff; font-size:1.05rem; font-weight:800; cursor:pointer; }' +
+'  .idmchg { margin-left:auto; color:#f0a5c0; font-size:.78rem; font-weight:700;' +
+'    text-decoration:underline; cursor:pointer; }';
 
 // 小窓（会話の全文）を出す仕掛け。データは showInstaDm が window.__idmData に置いた物を読む。
 var INSTADM_SCRIPT_ =
@@ -2113,7 +2127,8 @@ function renderInstaDmPage_(d, base, staff, dev) {
   return '<style>' + INSTADM_CSS_ + '</style>' +
     backBar_(base, staff, dev) +
     '<div class="idmwrap">' +
-      '<h1>📩 IGのDM<span class="idmgen">' + esc_(d.read_at || '—') + ' 時点</span></h1>' +
+      '<h1>📩 IGのDM<span class="idmgen">' + esc_(d.read_at || '—') + ' 時点</span>' +
+        '<span class="idmchg" onclick="if(window.idmClear)window.idmClear()">合言葉を変える</span></h1>' +
       body +
     '</div>' +
     '<div class="idmmask" id="idmMask" role="dialog" aria-modal="true">' +
@@ -2124,6 +2139,30 @@ function renderInstaDmPage_(d, base, staff, dev) {
       '</div>' +
     '</div>' +
     '<script>' + INSTADM_SCRIPT_ + '<\/script>';
+}
+
+/** IGのDMの合言葉入力画面。合言葉を入れると showInstaDm(index.html)が秘密の置き場所を取りに行く。 */
+function renderInstaDmGate_(msg, base, staff, dev) {
+  return '<style>' + INSTADM_CSS_ + '</style>' +
+    backBar_(base, staff, dev) +
+    '<div class="idmwrap">' +
+      '<h1>📩 IGのDM</h1>' +
+      '<div class="idmgate">' +
+        '<div class="idmgt">🔒 合言葉を入れてください</div>' +
+        '<div class="idmgm">この画面にはお客さまとの会話が入っています。合言葉を知っている端末だけ開けます。' +
+          '一度入れると、この端末は次から覚えています。</div>' +
+        (msg ? '<div class="idmgerr">' + esc_(msg) + '</div>' : '') +
+        '<input id="idmPw" type="password" class="idmginput" placeholder="合言葉" autocomplete="off" />' +
+        '<button type="button" id="idmGo" class="idmgbtn">開く</button>' +
+      '</div>' +
+    '</div>' +
+    '<script>(function(){' +
+      'var i=document.getElementById("idmPw"), b=document.getElementById("idmGo");' +
+      'function go(){ if(window.idmSubmit) window.idmSubmit(i?i.value:""); }' +
+      'if(b) b.addEventListener("click", go);' +
+      'if(i) i.addEventListener("keydown", function(e){ if(e.key==="Enter") go(); });' +
+      'if(i) i.focus();' +
+    '})();<\/script>';
 }
 
 var KOUKOKU_FILENAME = 'koukoku.json';
