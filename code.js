@@ -2070,6 +2070,22 @@ var INSTADM_SCRIPT_ =
 /** IGのDM（オーナー専用・開発URL専用）。3アカウントの会話を、お客さんが最後に送った物（返事待ち）を
  *  上に、既読を付けずに並べる。カードを押すと会話の全文が小窓で出る（事務所PCが裏データで取った物）。
  *  データ＝insta_dm.json（accounts[].threads[]＝全文つき／requests[]＝初めての人）。 */
+// 時刻が「今から1ヶ月以内」か。会話は絶対日付(YYYY/MM/DD…)、初めての人は相対表記(◯分/◯時間/◯週間/◯ヶ月…)。
+//   時刻不明は残す（安全側＝消しすぎない）。
+function idmWithinMonth_(ts) {
+  ts = (ts || '').trim();
+  if (!ts) return true;
+  var m = ts.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+  if (m) {
+    var d = new Date(+m[1], +m[2] - 1, +m[3]);
+    return (Date.now() - d.getTime()) <= 31 * 24 * 3600 * 1000;
+  }
+  if (/ヶ月|か月|个月|年/.test(ts)) return false;          // 「◯ヶ月」「◯年」＝1ヶ月超
+  var w = ts.match(/(\d+)\s*(週間|週|周)/);
+  if (w && +w[1] >= 5) return false;                        // 5週間以上＝1ヶ月超
+  return true;                                              // 分/時間/日/週間(1〜4)＝1ヶ月以内
+}
+
 function renderInstaDmPage_(d, base, staff, dev) {
   d = d || {};
   var accounts = d.accounts || [];
@@ -2099,9 +2115,12 @@ function renderInstaDmPage_(d, base, staff, dev) {
         var item = { t: threads[k], j: k };
         (threads[k].waiting ? waiting : done).push(item);
       }
+      // ★IGのDMは「1ヶ月より前」を出さない（返事待ち・初めての人とも）。DM再現は全部残す（そちらは別画面）。
+      waiting = waiting.filter(function (x) { return idmWithinMonth_(x.t.last_ts); });
+      var reqsShown = reqs.filter(function (r) { return idmWithinMonth_(r.ts); });
       body += '<div class="idmacc">📷 ' + esc_(a.label || '') +
         ' <span class="idmbadge">返事待ち ' + waiting.length + '</span>' +
-        ' <span class="idmbadge">初めての人 ' + reqs.length + '</span></div>';
+        ' <span class="idmbadge">初めての人 ' + reqsShown.length + '</span></div>';
       body += '<div class="idmsec">🟢 お客さんが最後に送った（返事待ち）</div>';
       if (waiting.length) {
         for (var w = 0; w < waiting.length; w++) {
@@ -2109,15 +2128,15 @@ function renderInstaDmPage_(d, base, staff, dev) {
           body += tcard(i, waiting[w].j, tw.title, tw.last_text, tw.last_ts, 'wait',
                         '<span class="idmtag wait">返事待ち</span>');
         }
-      } else { body += '<div class="idmempty">返事待ちはありません。</div>'; }
+      } else { body += '<div class="idmempty">1ヶ月以内の返事待ちはありません。</div>'; }
       body += '<div class="idmsec">✉️ 初めての人（リクエスト）</div>';
       body += '<div class="idmnote">知らない人からの最初のメッセージです。スパムが混じります（より分け・削除は第二弾）。</div>';
-      if (reqs.length) {
-        for (var r = 0; r < reqs.length; r++) {
-          var un = reqs[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
-          body += rcard(reqs[r].name, reqs[r].preview, reqs[r].ts, un);
+      if (reqsShown.length) {
+        for (var r = 0; r < reqsShown.length; r++) {
+          var un = reqsShown[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
+          body += rcard(reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, un);
         }
-      } else { body += '<div class="idmempty">初めての人はいません。</div>'; }
+      } else { body += '<div class="idmempty">1ヶ月以内の初めての人はいません。</div>'; }
       // ★2026-08-02 まるちゃん決定：IGのDMには「やり取り済み（こちらが返事した会話）」は出さない
       //   （返事待ち＋初めての人＝要対応だけにする）。全部見たい時は「DM再現」を使う。
     }
