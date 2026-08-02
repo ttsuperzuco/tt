@@ -911,13 +911,14 @@ var DEFAULT_TILE_SETTINGS_ = {
   cost:       { exec: false, staff: false },
   // ★広告費管理＝オーナー専用。cost と同じく開発URL(?dev=1)専用（tile_settings.py に入れない）。
   koukoku:    { exec: false, staff: false },
-  // ★IGのDM＝オーナー専用。koukoku と同じく開発URL(?dev=1)専用（tile_settings.py に入れない）。
-  instadm:    { exec: false, staff: false }
+  // ★IGのDM／DM再現＝オーナー専用。koukoku と同じく開発URL(?dev=1)専用（tile_settings.py に入れない）。
+  instadm:    { exec: false, staff: false },
+  igdm:       { exec: false, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'instadm', 'timedsend', 'yoyaku'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'timedsend', 'yoyaku'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1496,6 +1497,9 @@ var TILE_DEFS_ = [
   //   tile_settings.py に入れないので開発者だけに出る）。国籍×性別で広告費を見る＋広告ごとの明細。
   { id: 'koukoku', cls: 'koukoku', view: 'koukoku',
     icon: '<span class="ticon">📣</span>', label: '広告費\n管理' },
+  // ★DM再現＝インスタのDM画面をそっくり再現（左に一覧・右にやり取り全文）。開発URL(?dev=1)専用。2026-08-02。
+  { id: 'igdm', cls: 'igdm', view: 'igdm',
+    icon: '<span class="ticon">📱</span>', label: 'DM\n再現' },
   // ★IGのDM＝3つのインスタに来たDMを読む（既読を付けずに一覧だけ）。開発URL(?dev=1)専用
   //   （koukoku/kanshiと同じ＝tile_settings.py に入れないので開発者だけに出る）。2026-08-02 第一弾。
   { id: 'instadm', cls: 'instadm', view: 'instadm',
@@ -1516,7 +1520,7 @@ var TILE_DEFS_ = [
 //   GROUP_OF と一致させる（片方直したら必ず両方）。
 var TILE_GROUP_ = {
   uriage: 'kanri', kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
-  instadm: 'kanri',
+  instadm: 'kanri', igdm: 'kanri',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', timedsend: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
@@ -2164,6 +2168,137 @@ function renderInstaDmGate_(msg, base, staff, dev) {
       'if(i) i.focus();' +
     '})();<\/script>';
 }
+
+// ====== DM再現（view=igdm・開発URL専用／2026-08-02）＝インスタのDM画面をそっくり再現 ======
+//   左に会話の一覧、押すと右にそのやり取りの全文（パソコンは左右2画面・スマホは一覧→会話）。
+//   データは IGのDM と同じ insta_dm.json（合言葉方式）を使う＝会話40件×全文が入っている。
+//   一覧は20件ずつ「もっと読む」で増やす。読むだけ（返信・削除はしない）。
+var IGDM_CSS_ =
+'  .igdmchoose { display:flex; flex-direction:column; gap:10px; max-width:520px; margin:6px auto 14px; }' +
+'  .igdmaccbtn { display:flex; flex-direction:column; gap:2px; text-align:left; padding:16px 18px;' +
+'    border:0; border-radius:14px; background:#e1306c; color:#fff; font-size:1.1rem; font-weight:800; cursor:pointer; }' +
+'  .igdmaccsub { font-size:.8rem; font-weight:600; opacity:.9; }' +
+'  .igdmbar { display:flex; align-items:center; gap:10px; margin:6px 2px 8px; flex-wrap:wrap; }' +
+'  .igdmback { background:var(--card,#0f2f3d); color:var(--ink,#eaf3f7); border:1px solid rgba(255,255,255,.15);' +
+'    border-radius:999px; padding:7px 13px; font-size:.85rem; font-weight:700; cursor:pointer; }' +
+'  .igdmwho { font-weight:800; color:#fff; font-size:1.02rem; }' +
+'  .igdmrefresh { margin-left:auto; background:#166534; color:#fff; border:0; border-radius:999px;' +
+'    padding:7px 13px; font-size:.85rem; font-weight:700; cursor:pointer; }' +
+'  .igdmpane { display:flex; height:72vh; border:1px solid rgba(255,255,255,.12); border-radius:14px;' +
+'    overflow:hidden; background:var(--bg,#123); }' +
+'  .igdmlist { width:330px; flex:none; overflow-y:auto; border-right:1px solid rgba(255,255,255,.12); }' +
+'  .igdmthread { flex:1; overflow-y:auto; display:flex; flex-direction:column; }' +
+'  .igdmphold { color:#9fb8c4; text-align:center; margin:auto; padding:20px; font-size:.92rem; }' +
+'  .igdmrow { padding:11px 13px; border-bottom:1px solid rgba(255,255,255,.06); cursor:pointer; }' +
+'  .igdmrow:hover { background:rgba(255,255,255,.04); }' +
+'  .igdmrow.sel { background:rgba(225,48,108,.16); }' +
+'  .igdmrow.wait { border-left:4px solid #e1306c; }' +
+'  .igdmrn { font-weight:800; color:#fff; font-size:.98rem; word-break:break-word; }' +
+'  .igdmrp { color:#c7d7df; font-size:.86rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
+'  .igdmrt { color:#8fa8b4; font-size:.75rem; margin-top:3px; }' +
+'  .igdmmore { display:block; width:calc(100% - 20px); margin:10px; padding:11px; border:0; border-radius:10px;' +
+'    background:rgba(255,255,255,.1); color:#eaf3f7; font-weight:700; font-size:.9rem; cursor:pointer; }' +
+'  .igdmth-h { display:flex; align-items:center; gap:10px; padding:12px 14px; position:sticky; top:0;' +
+'    background:var(--bg,#123); border-bottom:1px solid rgba(255,255,255,.1); z-index:2; }' +
+'  .igdmth-nm { font-weight:800; color:#fff; word-break:break-word; }' +
+'  .igdmth-back { display:none; background:none; border:0; color:#f0a5c0; font-size:1rem; font-weight:800; cursor:pointer; }' +
+'  .igdmth-log { padding:14px; display:flex; flex-direction:column; gap:8px; }' +
+'  @media (max-width:760px) {' +
+'    .igdmlist { width:100%; }' +
+'    .igdmthread { display:none; }' +
+'    .igdmpane.showthread .igdmlist { display:none; }' +
+'    .igdmpane.showthread .igdmthread { display:flex; }' +
+'    .igdmth-back { display:inline; }' +
+'  }';
+
+var IGDM_STATE_ = { ai: 0, shown: 20, sel: -1 };
+var IGDM_ACC_NAME_ = { jp: '🇯🇵 日本人IG', tw_men: '🇹🇼 台湾人男性IG', tw_women: '🇹🇼 台湾人女性IG' };
+var IGDM_ACC_ORDER_ = ['jp', 'tw_men', 'tw_women'];
+
+function igdmAccs_() { return (window.__idmData && window.__idmData.accounts) ? window.__idmData.accounts : []; }
+function igdmAiByKey_(k) { var a = igdmAccs_(); for (var i = 0; i < a.length; i++) { if (a[i].key === k) return i; } return -1; }
+
+/** DM再現のトップ＝3アカウントの選択ボタン。押すと igdmOpen で2画面を出す。 */
+function renderIgdmHome_(d, base, staff, dev) {
+  window.__idmData = d || window.__idmData || { accounts: [] };
+  var accs = igdmAccs_(), btns = '';
+  for (var i = 0; i < IGDM_ACC_ORDER_.length; i++) {
+    var k = IGDM_ACC_ORDER_[i], ai = igdmAiByKey_(k);
+    if (ai < 0) continue;
+    var a = accs[ai];
+    btns += '<button type="button" class="igdmaccbtn" onclick="igdmOpen(' + ai + ')">' +
+      esc_(IGDM_ACC_NAME_[k] || a.label) +
+      '<span class="igdmaccsub">@' + esc_(a.handle || '') + '　' + ((a.threads || []).length) + '会話</span></button>';
+  }
+  if (!btns) btns = '<div class="idmempty">まだ読み取っていません。事務所PCの読み取りを待ってください。</div>';
+  return '<style>' + INSTADM_CSS_ + IGDM_CSS_ + '</style>' +
+    backBar_(base, staff, dev) +
+    '<div class="idmwrap"><h1>📱 DM再現<span class="idmgen">インスタのDMをそのまま表示（読むだけ）</span>' +
+      '<span class="idmchg" onclick="if(window.idmClear)window.idmClear()">合言葉を変える</span></h1>' +
+      '<div class="igdmchoose">' + btns + '</div>' +
+      '<div id="igdmStage"></div>' +
+    '</div>';
+}
+
+function igdmOpen(ai) {
+  IGDM_STATE_ = { ai: ai, shown: 20, sel: -1 };
+  var st = document.getElementById('igdmStage'); if (!st) return;
+  var a = igdmAccs_()[ai]; if (!a) { st.innerHTML = ''; return; }
+  st.innerHTML =
+    '<div class="igdmbar">' +
+      '<button type="button" class="igdmback" onclick="igdmBackAccts()">‹ アカウント選び直し</button>' +
+      '<span class="igdmwho">' + esc_(IGDM_ACC_NAME_[a.key] || a.label) + '</span>' +
+      '<button type="button" class="igdmrefresh" onclick="if(window.igdmRefresh)window.igdmRefresh()">↻ 今すぐ最新にする</button>' +
+    '</div>' +
+    '<div class="igdmpane" id="igdmPane">' +
+      '<div class="igdmlist" id="igdmList"></div>' +
+      '<div class="igdmthread" id="igdmThread"><div class="igdmphold">左の会話を選ぶと、ここにやり取りが全部出ます。</div></div>' +
+    '</div>';
+  igdmRenderList_();
+}
+
+function igdmRenderList_() {
+  var a = igdmAccs_()[IGDM_STATE_.ai]; if (!a) return;
+  var ths = a.threads || [], list = document.getElementById('igdmList'); if (!list) return;
+  var n = Math.min(IGDM_STATE_.shown, ths.length), html = '';
+  for (var i = 0; i < n; i++) {
+    var t = ths[i];
+    html += '<div class="igdmrow' + (t.waiting ? ' wait' : '') + (IGDM_STATE_.sel === i ? ' sel' : '') +
+      '" onclick="igdmSelect(' + i + ')">' +
+      '<div class="igdmrn">' + esc_(t.title || '（名前なし）') + '</div>' +
+      '<div class="igdmrp">' + esc_((t.last_text || '').slice(0, 46)) + '</div>' +
+      '<div class="igdmrt">' + esc_(t.last_ts || '') + (t.waiting ? '　・返事待ち' : '') + '</div>' +
+    '</div>';
+  }
+  if (ths.length > n) {
+    html += '<button type="button" class="igdmmore" onclick="igdmMore()">もっと読む（あと' + (ths.length - n) + '会話）</button>';
+  }
+  list.innerHTML = html;
+}
+
+function igdmMore() { IGDM_STATE_.shown += 20; igdmRenderList_(); }
+
+function igdmSelect(i) {
+  IGDM_STATE_.sel = i; igdmRenderList_();
+  var a = igdmAccs_()[IGDM_STATE_.ai], t = (a.threads || [])[i]; if (!t) return;
+  var pane = document.getElementById('igdmThread'); if (!pane) return;
+  var ms = t.msgs || [], body =
+    '<div class="igdmth-h"><button type="button" class="igdmth-back" onclick="igdmBackList()">‹ 一覧</button>' +
+    '<span class="igdmth-nm">' + esc_(t.title || '') + '</span></div><div class="igdmth-log">';
+  if (!ms.length) body += '<div class="idmempty">中身がありません。</div>';
+  for (var k = 0; k < ms.length; k++) {
+    var m = ms[k];
+    body += '<div class="idmmsg ' + (m.me ? 'me' : 'them') + '"><div class="idmbub">' + esc_(m.text) +
+      '</div><div class="idmmt">' + esc_(m.ts) + '</div></div>';
+  }
+  body += '</div>';
+  pane.innerHTML = body;
+  var pn = document.getElementById('igdmPane'); if (pn) pn.classList.add('showthread');
+  var lg = pane.querySelector('.igdmth-log'); if (lg) lg.scrollTop = lg.scrollHeight;
+}
+
+function igdmBackList() { var pn = document.getElementById('igdmPane'); if (pn) pn.classList.remove('showthread'); }
+function igdmBackAccts() { var st = document.getElementById('igdmStage'); if (st) st.innerHTML = ''; }
 
 var KOUKOKU_FILENAME = 'koukoku.json';
 
@@ -4665,6 +4800,7 @@ var HOMECSS_ =
 '  .tile.cost::before { background:#e0533d; }' +
 '  .tile.koukoku::before { background:#7c3aed; }' +
 '  .tile.instadm::before { background:#e1306c; }' +
+'  .tile.igdm::before { background:#c13584; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -4682,6 +4818,7 @@ var HOMECSS_ =
 '  .tile.cost .ticon { background:rgba(224,83,61,.16); }' +
 '  .tile.koukoku .ticon { background:rgba(124,58,237,.16); }' +
 '  .tile.instadm .ticon { background:rgba(225,48,108,.16); }' +
+'  .tile.igdm .ticon { background:rgba(193,53,132,.16); }' +
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +

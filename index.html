@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802instadm3"></script>
+<script src="code.js?v=20260802igdm1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -452,6 +452,7 @@
       return a.slice(0, 24);
     });
   }
+  // 合言葉で解錠して会話データを取り、いま選んでいる画面（IGのDM or DM再現）を描く。
   function idmFetch(pw) {
     idmSha24(pw).then(function (hex) {
       var cb = '__idm' + Date.now();
@@ -462,8 +463,9 @@
           try { mount(renderInstaDmGate_('合言葉が違うようです。もう一度入れてください。', base, staff, dev)); } catch (e) {}
           return;
         }
-        window.__idmData = payload;   // ★カードを押した時、小窓が会話の全文を取り出す元
-        try { mount(renderInstaDmPage_(payload, base, staff, dev)); }
+        window.__idmData = payload;   // ★カードを押した時、会話の全文を取り出す元
+        var render = window.__idmRender || function (p) { return renderInstaDmPage_(p, base, staff, dev); };
+        try { mount(render(payload)); }
         catch (e) { fail('描画エラー：' + e); }
       };
       var s = document.createElement('script');
@@ -473,9 +475,29 @@
     })['catch'](function () { try { mount(renderInstaDmGate_('この端末では合言葉を計算できませんでした。', base, staff, dev)); } catch (e) {} });
   }
   window.idmSubmit = function (pw) { pw = (pw || '').trim(); if (!pw) return; lsSet(LS_IDMPW, pw); idmFetch(pw); };
-  window.idmClear = function () { lsSet(LS_IDMPW, ''); showInstaDm(); };
+  window.idmClear = function () { lsSet(LS_IDMPW, ''); (window.__idmReshow || showInstaDm)(); };
+  // 「今すぐ最新にする」＝事務所PCに読み直しを依頼しつつ、貯まっている最新を取り直す。
+  window.igdmRefresh = function () {
+    try {
+      var s = document.createElement('script');
+      s.src = EXEC + "?action=submit&key=" + encodeURIComponent(EDIT_KEY) +
+        "&op=instadm_refresh&fields=" + encodeURIComponent('{}') + "&callback=__idmNoop&cb=" + Date.now();
+      window.__idmNoop = function () {}; document.head.appendChild(s);
+    } catch (e) {}
+    if (window.__idmReshow) window.__idmReshow();
+  };
   // IGのDM（合言葉方式）。会話は「合言葉から作った秘密の名前」の所にある＝合言葉を知る端末だけ読める。
   function showInstaDm() {
+    window.__idmRender = function (p) { return renderInstaDmPage_(p, base, staff, dev); };
+    window.__idmReshow = showInstaDm;
+    var pw = lsGet(LS_IDMPW);
+    if (!pw) { try { mount(renderInstaDmGate_('', base, staff, dev)); } catch (e) {} return; }
+    idmFetch(pw);
+  }
+  // DM再現（インスタのDMそっくり画面）。同じ合言葉・同じデータを使う。
+  function showIgdm() {
+    window.__idmRender = function (p) { return renderIgdmHome_(p, base, staff, dev); };
+    window.__idmReshow = showIgdm;
     var pw = lsGet(LS_IDMPW);
     if (!pw) { try { mount(renderInstaDmGate_('', base, staff, dev)); } catch (e) {} return; }
     idmFetch(pw);
@@ -642,6 +664,7 @@
     else if (v === 'cost') showCost();
     else if (v === 'koukoku') showKoukoku();
     else if (v === 'instadm') showInstaDm();
+    else if (v === 'igdm') showIgdm();
     else if (v === 'timedsend') showTimedSend();
     else if (v === 'yoyaku') showYoyaku();
     else if (v === 'rireki') showRireki();
