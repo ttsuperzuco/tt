@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802instadm2"></script>
+<script src="code.js?v=20260802instadm3"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -137,12 +137,16 @@
 
   // ===== 操作者(who)＝この端末で選んだ名前。localStorageに「固定」する。=====
   // 一度選んだら本人は変更不可。変えられるのは開発者だけ＝開発URLに ?reset=1 を付けて解除する。
-  var LS_WHO='sz_who', LS_ROLE='sz_role', LS_DEV='sz_device', LS_LABEL='sz_label', LS_PWOK='sz_pw_ok';
+  var LS_WHO='sz_who', LS_ROLE='sz_role', LS_DEV='sz_device', LS_LABEL='sz_label', LS_PWOK='sz_pw_ok', LS_IDMPW='idm_pw';
   function lsGet(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
   function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
   // 開発者だけのロック解除（対象端末で開発URL＋?reset=1を開く）。
   if (dev && params.get('reset') === '1') { lsDel(LS_WHO); lsDel(LS_ROLE); lsDel(LS_LABEL); }
+  // ★IGのDMの合言葉：URLに idmkey が付いていたら、この端末に覚えさせる（パソコン版・開発ズコの
+  //   事前ログイン用。合言葉そのものは公開コードに書かず、開いたURLからだけ入る）。
+  var _idmkey = params.get('idmkey');
+  if (_idmkey) { lsSet(LS_IDMPW, _idmkey); }
 
   var device = lsGet(LS_DEV);
   if (!device) { device = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet(LS_DEV, device); }
@@ -440,19 +444,41 @@
 
   // IGのDM（開発URL専用）。事務所PCが read_dms.py で書き出した insta_dm.json（既読を付けずに
   //   読んだDM一覧）を窓口(action=data)で取ってきて、renderInstaDmPage_ で並べる。
+  // 合言葉から「秘密の置き場所の名前」を作る（事務所PCの read_dms.py と同じ計算）。
+  function idmSha24(pw) {
+    var enc = new TextEncoder().encode(pw + '|ttinstadm');
+    return crypto.subtle.digest('SHA-256', enc).then(function (buf) {
+      var a = Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+      return a.slice(0, 24);
+    });
+  }
+  function idmFetch(pw) {
+    idmSha24(pw).then(function (hex) {
+      var cb = '__idm' + Date.now();
+      window[cb] = function (payload) {
+        try { delete window[cb]; } catch (e) {}
+        if (!payload || payload.error || payload.locked || !payload.accounts) {
+          lsSet(LS_IDMPW, '');   // 合言葉が違う＝秘密の名前が見つからない
+          try { mount(renderInstaDmGate_('合言葉が違うようです。もう一度入れてください。', base, staff, dev)); } catch (e) {}
+          return;
+        }
+        window.__idmData = payload;   // ★カードを押した時、小窓が会話の全文を取り出す元
+        try { mount(renderInstaDmPage_(payload, base, staff, dev)); }
+        catch (e) { fail('描画エラー：' + e); }
+      };
+      var s = document.createElement('script');
+      s.src = EXEC + '?action=data&name=insta_dm_' + hex + '.json&callback=' + cb + '&cb=' + Date.now();
+      s.onerror = function () { try { mount(renderInstaDmGate_('つながりませんでした。通信環境をご確認ください。', base, staff, dev)); } catch (e) {} };
+      document.head.appendChild(s);
+    })['catch'](function () { try { mount(renderInstaDmGate_('この端末では合言葉を計算できませんでした。', base, staff, dev)); } catch (e) {} });
+  }
+  window.idmSubmit = function (pw) { pw = (pw || '').trim(); if (!pw) return; lsSet(LS_IDMPW, pw); idmFetch(pw); };
+  window.idmClear = function () { lsSet(LS_IDMPW, ''); showInstaDm(); };
+  // IGのDM（合言葉方式）。会話は「合言葉から作った秘密の名前」の所にある＝合言葉を知る端末だけ読める。
   function showInstaDm() {
-    var cb = '__idm' + Date.now();
-    window[cb] = function (payload) {
-      try { delete window[cb]; } catch (e) {}
-      window.__idmData = payload || { accounts: [] };   // ★カードを押した時、小窓が会話の全文を取り出す元
-      try { mount(renderInstaDmPage_(window.__idmData, base, staff, dev)); }
-      catch (e) { fail('描画エラー：' + e); }
-    };
-    var s = document.createElement('script');
-    s.src = EXEC + '?action=data&name=insta_dm.json&device=' + encodeURIComponent(device) +
-            '&callback=' + cb + '&cb=' + Date.now();   // device＝鍵をかけた時に「登録した1台か」を窓口が見る（かけるまでは無害）
-    s.onerror = function () { window.__idmData = { accounts: [] }; try { mount(renderInstaDmPage_(window.__idmData, base, staff, dev)); } catch (e) {} };
-    document.head.appendChild(s);
+    var pw = lsGet(LS_IDMPW);
+    if (!pw) { try { mount(renderInstaDmGate_('', base, staff, dev)); } catch (e) {} return; }
+    idmFetch(pw);
   }
 
   // ★時間指定LINE送信＝開発URL専用。決めた時刻に文章＋画像を送る予約（renderTimedSendPage_ 内スクリプトが窓口へ依頼）。
