@@ -2196,6 +2196,10 @@ var IGDM_CSS_ =
 '  .igdmrn { font-weight:800; color:#fff; font-size:.98rem; word-break:break-word; }' +
 '  .igdmrp { color:#c7d7df; font-size:.86rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }' +
 '  .igdmrt { color:#8fa8b4; font-size:.75rem; margin-top:3px; }' +
+'  .igdmreq { display:inline-block; margin-top:4px; font-size:.72rem; font-weight:700;' +
+'    padding:2px 8px; border-radius:999px; background:#f59e0b; color:#3a2500; }' +
+'  .igdmsechead { padding:8px 13px; font-size:.78rem; font-weight:800; color:#cfe3ec;' +
+'    background:rgba(255,255,255,.05); border-bottom:1px solid rgba(255,255,255,.08); }' +
 '  .igdmmore { display:block; width:calc(100% - 20px); margin:10px; padding:11px; border:0; border-radius:10px;' +
 '    background:rgba(255,255,255,.1); color:#eaf3f7; font-weight:700; font-size:.9rem; cursor:pointer; }' +
 '  .igdmth-h { display:flex; align-items:center; gap:10px; padding:12px 14px; position:sticky; top:0;' +
@@ -2228,7 +2232,8 @@ function renderIgdmHome_(d, base, staff, dev) {
     var a = accs[ai];
     btns += '<button type="button" class="igdmaccbtn" onclick="igdmOpen(' + ai + ')">' +
       esc_(IGDM_ACC_NAME_[k] || a.label) +
-      '<span class="igdmaccsub">@' + esc_(a.handle || '') + '　' + ((a.threads || []).length) + '会話</span></button>';
+      '<span class="igdmaccsub">@' + esc_(a.handle || '') + '　' + ((a.threads || []).length) + '会話' +
+      ((a.requests || []).length ? '・初めての人' + a.requests.length : '') + '</span></button>';
   }
   if (!btns) btns = '<div class="idmempty">まだ読み取っていません。事務所PCの読み取りを待ってください。</div>';
   return '<style>' + INSTADM_CSS_ + IGDM_CSS_ + '</style>' +
@@ -2240,10 +2245,26 @@ function renderIgdmHome_(d, base, staff, dev) {
     '</div>';
 }
 
+// 一覧に出す並び＝上に「初めての人（リクエスト）」、その下に普通の会話（新しい順）。
+//   初めての人は全文の裏入口が無いので、最初の一言だけを1つの吹き出しで持たせる。
+function igdmBuildItems_(a) {
+  var items = [], reqs = a.requests || [];
+  for (var r = 0; r < reqs.length; r++) {
+    var q = reqs[r];
+    items.push({ req: true, title: q.name, unread: q.unread, waiting: true,
+      last_text: q.preview, last_ts: q.ts || '',
+      msgs: [{ me: false, text: q.preview || '（本文なし）', ts: q.ts || '' }] });
+  }
+  var ths = a.threads || [];
+  for (var t = 0; t < ths.length; t++) items.push(ths[t]);
+  return items;
+}
+
 function igdmOpen(ai) {
-  IGDM_STATE_ = { ai: ai, shown: 20, sel: -1 };
+  IGDM_STATE_ = { ai: ai, shown: 20, sel: -1, items: [] };
   var st = document.getElementById('igdmStage'); if (!st) return;
   var a = igdmAccs_()[ai]; if (!a) { st.innerHTML = ''; return; }
+  IGDM_STATE_.items = igdmBuildItems_(a);
   st.innerHTML =
     '<div class="igdmbar">' +
       '<button type="button" class="igdmback" onclick="igdmBackAccts()">‹ アカウント選び直し</button>' +
@@ -2258,20 +2279,22 @@ function igdmOpen(ai) {
 }
 
 function igdmRenderList_() {
-  var a = igdmAccs_()[IGDM_STATE_.ai]; if (!a) return;
-  var ths = a.threads || [], list = document.getElementById('igdmList'); if (!list) return;
-  var n = Math.min(IGDM_STATE_.shown, ths.length), html = '';
+  var items = IGDM_STATE_.items || [], list = document.getElementById('igdmList'); if (!list) return;
+  var n = Math.min(IGDM_STATE_.shown, items.length), html = '', reqHeaderDone = false, thHeaderDone = false;
   for (var i = 0; i < n; i++) {
-    var t = ths[i];
-    html += '<div class="igdmrow' + (t.waiting ? ' wait' : '') + (IGDM_STATE_.sel === i ? ' sel' : '') +
+    var t = items[i];
+    if (t.req && !reqHeaderDone) { html += '<div class="igdmsechead">✉️ 初めての人（リクエスト）</div>'; reqHeaderDone = true; }
+    if (!t.req && !thHeaderDone) { html += '<div class="igdmsechead">💬 これまでの会話</div>'; thHeaderDone = true; }
+    html += '<div class="igdmrow' + ((t.waiting || t.req) ? ' wait' : '') + (IGDM_STATE_.sel === i ? ' sel' : '') +
       '" onclick="igdmSelect(' + i + ')">' +
       '<div class="igdmrn">' + esc_(t.title || '（名前なし）') + '</div>' +
       '<div class="igdmrp">' + esc_((t.last_text || '').slice(0, 46)) + '</div>' +
-      '<div class="igdmrt">' + esc_(t.last_ts || '') + (t.waiting ? '　・返事待ち' : '') + '</div>' +
+      '<div class="igdmrt">' + esc_(t.last_ts || '') + (!t.req && t.waiting ? '　・返事待ち' : '') + '</div>' +
+      (t.req ? '<span class="igdmreq">初めての人' + (t.unread ? '・未読' : '') + '</span>' : '') +
     '</div>';
   }
-  if (ths.length > n) {
-    html += '<button type="button" class="igdmmore" onclick="igdmMore()">もっと読む（あと' + (ths.length - n) + '会話）</button>';
+  if (items.length > n) {
+    html += '<button type="button" class="igdmmore" onclick="igdmMore()">もっと読む（あと' + (items.length - n) + '件）</button>';
   }
   list.innerHTML = html;
 }
@@ -2280,11 +2303,12 @@ function igdmMore() { IGDM_STATE_.shown += 20; igdmRenderList_(); }
 
 function igdmSelect(i) {
   IGDM_STATE_.sel = i; igdmRenderList_();
-  var a = igdmAccs_()[IGDM_STATE_.ai], t = (a.threads || [])[i]; if (!t) return;
+  var t = (IGDM_STATE_.items || [])[i]; if (!t) return;
   var pane = document.getElementById('igdmThread'); if (!pane) return;
   var ms = t.msgs || [], body =
     '<div class="igdmth-h"><button type="button" class="igdmth-back" onclick="igdmBackList()">‹ 一覧</button>' +
-    '<span class="igdmth-nm">' + esc_(t.title || '') + '</span></div><div class="igdmth-log">';
+    '<span class="igdmth-nm">' + esc_(t.title || '') + (t.req ? '（初めての人）' : '') + '</span></div><div class="igdmth-log">';
+  if (t.req) body += '<div class="idmempty">初めての人からのメッセージです。ここには最初の一言だけ出ます（全文は本物のインスタで確認してください）。</div>';
   if (!ms.length) body += '<div class="idmempty">中身がありません。</div>';
   for (var k = 0; k < ms.length; k++) {
     var m = ms[k];
