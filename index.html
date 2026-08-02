@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802instadm"></script>
+<script src="code.js?v=20260802instadm2"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -444,12 +444,14 @@
     var cb = '__idm' + Date.now();
     window[cb] = function (payload) {
       try { delete window[cb]; } catch (e) {}
-      try { mount(renderInstaDmPage_(payload || { accounts: [] }, base, staff, dev)); }
+      window.__idmData = payload || { accounts: [] };   // ★カードを押した時、小窓が会話の全文を取り出す元
+      try { mount(renderInstaDmPage_(window.__idmData, base, staff, dev)); }
       catch (e) { fail('描画エラー：' + e); }
     };
     var s = document.createElement('script');
-    s.src = EXEC + '?action=data&name=insta_dm.json&callback=' + cb + '&cb=' + Date.now();
-    s.onerror = function () { try { mount(renderInstaDmPage_({ accounts: [] }, base, staff, dev)); } catch (e) {} };
+    s.src = EXEC + '?action=data&name=insta_dm.json&device=' + encodeURIComponent(device) +
+            '&callback=' + cb + '&cb=' + Date.now();   // device＝鍵をかけた時に「登録した1台か」を窓口が見る（かけるまでは無害）
+    s.onerror = function () { window.__idmData = { accounts: [] }; try { mount(renderInstaDmPage_(window.__idmData, base, staff, dev)); } catch (e) {} };
     document.head.appendChild(s);
   }
 
