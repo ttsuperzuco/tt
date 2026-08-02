@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802settings3rooms"></script>
+<script src="code.js?v=20260802instadm"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -438,6 +438,21 @@
     document.head.appendChild(s);
   }
 
+  // IGのDM（開発URL専用）。事務所PCが read_dms.py で書き出した insta_dm.json（既読を付けずに
+  //   読んだDM一覧）を窓口(action=data)で取ってきて、renderInstaDmPage_ で並べる。
+  function showInstaDm() {
+    var cb = '__idm' + Date.now();
+    window[cb] = function (payload) {
+      try { delete window[cb]; } catch (e) {}
+      try { mount(renderInstaDmPage_(payload || { accounts: [] }, base, staff, dev)); }
+      catch (e) { fail('描画エラー：' + e); }
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=data&name=insta_dm.json&callback=' + cb + '&cb=' + Date.now();
+    s.onerror = function () { try { mount(renderInstaDmPage_({ accounts: [] }, base, staff, dev)); } catch (e) {} };
+    document.head.appendChild(s);
+  }
+
   // ★時間指定LINE送信＝開発URL専用。決めた時刻に文章＋画像を送る予約（renderTimedSendPage_ 内スクリプトが窓口へ依頼）。
   function showTimedSend() { mount(renderTimedSendPage_(base, staff, dev)); }
 
@@ -598,6 +613,7 @@
     else if (v === 'zenjitsu') showZenjitsu();
     else if (v === 'cost') showCost();
     else if (v === 'koukoku') showKoukoku();
+    else if (v === 'instadm') showInstaDm();
     else if (v === 'timedsend') showTimedSend();
     else if (v === 'yoyaku') showYoyaku();
     else if (v === 'rireki') showRireki();
