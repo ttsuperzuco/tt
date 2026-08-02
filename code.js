@@ -933,7 +933,7 @@ function getTileSettings_() {
 var PEOPLE_ = ['kanbu', 'ringo', 'mikan', 'olive', 'marron', 'mango', 'coconut', 'reception'];
 // 表示名（アプリの名前選択・ログで使う。絵文字つき）。
 var PERSON_LABEL_ = {
-  kanbu: '社長', ringo: '🍎りんご', mikan: '🍊みかん', olive: '🫒オリーブ',
+  kanbu: '🍅トマト', ringo: '🍎りんご', mikan: '🍊みかん', olive: '🫒オリーブ',
   marron: '🌰マロン', mango: '🥭マンゴー', coconut: '🥥ココナッツ', reception: 'お店受付'
 };
 // 初期権限＝全員「施術室被り(conflict)」だけON（tile_settings.py DEFAULT と一致）。
