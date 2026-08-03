@@ -2948,6 +2948,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nr textarea{width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;min-height:120px;}' +
     '.nrpills{display:flex;flex-wrap:wrap;gap:8px;}' +
     '.nrpill{border:0;border-radius:999px;padding:12px 18px;font-weight:800;font-size:15px;color:#fff;opacity:.6;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15);}' +
+    '.nrdur .nrpill{flex:0 0 calc((100% - 40px)/6);padding:12px 2px;text-align:center;box-sizing:border-box;}' +   /* 所要時間だけ1行6個＝12個で2行に収める */
     '.nrpill.plain{background:#475569;}' +
     '.nrpill.sel{opacity:1;outline:3px solid #fff;outline-offset:-3px;}' +
     '.nrgo{display:block;width:100%;margin:24px 0 8px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
@@ -3019,7 +3020,7 @@ function renderNewReservationPage_(base, staff, dev) {
         '<textarea id="nrprev"></textarea>' +
       '</div>' +
       '<div id="nrrest" style="display:none">' +
-        '<div class="nrsec">② 所要時間（分）</div><div class="nrpills">' + durPills + '</div>' +
+        '<div class="nrsec">② 所要時間（分）</div><div class="nrpills nrdur">' + durPills + '</div>' +
         '<div id="secCounsel" style="display:none"><div class="nrsec">③ カウンセリング担当</div><div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
         '<div class="nrsec">④ 施術担当</div><div class="nrpills">' + staffPills('staff', '1') + '</div>' +
         '<div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div>' +
