@@ -2928,7 +2928,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrread{display:block;width:100%;margin:12px 0 4px;padding:14px;font-size:17px;font-weight:800;border:0;border-radius:14px;background:#2563eb;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.16);}' +
     '.nrread:disabled{opacity:.5;}' +
     '#nrprev{width:100%;box-sizing:border-box;min-height:120px;font-size:19px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;line-height:1.7;overflow:hidden;}' +
-    '.nrstatus{font-weight:900;color:#fff;min-height:28px;margin:14px 4px;font-size:19px;}';
+    '.nrstatus{font-weight:900;color:#fff;min-height:32px;margin:16px 4px;font-size:23px;line-height:1.5;}';
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
