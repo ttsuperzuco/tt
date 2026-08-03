@@ -1984,6 +1984,10 @@ var KOUKOKUCSS_ =
 //   insta_dm.json に書き出す→このアプリは窓口(action=data)で取ってきて並べるだけ（読むだけ）。
 //   見た目はLINE未回答に寄せる。返信・削除は第一弾では付けない。
 var INSTADM_CSS_ =
+'  .ubar { display:flex; align-items:center; gap:12px; margin:0 0 4px; }' +
+'  .uhome { flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--ink,#1c2430); text-decoration:none;' +
+'    background:var(--card,#fff); border:1px solid var(--line,#e6e9ef); border-radius:10px; padding:10px 14px; }' +
+'  .uhome:active { transform:translateY(1px); }' +
 '  .idmwrap { max-width:720px; margin:0 auto; }' +
 '  .idmwrap h1 { font-size:1.3rem; margin:6px 2px 12px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }' +
 '  .idmgen { color:#cfe3ec; font-size:.82rem; font-weight:600; }' +
