@@ -2120,9 +2120,6 @@ function renderInstaDmPage_(d, base, staff, dev) {
         '<button type="button" class="idmdelbtn" data-acc="' + esc_(accKey || '') +
           '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
           '" data-mode="delete" onclick="idmDelReq(this)">🚫 削除</button>' +
-        '<button type="button" class="idmblockbtn" data-acc="' + esc_(accKey || '') +
-          '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
-          '" data-mode="block" onclick="idmDelReq(this)">🚫 削除＆ブロック</button>' +
       '</div>' +
       '<div class="idmdelst"></div>' +
     '</div>';
