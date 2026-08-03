@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802yoy1"></script>
+<script src="code.js?v=20260802yoy2"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -593,7 +593,8 @@
   function showTimedSend() { mount(renderTimedSendPage_(base, staff, dev)); }
 
   // ★予約入力＝開発URL専用。貼って選ぶ→事務所PC(edit_worker op=new_reservation)が新規予約を作る（renderNewReservationPage_ 内スクリプトが窓口へ依頼）。
-  function showYoyaku() { mount(renderNewReservationPage_(base, staff, dev)); }
+  function showYoyaku() { mount(renderReservationHomePage_(base, staff, dev)); }        // トップ画面（新規/既存/変更）
+  function showYoyakuNew() { mount(renderNewReservationPage_(base, staff, dev)); }       // 「新規の予約」の入力画面
 
   // ホーム：権限(perms)＋選んだ名前(who)で出し分け（renderHomePage_は code.js＝GASと同一）。
   function showHome(perms, order) {
@@ -753,6 +754,7 @@
     else if (v === 'igdm') showIgdm();
     else if (v === 'timedsend') showTimedSend();
     else if (v === 'yoyaku') showYoyaku();
+    else if (v === 'yoyaku_new') showYoyakuNew();
     else if (v === 'rireki') showRireki();
     else if (v === 'conflict') showConflict();
     else { showHome(perms, order); prefetchForHome_(allow); }
