@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260803resolve1"></script>
+<script src="code.js?v=20260803reply1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -489,6 +489,22 @@
     var s = document.createElement('script');
     s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
       '&op=instadm_reply&fields=' + encodeURIComponent(fields) +
+      '&device=' + encodeURIComponent(device) + '&callback=' + cbS + '&cb=' + Date.now();
+    s.onerror = function () { statusFn('つながりませんでした。'); };
+    document.head.appendChild(s);
+  };
+  // 初めての人を「承認してから返信」する（承認＝本番操作なので練習モード中は事務所PC側で断られる）。
+  window.igdmApproveReply = function (account, name, occ, text, statusFn) {
+    var fields = JSON.stringify({ account: account, name: name, occ: occ || 0, text: text });
+    var cbS = '__idmApr' + Date.now();
+    window[cbS] = function (r) {
+      try { delete window[cbS]; } catch (e) {}
+      if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '受け付けられませんでした'); return; }
+      igdmPoll_(r.id, statusFn, 0);
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
+      '&op=instadm_approve_reply&fields=' + encodeURIComponent(fields) +
       '&device=' + encodeURIComponent(device) + '&callback=' + cbS + '&cb=' + Date.now();
     s.onerror = function () { statusFn('つながりませんでした。'); };
     document.head.appendChild(s);

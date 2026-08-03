@@ -2020,6 +2020,15 @@ var INSTADM_CSS_ =
 '    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
 '  .idmresbtn { background:#16a34a; color:#fff; border:0; border-radius:999px;' +
 '    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
+'  .idmrepbtn { background:#2563eb; color:#fff; border:0; border-radius:999px;' +
+'    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
+'  .idmreplybox { margin-top:10px; }' +
+'  .idmrtxt { width:100%; box-sizing:border-box; min-height:64px; border-radius:12px; border:0;' +
+'    padding:10px 12px; font-size:1rem; font-family:inherit; resize:vertical; }' +
+'  .idmrrow { display:flex; align-items:center; gap:10px; margin-top:8px; }' +
+'  .idmrsend { background:#2563eb; color:#fff; border:0; border-radius:999px;' +
+'    padding:9px 20px; font-size:.95rem; font-weight:800; cursor:pointer; }' +
+'  .idmrst { color:#cfe3ec; font-size:.9rem; }' +
 '  .idmdelst { color:#cfe3ec; font-size:.94rem; margin-top:6px; }' +
 '  .idmts { color:#9fb8c4; font-size:.92rem; }' +
 '  .idmopen { margin-left:auto; color:#f0a5c0; font-size:.92rem; font-weight:700; }' +
@@ -2105,23 +2114,28 @@ function idmWithinMonth_(ts) {
 function renderInstaDmPage_(d, base, staff, dev) {
   d = d || {};
   var accounts = d.accounts || [];
-  function tcard(ai, j, name, snippet, ts, cls, tagHtml, resKey, resSig) {
-    return '<div class="idmcard tap ' + cls + '" data-acc="' + ai + '" data-th="' + j + '">' +
+  function tcard(ai, j, name, snippet, ts, cls, tagHtml, resKey, resSig, accKey, thId) {
+    return '<div class="idmcard tap ' + cls + '" data-acc="' + ai + '" data-th="' + j +
+      '" data-rkind="t" data-racc="' + esc_(accKey || '') + '" data-rid="' + esc_(thId || '') + '">' +
       '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
       '<div class="idmpv">' + esc_(snippet || '（本文なし）') + '</div>' +
       '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
+      '<button type="button" class="idmrepbtn" onclick="event.stopPropagation();idmReplyToggle(this)">↩ 返信</button>' +
       '<button type="button" class="idmresbtn" data-key="' + esc_(resKey || '') + '" data-sig="' + esc_(resSig || '') +
         '" onclick="event.stopPropagation();idmResolve(this)">✓ 解決済</button>' +
       '<span class="idmopen">タップで全文 ›</span></div>' +
+      idmReplyBox_() +
     '</div>';
   }
   function rcard(accKey, name, preview, ts, tagHtml, occ, resKey, resSig) {
     // occ＝同じ名前の中で上から何番目か（0始まり）。名前がかぶっても、その1件を狙って開く・消すため。
     var oc = String(occ || 0);
-    return '<div class="idmcard">' +
+    return '<div class="idmcard" data-rkind="r" data-racc="' + esc_(accKey || '') +
+      '" data-rname="' + esc_(name || '') + '" data-rocc="' + oc + '">' +
       '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
       '<div class="idmpv idmpvfull">' + esc_(preview || '（本文なし）') + '</div>' +
       '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
+        '<button type="button" class="idmrepbtn" onclick="idmReplyToggle(this)">↩ 返信</button>' +
         '<button type="button" class="idmresbtn" data-key="' + esc_(resKey || '') + '" data-sig="' + esc_(resSig || '') +
           '" onclick="idmResolve(this)">✓ 解決済</button>' +
         '<button type="button" class="idmdetbtn" data-acc="' + esc_(accKey || '') +
@@ -2131,6 +2145,7 @@ function renderInstaDmPage_(d, base, staff, dev) {
           '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
           '" data-occ="' + oc + '" onclick="idmDelReq(this)">🚫 削除</button>' +
       '</div>' +
+      idmReplyBox_() +
       '<div class="idmdelst"></div>' +
     '</div>';
   }
@@ -2160,7 +2175,7 @@ function renderInstaDmPage_(d, base, staff, dev) {
           var tw = waiting[w].t;
           var tKey = 't:' + a.key + ':' + (tw.id || '');
           body += tcard(i, waiting[w].j, tw.title, tw.last_text, tw.last_ts, 'wait',
-                        '<span class="idmtag wait">返事待ち</span>', tKey, tw.last_ts || '');
+                        '<span class="idmtag wait">返事待ち</span>', tKey, tw.last_ts || '', a.key, tw.id || '');
         }
         // ②初めての人（リクエスト）
         for (var r = 0; r < reqsShown.length; r++) {
@@ -2206,6 +2221,50 @@ function idmOccOf_(reqs, item) {
 }
 // 名前をそろえて末尾の数字(未読件数)を外す（事務所PC側の識別名と同じ作り）。
 function idmStripNum_(s) { return idmNorm_(s).replace(/\s*\d+\s*$/, '').trim(); }
+
+// 返信の入力欄（各カードの中に隠して置く。返信ボタンで開く）。
+function idmReplyBox_() {
+  return '<div class="idmreplybox" style="display:none" onclick="event.stopPropagation()">' +
+    '<textarea class="idmrtxt" placeholder="返信を入力（送るとお客さんに届きます）"></textarea>' +
+    '<div class="idmrrow"><button type="button" class="idmrsend" onclick="event.stopPropagation();idmSendReply(this)">送る</button>' +
+    '<span class="idmrst"></span></div></div>';
+}
+// 「↩ 返信」＝そのカードの入力欄を開く／閉じる。
+function idmReplyToggle(btn) {
+  var card = btn;
+  for (var k = 0; k < 4 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
+  if (!card) return;
+  var box = card.querySelector('.idmreplybox');
+  if (!box) return;
+  var show = (box.style.display === 'none' || !box.style.display);
+  box.style.display = show ? 'block' : 'none';
+  if (show) { var ta = box.querySelector('.idmrtxt'); if (ta) ta.focus(); }
+}
+// 「送る」＝返事待ち会話はそのまま送信、初めての人は「承認してから返信」。最初は練習モードで守られる。
+function idmSendReply(btn) {
+  var card = btn;
+  for (var k = 0; k < 5 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
+  if (!card) return;
+  var box = card.querySelector('.idmreplybox');
+  var ta = box ? box.querySelector('.idmrtxt') : null;
+  var txt = ta ? ta.value.trim() : '';
+  var st = box ? box.querySelector('.idmrst') : null;
+  if (!txt) { if (st) st.textContent = '本文が空です。'; return; }
+  var kind = card.getAttribute('data-rkind') || '';
+  var acc = card.getAttribute('data-racc') || '';
+  if (kind === 't') {
+    var thId = card.getAttribute('data-rid') || '';
+    if (!confirm('このお客さんに送りますか？\n\n' + txt)) return;
+    if (st) st.textContent = '送信中…';
+    if (window.igdmReply) window.igdmReply(acc, thId, txt, function (m) { if (st) st.textContent = m; });
+  } else if (kind === 'r') {
+    var name = card.getAttribute('data-rname') || '';
+    var occ = parseInt(card.getAttribute('data-rocc') || '0', 10) || 0;
+    if (!confirm('この初めての人「' + name + '」を承認して、返信を送りますか？\n\n' + txt)) return;
+    if (st) st.textContent = '承認して送信中…';
+    if (window.igdmApproveReply) window.igdmApproveReply(acc, name, occ, txt, function (m) { if (st) st.textContent = m; });
+  }
+}
 
 // 「✓ 解決済」＝この相手を未返信一覧から隠す（削除はしない・全員で共有）。新しいメッセージが来たら戻る。
 function idmResolve(btn) {
