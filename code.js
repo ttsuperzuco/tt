@@ -2185,16 +2185,12 @@ function idmDelReq(btn) {
   var acc = btn.getAttribute('data-acc') || '';
   var name = btn.getAttribute('data-name') || '';
   var prev = btn.getAttribute('data-prev') || '';
-  var mode = btn.getAttribute('data-mode') || 'delete';
-  var isBlock = (mode === 'block');
-  var word = isBlock ? '削除してブロック' : '削除';
-  if (!confirm('この初めての人「' + name + '」を' + word + 'しますか？\n' +
-               (isBlock ? '消したうえで、この人からもう届かないようにします。' : '') + '\n元に戻せません。')) return;
+  if (!confirm('この初めての人「' + name + '」を削除しますか？\n元に戻せません。')) return;
   var card = btn;
   for (var k = 0; k < 4 && card && !(card.className && card.className.indexOf('idmcard') >= 0); k++) card = card.parentElement;
   var st = card ? card.querySelector('.idmdelst') : null;
-  if (st) st.textContent = (isBlock ? '削除＆ブロックを依頼中…' : '削除を依頼中…');
-  if (window.igdmDelete) window.igdmDelete(acc, name, prev, mode, function (m) { if (st) st.textContent = m; });
+  if (st) st.textContent = '削除を依頼中…';
+  if (window.igdmDelete) window.igdmDelete(acc, name, prev, function (m) { if (st) st.textContent = m; });
 }
 
 // 会話の全文を小窓（idmMask）に出す。無ければ簡易にまとめて出す。
@@ -2898,10 +2894,11 @@ function renderNewReservationPage_(base, staff, dev) {
   var STAFF = [['1', '🍅', 'トマト'], ['2', '🍊', 'みかん'], ['3', '🫒', 'オリーブ'], ['4', '🥭', 'マンゴー']];
   var ROOMS = [['FREEDOM', 'FREEDOM'], ['HAPPY', 'HAPPY'], ['LUCKY', 'LUCKY'], ['STAR', 'STAR/福/🇫🇷']];
   var DURS = [20, 30, 40, 45, 50, 60, 70, 80, 90, 120];
-  function staffPills(grp, defVal) {
+  function staffPills(grp, defVal, ids) {
     var h = '';
     for (var i = 0; i < STAFF.length; i++) {
       var s = STAFF[i];
+      if (ids && ids.indexOf(s[0]) < 0) continue;   // カウンセリングは トマト・みかん だけ
       h += '<button type="button" class="nrpill' + (s[0] === defVal ? ' sel' : '') + '" data-grp="' + grp +
         '" data-val="' + s[0] + '" style="background:' + staffColor_(s[1]) + '">' + s[1] + ' ' + s[2] + '</button>';
     }
@@ -2966,6 +2963,8 @@ function renderNewReservationPage_(base, staff, dev) {
     'var sg=document.getElementById("secGender"),stw=document.getElementById("secTw");' +
     'if(d.gender){selVal("gender",d.gender);if(sg)sg.style.display="none";}else if(sg)sg.style.display="";' +  // 読めたら性別欄は隠す
     'if(d.tw){selVal("tw",d.tw);if(stw)stw.style.display="none";}else if(stw)stw.style.display="";' +          // 読めたら国籍欄は隠す
+    'var scn=document.getElementById("secCounsel");if(scn)scn.style.display=d.datsumo?"":"none";' +            // カウンセリング担当は脱毛のときだけ
+
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
     'status("",false);});}' +                                                          // 読み取り後の一言は出さない
@@ -2997,8 +2996,8 @@ function renderNewReservationPage_(base, staff, dev) {
       '</div>' +
       '<div id="nrrest" style="display:none">' +
         '<div class="nrsec">② 所要時間（分）</div><div class="nrpills">' + durPills + '</div>' +
-        '<div class="nrsec">③ 施術担当</div><div class="nrpills">' + staffPills('staff', '1') + '</div>' +
-        '<div class="nrsec">④ カウンセリング担当（新規・脱毛のときだけ使います）</div><div class="nrpills">' + staffPills('counsel', '1') + '</div>' +
+        '<div id="secCounsel" style="display:none"><div class="nrsec">③ カウンセリング担当</div><div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
+        '<div class="nrsec">④ 施術担当</div><div class="nrpills">' + staffPills('staff', '1') + '</div>' +
         '<div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div>' +
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
         '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
