@@ -2012,8 +2012,6 @@ var INSTADM_CSS_ =
 '  .idmpvfull { -webkit-line-clamp:unset; display:block; overflow:visible; }' +
 '  .idmdetbtn { margin-left:auto; background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:999px;' +
 '    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
-'  .idmblockbtn { background:#7f1d1d; color:#fff; border:0; border-radius:999px;' +
-'    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
 '  .idmdelbtn { background:#dc2626; color:#fff; border:0; border-radius:999px;' +
 '    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
 '  .idmdelst { color:#cfe3ec; font-size:.82rem; margin-top:6px; }' +
