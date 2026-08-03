@@ -2929,7 +2929,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrgo:disabled{opacity:.5;}' +
     '.nrread{display:block;width:100%;margin:12px 0 4px;padding:14px;font-size:17px;font-weight:800;border:0;border-radius:14px;background:#2563eb;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.16);}' +
     '.nrread:disabled{opacity:.5;}' +
-    '#nrprev{width:100%;box-sizing:border-box;min-height:150px;font-size:16px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;line-height:1.6;}' +
+    '#nrprev{width:100%;box-sizing:border-box;min-height:120px;font-size:19px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;line-height:1.7;overflow:hidden;}' +
     '.nrstatus{font-weight:800;color:#0a7;min-height:24px;margin:12px 4px;font-size:15px;}';
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
@@ -2958,7 +2958,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
     'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("gender",d.gender);selVal("tw",d.tw);selVal("dur",d.dur);' +
+    'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
+    'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
     'status("✅ 読み取りました。内容を確認・修正して「登録する」を押してください。",false);});}' +
+    'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
     'readEl.disabled=true;status("読み取っています…（事務所パソコン）",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
