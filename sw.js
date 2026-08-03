@@ -17,7 +17,7 @@
 //
 // 【困った時】アプリが古いまま直らない等があれば、この保管を丸ごと捨てればよい
 //   （下の CACHE の名前を変えて配る＝古い保管は自動で消える）。
-var CACHE = 'ttzuko-shell-v62';   // 2026-08-03 説明文を削除
+var CACHE = 'ttzuko-shell-v63';   // 2026-08-03 未返信を1つにまとめ
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();   // 新しい保管係にすぐ交代する
