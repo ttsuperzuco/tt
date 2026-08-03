@@ -2916,7 +2916,7 @@ function renderNewReservationPage_(base, staff, dev) {
   var natPills = '<button type="button" class="nrpill" data-grp="tw" data-val="0" style="background:#64748b">日本</button>' +
     '<button type="button" class="nrpill" data-grp="tw" data-val="1" style="background:#0d9b6c">台湾 🇹🇼</button>';
   var css = '.nr{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
-    '.nrnote{background:#fff3cd;color:#5b4a00;padding:10px 12px;border-radius:12px;font-weight:700;font-size:13px;margin:6px 4px 4px;}' +
+    '.nrnote{background:#fff3cd;color:#5b4a00;padding:12px 14px;border-radius:12px;font-weight:800;font-size:16px;line-height:1.6;margin:6px 4px 6px;}' +
     '.nrsec{font-weight:800;margin:16px 4px 8px;font-size:16px;}' +
     '.nr textarea{width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;min-height:120px;}' +
     '.nrpills{display:flex;flex-wrap:wrap;gap:8px;}' +
@@ -2981,7 +2981,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '<div class="ubar"><a class="uhome" href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a></div>' +
     '<div class="hhead"><span class="bmark">📝</span><span class="bname">新規予約入力</span></div>' +
     '<div class="nr">' +
-      '<div class="nrnote">貼って選ぶだけ。登録は事務所パソコンが動いている時に実行されます。</div>' +
+      '<div class="nrnote">お客様から送られた"お客様情報"を、下の欄にそのまま貼って完了ボタンを押すと、自動で予約メモの形式に変換されます</div>' +
       '<div class="nrsec">① 予約フォームを貼る</div>' +
       '<textarea id="nrtext" placeholder="予約フォームの内容をここに貼り付け"></textarea>' +
       '<button type="button" class="nrread" id="nrread">貼り付け完了（読み取る）</button>' +
