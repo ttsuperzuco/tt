@@ -2911,11 +2911,9 @@ function renderNewReservationPage_(base, staff, dev) {
     durPills += '<button type="button" class="nrpill plain' + (DURS[di] === 60 ? ' sel' : '') +
       '" data-grp="dur" data-val="' + DURS[di] + '">' + DURS[di] + '</button>';
   }
-  var genderPills = '<button type="button" class="nrpill plain sel" data-grp="gender" data-val="">自動</button>' +
-    '<button type="button" class="nrpill" data-grp="gender" data-val="M" style="background:#2563eb">男</button>' +
+  var genderPills = '<button type="button" class="nrpill" data-grp="gender" data-val="M" style="background:#2563eb">男</button>' +
     '<button type="button" class="nrpill" data-grp="gender" data-val="F" style="background:#db2777">女</button>';
-  var natPills = '<button type="button" class="nrpill plain sel" data-grp="tw" data-val="auto">自動</button>' +
-    '<button type="button" class="nrpill" data-grp="tw" data-val="0" style="background:#64748b">日本</button>' +
+  var natPills = '<button type="button" class="nrpill" data-grp="tw" data-val="0" style="background:#64748b">日本</button>' +
     '<button type="button" class="nrpill" data-grp="tw" data-val="1" style="background:#0d9b6c">台湾 🇹🇼</button>';
   var css = '.nr{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.nrnote{background:#fff3cd;color:#5b4a00;padding:10px 12px;border-radius:12px;font-weight:700;font-size:13px;margin:6px 4px 4px;}' +
@@ -2934,7 +2932,7 @@ function renderNewReservationPage_(base, staff, dev) {
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-    'var sel={dur:"60",staff:"1",counsel:"1",room:"FREEDOM",gender:"",tw:"auto"};' +
+    'var sel={dur:"60",staff:"1",counsel:"1",room:"FREEDOM",gender:"",tw:""};' +
     'var stEl=document.getElementById("nrstatus"),goEl=document.getElementById("nrgo"),txtEl=document.getElementById("nrtext");' +
     'var prevEl=document.getElementById("nrprev"),prevWrap=document.getElementById("nrprevwrap"),readEl=document.getElementById("nrread");' +
     'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
@@ -2957,7 +2955,11 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(r.status!=="done"){status("読み取れませんでした："+esc(r.result||r.status),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
-    'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("gender",d.gender);selVal("tw",d.tw);selVal("dur",d.dur);' +
+    'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("dur",d.dur);' +
+    'var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +          // ②所要以降を読み取り後に出す
+    'var sg=document.getElementById("secGender"),stw=document.getElementById("secTw");' +
+    'if(d.gender){selVal("gender",d.gender);if(sg)sg.style.display="none";}else if(sg)sg.style.display="";' +  // 読めたら性別欄は隠す
+    'if(d.tw){selVal("tw",d.tw);if(stw)stw.style.display="none";}else if(stw)stw.style.display="";' +          // 読めたら国籍欄は隠す
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
     'status("✅ 読み取りました。内容を確認・修正して「登録する」を押してください。",false);});}' +
@@ -2987,14 +2989,16 @@ function renderNewReservationPage_(base, staff, dev) {
         '<div class="nrsec">変換後（このままメモに登録されます・直せます）</div>' +
         '<textarea id="nrprev"></textarea>' +
       '</div>' +
-      '<div class="nrsec">② 所要時間（分）</div><div class="nrpills">' + durPills + '</div>' +
-      '<div class="nrsec">③ 施術担当</div><div class="nrpills">' + staffPills('staff', '1') + '</div>' +
-      '<div class="nrsec">④ カウンセリング担当（新規・脱毛のときだけ使います）</div><div class="nrpills">' + staffPills('counsel', '1') + '</div>' +
-      '<div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div>' +
-      '<div class="nrsec">⑥ 性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div>' +
-      '<div class="nrsec">⑦ 国籍</div><div class="nrpills">' + natPills + '</div>' +
-      '<button type="button" class="nrgo" id="nrgo">この内容で登録する</button>' +
-      '<div class="nrstatus" id="nrstatus">「自動」のままなら、性別・国籍は事務所パソコンがLINEから調べて入れます。</div>' +
+      '<div id="nrrest" style="display:none">' +
+        '<div class="nrsec">② 所要時間（分）</div><div class="nrpills">' + durPills + '</div>' +
+        '<div class="nrsec">③ 施術担当</div><div class="nrpills">' + staffPills('staff', '1') + '</div>' +
+        '<div class="nrsec">④ カウンセリング担当（新規・脱毛のときだけ使います）</div><div class="nrpills">' + staffPills('counsel', '1') + '</div>' +
+        '<div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div>' +
+        '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
+        '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
+        '<button type="button" class="nrgo" id="nrgo">この内容で登録する</button>' +
+      '</div>' +
+      '<div class="nrstatus" id="nrstatus"></div>' +
     '</div>' +
   '</div>' +
   script;
