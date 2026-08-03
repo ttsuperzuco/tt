@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260803d150b"></script>
+<script src="code.js?v=20260803occ1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -511,8 +511,9 @@
   }
   // 「詳細を見る」＝初めての人1件を開いて中身を全部読む依頼→結果(会話JSON)を小窓へ。
   //   （開くので既読が付く＝まるちゃん了承。読むだけ・消さない）。
-  window.idmReqDetail = function (acc, name, preview, statusFn, onMsgs) {
-    var fields = JSON.stringify({ account: acc, name: name, preview: preview });
+  window.idmReqDetail = function (acc, name, preview, occ, statusFn, onMsgs) {
+    if (typeof occ === 'function') { onMsgs = statusFn; statusFn = occ; occ = 0; }   // 旧呼び出し(occなし)も許す
+    var fields = JSON.stringify({ account: acc, name: name, preview: preview, occ: occ || 0 });
     function poll(id, n) {
       if (n > 40) { statusFn('時間がかかっています。もう一度お試しください。'); return; }
       var cb = '__idmRs' + Date.now();
@@ -547,9 +548,9 @@
   };
   // 初めての人（スパム）を削除＝事務所PCへ依頼→結果を下に出す。★実際に消してよいかは
   //   事務所PCの delete_request.py（delete.json の enabled）が決める＝既定はカギ。押した1件だけ。
-  window.igdmDelete = function (account, name, preview, mode, statusFn) {
-    if (typeof mode === 'function') { statusFn = mode; mode = 'delete'; }   // 旧呼び出し(modeなし)も許す
-    var fields = JSON.stringify({ account: account, name: name, preview: preview, mode: mode || 'delete' });
+  window.igdmDelete = function (account, name, preview, occ, statusFn) {
+    if (typeof occ === 'function') { statusFn = occ; occ = 0; }   // 旧呼び出し(occなし)も許す
+    var fields = JSON.stringify({ account: account, name: name, preview: preview, occ: occ || 0 });
     var cbS = '__idmDel' + Date.now();
     window[cbS] = function (r) {
       try { delete window[cbS]; } catch (e) {}
