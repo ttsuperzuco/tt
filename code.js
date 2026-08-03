@@ -2960,7 +2960,7 @@ function renderNewReservationPage_(base, staff, dev) {
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-    'var sel={dur:"60",staff:"1",counsel:"1",room:"FREEDOM",gender:"",tw:""};' +
+    'var sel={dur:"60",staff:"2",counsel:"1",room:"FREEDOM",gender:"",tw:""};' +
     'var stEl=document.getElementById("nrstatus"),goEl=document.getElementById("nrgo"),txtEl=document.getElementById("nrtext");' +
     'var prevEl=document.getElementById("nrprev"),prevWrap=document.getElementById("nrprevwrap"),readEl=document.getElementById("nrread");' +
     'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
@@ -2983,7 +2983,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
-    'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("dur",d.dur);' +
+    'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);' +
     'var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +          // ②所要以降を読み取り後に出す
     'var sg=document.getElementById("secGender"),stw=document.getElementById("secTw");' +
     'if(d.gender){selVal("gender",d.gender);if(sg)sg.style.display="none";}else if(sg)sg.style.display="";' +  // 読めたら性別欄は隠す
@@ -3022,7 +3022,7 @@ function renderNewReservationPage_(base, staff, dev) {
       '<div id="nrrest" style="display:none">' +
         '<div class="nrsec">② 所要時間（分）</div><div class="nrpills nrdur">' + durPills + '</div>' +
         '<div id="secCounsel" style="display:none"><div class="nrsec">③ カウンセリング担当</div><div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
-        '<div class="nrsec">④ 施術担当</div><div class="nrpills">' + staffPills('staff', '1') + '</div>' +
+        '<div class="nrsec">④ 施術担当</div><div class="nrpills">' + staffPills('staff', '2') + '</div>' +
         '<div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div>' +
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
         '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
