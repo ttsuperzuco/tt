@@ -2917,7 +2917,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '<button type="button" class="nrpill" data-grp="tw" data-val="1" style="background:#0d9b6c">台湾 🇹🇼</button>';
   var css = '.nr{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.nrnote{background:#fff3cd;color:#5b4a00;padding:12px 14px;border-radius:12px;font-weight:800;font-size:16px;line-height:1.6;margin:6px 4px 6px;}' +
-    '.nrsec{font-weight:800;margin:16px 4px 8px;font-size:16px;}' +
+    '.nrsec{font-weight:900;margin:18px 4px 8px;font-size:20px;color:#fff;}' +
     '.nr textarea{width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;min-height:120px;}' +
     '.nrpills{display:flex;flex-wrap:wrap;gap:8px;}' +
     '.nrpill{border:0;border-radius:999px;padding:12px 18px;font-weight:800;font-size:15px;color:#fff;opacity:.6;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15);}' +
@@ -2928,7 +2928,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrread{display:block;width:100%;margin:12px 0 4px;padding:14px;font-size:17px;font-weight:800;border:0;border-radius:14px;background:#2563eb;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.16);}' +
     '.nrread:disabled{opacity:.5;}' +
     '#nrprev{width:100%;box-sizing:border-box;min-height:120px;font-size:19px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;line-height:1.7;overflow:hidden;}' +
-    '.nrstatus{font-weight:800;color:#0a7;min-height:24px;margin:12px 4px;font-size:15px;}';
+    '.nrstatus{font-weight:900;color:#fff;min-height:28px;margin:14px 4px;font-size:19px;}';
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
@@ -2962,10 +2962,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(d.tw){selVal("tw",d.tw);if(stw)stw.style.display="none";}else if(stw)stw.style.display="";' +          // 読めたら国籍欄は隠す
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
-    'status("✅ 読み取りました。内容を確認・修正して「登録する」を押してください。",false);});}' +
+    'status("",false);});}' +                                                          // 読み取り後の一言は出さない
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
-    'readEl.disabled=true;status("読み取っています…（事務所パソコン）",false);' +
+    'readEl.disabled=true;status("変換中です。しばらくお待ちください。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},1200);});}' +
     'readEl.addEventListener("click",readGo);' +
@@ -2986,7 +2986,7 @@ function renderNewReservationPage_(base, staff, dev) {
       '<textarea id="nrtext" placeholder="予約フォームの内容をここに貼り付け"></textarea>' +
       '<button type="button" class="nrread" id="nrread">貼り付け完了（読み取る）</button>' +
       '<div id="nrprevwrap" style="display:none">' +
-        '<div class="nrsec">変換後（このままメモに登録されます・直せます）</div>' +
+        '<div class="nrsec">予約メモ形式に変換されました（白い枠内で自由に文字を編集できます）</div>' +
         '<textarea id="nrprev"></textarea>' +
       '</div>' +
       '<div id="nrrest" style="display:none">' +
