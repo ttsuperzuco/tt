@@ -158,6 +158,12 @@ function doGet(e) {
   } else if (view === 'yoyaku_new') {
     title = '新規予約入力';                              // ★「新規の予約」を押した先＝貼って選ぶ→事務所PCが新規予約を作る（純JS）
     html = renderNewReservationPage_(base, staff, dev);
+  } else if (view === 'yoyaku_kizon') {
+    title = '既存の予約';                                // ★既存客の予約＝番号入力→日付選択（PC版と同じ・日付選択まで）
+    html = renderExistingPage_(base, staff, dev, '予約');
+  } else if (view === 'yoyaku_henkou') {
+    title = '既存の変更';                                // ★既存客の変更＝番号入力→日付選択（PC版と同じ・日付選択まで）
+    html = renderExistingPage_(base, staff, dev, '変更');
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
     html = renderHome_(base, staff, dev, who);
@@ -2994,10 +3000,10 @@ function renderReservationHomePage_(base, staff, dev) {
     '<div class="rolemenu">' +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
         '<span class="ricon">📝</span><span class="rname">新規の予約</span></a>' +
-      '<button type="button" class="rolebtn kaihatsu" onclick="alert(\'準備中です\');">' +
-        '<span class="ricon">📖</span><span class="rname">既存の予約</span></button>' +
-      '<button type="button" class="rolebtn kanri" onclick="alert(\'準備中です\');">' +
-        '<span class="ricon">✏️</span><span class="rname">既存の変更</span></button>' +
+      '<a class="rolebtn kaihatsu" href="' + base + '?view=yoyaku_kizon' + sfx + '" target="_top">' +
+        '<span class="ricon">📖</span><span class="rname">既存の予約</span></a>' +
+      '<a class="rolebtn kanri" href="' + base + '?view=yoyaku_henkou' + sfx + '" target="_top">' +
+        '<span class="ricon">✏️</span><span class="rname">既存の変更</span></a>' +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) + head + menu + '</div>';
@@ -3124,6 +3130,90 @@ function renderNewReservationPage_(base, staff, dev) {
     '</div>' +
   '</div>' +
   script;
+}
+
+/** 既存の予約／既存の変更＝番号入力→日付選択の2画面（PC版と同じ青緑の見た目・日付選択まで）。
+ *  ★2026-08-03：まるちゃん指示①＝まずは番号→日付の2画面だけ（予約えらび・登録は後回し）。 */
+function renderExistingPage_(base, staff, dev, mode) {
+  var title = (mode === '変更') ? '既存の変更' : '既存の予約';
+  var topHref = base + '?view=yoyaku' + roleSfx_(staff, dev);
+  var css =
+    '.ex{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+    '.exstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:14px;margin:2px 4px 8px;}' +
+    '.exdisp{background:#fff;color:#0f172a;border-radius:16px;text-align:center;letter-spacing:.1em;font-size:52px;font-weight:900;padding:14px 10px;margin:6px 0 16px;min-height:76px;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+    '.exseg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(255,255,255,.16);border-radius:16px;padding:6px;margin:0 0 14px;overflow:hidden;}' +
+    '.exseg .thumb{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/3);background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .22s;}' +
+    '.exseg button{position:relative;z-index:1;background:none;border:0;padding:14px 4px;font-size:19px;font-weight:800;color:#eaf6fb;cursor:pointer;}' +
+    '.exseg button[aria-pressed="true"]{color:#0f172a;}' +
+    '.expad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 16px;}' +
+    '.expad button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:20px 0;font-size:30px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+    '.expad button.util{background:#fde2e4;color:#9b1c31;font-size:24px;}' +
+    '.expaste{background:rgba(255,255,255,.14);border-radius:14px;padding:12px 14px;margin:2px 0 4px;}' +
+    '.expl{color:#eaf6fb;font-weight:800;font-size:15px;margin-bottom:8px;}' +
+    '.expaste input{width:100%;box-sizing:border-box;border:0;border-radius:10px;padding:14px;font-size:20px;font-weight:800;color:#0f172a;background:#fff;}' +
+    '.exgo{display:block;width:100%;margin:22px 0 6px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);cursor:pointer;}' +
+    '.exch{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 16px;}' +
+    '.exnav{width:48px;height:48px;border-radius:12px;border:0;background:#fff;color:#0f172a;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+    '.exct{font-size:24px;font-weight:900;width:170px;text-align:center;color:#fff;}' +
+    '.exgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;}' +
+    '.exwd{text-align:center;font-size:14px;color:#eaf6fb;font-weight:800;}' +
+    '.exwd.sat{color:#bfe3ff;}.exwd.sun{color:#ffc9c9;}' +
+    '.exday{aspect-ratio:1/1;display:grid;place-items:center;background:#fff;color:#0f172a;border:0;border-radius:12px;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
+    '.exday.sat{color:#1d6fb8;}.exday.sun{color:#c0392b;}' +
+    '.exday.today{outline:2px solid #fb8c44;outline-offset:-2px;}' +
+    '.exday.picked{background:#fb8c44;color:#fff;}' +
+    '.exday.blank{visibility:hidden;box-shadow:none;background:transparent;}' +
+    '.exday.past{opacity:.4;}' +
+    '.exdone{color:#fff;font-weight:800;font-size:20px;line-height:1.6;background:rgba(255,255,255,.14);border-radius:14px;padding:18px;margin-top:16px;}';
+  var numSec =
+    '<div id="exNum">' +
+      '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 前に戻る</a></div>' +
+      '<div class="hhead"><span class="bmark">①</span><span class="bname">お客様番号入力</span></div>' +
+      '<div class="exstep">' + title + '</div>' +
+      '<div class="exdisp" id="exdisp">―</div>' +
+      '<div class="exseg" id="exseg"><span class="thumb"></span>' +
+        '<button data-v="M" aria-pressed="true">M（男）</button>' +
+        '<button data-v="F">F（女）</button>' +
+        '<button data-v="">文字なし</button></div>' +
+      '<div class="expad" id="expad">' +
+        '<button>1</button><button>2</button><button>3</button>' +
+        '<button>4</button><button>5</button><button>6</button>' +
+        '<button>7</button><button>8</button><button>9</button>' +
+        '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>' +
+      '</div>' +
+      '<div class="expaste"><div class="expl">または貼り付け（コピーした番号を貼って Enter）</div><input id="expst" placeholder="M235 …"></div>' +
+      '<button class="exgo" id="exToDate">日付入力へ→</button>' +
+    '</div>';
+  var dateSec =
+    '<div id="exDate" style="display:none">' +
+      '<div class="ubar"><a class="uhome" id="exbackDate" href="javascript:void(0)">← 前に戻る</a></div>' +
+      '<div class="hhead"><span class="bmark">②</span><span class="bname">日付入力</span></div>' +
+      '<div class="exstep" id="exwho">' + title + '</div>' +
+      '<div class="exch"><button class="exnav" id="exprev">◀</button><div class="exct" id="exct"></div><button class="exnav" id="exnext">▶</button></div>' +
+      '<div class="exgrid" id="exgrid"></div>' +
+      '<div class="exdone" id="exdone" style="display:none"></div>' +
+    '</div>';
+  var script = '<script>(function(){' +
+    'var TITLE=' + JSON.stringify(title) + ';' +
+    'var prefix="M",digits="";' +
+    'var today=new Date();var calY=today.getFullYear(),calM=today.getMonth(),picked=null;' +
+    'function disp(){return (prefix||"")+digits;}' +
+    'function upd(){document.getElementById("exdisp").textContent=disp()||"―";}' +
+    'var seg=document.getElementById("exseg"),sb=seg.querySelectorAll("button"),thumb=seg.querySelector(".thumb");' +
+    'function selSeg(i){for(var j=0;j<sb.length;j++)sb[j].setAttribute("aria-pressed",j===i);thumb.style.transform="translateX("+(i*100)+"%)";prefix=sb[i].getAttribute("data-v");upd();}' +
+    'for(var i=0;i<sb.length;i++){(function(k){sb[k].addEventListener("click",function(){selSeg(k);});})(i);}' +
+    'document.getElementById("expad").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");if(k==="clr"){digits="";}else if(k==="del"){digits=digits.slice(0,-1);}else if(/^[0-9]$/.test(b.textContent)&&digits.length<4){digits+=b.textContent;}upd();});' +
+    'var pst=document.getElementById("expst");' +
+    'pst.addEventListener("input",function(){var m=(pst.value||"").toUpperCase().replace(/\\s/g,"").match(/^([MF]?)([0-9]{0,4})/);if(!m)return;if(m[1]){selSeg(m[1]==="M"?0:1);}else{selSeg(2);}digits=m[2];upd();});' +
+    'function drawCal(){var wd=["月","火","水","木","金","土","日"];document.getElementById("exct").textContent=calY+"年 "+(calM+1)+"月";var h="";for(var i=0;i<7;i++){h+="<div class=\\"exwd"+(i===5?" sat":i===6?" sun":"")+"\\">"+wd[i]+"</div>";}var first=new Date(calY,calM,1);var off=(first.getDay()+6)%7;var dim=new Date(calY,calM+1,0).getDate();for(var b=0;b<off;b++){h+="<div class=\\"exday blank\\"></div>";}var t0=new Date(today.getFullYear(),today.getMonth(),today.getDate());for(var d=1;d<=dim;d++){var dow=(off+d-1)%7;var cls="exday";if(dow===5){cls+=" sat";}if(dow===6){cls+=" sun";}var cur=new Date(calY,calM,d);if(calY===today.getFullYear()&&calM===today.getMonth()&&d===today.getDate()){cls+=" today";}if(cur<t0){cls+=" past";}if(picked&&picked.getFullYear()===calY&&picked.getMonth()===calM&&picked.getDate()===d){cls+=" picked";}h+="<button class=\\""+cls+"\\" data-d=\\""+d+"\\">"+d+"</button>";}document.getElementById("exgrid").innerHTML=h;}' +
+    'document.getElementById("exToDate").addEventListener("click",function(){if(!digits){alert("お客様番号を入れてください");return;}document.getElementById("exNum").style.display="none";document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="「"+disp()+"」の"+TITLE;calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);});' +
+    'document.getElementById("exbackDate").addEventListener("click",function(){document.getElementById("exDate").style.display="none";document.getElementById("exNum").style.display="";window.scrollTo(0,0);});' +
+    'document.getElementById("exprev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}drawCal();});' +
+    'document.getElementById("exnext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}drawCal();});' +
+    'document.getElementById("exgrid").addEventListener("click",function(e){var b=e.target.closest("button.exday");if(!b||b.className.indexOf("blank")>=0)return;var d=parseInt(b.getAttribute("data-d"),10);picked=new Date(calY,calM,d);drawCal();var done=document.getElementById("exdone");done.style.display="";done.textContent="選んだ日："+(calM+1)+"/"+d+"（この先は準備中です）";});' +
+    '})();</script>';
+  return '<style>' + HOMECSS_ + css + '</style>' +
+    '<div class="home"><div class="ex">' + numSec + dateSec + '</div></div>' + script;
 }
 
 /** 売上ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの両方から呼ばれる。 */
