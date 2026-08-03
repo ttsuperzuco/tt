@@ -2892,7 +2892,7 @@ function renderNewReservationPage_(base, staff, dev) {
   // 表示の並び順＝みかん・オリーブ・トマト・マンゴー（2026-08-03 まるちゃん指定）。
   var STAFF = [['2', '🍊', 'みかん'], ['3', '🫒', 'オリーブ'], ['1', '🍅', 'トマト'], ['4', '🥭', 'マンゴー']];
   var ROOMS = [['FREEDOM', 'FREEDOM'], ['HAPPY', 'HAPPY'], ['LUCKY', 'LUCKY'], ['STAR', 'STAR/福/🇫🇷']];
-  var DURS = [15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 120, 135, 150, 180];
+  var DURS = [15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 120, 150];
   function staffPills(grp, defVal, ids) {
     var h = '';
     for (var i = 0; i < STAFF.length; i++) {
