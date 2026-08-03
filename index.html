@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802yoy9"></script>
+<script src="code.js?v=20260803block1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -547,8 +547,9 @@
   };
   // 初めての人（スパム）を削除＝事務所PCへ依頼→結果を下に出す。★実際に消してよいかは
   //   事務所PCの delete_request.py（delete.json の enabled）が決める＝既定はカギ。押した1件だけ。
-  window.igdmDelete = function (account, name, preview, statusFn) {
-    var fields = JSON.stringify({ account: account, name: name, preview: preview });
+  window.igdmDelete = function (account, name, preview, mode, statusFn) {
+    if (typeof mode === 'function') { statusFn = mode; mode = 'delete'; }   // 旧呼び出し(modeなし)も許す
+    var fields = JSON.stringify({ account: account, name: name, preview: preview, mode: mode || 'delete' });
     var cbS = '__idmDel' + Date.now();
     window[cbS] = function (r) {
       try { delete window[cbS]; } catch (e) {}
