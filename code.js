@@ -2204,7 +2204,15 @@ function idmDelReq(btn) {
   for (var k = 0; k < 4 && card && !(card.className && card.className.indexOf('idmcard') >= 0); k++) card = card.parentElement;
   var st = card ? card.querySelector('.idmdelst') : null;
   if (st) st.textContent = '削除を依頼中…';
-  if (window.igdmDelete) window.igdmDelete(acc, name, prev, occ, function (m) { if (st) st.textContent = m; });
+  if (window.igdmDelete) window.igdmDelete(acc, name, prev, occ, function (m) {
+    if (st) st.textContent = m;
+    // 消えたら、その行を画面からも取り除く（残って見える対策）。
+    if (m && m.indexOf('削除しました') >= 0 && card && card.parentNode) {
+      card.style.transition = 'opacity .4s';
+      card.style.opacity = '0';
+      setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 400);
+    }
+  });
 }
 
 // 会話の全文を小窓（idmMask）に出す。無ければ簡易にまとめて出す。
