@@ -2228,6 +2228,8 @@ var IGDM_CSS_ =
 '  .igdmrrow { display:flex; align-items:center; gap:10px; margin-top:8px; }' +
 '  .igdmrsend { background:#e1306c; color:#fff; border:0; border-radius:10px; padding:10px 20px;' +
 '    font-size:1rem; font-weight:800; cursor:pointer; }' +
+'  .igdmdel { background:#dc2626; color:#fff; border:0; border-radius:10px; padding:11px 20px;' +
+'    font-size:1rem; font-weight:800; cursor:pointer; }' +
 '  .igdmrstatus { color:#cfe3ec; font-size:.86rem; }' +
 '  @media (max-width:760px) {' +
 '    .igdmlist { width:100%; }' +
@@ -2347,6 +2349,13 @@ function igdmSelect(i) {
       '<span class="igdmrstatus" id="igdmRStatus"></span></div>' +
     '</div>';
   }
+  if (t.req) {
+    // ★初めての人（スパムが来る所）＝中身を見た上で「削除」できる。押した1件だけ・確認あり・戻せない。
+    body += '<div class="igdmreply">' +
+      '<button type="button" class="igdmdel" onclick="igdmDoDelete()">🚫 この初めての人を削除</button>' +
+      '<div class="igdmrstatus" id="igdmRStatus" style="margin-top:8px;"></div>' +
+    '</div>';
+  }
   pane.innerHTML = body;
   var pn = document.getElementById('igdmPane'); if (pn) pn.classList.add('showthread');
   var lg = pane.querySelector('.igdmth-log'); if (lg) lg.scrollTop = lg.scrollHeight;
@@ -2361,6 +2370,15 @@ function igdmDoReply() {
   var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
   var st = document.getElementById('igdmRStatus'); if (st) st.textContent = '送信中…';
   if (window.igdmReply) window.igdmReply(acc, t.id, txt, function (m) { if (st) st.textContent = m; });
+}
+
+// 初めての人（スパム）を削除する。中身を見た上で、押した1件だけ・確認してから。戻せない。
+function igdmDoDelete() {
+  var t = (IGDM_STATE_.items || [])[IGDM_STATE_.sel]; if (!t || !t.req) return;
+  if (!confirm('この初めての人「' + (t.title || '') + '」を削除しますか？\n消すと元に戻せません。')) return;
+  var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
+  var st = document.getElementById('igdmRStatus'); if (st) st.textContent = '削除を依頼中…';
+  if (window.igdmDelete) window.igdmDelete(acc, t.title, t.last_text, function (m) { if (st) st.textContent = m; });
 }
 
 function igdmBackList() { var pn = document.getElementById('igdmPane'); if (pn) pn.classList.remove('showthread'); }

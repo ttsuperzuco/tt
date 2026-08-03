@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802reply1"></script>
+<script src="code.js?v=20260802del1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -509,6 +509,23 @@
     ss.onerror = function () { setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 1500); };
     document.head.appendChild(ss);
   }
+  // 初めての人（スパム）を削除＝事務所PCへ依頼→結果を下に出す。★実際に消してよいかは
+  //   事務所PCの delete_request.py（delete.json の enabled）が決める＝既定はカギ。押した1件だけ。
+  window.igdmDelete = function (account, name, preview, statusFn) {
+    var fields = JSON.stringify({ account: account, name: name, preview: preview });
+    var cbS = '__idmDel' + Date.now();
+    window[cbS] = function (r) {
+      try { delete window[cbS]; } catch (e) {}
+      if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '削除を受け付けられませんでした'); return; }
+      igdmPoll_(r.id, statusFn, 0);
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
+      '&op=instadm_delete&fields=' + encodeURIComponent(fields) +
+      '&device=' + encodeURIComponent(device) + '&callback=' + cbS + '&cb=' + Date.now();
+    s.onerror = function () { statusFn('つながりませんでした。'); };
+    document.head.appendChild(s);
+  };
   // 「今すぐ最新にする」＝事務所PCに読み直しを依頼しつつ、貯まっている最新を取り直す。
   window.igdmRefresh = function () {
     try {
