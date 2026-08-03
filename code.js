@@ -3156,6 +3156,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var css =
     '.ex{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.exstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:14px;margin:2px 4px 8px;}' +
+    '#exwho{font-size:28px;color:#fff;font-weight:900;margin:2px 4px 14px;}' +   /* 日付ページの「M332の既存の予約」＝2倍 */
     '.exdisp{background:#fff;color:#0f172a;border-radius:16px;text-align:center;letter-spacing:.1em;font-size:52px;font-weight:900;padding:14px 10px;margin:6px 0 16px;min-height:76px;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
     '.exseg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(255,255,255,.16);border-radius:16px;padding:6px;margin:0 0 14px;overflow:hidden;}' +
     '.exseg .thumb{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/3);background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .22s;}' +
@@ -3174,7 +3175,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;}' +
     '.exwd{text-align:center;font-size:14px;color:#eaf6fb;font-weight:800;}' +
     '.exwd.sat{color:#bfe3ff;}.exwd.sun{color:#ffc9c9;}' +
-    '.exday{aspect-ratio:1/1;display:grid;place-items:center;background:#fff;color:#0f172a;border:0;border-radius:12px;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
+    '.exday{aspect-ratio:1/1.5;display:grid;place-items:center;background:#fff;color:#0f172a;border:0;border-radius:12px;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
     '.exday.sat{color:#1d6fb8;}.exday.sun{color:#c0392b;}' +
     '.exday.today{outline:2px solid #fb8c44;outline-offset:-2px;}' +
     '.exday.picked{background:#fb8c44;color:#fff;}' +
