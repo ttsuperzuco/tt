@@ -17,7 +17,7 @@
 //
 // 【困った時】アプリが古いまま直らない等があれば、この保管を丸ごと捨てればよい
 //   （下の CACHE の名前を変えて配る＝古い保管は自動で消える）。
-var CACHE = 'ttzuko-shell-v51';   // 2026-08-02 IGのDMの初めての人にも削除ボタン
+var CACHE = 'ttzuko-shell-v52';   // 2026-08-02 初めての人に詳細を見るボタン
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();   // 新しい保管係にすぐ交代する

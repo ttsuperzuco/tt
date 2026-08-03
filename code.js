@@ -2007,7 +2007,9 @@ var INSTADM_CSS_ =
 '  .idmtag.new  { background:#f59e0b; color:#3a2500; }' +
 '  .idmtag.spam { background:#dc2626; color:#fff; }' +
 '  .idmpvfull { -webkit-line-clamp:unset; display:block; overflow:visible; }' +
-'  .idmdelbtn { margin-left:auto; background:#dc2626; color:#fff; border:0; border-radius:999px;' +
+'  .idmdetbtn { margin-left:auto; background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:999px;' +
+'    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
+'  .idmdelbtn { background:#dc2626; color:#fff; border:0; border-radius:999px;' +
 '    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
 '  .idmdelst { color:#cfe3ec; font-size:.82rem; margin-top:6px; }' +
 '  .idmts { color:#9fb8c4; font-size:.8rem; }' +
@@ -2107,6 +2109,9 @@ function renderInstaDmPage_(d, base, staff, dev) {
       '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
       '<div class="idmpv idmpvfull">' + esc_(preview || '（本文なし）') + '</div>' +
       '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
+        '<button type="button" class="idmdetbtn" data-acc="' + esc_(accKey || '') +
+          '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
+          '" onclick="idmDoReqDetail(this)">詳細を見る</button>' +
         '<button type="button" class="idmdelbtn" data-acc="' + esc_(accKey || '') +
           '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
           '" onclick="idmDelReq(this)">🚫 削除</button>' +
@@ -2181,6 +2186,40 @@ function idmDelReq(btn) {
   var st = card ? card.querySelector('.idmdelst') : null;
   if (st) st.textContent = '削除を依頼中…';
   if (window.igdmDelete) window.igdmDelete(acc, name, prev, function (m) { if (st) st.textContent = m; });
+}
+
+// 会話の全文を小窓（idmMask）に出す。無ければ簡易にまとめて出す。
+function idmShowMsgs(title, msgs) {
+  var mask = document.getElementById('idmMask');
+  var mnm = document.getElementById('idmMnm');
+  var log = document.getElementById('idmMlog');
+  msgs = msgs || [];
+  if (!mask || !log) {
+    alert((title || '') + '\n\n' + msgs.map(function (m) { return (m.me ? '自分: ' : '相手: ') + m.text; }).join('\n'));
+    return;
+  }
+  if (mnm) mnm.textContent = title || '';
+  log.innerHTML = '';
+  if (!msgs.length) log.innerHTML = '<div class="idmempty">中身がありませんでした。</div>';
+  msgs.forEach(function (m) {
+    var row = document.createElement('div'); row.className = 'idmmsg ' + (m.me ? 'me' : 'them');
+    row.innerHTML = '<div class="idmbub">' + esc_(m.text) + '</div><div class="idmmt">' + esc_(m.ts || '') + '</div>';
+    log.appendChild(row);
+  });
+  mask.classList.add('show'); log.scrollTop = log.scrollHeight;
+}
+
+// 「詳細を見る」＝初めての人1件を開いて中身を全部読む（開くので既読が付く・まるちゃん了承）。
+function idmDoReqDetail(btn) {
+  if (!btn) return;
+  var acc = btn.getAttribute('data-acc') || '', name = btn.getAttribute('data-name') || '', prev = btn.getAttribute('data-prev') || '';
+  var card = btn;
+  for (var k = 0; k < 5 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
+  var st = card ? card.querySelector('.idmdelst') : null;
+  if (st) st.textContent = '中身を読んでいます…（開くので既読が付きます・少し待ってください）';
+  if (window.idmReqDetail) window.idmReqDetail(acc, name, prev,
+    function (m) { if (st) st.textContent = m; },
+    function (d) { idmShowMsgs(d.title, d.msgs); });
 }
 
 /** IGのDMの合言葉入力画面。合言葉を入れると showInstaDm(index.html)が秘密の置き場所を取りに行く。 */
