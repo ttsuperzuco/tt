@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260802del2"></script>
+<script src="code.js?v=20260802det1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -509,6 +509,42 @@
     ss.onerror = function () { setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 1500); };
     document.head.appendChild(ss);
   }
+  // 「詳細を見る」＝初めての人1件を開いて中身を全部読む依頼→結果(会話JSON)を小窓へ。
+  //   （開くので既読が付く＝まるちゃん了承。読むだけ・消さない）。
+  window.idmReqDetail = function (acc, name, preview, statusFn, onMsgs) {
+    var fields = JSON.stringify({ account: acc, name: name, preview: preview });
+    function poll(id, n) {
+      if (n > 40) { statusFn('時間がかかっています。もう一度お試しください。'); return; }
+      var cb = '__idmRs' + Date.now();
+      window[cb] = function (s) {
+        try { delete window[cb]; } catch (e) {}
+        if (s && s.status && s.status !== 'pending' && s.status !== 'notfound') {
+          if (s.status === 'done') {
+            var d = null; try { d = JSON.parse(s.result); } catch (e) {}
+            if (d && d.msgs) { statusFn(''); onMsgs(d); } else { statusFn('中身を読めませんでした。'); }
+          } else { statusFn(s.result || '読めませんでした。'); }
+          return;
+        }
+        setTimeout(function () { poll(id, n + 1); }, 1500);
+      };
+      var ss = document.createElement('script');
+      ss.src = EXEC + '?action=status&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
+      ss.onerror = function () { setTimeout(function () { poll(id, n + 1); }, 1500); };
+      document.head.appendChild(ss);
+    }
+    var cbS = '__idmRd' + Date.now();
+    window[cbS] = function (r) {
+      try { delete window[cbS]; } catch (e) {}
+      if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '受け付けられませんでした'); return; }
+      poll(r.id, 0);
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
+      '&op=instadm_reqdetail&fields=' + encodeURIComponent(fields) +
+      '&device=' + encodeURIComponent(device) + '&callback=' + cbS + '&cb=' + Date.now();
+    s.onerror = function () { statusFn('つながりませんでした。'); };
+    document.head.appendChild(s);
+  };
   // 初めての人（スパム）を削除＝事務所PCへ依頼→結果を下に出す。★実際に消してよいかは
   //   事務所PCの delete_request.py（delete.json の enabled）が決める＝既定はカギ。押した1件だけ。
   window.igdmDelete = function (account, name, preview, statusFn) {
