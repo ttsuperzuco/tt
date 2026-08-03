@@ -1685,10 +1685,16 @@ function ltCard_(r) {
   var _diff = (r.status === 'time_mismatch') ? ' ldtdiff' : '';
   var dateStr = esc_(jpDateWeekday_(r.date));
 
+  // ★削除もれ＝お客様はLINEでキャンセル済み。LINE側は時刻でなく「キャンセル」と出す
+  //   （普通の予約に見えないように＝やることは"消す"）。
+  var _isDel = (r.status === 'need_delete');
+  var lineInner = _isDel
+    ? '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt ldtnone">キャンセル</span></span>'
+    : '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(r.line_time || '') + '</span></span>';
   var lineCell =
     '<div class="ldtcell">' +
       '<span class="lbadge2 line"><span class="b1">LINE</span><span class="b2">予約</span></span>' +
-      '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(r.line_time || '') + '</span></span>' +
+      lineInner +
     '</div>';
   // ★予約自体はパインのカレンダーに有るが、お店の部屋の枠が未確保＝「部屋未定」（2026-08-01オーナー）。
   var ttInner = r.room_undecided
@@ -1732,6 +1738,7 @@ function renderLtPage_(d, base, staff, dev) {
   var LTGROUPS = [
     { st: 'time_mismatch', title: 'TimeTree予約ズレ' },
     { st: 'not_found',     title: '記入もれ' },
+    { st: 'need_delete',   title: '削除もれ' },
     { st: 'need_check',    title: '要確認' }
   ];
   var cards = '';
