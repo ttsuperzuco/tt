@@ -2012,6 +2012,8 @@ var INSTADM_CSS_ =
 '  .idmpvfull { -webkit-line-clamp:unset; display:block; overflow:visible; }' +
 '  .idmdetbtn { margin-left:auto; background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:999px;' +
 '    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
+'  .idmblockbtn { background:#7f1d1d; color:#fff; border:0; border-radius:999px;' +
+'    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
 '  .idmdelbtn { background:#dc2626; color:#fff; border:0; border-radius:999px;' +
 '    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
 '  .idmdelst { color:#cfe3ec; font-size:.82rem; margin-top:6px; }' +
@@ -2117,7 +2119,10 @@ function renderInstaDmPage_(d, base, staff, dev) {
           '" onclick="idmDoReqDetail(this)">詳細を見る</button>' +
         '<button type="button" class="idmdelbtn" data-acc="' + esc_(accKey || '') +
           '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
-          '" onclick="idmDelReq(this)">🚫 削除</button>' +
+          '" data-mode="delete" onclick="idmDelReq(this)">🚫 削除</button>' +
+        '<button type="button" class="idmblockbtn" data-acc="' + esc_(accKey || '') +
+          '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
+          '" data-mode="block" onclick="idmDelReq(this)">🚫 削除＆ブロック</button>' +
       '</div>' +
       '<div class="idmdelst"></div>' +
     '</div>';
@@ -2183,12 +2188,16 @@ function idmDelReq(btn) {
   var acc = btn.getAttribute('data-acc') || '';
   var name = btn.getAttribute('data-name') || '';
   var prev = btn.getAttribute('data-prev') || '';
-  if (!confirm('この初めての人「' + name + '」を削除しますか？\n消すと元に戻せません。')) return;
+  var mode = btn.getAttribute('data-mode') || 'delete';
+  var isBlock = (mode === 'block');
+  var word = isBlock ? '削除してブロック' : '削除';
+  if (!confirm('この初めての人「' + name + '」を' + word + 'しますか？\n' +
+               (isBlock ? '消したうえで、この人からもう届かないようにします。' : '') + '\n元に戻せません。')) return;
   var card = btn;
   for (var k = 0; k < 4 && card && !(card.className && card.className.indexOf('idmcard') >= 0); k++) card = card.parentElement;
   var st = card ? card.querySelector('.idmdelst') : null;
-  if (st) st.textContent = '削除を依頼中…';
-  if (window.igdmDelete) window.igdmDelete(acc, name, prev, function (m) { if (st) st.textContent = m; });
+  if (st) st.textContent = (isBlock ? '削除＆ブロックを依頼中…' : '削除を依頼中…');
+  if (window.igdmDelete) window.igdmDelete(acc, name, prev, mode, function (m) { if (st) st.textContent = m; });
 }
 
 // 会話の全文を小窓（idmMask）に出す。無ければ簡易にまとめて出す。
