@@ -2927,14 +2927,19 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrpill.sel{opacity:1;outline:3px solid #fff;outline-offset:-3px;}' +
     '.nrgo{display:block;width:100%;margin:24px 0 8px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
     '.nrgo:disabled{opacity:.5;}' +
+    '.nrread{display:block;width:100%;margin:12px 0 4px;padding:14px;font-size:17px;font-weight:800;border:0;border-radius:14px;background:#2563eb;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.16);}' +
+    '.nrread:disabled{opacity:.5;}' +
+    '#nrprev{width:100%;box-sizing:border-box;min-height:150px;font-size:16px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;line-height:1.6;}' +
     '.nrstatus{font-weight:800;color:#0a7;min-height:24px;margin:12px 4px;font-size:15px;}';
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
     'var sel={dur:"60",staff:"1",counsel:"1",room:"FREEDOM",gender:"",tw:"auto"};' +
     'var stEl=document.getElementById("nrstatus"),goEl=document.getElementById("nrgo"),txtEl=document.getElementById("nrtext");' +
+    'var prevEl=document.getElementById("nrprev"),prevWrap=document.getElementById("nrprevwrap"),readEl=document.getElementById("nrread");' +
     'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
     'function esc(s){return (s==null?"":String(s));}' +
+    'function selVal(g,v){if(!v)return;sel[g]=String(v);var sib=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.toggle("sel",sib[j].getAttribute("data-val")===String(v));}' +
     'var pills=document.querySelectorAll(".nrpill");' +
     'for(var i=0;i<pills.length;i++){pills[i].addEventListener("click",function(){var g=this.getAttribute("data-grp"),v=this.getAttribute("data-val");sel[g]=v;' +
     'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");this.classList.add("sel");});}' +
@@ -2946,10 +2951,23 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(r.status==="pending"){setTimeout(function(){poll(id);},1500);return;}' +
     'if(r.status!=="done"){status("登録できませんでした："+esc(r.result||r.status),true);goEl.disabled=false;return;}' +
     'status("✅ "+esc(r.result||"登録しました")+" TimeTreeで内容をご確認ください。",false);txtEl.value="";goEl.disabled=false;});}' +
+    'var ppolls=0;function pollPrev(id){ppolls++;if(ppolls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);readEl.disabled=false;return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
+    'if(r.status==="pending"){setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
+    'if(r.status!=="done"){status("読み取れませんでした："+esc(r.result||r.status),true);return;}' +
+    'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
+    'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
+    'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("gender",d.gender);selVal("tw",d.tw);selVal("dur",d.dur);' +
+    'status("✅ 読み取りました。内容を確認・修正して「登録する」を押してください。",false);});}' +
+    'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
+    'readEl.disabled=true;status("読み取っています…（事務所パソコン）",false);' +
+    'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
+    'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},1200);});}' +
+    'readEl.addEventListener("click",readGo);' +
     'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼ってください。",true);return;}' +
     'goEl.disabled=true;status("登録を事務所パソコンへ送っています…",false);' +
     'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,' +
-    'fields:JSON.stringify({text:text,dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw})},' +
+    'fields:JSON.stringify({text:text,memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw})},' +
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}setTimeout(function(){poll(r.id);},1200);});}' +
     'goEl.addEventListener("click",go);' +
     '})();</script>';
@@ -2961,6 +2979,11 @@ function renderNewReservationPage_(base, staff, dev) {
       '<div class="nrnote">貼って選ぶだけ。登録は事務所パソコンが動いている時に実行されます。</div>' +
       '<div class="nrsec">① 予約フォームを貼る</div>' +
       '<textarea id="nrtext" placeholder="予約フォームの内容をここに貼り付け"></textarea>' +
+      '<button type="button" class="nrread" id="nrread">貼り付け完了（読み取る）</button>' +
+      '<div id="nrprevwrap" style="display:none">' +
+        '<div class="nrsec">変換後（このままメモに登録されます・直せます）</div>' +
+        '<textarea id="nrprev"></textarea>' +
+      '</div>' +
       '<div class="nrsec">② 所要時間（分）</div><div class="nrpills">' + durPills + '</div>' +
       '<div class="nrsec">③ 施術担当</div><div class="nrpills">' + staffPills('staff', '1') + '</div>' +
       '<div class="nrsec">④ カウンセリング担当（新規・脱毛のときだけ使います）</div><div class="nrpills">' + staffPills('counsel', '1') + '</div>' +
