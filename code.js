@@ -3162,7 +3162,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exseg button{position:relative;z-index:1;background:none;border:0;padding:14px 4px;font-size:19px;font-weight:800;color:#eaf6fb;cursor:pointer;}' +
     '.exseg button[aria-pressed="true"]{color:#0f172a;}' +
     '.expad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 16px;}' +
-    '.expad button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:20px 0;font-size:30px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+    '.expad button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:8px 0;font-size:30px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
     '.expad button.util{background:#fde2e4;color:#9b1c31;font-size:24px;}' +
     '.expaste{background:rgba(255,255,255,.14);border-radius:14px;padding:12px 14px;margin:2px 0 4px;}' +
     '.expl{color:#eaf6fb;font-weight:800;font-size:15px;margin-bottom:8px;}' +
