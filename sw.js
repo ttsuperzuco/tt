@@ -17,7 +17,7 @@
 //
 // 【困った時】アプリが古いまま直らない等があれば、この保管を丸ごと捨てればよい
 //   （下の CACHE の名前を変えて配る＝古い保管は自動で消える）。
-var CACHE = 'ttzuko-shell-v52';   // 2026-08-02 初めての人に詳細を見るボタン
+var CACHE = 'ttzuko-shell-v53';   // 2026-08-02 依頼の二重実行防止(running)対応
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();   // 新しい保管係にすぐ交代する

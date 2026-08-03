@@ -498,7 +498,7 @@
     var cb = '__idmSt' + Date.now();
     window[cb] = function (r) {
       try { delete window[cb]; } catch (e) {}
-      if (r && r.status && r.status !== 'pending' && r.status !== 'notfound') {
+      if (r && r.status && r.status !== 'pending' && r.status !== 'notfound' && r.status !== 'running') {
         statusFn(r.result || (r.status === 'done' ? '送りました' : '送れませんでした'));
         return;
       }
@@ -518,7 +518,7 @@
       var cb = '__idmRs' + Date.now();
       window[cb] = function (s) {
         try { delete window[cb]; } catch (e) {}
-        if (s && s.status && s.status !== 'pending' && s.status !== 'notfound') {
+        if (s && s.status && s.status !== 'pending' && s.status !== 'notfound' && s.status !== 'running') {
           if (s.status === 'done') {
             var d = null; try { d = JSON.parse(s.result); } catch (e) {}
             if (d && d.msgs) { statusFn(''); onMsgs(d); } else { statusFn('中身を読めませんでした。'); }
