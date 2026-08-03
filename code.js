@@ -2947,12 +2947,12 @@ function renderNewReservationPage_(base, staff, dev) {
     'var polls=0;function poll(id){polls++;if(polls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);goEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}' +
     'if(r.status==="pending"){setTimeout(function(){poll(id);},1500);return;}' +
-    'if(r.status!=="done"){status("登録できませんでした："+esc(r.result||r.status),true);goEl.disabled=false;return;}' +
+    'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);goEl.disabled=false;return;}' +
     'status("✅ "+esc(r.result||"登録しました")+" TimeTreeで内容をご確認ください。",false);txtEl.value="";goEl.disabled=false;});}' +
     'var ppolls=0;function pollPrev(id){ppolls++;if(ppolls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);readEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
     'if(r.status==="pending"){setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
-    'if(r.status!=="done"){status("読み取れませんでした："+esc(r.result||r.status),true);return;}' +
+    'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
     'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("dur",d.dur);' +
@@ -4950,6 +4950,13 @@ var HOMECSS_ =
 '  .bname { font-size:2.05rem; font-weight:900; letter-spacing:.01em; color:#fb8c44; }' +
 '  .hsub { text-align:center; color:#fff; font-weight:800; font-size:1.02rem;' +
 '    letter-spacing:.06em; opacity:.92; margin:0 0 28px; }' +
+// ★戻るボタン（← 前に戻る）＝スーパーズコ全画面共通。HOMECSS_ に置いて、予約入力など
+//   HOMECSS_ だけを読む画面でも必ずボタンとして見えるようにする（2026-08-01）。
+'  .ubar { display:flex; align-items:center; gap:12px; margin:6px 0 10px; }' +
+'  .uhome { flex:0 0 auto; font-size:1rem; font-weight:800; color:var(--ink); text-decoration:none;' +
+'    background:#fff; border:1px solid var(--line); border-radius:999px; padding:11px 20px;' +
+'    box-shadow:0 4px 12px rgba(0,0,0,.10); }' +
+'  .uhome:active { transform:translateY(1px); }' +
 // タイルは2列グリッドのまま、各タイル内を左アイコン／右文字の横並びに変更（2026-07-16）。
 // 文字は最大2行まで自動折返し（-webkit-line-clamp:2）。1行に収まる短い文言はそのまま1行で出る。
 // ★開発版(?dev=1)の「管理者用／実務者用／開発者用」の3つの大ボタンと、その中の戻るボタン（PC版と同じ見た目）。
