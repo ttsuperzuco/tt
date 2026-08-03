@@ -2154,7 +2154,6 @@ function renderInstaDmPage_(d, base, staff, dev) {
         }
       } else { body += '<div class="idmempty">1ヶ月以内の返事待ちはありません。</div>'; }
       body += '<div class="idmsec">✉️ 初めての人（リクエスト）</div>';
-      body += '<div class="idmnote">知らない人からの最初のメッセージです。スパムが混じります（より分け・削除は第二弾）。</div>';
       if (reqsShown.length) {
         for (var r = 0; r < reqsShown.length; r++) {
           var un = reqsShown[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
