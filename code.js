@@ -2142,28 +2142,28 @@ function renderInstaDmPage_(d, base, staff, dev) {
       // ★IGのDMは「1ヶ月より前」を出さない（返事待ち・初めての人とも）。DM再現は全部残す（そちらは別画面）。
       waiting = waiting.filter(function (x) { return idmWithinMonth_(x.t.last_ts); });
       var reqsShown = reqs.filter(function (r) { return idmWithinMonth_(r.ts); });
+      // ★2026-08-03 まるちゃん決定：「返事待ち（既存客）」と「初めての人」は分けず、
+      //   「当店が未返信」の1つにまとめる（どちらもお店がまだ返していない＝要返信で同じ）。
       body += '<div class="idmacc">📷 ' + esc_(a.label || '') +
-        ' <span class="idmbadge">返事待ち ' + waiting.length + '</span>' +
-        ' <span class="idmbadge">初めての人 ' + reqsShown.length + '</span></div>';
-      body += '<div class="idmsec">🟢 お客さんが最後に送った（返事待ち）</div>';
-      if (waiting.length) {
+        ' <span class="idmbadge">当店が未返信 ' + (waiting.length + reqsShown.length) + '</span></div>';
+      body += '<div class="idmsec">✉️ 当店が未返信</div>';
+      if (waiting.length + reqsShown.length) {
+        // ①既存の会話でこちらが返していないもの
         for (var w = 0; w < waiting.length; w++) {
           var tw = waiting[w].t;
           body += tcard(i, waiting[w].j, tw.title, tw.last_text, tw.last_ts, 'wait',
                         '<span class="idmtag wait">返事待ち</span>');
         }
-      } else { body += '<div class="idmempty">1ヶ月以内の返事待ちはありません。</div>'; }
-      body += '<div class="idmsec">✉️ 初めての人（リクエスト）</div>';
-      if (reqsShown.length) {
+        // ②初めての人（リクエスト）
         for (var r = 0; r < reqsShown.length; r++) {
           var un = reqsShown[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
           var sp = reqsShown[r].spam ? '<span class="idmtag spam">🚫 スパムかも</span>' : '';
           var occ = idmOccOf_(reqs, reqsShown[r]);   // 同じ名前の中で上から何番目か
           body += rcard(a.key, reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un, occ);
         }
-      } else { body += '<div class="idmempty">1ヶ月以内の初めての人はいません。</div>'; }
+      } else { body += '<div class="idmempty">1ヶ月以内に未返信はありません。</div>'; }
       // ★2026-08-02 まるちゃん決定：IGのDMには「やり取り済み（こちらが返事した会話）」は出さない
-      //   （返事待ち＋初めての人＝要対応だけにする）。全部見たい時は「DM再現」を使う。
+      //   （＝要対応だけにする）。全部見たい時は「DM再現」を使う。
     }
   }
   return '<style>' + INSTADM_CSS_ + '</style>' +
