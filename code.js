@@ -2167,9 +2167,17 @@ function renderInstaDmPage_(d, base, staff, dev) {
         (threads[k].waiting ? waiting : done).push(item);
       }
       // ★IGのDMは「1ヶ月より前」を出さない（返事待ち・初めての人とも）。DM再現は全部残す（そちらは別画面）。
-      //   さらに「解決済」にした相手も出さない（DM再現には出る）。
-      waiting = waiting.filter(function (x) { return idmWithinMonth_(x.t.last_ts) && !x.t.resolved; });
-      var reqsShown = reqs.filter(function (r) { return idmWithinMonth_(r.ts) && !r.resolved; });
+      //   さらに「解決済」にした相手も出さない（DM再現には出る）。事務所PCの印(resolved)に加え、
+      //   この端末が覚えている解決済(locRes)でも隠す＝読み直しが追いつく前でも消えたままにする。
+      var locRes = idmResGet_();
+      waiting = waiting.filter(function (x) {
+        var kk = 't:' + a.key + ':' + (x.t.id || '');
+        return idmWithinMonth_(x.t.last_ts) && !x.t.resolved && locRes[kk] !== (x.t.last_ts || '');
+      });
+      var reqsShown = reqs.filter(function (r) {
+        var kk = 'r:' + a.key + ':' + idmStripNum_(r.name);
+        return idmWithinMonth_(r.ts) && !r.resolved && locRes[kk] !== ((r.preview || '') + '|' + (r.ts || ''));
+      });
       // ★2026-08-03 まるちゃん決定：「返事待ち（既存客）」と「初めての人」は分けず、
       //   「当店が未返信」の1つにまとめる（どちらもお店がまだ返していない＝要返信で同じ）。
       body += '<div class="idmacc">📷 ' + esc_(a.label || '') +
@@ -2228,6 +2236,11 @@ function idmOccOf_(reqs, item) {
 // 名前をそろえて末尾の数字(未読件数)を外す（事務所PC側の識別名と同じ作り）。
 function idmStripNum_(s) { return idmNorm_(s).replace(/\s*\d+\s*$/, '').trim(); }
 
+// この端末が覚えている「解決済にした相手」（key→そのときの状態sig）。事務所PCの読み直しが
+// 追いつくまでの間も、再表示で隠れたままにするため。新しいやり取りが来て sig が変われば自動で戻る。
+function idmResGet_() { try { return JSON.parse(localStorage.getItem('idm_resolved') || '{}') || {}; } catch (e) { return {}; } }
+function idmResAdd_(key, sig) { try { var m = idmResGet_(); m[key] = sig; localStorage.setItem('idm_resolved', JSON.stringify(m)); } catch (e) {} }
+
 // 返信の入力欄（各カードの中に隠して置く。返信ボタンで開く）。
 function idmReplyBox_() {
   return '<div class="idmreplybox" style="display:none" onclick="event.stopPropagation()">' +
@@ -2282,10 +2295,13 @@ function idmResolve(btn) {
   var card = btn;
   for (var k = 0; k < 4 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
   if (window.igdmResolve) window.igdmResolve(key, sig, function (m) {
-    // 隠せたら、その行を画面からも消す。
-    if (m && m.indexOf('解決済み') >= 0 && card && card.parentNode) {
-      card.style.transition = 'opacity .4s'; card.style.opacity = '0';
-      setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 400);
+    // 隠せたら、この端末にも覚えさせて（再表示でも隠す）、その行を画面から消す。
+    if (m && m.indexOf('解決済み') >= 0) {
+      idmResAdd_(key, sig);
+      if (card && card.parentNode) {
+        card.style.transition = 'opacity .4s'; card.style.opacity = '0';
+        setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 400);
+      }
     }
   });
 }
