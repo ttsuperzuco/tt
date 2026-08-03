@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260803merge1"></script>
+<script src="code.js?v=20260803resolve1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -560,6 +560,22 @@
     var s = document.createElement('script');
     s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
       '&op=instadm_delete&fields=' + encodeURIComponent(fields) +
+      '&device=' + encodeURIComponent(device) + '&callback=' + cbS + '&cb=' + Date.now();
+    s.onerror = function () { statusFn('つながりませんでした。'); };
+    document.head.appendChild(s);
+  };
+  // 「解決済」＝この相手を未返信一覧から隠す（消さない・全員で共有）＝事務所PCの印に記録。
+  window.igdmResolve = function (key, sig, statusFn) {
+    var fields = JSON.stringify({ key: key, sig: sig });
+    var cbS = '__idmRes' + Date.now();
+    window[cbS] = function (r) {
+      try { delete window[cbS]; } catch (e) {}
+      if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '受け付けられませんでした'); return; }
+      igdmPoll_(r.id, statusFn, 0);
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
+      '&op=instadm_resolve&fields=' + encodeURIComponent(fields) +
       '&device=' + encodeURIComponent(device) + '&callback=' + cbS + '&cb=' + Date.now();
     s.onerror = function () { statusFn('つながりませんでした。'); };
     document.head.appendChild(s);

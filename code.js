@@ -2018,6 +2018,8 @@ var INSTADM_CSS_ =
 '    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
 '  .idmdelbtn { background:#dc2626; color:#fff; border:0; border-radius:999px;' +
 '    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
+'  .idmresbtn { background:#16a34a; color:#fff; border:0; border-radius:999px;' +
+'    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
 '  .idmdelst { color:#cfe3ec; font-size:.94rem; margin-top:6px; }' +
 '  .idmts { color:#9fb8c4; font-size:.92rem; }' +
 '  .idmopen { margin-left:auto; color:#f0a5c0; font-size:.92rem; font-weight:700; }' +
@@ -2103,21 +2105,25 @@ function idmWithinMonth_(ts) {
 function renderInstaDmPage_(d, base, staff, dev) {
   d = d || {};
   var accounts = d.accounts || [];
-  function tcard(ai, j, name, snippet, ts, cls, tagHtml) {
+  function tcard(ai, j, name, snippet, ts, cls, tagHtml, resKey, resSig) {
     return '<div class="idmcard tap ' + cls + '" data-acc="' + ai + '" data-th="' + j + '">' +
       '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
       '<div class="idmpv">' + esc_(snippet || '（本文なし）') + '</div>' +
       '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
+      '<button type="button" class="idmresbtn" data-key="' + esc_(resKey || '') + '" data-sig="' + esc_(resSig || '') +
+        '" onclick="event.stopPropagation();idmResolve(this)">✓ 解決済</button>' +
       '<span class="idmopen">タップで全文 ›</span></div>' +
     '</div>';
   }
-  function rcard(accKey, name, preview, ts, tagHtml, occ) {
+  function rcard(accKey, name, preview, ts, tagHtml, occ, resKey, resSig) {
     // occ＝同じ名前の中で上から何番目か（0始まり）。名前がかぶっても、その1件を狙って開く・消すため。
     var oc = String(occ || 0);
     return '<div class="idmcard">' +
       '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
       '<div class="idmpv idmpvfull">' + esc_(preview || '（本文なし）') + '</div>' +
       '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
+        '<button type="button" class="idmresbtn" data-key="' + esc_(resKey || '') + '" data-sig="' + esc_(resSig || '') +
+          '" onclick="idmResolve(this)">✓ 解決済</button>' +
         '<button type="button" class="idmdetbtn" data-acc="' + esc_(accKey || '') +
           '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
           '" data-occ="' + oc + '" onclick="idmDoReqDetail(this)">詳細を見る</button>' +
@@ -2140,8 +2146,9 @@ function renderInstaDmPage_(d, base, staff, dev) {
         (threads[k].waiting ? waiting : done).push(item);
       }
       // ★IGのDMは「1ヶ月より前」を出さない（返事待ち・初めての人とも）。DM再現は全部残す（そちらは別画面）。
-      waiting = waiting.filter(function (x) { return idmWithinMonth_(x.t.last_ts); });
-      var reqsShown = reqs.filter(function (r) { return idmWithinMonth_(r.ts); });
+      //   さらに「解決済」にした相手も出さない（DM再現には出る）。
+      waiting = waiting.filter(function (x) { return idmWithinMonth_(x.t.last_ts) && !x.t.resolved; });
+      var reqsShown = reqs.filter(function (r) { return idmWithinMonth_(r.ts) && !r.resolved; });
       // ★2026-08-03 まるちゃん決定：「返事待ち（既存客）」と「初めての人」は分けず、
       //   「当店が未返信」の1つにまとめる（どちらもお店がまだ返していない＝要返信で同じ）。
       body += '<div class="idmacc">📷 ' + esc_(a.label || '') +
@@ -2151,15 +2158,18 @@ function renderInstaDmPage_(d, base, staff, dev) {
         // ①既存の会話でこちらが返していないもの
         for (var w = 0; w < waiting.length; w++) {
           var tw = waiting[w].t;
+          var tKey = 't:' + a.key + ':' + (tw.id || '');
           body += tcard(i, waiting[w].j, tw.title, tw.last_text, tw.last_ts, 'wait',
-                        '<span class="idmtag wait">返事待ち</span>');
+                        '<span class="idmtag wait">返事待ち</span>', tKey, tw.last_ts || '');
         }
         // ②初めての人（リクエスト）
         for (var r = 0; r < reqsShown.length; r++) {
           var un = reqsShown[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
           var sp = reqsShown[r].spam ? '<span class="idmtag spam">🚫 スパムかも</span>' : '';
           var occ = idmOccOf_(reqs, reqsShown[r]);   // 同じ名前の中で上から何番目か
-          body += rcard(a.key, reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un, occ);
+          var rKey = 'r:' + a.key + ':' + idmStripNum_(reqsShown[r].name);
+          var rSig = (reqsShown[r].preview || '') + '|' + (reqsShown[r].ts || '');
+          body += rcard(a.key, reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un, occ, rKey, rSig);
         }
       } else { body += '<div class="idmempty">1ヶ月以内に未返信はありません。</div>'; }
       // ★2026-08-02 まるちゃん決定：IGのDMには「やり取り済み（こちらが返事した会話）」は出さない
@@ -2193,6 +2203,26 @@ function idmOccOf_(reqs, item) {
   var nm = idmNorm_(item.name), idx = reqs.indexOf(item), c = 0;
   for (var i = 0; i < reqs.length && i < idx; i++) { if (idmNorm_(reqs[i].name) === nm) c++; }
   return c;
+}
+// 名前をそろえて末尾の数字(未読件数)を外す（事務所PC側の識別名と同じ作り）。
+function idmStripNum_(s) { return idmNorm_(s).replace(/\s*\d+\s*$/, '').trim(); }
+
+// 「✓ 解決済」＝この相手を未返信一覧から隠す（削除はしない・全員で共有）。新しいメッセージが来たら戻る。
+function idmResolve(btn) {
+  if (!btn) return;
+  var key = btn.getAttribute('data-key') || '';
+  var sig = btn.getAttribute('data-sig') || '';
+  if (!key) return;
+  if (!confirm('この相手を「解決済み」にして一覧から隠しますか？\n（消しません。相手から新しいメッセージが来たらまた出ます）')) return;
+  var card = btn;
+  for (var k = 0; k < 4 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
+  if (window.igdmResolve) window.igdmResolve(key, sig, function (m) {
+    // 隠せたら、その行を画面からも消す。
+    if (m && m.indexOf('解決済み') >= 0 && card && card.parentNode) {
+      card.style.transition = 'opacity .4s'; card.style.opacity = '0';
+      setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 400);
+    }
+  });
 }
 
 // IGのDMの初めての人カードの「🚫 削除」。中身（最初の一言）を見た上で、押した1件だけ・確認してから。戻せない。
