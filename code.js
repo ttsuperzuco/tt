@@ -2006,6 +2006,10 @@ var INSTADM_CSS_ =
 '  .idmtag.done { background:rgba(255,255,255,.14); color:#cfe3ec; }' +
 '  .idmtag.new  { background:#f59e0b; color:#3a2500; }' +
 '  .idmtag.spam { background:#dc2626; color:#fff; }' +
+'  .idmpvfull { -webkit-line-clamp:unset; display:block; overflow:visible; }' +
+'  .idmdelbtn { margin-left:auto; background:#dc2626; color:#fff; border:0; border-radius:999px;' +
+'    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
+'  .idmdelst { color:#cfe3ec; font-size:.82rem; margin-top:6px; }' +
 '  .idmts { color:#9fb8c4; font-size:.8rem; }' +
 '  .idmopen { margin-left:auto; color:#f0a5c0; font-size:.8rem; font-weight:700; }' +
 '  .idmempty { color:#cfe3ec; text-align:center; padding:12px; font-size:.9rem; }' +
@@ -2098,11 +2102,16 @@ function renderInstaDmPage_(d, base, staff, dev) {
       '<span class="idmopen">タップで全文 ›</span></div>' +
     '</div>';
   }
-  function rcard(name, preview, ts, tagHtml) {
+  function rcard(accKey, name, preview, ts, tagHtml) {
     return '<div class="idmcard">' +
       '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
-      '<div class="idmpv">' + esc_(preview || '（本文なし）') + '</div>' +
-      '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span></div>' +
+      '<div class="idmpv idmpvfull">' + esc_(preview || '（本文なし）') + '</div>' +
+      '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
+        '<button type="button" class="idmdelbtn" data-acc="' + esc_(accKey || '') +
+          '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
+          '" onclick="idmDelReq(this)">🚫 削除</button>' +
+      '</div>' +
+      '<div class="idmdelst"></div>' +
     '</div>';
   }
   var body = '';
@@ -2136,7 +2145,7 @@ function renderInstaDmPage_(d, base, staff, dev) {
         for (var r = 0; r < reqsShown.length; r++) {
           var un = reqsShown[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
           var sp = reqsShown[r].spam ? '<span class="idmtag spam">🚫 スパムかも</span>' : '';
-          body += rcard(reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un);
+          body += rcard(a.key, reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un);
         }
       } else { body += '<div class="idmempty">1ヶ月以内の初めての人はいません。</div>'; }
       // ★2026-08-02 まるちゃん決定：IGのDMには「やり取り済み（こちらが返事した会話）」は出さない
@@ -2158,6 +2167,20 @@ function renderInstaDmPage_(d, base, staff, dev) {
       '</div>' +
     '</div>' +
     '<script>' + INSTADM_SCRIPT_ + '<\/script>';
+}
+
+// IGのDMの初めての人カードの「🚫 削除」。中身（最初の一言）を見た上で、押した1件だけ・確認してから。戻せない。
+function idmDelReq(btn) {
+  if (!btn) return;
+  var acc = btn.getAttribute('data-acc') || '';
+  var name = btn.getAttribute('data-name') || '';
+  var prev = btn.getAttribute('data-prev') || '';
+  if (!confirm('この初めての人「' + name + '」を削除しますか？\n消すと元に戻せません。')) return;
+  var card = btn;
+  for (var k = 0; k < 4 && card && !(card.className && card.className.indexOf('idmcard') >= 0); k++) card = card.parentElement;
+  var st = card ? card.querySelector('.idmdelst') : null;
+  if (st) st.textContent = '削除を依頼中…';
+  if (window.igdmDelete) window.igdmDelete(acc, name, prev, function (m) { if (st) st.textContent = m; });
 }
 
 /** IGのDMの合言葉入力画面。合言葉を入れると showInstaDm(index.html)が秘密の置き場所を取りに行く。 */
