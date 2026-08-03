@@ -1989,39 +1989,39 @@ var INSTADM_CSS_ =
 '    background:var(--card,#fff); border:1px solid var(--line,#e6e9ef); border-radius:10px; padding:10px 14px; }' +
 '  .uhome:active { transform:translateY(1px); }' +
 '  .idmwrap { max-width:720px; margin:0 auto; }' +
-'  .idmwrap h1 { font-size:1.3rem; margin:6px 2px 12px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }' +
-'  .idmgen { color:#cfe3ec; font-size:.82rem; font-weight:600; }' +
-'  .idmacc { margin:18px 0 6px; font-size:1.08rem; font-weight:800; color:#fff;' +
+'  .idmwrap h1 { font-size:1.5rem; margin:6px 2px 12px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }' +
+'  .idmgen { color:#cfe3ec; font-size:.92rem; font-weight:600; }' +
+'  .idmacc { margin:20px 0 6px; font-size:1.32rem; font-weight:800; color:#fff;' +
 '    display:flex; align-items:center; gap:8px; flex-wrap:wrap; }' +
-'  .idmbadge { font-size:.76rem; font-weight:700; padding:2px 9px; border-radius:999px;' +
+'  .idmbadge { font-size:.9rem; font-weight:700; padding:3px 11px; border-radius:999px;' +
 '    background:rgba(255,255,255,.16); color:#fff; }' +
-'  .idmsec { font-size:.92rem; font-weight:700; color:#eaf3f7; margin:12px 2px 4px; }' +
-'  .idmnote { color:#cfe3ec; font-size:.83rem; background:rgba(255,255,255,.06);' +
-'    border-radius:10px; padding:8px 11px; margin:4px 2px 6px; line-height:1.5; }' +
+'  .idmsec { font-size:1.1rem; font-weight:700; color:#eaf3f7; margin:14px 2px 4px; }' +
+'  .idmnote { color:#cfe3ec; font-size:.98rem; background:rgba(255,255,255,.06);' +
+'    border-radius:10px; padding:9px 12px; margin:4px 2px 6px; line-height:1.55; }' +
 '  .idmcard { background:var(--card,#0f2f3d); border:1px solid rgba(255,255,255,.08);' +
 '    border-radius:14px; padding:12px 14px; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,.12); }' +
 '  .idmcard.wait { border-left:5px solid #e1306c; }' +
 '  .idmcard.tap { cursor:pointer; }' +
 '  .idmcard.tap:active { transform:translateY(1px); }' +
 '  @media (hover:hover){ .idmcard.tap:hover { border-color:rgba(225,48,108,.5); } }' +
-'  .idmnm { font-weight:800; font-size:1.02rem; color:#fff; word-break:break-word; }' +
-'  .idmpv { color:#dbe9f0; font-size:.95rem; margin-top:4px; line-height:1.45; word-break:break-word;' +
+'  .idmnm { font-weight:800; font-size:1.18rem; color:#fff; word-break:break-word; }' +
+'  .idmpv { color:#dbe9f0; font-size:1.06rem; margin-top:4px; line-height:1.5; word-break:break-word;' +
 '    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
 '  .idmmeta { display:flex; gap:8px; align-items:center; margin-top:7px; flex-wrap:wrap; }' +
-'  .idmtag { font-size:.74rem; font-weight:700; padding:2px 9px; border-radius:999px; }' +
+'  .idmtag { font-size:.86rem; font-weight:700; padding:3px 10px; border-radius:999px; }' +
 '  .idmtag.wait { background:#e1306c; color:#fff; }' +
 '  .idmtag.done { background:rgba(255,255,255,.14); color:#cfe3ec; }' +
 '  .idmtag.new  { background:#f59e0b; color:#3a2500; }' +
 '  .idmtag.spam { background:#dc2626; color:#fff; }' +
 '  .idmpvfull { -webkit-line-clamp:unset; display:block; overflow:visible; }' +
 '  .idmdetbtn { margin-left:auto; background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:999px;' +
-'    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
+'    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
 '  .idmdelbtn { background:#dc2626; color:#fff; border:0; border-radius:999px;' +
-'    padding:5px 12px; font-size:.8rem; font-weight:800; cursor:pointer; }' +
-'  .idmdelst { color:#cfe3ec; font-size:.82rem; margin-top:6px; }' +
-'  .idmts { color:#9fb8c4; font-size:.8rem; }' +
-'  .idmopen { margin-left:auto; color:#f0a5c0; font-size:.8rem; font-weight:700; }' +
-'  .idmempty { color:#cfe3ec; text-align:center; padding:12px; font-size:.9rem; }' +
+'    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
+'  .idmdelst { color:#cfe3ec; font-size:.94rem; margin-top:6px; }' +
+'  .idmts { color:#9fb8c4; font-size:.92rem; }' +
+'  .idmopen { margin-left:auto; color:#f0a5c0; font-size:.92rem; font-weight:700; }' +
+'  .idmempty { color:#cfe3ec; text-align:center; padding:12px; font-size:1.02rem; }' +
 // 全文の小窓（会話を吹き出しで・既読は付かない＝事務所PCが裏データで取った物を見るだけ）
 '  .idmmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none;' +
 '    align-items:flex-end; justify-content:center; z-index:50; }' +
