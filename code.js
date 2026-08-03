@@ -3103,6 +3103,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(d.gender){selVal("gender",d.gender);if(sg)sg.style.display="none";}else if(sg)sg.style.display="";' +  // 読めたら性別欄は隠す
     'if(d.tw){selVal("tw",d.tw);if(stw)stw.style.display="none";}else if(stw)stw.style.display="";' +          // 読めたら国籍欄は隠す
     'var scn=document.getElementById("secCounsel");if(scn)scn.style.display=d.datsumo?"":"none";' +            // カウンセリング担当は脱毛のときだけ
+    'var hideBusy=function(g,list){list=(list||[]).map(String);var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),selH=false,first=null;for(var i=0;i<pl.length;i++){var busy=list.indexOf(pl[i].getAttribute("data-val"))>=0;pl[i].style.display=busy?"none":"";if(!busy&&!first){first=pl[i];}if(busy&&pl[i].classList.contains("sel")){selH=true;}}if(selH&&first){sel[g]=first.getAttribute("data-val");for(var j=0;j<pl.length;j++){pl[j].classList.toggle("sel",pl[j]===first);}}};' +
+    'hideBusy("room",d.occ_rooms);hideBusy("staff",d.busy_staff);' +   // 空いていない部屋・施術担当は消す
+
 
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
