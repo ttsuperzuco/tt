@@ -153,7 +153,10 @@ function doGet(e) {
     title = '時間指定LINE送信';                          // ★開発URL(?dev=1)専用。決めた時刻に文章＋画像を送る予約（純JS）
     html = renderTimedSendPage_(base, staff, dev);
   } else if (view === 'yoyaku') {
-    title = '予約入力';                                  // ★開発URL(?dev=1)専用。貼って選ぶ→事務所PCが新規予約を作る（純JS）
+    title = '予約入力';                                  // ★予約入力のトップ画面（新規／既存／変更の3ボタン・PC版と同じ見た目）
+    html = renderReservationHomePage_(base, staff, dev);
+  } else if (view === 'yoyaku_new') {
+    title = '新規予約入力';                              // ★「新規の予約」を押した先＝貼って選ぶ→事務所PCが新規予約を作る（純JS）
     html = renderNewReservationPage_(base, staff, dev);
   } else {
     title = staff ? 'TTスーパーズコ（スタッフ版）' : (dev ? 'TTスーパーズコ（開発版）' : 'TTスーパーズコ');
@@ -2864,6 +2867,25 @@ function renderTimedSendPage_(base, staff, dev) {
 /** 予約入力（スマホ版）。貼って選ぶだけ→事務所PC(edit_worker op=new_reservation)が新規予約を1件作る。
  *  読み取り(性別自動判定)・予定組み立て(カウンセリング＋施術)・登録はすべて事務所PC側でPC版と同じ
  *  prep_reservation を使う（スマホは入力を集めて送るだけ）。時間指定LINE送信と同じ「依頼→poll→結果」型。 */
+/** 予約入力のトップ画面＝新規／既存／変更の3ボタン（PC版と同じ見た目＝丸ロゴ＋カード型ボタン）。
+ *  「新規の予約」だけ中身あり（?view=yoyaku_new）。既存・変更はまだ中身が無いので押すと「準備中です」。 */
+function renderReservationHomePage_(base, staff, dev) {
+  var sfx = roleSfx_(staff, dev);
+  var head = '<div class="hhead"><span class="bmark">📅</span><span class="bname">予約入力</span></div>' +
+             '<div class="hsub">TaiwanTomato</div>';
+  var menu =
+    '<div class="rolemenu">' +
+      '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
+        '<span class="ricon">📝</span><span class="rname">新規の予約</span></a>' +
+      '<button type="button" class="rolebtn kaihatsu" onclick="alert(\'準備中です\');">' +
+        '<span class="ricon">📖</span><span class="rname">既存の予約</span></button>' +
+      '<button type="button" class="rolebtn kanri" onclick="alert(\'準備中です\');">' +
+        '<span class="ricon">✏️</span><span class="rname">既存の変更</span></button>' +
+    '</div>';
+  return '<style>' + HOMECSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) + head + menu + '</div>';
+}
+
 function renderNewReservationPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
@@ -2933,8 +2955,8 @@ function renderNewReservationPage_(base, staff, dev) {
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' +
-    backBar_(base, staff, dev) +
-    '<div class="hhead"><span class="bmark">📝</span><span class="bname">予約入力</span></div>' +
+    '<div class="ubar"><a class="uhome" href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a></div>' +
+    '<div class="hhead"><span class="bmark">📝</span><span class="bname">新規予約入力</span></div>' +
     '<div class="nr">' +
       '<div class="nrnote">貼って選ぶだけ。登録は事務所パソコンが動いている時に実行されます。</div>' +
       '<div class="nrsec">① 予約フォームを貼る</div>' +
