@@ -2107,17 +2107,19 @@ function renderInstaDmPage_(d, base, staff, dev) {
       '<span class="idmopen">タップで全文 ›</span></div>' +
     '</div>';
   }
-  function rcard(accKey, name, preview, ts, tagHtml) {
+  function rcard(accKey, name, preview, ts, tagHtml, occ) {
+    // occ＝同じ名前の中で上から何番目か（0始まり）。名前がかぶっても、その1件を狙って開く・消すため。
+    var oc = String(occ || 0);
     return '<div class="idmcard">' +
       '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
       '<div class="idmpv idmpvfull">' + esc_(preview || '（本文なし）') + '</div>' +
       '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
         '<button type="button" class="idmdetbtn" data-acc="' + esc_(accKey || '') +
           '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
-          '" onclick="idmDoReqDetail(this)">詳細を見る</button>' +
+          '" data-occ="' + oc + '" onclick="idmDoReqDetail(this)">詳細を見る</button>' +
         '<button type="button" class="idmdelbtn" data-acc="' + esc_(accKey || '') +
           '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
-          '" data-mode="delete" onclick="idmDelReq(this)">🚫 削除</button>' +
+          '" data-occ="' + oc + '" onclick="idmDelReq(this)">🚫 削除</button>' +
       '</div>' +
       '<div class="idmdelst"></div>' +
     '</div>';
@@ -2153,7 +2155,8 @@ function renderInstaDmPage_(d, base, staff, dev) {
         for (var r = 0; r < reqsShown.length; r++) {
           var un = reqsShown[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
           var sp = reqsShown[r].spam ? '<span class="idmtag spam">🚫 スパムかも</span>' : '';
-          body += rcard(a.key, reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un);
+          var occ = idmOccOf_(reqs, reqsShown[r]);   // 同じ名前の中で上から何番目か
+          body += rcard(a.key, reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un, occ);
         }
       } else { body += '<div class="idmempty">1ヶ月以内の初めての人はいません。</div>'; }
       // ★2026-08-02 まるちゃん決定：IGのDMには「やり取り済み（こちらが返事した会話）」は出さない
@@ -2177,18 +2180,31 @@ function renderInstaDmPage_(d, base, staff, dev) {
     '<script>' + INSTADM_SCRIPT_ + '<\/script>';
 }
 
+// 名前をそろえる（飾り文字や全角を普通の文字に・前後の空白と大文字小文字を無視）。事務所PC側と同じそろえ方。
+function idmNorm_(s) {
+  try { return String(s || '').normalize('NFKC').trim().toLowerCase(); }
+  catch (e) { return String(s || '').trim().toLowerCase(); }
+}
+// この初めての人が「同じ名前の中で上から何番目か」（0始まり）。名前がかぶった時に1件を狙うため。
+function idmOccOf_(reqs, item) {
+  var nm = idmNorm_(item.name), idx = reqs.indexOf(item), c = 0;
+  for (var i = 0; i < reqs.length && i < idx; i++) { if (idmNorm_(reqs[i].name) === nm) c++; }
+  return c;
+}
+
 // IGのDMの初めての人カードの「🚫 削除」。中身（最初の一言）を見た上で、押した1件だけ・確認してから。戻せない。
 function idmDelReq(btn) {
   if (!btn) return;
   var acc = btn.getAttribute('data-acc') || '';
   var name = btn.getAttribute('data-name') || '';
   var prev = btn.getAttribute('data-prev') || '';
+  var occ = parseInt(btn.getAttribute('data-occ') || '0', 10) || 0;
   if (!confirm('この初めての人「' + name + '」を削除しますか？\n元に戻せません。')) return;
   var card = btn;
   for (var k = 0; k < 4 && card && !(card.className && card.className.indexOf('idmcard') >= 0); k++) card = card.parentElement;
   var st = card ? card.querySelector('.idmdelst') : null;
   if (st) st.textContent = '削除を依頼中…';
-  if (window.igdmDelete) window.igdmDelete(acc, name, prev, function (m) { if (st) st.textContent = m; });
+  if (window.igdmDelete) window.igdmDelete(acc, name, prev, occ, function (m) { if (st) st.textContent = m; });
 }
 
 // 会話の全文を小窓（idmMask）に出す。無ければ簡易にまとめて出す。
@@ -2216,11 +2232,12 @@ function idmShowMsgs(title, msgs) {
 function idmDoReqDetail(btn) {
   if (!btn) return;
   var acc = btn.getAttribute('data-acc') || '', name = btn.getAttribute('data-name') || '', prev = btn.getAttribute('data-prev') || '';
+  var occ = parseInt(btn.getAttribute('data-occ') || '0', 10) || 0;
   var card = btn;
   for (var k = 0; k < 5 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
   var st = card ? card.querySelector('.idmdelst') : null;
   if (st) st.textContent = '中身を読んでいます…（開くので既読が付きます・少し待ってください）';
-  if (window.idmReqDetail) window.idmReqDetail(acc, name, prev,
+  if (window.idmReqDetail) window.idmReqDetail(acc, name, prev, occ,
     function (m) { if (st) st.textContent = m; },
     function (d) { idmShowMsgs(d.title, d.msgs); });
 }
