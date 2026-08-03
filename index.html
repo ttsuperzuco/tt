@@ -505,7 +505,7 @@
       setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 1500);
     };
     var ss = document.createElement('script');
-    ss.src = EXEC + '?action=status&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
+    ss.src = EXEC + '?action=status&key=' + encodeURIComponent(EDIT_KEY) + '&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
     ss.onerror = function () { setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 1500); };
     document.head.appendChild(ss);
   }
@@ -528,7 +528,7 @@
         setTimeout(function () { poll(id, n + 1); }, 1500);
       };
       var ss = document.createElement('script');
-      ss.src = EXEC + '?action=status&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
+      ss.src = EXEC + '?action=status&key=' + encodeURIComponent(EDIT_KEY) + '&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
       ss.onerror = function () { setTimeout(function () { poll(id, n + 1); }, 1500); };
       document.head.appendChild(ss);
     }
