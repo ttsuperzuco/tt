@@ -1836,7 +1836,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'window.addEventListener("resize",function(){fit(f);});}' +
   'var polls=0;function poll(id){polls++;if(polls>40){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";goEl.disabled=false;return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");goEl.disabled=false;return;}' +
-  'if(r.status==="pending"){setTimeout(function(){poll(id);},1300);return;}' +
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1300);return;}' +
   'goEl.disabled=false;' +
   'if(r.status!=="done"){stEl.textContent="作成に失敗しました："+esc(r.result||r.status);return;}' +
   'jsonp({action:"data",name:"notice_"+slot+".json"},function(d){showResult(d);});});}' +
@@ -2854,7 +2854,7 @@ function renderRirekiPage_(base, staff, dev) {
   'stEl.textContent=cs.length+" 人ヒット";resEl.innerHTML=cs.map(custHtml).join("");toTop();}' +
   'var polls=0;function poll(id){polls++;if(polls>30){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");return;}' +
-  'if(r.status==="pending"){setTimeout(function(){poll(id);},1200);return;}' +
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1200);return;}' +
   'if(r.status!=="done"){stEl.textContent="検索に失敗しました："+esc(r.result||r.status);return;}' +
   'jsonp({action:"data",name:"custsearch_"+slot+".json"},function(d){render(d);});});}' +
   'function doSearch(q){q=(q||qEl.value||"").trim();if(!q){stEl.textContent="番号か氏名を入れてください。";return;}' +
@@ -2966,7 +2966,7 @@ function renderTimedSendPage_(base, staff, dev) {
   'else if(d){banEl.style.background="#d1e7dd";banEl.textContent="いまは本番モードです。選んだ相手に実際に送られます。";}});' +
   'var polls=0;function poll(id){polls++;if(polls>30){status("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。",true);goEl.disabled=false;return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}' +
-  'if(r.status==="pending"){setTimeout(function(){poll(id);},1200);return;}' +
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1200);return;}' +
   'if(r.status!=="done"){status("予約できませんでした："+esc(r.result||r.status),true);goEl.disabled=false;return;}' +
   'status("予約しました。"+esc(r.result||""),false);msgEl.value="";imgs=[];fileEl.value="";renderThumbs();codesEl.value="";goEl.disabled=false;});}' +
   'function go(){var msg=(msgEl.value||"").trim();if(!msg&&!imgs.length){status("文章か画像のどちらかは必要です。",true);return;}' +
@@ -3095,12 +3095,12 @@ function renderNewReservationPage_(base, staff, dev) {
     'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
     'var polls=0;function poll(id){polls++;if(polls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);goEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}' +
-    'if(r.status==="pending"){setTimeout(function(){poll(id);},1500);return;}' +
+    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1500);return;}' +
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);goEl.disabled=false;return;}' +
     'status("✅ "+esc(r.result||"登録しました")+" TimeTreeで内容をご確認ください。",false);txtEl.value="";goEl.disabled=false;});}' +
     'var ppolls=0;function pollPrev(id){ppolls++;if(ppolls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);readEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
-    'if(r.status==="pending"){setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
+    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
@@ -3226,7 +3226,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var pickSec =
     '<div id="exPick" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackPick" href="javascript:void(0)">← 前に戻る</a></div>' +
-      '<div class="hhead"><span class="bmark">📖</span><span class="bname">変える予約をえらぶ</span></div>' +
+      '<div class="hhead"><span class="bmark">📖</span><span class="bname">変更する予約を選択する</span></div>' +
       '<div class="exstep" id="expickwho"></div>' +
       '<div class="exstatus" id="expickst"></div>' +
       '<div class="expick" id="expicklist"></div>' +
@@ -3265,7 +3265,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
     'function esc(s){return (s==null?"":String(s));}' +
     'function jsonp(params,onR){var cb="__ck"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
-    'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>40){document.getElementById("expickst").textContent="時間切れです。事務所パソコンが動いているかご確認ください。";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"){setTimeout(function(){pollPicks(id);},1500);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
+    'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>40){document.getElementById("expickst").textContent="時間切れです。事務所パソコンが動いているかご確認ください。";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},1500);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
     'function loadPicks(){document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="「"+disp()+"」の予約";document.getElementById("expicklist").innerHTML="";document.getElementById("exPickGo").style.display="none";document.getElementById("expickst").textContent="予約をさがしています…";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp()})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},1200);});}' +
     'function renderPicks(list){var el=document.getElementById("expicklist");document.getElementById("expickst").textContent=list.length?"":"この番号の予約が見つかりません。";var h="";for(var i=0;i<list.length;i++){var r=list[i];var pm=(r.parts||[]).join("・")||"—";var past=r.is_past?"（過去）":"";h+="<button class=\\"expickrow\\" data-i=\\""+i+"\\"><span class=\\"pd\\">"+past+r.date+" "+r.start_hm+" "+(r.dur_min||"")+"分</span><span class=\\"pm\\">部屋 "+esc(r.room)+"　担当 "+esc(r.staff_emoji||"?")+"　"+esc(pm)+"</span></button>";}el.innerHTML=h;window.__PICKS=list;var rows=el.querySelectorAll(".expickrow");for(var j=0;j<rows.length;j++){(function(k){rows[k].addEventListener("click",function(){for(var m=0;m<rows.length;m++){rows[m].classList.remove("sel");}rows[k].classList.add("sel");chosen=window.__PICKS[k];document.getElementById("exPickGo").style.display="";});})(j);}}' +
     'function goDate(){document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="none";document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="「"+disp()+"」の"+TITLE;calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
