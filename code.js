@@ -3199,7 +3199,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '<div id="exNum">' +
       '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 前に戻る</a></div>' +
       '<div class="hhead"><span class="bmark">📝</span><span class="bname">' + head + '</span></div>' +
-      '<div class="exlabel">お客様番号を貼り付けるか、英・数字のパッドを押して入力する</div>' +
+      '<div class="exlabel">お客様番号を貼り付けるか、下の英語・番号ボタンで入力する</div>' +
       '<input class="exbox" id="exdisp" placeholder="M235 …">' +
       '<div class="exseg" id="exseg"><span class="thumb"></span>' +
         '<button data-v="M" aria-pressed="true">M（男）</button>' +
