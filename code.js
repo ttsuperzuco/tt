@@ -3218,6 +3218,10 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exp.plain{background:#475569;}' +
     '.exp.sel{opacity:1;outline:3px solid #fff;outline-offset:-3px;}' +
     '.exdur .exp{flex:0 0 calc((100% - 40px)/6);padding:12px 2px;text-align:center;box-sizing:border-box;}' +
+    '.exmlist{display:flex;flex-direction:column;gap:12px;margin-top:10px;}' +
+    '.exmbtn{display:block;width:100%;text-align:left;background:#fff;color:#0f172a;border:0;border-radius:16px;padding:20px 22px;font-size:24px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
+    '.exmbtn:active{transform:translateY(1px);}' +
+    '#exmemobox{text-align:left;font-size:20px;line-height:1.6;min-height:180px;}' +
     '.exch{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 16px;}' +
     '.exnav{width:48px;height:48px;border-radius:12px;border:0;background:#fff;color:#0f172a;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
     '.exct{font-size:24px;font-weight:900;width:170px;text-align:center;color:#fff;}' +
@@ -3286,11 +3290,34 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" id="exbackEdit" href="javascript:void(0)">← 前に戻る</a></div>' +
       '<div class="hhead"><span class="bmark">✏️</span><span class="bname">変更内容</span></div>' +
       '<div class="exwho1" id="exeditwho"></div>' +
-      '<div class="exsec">所要時間（分）</div><div class="expills exdur" id="edur">' + durP + '</div>' +
-      '<div class="exsec">施術担当</div><div class="expills" id="estaff">' + staffP + '</div>' +
-      '<div class="exsec">部屋</div><div class="expills" id="eroom">' + roomP + '</div>' +
+      '<div id="secDur"><div class="exsec">施術時間（分）</div><div class="expills exdur" id="edur">' + durP + '</div></div>' +
+      '<div id="secStaff"><div class="exsec">施術担当</div><div class="expills" id="estaff">' + staffP + '</div></div>' +
+      '<div id="secRoom"><div class="exsec">部屋</div><div class="expills" id="eroom">' + roomP + '</div></div>' +
       '<button class="exgo" id="exEditGo">この内容に変更する→</button>' +
       '<div class="exdone" id="exdone3" style="display:none"></div>' +
+    '</div>';
+  var menuSec =
+    '<div id="exMenu" style="display:none">' +
+      '<div class="ubar"><a class="uhome" id="exbackMenu" href="javascript:void(0)">← 前に戻る</a></div>' +
+      '<div class="hhead"><span class="bmark">✏️</span><span class="bname">変更する内容を選択</span></div>' +
+      '<div class="exwho1" id="exmenuwho"></div>' +
+      '<div class="exmlist">' +
+        '<button class="exmbtn" data-chg="dt">日付＆時間</button>' +
+        '<button class="exmbtn" data-chg="t">時間（同日内）</button>' +
+        '<button class="exmbtn" data-chg="staff">担当</button>' +
+        '<button class="exmbtn" data-chg="room">部屋</button>' +
+        '<button class="exmbtn" data-chg="dur">施術時間</button>' +
+        '<button class="exmbtn" data-chg="memo">予約メモ</button>' +
+      '</div>' +
+    '</div>';
+  var memoSec =
+    '<div id="exMemo" style="display:none">' +
+      '<div class="ubar"><a class="uhome" id="exbackMemo" href="javascript:void(0)">← 前に戻る</a></div>' +
+      '<div class="hhead"><span class="bmark">📝</span><span class="bname">予約メモを変更</span></div>' +
+      '<div class="exwho1" id="exmemowho"></div>' +
+      '<textarea class="exbox" id="exmemobox" rows="6"></textarea>' +
+      '<button class="exgo" id="exMemoGo">この内容に変更する→</button>' +
+      '<div class="exdone" id="exdone4" style="display:none"></div>' +
     '</div>';
   var script = '<script>(function(){' +
     'var TITLE=' + JSON.stringify(title) + ';' +
@@ -3302,8 +3329,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function jsonp(params,onR){var cb="__ck"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
     'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>40){document.getElementById("expickst").textContent="時間切れです。事務所パソコンが動いているかご確認ください。";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},600);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
     'function loadPicks(){document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="「"+disp()+"」の予約";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="予約をさがしています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp()})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
-    'function renderPicks(list){var el=document.getElementById("expicklist");document.getElementById("expickst").textContent=list.length?"":"この番号の予約が見つかりません。";document.getElementById("expickwho").textContent="「"+disp()+"」"+((list.length&&list[0].name)?list[0].name+"様":"")+" の予約";var h="";for(var i=0;i<list.length;i++){var r=list[i];var pm=(r.parts||[]).join("・")||"—";var past=r.is_past?"（過去）":"";var rk=roomVal(r.room);var rc=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;h+="<button class=\\"expickrow\\" data-i=\\""+i+"\\"><span class=\\"pd\\">"+past+r.date+" "+r.start_hm+" "+(r.dur_min||"")+"分</span><span class=\\"pm\\"><span class=\\"proom\\" style=\\"background:"+rc+"\\">"+esc(rn)+"</span>担当 "+esc(r.staff_emoji||"?")+"</span><span class=\\"ppart\\">施術部位："+esc(pm)+"</span></button>";}el.innerHTML=h;window.__PICKS=list;var rows=el.querySelectorAll(".expickrow");for(var j=0;j<rows.length;j++){(function(k){rows[k].addEventListener("click",function(){chosen=window.__PICKS[k];goDate();});})(j);}}' +
-    'function goDate(){document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="none";document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="「"+disp()+"」の"+TITLE;calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
+    'function renderPicks(list){var el=document.getElementById("expicklist");document.getElementById("expickst").textContent=list.length?"":"この番号の予約が見つかりません。";document.getElementById("expickwho").textContent="「"+disp()+"」"+((list.length&&list[0].name)?list[0].name+"様":"の予約");var h="";for(var i=0;i<list.length;i++){var r=list[i];var pm=(r.parts||[]).join("・")||"—";var past=r.is_past?"（過去）":"";var rk=roomVal(r.room);var rc=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;h+="<button class=\\"expickrow\\" data-i=\\""+i+"\\"><span class=\\"pd\\">"+past+r.date+" "+r.start_hm+" "+(r.dur_min||"")+"分</span><span class=\\"pm\\">担当 "+esc(r.staff_emoji||"?")+"　<span class=\\"proom\\" style=\\"background:"+rc+"\\">"+esc(rn)+"</span></span><span class=\\"ppart\\">施術部位："+esc(pm)+"</span></button>";}el.innerHTML=h;window.__PICKS=list;var rows=el.querySelectorAll(".expickrow");for(var j=0;j<rows.length;j++){(function(k){rows[k].addEventListener("click",function(){chosen=window.__PICKS[k];showMenu();});})(j);}}' +
+    'function goDate(){hideSteps();document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="「"+disp()+"」の"+TITLE;calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
     'function disp(){return (prefix||"")+digits;}' +
     'function upd(){document.getElementById("exdisp").value=disp();}' +
     'var seg=document.getElementById("exseg"),sb=seg.querySelectorAll("button"),thumb=seg.querySelector(".thumb");' +
@@ -3315,7 +3342,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function drawCal(){var wd=["月","火","水","木","金","土","日"];document.getElementById("exct").textContent=calY+"年 "+(calM+1)+"月";var h="";for(var i=0;i<7;i++){h+="<div class=\\"exwd"+(i===5?" sat":i===6?" sun":"")+"\\">"+wd[i]+"</div>";}var first=new Date(calY,calM,1);var off=(first.getDay()+6)%7;var dim=new Date(calY,calM+1,0).getDate();for(var b=0;b<off;b++){h+="<div class=\\"exday blank\\"></div>";}var t0=new Date(today.getFullYear(),today.getMonth(),today.getDate());for(var d=1;d<=dim;d++){var dow=(off+d-1)%7;var cls="exday";if(dow===5){cls+=" sat";}if(dow===6){cls+=" sun";}var cur=new Date(calY,calM,d);if(calY===today.getFullYear()&&calM===today.getMonth()&&d===today.getDate()){cls+=" today";}if(cur<t0){cls+=" past";}if(picked&&picked.getFullYear()===calY&&picked.getMonth()===calM&&picked.getDate()===d){cls+=" picked";}h+="<button class=\\""+cls+"\\" data-d=\\""+d+"\\">"+d+"</button>";}document.getElementById("exgrid").innerHTML=h;}' +
     'document.getElementById("exToDate").addEventListener("click",function(){if(!digits){alert("お客様番号を入れてください");return;}if(ISCHANGE){loadPicks();}else{goDate();}});' +
     'document.getElementById("exbackPick").addEventListener("click",function(){document.getElementById("exPick").style.display="none";document.getElementById("exNum").style.display="";window.scrollTo(0,0);});' +
-    'document.getElementById("exbackDate").addEventListener("click",function(){document.getElementById("exDate").style.display="none";document.getElementById(ISCHANGE?"exPick":"exNum").style.display="";window.scrollTo(0,0);});' +
+    'document.getElementById("exbackDate").addEventListener("click",function(){document.getElementById("exDate").style.display="none";document.getElementById(ISCHANGE?"exMenu":"exNum").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exprev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}drawCal();});' +
     'document.getElementById("exnext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}drawCal();});' +
     'document.getElementById("exgrid").addEventListener("click",function(e){var b=e.target.closest("button.exday");if(!b||b.className.indexOf("blank")>=0)return;var d=parseInt(b.getAttribute("data-d"),10);picked=new Date(calY,calM,d);drawCal();document.getElementById("exDate").style.display="none";document.getElementById("exTime").style.display="";var wd=["日","月","火","水","木","金","土"][picked.getDay()];document.getElementById("exwhen").innerHTML="<div class=\\"exwho1\\">「"+disp()+"」の"+TITLE+"</div><div class=\\"exwd2\\">"+(calM+1)+"月"+d+"日（"+wd+"）</div>";tdig="";tupd();window.scrollTo(0,0);});' +
@@ -3323,20 +3350,31 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function tdisp(){if(!tdig){return "";}if(tdig.length<4){return tdig;}return tdig.slice(0,2)+":"+tdig.slice(2);}' +
     'function tupd(){document.getElementById("extime").value=tdisp();}' +
     'document.getElementById("extpad").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");if(k==="clr"){tdig="";}else if(k==="del"){tdig=tdig.slice(0,-1);}else if(/^[0-9]$/.test(b.textContent)&&tdig.length<4){tdig+=b.textContent;}tupd();});' +
-    'document.getElementById("exbackTime").addEventListener("click",function(){document.getElementById("exTime").style.display="none";document.getElementById("exDate").style.display="";window.scrollTo(0,0);});' +
-    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){alert("時刻を4ケタで入れてください（例 1230）");return;}enterEdit();});' +
+    'document.getElementById("exbackTime").addEventListener("click",function(){document.getElementById("exTime").style.display="none";document.getElementById(chgtype==="t"?"exMenu":"exDate").style.display="";window.scrollTo(0,0);});' +
+    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){alert("時刻を4ケタで入れてください（例 1230）");return;}var _d=document.getElementById("exdone2");_d.style.display="";_d.textContent=summaryText();window.scrollTo(0,document.body.scrollHeight);});' +
     'var esel={dur:"",staff:"",room:""};' +
     'function selE(g,v){esel[g]=String(v);var pl=document.querySelectorAll(".exp[data-eg=\\""+g+"\\"]");for(var i=0;i<pl.length;i++){pl[i].classList.toggle("sel",pl[i].getAttribute("data-ev")===String(v));}}' +
     'function nearDur(v){v=parseInt(v,10)||30;var arr=[15,20,30,40,45,50,60,70,80,90,120,150],best=arr[0];for(var i=0;i<arr.length;i++){if(Math.abs(arr[i]-v)<Math.abs(best-v)){best=arr[i];}}return best;}' +
     'function roomVal(r){r=String(r||"").toLowerCase();if(r.indexOf("freedom")>=0){return "FREEDOM";}if(r.indexOf("happy")>=0){return "HAPPY";}if(r.indexOf("lucky")>=0){return "LUCKY";}if(r.indexOf("スター")>=0||r.indexOf("star")>=0||r.indexOf("福")>=0){return "STAR/福/🇫🇷";}return "FREEDOM";}' +
     'function staffNum(e){e=String(e||"");if(e.indexOf("🍅")>=0){return "1";}if(e.indexOf("🍊")>=0){return "2";}if(e.indexOf("🫒")>=0){return "3";}if(e.indexOf("🥭")>=0){return "4";}return "2";}' +
     'var epills=document.querySelectorAll(".exp");for(var _p=0;_p<epills.length;_p++){epills[_p].addEventListener("click",function(){selE(this.getAttribute("data-eg"),this.getAttribute("data-ev"));});}' +
-    'function enterEdit(){document.getElementById("exTime").style.display="none";document.getElementById("exEdit").style.display="";document.getElementById("exeditwho").innerHTML="「"+disp()+"」の予約を<br>"+(picked.getMonth()+1)+"月"+picked.getDate()+"日 "+tdisp()+" に変更";selE("dur",nearDur(chosen?chosen.dur_min:30));selE("staff",staffNum(chosen?chosen.staff_emoji:""));selE("room",roomVal(chosen?chosen.room:""));window.scrollTo(0,0);}' +
-    'document.getElementById("exbackEdit").addEventListener("click",function(){document.getElementById("exEdit").style.display="none";document.getElementById("exTime").style.display="";window.scrollTo(0,0);});' +
-    'document.getElementById("exEditGo").addEventListener("click",function(){var done=document.getElementById("exdone3");done.style.display="";var sn={"1":"トマト","2":"みかん","3":"オリーブ","4":"マンゴー"};done.innerHTML="練習：この予約を<br>"+(picked.getMonth()+1)+"月"+picked.getDate()+"日 "+tdisp()+"／所要"+esel.dur+"分／担当"+(sn[esel.staff]||"")+"／部屋"+esel.room+"<br>に変更しました（練習なので本物のタイムツリーには書き込んでいません）";window.scrollTo(0,document.body.scrollHeight);});' +
+    'var chgtype="dt";' +
+    'function nameSuffix(){return (chosen&&chosen.name)?chosen.name+"様":"";}' +
+    'function hideSteps(){var ids=["exNum","exPick","exMenu","exDate","exTime","exEdit","exMemo"];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.style.display="none";}}' +
+    'function showMenu(){hideSteps();document.getElementById("exMenu").style.display="";document.getElementById("exmenuwho").innerHTML="「"+disp()+"」"+nameSuffix()+"<br>元："+chosen.date+" "+chosen.start_hm;window.scrollTo(0,0);}' +
+    'function goTime(){hideSteps();document.getElementById("exTime").style.display="";var wd=["日","月","火","水","木","金","土"][picked.getDay()];document.getElementById("exwhen").innerHTML="<div class=\\"exwho1\\">「"+disp()+"」"+nameSuffix()+"</div><div class=\\"exwd2\\">"+(picked.getMonth()+1)+"月"+picked.getDate()+"日（"+wd+"）</div>";tdig="";tupd();window.scrollTo(0,0);}' +
+    'function enterEdit(){hideSteps();document.getElementById("exEdit").style.display="";document.getElementById("secDur").style.display=(chgtype==="dur")?"":"none";document.getElementById("secStaff").style.display=(chgtype==="staff")?"":"none";document.getElementById("secRoom").style.display=(chgtype==="room")?"":"none";var lbl={dur:"施術時間",staff:"担当",room:"部屋"}[chgtype]||"";document.getElementById("exeditwho").innerHTML="「"+disp()+"」"+nameSuffix()+"<br>"+lbl+"を変更";selE("dur",nearDur(chosen?chosen.dur_min:30));selE("staff",staffNum(chosen?chosen.staff_emoji:""));selE("room",roomVal(chosen?chosen.room:""));window.scrollTo(0,0);}' +
+    'function enterMemo(){hideSteps();document.getElementById("exMemo").style.display="";document.getElementById("exmemowho").innerHTML="「"+disp()+"」"+nameSuffix()+"<br>予約メモを変更";document.getElementById("exmemobox").value=(chosen&&chosen.note)||"";window.scrollTo(0,0);}' +
+    'function summaryText(){var sn={"1":"トマト","2":"みかん","3":"オリーブ","4":"マンゴー"};var b="練習：この予約を ";var tail="（練習なので本物のタイムツリーには書き込んでいません）";if(chgtype==="dt"){return b+(picked.getMonth()+1)+"月"+picked.getDate()+"日 "+tdisp()+" に変更しました"+tail;}if(chgtype==="t"){return b+"時刻 "+tdisp()+"（同じ日）に変更しました"+tail;}if(chgtype==="staff"){return b+"担当を "+(sn[esel.staff]||"")+" に変更しました"+tail;}if(chgtype==="room"){return b+"部屋を "+esel.room+" に変更しました"+tail;}if(chgtype==="dur"){return b+"施術時間を "+esel.dur+"分 に変更しました"+tail;}if(chgtype==="memo"){return b+"予約メモを変更しました"+tail;}return "";}' +
+    'var mbtns=document.querySelectorAll(".exmbtn");for(var _mb=0;_mb<mbtns.length;_mb++){mbtns[_mb].addEventListener("click",function(){chgtype=this.getAttribute("data-chg");if(chgtype==="dt"){picked=null;goDate();}else if(chgtype==="t"){picked=new Date(chosen.date+"T00:00:00");goTime();}else if(chgtype==="memo"){enterMemo();}else{enterEdit();}});}' +
+    'document.getElementById("exbackMenu").addEventListener("click",function(){hideSteps();document.getElementById("exPick").style.display="";window.scrollTo(0,0);});' +
+    'document.getElementById("exbackMemo").addEventListener("click",function(){showMenu();});' +
+    'document.getElementById("exMemoGo").addEventListener("click",function(){var d=document.getElementById("exdone4");d.style.display="";d.textContent=summaryText();window.scrollTo(0,document.body.scrollHeight);});' +
+    'document.getElementById("exbackEdit").addEventListener("click",function(){document.getElementById("exEdit").style.display="none";document.getElementById("exMenu").style.display="";window.scrollTo(0,0);});' +
+    'document.getElementById("exEditGo").addEventListener("click",function(){var done=document.getElementById("exdone3");done.style.display="";done.textContent=summaryText();window.scrollTo(0,document.body.scrollHeight);});' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
-    '<div class="home"><div class="ex">' + numSec + pickSec + dateSec + timeSec + editSec + '</div></div>' + script;
+    '<div class="home"><div class="ex">' + numSec + pickSec + menuSec + dateSec + timeSec + editSec + memoSec + '</div></div>' + script;
 }
 
 /** 売上ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの両方から呼ばれる。 */
