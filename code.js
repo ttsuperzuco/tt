@@ -3161,7 +3161,7 @@ function renderNewReservationPage_(base, staff, dev) {
 /** 既存の予約／既存の変更＝番号入力→日付選択の2画面（PC版と同じ青緑の見た目・日付選択まで）。
  *  ★2026-08-03：まるちゃん指示①＝まずは番号→日付の2画面だけ（予約えらび・登録は後回し）。 */
 function renderExistingPage_(base, staff, dev, mode) {
-  var title = (mode === '変更') ? '既存の変更' : '既存の予約';
+  var title = (mode === '変更') ? '予約変更' : '予約';             // 日付ページの「M332の予約変更」用
   var head = (mode === '変更') ? '既存の予約変更' : '既存の予約';   // 見出しの文言（新規予約と同じマーク📝）
   var topHref = base + '?view=yoyaku' + roleSfx_(staff, dev);
   var css =
@@ -3214,7 +3214,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var dateSec =
     '<div id="exDate" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackDate" href="javascript:void(0)">← 前に戻る</a></div>' +
-      '<div class="hhead"><span class="bmark">②</span><span class="bname">日付入力</span></div>' +
+      '<div class="hhead"><span class="bmark">📅</span><span class="bname">日付入力</span></div>' +
       '<div class="exstep" id="exwho">' + title + '</div>' +
       '<div class="exch"><button class="exnav" id="exprev">◀</button><div class="exct" id="exct"></div><button class="exnav" id="exnext">▶</button></div>' +
       '<div class="exgrid" id="exgrid"></div>' +
