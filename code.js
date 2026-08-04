@@ -1101,6 +1101,28 @@ function staffColor_(fruit) {
   return STAFF_COLORS_[fruit] || '#64748b';
 }
 
+// ★共通ルール(2026-08-05まるちゃん)：書き込み系ボタンは全部〈全画面で処理中→完了〉表示に統一。
+//   どのページのスクリプトからも window.szOvShow_/szOvHide_/szBusyHtml_/szDoneHtml_ で呼べる。
+//   処理中＝青緑(#2C7A99)・⏳／成功＝緑(#16a34a)・✓＋戻る／失敗＝小さな警告(ccPopup_)＋事務所PCがRYUへ通知。
+function szOvShow_(html, bg) {
+  var ov = document.getElementById('szBusyOv');
+  if (!ov) { ov = document.createElement('div'); ov.id = 'szBusyOv'; document.body.appendChild(ov); }
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:' + bg + ';display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;';
+  ov.innerHTML = html;
+  return ov;
+}
+function szOvHide_() { var ov = document.getElementById('szBusyOv'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); }
+function szBusyHtml_(title) {
+  return "<div style='font-size:66px;margin-bottom:20px;'>⏳</div>" +
+    "<div style='color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;'>" + title + "</div>" +
+    "<div style='color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;'>タイムツリーへの書き込みが完了したら自動で切り替わりますので、しばらくお待ちください。</div>";
+}
+function szDoneHtml_(title, backLabel) {
+  return "<div style='font-size:92px;margin-bottom:16px;'>✓</div>" +
+    "<div style='color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;'>" + title + "</div>" +
+    "<button type='button' id='szDoneBack' style='font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;'>" + (backLabel || '戻る') + "</button>";
+}
+
 // 部屋名 → 移動先の (カレンダーID, ラベルID)。config.ROOM と同じ（部屋も揃えて移動＝B方式）。
 // ★config.py の ROOM_LABELS と一致させること（片方直したら両方）。
 // ★NAIL(ネイル)はうちの部屋管理の対象外（外部の間借りの方のサービス）＝共通ルールで恒久的に除外。
@@ -3099,11 +3121,11 @@ function renderNewReservationPage_(base, staff, dev) {
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
     'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
-    'var polls=0;function poll(id){polls++;if(polls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);goEl.disabled=false;return;}' +
-    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}' +
-    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1500);return;}' +
-    'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);goEl.disabled=false;return;}' +
-    'status("✅ "+esc(r.result||"登録しました")+" TimeTreeで内容をご確認ください。",false);txtEl.value="";goEl.disabled=false;});}' +
+    'var polls=0;function poll(id){polls++;if(polls>40){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
+    'if(r.status!=="done"){szOvHide_();goEl.disabled=false;alert(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
+    'goEl.disabled=false;txtEl.value="";szOvShow_(szDoneHtml_("予約を登録しました","予約入力に戻る"),"#16a34a");var _bb=document.getElementById("szDoneBack");if(_bb){_bb.addEventListener("click",function(){location.href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '";});}});}' +
     'var ppolls=0;function pollPrev(id){ppolls++;if(ppolls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);readEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
@@ -3130,10 +3152,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},1200);});}' +
     'readEl.addEventListener("click",readGo);' +
     'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼ってください。",true);return;}' +
-    'goEl.disabled=true;status("登録を事務所パソコンへ送っています…",false);' +
+    'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,' +
     'fields:JSON.stringify({text:text,memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw})},' +
-    'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}setTimeout(function(){poll(r.id);},1200);});}' +
+    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});}' +
     'goEl.addEventListener("click",go);' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
