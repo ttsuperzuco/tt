@@ -1741,10 +1741,11 @@ function renderLtPage_(d, base, staff, dev) {
 
   // ★状態ごとに見出しを分ける（時刻ズレ／記入もれ／要確認）。「⚠️ TimeTree予約ズレ ◯件」の形。
   var LTGROUPS = [
-    { st: 'time_mismatch', title: 'TimeTree予約ズレ' },
-    { st: 'not_found',     title: '記入もれ' },
-    { st: 'need_delete',   title: '削除もれ' },
-    { st: 'need_check',    title: '要確認' }
+    { st: 'time_mismatch',  title: 'TimeTree予約ズレ' },
+    { st: 'not_found',      title: '記入もれ' },
+    { st: 'room_undecided', title: '部屋未定' },
+    { st: 'need_delete',    title: '削除もれ' },
+    { st: 'need_check',     title: '要確認' }
   ];
   var cards = '';
   LTGROUPS.forEach(function (g) {
