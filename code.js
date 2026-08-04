@@ -3202,6 +3202,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exhint{color:#eaf6fb;font-weight:700;font-size:16px;line-height:1.5;margin:2px 4px 12px;}' +
     '.exwho1{color:#fff;font-weight:900;font-size:24px;margin:2px 4px 4px;}' +
     '.exwd2{color:#fff;font-weight:900;font-size:40px;line-height:1.2;margin:0 4px 14px;}' +
+    '#expickwho{color:#fff;font-weight:900;font-size:36px;line-height:1.25;margin:8px 4px 12px;}' +
     '.exstatus{color:#fff;font-weight:800;font-size:18px;margin:8px 4px;min-height:24px;}' +
     '.expick{display:flex;flex-direction:column;gap:12px;margin:6px 0 8px;}' +
     '.expickrow{display:block;width:100%;text-align:left;background:#fff;color:#0f172a;border:0;border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
@@ -3247,8 +3248,8 @@ function renderExistingPage_(base, staff, dev, mode) {
   var pickSec =
     '<div id="exPick" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackPick" href="javascript:void(0)">← 前に戻る</a></div>' +
-      '<div class="hhead"><span class="bmark">📖</span><span class="bname">変更する予約を選択する</span></div>' +
-      '<div class="exstep" id="expickwho"></div>' +
+      '<div class="hhead"><span class="bmark">📖</span><span class="bname">変更する予約を選択</span></div>' +
+      '<div id="expickwho"></div>' +
       '<div class="exstatus" id="expickst"></div>' +
       '<div class="expick" id="expicklist"></div>' +
       '<button class="exgo" id="exPickGo" style="display:none">この予約を変える→</button>' +
