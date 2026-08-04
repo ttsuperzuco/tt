@@ -3181,6 +3181,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.expl{color:#eaf6fb;font-weight:800;font-size:15px;margin-bottom:8px;}' +
     '.expaste input{width:100%;box-sizing:border-box;border:0;border-radius:10px;padding:14px;font-size:20px;font-weight:800;color:#0f172a;background:#fff;}' +
     '.exgo{display:block;width:100%;margin:22px 0 6px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);cursor:pointer;}' +
+    '.exhint{color:#eaf6fb;font-weight:700;font-size:16px;line-height:1.5;margin:2px 4px 12px;}' +
     '.exch{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 16px;}' +
     '.exnav{width:48px;height:48px;border-radius:12px;border:0;background:#fff;color:#0f172a;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
     '.exct{font-size:24px;font-weight:900;width:170px;text-align:center;color:#fff;}' +
@@ -3220,6 +3221,22 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="exgrid" id="exgrid"></div>' +
       '<div class="exdone" id="exdone" style="display:none"></div>' +
     '</div>';
+  var padHtml =
+    '<button>1</button><button>2</button><button>3</button>' +
+    '<button>4</button><button>5</button><button>6</button>' +
+    '<button>7</button><button>8</button><button>9</button>' +
+    '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>';
+  var timeSec =
+    '<div id="exTime" style="display:none">' +
+      '<div class="ubar"><a class="uhome" id="exbackTime" href="javascript:void(0)">← 前に戻る</a></div>' +
+      '<div class="hhead"><span class="bmark">🕐</span><span class="bname">時刻入力</span></div>' +
+      '<div class="exstep" id="exwhen"></div>' +
+      '<input class="exbox" id="extime" readonly placeholder="__ : __">' +
+      '<div class="exhint">例：9時→0900 ／ 12時10分→1210（4ケタで入れてね）</div>' +
+      '<div class="expad" id="extpad">' + padHtml + '</div>' +
+      '<button class="exgo" id="exToDone">この内容で進む→</button>' +
+      '<div class="exdone" id="exdone2" style="display:none"></div>' +
+    '</div>';
   var script = '<script>(function(){' +
     'var TITLE=' + JSON.stringify(title) + ';' +
     'var prefix="M",digits="";' +
@@ -3237,10 +3254,16 @@ function renderExistingPage_(base, staff, dev, mode) {
     'document.getElementById("exbackDate").addEventListener("click",function(){document.getElementById("exDate").style.display="none";document.getElementById("exNum").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exprev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}drawCal();});' +
     'document.getElementById("exnext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}drawCal();});' +
-    'document.getElementById("exgrid").addEventListener("click",function(e){var b=e.target.closest("button.exday");if(!b||b.className.indexOf("blank")>=0)return;var d=parseInt(b.getAttribute("data-d"),10);picked=new Date(calY,calM,d);drawCal();var done=document.getElementById("exdone");done.style.display="";done.textContent="選んだ日："+(calM+1)+"/"+d+"（この先は準備中です）";});' +
+    'document.getElementById("exgrid").addEventListener("click",function(e){var b=e.target.closest("button.exday");if(!b||b.className.indexOf("blank")>=0)return;var d=parseInt(b.getAttribute("data-d"),10);picked=new Date(calY,calM,d);drawCal();document.getElementById("exDate").style.display="none";document.getElementById("exTime").style.display="";document.getElementById("exwhen").textContent="「"+disp()+"」の"+TITLE+"（"+(calM+1)+"/"+d+"）";tdig="";tupd();window.scrollTo(0,0);});' +
+    'var tdig="";' +
+    'function tdisp(){if(!tdig){return "";}if(tdig.length<4){return tdig;}return tdig.slice(0,2)+":"+tdig.slice(2);}' +
+    'function tupd(){document.getElementById("extime").value=tdisp();}' +
+    'document.getElementById("extpad").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");if(k==="clr"){tdig="";}else if(k==="del"){tdig=tdig.slice(0,-1);}else if(/^[0-9]$/.test(b.textContent)&&tdig.length<4){tdig+=b.textContent;}tupd();});' +
+    'document.getElementById("exbackTime").addEventListener("click",function(){document.getElementById("exTime").style.display="none";document.getElementById("exDate").style.display="";window.scrollTo(0,0);});' +
+    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){alert("時刻を4ケタで入れてください（例 1230）");return;}var done=document.getElementById("exdone2");done.style.display="";done.textContent="日付 "+(picked.getMonth()+1)+"/"+picked.getDate()+"・時刻 "+tdisp()+" を選びました（この先の変更内容は準備中です）";window.scrollTo(0,document.body.scrollHeight);});' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
-    '<div class="home"><div class="ex">' + numSec + dateSec + '</div></div>' + script;
+    '<div class="home"><div class="ex">' + numSec + dateSec + timeSec + '</div></div>' + script;
 }
 
 /** 売上ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの両方から呼ばれる。 */
