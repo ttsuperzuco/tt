@@ -4730,7 +4730,9 @@ function renderLinksError_(err, base, staff, dev) {
 function renderClaudeToolsPage_(base, staff, dev) {
   var KOTOBA = [
     { t: 'インスタを操作したい',
-      d: 'インスタのDM返信・投稿・ストーリーズ・投稿のアーカイブなどを操作（3アカウント／ログイン使い回し）' }
+      d: 'インスタのDM返信・投稿・ストーリーズ・投稿のアーカイブなどを操作（3アカウント／ログイン使い回し）' },
+    { t: '画像のURLをつくりたい',
+      d: '画像（料金表・お支払い方法など）を、お客様がそのまま開ける短いリンク（x.gd/〇〇）に変える' }
   ];
   var CSS =
     '  .ubar { display:flex; align-items:center; gap:12px; margin:0 0 4px; }' +
