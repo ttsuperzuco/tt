@@ -3182,6 +3182,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.expaste input{width:100%;box-sizing:border-box;border:0;border-radius:10px;padding:14px;font-size:20px;font-weight:800;color:#0f172a;background:#fff;}' +
     '.exgo{display:block;width:100%;margin:22px 0 6px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);cursor:pointer;}' +
     '.exhint{color:#eaf6fb;font-weight:700;font-size:16px;line-height:1.5;margin:2px 4px 12px;}' +
+    '.exwho1{color:#fff;font-weight:900;font-size:24px;margin:2px 4px 4px;}' +
+    '.exwd2{color:#fff;font-weight:900;font-size:40px;line-height:1.2;margin:0 4px 14px;}' +
     '.exch{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 16px;}' +
     '.exnav{width:48px;height:48px;border-radius:12px;border:0;background:#fff;color:#0f172a;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
     '.exct{font-size:24px;font-weight:900;width:170px;text-align:center;color:#fff;}' +
@@ -3254,7 +3256,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'document.getElementById("exbackDate").addEventListener("click",function(){document.getElementById("exDate").style.display="none";document.getElementById("exNum").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exprev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}drawCal();});' +
     'document.getElementById("exnext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}drawCal();});' +
-    'document.getElementById("exgrid").addEventListener("click",function(e){var b=e.target.closest("button.exday");if(!b||b.className.indexOf("blank")>=0)return;var d=parseInt(b.getAttribute("data-d"),10);picked=new Date(calY,calM,d);drawCal();document.getElementById("exDate").style.display="none";document.getElementById("exTime").style.display="";document.getElementById("exwhen").textContent="「"+disp()+"」の"+TITLE+"（"+(calM+1)+"/"+d+"）";tdig="";tupd();window.scrollTo(0,0);});' +
+    'document.getElementById("exgrid").addEventListener("click",function(e){var b=e.target.closest("button.exday");if(!b||b.className.indexOf("blank")>=0)return;var d=parseInt(b.getAttribute("data-d"),10);picked=new Date(calY,calM,d);drawCal();document.getElementById("exDate").style.display="none";document.getElementById("exTime").style.display="";var wd=["日","月","火","水","木","金","土"][picked.getDay()];document.getElementById("exwhen").innerHTML="<div class=\\"exwho1\\">「"+disp()+"」の"+TITLE+"</div><div class=\\"exwd2\\">"+(calM+1)+"月"+d+"日（"+wd+"）</div>";tdig="";tupd();window.scrollTo(0,0);});' +
     'var tdig="";' +
     'function tdisp(){if(!tdig){return "";}if(tdig.length<4){return tdig;}return tdig.slice(0,2)+":"+tdig.slice(2);}' +
     'function tupd(){document.getElementById("extime").value=tdisp();}' +
