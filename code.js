@@ -3168,9 +3168,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.ex{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.exstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:14px;margin:2px 4px 8px;}' +
     '#exwho{font-size:28px;color:#fff;font-weight:900;margin:2px 4px 14px;}' +   /* 日付ページの「M332の既存の予約」＝2倍 */
-    '.exlabel{color:#fff;font-weight:900;font-size:20px;line-height:1.5;margin:8px 4px 10px;}' +
-    '.exbox{width:100%;box-sizing:border-box;background:#fff;color:#0f172a;border:0;border-radius:16px;text-align:center;letter-spacing:.1em;font-size:52px;font-weight:900;padding:14px 10px;margin:2px 0 16px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
-    '.exbox::placeholder{color:#94a3b8;font-weight:800;letter-spacing:normal;}' +
+    '.exbox{width:100%;box-sizing:border-box;background:#fff;color:#0f172a;border:0;border-radius:16px;text-align:center;letter-spacing:.08em;font-size:44px;font-weight:900;padding:16px 12px;margin:6px 0 16px;box-shadow:0 4px 14px rgba(0,0,0,.15);resize:none;overflow:hidden;line-height:1.35;font-family:inherit;}' +
+    '.exbox::placeholder{color:#94a3b8;font-weight:800;font-size:17px;letter-spacing:normal;line-height:1.6;}' +
     '.exseg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(255,255,255,.16);border-radius:16px;padding:6px;margin:0 0 14px;overflow:hidden;}' +
     '.exseg .thumb{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/3);background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .22s;}' +
     '.exseg button{position:relative;z-index:1;background:none;border:0;padding:14px 4px;font-size:19px;font-weight:800;color:#eaf6fb;cursor:pointer;}' +
@@ -3199,8 +3198,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '<div id="exNum">' +
       '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 前に戻る</a></div>' +
       '<div class="hhead"><span class="bmark">📝</span><span class="bname">' + head + '</span></div>' +
-      '<div class="exlabel">お客様番号を貼り付けるか、下の英語・番号ボタンで入力する</div>' +
-      '<input class="exbox" id="exdisp" placeholder="M235 …">' +
+      '<textarea class="exbox" id="exdisp" rows="2" placeholder="ここにお客様番号を貼り付けるか、下の英語・番号ボタンで入力する"></textarea>' +
       '<div class="exseg" id="exseg"><span class="thumb"></span>' +
         '<button data-v="M" aria-pressed="true">M（男）</button>' +
         '<button data-v="F">F（女）</button>' +
