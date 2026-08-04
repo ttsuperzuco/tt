@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260731matsueku"></script>
-<script src="code.js?v=20260804chg3"></script>
+<script src="code.js?v=20260804ctt1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -623,6 +623,9 @@
     idmFetch(pw);
   }
 
+  // ★自作Claudeツール＝開発URL専用。Claudeに言う「合言葉」の一覧（タップでコピー）。renderClaudeToolsPage_ は code.js＝GASと同一。
+  function showClaudeTools() { mount(renderClaudeToolsPage_(base, staff, dev)); }
+
   // ★時間指定LINE送信＝開発URL専用。決めた時刻に文章＋画像を送る予約（renderTimedSendPage_ 内スクリプトが窓口へ依頼）。
   function showTimedSend() { mount(renderTimedSendPage_(base, staff, dev)); }
 
@@ -788,6 +791,7 @@
     else if (v === 'koukoku') showKoukoku();
     else if (v === 'instadm') showInstaDm();
     else if (v === 'igdm') showIgdm();
+    else if (v === 'claudetools') showClaudeTools();
     else if (v === 'timedsend') showTimedSend();
     else if (v === 'yoyaku') showYoyaku();
     else if (v === 'yoyaku_new') showYoyakuNew();
