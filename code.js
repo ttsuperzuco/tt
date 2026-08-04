@@ -3162,12 +3162,15 @@ function renderNewReservationPage_(base, staff, dev) {
  *  ★2026-08-03：まるちゃん指示①＝まずは番号→日付の2画面だけ（予約えらび・登録は後回し）。 */
 function renderExistingPage_(base, staff, dev, mode) {
   var title = (mode === '変更') ? '既存の変更' : '既存の予約';
+  var head = (mode === '変更') ? '既存の予約変更' : '既存の予約';   // 見出しの文言（新規予約と同じマーク📝）
   var topHref = base + '?view=yoyaku' + roleSfx_(staff, dev);
   var css =
     '.ex{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.exstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:14px;margin:2px 4px 8px;}' +
     '#exwho{font-size:28px;color:#fff;font-weight:900;margin:2px 4px 14px;}' +   /* 日付ページの「M332の既存の予約」＝2倍 */
-    '.exdisp{background:#fff;color:#0f172a;border-radius:16px;text-align:center;letter-spacing:.1em;font-size:52px;font-weight:900;padding:14px 10px;margin:6px 0 16px;min-height:76px;box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+    '.exlabel{color:#fff;font-weight:900;font-size:20px;line-height:1.5;margin:8px 4px 10px;}' +
+    '.exbox{width:100%;box-sizing:border-box;background:#fff;color:#0f172a;border:0;border-radius:16px;text-align:center;letter-spacing:.1em;font-size:52px;font-weight:900;padding:14px 10px;margin:2px 0 16px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+    '.exbox::placeholder{color:#94a3b8;font-weight:800;letter-spacing:normal;}' +
     '.exseg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(255,255,255,.16);border-radius:16px;padding:6px;margin:0 0 14px;overflow:hidden;}' +
     '.exseg .thumb{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/3);background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .22s;}' +
     '.exseg button{position:relative;z-index:1;background:none;border:0;padding:14px 4px;font-size:19px;font-weight:800;color:#eaf6fb;cursor:pointer;}' +
@@ -3195,9 +3198,9 @@ function renderExistingPage_(base, staff, dev, mode) {
   var numSec =
     '<div id="exNum">' +
       '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 前に戻る</a></div>' +
-      '<div class="hhead"><span class="bmark">①</span><span class="bname">お客様番号入力</span></div>' +
-      '<div class="exstep">' + title + '</div>' +
-      '<div class="exdisp" id="exdisp">―</div>' +
+      '<div class="hhead"><span class="bmark">📝</span><span class="bname">' + head + '</span></div>' +
+      '<div class="exlabel">お客様番号を貼り付けるか、英・数字のパッドを押して入力する</div>' +
+      '<input class="exbox" id="exdisp" placeholder="M235 …">' +
       '<div class="exseg" id="exseg"><span class="thumb"></span>' +
         '<button data-v="M" aria-pressed="true">M（男）</button>' +
         '<button data-v="F">F（女）</button>' +
@@ -3208,7 +3211,6 @@ function renderExistingPage_(base, staff, dev, mode) {
         '<button>7</button><button>8</button><button>9</button>' +
         '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>' +
       '</div>' +
-      '<div class="expaste"><div class="expl">または貼り付け（コピーした番号を貼って Enter）</div><input id="expst" placeholder="M235 …"></div>' +
       '<button class="exgo" id="exToDate">日付入力へ→</button>' +
     '</div>';
   var dateSec =
@@ -3225,13 +3227,13 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var prefix="M",digits="";' +
     'var today=new Date();var calY=today.getFullYear(),calM=today.getMonth(),picked=null;' +
     'function disp(){return (prefix||"")+digits;}' +
-    'function upd(){document.getElementById("exdisp").textContent=disp()||"―";}' +
+    'function upd(){document.getElementById("exdisp").value=disp();}' +
     'var seg=document.getElementById("exseg"),sb=seg.querySelectorAll("button"),thumb=seg.querySelector(".thumb");' +
     'function selSeg(i){for(var j=0;j<sb.length;j++)sb[j].setAttribute("aria-pressed",j===i);thumb.style.transform="translateX("+(i*100)+"%)";prefix=sb[i].getAttribute("data-v");upd();}' +
     'for(var i=0;i<sb.length;i++){(function(k){sb[k].addEventListener("click",function(){selSeg(k);});})(i);}' +
     'document.getElementById("expad").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");if(k==="clr"){digits="";}else if(k==="del"){digits=digits.slice(0,-1);}else if(/^[0-9]$/.test(b.textContent)&&digits.length<4){digits+=b.textContent;}upd();});' +
-    'var pst=document.getElementById("expst");' +
-    'pst.addEventListener("input",function(){var m=(pst.value||"").toUpperCase().replace(/\\s/g,"").match(/^([MF]?)([0-9]{0,4})/);if(!m)return;if(m[1]){selSeg(m[1]==="M"?0:1);}else{selSeg(2);}digits=m[2];upd();});' +
+    'var box=document.getElementById("exdisp");' +   /* 白BOX＝貼り付けもでき、パッド入力も表示する */
+    'box.addEventListener("input",function(){var m=(box.value||"").toUpperCase().replace(/\\s/g,"").match(/^([MF]?)([0-9]{0,4})/);if(!m){return;}digits=m[2];if(m[1]){selSeg(m[1]==="M"?0:1);}else if(box.value){selSeg(2);}else{upd();}});' +
     'function drawCal(){var wd=["月","火","水","木","金","土","日"];document.getElementById("exct").textContent=calY+"年 "+(calM+1)+"月";var h="";for(var i=0;i<7;i++){h+="<div class=\\"exwd"+(i===5?" sat":i===6?" sun":"")+"\\">"+wd[i]+"</div>";}var first=new Date(calY,calM,1);var off=(first.getDay()+6)%7;var dim=new Date(calY,calM+1,0).getDate();for(var b=0;b<off;b++){h+="<div class=\\"exday blank\\"></div>";}var t0=new Date(today.getFullYear(),today.getMonth(),today.getDate());for(var d=1;d<=dim;d++){var dow=(off+d-1)%7;var cls="exday";if(dow===5){cls+=" sat";}if(dow===6){cls+=" sun";}var cur=new Date(calY,calM,d);if(calY===today.getFullYear()&&calM===today.getMonth()&&d===today.getDate()){cls+=" today";}if(cur<t0){cls+=" past";}if(picked&&picked.getFullYear()===calY&&picked.getMonth()===calM&&picked.getDate()===d){cls+=" picked";}h+="<button class=\\""+cls+"\\" data-d=\\""+d+"\\">"+d+"</button>";}document.getElementById("exgrid").innerHTML=h;}' +
     'document.getElementById("exToDate").addEventListener("click",function(){if(!digits){alert("お客様番号を入れてください");return;}document.getElementById("exNum").style.display="none";document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="「"+disp()+"」の"+TITLE;calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);});' +
     'document.getElementById("exbackDate").addEventListener("click",function(){document.getElementById("exDate").style.display="none";document.getElementById("exNum").style.display="";window.scrollTo(0,0);});' +
