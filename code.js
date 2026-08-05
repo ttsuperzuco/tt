@@ -3309,7 +3309,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.extop{color:#fff;font-size:20px;font-weight:900;line-height:1.5;background:rgba(255,255,255,.16);border-radius:10px;padding:9px 13px;margin:2px 0 12px;}' +
     '.expkemo{font-size:1.5em;vertical-align:middle;margin-right:10px;}' +
     '.expkroom{display:inline-block;color:#fff;font-weight:900;font-size:26px;padding:8px 30px;border-radius:999px;vertical-align:middle;text-shadow:0 1px 2px rgba(0,0,0,.35);}' +
-    '.exq{color:#fff;font-size:24px;font-weight:900;line-height:1.5;margin:12px 0 4px;}';
+    '.exq{color:#fff;font-size:28px;font-weight:900;line-height:1.5;margin:14px 0 10px;background:#e0592b;border-radius:12px;padding:14px 14px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.2);}';
   var numSec =
     '<div id="exNum">' +
       '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 前に戻る</a></div>' +
