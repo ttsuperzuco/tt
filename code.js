@@ -3300,7 +3300,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.expknote{color:#ffdede;font-size:16px;font-weight:800;line-height:1.6;margin:2px 0 12px;text-align:center;}' +
     '.extop{color:#fff;font-size:20px;font-weight:900;line-height:1.5;background:rgba(255,255,255,.16);border-radius:10px;padding:9px 13px;margin:2px 0 12px;}' +
     '.expkemo{font-size:1.5em;vertical-align:middle;margin-right:10px;}' +
-    '.expkroom{display:inline-block;color:#fff;font-weight:900;font-size:26px;padding:8px 30px;border-radius:999px;vertical-align:middle;text-shadow:0 1px 2px rgba(0,0,0,.35);}';
+    '.expkroom{display:inline-block;color:#fff;font-weight:900;font-size:26px;padding:8px 30px;border-radius:999px;vertical-align:middle;text-shadow:0 1px 2px rgba(0,0,0,.35);}' +
+    '.exq{color:#fff;font-size:24px;font-weight:900;line-height:1.5;margin:12px 0 4px;}';
   var numSec =
     '<div id="exNum">' +
       '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 前に戻る</a></div>' +
@@ -3390,12 +3391,11 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<button class="exgo" id="exMemoGo">この内容に変更する→</button>' +
       '<div class="exdone" id="exdone4" style="display:none"></div>' +
     '</div>';
-  // 日付・時刻を移す時だけ出す「担当を選ぶ」「部屋を選ぶ」画面（押したらすぐ次へ進む）。
+  // 日付・時刻を移す時だけ出す「担当を変更しますか？」「部屋を変更しますか？」画面（押したらすぐ次へ進む）。
   var staffPickSec =
     '<div id="exStaffPick" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackStaffPick" href="javascript:void(0)">← 前に戻る</a></div>' +
       '<div class="extop"></div>' +
-      '<div class="hhead"><span class="bmark">🧑‍🔧</span><span class="bname">担当を選ぶ</span></div>' +
       '<div class="exwho1" id="exspwho"></div>' +
       '<div id="exsplist"></div>' +
     '</div>';
@@ -3403,7 +3403,6 @@ function renderExistingPage_(base, staff, dev, mode) {
     '<div id="exRoomPick" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackRoomPick" href="javascript:void(0)">← 前に戻る</a></div>' +
       '<div class="extop"></div>' +
-      '<div class="hhead"><span class="bmark">🚪</span><span class="bname">部屋を選ぶ</span></div>' +
       '<div class="exwho1" id="exrpwho"></div>' +
       '<div id="exrplist"></div>' +
     '</div>';
@@ -3448,9 +3447,9 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var RMAP_={"FREEDOM":{cal:"73208496",label:1},"HAPPY":{cal:"59950855",label:6},"LUCKY":{cal:"59950871",label:9},"STAR/福/🇫🇷":{cal:"86075789",label:10}};' +
     'function startPickFlow(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;newYmd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);newSm=hh*60+mm;pickStaff="";pickRoom="";availData=null;var dur=(chosen.dur_min||30);exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">空きを確認しています</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">その時間に空いている担当・部屋を調べています。しばらくお待ちください。</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:newYmd,start_min:newSm,dur:dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pickFlowPoll(r.id);});}' +
     'function pickFlowPoll(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pickFlowPoll(id);},600);return;}if(r.status!=="done"){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}availData={free_staff:(d.free_staff||[]).map(String),free_rooms:(d.free_rooms||[]).map(String)};exOvHide_();showStaffPick();});}' +
-    'function showStaffPick(){hideSteps();document.getElementById("exStaffPick").style.display="";var cur=staffNum(chosen.staff_emoji||"");var fs=(availData&&availData.free_staff)||[];document.getElementById("exspwho").innerHTML="移す先："+newYmd+" "+tdisp()+"<br>現在の担当："+(SEMO_[cur]||"")+" "+(SNM_[cur]||"?");var curBusy=(cur&&fs.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（<span class=\\"expkemo\\">"+(SEMO_[cur]||"")+"</span>"+(SNM_[cur]||"?")+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間「"+(SNM_[cur]||"")+"」は空いていないので、下の空いている担当から選んでください。</div>";}var order=["2","3","1","4"];for(var i=0;i<order.length;i++){var n=order[i];if(n===cur)continue;if(fs.indexOf(n)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+n+"\\"><span class=\\"expkemo\\">"+SEMO_[n]+"</span>"+SNM_[n]+"</button>";}document.getElementById("exsplist").innerHTML=h;window.scrollTo(0,0);}' +
+    'function showStaffPick(){hideSteps();document.getElementById("exStaffPick").style.display="";var cur=staffNum(chosen.staff_emoji||"");var fs=(availData&&availData.free_staff)||[];document.getElementById("exspwho").innerHTML="移す先："+newYmd+" "+tdisp()+"<br>現在の担当："+(SEMO_[cur]||"")+" "+(SNM_[cur]||"?")+"<div class=\\"exq\\">担当を変更しますか？</div>";var curBusy=(cur&&fs.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（<span class=\\"expkemo\\">"+(SEMO_[cur]||"")+"</span>"+(SNM_[cur]||"?")+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間「"+(SNM_[cur]||"")+"」は空いていないので、下の空いている担当から選んでください。</div>";}var order=["2","3","1","4"];for(var i=0;i<order.length;i++){var n=order[i];if(n===cur)continue;if(fs.indexOf(n)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+n+"\\"><span class=\\"expkemo\\">"+SEMO_[n]+"</span>"+SNM_[n]+"</button>";}document.getElementById("exsplist").innerHTML=h;window.scrollTo(0,0);}' +
     'function roomBadge_(rk){var c=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var nm=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;return "<span class=\\"expkroom\\" style=\\"background:"+c+"\\">"+nm+"</span>";}' +
-    'function showRoomPick(){hideSteps();document.getElementById("exRoomPick").style.display="";var cur=roomVal(chosen.room||"");var fr=(availData&&availData.free_rooms)||[];document.getElementById("exrpwho").innerHTML="移す先："+newYmd+" "+tdisp()+"<br>現在の部屋："+roomBadge_(cur);var curBusy=(cur&&fr.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（"+roomBadge_(cur)+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間この部屋は空いていないので、下の空いている部屋から選んでください。</div>";}var order=["FREEDOM","HAPPY","LUCKY","STAR/福/🇫🇷"];for(var i=0;i<order.length;i++){var rm=order[i];if(rm===cur)continue;if(fr.indexOf(rm)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+rm+"\\">"+roomBadge_(rm)+"</button>";}document.getElementById("exrplist").innerHTML=h;window.scrollTo(0,0);}' +
+    'function showRoomPick(){hideSteps();document.getElementById("exRoomPick").style.display="";var cur=roomVal(chosen.room||"");var fr=(availData&&availData.free_rooms)||[];document.getElementById("exrpwho").innerHTML="移す先："+newYmd+" "+tdisp()+"<br>現在の部屋："+roomBadge_(cur)+"<div class=\\"exq\\">部屋を変更しますか？</div>";var curBusy=(cur&&fr.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（"+roomBadge_(cur)+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間この部屋は空いていないので、下の空いている部屋から選んでください。</div>";}var order=["FREEDOM","HAPPY","LUCKY","STAR/福/🇫🇷"];for(var i=0;i<order.length;i++){var rm=order[i];if(rm===cur)continue;if(fr.indexOf(rm)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+rm+"\\">"+roomBadge_(rm)+"</button>";}document.getElementById("exrplist").innerHTML=h;window.scrollTo(0,0);}' +
     'document.getElementById("exsplist").addEventListener("click",function(e){var b=e.target.closest(".expk");if(!b||b.className.indexOf("dis")>=0)return;var v=b.getAttribute("data-v");pickStaff=(v==="__keep")?"":v;showRoomPick();});' +
     'document.getElementById("exrplist").addEventListener("click",function(e){var b=e.target.closest(".expk");if(!b||b.className.indexOf("dis")>=0)return;var v=b.getAttribute("data-v");pickRoom=(v==="__keep")?"":v;realChange(document.getElementById("exdone2"));});' +
     'document.getElementById("exbackStaffPick").addEventListener("click",function(){hideSteps();document.getElementById("exTime").style.display="";window.scrollTo(0,0);});' +
