@@ -3287,7 +3287,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exmh{color:#fff;font-weight:900;font-size:19px;margin:6px 4px 8px;}' +
     '.exallday{display:block;width:100%;box-sizing:border-box;text-align:center;margin:14px 0 4px;background:#c0392b;color:#fff;border:0;border-radius:14px;padding:18px 10px;font-size:20px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);}' +
     '.exallday:active{transform:translateY(1px);}' +
-    '#exmemobox{text-align:left;font-size:20px;line-height:1.6;min-height:180px;}' +
+    '#exmemobox{text-align:left;font-size:20px;line-height:1.6;height:300px;overflow:auto;resize:vertical;-webkit-overflow-scrolling:touch;}' +
     '.exch{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 16px;}' +
     '.exnav{width:48px;height:48px;border-radius:12px;border:0;background:#fff;color:#0f172a;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
     '.exct{font-size:24px;font-weight:900;width:170px;text-align:center;color:#fff;}' +
