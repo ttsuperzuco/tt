@@ -2616,8 +2616,17 @@ function igdmDoDelete() {
   var t = (IGDM_STATE_.items || [])[IGDM_STATE_.sel]; if (!t || !t.req) return;
   if (!confirm('この初めての人「' + (t.title || '') + '」を削除しますか？\n消すと元に戻せません。')) return;
   var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
-  var st = document.getElementById('igdmRStatus'); if (st) st.textContent = '削除を依頼中…';
-  if (window.igdmDelete) window.igdmDelete(acc, t.title, t.last_text, function (m) { if (st) st.textContent = m; });
+  szOvShow_(szBusyHtml_('削除しています'), '#2C7A99');   // 部屋かぶりと同じ全画面表示（共通ルール）
+  if (window.igdmDelete) window.igdmDelete(acc, t.title, t.last_text, function (m) {
+    var ms = '' + (m || '');
+    if (ms.indexOf('エラー') >= 0 || ms.indexOf('失敗') >= 0 || ms.indexOf('できません') >= 0 || ms.indexOf('つながり') >= 0 || ms.indexOf('時間がかかって') >= 0) {
+      szOvHide_(); alert(ms || 'エラーが発生しました。りゅうさんに連絡しました。');
+    } else {
+      szOvShow_(szDoneHtml_('削除しました', '一覧に戻る'), '#16a34a');
+      var b = document.getElementById('szDoneBack');
+      if (b) b.addEventListener('click', function () { szOvHide_(); if (window.igdmBackList) igdmBackList(); });
+    }
+  });
 }
 
 function igdmBackList() { var pn = document.getElementById('igdmPane'); if (pn) pn.classList.remove('showthread'); }
