@@ -2992,23 +2992,23 @@ function renderTimedSendPage_(base, staff, dev) {
   'if(d&&d.enabled===false){banEl.style.background="#f8d7da";banEl.textContent="いま送信はOFFです。事務所PCの自動監視でONにするまで、予約しても送られません。";}' +
   'else if(d&&d.practice){banEl.style.background="#fff3cd";banEl.textContent="いまは練習モードです。誰を選んでも、実際にはオーナー本人にしか送りません。";}' +
   'else if(d){banEl.style.background="#d1e7dd";banEl.textContent="いまは本番モードです。選んだ相手に実際に送られます。";}});' +
-  'var polls=0;function poll(id){polls++;if(polls>30){status("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。",true);goEl.disabled=false;return;}' +
-  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}' +
-  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1200);return;}' +
-  'if(r.status!=="done"){status("予約できませんでした："+esc(r.result||r.status),true);goEl.disabled=false;return;}' +
-  'status("予約しました。"+esc(r.result||""),false);msgEl.value="";imgs=[];fileEl.value="";renderThumbs();codesEl.value="";goEl.disabled=false;});}' +
+  'var polls=0;function poll(id){polls++;if(polls>30){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
+  'if(r.status!=="done"){szOvHide_();goEl.disabled=false;alert(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
+  'goEl.disabled=false;msgEl.value="";imgs=[];fileEl.value="";renderThumbs();codesEl.value="";szOvShow_(szDoneHtml_("送信を予約しました","戻る"),"#16a34a");var _b=document.getElementById("szDoneBack");if(_b){_b.addEventListener("click",function(){szOvHide_();});}});}' +
   'function go(){var msg=(msgEl.value||"").trim();if(!msg&&!imgs.length){status("文章か画像のどちらかは必要です。",true);return;}' +
   'var dv=dateEl.value,tv=timeEl.value;if(!dv||!tv){status("送る日と時刻を入れてください。",true);return;}var send_at=dv+" "+tv;' +
   'var mode=getMode(),target;' +
   'if(mode==="person"){var codes=(codesEl.value||"").split(/[\\s,\\u3001\\uFF0C]+/).filter(Boolean);if(!codes.length){status("番号を入れてください（例 M123）。",true);return;}target={type:"person",codes:codes};}' +
   'else if(mode==="group"){var val=groupEl.value;if(!val){status("グループを選んでください。",true);return;}var g=GROUPS[val];target={type:"tag",tag_id:val,tag_name:g?g.name:""};}' +
   'else if(mode==="all"){target={type:"all"};}else{target={type:"owner"};}' +
-  'goEl.disabled=true;status("送っています…（画像があると少しかかります）",false);' +
+  'goEl.disabled=true;szOvShow_(szBusyHtml_("送信を予約中です"),"#2C7A99");' +
   'var names=[],ups=imgs.map(function(o){var n=rnd();names.push(n);return pushImage(n,o);});' +
   'Promise.all(ups).then(function(){' +
   'jsonp({action:"submit",key:KEY,op:"timed_line_send",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({message:msg,send_at:send_at,target:target,images:names})},' +
-  'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);goEl.disabled=false;return;}setTimeout(function(){poll(r.id);},1000);});' +
-  '}).catch(function(){status("画像の送信でつまずきました。もう一度お試しください。",true);goEl.disabled=false;});}' +
+  'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1000);});' +
+  '}).catch(function(){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。画像の送信でつまずきました。もう一度お試しください。");});}' +
   'goEl.addEventListener("click",go);' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
