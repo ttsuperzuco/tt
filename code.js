@@ -1122,6 +1122,32 @@ function szDoneHtml_(title, backLabel) {
     "<div style='color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;'>" + title + "</div>" +
     "<button type='button' id='szDoneBack' style='font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;'>" + (backLabel || '戻る') + "</button>";
 }
+// ★共通ルール(2026-08-05まるちゃん)：知らせ・警告・確認の小窓は、どのページでも必ずこのスーパーズコの
+//   見た目にそろえる。素っ気ない標準の警告(alert/confirm)を使わない。どのページのスクリプトからも
+//   window.szPopup_ で呼べる（自前でCSS変数に頼らず全部この関数の中で見た目を作るので、どの画面でも同じ形）。
+//   使い方：szPopup_("メッセージ")／確認は szPopup_("…しますか？", {cancel:true, onYes:fn})。
+function szPopup_(msg, opts) {
+  opts = opts || {};
+  var mask = document.createElement('div');
+  mask.className = 'szpopmask';
+  mask.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;';
+  var icon = ('icon' in opts) ? opts.icon : '⚠️';
+  var yesLabel = opts.yesLabel || 'OK';
+  mask.innerHTML =
+    "<div style='background:#12303c;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:26px 24px;max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 14px 44px rgba(0,0,0,.45);text-align:center;'>" +
+      (icon ? "<div style='font-size:56px;line-height:1;margin-bottom:14px;'>" + icon + "</div>" : "") +
+      "<div class='szpopmsg' style='color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:22px;'></div>" +
+      "<div style='display:flex;gap:12px;'>" +
+        (opts.cancel ? "<button type='button' class='szpopno' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#eaf3f7;cursor:pointer;'>" + (opts.noLabel || 'キャンセル') + "</button>" : "") +
+        "<button type='button' class='szpopyes' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:0;background:#2C7A99;color:#fff;cursor:pointer;'>" + yesLabel + "</button>" +
+      "</div>" +
+    "</div>";
+  if (opts.isHtml) mask.querySelector('.szpopmsg').innerHTML = msg; else mask.querySelector('.szpopmsg').textContent = msg;
+  document.body.appendChild(mask);
+  mask.querySelector('.szpopyes').addEventListener('click', function () { if (mask.parentNode) mask.parentNode.removeChild(mask); if (opts.onYes) opts.onYes(); });
+  var no = mask.querySelector('.szpopno'); if (no) no.addEventListener('click', function () { if (mask.parentNode) mask.parentNode.removeChild(mask); if (opts.onNo) opts.onNo(); });
+  return mask;
+}
 
 // 部屋名 → 移動先の (カレンダーID, ラベルID)。config.ROOM と同じ（部屋も揃えて移動＝B方式）。
 // ★config.py の ROOM_LABELS と一致させること（片方直したら両方）。
@@ -2371,7 +2397,7 @@ function idmShowMsgs(title, msgs) {
   var log = document.getElementById('idmMlog');
   msgs = msgs || [];
   if (!mask || !log) {
-    alert((title || '') + '\n\n' + msgs.map(function (m) { return (m.me ? '自分: ' : '相手: ') + m.text; }).join('\n'));
+    szPopup_((title || '') + '\n\n' + msgs.map(function (m) { return (m.me ? '自分: ' : '相手: ') + m.text; }).join('\n'), { icon: '' });
     return;
   }
   if (mnm) mnm.textContent = title || '';
@@ -2620,7 +2646,7 @@ function igdmDoDelete() {
   if (window.igdmDelete) window.igdmDelete(acc, t.title, t.last_text, function (m) {
     var ms = '' + (m || '');
     if (ms.indexOf('エラー') >= 0 || ms.indexOf('失敗') >= 0 || ms.indexOf('できません') >= 0 || ms.indexOf('つながり') >= 0 || ms.indexOf('時間がかかって') >= 0) {
-      szOvHide_(); alert(ms || 'エラーが発生しました。りゅうさんに連絡しました。');
+      szOvHide_(); szPopup_(ms || 'エラーが発生しました。りゅうさんに連絡しました。');
     } else {
       szOvShow_(szDoneHtml_('削除しました', '一覧に戻る'), '#16a34a');
       var b = document.getElementById('szDoneBack');
@@ -3001,10 +3027,10 @@ function renderTimedSendPage_(base, staff, dev) {
   'if(d&&d.enabled===false){banEl.style.background="#f8d7da";banEl.textContent="いま送信はOFFです。事務所PCの自動監視でONにするまで、予約しても送られません。";}' +
   'else if(d&&d.practice){banEl.style.background="#fff3cd";banEl.textContent="いまは練習モードです。誰を選んでも、実際にはオーナー本人にしか送りません。";}' +
   'else if(d){banEl.style.background="#d1e7dd";banEl.textContent="いまは本番モードです。選んだ相手に実際に送られます。";}});' +
-  'var polls=0;function poll(id){polls++;if(polls>30){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
-  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>30){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
-  'if(r.status!=="done"){szOvHide_();goEl.disabled=false;alert(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
+  'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
   'goEl.disabled=false;msgEl.value="";imgs=[];fileEl.value="";renderThumbs();codesEl.value="";szOvShow_(szDoneHtml_("送信を予約しました","戻る"),"#16a34a");var _b=document.getElementById("szDoneBack");if(_b){_b.addEventListener("click",function(){szOvHide_();});}});}' +
   'function go(){var msg=(msgEl.value||"").trim();if(!msg&&!imgs.length){status("文章か画像のどちらかは必要です。",true);return;}' +
   'var dv=dateEl.value,tv=timeEl.value;if(!dv||!tv){status("送る日と時刻を入れてください。",true);return;}var send_at=dv+" "+tv;' +
@@ -3016,8 +3042,8 @@ function renderTimedSendPage_(base, staff, dev) {
   'var names=[],ups=imgs.map(function(o){var n=rnd();names.push(n);return pushImage(n,o);});' +
   'Promise.all(ups).then(function(){' +
   'jsonp({action:"submit",key:KEY,op:"timed_line_send",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({message:msg,send_at:send_at,target:target,images:names})},' +
-  'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1000);});' +
-  '}).catch(function(){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。画像の送信でつまずきました。もう一度お試しください。");});}' +
+  'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1000);});' +
+  '}).catch(function(){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。画像の送信でつまずきました。もう一度お試しください。");});}' +
   'goEl.addEventListener("click",go);' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
@@ -3130,10 +3156,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
     'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
-    'var polls=0;function poll(id){polls++;if(polls>40){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
-    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+    'var polls=0;function poll(id){polls++;if(polls>40){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
-    'if(r.status!=="done"){szOvHide_();goEl.disabled=false;alert(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
+    'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
     'goEl.disabled=false;txtEl.value="";szOvShow_(szDoneHtml_("予約を登録しました","予約入力に戻る"),"#16a34a");var _bb=document.getElementById("szDoneBack");if(_bb){_bb.addEventListener("click",function(){location.href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '";});}});}' +
     'var ppolls=0;function pollPrev(id){ppolls++;if(ppolls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);readEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
@@ -3164,7 +3190,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,' +
     'fields:JSON.stringify({text:text,memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw})},' +
-    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});}' +
+    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});}' +
     'goEl.addEventListener("click",go);' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
@@ -3372,7 +3398,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var box=document.getElementById("exdisp");' +   /* 白BOX＝貼り付けもでき、パッド入力も表示する */
     'box.addEventListener("input",function(){var m=(box.value||"").toUpperCase().replace(/\\s/g,"").match(/^([MF]?)([0-9]{0,4})/);if(!m){return;}digits=m[2];selSeg(m[1]==="M"?0:(m[1]==="F"?1:2));});' +
     'function drawCal(){var wd=["月","火","水","木","金","土","日"];document.getElementById("exct").textContent=calY+"年 "+(calM+1)+"月";var h="";for(var i=0;i<7;i++){h+="<div class=\\"exwd"+(i===5?" sat":i===6?" sun":"")+"\\">"+wd[i]+"</div>";}var first=new Date(calY,calM,1);var off=(first.getDay()+6)%7;var dim=new Date(calY,calM+1,0).getDate();for(var b=0;b<off;b++){h+="<div class=\\"exday blank\\"></div>";}var t0=new Date(today.getFullYear(),today.getMonth(),today.getDate());for(var d=1;d<=dim;d++){var dow=(off+d-1)%7;var cls="exday";if(dow===5){cls+=" sat";}if(dow===6){cls+=" sun";}var cur=new Date(calY,calM,d);if(calY===today.getFullYear()&&calM===today.getMonth()&&d===today.getDate()){cls+=" today";}if(cur<t0){cls+=" past";}if(picked&&picked.getFullYear()===calY&&picked.getMonth()===calM&&picked.getDate()===d){cls+=" picked";}h+="<button class=\\""+cls+"\\" data-d=\\""+d+"\\">"+d+"</button>";}document.getElementById("exgrid").innerHTML=h;}' +
-    'document.getElementById("exToDate").addEventListener("click",function(){if(!digits){alert("お客様番号を入れてください");return;}if(ISCHANGE){loadPicks();}else{goDate();}});' +
+    'document.getElementById("exToDate").addEventListener("click",function(){if(!digits){szPopup_("お客様番号を入れてください");return;}if(ISCHANGE){loadPicks();}else{goDate();}});' +
     'document.getElementById("exbackPick").addEventListener("click",function(){document.getElementById("exPick").style.display="none";document.getElementById("exNum").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exbackDate").addEventListener("click",function(){document.getElementById("exDate").style.display="none";document.getElementById(ISCHANGE?"exMenu":"exNum").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exprev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}drawCal();});' +
@@ -3383,10 +3409,10 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function tupd(){document.getElementById("extime").value=tdisp();}' +
     'document.getElementById("extpad").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");if(k==="clr"){tdig="";}else if(k==="del"){tdig=tdig.slice(0,-1);}else if(/^[0-9]$/.test(b.textContent)&&tdig.length<4){tdig+=b.textContent;}tupd();});' +
     'document.getElementById("exbackTime").addEventListener("click",function(){document.getElementById("exTime").style.display="none";document.getElementById(chgtype==="t"?"exMenu":"exDate").style.display="";window.scrollTo(0,0);});' +
-    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){alert("時刻を4ケタで入れてください（例 1230）");return;}avGuardChange();window.scrollTo(0,document.body.scrollHeight);});' +
+    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){szPopup_("時刻を4ケタで入れてください（例 1230）");return;}avGuardChange();window.scrollTo(0,document.body.scrollHeight);});' +
     // 日付・時刻を移す前に、移し先でこの予約の担当・部屋が別の予約と重ならないか確認する（自分自身は番号で除く）。
-    'function avGuardChange(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;var ymd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var sm=hh*60+mm;var dur=(chosen.dur_min||30);var sNum=staffNum(chosen.staff_emoji||"");var rVal=roomVal(chosen.room||"");exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">空きを確認しています</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">その時間に担当・部屋が空いているか調べています。しばらくお待ちください。</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:ymd,start_min:sm,dur:dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}avGuardPoll(r.id,sNum,rVal);});}' +
-    'function avGuardPoll(id,sNum,rVal){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();alert("エラーが発生しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){avGuardPoll(id,sNum,rVal);},600);return;}if(r.status!=="done"){exOvHide_();alert("エラーが発生しました。もう一度お試しください。");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}var fs=(d.free_staff||[]).map(String),fr=(d.free_rooms||[]).map(String);var sn={"1":"トマト","2":"みかん","3":"オリーブ","4":"マンゴー"};if(sNum&&fs.indexOf(sNum)<0){exOvHide_();alert("その時間、担当「"+(sn[sNum]||"")+"」は別の予約に入っています。\\n担当を変えるか、別の時間にしてください。");return;}if(rVal&&fr.indexOf(rVal)<0){exOvHide_();alert("その時間、部屋「"+rVal+"」は別の予約に入っています。\\n部屋を変えるか、別の時間にしてください。");return;}realChange(document.getElementById("exdone2"));});}' +
+    'function avGuardChange(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;var ymd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var sm=hh*60+mm;var dur=(chosen.dur_min||30);var sNum=staffNum(chosen.staff_emoji||"");var rVal=roomVal(chosen.room||"");exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">空きを確認しています</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">その時間に担当・部屋が空いているか調べています。しばらくお待ちください。</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:ymd,start_min:sm,dur:dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}avGuardPoll(r.id,sNum,rVal);});}' +
+    'function avGuardPoll(id,sNum,rVal){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){avGuardPoll(id,sNum,rVal);},600);return;}if(r.status!=="done"){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}var fs=(d.free_staff||[]).map(String),fr=(d.free_rooms||[]).map(String);var sn={"1":"トマト","2":"みかん","3":"オリーブ","4":"マンゴー"};if(sNum&&fs.indexOf(sNum)<0){exOvHide_();szPopup_("その時間、担当「"+(sn[sNum]||"")+"」は別の予約に入っています。\\n担当を変えるか、別の時間にしてください。");return;}if(rVal&&fr.indexOf(rVal)<0){exOvHide_();szPopup_("その時間、部屋「"+rVal+"」は別の予約に入っています。\\n部屋を変えるか、別の時間にしてください。");return;}realChange(document.getElementById("exdone2"));});}' +
     'var esel={dur:"",staff:"",room:""};' +
     'function selE(g,v){esel[g]=String(v);var pl=document.querySelectorAll(".exp[data-eg=\\""+g+"\\"]");for(var i=0;i<pl.length;i++){pl[i].classList.toggle("sel",pl[i].getAttribute("data-ev")===String(v));}}' +
     'function nearDur(v){v=parseInt(v,10)||30;var arr=[15,20,30,40,45,50,60,70,80,90,120,150],best=arr[0];for(var i=0;i<arr.length;i++){if(Math.abs(arr[i]-v)<Math.abs(best-v)){best=arr[i];}}return best;}' +
@@ -3410,9 +3436,9 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var TOPHREF="' + topHref + '";' +
     'function exOvShow_(html,bg){var ov=document.getElementById("exOverlay");if(!ov){ov=document.createElement("div");ov.id="exOverlay";document.body.appendChild(ov);}ov.style.cssText="position:fixed;inset:0;z-index:9999;background:"+bg+";display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";ov.innerHTML=html;return ov;}' +
     'function exOvHide_(){var ov=document.getElementById("exOverlay");if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);}' +
-    'function realChange(doneEl){var fields={cal:chosen.calendar_id,event:chosen.event_id};if(chgtype==="dt"||chgtype==="t"){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var sd=new Date(picked.getFullYear(),picked.getMonth(),picked.getDate(),hh,mm,0,0);var ed=new Date(sd.getTime()+((chosen.dur_min||30)*60000));fields.start=_iso(sd);fields.end=_iso(ed);}else if(chgtype==="dur"){var hm=(chosen.start_hm||"13:00").split(":");var sd=new Date(chosen.date+"T00:00:00");sd.setHours(parseInt(hm[0],10),parseInt(hm[1],10),0,0);var ed=new Date(sd.getTime()+(parseInt(esel.dur,10)*60000));fields.start=_iso(sd);fields.end=_iso(ed);}else if(chgtype==="memo"){fields.note=document.getElementById("exmemobox").value;}else{alert("この項目はまだ準備中です。");return;}exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">予約を変更中です</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"change_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollChange(r.id);});}' +
+    'function realChange(doneEl){var fields={cal:chosen.calendar_id,event:chosen.event_id};if(chgtype==="dt"||chgtype==="t"){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var sd=new Date(picked.getFullYear(),picked.getMonth(),picked.getDate(),hh,mm,0,0);var ed=new Date(sd.getTime()+((chosen.dur_min||30)*60000));fields.start=_iso(sd);fields.end=_iso(ed);}else if(chgtype==="dur"){var hm=(chosen.start_hm||"13:00").split(":");var sd=new Date(chosen.date+"T00:00:00");sd.setHours(parseInt(hm[0],10),parseInt(hm[1],10),0,0);var ed=new Date(sd.getTime()+(parseInt(esel.dur,10)*60000));fields.start=_iso(sd);fields.end=_iso(ed);}else if(chgtype==="memo"){fields.note=document.getElementById("exmemobox").value;}else{szPopup_("この項目はまだ準備中です。");return;}exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">予約を変更中です</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"change_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollChange(r.id);});}' +
     'function ttAlias_(room){var r=(""+room).toLowerCase();if(r.indexOf("freedom")>=0)return"2AfH2fMvqXEH";if(r.indexOf("happy")>=0)return"eavbC5WSuUs6";if(r.indexOf("lucky")>=0)return"GPapusGepg5P";if(r.indexOf("cosmos")>=0)return"ojzXKACEbghC";if(r.indexOf("スター")>=0||r.indexOf("star")>=0||r.indexOf("福")>=0)return"KMkTNuLk3Qif";return"";}' +
-    'function pollChange(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();alert("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollChange(id);},400);return;}if(r.status!=="done"){exOvHide_();alert(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}var _al=ttAlias_(chosen.room),_tt=_al?("https://timetreeapp.com/calendars/"+_al+"/events/"+chosen.event_id):"";exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">"+doneMsg()+"<br>変更が完了しました</div><button type=\\"button\\" id=\\"exBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>"+(_tt?"<button type=\\"button\\" id=\\"exTtBtn\\" style=\\"display:block;margin:14px auto 0;font:inherit;font-size:1.15rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer;\\">タイムツリーを開く</button>":""),"#16a34a");var bb=document.getElementById("exBackBtn");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}var tb=document.getElementById("exTtBtn");if(tb){tb.addEventListener("click",function(){window.open(_tt,"_blank");});}});}' +
+    'function pollChange(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollChange(id);},400);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}var _al=ttAlias_(chosen.room),_tt=_al?("https://timetreeapp.com/calendars/"+_al+"/events/"+chosen.event_id):"";exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">"+doneMsg()+"<br>変更が完了しました</div><button type=\\"button\\" id=\\"exBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>"+(_tt?"<button type=\\"button\\" id=\\"exTtBtn\\" style=\\"display:block;margin:14px auto 0;font:inherit;font-size:1.15rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer;\\">タイムツリーを開く</button>":""),"#16a34a");var bb=document.getElementById("exBackBtn");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}var tb=document.getElementById("exTtBtn");if(tb){tb.addEventListener("click",function(){window.open(_tt,"_blank");});}});}' +
     'var mbtns=document.querySelectorAll(".exmbtn");for(var _mb=0;_mb<mbtns.length;_mb++){mbtns[_mb].addEventListener("click",function(){chgtype=this.getAttribute("data-chg");if(chgtype==="dt"){picked=null;goDate();}else if(chgtype==="t"){picked=new Date(chosen.date+"T00:00:00");goTime();}else if(chgtype==="memo"){enterMemo();}else{enterEdit();}});}' +
     'document.getElementById("exbackMenu").addEventListener("click",function(){hideSteps();document.getElementById("exPick").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exbackMemo").addEventListener("click",function(){showMenu();});' +
