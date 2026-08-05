@@ -3276,9 +3276,15 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exp.plain{background:#475569;}' +
     '.exp.sel{opacity:1;outline:3px solid #fff;outline-offset:-3px;}' +
     '.exdur .exp{flex:0 0 calc((100% - 40px)/6);padding:12px 2px;text-align:center;box-sizing:border-box;}' +
-    '.exmlist{display:flex;flex-direction:column;gap:12px;margin-top:10px;}' +
-    '.exmbtn{display:block;width:100%;text-align:left;background:#fff;color:#0f172a;border:0;border-radius:16px;padding:20px 22px;font-size:24px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
+    '.exmlist{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}' +
+    '.exmbtn{display:block;width:100%;text-align:center;background:#fff;color:#0f172a;border:0;border-radius:14px;padding:16px 8px;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
     '.exmbtn:active{transform:translateY(1px);}' +
+    '.exsum{background:rgba(255,255,255,.14);border-radius:12px;padding:12px 14px;margin:2px 0 12px;}' +
+    '.exsumrow{color:#fff;font-size:16px;font-weight:800;line-height:1.6;margin:3px 0;}' +
+    '.exsumrow b{display:inline-block;min-width:3.4em;color:#cfe6f0;font-weight:900;margin-right:6px;}' +
+    '.exsumroom{display:inline-block;color:#fff;font-weight:900;font-size:15px;padding:2px 14px;border-radius:999px;vertical-align:middle;}' +
+    '.exsummemo{color:#fff;font-size:14px;line-height:1.5;white-space:pre-wrap;background:rgba(0,0,0,.20);border-radius:8px;padding:8px 10px;margin-top:4px;max-height:110px;overflow:auto;}' +
+    '.exmh{color:#fff;font-weight:900;font-size:19px;margin:6px 4px 8px;}' +
     '#exmemobox{text-align:left;font-size:20px;line-height:1.6;min-height:180px;}' +
     '.exch{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 16px;}' +
     '.exnav{width:48px;height:48px;border-radius:12px;border:0;background:#fff;color:#0f172a;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
@@ -3370,8 +3376,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     '<div id="exMenu" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackMenu" href="javascript:void(0)">← 前に戻る</a></div>' +
       '<div class="extop"></div>' +
-      '<div class="hhead"><span class="bmark">✏️</span><span class="bname">変更する内容を選択</span></div>' +
-      '<div class="exwho1" id="exmenuwho"></div>' +
+      '<div class="exsum" id="exmsum"></div>' +
+      '<div class="exmh">変更する内容を選択</div>' +
       '<div class="exmlist">' +
         '<button class="exmbtn" data-chg="dt">日付＆時間</button>' +
         '<button class="exmbtn" data-chg="t">時間（同日内）</button>' +
@@ -3470,7 +3476,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function hideSteps(){var ids=["exNum","exPick","exMenu","exDate","exTime","exEdit","exMemo","exStaffPick","exRoomPick"];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.style.display="none";}setExTop();}' +
     // タイトル（時刻入力など）の上に「番号＋お名前様 の予約変更」を毎画面出す。
     'function setExTop(){var nm=(chosen&&chosen.name)?chosen.name+"様":"";var t=disp()?("「"+disp()+"」"+nm+" の"+TITLE):"";var els=document.querySelectorAll(".extop");for(var i=0;i<els.length;i++){els[i].textContent=t;els[i].style.display=t?"":"none";}}' +
-    'function showMenu(){hideSteps();document.getElementById("exMenu").style.display="";document.getElementById("exmenuwho").innerHTML="元："+chosen.date+" "+chosen.start_hm;loadAvail();window.scrollTo(0,0);}' +
+    'function exSumHtml(){var wd=["日","月","火","水","木","金","土"][new Date(chosen.date+"T00:00:00").getDay()];var cn=staffNum(chosen.staff_emoji||"");var rk=roomVal(chosen.room||"");var rc=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var parts=(chosen.parts||[]).join("・")||"—";var note=esc(chosen.note||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");var h="<div class=\\"exsumrow\\"><b>日時</b>"+chosen.date+"（"+wd+"） "+chosen.start_hm+"　"+(chosen.dur_min||"?")+"分</div>";h+="<div class=\\"exsumrow\\"><b>担当</b>"+(SEMO_[cn]||chosen.staff_emoji||"")+" "+(SNM_[cn]||"")+"</div>";h+="<div class=\\"exsumrow\\"><b>部屋</b><span class=\\"exsumroom\\" style=\\"background:"+rc+"\\">"+rn+"</span></div>";h+="<div class=\\"exsumrow\\"><b>部位</b>"+esc(parts)+"</div>";h+="<div class=\\"exsumrow\\"><b>メモ</b></div><div class=\\"exsummemo\\">"+(note||"（メモなし）")+"</div>";return h;}' +
+    'function showMenu(){hideSteps();document.getElementById("exMenu").style.display="";document.getElementById("exmsum").innerHTML=exSumHtml();loadAvail();window.scrollTo(0,0);}' +
     'function goTime(){hideSteps();document.getElementById("exTime").style.display="";var wd=["日","月","火","水","木","金","土"][picked.getDay()];document.getElementById("exwhen").innerHTML="<div class=\\"exwd2\\">"+(picked.getMonth()+1)+"月"+picked.getDate()+"日（"+wd+"）</div>";tdig="";tupd();window.scrollTo(0,0);}' +
     'function enterEdit(){hideSteps();document.getElementById("exEdit").style.display="";document.getElementById("secDur").style.display=(chgtype==="dur")?"":"none";document.getElementById("secStaff").style.display=(chgtype==="staff")?"":"none";document.getElementById("secRoom").style.display=(chgtype==="room")?"":"none";var lbl={dur:"施術時間",staff:"担当",room:"部屋"}[chgtype]||"";document.getElementById("exeditwho").innerHTML=lbl+"を変更";selE("dur",nearDur(chosen?chosen.dur_min:30));selE("staff",staffNum(chosen?chosen.staff_emoji:""));selE("room",roomVal(chosen?chosen.room:""));if(chgtype==="staff"||chgtype==="room"){filterAvail();}window.scrollTo(0,0);}' +
     'function enterMemo(){hideSteps();document.getElementById("exMemo").style.display="";document.getElementById("exmemowho").innerHTML="予約メモを変更";document.getElementById("exmemobox").value=(chosen&&chosen.note)||"";window.scrollTo(0,0);}' +
