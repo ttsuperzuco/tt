@@ -5067,14 +5067,50 @@ function renderLinksPage_(d, base, staff, dev) {
   // ★開発者(?dev=1)だけに「リンクを編集」ボタンを出す（2026-08-06まるちゃん要望）。押すと元データの
   //   Googleシート「ズコLINK」タブが新しいタブで開く＝行を足せば追加・行を消せば削除。アプリからシートへ
   //   書き込む配管は作らず、今まで通りシートを直接編集する入口をボタン1つにしただけ（共通ルール16＝
-  //   新ボタンは既定で開発者だけ表示）。
-  (dev ? '<a class="lkedit" href="' + LK_SHEET_URL_ + '" target="_blank" rel="noopener">' +
-    '🔧 リンクを編集（追加・削除）</a>' : '') +
+  //   新ボタンは既定で開発者だけ表示）。「今すぐ反映」＝表を直したあとすぐアプリに出す（事務所PCが読み直す）。
+  (dev ? '<div class="lkdevbar">' +
+    '<a class="lkedit" href="' + LK_SHEET_URL_ + '" target="_blank" rel="noopener">🔧 リンクを編集（追加・削除）</a>' +
+    '<button type="button" class="lkrefresh" id="lkRefreshBtn">🔄 今すぐ反映</button>' +
+  '</div>' : '') +
   '<div id="lklist">' +
     list +
   '</div>' +
 '</div>' +
-LKSCRIPT_;
+LKSCRIPT_ +
+(dev ? lkDevScript_() : '');
+}
+
+// ★開発者だけの「今すぐ反映」ボタンの中身（2026-08-06）。押すと事務所PCへ命令(op=links_refresh)を送り、
+//   Googleシートを読み直して各種LINKを最新にする。処理中・成功・失敗の見せ方は他の書き込みボタンと同じ
+//   共通の全画面表示(szOvShow_/szBusyHtml_/szDoneHtml_)・小窓(szPopup_)にそろえる（共通ルール）。
+function lkDevScript_() {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  var KEY = 'kx7Q2p9mVt4Zr8';
+  return '<script>(function(){' +
+    'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
+    'var DEV="";try{DEV=localStorage.getItem("sz_device")||"";}catch(e){}' +
+    'function jsonp(params,onR){var cb="__lk"+Date.now()+Math.floor(Math.random()*1000);' +
+      'window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
+      'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
+      'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();' +
+      'sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
+    'function poll(id,n){n=n||0;if(n>40){szOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+      'jsonp({action:"status",key:KEY,id:id},function(r){' +
+        'if(!r||!r.ok){szOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}' +
+        'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id,n+1);},700);return;}' +
+        'if(r.status!=="done"){szOvHide_();szPopup_((r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
+        'szOvShow_(szDoneHtml_("最新のリンクに反映しました","更新する"),"#16a34a");' +
+        'var b=document.getElementById("szDoneBack");if(b){b.addEventListener("click",function(){location.reload();});}' +
+      '});}' +
+    'var btn=document.getElementById("lkRefreshBtn");' +
+    'if(btn){btn.addEventListener("click",function(){' +
+      'szOvShow_(szBusyHtml_("最新のリンクを反映しています"),"#2C7A99");' +
+      'jsonp({action:"submit",key:KEY,op:"links_refresh",who:"",role:"",device:DEV,fields:JSON.stringify({})},function(r){' +
+        'if(!r||!r.ok||!r.id){szOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+        'poll(r.id,0);' +
+      '});' +
+    '});}' +
+  '})();</scr' + 'ipt>';
 }
 
 // 案内1件＝白い見出し（案内名）＋その下に言語ボタンを横並び（押すとURLをコピー）。
@@ -5147,11 +5183,14 @@ var LKCSS_ =
 '  .lkhead{ display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; margin-bottom:14px; }' +
 '  .lkwrap h1{ font-size:24px; margin:2px 0; font-weight:800; }' +
 '  .lkhint{ color:#ffb3d9; font-size:16px; font-weight:800; }' +
-// ★開発者だけに出る「リンクを編集」ボタン（緑＝押すと元の表が開く）。目立つ固定色（テーマ変数に頼らない）。
-'  .lkedit{ display:block; text-align:center; font-size:18px; font-weight:800; color:#fff;' +
-'    text-decoration:none; background:#16a34a; border:1px solid #15803d; border-radius:14px;' +
-'    padding:12px 14px; margin:0 0 20px; box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
-'  .lkedit:active{ transform:translateY(2px); }' +
+// ★開発者だけに出る操作ボタン（編集＝緑・今すぐ反映＝青緑）。目立つ固定色（テーマ変数に頼らない）。
+'  .lkdevbar{ display:flex; flex-wrap:wrap; gap:10px; margin:0 0 20px; }' +
+'  .lkedit,.lkrefresh{ flex:1 1 160px; text-align:center; font-size:18px; font-weight:800; color:#fff;' +
+'    text-decoration:none; border-radius:14px; padding:12px 14px; box-shadow:0 4px 14px rgba(0,0,0,.18);' +
+'    font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none; }' +
+'  .lkedit{ background:#16a34a; border:1px solid #15803d; }' +
+'  .lkrefresh{ background:#2C7A99; border:1px solid #256781; }' +
+'  .lkedit:active,.lkrefresh:active{ transform:translateY(2px); }' +
 // 案内1件のまとまり＝白い見出し＋言語ボタン（1画面に並ぶので間隔をあけて区切る）。
 '  .lktopic{ margin-bottom:28px; }' +
 '  .lkcell{ display:flex; flex-direction:column; gap:8px; flex:1 1 140px; min-width:140px; }' +
