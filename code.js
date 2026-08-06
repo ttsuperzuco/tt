@@ -3173,8 +3173,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(d.gender){selVal("gender",d.gender);if(sg)sg.style.display="none";}else if(sg)sg.style.display="";' +  // 読めたら性別欄は隠す
     'if(d.tw){selVal("tw",d.tw);if(stw)stw.style.display="none";}else if(stw)stw.style.display="";' +          // 読めたら国籍欄は隠す
     'var scn=document.getElementById("secCounsel");if(scn)scn.style.display=d.datsumo?"":"none";' +            // カウンセリング担当は脱毛のときだけ
+    'var cw=document.getElementById("cosmosWarn");if(cw)cw.style.display=d.cosmos_busy?"":"none";' +           // カウンセリング部屋(コスモス)がその時間ふさがっていたら警告
     'var hideBusy=function(g,list){list=(list||[]).map(String);var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),selH=false,first=null;for(var i=0;i<pl.length;i++){var busy=list.indexOf(pl[i].getAttribute("data-val"))>=0;pl[i].style.display=busy?"none":"";if(!busy&&!first){first=pl[i];}if(busy&&pl[i].classList.contains("sel")){selH=true;}}if(selH&&first){sel[g]=first.getAttribute("data-val");for(var j=0;j<pl.length;j++){pl[j].classList.toggle("sel",pl[j]===first);}}};' +
-    'hideBusy("room",d.occ_rooms);hideBusy("staff",d.busy_staff);' +   // 空いていない部屋・施術担当は消す
+    'hideBusy("room",d.occ_rooms);hideBusy("staff",d.busy_staff);hideBusy("counsel",d.busy_counsel_staff);' +   // 空いていない部屋・施術担当・カウンセリング担当は消す（施術は開始=カウンセリング30分後で判定）
 
 
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
@@ -3209,6 +3210,7 @@ function renderNewReservationPage_(base, staff, dev) {
       '<div id="nrrest" style="display:none">' +
         '<div class="nrsec">② 所要時間（分）</div><div class="nrpills nrdur">' + durPills + '</div>' +
         '<div id="secCounsel" style="display:none"><div class="nrsec">③ カウンセリング担当</div><div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
+        '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px">⚠ カウンセリングの部屋（コスモス）が、この時間ふさがっています。時間や予約を確認してください。</div>' +
         '<div class="nrsec">④ 施術担当</div><div class="nrpills">' + staffPills('staff', '2') + '</div>' +
         '<div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div>' +
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
