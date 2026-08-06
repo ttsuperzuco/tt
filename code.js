@@ -5104,7 +5104,9 @@ function lkDevScript_() {
       '});}' +
     'var btn=document.getElementById("lkRefreshBtn");' +
     'if(btn){btn.addEventListener("click",function(){' +
-      'szOvShow_(szBusyHtml_("最新のリンクを反映しています"),"#2C7A99");' +
+      'szOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>' +
+        '<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">最新のリンクを反映しています</div>' +
+        '<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">お店の一覧表を読み直しています。少しお待ちください。</div>","#2C7A99");' +
       'jsonp({action:"submit",key:KEY,op:"links_refresh",who:"",role:"",device:DEV,fields:JSON.stringify({})},function(r){' +
         'if(!r||!r.ok||!r.id){szOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
         'poll(r.id,0);' +
