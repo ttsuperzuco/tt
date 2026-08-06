@@ -4990,11 +4990,14 @@ function renderLinksError_(err, base, staff, dev) {
  *  そのまま別のチャットに貼れば、説明なしでその作業ができる。開発URL(?dev=1)専用・管理者用グループ。
  *  ★合言葉を増やす時は下の KOTOBA 配列に1行足すだけ（t=合言葉／d=何ができるか）。 */
 function renderClaudeToolsPage_(base, staff, dev) {
+  // t=画面に出す名前／d=説明／c=コピーする合言葉（省略時は t をコピー）。
   var KOTOBA = [
     { t: 'インスタを操作したい',
       d: 'インスタのDM返信・投稿・ストーリーズ・投稿のアーカイブなどを操作（3アカウント／ログイン使い回し）' },
     { t: '画像のURLをつくりたい',
-      d: '画像（料金表・お支払い方法など）を、お客様がそのまま開ける短いリンク（x.gd/〇〇）に変える' }
+      d: '画像（料金表・お支払い方法など）を、お客様がそのまま開ける短いリンク（x.gd/〇〇）に変える' },
+    { t: '家計簿操作ツール', c: '家計簿',
+      d: '「家計簿」と貼るだけで、話した日々の出費を家計簿に記入。例：「きのう うーばー 206」→ 昨日のUberEats 206元を記入（一人の食事＝ノーマル／それ以外は確認、クレカ払いはカードにも反映）' }
   ];
   var CSS =
     '  .ubar { display:flex; align-items:center; gap:12px; margin:0 0 4px; }' +
@@ -5016,10 +5019,11 @@ function renderClaudeToolsPage_(base, staff, dev) {
   var cards = '';
   for (var i = 0; i < KOTOBA.length; i++) {
     var k = KOTOBA[i];
-    cards += '<div class="cttcard" onclick="cttCopy(this)" data-t="' + esc_(k.t) + '">' +
+    var copyText = k.c || k.t;   // コピーする合言葉（無ければ表示名をそのまま）
+    cards += '<div class="cttcard" onclick="cttCopy(this)" data-t="' + esc_(copyText) + '">' +
       '<div class="cttt">' + esc_(k.t) + '</div>' +
       '<div class="cttd">' + esc_(k.d) + '</div>' +
-      '<div class="cttrow"><button type="button" class="cttcopy" onclick="event.stopPropagation();cttCopy(this)" data-t="' + esc_(k.t) + '">📋 コピー</button>' +
+      '<div class="cttrow"><button type="button" class="cttcopy" onclick="event.stopPropagation();cttCopy(this)" data-t="' + esc_(copyText) + '">📋 コピー</button>' +
       '<span class="cttok"></span></div>' +
     '</div>';
   }
