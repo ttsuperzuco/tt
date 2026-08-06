@@ -5046,6 +5046,9 @@ function renderClaudeToolsPage_(base, staff, dev) {
  *  export_links_super.py。GASは計算しない＝描くだけ）。
  *  ★2026-07-21：画面を1枚にした。以前は「案内名を押す→言語を選ぶ」の2段階だったが、案内名の
  *  すぐ下に言語ボタンを並べて、1画面で押せば即コピーできるようにした（ユーザー指示）。 */
+// ★元データのGoogleシート「ズコLINK」タブ（オーナーが直接編集する表）。開発者ボタンの飛び先。
+var LK_SHEET_URL_ = 'https://docs.google.com/spreadsheets/d/16ta_ciEX_uPUxfy7eXq5aqrlKQyTmskB57pGxXyiXNY/edit?gid=2000945592';
+
 function renderLinksPage_(d, base, staff, dev) {
   var topics = (d && d.topics) || [];
   var list = topics.length
@@ -5061,6 +5064,12 @@ function renderLinksPage_(d, base, staff, dev) {
   '</div>' +
   '<div class="lkhead"><h1>🔗 各種LINK</h1>' +
     '<span class="lkhint">言語を選ぶとURLがコピーされます</span></div>' +
+  // ★開発者(?dev=1)だけに「リンクを編集」ボタンを出す（2026-08-06まるちゃん要望）。押すと元データの
+  //   Googleシート「ズコLINK」タブが新しいタブで開く＝行を足せば追加・行を消せば削除。アプリからシートへ
+  //   書き込む配管は作らず、今まで通りシートを直接編集する入口をボタン1つにしただけ（共通ルール16＝
+  //   新ボタンは既定で開発者だけ表示）。
+  (dev ? '<a class="lkedit" href="' + LK_SHEET_URL_ + '" target="_blank" rel="noopener">' +
+    '🔧 リンクを編集（追加・削除）</a>' : '') +
   '<div id="lklist">' +
     list +
   '</div>' +
@@ -5138,6 +5147,11 @@ var LKCSS_ =
 '  .lkhead{ display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; margin-bottom:14px; }' +
 '  .lkwrap h1{ font-size:24px; margin:2px 0; font-weight:800; }' +
 '  .lkhint{ color:#ffb3d9; font-size:16px; font-weight:800; }' +
+// ★開発者だけに出る「リンクを編集」ボタン（緑＝押すと元の表が開く）。目立つ固定色（テーマ変数に頼らない）。
+'  .lkedit{ display:block; text-align:center; font-size:18px; font-weight:800; color:#fff;' +
+'    text-decoration:none; background:#16a34a; border:1px solid #15803d; border-radius:14px;' +
+'    padding:12px 14px; margin:0 0 20px; box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
+'  .lkedit:active{ transform:translateY(2px); }' +
 // 案内1件のまとまり＝白い見出し＋言語ボタン（1画面に並ぶので間隔をあけて区切る）。
 '  .lktopic{ margin-bottom:28px; }' +
 '  .lkcell{ display:flex; flex-direction:column; gap:8px; flex:1 1 140px; min-width:140px; }' +
