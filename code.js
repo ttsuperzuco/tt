@@ -3168,7 +3168,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
     'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);' +
-    'var _mm=d.memo||"",_hasPro=(/procell/i.test(_mm)||/プロセル/.test(_mm)),_hasF=/顔プロセル/.test(_mm),_hasS=/頭皮プロセル/.test(_mm);var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display=(_hasPro&&!_hasF&&!_hasS)?"":"none";' +
+    'var _mm=d.memo||"",_hasPro=(/procell/i.test(_mm)||/プロセル/.test(_mm)),_hasF=/顔プロセル/.test(_mm),_hasS=/頭皮プロセル/.test(_mm);var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display=(_hasPro&&!_hasF&&!_hasS)?"":"none";window.__procellWord=d.procell_face_word||"トライアル";var _pp=document.querySelector(\'[data-procell="顔プロセルPro"]\');if(_pp)_pp.textContent="顔プロセルPro "+window.__procellWord;var _pm=document.querySelector(\'[data-procell="顔プロセルMD"]\');if(_pm)_pm.textContent="顔プロセルMD "+window.__procellWord;' +
     'var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +          // ②所要以降を読み取り後に出す
     'var sg=document.getElementById("secGender"),stw=document.getElementById("secTw");' +
     'if(d.gender){selVal("gender",d.gender);if(sg)sg.style.display="none";}else if(sg)sg.style.display="";' +  // 読めたら性別欄は隠す
@@ -3183,7 +3183,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
     'status("",false);});}' +                                                          // 読み取り後の一言は出さない
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
-    'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var nm=this.getAttribute("data-procell");prevEl.value=prevEl.value.replace(/(?:顔|頭皮)?プロセル|procell/gi,nm);prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";});}' +
+    'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var nm=this.getAttribute("data-procell");if(nm==="顔プロセルPro"||nm==="顔プロセルMD"){nm=nm+" "+(window.__procellWord||"トライアル");}prevEl.value=prevEl.value.replace(/(?:顔|頭皮)?プロセル|procell/gi,nm);prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
     'readEl.disabled=true;status("変換中です。しばらくお待ちください。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
