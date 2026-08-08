@@ -3151,7 +3151,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'function esc(s){return (s==null?"":String(s));}' +
     'function selVal(g,v){if(!v)return;sel[g]=String(v);var sib=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.toggle("sel",sib[j].getAttribute("data-val")===String(v));}' +
     'var pills=document.querySelectorAll(".nrpill");' +
-    'for(var i=0;i<pills.length;i++){pills[i].addEventListener("click",function(){var g=this.getAttribute("data-grp"),v=this.getAttribute("data-val");sel[g]=v;' +
+    'for(var i=0;i<pills.length;i++){pills[i].addEventListener("click",function(){var g=this.getAttribute("data-grp"),v=this.getAttribute("data-val");if(!g)return;sel[g]=v;' +
     'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");this.classList.add("sel");});}' +
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
@@ -3168,6 +3168,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
     'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);' +
+    'var _mm=d.memo||"",_hasPro=(/procell/i.test(_mm)||/プロセル/.test(_mm)),_hasF=/顔プロセル/.test(_mm),_hasS=/頭皮プロセル/.test(_mm);var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display=(_hasPro&&!_hasF&&!_hasS)?"":"none";' +
     'var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +          // ②所要以降を読み取り後に出す
     'var sg=document.getElementById("secGender"),stw=document.getElementById("secTw");' +
     'if(d.gender){selVal("gender",d.gender);if(sg)sg.style.display="none";}else if(sg)sg.style.display="";' +  // 読めたら性別欄は隠す
@@ -3182,6 +3183,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
     'status("",false);});}' +                                                          // 読み取り後の一言は出さない
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
+    'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var nm=this.getAttribute("data-procell");prevEl.value=prevEl.value.replace(/(?:顔|頭皮)?プロセル|procell/gi,nm);prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
     'readEl.disabled=true;status("変換中です。しばらくお待ちください。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
@@ -3206,6 +3208,13 @@ function renderNewReservationPage_(base, staff, dev) {
       '<div id="nrprevwrap" style="display:none">' +
         '<div class="nrsec">予約メモ形式に変換されました（白い枠内で自由に文字を編集できます）</div>' +
         '<textarea id="nrprev"></textarea>' +
+        '<div id="nrProcellAsk" style="display:none">' +
+          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは 顔 ですか？ 頭皮 ですか？　下から選んでください。</div>' +
+          '<div class="nrpills">' +
+            '<button type="button" class="nrpill" data-procell="顔プロセル" style="background:#2563eb">顔プロセル</button>' +
+            '<button type="button" class="nrpill" data-procell="頭皮プロセル" style="background:#7c3aed">頭皮プロセル</button>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
       '<div id="nrrest" style="display:none">' +
         '<div class="nrsec">② 所要時間（分）</div><div class="nrpills nrdur">' + durPills + '</div>' +
