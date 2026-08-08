@@ -3209,9 +3209,10 @@ function renderNewReservationPage_(base, staff, dev) {
         '<div class="nrsec">予約メモ形式に変換されました（白い枠内で自由に文字を編集できます）</div>' +
         '<textarea id="nrprev"></textarea>' +
         '<div id="nrProcellAsk" style="display:none">' +
-          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは 顔 ですか？ 頭皮 ですか？　下から選んでください。</div>' +
+          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選んでください。</div>' +
           '<div class="nrpills">' +
-            '<button type="button" class="nrpill" data-procell="顔プロセル" style="background:#2563eb">顔プロセル</button>' +
+            '<button type="button" class="nrpill" data-procell="顔プロセルPro" style="background:#2563eb">顔プロセルPro</button>' +
+            '<button type="button" class="nrpill" data-procell="顔プロセルMD" style="background:#0891b2">顔プロセルMD</button>' +
             '<button type="button" class="nrpill" data-procell="頭皮プロセル" style="background:#7c3aed">頭皮プロセル</button>' +
           '</div>' +
         '</div>' +
