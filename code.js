@@ -2890,10 +2890,9 @@ function renderKoukokuPage_(d, base, staff, dev) {
     'var LBL={},bs=seg.querySelectorAll("button"),i;' +
     'for(i=0;i<bs.length;i++){LBL[bs[i].getAttribute("data-p")]=bs[i].textContent;}' +
     'var period="1w";' +
-    'function nf(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;' +
-      'if(n>=10000){var t=Math.round(n/1000)/10;s=(t%1===0?t:t.toFixed(1))+"万";}' +
-      'else{s=""+n;var o="",c=0,j;for(j=s.length-1;j>=0;j--){o=s.charAt(j)+o;if(++c%3===0&&j>0)o=","+o;}s=o;}' +
-      'return (neg?"-":"")+s;}' +
+    'function nf(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s=""+n,o="",c=0,j;' +
+      'for(j=s.length-1;j>=0;j--){o=s.charAt(j)+o;if(++c%3===0&&j>0)o=","+o;}' +
+      'return (neg?"-":"")+o;}' +
     'function sg(n){n=Number(n)||0;if(period==="all")return nf(n);return (n<0?"":"+")+nf(n);}' +
     'function apply(){var cards=document.querySelectorAll(".kkpc"),arr=[],k;' +
       'for(k=0;k<cards.length;k++)arr.push(cards[k]);' +
