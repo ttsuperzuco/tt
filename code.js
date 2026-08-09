@@ -2795,17 +2795,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
     var img = a.image_data ? '<img class="kkpth" src="' + a.image_data + '" alt="">' : '<div class="kkpth ph">画像</div>';
     var perf = a.perf || {};
     var initFollows = (perf['1w'] && perf['1w'].follows) || (perf['all'] && perf['all'].follows) || 0;
-    var demo = a.demo || {};
-    function pctline(arr) { return (arr || []).map(function (x) { return esc_(x[0]) + ' ' + esc_(x[1]); }).join(' / '); }
-    var demoHtml = '';
-    var hasDemo = (demo.sex && demo.sex.length) || (demo.age && demo.age.length) || (demo.region && demo.region.length);
-    if (hasDemo) {
-      demoHtml = '<div class="kkpdemo">' +
-        (demo.sex && demo.sex.length ? '<div><span class="kkpdk">見た人の男女</span>' + esc_(demo.sex.map(function (x) { return x[0] + ' ' + x[1]; }).join('・')) + '</div>' : '') +
-        (demo.age && demo.age.length ? '<div><span class="kkpdk">年齢</span>' + pctline(demo.age) + '</div>' : '') +
-        (demo.region && demo.region.length ? '<div><span class="kkpdk">場所</span>' + pctline(demo.region) + '</div>' : '') +
-        '</div>';
-    }
+    var demoHtml = demoBlock(a);
     var acc = a._label ? '<div class="kkacclbl">' + esc_(a._label) + '</div>' : '';
     return '<div class="kkpc" data-follows="' + initFollows + '" data-sort="' + initFollows + '" data-perf="' + esc_(JSON.stringify(perf)) + '">' +
       img +
@@ -2824,8 +2814,59 @@ function renderKoukokuPage_(d, base, staff, dev) {
       '</div></div>';
   }
 
+  // 男女・年齢・場所の内訳ブロック（成績カードと通算カードで共用）。
+  function demoBlock(a) {
+    var demo = a.demo || {};
+    function pctline(arr) { return (arr || []).map(function (x) { return esc_(x[0]) + ' ' + esc_(x[1]); }).join(' / '); }
+    var hasDemo = (demo.sex && demo.sex.length) || (demo.age && demo.age.length) || (demo.region && demo.region.length);
+    if (!hasDemo) return '';
+    return '<div class="kkpdemo">' +
+      (demo.sex && demo.sex.length ? '<div><span class="kkpdk">見た人の男女</span>' + esc_(demo.sex.map(function (x) { return x[0] + ' ' + x[1]; }).join('・')) + '</div>' : '') +
+      (demo.age && demo.age.length ? '<div><span class="kkpdk">年齢</span>' + pctline(demo.age) + '</div>' : '') +
+      (demo.region && demo.region.length ? '<div><span class="kkpdk">場所</span>' + pctline(demo.region) + '</div>' : '') +
+      '</div>';
+  }
+
+  // 桁区切りのみ（万でまるめない）。
+  function numc(n) {
+    n = Number(n) || 0; var neg = n < 0; n = Math.abs(n);
+    var t = String(n), o = '', c = 0, i;
+    for (i = t.length - 1; i >= 0; i--) { o = t.charAt(i) + o; if (++c % 3 === 0 && i > 0) o = ',' + o; }
+    return (neg ? '-' : '') + o;
+  }
+
+  // 止めている広告用：全期間（通算）の成績カード（期間切替なし＝トータルだけ）。
+  function perfTotalCard(a, showAcc) {
+    var all = a.perf && a.perf.all;
+    if (!all) return adCard(a, showAcc);   // 成績が無ければ従来の簡易カード
+    var natJa = (a.nat === 'jp') ? '日本' : (a.nat === 'tw' ? '台湾' : '');
+    var sexJa = a.sex ? SEXLBL[a.sex] + '向け' : '';
+    var title = ((natJa ? natJa + ' ' : '') + sexJa) || '広告';
+    var img = a.image_data ? '<img class="kkpth" src="' + a.image_data + '" alt="">' : '<div class="kkpth ph">画像</div>';
+    var run = (a.run_days != null) ? '<span class="kkprun">走らせて ' + esc_(a.run_days) + '日</span>' : '';
+    var st = '<span class="kkst kkstop" style="margin-left:8px;">' + esc_(a.status || '') + '</span>';
+    function mi(label, v) {
+      var cost = (all.spend > 0 && v > 0) ? '(1つ ' + numc(Math.round(all.spend / v)) + ' 元)' : '';
+      return '<span class="kkpmi"><small>' + label + '</small><b>' + numc(v) + '</b><i class="kkpu">' + cost + '</i></span>';
+    }
+    var acc = (showAcc && a._label) ? '<div class="kkacclbl">' + esc_(a._label) + '</div>' : '';
+    return '<div class="kkpc">' + img +
+      '<div class="kkpbody">' + acc +
+        '<div class="kkptitle">' + esc_(title) + run + st + '</div>' +
+        '<div class="kkpgoal">目的：プロフィールを見てもらう</div>' +
+        '<div class="kkpmx">' +
+          mi('フォロワー', all.follows) + mi('保存', all.saves) + mi('外部リンク', all.external_taps) +
+          mi('いいね', all.likes) + mi('シェア', all.shares) +
+        '</div>' +
+        '<div class="kkpmoney">全期間でかけた金額 <b>' + numc(all.spend) + ' 元</b>' +
+          '　／　プロフィールを見てもらう1回あたり <b>' + (all.cpv != null ? esc_(all.cpv) + ' 元' : '—') + '</b>' +
+          '（訪問 ' + numc(all.profile_visits) + '回）</div>' +
+        demoBlock(a) +
+      '</div></div>';
+  }
+
   // 「配信中（今 動いている広告）」を3アカウントぶんまとめて上に（成績カード＝期間で切替）。
-  // 「停止中（今は止めている広告）」はその下に、アカウントごとにまとめる。
+  // 「停止中（今は止めている広告）」はその下に、アカウントごとにまとめる（全期間の通算成績で表示）。
   var totalAds = allads.length, list;
   if (allads.length) {
     var liveAds = allads.filter(function (a) { return a.status === '配信中'; });
@@ -2856,10 +2897,10 @@ function renderKoukokuPage_(d, base, staff, dev) {
           var s = (acc.ads || []).filter(function (a) { return a.status !== '配信中'; });
           if (!s.length) return '';
           return '<div class="kksub">' + esc_(acc.label || '') + '<small>@' + esc_(acc.handle || '') + '・' + s.length + '件</small></div>' +
-            s.map(function (a) { return adCard(a, false); }).join('');
+            s.map(function (a) { return perfTotalCard(a, false); }).join('');
         }).join('');
       } else {
-        groups = stopAds.map(function (a) { return adCard(a, true); }).join('');
+        groups = stopAds.map(function (a) { return perfTotalCard(a, true); }).join('');
       }
       stopBody = '<div class="kkacc" style="border-left-color:#94a3b8;">⏸ 今は止めている広告' +
         '<small>' + stopAds.length + '件</small></div>' + groups;
