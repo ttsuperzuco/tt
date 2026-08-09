@@ -2056,11 +2056,13 @@ var KOUKOKUCSS_ =
   '  .kkpth.ph { background:var(--line,#e2e8f0); display:flex; align-items:center; justify-content:center; color:var(--sub,#64748b); font-size:.7rem; }' +
   '  .kkpbody { flex:1; min-width:0; }' +
   '  .kkptitle { font-weight:800; font-size:1.05rem; }' +
+  '  .kkprun { display:inline-block; margin-left:8px; font-size:.72rem; font-weight:800; color:#0ea5e9; background:rgba(14,165,233,.14); padding:2px 9px; border-radius:999px; vertical-align:middle; }' +
   '  .kkpgoal { color:var(--sub,#64748b); font-size:.8rem; margin:1px 0 8px; }' +
   '  .kkpmx { display:flex; flex-wrap:wrap; gap:9px 16px; margin-bottom:9px; }' +
   '  .kkpmi { display:flex; flex-direction:column; }' +
   '  .kkpmi small { color:var(--sub,#64748b); font-size:.72rem; font-weight:700; }' +
   '  .kkpmi b { font-size:1.15rem; font-weight:900; color:#16a34a; }' +
+  '  .kkpmi .kkpu { font-style:normal; color:var(--sub,#64748b); font-size:.7rem; font-weight:700; margin-top:1px; min-height:.9em; }' +
   '  .kkpmoney { background:rgba(148,163,184,.12); border-radius:10px; padding:8px 10px; font-size:.86rem; line-height:1.55; }' +
   '  .kkpmoney b { color:var(--ink,#0f172a); font-weight:900; }' +
   '  .kkpsince { color:var(--sub,#64748b); font-size:.72rem; margin:5px 0 0; }' +
@@ -2783,7 +2785,8 @@ function renderKoukokuPage_(d, base, staff, dev) {
   // 配信中の広告1件の「成績カード」（期間で切り替え＝見本の形）。
   //   期間ごとの増えたぶんは data-perf に全期間ぶん入れておき、下のスクリプトで切り替える。
   function mxItem(label, key) {
-    return '<span class="kkpmi"><small>' + label + '</small><b class="kkp-' + key + '">-</b></span>';
+    return '<span class="kkpmi"><small>' + label + '</small><b class="kkp-' + key + '">-</b>' +
+      '<i class="kkpu kkpu-' + key + '"></i></span>';
   }
   function perfCard(a) {
     var natJa = (a.nat === 'jp') ? '日本' : (a.nat === 'tw' ? '台湾' : '');
@@ -2807,7 +2810,8 @@ function renderKoukokuPage_(d, base, staff, dev) {
     return '<div class="kkpc" data-follows="' + initFollows + '" data-sort="' + initFollows + '" data-perf="' + esc_(JSON.stringify(perf)) + '">' +
       img +
       '<div class="kkpbody">' + acc +
-        '<div class="kkptitle">' + esc_(title) + '</div>' +
+        '<div class="kkptitle">' + esc_(title) +
+          (a.run_days != null ? '<span class="kkprun">走らせて ' + esc_(a.run_days) + '日</span>' : '') + '</div>' +
         '<div class="kkpgoal">目的：プロフィールを見てもらう</div>' +
         '<div class="kkpmx">' +
           mxItem('フォロワー', 'follows') + mxItem('保存', 'saves') + mxItem('外部リンク', 'external_taps') +
@@ -2898,8 +2902,11 @@ function renderKoukokuPage_(d, base, staff, dev) {
       'for(k=0;k<cards.length;k++)arr.push(cards[k]);' +
       'for(k=0;k<arr.length;k++){(function(cc){var p={};try{p=JSON.parse(cc.getAttribute("data-perf")||"{}");}catch(e){}' +
         'var dd=p[period]||{};function set(cl,v){var el=cc.querySelector(".kkp-"+cl);if(el)el.innerHTML=v;}' +
+        'function pu(cl,cnt){var el=cc.querySelector(".kkpu-"+cl);if(!el)return;var sp=Number(dd.spend)||0,n=Number(cnt)||0;' +
+          'el.innerHTML=(sp>0&&n>0)?("(1つ "+nf(Math.round(sp/n))+" 元)"):"";}' +
         'set("follows",sg(dd.follows));set("saves",sg(dd.saves));set("external_taps",sg(dd.external_taps));' +
         'set("likes",sg(dd.likes));set("shares",sg(dd.shares));' +
+        'pu("follows",dd.follows);pu("saves",dd.saves);pu("external_taps",dd.external_taps);pu("likes",dd.likes);pu("shares",dd.shares);' +
         'set("spend",(dd.spend!=null?nf(dd.spend)+" 元":"—"));' +
         'set("cpv",(dd.cpv!=null?dd.cpv+" 元":"—"));' +
         'set("pv",(dd.profile_visits!=null?sg(dd.profile_visits)+"回":"—"));' +
