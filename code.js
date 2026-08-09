@@ -2047,6 +2047,25 @@ var KOUKOKUCSS_ =
   '  .kkacclbl { color:var(--sub,#64748b); font-size:.72rem; font-weight:800; margin-bottom:3px; }' +
   '  .kksub { color:#fff; opacity:.92; font-weight:800; font-size:.9rem; margin:14px 2px 8px; padding-left:10px; border-left:3px solid #94a3b8; }' +
   '  .kksub small { opacity:.8; font-weight:600; font-size:.72rem; margin-left:6px; }' +
+  '  .kkpseg { display:flex; flex-wrap:wrap; gap:6px; margin:8px 2px; }' +
+  '  .kkpseg button { border:0; background:var(--card,#fff); color:var(--sub,#64748b); font-size:.9rem; font-weight:800; padding:8px 14px; border-radius:999px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.12); }' +
+  '  .kkpseg button.on { background:#e0533d; color:#fff; }' +
+  '  .kkpnote { color:rgba(255,255,255,.82); font-size:.74rem; margin:0 2px 10px; }' +
+  '  .kkpc { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:14px; padding:12px; margin-bottom:12px; display:flex; gap:12px; box-shadow:0 4px 14px rgba(0,0,0,.12); }' +
+  '  .kkpth { width:96px; height:96px; border-radius:10px; object-fit:cover; flex:none; }' +
+  '  .kkpth.ph { background:var(--line,#e2e8f0); display:flex; align-items:center; justify-content:center; color:var(--sub,#64748b); font-size:.7rem; }' +
+  '  .kkpbody { flex:1; min-width:0; }' +
+  '  .kkptitle { font-weight:800; font-size:1.05rem; }' +
+  '  .kkpgoal { color:var(--sub,#64748b); font-size:.8rem; margin:1px 0 8px; }' +
+  '  .kkpmx { display:flex; flex-wrap:wrap; gap:9px 16px; margin-bottom:9px; }' +
+  '  .kkpmi { display:flex; flex-direction:column; }' +
+  '  .kkpmi small { color:var(--sub,#64748b); font-size:.72rem; font-weight:700; }' +
+  '  .kkpmi b { font-size:1.15rem; font-weight:900; color:#16a34a; }' +
+  '  .kkpmoney { background:rgba(148,163,184,.12); border-radius:10px; padding:8px 10px; font-size:.86rem; line-height:1.55; }' +
+  '  .kkpmoney b { color:var(--ink,#0f172a); font-weight:900; }' +
+  '  .kkpsince { color:var(--sub,#64748b); font-size:.72rem; margin:5px 0 0; }' +
+  '  .kkpdemo { margin-top:8px; font-size:.8rem; color:var(--ink,#0f172a); line-height:1.7; }' +
+  '  .kkpdemo .kkpdk { display:inline-block; min-width:5.6em; color:var(--sub,#64748b); font-weight:700; }' +
   '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.8); font-size:.72rem; text-align:center; line-height:1.6; }';
 
 // ====== IGのDM（view=instadm・開発URL専用／2026-08-02 第一弾） ======
@@ -2761,7 +2780,47 @@ function renderKoukokuPage_(d, base, staff, dev) {
       '</div></div>';
   }
 
-  // 「配信中（今 動いている広告）」を3アカウントぶんまとめて上に（1日の予算が多い順）。
+  // 配信中の広告1件の「成績カード」（期間で切り替え＝見本の形）。
+  //   期間ごとの増えたぶんは data-perf に全期間ぶん入れておき、下のスクリプトで切り替える。
+  function mxItem(label, key) {
+    return '<span class="kkpmi"><small>' + label + '</small><b class="kkp-' + key + '">-</b></span>';
+  }
+  function perfCard(a) {
+    var natJa = (a.nat === 'jp') ? '日本' : (a.nat === 'tw' ? '台湾' : '');
+    var sexJa = a.sex ? SEXLBL[a.sex] + '向け' : '';
+    var title = ((natJa ? natJa + ' ' : '') + sexJa) || '広告';
+    var img = a.image_data ? '<img class="kkpth" src="' + a.image_data + '" alt="">' : '<div class="kkpth ph">画像</div>';
+    var perf = a.perf || {};
+    var initFollows = (perf['1w'] && perf['1w'].follows) || (perf['all'] && perf['all'].follows) || 0;
+    var demo = a.demo || {};
+    function pctline(arr) { return (arr || []).map(function (x) { return esc_(x[0]) + ' ' + esc_(x[1]); }).join(' / '); }
+    var demoHtml = '';
+    var hasDemo = (demo.sex && demo.sex.length) || (demo.age && demo.age.length) || (demo.region && demo.region.length);
+    if (hasDemo) {
+      demoHtml = '<div class="kkpdemo">' +
+        (demo.sex && demo.sex.length ? '<div><span class="kkpdk">見た人の男女</span>' + esc_(demo.sex.map(function (x) { return x[0] + ' ' + x[1]; }).join('・')) + '</div>' : '') +
+        (demo.age && demo.age.length ? '<div><span class="kkpdk">年齢</span>' + pctline(demo.age) + '</div>' : '') +
+        (demo.region && demo.region.length ? '<div><span class="kkpdk">場所</span>' + pctline(demo.region) + '</div>' : '') +
+        '</div>';
+    }
+    var acc = a._label ? '<div class="kkacclbl">' + esc_(a._label) + '</div>' : '';
+    return '<div class="kkpc" data-follows="' + initFollows + '" data-sort="' + initFollows + '" data-perf="' + esc_(JSON.stringify(perf)) + '">' +
+      img +
+      '<div class="kkpbody">' + acc +
+        '<div class="kkptitle">' + esc_(title) + '</div>' +
+        '<div class="kkpgoal">目的：プロフィールを見てもらう</div>' +
+        '<div class="kkpmx">' +
+          mxItem('フォロワー', 'follows') + mxItem('保存', 'saves') + mxItem('外部リンク', 'external_taps') +
+          mxItem('いいね', 'likes') + mxItem('シェア', 'shares') +
+        '</div>' +
+        '<div class="kkpmoney">この<b class="kkp-plabel">1週間</b>でかけた金額 <b class="kkp-spend">-</b>' +
+          '　／　プロフィールを見てもらう1回あたり <b class="kkp-cpv">-</b>（訪問 <b class="kkp-pv">-</b>）</div>' +
+        '<div class="kkpsince"></div>' +
+        demoHtml +
+      '</div></div>';
+  }
+
+  // 「配信中（今 動いている広告）」を3アカウントぶんまとめて上に（成績カード＝期間で切替）。
   // 「停止中（今は止めている広告）」はその下に、アカウントごとにまとめる。
   var totalAds = allads.length, list;
   if (allads.length) {
@@ -2772,9 +2831,18 @@ function renderKoukokuPage_(d, base, staff, dev) {
 
     var liveHead = '<div class="kkacc" style="border-left-color:#16a34a;">🟢 今 配信中の広告' +
       '<small>' + liveAds.length + '件・1日 合計 ' + esc_(_costYen_(liveDay)) + '</small></div>';
-    var liveBody = liveAds.length
-      ? liveAds.map(function (a) { return adCard(a, true); }).join('')
-      : '<div class="kkempty2">今 配信中の広告はありません。</div>';
+    var liveBody;
+    if (liveAds.length) {
+      var pers = (d.periods && d.periods.length) ? d.periods : [{ key: '1w', label: '1週間' }];
+      var segBtns = pers.map(function (p) {
+        return '<button type="button" data-p="' + esc_(p.key) + '"' + (p.key === '1w' ? ' class="on"' : '') + '>' + esc_(p.label) + '</button>';
+      }).join('');
+      liveBody = '<div class="kkpseg">' + segBtns + '</div>' +
+        '<div class="kkpnote">選んだ期間で「増えたぶん」を、フォロワーが増えた順に並べています。</div>' +
+        '<div id="kkp-list">' + liveAds.map(perfCard).join('') + '</div>';
+    } else {
+      liveBody = '<div class="kkempty2">今 配信中の広告はありません。</div>';
+    }
 
     var stopBody = '';
     if (stopAds.length) {
@@ -2816,6 +2884,36 @@ function renderKoukokuPage_(d, base, staff, dev) {
     'if(bd)bd.addEventListener("click",function(){mode="day";apply();});' +
     'if(bm)bm.addEventListener("click",function(){mode="month";apply();});})();</script>';
 
+  // 成績カードの期間切り替え＆フォロワーが増えた順の並べ替え（全期間ぶんの数字は各カードのdata-perfに入れてある）。
+  var pscript = '<script>(function(){' +
+    'var seg=document.querySelector(".kkpseg");if(!seg)return;' +
+    'var LBL={},bs=seg.querySelectorAll("button"),i;' +
+    'for(i=0;i<bs.length;i++){LBL[bs[i].getAttribute("data-p")]=bs[i].textContent;}' +
+    'var period="1w";' +
+    'function nf(n){n=Number(n)||0;var neg=n<0;n=Math.abs(n);var s;' +
+      'if(n>=10000){var t=Math.round(n/1000)/10;s=(t%1===0?t:t.toFixed(1))+"万";}' +
+      'else{s=""+n;var o="",c=0,j;for(j=s.length-1;j>=0;j--){o=s.charAt(j)+o;if(++c%3===0&&j>0)o=","+o;}s=o;}' +
+      'return (neg?"-":"")+s;}' +
+    'function sg(n){n=Number(n)||0;if(period==="all")return nf(n);return (n<0?"":"+")+nf(n);}' +
+    'function apply(){var cards=document.querySelectorAll(".kkpc"),arr=[],k;' +
+      'for(k=0;k<cards.length;k++)arr.push(cards[k]);' +
+      'for(k=0;k<arr.length;k++){(function(cc){var p={};try{p=JSON.parse(cc.getAttribute("data-perf")||"{}");}catch(e){}' +
+        'var dd=p[period]||{};function set(cl,v){var el=cc.querySelector(".kkp-"+cl);if(el)el.innerHTML=v;}' +
+        'set("follows",sg(dd.follows));set("saves",sg(dd.saves));set("external_taps",sg(dd.external_taps));' +
+        'set("likes",sg(dd.likes));set("shares",sg(dd.shares));' +
+        'set("spend",(dd.spend!=null?nf(dd.spend)+" 元":"—"));' +
+        'set("cpv",(dd.cpv!=null?dd.cpv+" 元":"—"));' +
+        'set("pv",(dd.profile_visits!=null?sg(dd.profile_visits)+"回":"—"));' +
+        'set("plabel",LBL[period]||period);' +
+        'var sc=cc.querySelector(".kkpsince");if(sc){if(period==="all"){sc.innerHTML="全期間（この広告の通算）";}' +
+          'else{var sd=dd.since?dd.since.slice(5).replace("-","/"):"";sc.innerHTML=(sd?sd+" から今日まで":"")+(dd.is_full===false?"（記録はここまで）":"");}}' +
+        'cc.setAttribute("data-sort",(dd.follows!=null?dd.follows:-1));})(arr[k]);}' +
+      'var box=document.getElementById("kkp-list");' +
+      'if(box){arr.sort(function(a,b){return (Number(b.getAttribute("data-sort"))||0)-(Number(a.getAttribute("data-sort"))||0);});for(k=0;k<arr.length;k++)box.appendChild(arr[k]);}' +
+      'for(k=0;k<bs.length;k++){bs[k].className=(bs[k].getAttribute("data-p")===period?"on":"");}}' +
+    'for(i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){period=this.getAttribute("data-p");apply();});}' +
+    'apply();})();</script>';
+
   return '<style>' + HOMECSS_ + KOUKOKUCSS_ + '</style>' +
     '<div class="home">' +
       backBar_(base, staff, dev) +
@@ -2831,7 +2929,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
         list +
         '<div class="kknote">4マスは「今 配信中の広告の1日予算」を国籍×性別で合算。男女は各広告を見た人の割合から自動判定。金額は台湾ドル（元）。</div>' +
       '</div>' +
-    '</div>' + script;
+    '</div>' + script + pscript;
 }
 
 // ★顧客履歴検索：番号 or 氏名（一部一致OK）で客を探し、今回の予約と過去予約(メモ込み)を見る。
