@@ -2044,6 +2044,9 @@ var KOUKOKUCSS_ =
   '  .kkest { margin:6px 2px 0; padding:12px 14px; border-radius:12px; background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.35); color:var(--ink,#0f172a); font-size:.95rem; font-weight:700; line-height:1.6; text-align:center; }' +
   '  .kkest .kkestbig { color:#f59e0b; font-size:1.35rem; font-weight:900; margin:0 2px; }' +
   '  .kksex { font-size:.7rem; font-weight:800; padding:2px 9px; border-radius:999px; margin-left:6px; }' +
+  '  .kkacclbl { color:var(--sub,#64748b); font-size:.72rem; font-weight:800; margin-bottom:3px; }' +
+  '  .kksub { color:#fff; opacity:.92; font-weight:800; font-size:.9rem; margin:14px 2px 8px; padding-left:10px; border-left:3px solid #94a3b8; }' +
+  '  .kksub small { opacity:.8; font-weight:600; font-size:.72rem; margin-left:6px; }' +
   '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.8); font-size:.72rem; text-align:center; line-height:1.6; }';
 
 // ====== IGのDM（view=instadm・開発URL専用／2026-08-02 第一弾） ======
@@ -2742,32 +2745,66 @@ function renderKoukokuPage_(d, base, staff, dev) {
     (unknown ? '<div class="kkleg" style="text-align:center;color:#d97706;">※ 男女を読めなかった配信中の広告 1日 ' + esc_(_costYen_(unknown)) + ' 分は4マスに入れていません</div>' : '') +
     '</div>';
 
-  // 広告1件のカード（男女の印つき）。
-  function adCard(a) {
+  // 広告1件のカード（男女の印つき）。showAcc=trueで、どのアカウントの広告かの見出しも小さく出す。
+  function adCard(a, showAcc) {
     var live = (a.status === '配信中');
     var st = '<span class="kkst ' + (live ? 'kklive2' : 'kkstop') + '">' + esc_(a.status || '') + '</span>';
     var sex = a.sex ? '<span class="kksex" style="background:' + SEXCOL[a.sex] + '22;color:' + SEXCOL[a.sex] + '">' + SEXLBL[a.sex] + '向け</span>' : '';
     var day = a.day_budget ? '　1日 ' + esc_(_costYen_(a.day_budget)) : '';
+    var acc = (showAcc && a._label) ? '<div class="kkacclbl">' + esc_(a._label) + '</div>' : '';
     var img = a.image_data ? '<img class="kkth" src="' + a.image_data + '" alt="">' : '<div class="kkth ph">画像</div>';
     return '<div class="kkad">' + img +
-      '<div class="kkinfo">' +
+      '<div class="kkinfo">' + acc +
         '<div class="kkr1">' + st + sex +
           '<span class="kkspend">' + esc_(_costYen_(a.spend_ntd)) + ' <small>使った実額' + day + '</small></span></div>' +
         '<div class="kkkv">見られた <b>' + fig(a.views) + '</b>　プロフィール来訪 <b>' + fig(a.profile_visits) + '</b></div>' +
       '</div></div>';
   }
 
-  var totalAds = 0, list;
-  if (accounts.length) {
-    list = accounts.map(function (acc) {
-      var aads = acc.ads || [];
-      totalAds += aads.length;
-      var head = '<div class="kkacc">' + esc_(acc.label || '') + '<small>@' + esc_(acc.handle || '') + '・' + aads.length + '件</small></div>';
-      return head + (aads.length ? aads.map(adCard).join('') : '<div class="kkempty2">読み取れませんでした（ログイン切れ等の疑い）。</div>');
-    }).join('');
+  // 「配信中（今 動いている広告）」を3アカウントぶんまとめて上に（1日の予算が多い順）。
+  // 「停止中（今は止めている広告）」はその下に、アカウントごとにまとめる。
+  var totalAds = allads.length, list;
+  if (allads.length) {
+    var liveAds = allads.filter(function (a) { return a.status === '配信中'; });
+    var stopAds = allads.filter(function (a) { return a.status !== '配信中'; });
+    liveAds.sort(function (a, b) { return (Number(b.day_budget) || 0) - (Number(a.day_budget) || 0); });
+    var liveDay = 0; liveAds.forEach(function (a) { liveDay += Number(a.day_budget) || 0; });
+
+    var liveHead = '<div class="kkacc" style="border-left-color:#16a34a;">🟢 今 配信中の広告' +
+      '<small>' + liveAds.length + '件・1日 合計 ' + esc_(_costYen_(liveDay)) + '</small></div>';
+    var liveBody = liveAds.length
+      ? liveAds.map(function (a) { return adCard(a, true); }).join('')
+      : '<div class="kkempty2">今 配信中の広告はありません。</div>';
+
+    var stopBody = '';
+    if (stopAds.length) {
+      var groups = '';
+      if (accounts.length) {
+        groups = accounts.map(function (acc) {
+          var s = (acc.ads || []).filter(function (a) { return a.status !== '配信中'; });
+          if (!s.length) return '';
+          return '<div class="kksub">' + esc_(acc.label || '') + '<small>@' + esc_(acc.handle || '') + '・' + s.length + '件</small></div>' +
+            s.map(function (a) { return adCard(a, false); }).join('');
+        }).join('');
+      } else {
+        groups = stopAds.map(function (a) { return adCard(a, true); }).join('');
+      }
+      stopBody = '<div class="kkacc" style="border-left-color:#94a3b8;">⏸ 今は止めている広告' +
+        '<small>' + stopAds.length + '件</small></div>' + groups;
+    }
+
+    // 読み取れなかったアカウント（0件＝ログイン切れ等）は分かるように注記を残す。
+    var emptyWarn = '';
+    if (accounts.length) {
+      accounts.forEach(function (acc) {
+        if (!(acc.ads || []).length) {
+          emptyWarn += '<div class="kkempty2">' + esc_(acc.label || '') + '（@' + esc_(acc.handle || '') + '）は読み取れませんでした（ログイン切れ等の疑い）。</div>';
+        }
+      });
+    }
+    list = liveHead + liveBody + stopBody + emptyWarn;
   } else {
-    totalAds = allads.length;
-    list = allads.length ? allads.map(adCard).join('') : '<div class="kkempty">まだ読み取っていません。<br>毎日1回、自動でインスタから読み取ります。</div>';
+    list = '<div class="kkempty">まだ読み取っていません。<br>毎日1回、自動でインスタから読み取ります。</div>';
   }
   var when = d.read_at ? '最終読み取り：' + esc_(d.read_at) + '　／　広告 ' + totalAds + '件' : '広告 ' + totalAds + '件';
 
