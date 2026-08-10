@@ -2942,7 +2942,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
       'for(j=s.length-1;j>=0;j--){o=s.charAt(j)+o;if(++c%3===0&&j>0)o=","+o;}' +
       'return (neg?"-":"")+o;}' +
     'function sg(n){n=Number(n)||0;if(period==="all")return nf(n);return (n<0?"":"+")+nf(n);}' +
-    'function apply(){var cards=document.querySelectorAll(".kkpc"),arr=[],k;' +
+    'function apply(){var cards=document.querySelectorAll("#kkp-list .kkpc"),arr=[],k;' +
       'for(k=0;k<cards.length;k++)arr.push(cards[k]);' +
       'for(k=0;k<arr.length;k++){(function(cc){var p={};try{p=JSON.parse(cc.getAttribute("data-perf")||"{}");}catch(e){}' +
         'var dd=p[period]||{};function set(cl,v){var el=cc.querySelector(".kkp-"+cl);if(el)el.innerHTML=v;}' +
