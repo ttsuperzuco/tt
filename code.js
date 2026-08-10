@@ -2057,6 +2057,7 @@ var KOUKOKUCSS_ =
   '  .kkpbody { flex:1; min-width:0; }' +
   '  .kkptitle { font-weight:800; font-size:1.05rem; }' +
   '  .kkprun { display:inline-block; margin-left:8px; font-size:.72rem; font-weight:800; color:#0ea5e9; background:rgba(14,165,233,.14); padding:2px 9px; border-radius:999px; vertical-align:middle; }' +
+  '  .kkpbudget { float:right; margin-left:8px; font-size:.82rem; font-weight:800; color:#d97706; background:rgba(217,119,6,.16); padding:2px 10px; border-radius:999px; }' +
   '  .kkpgoal { color:var(--sub,#64748b); font-size:.8rem; margin:1px 0 8px; }' +
   '  .kkpmx { display:flex; flex-wrap:wrap; gap:9px 16px; margin-bottom:9px; }' +
   '  .kkpmi { display:flex; flex-direction:column; }' +
@@ -2800,7 +2801,9 @@ function renderKoukokuPage_(d, base, staff, dev) {
     return '<div class="kkpc" data-follows="' + initFollows + '" data-sort="' + initFollows + '" data-perf="' + esc_(JSON.stringify(perf)) + '">' +
       img +
       '<div class="kkpbody">' + acc +
-        '<div class="kkptitle">' + esc_(title) +
+        '<div class="kkptitle">' +
+          (a.day_budget ? '<span class="kkpbudget">1日 ' + esc_(_costYen_(a.day_budget)) + '</span>' : '') +
+          esc_(title) +
           (a.run_days != null ? '<span class="kkprun">走らせて ' + esc_(a.run_days) + '日</span>' : '') + '</div>' +
         '<div class="kkpgoal">目的：プロフィールを見てもらう</div>' +
         '<div class="kkpmx">' +
