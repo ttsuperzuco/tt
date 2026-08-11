@@ -956,7 +956,8 @@ function defaultPerms_(people) {
   var list = people || PEOPLE_;
   var perms = {};
   for (var i = 0; i < list.length; i++) {
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false };
+    // ★yoyaku(予約入力)＝幹部(🍅トマト=kanbu)だけ既定ON・他スタッフは非表示（2026-08-11 まるちゃん決定）。中は新規のみ(viewAllowed_)。
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, yoyaku: (list[i] === 'kanbu') };
   }
   return perms;
 }
@@ -1054,6 +1055,8 @@ function personPerms_(perms, staff, dev, who) {
 function viewAllowed_(view, allow) {
   if (view === 'home' || view === 'notice') return true;
   if (!allow) return true;   // dev
+  // ★予約入力：親の 'yoyaku' 権限があれば、トップ画面と「新規」だけ許可（既存/変更は開発者専用・2026-08-11 まるちゃん）。
+  if (view === 'yoyaku' || view === 'yoyaku_new') return allow['yoyaku'] === true;
   return allow[view] === true;
 }
 
@@ -3267,16 +3270,17 @@ function renderReservationHomePage_(base, staff, dev) {
   var sfx = roleSfx_(staff, dev);
   var head = '<div class="hhead"><span class="bmark">📅</span><span class="bname">予約入力</span></div>' +
              '<div class="hsub">TaiwanTomato</div>';
-  // ★2026-08-11 まるちゃん決定：今は「新規の予約」だけ表示。既存の予約・既存の変更はまだ出さない
-  //   （下2ボタンを一時的に隠す）。戻す時は下のコメントを外す。
+  // ★2026-08-11 まるちゃん決定：幹部(🍅トマト)は「新規の予約」だけ表示。既存の予約・既存の変更は開発者(?dev=1)だけに出す。
+  var ex = dev ?
+      ('<a class="rolebtn kaihatsu" href="' + base + '?view=yoyaku_kizon' + sfx + '" target="_top">' +
+        '<span class="ricon">📖</span><span class="rname">既存の予約</span></a>' +
+      '<a class="rolebtn kanri" href="' + base + '?view=yoyaku_henkou' + sfx + '" target="_top">' +
+        '<span class="ricon">✏️</span><span class="rname">既存の変更</span></a>') : '';
   var menu =
     '<div class="rolemenu">' +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
         '<span class="ricon">📝</span><span class="rname">新規の予約</span></a>' +
-      /* '<a class="rolebtn kaihatsu" href="' + base + '?view=yoyaku_kizon' + sfx + '" target="_top">' +
-        '<span class="ricon">📖</span><span class="rname">既存の予約</span></a>' +
-      '<a class="rolebtn kanri" href="' + base + '?view=yoyaku_henkou' + sfx + '" target="_top">' +
-        '<span class="ricon">✏️</span><span class="rname">既存の変更</span></a>' + */
+      ex +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) + head + menu + '</div>';
