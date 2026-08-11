@@ -3358,7 +3358,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
-    'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);if(d.room)selVal("room",d.room);' +
+    'prevEl.value=d.memo||"";prevWrap.style.display="";selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);if(d.room)selVal("room",d.room);window.__rvdt={mm:d.mm,dd:d.dd,hh:d.hh,mi:d.mi};' +
     'var _mm=d.memo||"",_hasPro=(/procell/i.test(_mm)||/プロセル/.test(_mm)),_hasF=/顔プロセル/.test(_mm),_hasS=/頭皮プロセル/.test(_mm);var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display=(_hasPro&&!_hasF&&!_hasS)?"":"none";window.__procellWord=d.procell_face_word||"トライアル";var _pp=document.querySelector(\'[data-procell="顔プロセルPro"]\');if(_pp)_pp.textContent="顔プロセルPro "+window.__procellWord;var _pm=document.querySelector(\'[data-procell="顔プロセルMD"]\');if(_pm)_pm.textContent="顔プロセルMD "+window.__procellWord;' +
     'var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +          // ②所要以降を読み取り後に出す
     'var sg=document.getElementById("secGender"),stw=document.getElementById("secTw");' +
@@ -3383,7 +3383,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼ってください。",true);return;}' +
     'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,' +
-    'fields:JSON.stringify({text:text,memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw})},' +
+    'fields:JSON.stringify({text:text,memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)})},' +
     'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});}' +
     'goEl.addEventListener("click",go);' +
     '})();</script>';
