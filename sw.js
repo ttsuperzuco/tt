@@ -17,7 +17,7 @@
 //
 // 【困った時】アプリが古いまま直らない等があれば、この保管を丸ごと捨てればよい
 //   （下の CACHE の名前を変えて配る＝古い保管は自動で消える）。
-var CACHE = 'ttzuko-shell-v69';   // 2026-08-12 「お散歩中」で固まる端末を、保管ごと入れ替えて直す
+var CACHE = 'ttzuko-shell-v70';   // 2026-08-12 各種LINK→トマトさん版へ飛ぶ保険を撤去・保管ごと入れ替えて確実に更新
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();   // 新しい保管係にすぐ交代する

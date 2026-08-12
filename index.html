@@ -119,7 +119,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260811shiyou"></script>
-<script src="code.js?v=20260812imglink4"></script>
+<script src="code.js?v=20260812imglink5"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -836,22 +836,10 @@
   if (window.__tsResult !== undefined) { useCfg_(window.__tsResult, false); }
   else { window.__tsWaiter = function (cfg) { useCfg_(cfg || {}, false); }; }
 
-  // ★2026-08-12：万一ずっと「お散歩中/起動中」の読み込み画面のまま先に進まない時の保険。
-  //   読み込みから8秒たっても、まだ最初のローディング画面(.bootText/.bootTextLg/.bootIcon)が
-  //   残っていたら＝どこかで詰まった＝一度だけホーム(?view無し)へ入り直して立ち直る。
-  //   ・エラー表示(fail()＝子要素の無い .boot)や、名前選択/合言葉(.pkwrap)には反応しない。
-  //   ・このタブで1回だけ（sessionStorage）＝ホーム自体が詰まっても無限ループしない。
-  try {
-    if (!sessionStorage.getItem('sz_boot_recovered')) {
-      setTimeout(function () {
-        var r = document.getElementById('root');
-        if (r && r.querySelector('.bootText, .bootTextLg, .bootIcon')) {
-          try { sessionStorage.setItem('sz_boot_recovered', '1'); } catch (e) {}
-          location.replace(base);
-        }
-      }, 8000);
-    }
-  } catch (e) {}
+  // ★2026-08-12：以前ここに「8秒たってもローディングのままなら、ホーム(?view無し)へ入り直す」保険が
+  //   あったが、各種LINK等(?view付き)の読み込みが少し長引いた時に誤発動して目的の画面を奪い、
+  //   ホーム(TOMATOさん版など)を開いてしまう害があった。元の詰まり原因(各種LINKが画像を待って固まる)は
+  //   既に直した(URLは即表示・画像は押した時に取得)ので、この保険は撤去した。
 })();
 </script>
 </body>
