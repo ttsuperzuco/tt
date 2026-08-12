@@ -3344,7 +3344,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'function selVal(g,v){if(!v)return;sel[g]=String(v);var sib=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.toggle("sel",sib[j].getAttribute("data-val")===String(v));}' +
     'var pills=document.querySelectorAll(".nrpill");' +
     'for(var i=0;i<pills.length;i++){pills[i].addEventListener("click",function(){var g=this.getAttribute("data-grp"),v=this.getAttribute("data-val");if(!g)return;sel[g]=v;' +
-    'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");this.classList.add("sel");});}' +
+    'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");this.classList.add("sel");if(window.__nrSchedTitle)window.__nrSchedTitle(g);});}' +
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
     'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
@@ -3370,14 +3370,15 @@ function renderNewReservationPage_(base, staff, dev) {
     'var hideBusy=function(g,list){list=(list||[]).map(String);var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),selH=false,first=null;for(var i=0;i<pl.length;i++){var busy=list.indexOf(pl[i].getAttribute("data-val"))>=0;pl[i].style.display=busy?"none":"";if(!busy&&!first){first=pl[i];}if(busy&&pl[i].classList.contains("sel")){selH=true;}}if(selH&&first){sel[g]=first.getAttribute("data-val");for(var j=0;j<pl.length;j++){pl[j].classList.toggle("sel",pl[j]===first);}}};' +
     'hideBusy("room",d.occ_rooms);hideBusy("staff",d.busy_staff);hideBusy("counsel",d.busy_counsel_staff);' +   // 空いていない部屋・施術担当・カウンセリング担当は消す（施術は開始=カウンセリング30分後で判定）
     // ★デザイン眉・まつエク＝パイン🍍だけ選べる（他4人は隠す）・部屋は取らない（部屋欄を隠す）。
-    'var _isMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");var _sp=document.querySelectorAll(".nrpill[data-grp=\\"staff\\"]");for(var _k=0;_k<_sp.length;_k++){var _pine=_sp[_k].getAttribute("data-val")==="5";_sp[_k].style.display=_isMayu?(_pine?"":"none"):(_pine?"none":"");}var _rw=document.getElementById("nrRoomWrap");if(_rw)_rw.style.display=_isMayu?"none":"";if(_isMayu){selVal("staff","5");sel.room="";}' +
+    'var _isMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");var _isSat=d.date?(new Date(d.date+"T00:00:00").getDay()===6):false;var _sp=document.querySelectorAll(".nrpill[data-grp=\\"staff\\"]");for(var _k=0;_k<_sp.length;_k++){var _pine=_sp[_k].getAttribute("data-val")==="5";_sp[_k].style.display=_isMayu?(_pine?"":"none"):(_pine?"none":"");}var _rw=document.getElementById("nrRoomWrap");if(_rw)_rw.style.display=_isMayu?(_isSat?"":"none"):"";if(_isMayu){selVal("staff","5");if(_isSat){var _rp=document.querySelectorAll(".nrpill[data-grp=\\"room\\"]"),_rf=null;for(var _m=0;_m<_rp.length;_m++){if(_rp[_m].style.display!=="none"&&!_rf){_rf=_rp[_m];}}if(_rf){sel.room=_rf.getAttribute("data-val");for(var _n=0;_n<_rp.length;_n++){_rp[_n].classList.toggle("sel",_rp[_n]===_rf);}}}else{sel.room="";}}' +
 
 
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
+    'titleEdited=false;refreshTitles();' +                                             // 登録されるタイトルを画面に出す（人が直せる）
     'status("",false);});}' +                                                          // 読み取り後の一言は出さない
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
-    'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var base=this.getAttribute("data-procell");var tw=(base==="頭皮プロセル")?"トライアル":(window.__procellWord||"トライアル");var full=base+" "+tw;var lines=prevEl.value.split("\\n");for(var k=0;k<lines.length;k++){lines[k]=lines[k].replace(/(?:顔|頭皮)?プロセル|procell/gi,full);}prevEl.value=lines.join("\\n");prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";});}' +
+    'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var base=this.getAttribute("data-procell");var tw=(base==="頭皮プロセル")?"トライアル":(window.__procellWord||"トライアル");var full=base+" "+tw;var lines=prevEl.value.split("\\n");for(var k=0;k<lines.length;k++){lines[k]=lines[k].replace(/(?:顔|頭皮)?プロセル|procell/gi,full);}prevEl.value=lines.join("\\n");prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
     'readEl.disabled=true;status("変換中です。しばらくお待ちください。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
@@ -3385,26 +3386,19 @@ function renderNewReservationPage_(base, staff, dev) {
     'readEl.addEventListener("click",readGo);' +
     // 送る中身（貼った文＋選んだ担当/部屋/所要/性別/国籍。extra でタイトルの差し替えを足せる）。
     'function buildFields(extra){var f={text:(txtEl.value||"").trim(),memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)};if(extra){for(var k in extra){f[k]=extra[k];}}return f;}' +
-    // ① まず、タイムツリーに入るタイトルを受付係に作ってもらう（登録しない）。
-    'var tpolls=0;function pollTitles(id){tpolls++;if(tpolls>40){szOvHide_();goEl.disabled=false;szPopup_("時間切れです。事務所パソコンが動いているかご確認ください。");return;}' +
-    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
-    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id);},600);return;}' +
-    'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。もう一度お試しください。");return;}' +
-    'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d.ok){szOvHide_();goEl.disabled=false;szPopup_(esc(d.error)||"エラーが発生しました。もう一度お試しください。");return;}' +
-    'showTitleConfirm(d.titles||[],d.disps||[]);});}' +
-    // ② タイトルを編集欄で見せる（枠が複数なら各行）。人が直せる。
-    'function showTitleConfirm(titles,disps){var rows="";for(var i=0;i<titles.length;i++){rows+=\'<div style="margin:10px 0;text-align:left"><div style="color:#eaf3f7;font-size:15px;font-weight:800;margin:0 2px 6px">\'+esc(disps[i]||("枠"+(i+1)))+\'</div><input class="nrTitleIn" value="\'+esc(titles[i]).replace(/"/g,"&quot;")+\'" style="width:100%;font:inherit;font-size:18px;font-weight:800;color:#0f172a;background:#fff;border:0;border-radius:10px;padding:12px 14px;box-sizing:border-box"></div>\';}' +
-    'var html=\'<div style="color:#fff;font-size:26px;font-weight:900;margin-bottom:10px">タイムツリーに登録されるタイトル</div><div style="color:#eaf3f7;font-size:17px;line-height:1.7;margin-bottom:8px">下がそのまま登録されます。直したい時は書き換えてください。</div><div style="width:min(520px,92vw)">\'+rows+\'</div><div style="display:flex;gap:12px;justify-content:center;margin-top:22px"><button type="button" id="nrTitleGo" style="font:inherit;font-size:1.2rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer">この内容で登録する</button><button type="button" id="nrTitleBack" style="font:inherit;font-size:1.05rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer">戻る</button></div>\';' +
-    'szOvShow_(html,"#2C7A99");' +
-    'document.getElementById("nrTitleBack").addEventListener("click",function(){szOvHide_();goEl.disabled=false;});' +
-    'document.getElementById("nrTitleGo").addEventListener("click",function(){var ins=document.querySelectorAll(".nrTitleIn"),ts=[];for(var j=0;j<ins.length;j++){ts.push(ins[j].value);}' +
-    // ③ 直したタイトルで登録。
-    'szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
-    'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields({titles:JSON.stringify(ts)}))},function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});});}' +
+    // 画面のタイトル欄に、いま登録されるタイトルを出す（人が手で直したら自動で上書きしない）。
+    'var titleEdited=false,titleReq=0,_titleTimer=null;' +
+    'function fillTitles(titles,disps){var wrap=document.getElementById("nrTitleWrap"),sec=document.getElementById("secTitle");if(!wrap||!sec)return;var rows="";for(var i=0;i<titles.length;i++){rows+=\'<div style="color:#eaf3f7;font-weight:800;font-size:14px;margin:8px 2px 2px">\'+esc(disps[i]||("枠"+(i+1)))+\'</div><input class="nrTitleIn" value="\'+esc(titles[i]).replace(/"/g,"&quot;")+\'" style="width:100%;box-sizing:border-box;font:inherit;font-size:18px;font-weight:800;color:#0f172a;background:#fff;border:0;border-radius:12px;padding:14px 14px;margin:6px 0;box-shadow:0 2px 6px rgba(0,0,0,.12)">\';}wrap.innerHTML=rows;sec.style.display="";var ins=wrap.querySelectorAll(".nrTitleIn");for(var j=0;j<ins.length;j++){ins[j].addEventListener("input",function(){titleEdited=true;});}}' +
+    'var tpolls=0;function pollTitles(id,myReq){tpolls++;if(tpolls>40)return;jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok)return;if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq);},700);return;}if(r.status!=="done")return;var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok)return;if(myReq!==titleReq||titleEdited)return;fillTitles(d.titles||[],d.disps||[]);});}' +
+    'function refreshTitles(){if(titleEdited)return;var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim())return;var myReq=++titleReq;tpolls=0;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id)return;setTimeout(function(){pollTitles(r.id,myReq);},900);});}' +
+    'function scheduleTitleRefresh(g){if(["staff","counsel","gender","tw","room"].indexOf(g)<0)return;if(_titleTimer)clearTimeout(_titleTimer);_titleTimer=setTimeout(function(){refreshTitles();},350);}' +
+    'window.__nrSchedTitle=scheduleTitleRefresh;' +
+    // 登録＝画面に出ている（人が直せる）タイトルをそのまま使う。
     'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼ってください。",true);return;}' +
-    'goEl.disabled=true;szOvShow_(szBusyHtml_("登録するタイトルを確認中です"),"#2C7A99");' +
-    'jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},' +
-    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){pollTitles(r.id);},1000);});}' +
+    'var ins=document.querySelectorAll(".nrTitleIn"),ts=[];for(var j=0;j<ins.length;j++){ts.push(ins[j].value);}' +
+    'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
+    'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields(ins.length?{titles:JSON.stringify(ts)}:null))},' +
+    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});}' +
     'goEl.addEventListener("click",go);' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
@@ -3436,6 +3430,7 @@ function renderNewReservationPage_(base, staff, dev) {
         '<div id="nrRoomWrap"><div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div></div>' +
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
         '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
+        '<div id="secTitle" style="display:none"><div class="nrsec">タイムツリーに登録されるタイトル（直せます）</div><div id="nrTitleWrap"></div></div>' +
         '<button type="button" class="nrgo" id="nrgo">この内容で登録する</button>' +
       '</div>' +
       '<div class="nrstatus" id="nrstatus"></div>' +
