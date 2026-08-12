@@ -834,6 +834,23 @@
   if (cachedCfg_) { try { useCfg_(JSON.parse(cachedCfg_), true); } catch (e) {} }
   if (window.__tsResult !== undefined) { useCfg_(window.__tsResult, false); }
   else { window.__tsWaiter = function (cfg) { useCfg_(cfg || {}, false); }; }
+
+  // ★2026-08-12：万一ずっと「お散歩中/起動中」の読み込み画面のまま先に進まない時の保険。
+  //   読み込みから8秒たっても、まだ最初のローディング画面(.bootText/.bootTextLg/.bootIcon)が
+  //   残っていたら＝どこかで詰まった＝一度だけホーム(?view無し)へ入り直して立ち直る。
+  //   ・エラー表示(fail()＝子要素の無い .boot)や、名前選択/合言葉(.pkwrap)には反応しない。
+  //   ・このタブで1回だけ（sessionStorage）＝ホーム自体が詰まっても無限ループしない。
+  try {
+    if (!sessionStorage.getItem('sz_boot_recovered')) {
+      setTimeout(function () {
+        var r = document.getElementById('root');
+        if (r && r.querySelector('.bootText, .bootTextLg, .bootIcon')) {
+          try { sessionStorage.setItem('sz_boot_recovered', '1'); } catch (e) {}
+          location.replace(base);
+        }
+      }, 8000);
+    }
+  } catch (e) {}
 })();
 </script>
 </body>
