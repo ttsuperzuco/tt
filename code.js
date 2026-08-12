@@ -5378,7 +5378,7 @@ function lkImgScript_() {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   return '<script>(function(){' +
     'var EXEC="' + EXEC + '";' +
-    'var CATS=null,loading=false;' +   // ★CATS=null＝まだ取っていない。画像リンクを押した時だけ images.json を取りに行く
+    'var CATS=null,imgLoading=false;' +   // ★画像データ。各種LINKを開いた瞬間に裏で先に取り始める（URL表示は待たない）
     'var hub=document.getElementById("lkhub");' +
     'var urlsec=document.getElementById("lkurlsec");' +
     'var imgsec=document.getElementById("lkimgsec");' +
@@ -5390,16 +5390,26 @@ function lkImgScript_() {
     'function showHub(){hub.hidden=false;urlsec.hidden=true;imgsec.hidden=true;}' +
     'function showUrl(){hub.hidden=true;urlsec.hidden=false;imgsec.hidden=true;}' +
     'function showImg(){hub.hidden=true;urlsec.hidden=true;imgsec.hidden=false;}' +
-    // 画像リンクを押した時だけ images.json を取りに行く（URLの表示はこれを待たない＝URLは必ず出る）。
-    'function openImg(){showImg();if(CATS){renderCats();return;}if(loading)return;loading=true;' +
-      'body.innerHTML="<div class=\\"lkimgmsg\\">読み込み中…</div>";' +
-      'var cb="__lkimg"+Date.now()+Math.floor(Math.random()*1000);' +
-      'window[cb]=function(r){try{delete window[cb];}catch(e){}loading=false;CATS=(r&&r.cats)||[];renderCats();};' +
-      'var s=document.createElement("script");s.src=EXEC+"?action=data&name=images.json&callback="+cb+"&cb="+Date.now();' +
-      's.onerror=function(){try{delete window[cb];}catch(e){}loading=false;body.innerHTML="<div class=\\"lknone\\">画像の読み込みに失敗しました。もう一度お試しください。</div>";};' +
-      'document.body.appendChild(s);}' +
+    // 画像データを取りに行く。1回の通信が失敗しても自動でもう数回やり直す（グーグル窓口の一時的なエラー対策）。
+    'function tryFetch(n,done){var cb="__lkimg"+Date.now()+Math.floor(Math.random()*1000);var settled=false,s;' +
+      'function fin(ok,r){if(settled)return;settled=true;clearTimeout(t);try{delete window[cb];}catch(e){}if(s&&s.parentNode)s.parentNode.removeChild(s);' +
+        'if(ok){done(true,r);}else if(n>1){setTimeout(function(){tryFetch(n-1,done);},700);}else{done(false);}}' +
+      'var t=setTimeout(function(){fin(false);},6000);' +
+      'window[cb]=function(r){fin(true,r);};' +
+      's=document.createElement("script");s.src=EXEC+"?action=data&name=images.json&callback="+cb+"&cb="+Date.now();' +
+      's.onerror=function(){fin(false);};document.body.appendChild(s);}' +
+    'function loadImages(){if(imgLoading||CATS)return;imgLoading=true;' +
+      'tryFetch(4,function(ok,r){imgLoading=false;' +
+        'if(ok){CATS=(r&&r.cats)||[];if(!imgsec.hidden)renderCats();}' +
+        'else if(!imgsec.hidden){body.innerHTML="<div class=\\"lknone\\">画像の読み込みに失敗しました。もう一度お試しください。</div>";}' +
+      '});}' +
+    // 画像リンクを押した時：もう手元にあれば即出す。取得中なら「読み込み中」、まだなら取りに行く。
+    'function openImg(){showImg();if(CATS){renderCats();return;}' +
+      'body.innerHTML="<div class=\\"lkimgmsg\\">読み込み中…</div>";if(!imgLoading)loadImages();}' +
     'if(goUrl)goUrl.addEventListener("click",function(){showUrl();});' +
     'if(goImg)goImg.addEventListener("click",openImg);' +
+    'loadImages();' +   // ★各種LINKを開いた瞬間に裏で先読み（押した時にはもう手元にある＝速い・失敗しにくい）
+
     'if(urlBack)urlBack.addEventListener("click",function(){showHub();});' +
     'if(imgBack)imgBack.addEventListener("click",function(){' +
       'if(level==="image"){renderItems(curCat);}else if(level==="items"){renderCats();}else{showHub();}' +
