@@ -86,8 +86,8 @@
     lt:         'lt_match.json',
     uriage:     'uriage.json',
     unanswered: 'unanswered.json',
-    akijikan:   'akijikan.json',
-    links:      'links.json'
+    akijikan:   'akijikan.json'
+    // ★links(各種LINKのURL一覧)は速い置き場(GitHub Pages)から直接取るのでここには入れない（グーグル窓口を使わない）。
     // ★kanshi(自動監視)は対象外＝開発URL専用でスタッフの目には触れず、装置の見分け(device)も
     //   要るため。頻度も低く先取りの旨味が薄い（詳細は共通\スーパーズコApp_必読.md）。
   };
@@ -119,7 +119,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260811shiyou"></script>
-<script src="code.js?v=20260812imglink7"></script>
+<script src="code.js?v=20260813fastlinks"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -387,14 +387,21 @@
   }
 
   function showLinks() {
-    // ★2026-08-12：URLの一覧はこれ（links.json）だけで即描く＝画像の読み込みを待たない。
-    //   画像リンク（images.json）は、画像リンクのボタンを押した時に code.js 側が取りに行く。
-    showPrefetchable_('links', function (payload) {
-      try {
-        if (!payload || payload.error) { mount(renderLinksError_((payload && payload.error) || '不明', base, staff, dev)); return; }
-        mount(renderLinksPage_(payload, base, staff, dev));
-      } catch (e) { fail('描画エラー：' + e); }
-    });
+    // ★2026-08-13：URL一覧(links.json)も速い置き場(GitHub Pages)から取る＝グーグル窓口の順番待ち（実測10秒）を
+    //   避け、各種LINKの画面が一瞬で出る。1回失敗しても自動で数回やり直す。画像(images.json)は画像リンクを
+    //   押した時に code.js 側が同じ速い置き場から取る。
+    function attempt(n) {
+      fetch(base + 'links.json?cb=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+        .then(function (payload) {
+          try { mount(renderLinksPage_(payload, base, staff, dev)); } catch (e) { fail('描画エラー：' + e); }
+        })
+        .catch(function () {
+          if (n > 1) { setTimeout(function () { attempt(n - 1); }, 600); }
+          else { mount(renderLinksError_('通信エラーです。通信環境をご確認ください。', base, staff, dev)); }
+        });
+    }
+    attempt(4);
   }
 
   // 自動監視（開発URL ?dev=1 だけに出るボタン）。事務所PCが1分ごとに送ってくる状態を見る。
