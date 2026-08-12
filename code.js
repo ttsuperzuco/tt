@@ -5363,9 +5363,6 @@ function renderLinksPage_(d, base, staff, dev) {
   // ── 画像リンク（イーライト後などの画像案内） ──
   '<div id="lkimgsec" class="lksec" hidden>' +
     '<button type="button" class="lkback2" id="lkImgBack">← 前に戻る</button>' +
-    (dev ? '<div class="lkdevbar">' +
-      '<a class="lkedit" href="' + LK_IMG_SHEET_URL_ + '" target="_blank" rel="noopener">🔧 画像を編集（追加・削除）</a>' +
-    '</div>' : '') +
     '<div id="lkimgbody"></div>' +
   '</div>' +
 '</div>' +
