@@ -120,7 +120,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260811shiyou"></script>
-<script src="code.js?v=20260812imglink1"></script>
+<script src="code.js?v=20260812imglink2"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -388,25 +388,13 @@
   }
 
   function showLinks() {
-    // ★2026-08-12：各種LINKは「URLリンク＋画像リンク」の2つのデータで描く。
-    //   links.json（URL）を取ったあと images.json（画像）も取り、両方そろえて1画面に描く。
-    //   images.json が無い/取れない時も URL 側は必ず出す（画像側は空で表示）。
+    // ★2026-08-12：URLの一覧はこれ（links.json）だけで即描く＝画像の読み込みを待たない。
+    //   画像リンク（images.json）は、画像リンクのボタンを押した時に code.js 側が取りに行く。
     showPrefetchable_('links', function (payload) {
-      var linksP = payload;
-      var cb = '__ttImgsNow_' + Date.now();
-      var doneOnce = false;
-      function finish(imgsP) {
-        if (doneOnce) return; doneOnce = true;
-        try {
-          if (!linksP || linksP.error) { mount(renderLinksError_((linksP && linksP.error) || '不明', base, staff, dev)); return; }
-          mount(renderLinksPage_(linksP, imgsP || {}, base, staff, dev));
-        } catch (e) { fail('描画エラー：' + e); }
-      }
-      window[cb] = function (imgsP) { try { delete window[cb]; } catch (e) {} finish(imgsP); };
-      var s = document.createElement('script');
-      s.src = EXEC + '?action=data&name=images.json&callback=' + cb + '&cb=' + Date.now();
-      s.onerror = function () { try { delete window[cb]; } catch (e) {} finish({}); };
-      document.body.appendChild(s);
+      try {
+        if (!payload || payload.error) { mount(renderLinksError_((payload && payload.error) || '不明', base, staff, dev)); return; }
+        mount(renderLinksPage_(payload, base, staff, dev));
+      } catch (e) { fail('描画エラー：' + e); }
     });
   }
 
