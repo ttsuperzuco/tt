@@ -5368,16 +5368,15 @@ function renderLinksPage_(d, base, staff, dev) {
 '</div>' +
 LKSCRIPT_ +
 (dev ? lkDevScript_() : '') +
-lkImgScript_();
+lkImgScript_(base || '');
 }
 
 // 画像リンクの中身（純JS・GAS API不使用）。入口の2択の切り替え＋「分類→ラベル→画像」の
 // 行き来＋画像の送る/保存/コピー（機種で出し分け）を全部この埋め込みスクリプトで行う。
 // スーパーズコは外枠(iframe)の中ではない静的ページなので、コピー/共有/保存はそのまま効く。
-function lkImgScript_() {
-  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+function lkImgScript_(base) {
   return '<script>(function(){' +
-    'var EXEC="' + EXEC + '";' +
+    'var BASE="' + base + '";' +   // ★名前リスト(images.json)はアプリと同じ速い置き場から取る（グーグル窓口の2〜3秒を避ける）
     'var CATS=null,imgLoading=false;' +   // ★画像データ。各種LINKを開いた瞬間に裏で先に取り始める（URL表示は待たない）
     'var hub=document.getElementById("lkhub");' +
     'var urlsec=document.getElementById("lkurlsec");' +
@@ -5391,13 +5390,10 @@ function lkImgScript_() {
     'function showUrl(){hub.hidden=true;urlsec.hidden=false;imgsec.hidden=true;}' +
     'function showImg(){hub.hidden=true;urlsec.hidden=true;imgsec.hidden=false;}' +
     // 画像データを取りに行く。1回の通信が失敗しても自動でもう数回やり直す（グーグル窓口の一時的なエラー対策）。
-    'function tryFetch(n,done){var cb="__lkimg"+Date.now()+Math.floor(Math.random()*1000);var settled=false,s;' +
-      'function fin(ok,r){if(settled)return;settled=true;clearTimeout(t);try{delete window[cb];}catch(e){}if(s&&s.parentNode)s.parentNode.removeChild(s);' +
-        'if(ok){done(true,r);}else if(n>1){setTimeout(function(){tryFetch(n-1,done);},700);}else{done(false);}}' +
-      'var t=setTimeout(function(){fin(false);},6000);' +
-      'window[cb]=function(r){fin(true,r);};' +
-      's=document.createElement("script");s.src=EXEC+"?action=data&name=images.json&callback="+cb+"&cb="+Date.now();' +
-      's.onerror=function(){fin(false);};document.body.appendChild(s);}' +
+    'function tryFetch(n,done){' +
+      'fetch(BASE+"images.json?cb="+Date.now(),{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json();})' +
+        '.then(function(j){done(true,j);})' +
+        '.catch(function(){if(n>1){setTimeout(function(){tryFetch(n-1,done);},600);}else{done(false);}});}' +
     'function loadImages(){if(imgLoading||CATS)return;imgLoading=true;' +
       'tryFetch(4,function(ok,r){imgLoading=false;' +
         'if(ok){CATS=(r&&r.cats)||[];if(!imgsec.hidden)renderCats();}' +
