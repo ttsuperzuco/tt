@@ -5322,36 +5322,110 @@ function renderClaudeToolsPage_(base, staff, dev) {
  *  すぐ下に言語ボタンを並べて、1画面で押せば即コピーできるようにした（ユーザー指示）。 */
 // ★元データのGoogleシート「ズコLINK」タブ（オーナーが直接編集する表）。開発者ボタンの飛び先。
 var LK_SHEET_URL_ = 'https://docs.google.com/spreadsheets/d/16ta_ciEX_uPUxfy7eXq5aqrlKQyTmskB57pGxXyiXNY/edit?gid=2000945592';
+// ★画像リンクの元データ「ズコ画像」タブ（オーナーが直接編集）。開発者ボタンの飛び先。
+var LK_IMG_SHEET_URL_ = 'https://docs.google.com/spreadsheets/d/16ta_ciEX_uPUxfy7eXq5aqrlKQyTmskB57pGxXyiXNY/edit?gid=961471682';
 
-function renderLinksPage_(d, base, staff, dev) {
+// ★2026-08-12（まるちゃん）：各種LINKの入口を「URLリンク／画像リンク」の2択にした。
+//   URLリンク＝今まで通りの案内リンク集（ズコLINKタブ）。画像リンク＝イーライト後などの
+//   画像案内（ズコ画像タブ）。画像は押すとその場で送る／保存／コピーができる（機種で出し分け）。
+//   見た目はスーパーズコのまま。d=links.json、imgs=images.json。
+function renderLinksPage_(d, imgs, base, staff, dev) {
   var topics = (d && d.topics) || [];
   var list = topics.length
     ? topics.map(lkTopicBlock_).join('')
     : '<div class="lknone">まだ案内リンクが登録されていません。</div>';
+  var cats = (imgs && imgs.cats) || [];
+  var catsJson = JSON.stringify(cats).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+  var homeHref = (base || '') + '?view=home' + roleSfx_(staff, dev);
 
   return '' +
-'<style>' + LKCSS_ + '</style>' +
+'<style>' + LKCSS_ + LKIMGCSS_ + '</style>' +
 '<div class="lkwrap">' +
   '<div class="lkbar">' +
-    '<a class="lkhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← TOPに戻る</a>' +
-    '<span class="lkgen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
+    '<a class="lkhome" href="' + homeHref + '" target="_top">← TOPに戻る</a>' +
+    '<span class="lkgen">生成: ' + esc_((d && d.generated_at) || '—') + '</span>' +
   '</div>' +
-  '<div class="lkhead"><h1>🔗 各種LINK</h1>' +
-    '<span class="lkhint">言語を選ぶとURLがコピーされます</span></div>' +
-  // ★開発者(?dev=1)だけに「リンクを編集」ボタンを出す（2026-08-06まるちゃん要望）。押すと元データの
-  //   Googleシート「ズコLINK」タブが新しいタブで開く＝行を足せば追加・行を消せば削除。アプリからシートへ
-  //   書き込む配管は作らず、今まで通りシートを直接編集する入口をボタン1つにしただけ（共通ルール16＝
-  //   新ボタンは既定で開発者だけ表示）。「今すぐ反映」＝表を直したあとすぐアプリに出す（事務所PCが読み直す）。
-  (dev ? '<div class="lkdevbar">' +
-    '<a class="lkedit" href="' + LK_SHEET_URL_ + '" target="_blank" rel="noopener">🔧 リンクを編集（追加・削除）</a>' +
-    '<button type="button" class="lkrefresh" id="lkRefreshBtn">🔄 今すぐ反映</button>' +
-  '</div>' : '') +
-  '<div id="lklist">' +
-    list +
+  '<div class="lkhead"><h1>🔗 各種LINK</h1></div>' +
+  // 入口＝URLリンク／画像リンクの2択。押すと下の各セクションに切り替わる（同じページ内・再取得なし）。
+  '<div id="lkhub" class="lkhub">' +
+    '<button type="button" class="lkhubbtn" id="lkGoUrl"><span class="lkhubico">🔗</span><span>URLリンク</span></button>' +
+    '<button type="button" class="lkhubbtn" id="lkGoImg"><span class="lkhubico">🖼️</span><span>画像リンク</span></button>' +
+  '</div>' +
+  // ── URLリンク（元の各種LINK） ──
+  '<div id="lkurlsec" class="lksec" hidden>' +
+    '<button type="button" class="lkback2" id="lkUrlBack">← 前に戻る</button>' +
+    '<div class="lkhead2"><span class="lkhint">言語を選ぶとURLがコピーされます</span></div>' +
+    // ★開発者(?dev=1)だけに出る「リンクを編集」「今すぐ反映」（共通ルール16）。ズコLINKタブが開く。
+    (dev ? '<div class="lkdevbar">' +
+      '<a class="lkedit" href="' + LK_SHEET_URL_ + '" target="_blank" rel="noopener">🔧 リンクを編集（追加・削除）</a>' +
+      '<button type="button" class="lkrefresh" id="lkRefreshBtn">🔄 今すぐ反映</button>' +
+    '</div>' : '') +
+    '<div id="lklist">' + list + '</div>' +
+  '</div>' +
+  // ── 画像リンク（イーライト後などの画像案内） ──
+  '<div id="lkimgsec" class="lksec" hidden>' +
+    '<button type="button" class="lkback2" id="lkImgBack">← 前に戻る</button>' +
+    (dev ? '<div class="lkdevbar">' +
+      '<a class="lkedit" href="' + LK_IMG_SHEET_URL_ + '" target="_blank" rel="noopener">🔧 画像を編集（追加・削除）</a>' +
+    '</div>' : '') +
+    '<div id="lkimgbody"></div>' +
   '</div>' +
 '</div>' +
 LKSCRIPT_ +
-(dev ? lkDevScript_() : '');
+(dev ? lkDevScript_() : '') +
+lkImgScript_(catsJson);
+}
+
+// 画像リンクの中身（純JS・GAS API不使用）。入口の2択の切り替え＋「分類→ラベル→画像」の
+// 行き来＋画像の送る/保存/コピー（機種で出し分け）を全部この埋め込みスクリプトで行う。
+// スーパーズコは外枠(iframe)の中ではない静的ページなので、コピー/共有/保存はそのまま効く。
+function lkImgScript_(catsJson) {
+  return '<script>(function(){' +
+    'var CATS=' + catsJson + ';' +
+    'var hub=document.getElementById("lkhub");' +
+    'var urlsec=document.getElementById("lkurlsec");' +
+    'var imgsec=document.getElementById("lkimgsec");' +
+    'var body=document.getElementById("lkimgbody");' +
+    'var goUrl=document.getElementById("lkGoUrl"),goImg=document.getElementById("lkGoImg");' +
+    'var urlBack=document.getElementById("lkUrlBack"),imgBack=document.getElementById("lkImgBack");' +
+    'var level="cats",curCat=null;' +
+    'function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\\"/g,"&quot;");}' +
+    'function showHub(){hub.hidden=false;urlsec.hidden=true;imgsec.hidden=true;}' +
+    'function showUrl(){hub.hidden=true;urlsec.hidden=false;imgsec.hidden=true;}' +
+    'function showImg(){hub.hidden=true;urlsec.hidden=true;imgsec.hidden=false;}' +
+    'if(goUrl)goUrl.addEventListener("click",function(){showUrl();});' +
+    'if(goImg)goImg.addEventListener("click",function(){showImg();renderCats();});' +
+    'if(urlBack)urlBack.addEventListener("click",function(){showHub();});' +
+    'if(imgBack)imgBack.addEventListener("click",function(){' +
+      'if(level==="image"){renderItems(curCat);}else if(level==="items"){renderCats();}else{showHub();}' +
+    '});' +
+    'function renderCats(){level="cats";curCat=null;' +
+      'if(!CATS.length){body.innerHTML="<div class=\\"lknone\\">まだ画像の案内が登録されていません。</div>";return;}' +
+      'var h="<div class=\\"lkimgcats\\">";for(var i=0;i<CATS.length;i++){h+="<button type=\\"button\\" class=\\"lkcatbtn\\" data-i=\\""+i+"\\">"+esc(CATS[i].name)+"</button>";}h+="</div>";' +
+      'body.innerHTML=h;var bs=body.querySelectorAll(".lkcatbtn");for(var k=0;k<bs.length;k++){(function(idx){bs[idx].addEventListener("click",function(){renderItems(CATS[idx]);});})(k);}' +
+    '}' +
+    'function renderItems(cat){level="items";curCat=cat;var items=(cat&&cat.items)||[];' +
+      'var h="<div class=\\"lkimgtitle\\">"+esc(cat.name)+"</div><div class=\\"lkimgcats\\">";' +
+      'for(var i=0;i<items.length;i++){h+="<button type=\\"button\\" class=\\"lkcatbtn\\" data-i=\\""+i+"\\">"+esc(items[i].label)+"</button>";}h+="</div>";' +
+      'body.innerHTML=h;var bs=body.querySelectorAll(".lkcatbtn");for(var k=0;k<bs.length;k++){(function(idx){bs[idx].addEventListener("click",function(){renderImage(items[idx]);});})(k);}' +
+    '}' +
+    'function renderImage(item){level="image";var u=item.url;var ua=navigator.userAgent||"";' +
+      'var isIOS=/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&"ontouchend" in document);var isAndroid=/Android/i.test(ua);' +
+      'var h="<div class=\\"lkimgtitle\\">"+esc(item.label)+"</div>";' +
+      'if(!isIOS&&!isAndroid){h+="<button type=\\"button\\" class=\\"lkimgbtn\\" id=\\"lkCopy\\">📋 この画像をコピーする（LINEに貼り付け）</button>";}' +
+      'h+="<button type=\\"button\\" class=\\"lkimgbtn"+((!isIOS&&!isAndroid)?" lksub":"")+"\\" id=\\"lkSave\\">"+((!isIOS&&!isAndroid)?"うまくいかない時（ダウンロードに保存）":"📷 この画像を保存する")+"</button>";' +
+      'h+="<div class=\\"lkimgmsg\\" id=\\"lkMsg\\"></div>";' +
+      'h+="<div class=\\"lkimgwrap\\"><img src=\\""+esc(u)+"\\" alt=\\""+esc(item.label)+"\\"></div>";' +
+      'body.innerHTML=h;var msg=document.getElementById("lkMsg");' +
+      'function directSave(){if(msg)msg.textContent="保存しています…";fetch(u).then(function(r){return r.blob();}).then(function(b){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=(u.split("/").pop()||"image.jpg");document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},4000);if(msg)msg.textContent=(isAndroid?"保存しました。「ダウンロード」フォルダ（写真アプリの「ダウンロード」）に入ります。":"保存しました。「ダウンロード」フォルダに入ります。");}).catch(function(){if(msg)msg.textContent="";window.open(u,"_blank");});}' +
+      'function iosSave(){if(!(navigator.canShare&&navigator.share)){directSave();return;}if(msg)msg.textContent="準備しています…";fetch(u).then(function(r){return r.blob();}).then(function(b){var f=new File([b],(u.split("/").pop()||"image.jpg"),{type:b.type||"image/jpeg"});if(!navigator.canShare({files:[f]}))throw new Error("no");if(msg)msg.textContent="出てきたメニューで「画像を保存」を押すと写真に入ります（LINEを押せばそのまま送れます）。";return navigator.share({files:[f]});}).catch(function(e){if(e&&e.name==="AbortError"){if(msg)msg.textContent="";return;}directSave();});}' +
+      'function toPng(blob){return new Promise(function(res,rej){var im=new Image();var ou=URL.createObjectURL(blob);im.onload=function(){var c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext("2d").drawImage(im,0,0);URL.revokeObjectURL(ou);c.toBlob(function(pb){pb?res(pb):rej(new Error("x"));},"image/png");};im.onerror=function(){URL.revokeObjectURL(ou);rej(new Error("x"));};im.src=ou;});}' +
+      'function pcCopy(){if(!(navigator.clipboard&&navigator.clipboard.write&&window.ClipboardItem)){directSave();return;}if(msg)msg.textContent="コピーしています…";fetch(u).then(function(r){return r.blob();}).then(function(b){return toPng(b);}).then(function(png){return navigator.clipboard.write([new ClipboardItem({"image/png":png})]);}).then(function(){if(msg)msg.textContent="コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してください。";}).catch(function(){if(msg)msg.textContent="コピーできなかったので、保存にします…";directSave();});}' +
+      'var cp=document.getElementById("lkCopy"),sv=document.getElementById("lkSave");' +
+      'if(cp)cp.addEventListener("click",pcCopy);' +
+      'if(sv)sv.addEventListener("click",function(){if(isIOS)iosSave();else directSave();});' +
+    '}' +
+  '})();</scr' + 'ipt>';
 }
 
 // ★開発者だけの「今すぐ反映」ボタンの中身（2026-08-06）。押すと事務所PCへ命令(op=links_refresh)を送り、
@@ -5491,6 +5565,37 @@ var LKCSS_ =
 '  .lkbtn.lkok{ background:#eafff1; border-color:#16a34a; }' +
 '  .lkbtn.lkok .lklang, .lkbtn.lkok .lkcopy{ color:#16a34a; }' +
 '  .lknone{ color:#c33; font-size:16px; font-weight:800; padding:8px 0; }';
+
+// 画像リンク（URLリンク／画像リンクの入口＋画像の分類・ラベル・画像の見た目）。スーパーズコの見た目に合わせる。
+var LKIMGCSS_ =
+'  .lkhub{ display:flex; gap:14px; flex-wrap:wrap; margin:6px 0 20px; }' +
+'  .lkhubbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; cursor:pointer;' +
+'    flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;' +
+'    padding:26px 14px; font-size:24px; font-weight:800; color:#fff; background:#2C7A99;' +
+'    border:1px solid #256781; border-radius:18px; box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
+'  .lkhubbtn:active{ transform:translateY(2px); }' +
+'  .lkhubico{ font-size:40px; }' +
+'  .lkback2{ appearance:none; -webkit-appearance:none; font-family:inherit; cursor:pointer;' +
+'    font-size:.95rem; font-weight:800; color:var(--akiink); background:var(--akicard);' +
+'    border:1px solid var(--akiline); border-radius:10px; padding:10px 16px; margin:0 0 16px; }' +
+'  .lkback2:active{ transform:translateY(1px); }' +
+'  .lkhead2{ margin:0 0 14px; }' +
+'  .lkimgcats{ display:flex; flex-direction:column; gap:14px; }' +
+'  .lkcatbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; cursor:pointer;' +
+'    display:block; width:100%; text-align:center; font-size:26px; font-weight:800; color:#1d4ed8;' +
+'    background:#ffffff; border:1px solid #d7dee8; border-radius:18px; padding:20px 14px;' +
+'    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
+'  .lkcatbtn:active{ transform:translateY(2px); }' +
+'  .lkimgtitle{ font-size:26px; font-weight:800; color:#fff; margin:2px 0 16px; line-height:1.3; }' +
+'  .lkimgbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; cursor:pointer;' +
+'    display:block; width:100%; box-sizing:border-box; font-size:22px; font-weight:800; color:#fff;' +
+'    background:#16a34a; border:1px solid #15803d; border-radius:16px; padding:16px 12px; margin:0 0 10px;' +
+'    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
+'  .lkimgbtn:active{ transform:translateY(2px); }' +
+'  .lkimgbtn.lksub{ background:#ffffff; color:#16a34a; border:2px solid #16a34a; font-size:17px; box-shadow:none; }' +
+'  .lkimgmsg{ color:#16a34a; font-weight:800; font-size:16px; margin:2px 0 10px; min-height:20px; }' +
+'  @media (prefers-color-scheme:dark){ .lkimgmsg{ color:#7CFFB2; } }' +
+'  .lkimgwrap img{ width:100%; display:block; border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,.25); background:#fff; }';
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
 // iOSは https のユニバーサルリンクのまま（Safariで開けばアプリに渡る）。
