@@ -5329,13 +5329,11 @@ var LK_IMG_SHEET_URL_ = 'https://docs.google.com/spreadsheets/d/16ta_ciEX_uPUxfy
 //   URLリンク＝今まで通りの案内リンク集（ズコLINKタブ）。画像リンク＝イーライト後などの
 //   画像案内（ズコ画像タブ）。画像は押すとその場で送る／保存／コピーができる（機種で出し分け）。
 //   見た目はスーパーズコのまま。d=links.json、imgs=images.json。
-function renderLinksPage_(d, imgs, base, staff, dev) {
+function renderLinksPage_(d, base, staff, dev) {
   var topics = (d && d.topics) || [];
   var list = topics.length
     ? topics.map(lkTopicBlock_).join('')
     : '<div class="lknone">まだ案内リンクが登録されていません。</div>';
-  var cats = (imgs && imgs.cats) || [];
-  var catsJson = JSON.stringify(cats).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
   var homeHref = (base || '') + '?view=home' + roleSfx_(staff, dev);
 
   return '' +
@@ -5373,15 +5371,17 @@ function renderLinksPage_(d, imgs, base, staff, dev) {
 '</div>' +
 LKSCRIPT_ +
 (dev ? lkDevScript_() : '') +
-lkImgScript_(catsJson);
+lkImgScript_();
 }
 
 // 画像リンクの中身（純JS・GAS API不使用）。入口の2択の切り替え＋「分類→ラベル→画像」の
 // 行き来＋画像の送る/保存/コピー（機種で出し分け）を全部この埋め込みスクリプトで行う。
 // スーパーズコは外枠(iframe)の中ではない静的ページなので、コピー/共有/保存はそのまま効く。
-function lkImgScript_(catsJson) {
+function lkImgScript_() {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   return '<script>(function(){' +
-    'var CATS=' + catsJson + ';' +
+    'var EXEC="' + EXEC + '";' +
+    'var CATS=null,loading=false;' +   // ★CATS=null＝まだ取っていない。画像リンクを押した時だけ images.json を取りに行く
     'var hub=document.getElementById("lkhub");' +
     'var urlsec=document.getElementById("lkurlsec");' +
     'var imgsec=document.getElementById("lkimgsec");' +
@@ -5393,8 +5393,16 @@ function lkImgScript_(catsJson) {
     'function showHub(){hub.hidden=false;urlsec.hidden=true;imgsec.hidden=true;}' +
     'function showUrl(){hub.hidden=true;urlsec.hidden=false;imgsec.hidden=true;}' +
     'function showImg(){hub.hidden=true;urlsec.hidden=true;imgsec.hidden=false;}' +
+    // 画像リンクを押した時だけ images.json を取りに行く（URLの表示はこれを待たない＝URLは必ず出る）。
+    'function openImg(){showImg();if(CATS){renderCats();return;}if(loading)return;loading=true;' +
+      'body.innerHTML="<div class=\\"lkimgmsg\\">読み込み中…</div>";' +
+      'var cb="__lkimg"+Date.now()+Math.floor(Math.random()*1000);' +
+      'window[cb]=function(r){try{delete window[cb];}catch(e){}loading=false;CATS=(r&&r.cats)||[];renderCats();};' +
+      'var s=document.createElement("script");s.src=EXEC+"?action=data&name=images.json&callback="+cb+"&cb="+Date.now();' +
+      's.onerror=function(){try{delete window[cb];}catch(e){}loading=false;body.innerHTML="<div class=\\"lknone\\">画像の読み込みに失敗しました。もう一度お試しください。</div>";};' +
+      'document.body.appendChild(s);}' +
     'if(goUrl)goUrl.addEventListener("click",function(){showUrl();});' +
-    'if(goImg)goImg.addEventListener("click",function(){showImg();renderCats();});' +
+    'if(goImg)goImg.addEventListener("click",openImg);' +
     'if(urlBack)urlBack.addEventListener("click",function(){showHub();});' +
     'if(imgBack)imgBack.addEventListener("click",function(){' +
       'if(level==="image"){renderItems(curCat);}else if(level==="items"){renderCats();}else{showHub();}' +
