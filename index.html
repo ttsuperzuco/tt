@@ -38,14 +38,13 @@
 <div id="root"></div>
 <script>
 (function () {
-  // 起ち上げ直後（ホーム画面のアイコンから開いた時＝view指定なし）は、
-  // スマホ自身が先に出すアイコン画面(OS側・制御不可)のすぐ後に、アイコンを重ねて出さず
-  // 「TTスーパーズコを起動中」の文字だけを最初から表示する（アイコンが二重に見える対策）。
-  // ボタンを押した後の画面遷移（?view=... 付き）は元通り「よみこみ中…」の文字付きを最初から表示。
+  // 待ち画面はどちらも金魚（ズコ）にそろえる（まるちゃん指示 2026-08-12）。
+  //   ホーム(view無し)＝「ズコは少し遠出かも...」／ボタン後の画面(?view=… 付き)＝「ズコがお散歩中...」。
+  //   ＝はじめ「お散歩中」、読み込みが長引いて自動でホームに戻った時に「少し遠出かも...」になる。
   var view = (new URLSearchParams(location.search)).get('view') || 'home';
   var root = document.getElementById('root');
   if (view === 'home') {
-    root.innerHTML = '<div class="boot"><div class="bootTextLg">TTスーパーズコ<br>を起動中</div></div>';
+    root.innerHTML = '<div class="boot"><div class="bootText">ズコは少し遠出かも...</div><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
   } else {
     root.innerHTML = '<div class="boot"><div class="bootText">ズコがお散歩中...</div><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
   }
@@ -120,7 +119,7 @@
 })();
 </script>
 <script src="detect_core.js?v=20260811shiyou"></script>
-<script src="code.js?v=20260812imglink3"></script>
+<script src="code.js?v=20260812imglink4"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
