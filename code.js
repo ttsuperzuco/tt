@@ -1099,7 +1099,7 @@ function roomColor_(room) {
 
 // 担当スタッフの色（果物マーク別）。TimeTree側に対応物が無いので自前定義
 // ＝room_conflict_detect.py の _STAFF_COLOR と同じ値にすること（PC版⇔アプリの二重メンテ）。
-var STAFF_COLORS_ = { '🍅': '#d1443c', '🍊': '#e08a1e', '🫒': '#4b8b3b', '🥭': '#c9a227' };
+var STAFF_COLORS_ = { '🍅': '#d1443c', '🍊': '#e08a1e', '🫒': '#4b8b3b', '🥭': '#c9a227', '🍍': '#c98a3c' };
 function staffColor_(fruit) {
   return STAFF_COLORS_[fruit] || '#64748b';
 }
@@ -3290,7 +3290,8 @@ function renderNewReservationPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
   // 表示の並び順＝みかん・オリーブ・トマト・マンゴー（2026-08-03 まるちゃん指定）。
-  var STAFF = [['2', '🍊', 'みかん'], ['3', '🫒', 'オリーブ'], ['1', '🍅', 'トマト'], ['4', '🥭', 'マンゴー']];
+  //   5=パイン🍍＝デザイン眉・まつエク専用（既定は隠し、デザ眉/まつエクの時だけ出す）。
+  var STAFF = [['2', '🍊', 'みかん'], ['3', '🫒', 'オリーブ'], ['1', '🍅', 'トマト'], ['4', '🥭', 'マンゴー'], ['5', '🍍', 'パイン']];
   var ROOMS = [['FREEDOM', 'FREEDOM'], ['HAPPY', 'HAPPY'], ['LUCKY', 'LUCKY'], ['STAR', 'STAR/福/🇫🇷']];
   var DURS = [15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 120, 150];
   function staffPills(grp, defVal, ids) {
@@ -3368,6 +3369,8 @@ function renderNewReservationPage_(base, staff, dev) {
     'var cw=document.getElementById("cosmosWarn");if(cw)cw.style.display=d.cosmos_busy?"":"none";' +           // カウンセリング部屋(コスモス)がその時間ふさがっていたら警告
     'var hideBusy=function(g,list){list=(list||[]).map(String);var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),selH=false,first=null;for(var i=0;i<pl.length;i++){var busy=list.indexOf(pl[i].getAttribute("data-val"))>=0;pl[i].style.display=busy?"none":"";if(!busy&&!first){first=pl[i];}if(busy&&pl[i].classList.contains("sel")){selH=true;}}if(selH&&first){sel[g]=first.getAttribute("data-val");for(var j=0;j<pl.length;j++){pl[j].classList.toggle("sel",pl[j]===first);}}};' +
     'hideBusy("room",d.occ_rooms);hideBusy("staff",d.busy_staff);hideBusy("counsel",d.busy_counsel_staff);' +   // 空いていない部屋・施術担当・カウンセリング担当は消す（施術は開始=カウンセリング30分後で判定）
+    // ★デザイン眉・まつエク＝パイン🍍だけ選べる（他4人は隠す）・部屋は取らない（部屋欄を隠す）。
+    'var _isMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");var _sp=document.querySelectorAll(".nrpill[data-grp=\\"staff\\"]");for(var _k=0;_k<_sp.length;_k++){var _pine=_sp[_k].getAttribute("data-val")==="5";_sp[_k].style.display=_isMayu?(_pine?"":"none"):(_pine?"none":"");}var _rw=document.getElementById("nrRoomWrap");if(_rw)_rw.style.display=_isMayu?"none":"";if(_isMayu){selVal("staff","5");sel.room="";}' +
 
 
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
@@ -3380,11 +3383,28 @@ function renderNewReservationPage_(base, staff, dev) {
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},1200);});}' +
     'readEl.addEventListener("click",readGo);' +
+    // 送る中身（貼った文＋選んだ担当/部屋/所要/性別/国籍。extra でタイトルの差し替えを足せる）。
+    'function buildFields(extra){var f={text:(txtEl.value||"").trim(),memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)};if(extra){for(var k in extra){f[k]=extra[k];}}return f;}' +
+    // ① まず、タイムツリーに入るタイトルを受付係に作ってもらう（登録しない）。
+    'var tpolls=0;function pollTitles(id){tpolls++;if(tpolls>40){szOvHide_();goEl.disabled=false;szPopup_("時間切れです。事務所パソコンが動いているかご確認ください。");return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id);},600);return;}' +
+    'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。もう一度お試しください。");return;}' +
+    'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d.ok){szOvHide_();goEl.disabled=false;szPopup_(esc(d.error)||"エラーが発生しました。もう一度お試しください。");return;}' +
+    'showTitleConfirm(d.titles||[],d.disps||[]);});}' +
+    // ② タイトルを編集欄で見せる（枠が複数なら各行）。人が直せる。
+    'function showTitleConfirm(titles,disps){var rows="";for(var i=0;i<titles.length;i++){rows+=\'<div style="margin:10px 0;text-align:left"><div style="color:#eaf3f7;font-size:15px;font-weight:800;margin:0 2px 6px">\'+esc(disps[i]||("枠"+(i+1)))+\'</div><input class="nrTitleIn" value="\'+esc(titles[i]).replace(/"/g,"&quot;")+\'" style="width:100%;font:inherit;font-size:18px;font-weight:800;color:#0f172a;background:#fff;border:0;border-radius:10px;padding:12px 14px;box-sizing:border-box"></div>\';}' +
+    'var html=\'<div style="color:#fff;font-size:26px;font-weight:900;margin-bottom:10px">タイムツリーに登録されるタイトル</div><div style="color:#eaf3f7;font-size:17px;line-height:1.7;margin-bottom:8px">下がそのまま登録されます。直したい時は書き換えてください。</div><div style="width:min(520px,92vw)">\'+rows+\'</div><div style="display:flex;gap:12px;justify-content:center;margin-top:22px"><button type="button" id="nrTitleGo" style="font:inherit;font-size:1.2rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer">この内容で登録する</button><button type="button" id="nrTitleBack" style="font:inherit;font-size:1.05rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer">戻る</button></div>\';' +
+    'szOvShow_(html,"#2C7A99");' +
+    'document.getElementById("nrTitleBack").addEventListener("click",function(){szOvHide_();goEl.disabled=false;});' +
+    'document.getElementById("nrTitleGo").addEventListener("click",function(){var ins=document.querySelectorAll(".nrTitleIn"),ts=[];for(var j=0;j<ins.length;j++){ts.push(ins[j].value);}' +
+    // ③ 直したタイトルで登録。
+    'szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
+    'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields({titles:JSON.stringify(ts)}))},function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});});}' +
     'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼ってください。",true);return;}' +
-    'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
-    'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,' +
-    'fields:JSON.stringify({text:text,memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)})},' +
-    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});}' +
+    'goEl.disabled=true;szOvShow_(szBusyHtml_("登録するタイトルを確認中です"),"#2C7A99");' +
+    'jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},' +
+    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){pollTitles(r.id);},1000);});}' +
     'goEl.addEventListener("click",go);' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
@@ -3413,7 +3433,7 @@ function renderNewReservationPage_(base, staff, dev) {
         '<div id="secCounsel" style="display:none"><div class="nrsec">③ カウンセリング担当</div><div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
         '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px">⚠ カウンセリングの部屋（コスモス）が、この時間ふさがっています。時間や予約を確認してください。</div>' +
         '<div class="nrsec">④ 施術担当</div><div class="nrpills">' + staffPills('staff', '2') + '</div>' +
-        '<div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div>' +
+        '<div id="nrRoomWrap"><div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div></div>' +
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
         '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
         '<button type="button" class="nrgo" id="nrgo">この内容で登録する</button>' +
