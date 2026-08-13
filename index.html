@@ -9,7 +9,12 @@
   #root { min-height:100vh; }
   .boot { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
     color:#fff; opacity:.85; font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; }
-  .bootIcon { width:min(60vw,260px); height:min(60vw,260px); border-radius:20%; box-shadow:0 6px 20px rgba(0,0,0,.3); }
+  /* ★2026-08-13：待ち画面のズコが出ず「空っぽの四角」だけ見える、とまるちゃん指摘。
+     原因は2つ。①絵が icons/icon-512.png(265KB)で届くまで間があった → 見た目そのままで31KBに
+     軽くした zuko-boot.png に差し替え。②届く前でも影(box-shadow)のせいで四角の枠だけ見えていた
+     → 絵が届いて .ok が付くまで影を出さない（届くまでは何も無いように見える）。 */
+  .bootIcon { width:min(60vw,260px); height:min(60vw,260px); border-radius:20%; box-shadow:none; }
+  .bootIcon.ok { box-shadow:0 6px 20px rgba(0,0,0,.3); }
   .bootText { font-size:26px; font-weight:800; }
   .bootTextLg { font-size:min(11vw,50px); font-weight:800; text-align:center; line-height:1.35; padding:0 20px; }
   /* 名前選択（スタッフURLで初回のみ） */
@@ -44,9 +49,9 @@
   var view = (new URLSearchParams(location.search)).get('view') || 'home';
   var root = document.getElementById('root');
   if (view === 'home') {
-    root.innerHTML = '<div class="boot"><div class="bootText">ズコは少し遠出かも...</div><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
+    root.innerHTML = '<div class="boot"><div class="bootText">ズコは少し遠出かも...</div><img src="icons/zuko-boot.png" alt="" class="bootIcon" onload="this.className+=\' ok\'"></div>';
   } else {
-    root.innerHTML = '<div class="boot"><div class="bootText">ズコがお散歩中...</div><img src="icons/icon-512.png" alt="" class="bootIcon"></div>';
+    root.innerHTML = '<div class="boot"><div class="bootText">ズコがお散歩中...</div><img src="icons/zuko-boot.png" alt="" class="bootIcon" onload="this.className+=\' ok\'"></div>';
   }
 })();
 </script>
