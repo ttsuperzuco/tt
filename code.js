@@ -5504,14 +5504,23 @@ function lkTopicBlock_(topic) {
 }
 
 // 言語1つ＝上に大きなコピーボタン、その下に背の低い「プレビュー」（別画面で中身を確認）。
+// ★2026-08-13：シートのC列は「URL1本だけ」とは限らず、案内文＋URL（複数行・URL複数本）が
+//   まるごと入ることがある（オーナー運用）。大きいボタンは中身を"そのまま丸ごと"コピーする
+//   のが正しいので、改行が消えないよう属性値に &#10; で残す。
+//   プレビューは href に中身をそのまま入れていたため、文章混じりだと相対パス扱いになり
+//   GitHub Pagesの404ページが開いていた（スタッフ報告）。中から最初のURLだけを取り出して開き、
+//   URLが1本も無い時はプレビュー自体を出さない。
 function lkLinkBtn_(lk) {
-  var url = esc_(lk.url || '');
+  var raw = String(lk.url == null ? '' : lk.url);
+  var data = esc_(raw).replace(/\r\n|\r|\n/g, '&#10;');
+  var m = raw.match(/https?:\/\/[^\s"'<>]+/);
+  var prev = m ? m[0] : '';
   return '<div class="lkcell">' +
-    '<button type="button" class="lkbtn" data-url="' + url + '">' +
+    '<button type="button" class="lkbtn" data-url="' + data + '">' +
       '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
       '<span class="lkcopy"></span>' +
     '</button>' +
-    '<a class="lkprev" href="' + url + '" target="_blank" rel="noopener">プレビュー</a>' +
+    (prev ? '<a class="lkprev" href="' + esc_(prev) + '" target="_blank" rel="noopener">プレビュー</a>' : '') +
   '</div>';
 }
 
