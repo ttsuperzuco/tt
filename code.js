@@ -5386,7 +5386,7 @@ function lkImgScript_(base) {
     'var body=document.getElementById("lkimgbody");' +
     'var goUrl=document.getElementById("lkGoUrl"),goImg=document.getElementById("lkGoImg");' +
     'var urlBack=document.getElementById("lkUrlBack"),imgBack=document.getElementById("lkImgBack");' +
-    'var level="cats",curCat=null;' +
+    'var level="cats",curCat=null,curGroup=null;' +   // ★curGroup＝いま開いている"まとめ"（無ければnull）
     'function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\\"/g,"&quot;");}' +
     'function showHub(){hub.hidden=false;urlsec.hidden=true;imgsec.hidden=true;}' +
     'function showUrl(){hub.hidden=true;urlsec.hidden=false;imgsec.hidden=true;}' +
@@ -5410,12 +5410,30 @@ function lkImgScript_(base) {
 
     'if(urlBack)urlBack.addEventListener("click",function(){showHub();});' +
     'if(imgBack)imgBack.addEventListener("click",function(){' +
-      'if(level==="image"){renderItems(curCat);}else if(level==="items"){renderCats();}else{showHub();}' +
+      'if(level==="image"){renderItems(curCat);}else if(level==="items"){if(curCat&&curCat.group){renderGroup(curCat.group);}else{renderCats();}}' +
+      'else if(level==="group"){renderCats();}else{showHub();}' +
     '});' +
-    'function renderCats(){level="cats";curCat=null;' +
+    // 一番上の並び：まとめ名が付いた分類は"まとめボタン"1つにたたみ、付いていない分類はそのまま並べる（表のA列で決まる）。
+    'function renderCats(){level="cats";curCat=null;curGroup=null;' +
       'if(!CATS.length){body.innerHTML="<div class=\\"lknone\\">まだ画像の案内が登録されていません。</div>";return;}' +
-      'var h="<div class=\\"lkimgcats\\">";for(var i=0;i<CATS.length;i++){h+="<button type=\\"button\\" class=\\"lkcatbtn\\" data-i=\\""+i+"\\">"+esc(CATS[i].name)+"</button>";}h+="</div>";' +
-      'body.innerHTML=h;var bs=body.querySelectorAll(".lkcatbtn");for(var k=0;k<bs.length;k++){(function(idx){bs[idx].addEventListener("click",function(){renderItems(CATS[idx]);});})(k);}' +
+      'var rows=[],seen={};' +
+      'for(var i=0;i<CATS.length;i++){var g=CATS[i].group||"";' +
+        'if(g){if(!seen[g]){seen[g]=1;rows.push({group:g});}}else{rows.push({cat:CATS[i]});}}' +
+      'var h="<div class=\\"lkimgcats\\">";' +
+      'for(var j=0;j<rows.length;j++){h+="<button type=\\"button\\" class=\\"lkcatbtn\\" data-i=\\""+j+"\\">"+esc(rows[j].group||rows[j].cat.name)+"</button>";}' +
+      'h+="</div>";' +
+      'body.innerHTML=h;var bs=body.querySelectorAll(".lkcatbtn");' +
+      'for(var k=0;k<bs.length;k++){(function(idx){bs[idx].addEventListener("click",function(){' +
+        'if(rows[idx].group){renderGroup(rows[idx].group);}else{renderItems(rows[idx].cat);}' +
+      '});})(k);}' +
+    '}' +
+    // まとめボタンを押した時：そのまとめに入っている分類だけを並べる。
+    'function renderGroup(g){level="group";curGroup=g;curCat=null;' +
+      'var list=[];for(var i=0;i<CATS.length;i++){if((CATS[i].group||"")===g)list.push(CATS[i]);}' +
+      'var h="<div class=\\"lkimgtitle\\">"+esc(g)+"</div><div class=\\"lkimgcats\\">";' +
+      'for(var j=0;j<list.length;j++){h+="<button type=\\"button\\" class=\\"lkcatbtn\\" data-i=\\""+j+"\\">"+esc(list[j].name)+"</button>";}h+="</div>";' +
+      'body.innerHTML=h;var bs=body.querySelectorAll(".lkcatbtn");' +
+      'for(var k=0;k<bs.length;k++){(function(idx){bs[idx].addEventListener("click",function(){renderItems(list[idx]);});})(k);}' +
     '}' +
     'function renderItems(cat){level="items";curCat=cat;var items=(cat&&cat.items)||[];' +
       'var h="<div class=\\"lkimgtitle\\">"+esc(cat.name)+"</div><div class=\\"lkimgcats\\">";' +
