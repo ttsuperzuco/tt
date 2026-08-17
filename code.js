@@ -1605,6 +1605,24 @@ var ROLEMENU_SCRIPT_ =
 'var bb=document.querySelectorAll(".backbtn");for(var j=0;j<bb.length;j++){bb[j].addEventListener("click",showMenu);}' +
 '})();</script>';
 
+// 外部サイトへ飛ぶボタン（元祖TTアプリ等）を、スマホのホーム画面から開いた時にも必ず開けるようにする。
+//   【なぜ有る】2026-08-17・まるちゃん報告「スマホで元祖TTアプリが開かない・パソコンは大丈夫」。
+//   原因＝これらのボタンは target="_blank"（新しいタブで開く）だが、ホーム画面のアイコンから
+//   開いた時のスーパーズコは「タブの無いアプリの姿」で動いており、新しいタブを作れない
+//   （特にiPhoneは押しても何も起きない）。パソコンのブラウザにはタブがあるので今まで通り開く。
+//   【やり方】アプリの姿で動いている時だけ、その場で飛ぶ（同じ画面で開く）に切り替える。
+//   パソコン（普通のブラウザのタブ）では今まで通り新しいタブで開く＝動きを変えない。
+var EXTLINK_SCRIPT_ =
+'<script>(function(){' +
+'var app=false;' +
+'try{app=(window.navigator.standalone===true)||(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches);}catch(e){}' +
+'if(!app)return;' +
+'var a=document.querySelectorAll(\'a.tile[target="_blank"]\');' +
+'for(var i=0;i<a.length;i++){(function(el){el.addEventListener("click",function(ev){' +
+'var u=el.getAttribute("href");if(!u)return;ev.preventDefault();window.location.href=u;' +
+'});})(a[i]);}' +
+'})();</script>';
+
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
  *  perms/labels(追加スタッフ込み)を renderHomePage_ に渡す。 */
 function renderHome_(base, staff, dev, who) {
@@ -1672,12 +1690,12 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       '<div class="home">' + head +
         '<div class="rolemenu" id="rolemenu">' + menuHtml + '</div>' +
         groupsHtml +
-      '</div>' + ROLEMENU_SCRIPT_;
+      '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_;
   }
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' + head +
     '<div class="tiles">' + shown.map(tileA_).join('') + '</div>' +
-  '</div>';
+  '</div>' + EXTLINK_SCRIPT_;
 }
 
 /** L⇔T予約照合（LINEの予約 と TimeTree の予定を突き合わせた結果を表示）。
