@@ -1612,6 +1612,9 @@ var ROLEMENU_SCRIPT_ =
 //   （特にiPhoneは押しても何も起きない）。パソコンのブラウザにはタブがあるので今まで通り開く。
 //   【やり方】アプリの姿で動いている時だけ、その場で飛ぶ（同じ画面で開く）に切り替える。
 //   パソコン（普通のブラウザのタブ）では今まで通り新しいタブで開く＝動きを変えない。
+//   ★2026-08-17・まるちゃん指示「押してる間・開いてる間はズコの散歩を出せ」：その場で飛ぶ時は
+//     飛ぶ直前に「ズコがお散歩中...」の待ち画面へ差し替える（押しても無反応に見える時間を無くす）。
+//     見た目は index.html のボタン後の待ち画面とまったく同じ物（同じ文言・同じ絵・同じ飾り）。
 var EXTLINK_SCRIPT_ =
 '<script>(function(){' +
 'var app=false;' +
@@ -1619,7 +1622,11 @@ var EXTLINK_SCRIPT_ =
 'if(!app)return;' +
 'var a=document.querySelectorAll(\'a.tile[target="_blank"]\');' +
 'for(var i=0;i<a.length;i++){(function(el){el.addEventListener("click",function(ev){' +
-'var u=el.getAttribute("href");if(!u)return;ev.preventDefault();window.location.href=u;' +
+'var u=el.getAttribute("href");if(!u)return;ev.preventDefault();' +
+'var r=document.getElementById("root");' +
+'if(r)r.innerHTML=\'<div class="boot"><div class="bootText">ズコがお散歩中...</div>\'+' +
+'\'<img src="icons/zuko-boot.png" alt="" class="bootIcon" onload="this.className+=&quot; ok&quot;"></div>\';' +
+'window.location.href=u;' +
 '});})(a[i]);}' +
 '})();</script>';
 
