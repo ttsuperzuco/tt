@@ -5533,19 +5533,26 @@ function lkTopicBlock_(topic) {
 //   まるごと入ることがある（オーナー運用）。大きいボタンは中身を"そのまま丸ごと"コピーする
 //   のが正しいので、改行が消えないよう属性値に &#10; で残す。
 //   プレビューは href に中身をそのまま入れていたため、文章混じりだと相対パス扱いになり
-//   GitHub Pagesの404ページが開いていた（スタッフ報告）。中から最初のURLだけを取り出して開き、
+//   GitHub Pagesの404ページが開いていた（スタッフ報告）。中からURLだけを取り出して開き、
 //   URLが1本も無い時はプレビュー自体を出さない。
+// ★2026-08-18：1つの枠に案内が2つ（URL2本）入る運用になったのに、プレビューが最初の1本しか
+//   開けず「画像しか出ない」と指摘を受けた。枠の中のURLを全部拾い、1本ごとにプレビューを出す。
+//   2本以上ある時だけ「プレビュー①②…」と番号を付ける（順番＝枠の中に出てくる順）。
 function lkLinkBtn_(lk) {
   var raw = String(lk.url == null ? '' : lk.url);
   var data = esc_(raw).replace(/\r\n|\r|\n/g, '&#10;');
-  var m = raw.match(/https?:\/\/[^\s"'<>]+/);
-  var prev = m ? m[0] : '';
+  var urls = raw.match(/https?:\/\/[^\s"'<>]+/g) || [];
+  var marks = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
+  var prevs = urls.map(function (u, i) {
+    var label = urls.length > 1 ? 'プレビュー' + (marks[i] || (i + 1)) : 'プレビュー';
+    return '<a class="lkprev" href="' + esc_(u) + '" target="_blank" rel="noopener">' + label + '</a>';
+  }).join('');
   return '<div class="lkcell">' +
     '<button type="button" class="lkbtn" data-url="' + data + '">' +
       '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
       '<span class="lkcopy"></span>' +
     '</button>' +
-    (prev ? '<a class="lkprev" href="' + esc_(prev) + '" target="_blank" rel="noopener">プレビュー</a>' : '') +
+    prevs +
   '</div>';
 }
 
