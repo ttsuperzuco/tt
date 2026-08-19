@@ -1115,10 +1115,12 @@ function szOvShow_(html, bg) {
   return ov;
 }
 function szOvHide_() { var ov = document.getElementById('szBusyOv'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); }
-function szBusyHtml_(title) {
+function szBusyHtml_(title, sub) {
+  // sub＝下の説明文。書かなければ今まで通りタイムツリー書き込み用の文（部屋移動・担当異動など）。
   return "<div style='font-size:66px;margin-bottom:20px;'>⏳</div>" +
     "<div style='color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;'>" + title + "</div>" +
-    "<div style='color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;'>タイムツリーへの書き込みが完了したら自動で切り替わりますので、しばらくお待ちください。</div>";
+    "<div style='color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;'>" +
+    (sub || "タイムツリーへの書き込みが完了したら自動で切り替わりますので、しばらくお待ちください。") + "</div>";
 }
 function szDoneHtml_(title, backLabel) {
   return "<div style='font-size:92px;margin-bottom:16px;'>✓</div>" +
@@ -6735,15 +6737,27 @@ var KANSHISCRIPT_ =
 '    if(onDone) onDone();' +
 '  });' +
 '}' +
-'function poll_(id, tries){' +
+// busy＝{title:"保存中です", done:"保存が完了しました"} を渡すと、全画面の〈処理中→完了〉表示にする
+// （共通ルール2026-08-05／パソコンの同じ画面ともそろえる・2026-08-19まるちゃん指摘）。
+'function poll_(id, tries, busy){' +
 '  jsonp_({action:"status", key:KEY_, id:id}, function(r){' +
 '    if(r&&r.ok&&(r.status==="done"||r.status==="error")){' +
-'      toast_((r.status==="done"?"✅ ":"⚠ ")+(r.result||""));' +
+'      if(busy){' +
+'        if(r.status==="done"){' +
+'          szOvShow_(szDoneHtml_(busy.done||"完了しました","戻る"),"#16a34a");' +
+'          var _b=document.getElementById("szDoneBack");' +
+'          if(_b) _b.addEventListener("click", function(){ szOvHide_(); });' +
+'        } else { szOvHide_(); szPopup_("エラーが発生しました。"+(r.result||"")); }' +
+'      } else { toast_((r.status==="done"?"✅ ":"⚠ ")+(r.result||"")); }' +
 '      reload_();' +
 '      return;' +
 '    }' +
-'    if(tries<=0){ toast_("時間切れです。事務所PCの状態をご確認ください。"); return; }' +
-'    setTimeout(function(){ poll_(id, tries-1); }, 5000);' +
+'    if(tries<=0){' +
+'      if(busy){ szOvHide_(); szPopup_("時間切れです。事務所PCの状態をご確認ください。"); }' +
+'      else { toast_("時間切れです。事務所PCの状態をご確認ください。"); }' +
+'      return;' +
+'    }' +
+'    setTimeout(function(){ poll_(id, tries-1, busy); }, 5000);' +
 '  });' +
 '}' +
 // ========== ボタン表示設定の編集画面（2026-07-17・事務所PCの設定画面と同じことをスマホで） ==========
@@ -6865,7 +6879,8 @@ var KANSHISCRIPT_ =
 '    for(var t in (EP_[pid]||{})){ if(EP_[pid][t]) on.push(t); }' +
 '    p[pid]=on;' +
 '  }' +
-'  send_("tile_settings","setval", JSON.stringify({t:"save", o:EO_, p:p, ph:EPCHIDDEN_}));' +
+'  send_("tile_settings","setval", JSON.stringify({t:"save", o:EO_, p:p, ph:EPCHIDDEN_}),' +
+'    {title:"保存中です", done:"保存が完了しました"});' +
 '  closeTiles_();' +
 '}' +
 'function tilesClick_(ev){' +
@@ -6887,7 +6902,8 @@ var KANSHISCRIPT_ =
 '  if(chip&&chip.getAttribute("data-reset")){' +
 '    var rid=chip.getAttribute("data-reset");' +
 '    if(confirm("「"+(rid==="all"?"全員":(ELAB_[rid]||rid))+"」を名前の選び直しにします。よろしいですか？")){' +
-'      send_("tile_settings","setval", JSON.stringify({t:"reset", v:rid}));' +
+'      send_("tile_settings","setval", JSON.stringify({t:"reset", v:rid}),' +
+'        {title:"選び直しにしています", done:"選び直しにしました"});' +
 '    }' +
 '    return true;' +
 '  }' +
@@ -6896,7 +6912,8 @@ var KANSHISCRIPT_ =
 '  if(t.closest("#kAddBtn")){' +
 '    var v=(document.getElementById("kAdd").value||"").trim();' +
 '    if(!v){ toast_("名前を入れてください"); return true; }' +
-'    send_("tile_settings","setval", JSON.stringify({t:"add", v:v}));' +
+'    send_("tile_settings","setval", JSON.stringify({t:"add", v:v}),' +
+'      {title:"ユーザーを追加しています", done:"ユーザーを追加しました"});' +
 '    document.getElementById("kAdd").value="";' +
 '    return true;' +
 '  }' +
@@ -6904,7 +6921,8 @@ var KANSHISCRIPT_ =
 '    var pw=(document.getElementById("kPw2").value||"").trim();' +
 '    if(!pw){ toast_("新しい合言葉を入れてください"); return true; }' +
 '    if(confirm("スタッフ用URLの合言葉を「"+pw+"」に変えます。よろしいですか？")){' +
-'      send_("tile_settings","setval", JSON.stringify({t:"pw", v:pw}));' +
+'      send_("tile_settings","setval", JSON.stringify({t:"pw", v:pw}),' +
+'        {title:"合言葉を変えています", done:"合言葉を変えました"});' +
 '    }' +
 '    return true;' +
 '  }' +
@@ -6913,13 +6931,18 @@ var KANSHISCRIPT_ =
 '  return false;' +
 '}' +
 // 依頼を送る。合言葉は無い＝**登録した1台のスマホ**であることをサーバー側が見る（kanshiGate_）。
-'function send_(key, act, val){' +
-'  toast_("受け付けました。事務所PCが実行します（最大1分）…");' +
+'function send_(key, act, val, busy){' +
+'  if(busy){ szOvShow_(szBusyHtml_(busy.title, "事務所のパソコンが受け取って書き終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99"); }' +
+'  else { toast_("受け付けました。事務所PCが実行します（最大1分）…"); }' +
 '  jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", device:DEV_,' +
 '    fields:JSON.stringify({ctl_key:key, ctl_act:act, ctl_val:(val||"")})},' +
 '    function(r){' +
-'      if(!r||!r.ok){ toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); return; }' +
-'      poll_(r.id, 16);' +
+'      if(!r||!r.ok){' +
+'        if(busy){ szOvHide_(); szPopup_("エラーが発生しました。"+((r&&r.error)||"依頼できませんでした")); }' +
+'        else { toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); }' +
+'        return;' +
+'      }' +
+'      poll_(r.id, 16, busy);' +
 '    });' +
 '}' +
 'document.addEventListener("click", function(ev){' +
