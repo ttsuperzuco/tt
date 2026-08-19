@@ -1583,8 +1583,9 @@ var TILE_DEFS_ = [
 //   3つの大ボタンを出し、押すとその仲間だけを見せる（上の「← 戻る」で3ボタンに戻る）。普通のスタッフ版・
 //   社長版は今まで通り一覧のまま。どのボタンがどの部屋か（ここに無いidは実務者用）＝PC版 super_pc.py の
 //   GROUP_OF と一致させる（片方直したら必ず両方）。
+// ★2026-08-19 まるちゃん決定：売上転記(uriage)は実務者用へ移した（ここに書かない＝実務者用になる）。
 var TILE_GROUP_ = {
-  uriage: 'kanri', kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
+  kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', timedsend: 'kaihatsu'
 };
