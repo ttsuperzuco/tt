@@ -137,6 +137,9 @@ function doGet(e) {
   } else if (view === 'akijikan') {
     title = '空き時間検索';
     html = renderAkijikan_(base, staff, dev);
+  } else if (view === 'procell') {
+    title = 'プロセル 残り本数';                         // ★開発URL(?dev=1)専用。美容液を何本注文するかの数
+    html = renderProcell_(base, staff, dev);
   } else if (view === 'kanshi') {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
@@ -833,6 +836,25 @@ function getUnansweredFile_() {
 /** akijikan.json のファイルを取得（空き時間検索の表示。
  *  事務所PCが export_akijikan_super.py で書き出す）。 */
 var AKIJIKAN_FILENAME = 'akijikan.json';
+// ★プロセルの残り本数（2026-08-20 まるちゃん決定）＝事務所PCが毎晩そろえて置き場へ書き出す。
+var PROCELL_FILENAME = 'procell.json';
+function getProcellFile_() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('PROCELL_FILE_ID');
+  if (id) {
+    try { return DriveApp.getFileById(id); } catch (ignore) { /* IDが古い→探し直す */ }
+  }
+  var it = DriveApp.getFilesByName(PROCELL_FILENAME);
+  var newest = null;
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
+  }
+  if (!newest) throw new Error(PROCELL_FILENAME + ' が見つかりません（事務所PCで書き出してください）。');
+  props.setProperty('PROCELL_FILE_ID', newest.getId());
+  return newest;
+}
+
 function getAkijikanFile_() {
   var props = PropertiesService.getScriptProperties();
   var id = props.getProperty('AKIJIKAN_FILE_ID');
@@ -924,12 +946,15 @@ var DEFAULT_TILE_SETTINGS_ = {
   instadm:    { exec: false, staff: false },
   igdm:       { exec: false, staff: false },
   // ★自作Claudeツール＝合言葉の一覧（タップでコピー）。オーナー専用＝開発URL(?dev=1)だけに出る。
-  claudetools: { exec: false, staff: false }
+  claudetools: { exec: false, staff: false },
+  // ★プロセル残り本数＝オーナー(開発者)専用。kanshi/costと同じく開発URL(?dev=1)専用
+  //   （tile_settings.py の TILES にも入れない＝誰もONにできない・共通ルール16）。
+  procell:    { exec: false, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'timedsend', 'yoyaku'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'timedsend', 'yoyaku', 'procell'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1577,6 +1602,10 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">⏰</span>', label: '時間指定\nLINE送信' },
   // ★予約入力＝貼って選ぶだけで新規予約を1件作る。開発URL(?dev=1)専用（kanshi/zenjitsu/costと同じ＝
   //   tile_settings.py に入れないので開発者だけに出る）。登録は事務所PC(edit_worker op=new_reservation)が実行。
+  // ★プロセル残り本数＝美容液を何本注文するかの数（頭皮用・顔MD用・顔Pro用）。開発URL(?dev=1)専用。
+  //   事務所PCが毎晩そろえた procell.json を読んで出すだけ（計算はPC側・2026-08-20）。
+  { id: 'procell', cls: 'procell', view: 'procell',
+    icon: '<span class="ticon">🧴</span>', label: 'プロセル\n残り本数' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
     icon: '<span class="ticon">📝</span>', label: '予約\n入力' }
 ];
@@ -4836,6 +4865,84 @@ var UNACSS_ =
 /** 空き時間検索（スタッフの手空きから予約可能な時間を探す）。
  *  事務所PCが export_akijikan_super.py で書き出した akijikan.json を読むだけ（GASは計算しない＝
  *  判定ロジックの実体はPC版 空き時間検索\available_slots.py の build_report() 1つ）。 */
+// ========== プロセル 残り本数（2026-08-20 まるちゃん決定・開発URL専用） ==========
+// 事務所PCが毎晩そろえた procell.json を読んで出すだけ（計算はPC側＝共通の決まり）。
+function renderProcell_(base, staff, dev) {
+  try {
+    var d = JSON.parse(getProcellFile_().getBlob().getDataAsString('UTF-8'));
+    return renderProcellPage_(d, base, staff, dev);
+  } catch (err) {
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="home">' + backBar_(base, staff, dev) +
+      '<div class="hhead"><span class="bmark">🧴</span><span class="bname">プロセル 残り本数</span></div>' +
+      '<div class="soon"><div class="soonic">📄</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">まだ作られていません</div>' +
+      '<div class="soondesc">' + esc_(err && err.message ? err.message : err) + '</div></div></div>';
+  }
+}
+
+function renderProcellPage_(d, base, staff, dev) {
+  var o = d.order || {}, r = d.rest || {}, k = d.expired || {};
+  var kinds = [['頭皮', '頭皮用'], ['顔MD', '顔MD用'], ['顔Pro', '顔Pro用']];
+  var cards = '';
+  for (var i = 0; i < kinds.length; i++) {
+    var key = kinds[i][0], nm = kinds[i][1];
+    cards +=
+      '<div class="pcCard">' +
+        '<div class="pcName">' + esc_(nm) + '</div>' +
+        '<div class="pcNum">' + (o[key] || 0) + '<span class="pcUnit">本</span></div>' +
+        '<div class="pcSub">残り ' + (r[key] || 0) + '本' +
+          ((k[key] || 0) ? '（うち期限切れ ' + k[key] + '本を除く）' : '') + '</div>' +
+      '</div>';
+  }
+  var people = d.people || [];
+  people.sort(function (a, b) { return (b['残り'] - b['期限切れ']) - (a['残り'] - a['期限切れ']); });
+  var rows = '';
+  for (var j = 0; j < people.length; j++) {
+    var p = people[j];
+    var nokori = (p['残り'] || 0) - (p['期限切れ'] || 0);
+    if (nokori <= 0) continue;
+    rows +=
+      '<tr>' +
+        '<td class="pcL">' + esc_(p['番号'] || '') + '</td>' +
+        '<td class="pcL">' + esc_(p['名前'] || '') + '</td>' +
+        '<td class="pcL">' + esc_(p['種類'] || '') + '</td>' +
+        '<td class="pcR">' + nokori + '</td>' +
+        '<td class="pcL pcDim">' + esc_(p['最後の来店'] || '') + '</td>' +
+      '</tr>';
+  }
+  return '<style>' + HOMECSS_ + PROCELLCSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🧴</span><span class="bname">プロセル 残り本数</span></div>' +
+    '<div class="pcLead">お金をいただいてあって、まだ受けていない回数です。これから注文する本数の目安になります。</div>' +
+    '<div class="pcCards">' + cards + '</div>' +
+    '<div class="pcTitle">お客様ごとの残り</div>' +
+    '<div class="pcTableWrap"><table class="pcTable">' +
+      '<tr><th class="pcL">番号</th><th class="pcL">お名前</th><th class="pcL">種類</th>' +
+      '<th class="pcR">残り</th><th class="pcL">最後のご来店</th></tr>' + rows +
+    '</table></div>' +
+    '<div class="pcFoot">そろえた時刻：' + esc_(d.generated_at || '') + '（毎晩そろえます）</div>' +
+  '</div>';
+}
+
+var PROCELLCSS_ = ''
++ '.pcLead{margin:10px 4px 14px;font-size:1rem;line-height:1.6;opacity:.9}'
++ '.pcCards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}'
++ '.pcCard{flex:1 1 30%;min-width:150px;background:#16283a;border-radius:14px;padding:14px 12px;text-align:center}'
++ '.pcName{font-size:1rem;opacity:.85;margin-bottom:6px}'
++ '.pcNum{font-size:2.4rem;font-weight:800;line-height:1.1;color:#7ad0ff}'
++ '.pcUnit{font-size:1rem;font-weight:600;margin-left:3px;opacity:.85}'
++ '.pcSub{font-size:.85rem;opacity:.75;margin-top:6px}'
++ '.pcTitle{font-weight:700;font-size:1.1rem;margin:6px 4px 8px}'
++ '.pcTableWrap{overflow-x:auto}'
++ '.pcTable{width:100%;border-collapse:collapse;font-size:.95rem}'
++ '.pcTable th{background:#16283a;padding:8px 10px;white-space:nowrap}'
++ '.pcTable td{border-bottom:1px solid rgba(255,255,255,.12);padding:8px 10px;white-space:nowrap}'
++ '.pcL{text-align:left}.pcR{text-align:right;font-weight:700}'
++ '.pcDim{opacity:.7}'
++ '.pcFoot{margin:14px 4px;font-size:.85rem;opacity:.7}';
+
 function renderAkijikan_(base, staff, dev) {
   try {
     var d = JSON.parse(getAkijikanFile_().getBlob().getDataAsString('UTF-8'));
