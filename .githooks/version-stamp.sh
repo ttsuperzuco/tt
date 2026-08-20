@@ -28,8 +28,20 @@ cd "$top" || exit 1
 mode="$1"
 rc=0
 
-for f in code.js detect_core.js; do
-  [ -f "$f" ] || continue
+# 対象は決め打ちにせず、入口(index.html)が「版の名札つきで読み込んでいる本体」を自動で見つける。
+# ＝将来この2本以外が増えても、書き足さなくても勝手に対象になる（付け忘れが起きない）。
+targets=$(sed -n 's|.*src="\([A-Za-z0-9_.-]*\.js\)?v=[^"]*".*|\1|p' index.html | sort -u)
+if [ -z "$targets" ]; then
+  echo "！入口(index.html)に版の名札つきの読み込み行が1つも見つかりません。書き方を変えたなら、この道具も直してください。" >&2
+  exit 1
+fi
+
+for f in $targets; do
+  if [ ! -f "$f" ]; then
+    echo "！入口が読んでいる $f が見当たりません。" >&2
+    rc=1
+    continue
+  fi
   sum=$(git hash-object "$f" | cut -c1-10)
   cur=$(sed -n "s|.*src=\"$f?v=\([^\"]*\)\".*|\1|p" index.html | head -1)
 
