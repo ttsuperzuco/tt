@@ -1,0 +1,4 @@
+# 押し出し前の自動処理（.githooks の中身）は、Windowsでも必ずLF改行で取り出す。
+# CRLFになると「#!/bin/sh」の行が壊れて動かなくなり、版の番号の自動生成が黙って効かなくなるため。
+.githooks/* text eol=lf
+*.sh text eol=lf
