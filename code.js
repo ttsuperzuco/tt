@@ -6975,4 +6975,3 @@ var KANSHISCRIPT_ =
 'render_();' +
 'setInterval(function(){ reload_(); }, 30000);' +
 '})();<' + '/script>';
-// ※2026-08-20 通し試験：この行はスマホへ届くかを確かめるための無害な覚え書きです（画面には出ません）
