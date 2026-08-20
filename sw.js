@@ -17,7 +17,16 @@
 //
 // 【困った時】アプリが古いまま直らない等があれば、この保管を丸ごと捨てればよい
 //   （下の CACHE の名前を変えて配る＝古い保管は自動で消える）。
-var CACHE = 'ttzuko-shell-v70';   // 2026-08-12 各種LINK→トマトさん版へ飛ぶ保険を撤去・保管ごと入れ替えて確実に更新
+//
+// 【★2026-08-20・まるちゃん依頼「スマホで開くのが遅い・戻るを押すとまた遅い」の直し】
+//   原因＝2026-07-19/07-26に「直したのに古いまま」を防ぐため、入口も本体も**毎回ネットから
+//   取り直す**ようにした。当時の本体は270KBだったが、いまは545KB（圧縮しても151KB）まで太った。
+//   画面の切り替えは全部ページの読み直しなので、起動も戻るもボタンも毎回この151KBを待っていた。
+//   直し＝**入口だけ今まで通り毎回ネット・本体(住所に版の名札 ?v=… が付く物)は手元優先**に戻す。
+//   版を上げると住所そのものが変わる＝手元に無い＝必ず取りに行くので、
+//   「古いまま直らない」は起きない（この考え方は上の★印に元から書いてあった通り）。
+//   本体を新しく保管した時は、同じ名前の古い版を捨てる（保管が溜まらないように）。
+var CACHE = 'ttzuko-shell-v71';   // 2026-08-20 本体(?v=付き)を手元優先に戻す＝起動と戻るを速く（まるちゃん依頼）
 
 self.addEventListener('install', function (e) {
   self.skipWaiting();   // 新しい保管係にすぐ交代する
@@ -42,6 +51,38 @@ self.addEventListener('fetch', function (e) {
 
   var isNav = (req.mode === 'navigate');   // ?view=... が付くので、保存する時は付けずに1つにまとめる
   var key = isNav ? new Request(url.origin + url.pathname) : req;
+
+  // 【★本体(code.js / detect_core.js)＝住所の末尾に版の名札(?v=…)が付いている物】
+  //   手元にあれば即返す＝ネットを1秒も待たない（起動・戻る・ボタンが速くなる）。
+  //   版を上げると入口(index.html)が指す住所が変わる→手元に無い→その時だけ取りに行く。
+  //   だから「直したのにスマホが古いまま」にはならない（入口は下の通り毎回ネットから取るため）。
+  if (!isNav && /\.js$/.test(url.pathname) && /[?&]v=/.test(url.search)) {
+    e.respondWith(
+      caches.open(CACHE).then(function (cache) {
+        return cache.match(req).then(function (hit) {
+          if (hit) return hit;   // 手元にある＝即返す
+          return fetch(req.url, { cache: 'no-store' }).then(function (res) {
+            if (res && res.ok && res.type === 'basic') {
+              var copy = res.clone();
+              cache.put(req, copy).then(function () {
+                // 同じ名前の古い版は捨てる（版を上げるたびに保管が積み上がらないように）
+                cache.keys().then(function (reqs) {
+                  for (var i = 0; i < reqs.length; i++) {
+                    try {
+                      var u = new URL(reqs[i].url);
+                      if (u.pathname === url.pathname && reqs[i].url !== req.url) cache['delete'](reqs[i]);
+                    } catch (e3) {}
+                  }
+                })['catch'](function () {});
+              })['catch'](function () {});
+            }
+            return res;
+          });
+        });
+      })
+    );
+    return;
+  }
 
   // 【画面の本体(index.html/code.js/detect_core.js)＝必ず先にネットから取る】
   //   2026-07-19：以前は本体も「手元優先」だったため、新しい版が届くのが毎回1回遅れ
