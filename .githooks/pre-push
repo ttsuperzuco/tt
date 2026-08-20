@@ -1,0 +1,11 @@
+#!/bin/sh
+# 押し出す直前の二重の安全網。入口の版の番号が本体と合っていなければ止める。
+# （コミット時の自動書き直しを飛ばした場合などに効く）
+top=$(git rev-parse --show-toplevel) || exit 1
+if ! sh "$top/.githooks/version-stamp.sh" --check; then
+  echo "" >&2
+  echo "→ 入口の版の番号が本体と合っていません。押し出しを止めました。" >&2
+  echo "   直し方： sh .githooks/version-stamp.sh   のあと、もう一度コミットしてください。" >&2
+  exit 1
+fi
+exit 0

@@ -1,0 +1,9 @@
+#!/bin/sh
+# コミットの直前に、入口(index.html)の版の番号を本体の中身から自動で書き直す。
+# 詳しくは .githooks/version-stamp.sh の冒頭。
+top=$(git rev-parse --show-toplevel) || exit 1
+sh "$top/.githooks/version-stamp.sh"
+r=$?
+[ $r -eq 1 ] && exit 1              # 入口の書き方がおかしい＝止める
+[ $r -eq 2 ] && git add "$top/index.html"   # 書き直した分を今回のコミットに入れる
+exit 0
