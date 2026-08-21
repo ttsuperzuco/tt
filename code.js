@@ -3393,7 +3393,7 @@ function renderNewReservationPage_(base, staff, dev) {
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-    'var sel={dur:"60",staff:"2",counsel:"1",room:"FREEDOM",gender:"",tw:""};' +
+    'var sel={dur:"60",staff:"2",counsel:"1",needc:"yes",room:"FREEDOM",gender:"",tw:""};' +
     'var stEl=document.getElementById("nrstatus"),goEl=document.getElementById("nrgo"),txtEl=document.getElementById("nrtext");' +
     'var prevEl=document.getElementById("nrprev"),prevWrap=document.getElementById("nrprevwrap"),readEl=document.getElementById("nrread");' +
     'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
@@ -3406,11 +3406,18 @@ function renderNewReservationPage_(base, staff, dev) {
     'var rw=document.getElementById("nrRoomWrap");if(rw)rw.style.display=isMayu?(isSat?"":"none"):"";' +
     'if(isMayu){selVal("staff","5");if(isSat){var rp=document.querySelectorAll(".nrpill[data-grp=\\"room\\"]"),rf=null;for(var m=0;m<rp.length;m++){if(rp[m].style.display!=="none"&&!rf){rf=rp[m];}}if(rf){sel.room=rf.getAttribute("data-val");for(var n=0;n<rp.length;n++){rp[n].classList.toggle("sel",rp[n]===rf);}}}else{sel.room="";}}}' +
     // ★空きの結果を画面に反映（開始時間・所要時間・カウンセリングの有無を変えるたびに呼ぶ）。
-    'var nrAvGuard=false;' +
+    // ★選べる物が1つも無くなったら、見出しの右に赤い知らせを出す（2026-08-21 まるちゃん）。
+    'function nrShowNone(g,id){var el=document.getElementById(id);if(!el)return;var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),n=0;' +
+    'for(var i=0;i<pl.length;i++){if(pl[i].style.display!=="none")n++;}el.style.display=n?"none":"inline";}' +
     'function applyAvail(av){if(!av)return;var cw=document.getElementById("cosmosWarn"),cwho=document.getElementById("cosmosWho");' +
     'if(cw)cw.style.display=av.cosmos_busy?"":"none";if(cwho)cwho.textContent=av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"";' +
-    'var before=sel.counsel;nrHideBusy("room",av.occ_rooms);nrHideBusy("staff",av.busy_staff);nrHideBusy("counsel",av.busy_counsel_staff);nrMayuVis();' +
-    'if(!nrAvGuard&&before!==sel.counsel){nrAvGuard=true;nrRecheckAvail(function(){nrAvGuard=false;});}}' +
+    'nrHideBusy("room",av.occ_rooms);nrHideBusy("staff",av.busy_staff);nrHideBusy("counsel",av.busy_counsel_staff);nrMayuVis();' +
+    'nrShowNone("counsel","noneCounsel");nrShowNone("staff","noneStaff");nrShowNone("room","noneRoom");}' +
+    // ★カウンセリングの必要（④）で、カウンセリング担当（⑤）の出し入れをする。
+    'function nrApplyNeedC(){var on=(window.__nrNeedCounsel&&sel.needc!=="no");' +
+    'var sn=document.getElementById("secNeedC");if(sn)sn.style.display=window.__nrNeedCounsel?"":"none";' +
+    'var sc=document.getElementById("secCounsel");if(sc)sc.style.display=on?"":"none";' +
+    'if(!on){var cw2=document.getElementById("cosmosWarn");if(cw2)cw2.style.display="none";}}' +
     // ★開始時間「〇月〇日（水）〇時〇分」を出す。
     'function nrStartText(){var d=window.__rvdt;if(!d||d.mm==null)return "―";var wd=window.__nrWd?("（"+window.__nrWd+"）"):"";' +
     'var mi=String(d.mi);if(mi.length<2)mi="0"+mi;return Number(d.mm)+"月"+Number(d.dd)+"日"+wd+" "+Number(d.hh)+"時"+mi+"分";}' +
@@ -3418,7 +3425,7 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
     'var nrAvTimer=null;function nrScheduleAvail(){if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
     'var nrAvPolls=0;function nrRecheckAvail(done){var d=window.__rvdt;if(!d||!window.__nrDate){if(done)done();return;}' +
-    'var need=(!!window.__nrNeedCounsel&&sel.counsel!=="none")?"1":"0";' +
+    'var need=(!!window.__nrNeedCounsel&&sel.needc!=="no")?"1":"0";' +
     'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
     'fields:JSON.stringify({date:window.__nrDate,start_min:(Number(d.hh)*60+Number(d.mi)),dur:Number(sel.dur||60),need_counsel:need})},' +
     'function(r){if(!r||!r.ok||!r.id){if(done)done();return;}nrAvPolls=0;setTimeout(function(){nrAvPoll(r.id,done);},700);});}' +
@@ -3447,7 +3454,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var pills=document.querySelectorAll(".nrpill");' +
     'for(var i=0;i<pills.length;i++){pills[i].addEventListener("click",function(){var g=this.getAttribute("data-grp"),v=this.getAttribute("data-val");if(!g)return;sel[g]=v;' +
     'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");this.classList.add("sel");if(window.__nrSchedTitle)window.__nrSchedTitle(g);' +
-    'if(g==="dur"||g==="counsel"){nrScheduleAvail();}});}' +
+    'if(g==="needc"){nrApplyNeedC();nrScheduleAvail();}else if(g==="dur"){nrScheduleAvail();}});}' +
     'nrStartEditInit();' +
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
@@ -3473,7 +3480,7 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★開始時間の欄に出す材料を覚える（2026-08-21 まるちゃん）。パソコン版と同じ作り。
     'window.__nrDate=d.date||"";window.__nrWd=d.weekday||"";window.__nrNeedCounsel=!!d.need_counsel;' +
     'window.__nrMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");window.__nrSat=d.date?(new Date(d.date+"T00:00:00").getDay()===6):false;' +
-    'nrShowStart();applyAvail(d);' +   // 開始時間を出す／埋まっている部屋・担当を消す／コスモスの注意書き
+    'selVal("needc","yes");nrApplyNeedC();nrShowStart();applyAvail(d);' +   // 開始時間を出す／埋まっている部屋・担当を消す／コスモスの注意書き
 
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
@@ -3488,7 +3495,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'readEl.addEventListener("click",readGo);' +
     // 送る中身（貼った文＋選んだ担当/部屋/所要/性別/国籍。extra でタイトルの差し替えを足せる）。
     // ★「カウンセリング無し」を選んだ時は、カウンセリング担当を空で渡す＝枠を作らない（2026-08-21 まるちゃん）。
-    'function buildFields(extra){var f={text:(txtEl.value||"").trim(),memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:(sel.counsel==="none"?"":sel.counsel),room:sel.room,gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)};if(extra){for(var k in extra){f[k]=extra[k];}}return f;}' +
+    'function buildFields(extra){var f={text:(txtEl.value||"").trim(),memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:(sel.needc==="no"?"":sel.counsel),room:sel.room,gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)};if(extra){for(var k in extra){f[k]=extra[k];}}return f;}' +
     // 画面のタイトル欄に、いま登録されるタイトルを出す（人が手で直したら自動で上書きしない）。
     'var titleEdited=false,titleReq=0,_titleTimer=null;' +
     'function fillTitles(titles,disps){var wrap=document.getElementById("nrTitleWrap"),sec=document.getElementById("secTitle");if(!wrap||!sec)return;var rows="";for(var i=0;i<titles.length;i++){rows+=\'<div style="color:#eaf3f7;font-weight:800;font-size:14px;margin:8px 2px 2px">\'+esc(disps[i]||("枠"+(i+1)))+\'</div><input class="nrTitleIn" value="\'+esc(titles[i]).replace(/"/g,"&quot;")+\'" style="width:100%;box-sizing:border-box;font:inherit;font-size:18px;font-weight:800;color:#0f172a;background:#fff;border:0;border-radius:12px;padding:14px 14px;margin:6px 0;box-shadow:0 2px 6px rgba(0,0,0,.12)">\';}wrap.innerHTML=rows;sec.style.display="";var ins=wrap.querySelectorAll(".nrTitleIn");for(var j=0;j<ins.length;j++){ins[j].addEventListener("input",function(){titleEdited=true;});}}' +
@@ -3541,12 +3548,16 @@ function renderNewReservationPage_(base, staff, dev) {
           '<button type="button" id="btnStartCancel" style="border:0;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:#fff;background:#64748b">やめる</button>' +
         '</div>' +
         '<div class="nrsec">③ 所要時間（分）</div><div class="nrpills nrdur">' + durPills + '</div>' +
-        // ★「カウンセリング無し」も選べる（2026-08-21 まるちゃん）＝選ぶとカウンセリングの枠を作らない。
-        '<div id="secCounsel" style="display:none"><div class="nrsec">④ カウンセリング担当</div><div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) +
-          '<button type="button" class="nrpill" data-grp="counsel" data-val="none" style="background:#475569">カウンセリング無し</button>' + '</div></div>' +
+        // ★カウンセリングが必要かどうかの2択（2026-08-21 まるちゃん）。既定＝必要あり。
+        '<div id="secNeedC" style="display:none"><div class="nrsec">④ カウンセリングの必要</div><div class="nrpills">' +
+          '<button type="button" class="nrpill sel" data-grp="needc" data-val="yes" style="background:#16a34a">必要あり</button>' +
+          '<button type="button" class="nrpill" data-grp="needc" data-val="no" style="background:#475569">必要なし</button>' + '</div></div>' +
+        '<div id="secCounsel" style="display:none"><div class="nrsec">⑤ カウンセリング担当' +
+          '<span id="noneCounsel" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div>' +
+          '<div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
         '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px">⚠ カウンセリングの部屋（コスモス）が、この時間ふさがっています。<span id="cosmosWho"></span></div>' +
-        '<div class="nrsec">⑤ 施術担当</div><div class="nrpills">' + staffPills('staff', '2') + '</div>' +
-        '<div id="nrRoomWrap"><div class="nrsec">⑥ 部屋</div><div class="nrpills">' + roomPills + '</div></div>' +
+        '<div class="nrsec">⑥ 施術担当<span id="noneStaff" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div><div class="nrpills">' + staffPills('staff', '2') + '</div>' +
+        '<div id="nrRoomWrap"><div class="nrsec">⑦ 部屋<span id="noneRoom" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は部屋が空いていません</span></div><div class="nrpills">' + roomPills + '</div></div>' +
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
         '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
         '<div id="secTitle" style="display:none"><div class="nrsec">タイムツリーに登録されるタイトル（直せます）</div><div id="nrTitleWrap"></div></div>' +
