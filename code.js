@@ -1981,10 +1981,16 @@ function renderZenjitsuPage_(base, staff, dev) {
   'resEl.innerHTML="";polls=0;' +
   'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode})},' +
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");lock(false);return;}setTimeout(function(){poll(r.id);},1000);});}' +
-  'var t=new Date();t.setDate(t.getDate()+2);dEl.value=t.toISOString().slice(0,10);' +
+  /* ★最初から入っている日付＝翌営業日（定休の日曜・月曜は飛ばす／2026-08-21まるちゃん）。
+     パソコン側の同じ決まり＝共通\\business_day.py（日曜=0,月曜=1 はJSの数え方）。
+     ★どちらかの決まりを直したら、必ずもう片方も同じに直す（PC版とスマホ版は常に同じ）。 */
+  'function nextBizDay(){var t=new Date();t.setHours(12,0,0,0);' +
+  'do{t.setDate(t.getDate()+1);}while(t.getDay()===0||t.getDay()===1);' +
+  'return t.getFullYear()+"-"+("0"+(t.getMonth()+1)).slice(-2)+"-"+("0"+t.getDate()).slice(-2);}' +
+  'dEl.value=nextBizDay();' +
+  /* ★画面を開いただけでは作らない＝押した時だけ作る（2026-08-21まるちゃん「自動はやめて」）。
+     パソコンの窓と同じ動き。日付を変えただけでも作らない。 */
   'btns.forEach(function(b){b.addEventListener("click",function(){run(b.getAttribute("data-mode"));});});' +
-  'dEl.addEventListener("change",function(){run("all");});' +
-  'run("all");' +
   '})();</script>';
   return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
   '<div class="home">' +
