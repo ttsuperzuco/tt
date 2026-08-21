@@ -3399,9 +3399,56 @@ function renderNewReservationPage_(base, staff, dev) {
     'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
     'function esc(s){return (s==null?"":String(s));}' +
     'function selVal(g,v){if(!v)return;sel[g]=String(v);var sib=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.toggle("sel",sib[j].getAttribute("data-val")===String(v));}' +
+    // ★空いていない部屋・担当のボタンを消す（埋まっている所は選べないように）。パソコン版と同じ考え方。
+    'function nrHideBusy(g,list){list=(list||[]).map(String);var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),selH=false,first=null;for(var i=0;i<pl.length;i++){var busy=list.indexOf(pl[i].getAttribute("data-val"))>=0;pl[i].style.display=busy?"none":"";if(!busy&&!first){first=pl[i];}if(busy&&pl[i].classList.contains("sel")){selH=true;}}if(selH&&first){sel[g]=first.getAttribute("data-val");for(var j=0;j<pl.length;j++){pl[j].classList.toggle("sel",pl[j]===first);}}}' +
+    // ★デザイン眉・まつエク＝パイン🍍だけ選べる（他4人は隠す）・部屋は取らない（土曜だけ部屋欄を出す）。
+    'function nrMayuVis(){var isMayu=!!window.__nrMayu,isSat=!!window.__nrSat;var sp=document.querySelectorAll(".nrpill[data-grp=\\"staff\\"]");for(var k=0;k<sp.length;k++){var pine=sp[k].getAttribute("data-val")==="5";if(isMayu){sp[k].style.display=pine?"":"none";}else if(pine){sp[k].style.display="none";}}' +
+    'var rw=document.getElementById("nrRoomWrap");if(rw)rw.style.display=isMayu?(isSat?"":"none"):"";' +
+    'if(isMayu){selVal("staff","5");if(isSat){var rp=document.querySelectorAll(".nrpill[data-grp=\\"room\\"]"),rf=null;for(var m=0;m<rp.length;m++){if(rp[m].style.display!=="none"&&!rf){rf=rp[m];}}if(rf){sel.room=rf.getAttribute("data-val");for(var n=0;n<rp.length;n++){rp[n].classList.toggle("sel",rp[n]===rf);}}}else{sel.room="";}}}' +
+    // ★空きの結果を画面に反映（開始時間・所要時間・カウンセリングの有無を変えるたびに呼ぶ）。
+    'var nrAvGuard=false;' +
+    'function applyAvail(av){if(!av)return;var cw=document.getElementById("cosmosWarn"),cwho=document.getElementById("cosmosWho");' +
+    'if(cw)cw.style.display=av.cosmos_busy?"":"none";if(cwho)cwho.textContent=av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"";' +
+    'var before=sel.counsel;nrHideBusy("room",av.occ_rooms);nrHideBusy("staff",av.busy_staff);nrHideBusy("counsel",av.busy_counsel_staff);nrMayuVis();' +
+    'if(!nrAvGuard&&before!==sel.counsel){nrAvGuard=true;nrRecheckAvail(function(){nrAvGuard=false;});}}' +
+    // ★開始時間「〇月〇日（水）〇時〇分」を出す。
+    'function nrStartText(){var d=window.__rvdt;if(!d||d.mm==null)return "―";var wd=window.__nrWd?("（"+window.__nrWd+"）"):"";' +
+    'var mi=String(d.mi);if(mi.length<2)mi="0"+mi;return Number(d.mm)+"月"+Number(d.dd)+"日"+wd+" "+Number(d.hh)+"時"+mi+"分";}' +
+    'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
+    // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
+    'var nrAvTimer=null;function nrScheduleAvail(){if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
+    'var nrAvPolls=0;function nrRecheckAvail(done){var d=window.__rvdt;if(!d||!window.__nrDate){if(done)done();return;}' +
+    'var need=(!!window.__nrNeedCounsel&&sel.counsel!=="none")?"1":"0";' +
+    'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
+    'fields:JSON.stringify({date:window.__nrDate,start_min:(Number(d.hh)*60+Number(d.mi)),dur:Number(sel.dur||60),need_counsel:need})},' +
+    'function(r){if(!r||!r.ok||!r.id){if(done)done();return;}nrAvPolls=0;setTimeout(function(){nrAvPoll(r.id,done);},700);});}' +
+    'function nrAvPoll(id,done){nrAvPolls++;if(nrAvPolls>30){if(done)done();return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(done)done();return;}' +
+    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){nrAvPoll(id,done);},700);return;}' +
+    'if(r.status!=="done"){if(done)done();return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
+    'if(av&&av.ok)applyAvail(av);if(done)done();});}' +
+    // ★開始時間の「修正」＝月日時分を直して、空きと登録日時をやり直す。
+    'function nrStartEditInit(){var row=document.getElementById("nrStartRow"),ed=document.getElementById("nrStartEdit");' +
+    'var bFix=document.getElementById("btnStartFix"),bOk=document.getElementById("btnStartOk"),bNo=document.getElementById("btnStartCancel");' +
+    'function gv(id){return document.getElementById(id);}' +
+    'function open(){var d=window.__rvdt||{};gv("nrEdMM").value=(d.mm||"");gv("nrEdDD").value=(d.dd||"");gv("nrEdHH").value=(d.hh==null?"":d.hh);gv("nrEdMI").value=(d.mi==null?"":d.mi);' +
+    'if(ed)ed.style.display="flex";if(row)row.style.display="none";}' +
+    'function close(){if(ed)ed.style.display="none";if(row)row.style.display="flex";}' +
+    'if(bFix)bFix.addEventListener("click",open);if(bNo)bNo.addEventListener("click",close);' +
+    'if(bOk)bOk.addEventListener("click",function(){var mm=Number(gv("nrEdMM").value),dd=Number(gv("nrEdDD").value),hh=Number(gv("nrEdHH").value),mi=Number(gv("nrEdMI").value);' +
+    'if(!(mm>=1&&mm<=12)||!(dd>=1&&dd<=31)||!(hh>=0&&hh<=23)||!(mi>=0&&mi<=59)){szPopup_("月日時分を正しく入れてください。");return;}' +
+    'var y=window.__nrDate?Number(window.__nrDate.slice(0,4)):(new Date()).getFullYear();var dt=new Date(y,mm-1,dd);var today=new Date();today.setHours(0,0,0,0);' +
+    'if((today-dt)>31*24*3600*1000){y+=1;dt=new Date(y,mm-1,dd);}' +
+    'if(dt.getMonth()!==mm-1){szPopup_("その日付はありません。");return;}' +
+    'window.__rvdt={mm:mm,dd:dd,hh:hh,mi:mi};' +
+    'window.__nrDate=y+"-"+(mm<10?"0":"")+mm+"-"+(dd<10?"0":"")+dd;' +
+    'window.__nrWd="日月火水木金土".charAt(dt.getDay());window.__nrSat=(dt.getDay()===6);' +
+    'close();nrShowStart();nrRecheckAvail();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'var pills=document.querySelectorAll(".nrpill");' +
     'for(var i=0;i<pills.length;i++){pills[i].addEventListener("click",function(){var g=this.getAttribute("data-grp"),v=this.getAttribute("data-val");if(!g)return;sel[g]=v;' +
-    'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");this.classList.add("sel");if(window.__nrSchedTitle)window.__nrSchedTitle(g);});}' +
+    'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");this.classList.add("sel");if(window.__nrSchedTitle)window.__nrSchedTitle(g);' +
+    'if(g==="dur"||g==="counsel"){nrScheduleAvail();}});}' +
+    'nrStartEditInit();' +
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
     'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
@@ -3423,12 +3470,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(d.gender){selVal("gender",d.gender);if(sg)sg.style.display="none";}else if(sg)sg.style.display="";' +  // 読めたら性別欄は隠す
     'if(d.tw){selVal("tw",d.tw);if(stw)stw.style.display="none";}else if(stw)stw.style.display="";' +          // 読めたら国籍欄は隠す
     'var scn=document.getElementById("secCounsel");if(scn)scn.style.display=d.datsumo?"":"none";' +            // カウンセリング担当は脱毛のときだけ
-    'var cw=document.getElementById("cosmosWarn");if(cw)cw.style.display=d.cosmos_busy?"":"none";' +           // カウンセリング部屋(コスモス)がその時間ふさがっていたら警告
-    'var hideBusy=function(g,list){list=(list||[]).map(String);var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),selH=false,first=null;for(var i=0;i<pl.length;i++){var busy=list.indexOf(pl[i].getAttribute("data-val"))>=0;pl[i].style.display=busy?"none":"";if(!busy&&!first){first=pl[i];}if(busy&&pl[i].classList.contains("sel")){selH=true;}}if(selH&&first){sel[g]=first.getAttribute("data-val");for(var j=0;j<pl.length;j++){pl[j].classList.toggle("sel",pl[j]===first);}}};' +
-    'hideBusy("room",d.occ_rooms);hideBusy("staff",d.busy_staff);hideBusy("counsel",d.busy_counsel_staff);' +   // 空いていない部屋・施術担当・カウンセリング担当は消す（施術は開始=カウンセリング30分後で判定）
-    // ★デザイン眉・まつエク＝パイン🍍だけ選べる（他4人は隠す）・部屋は取らない（部屋欄を隠す）。
-    'var _isMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");var _isSat=d.date?(new Date(d.date+"T00:00:00").getDay()===6):false;var _sp=document.querySelectorAll(".nrpill[data-grp=\\"staff\\"]");for(var _k=0;_k<_sp.length;_k++){var _pine=_sp[_k].getAttribute("data-val")==="5";_sp[_k].style.display=_isMayu?(_pine?"":"none"):(_pine?"none":"");}var _rw=document.getElementById("nrRoomWrap");if(_rw)_rw.style.display=_isMayu?(_isSat?"":"none"):"";if(_isMayu){selVal("staff","5");if(_isSat){var _rp=document.querySelectorAll(".nrpill[data-grp=\\"room\\"]"),_rf=null;for(var _m=0;_m<_rp.length;_m++){if(_rp[_m].style.display!=="none"&&!_rf){_rf=_rp[_m];}}if(_rf){sel.room=_rf.getAttribute("data-val");for(var _n=0;_n<_rp.length;_n++){_rp[_n].classList.toggle("sel",_rp[_n]===_rf);}}}else{sel.room="";}}' +
-
+    // ★開始時間の欄に出す材料を覚える（2026-08-21 まるちゃん）。パソコン版と同じ作り。
+    'window.__nrDate=d.date||"";window.__nrWd=d.weekday||"";window.__nrNeedCounsel=!!d.need_counsel;' +
+    'window.__nrMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");window.__nrSat=d.date?(new Date(d.date+"T00:00:00").getDay()===6):false;' +
+    'nrShowStart();applyAvail(d);' +   // 開始時間を出す／埋まっている部屋・担当を消す／コスモスの注意書き
 
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
@@ -3442,7 +3487,8 @@ function renderNewReservationPage_(base, staff, dev) {
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},1200);});}' +
     'readEl.addEventListener("click",readGo);' +
     // 送る中身（貼った文＋選んだ担当/部屋/所要/性別/国籍。extra でタイトルの差し替えを足せる）。
-    'function buildFields(extra){var f={text:(txtEl.value||"").trim(),memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:sel.counsel,room:sel.room,gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)};if(extra){for(var k in extra){f[k]=extra[k];}}return f;}' +
+    // ★「カウンセリング無し」を選んだ時は、カウンセリング担当を空で渡す＝枠を作らない（2026-08-21 まるちゃん）。
+    'function buildFields(extra){var f={text:(txtEl.value||"").trim(),memo:(prevEl.value||""),dur:sel.dur,staff:sel.staff,counsel:(sel.counsel==="none"?"":sel.counsel),room:sel.room,gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)};if(extra){for(var k in extra){f[k]=extra[k];}}return f;}' +
     // 画面のタイトル欄に、いま登録されるタイトルを出す（人が手で直したら自動で上書きしない）。
     'var titleEdited=false,titleReq=0,_titleTimer=null;' +
     'function fillTitles(titles,disps){var wrap=document.getElementById("nrTitleWrap"),sec=document.getElementById("secTitle");if(!wrap||!sec)return;var rows="";for(var i=0;i<titles.length;i++){rows+=\'<div style="color:#eaf3f7;font-weight:800;font-size:14px;margin:8px 2px 2px">\'+esc(disps[i]||("枠"+(i+1)))+\'</div><input class="nrTitleIn" value="\'+esc(titles[i]).replace(/"/g,"&quot;")+\'" style="width:100%;box-sizing:border-box;font:inherit;font-size:18px;font-weight:800;color:#0f172a;background:#fff;border:0;border-radius:12px;padding:14px 14px;margin:6px 0;box-shadow:0 2px 6px rgba(0,0,0,.12)">\';}wrap.innerHTML=rows;sec.style.display="";var ins=wrap.querySelectorAll(".nrTitleIn");for(var j=0;j<ins.length;j++){ins[j].addEventListener("input",function(){titleEdited=true;});}}' +
@@ -3480,11 +3526,27 @@ function renderNewReservationPage_(base, staff, dev) {
         '</div>' +
       '</div>' +
       '<div id="nrrest" style="display:none">' +
-        '<div class="nrsec">② 所要時間（分）</div><div class="nrpills nrdur">' + durPills + '</div>' +
-        '<div id="secCounsel" style="display:none"><div class="nrsec">③ カウンセリング担当</div><div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
-        '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px">⚠ カウンセリングの部屋（コスモス）が、この時間ふさがっています。時間や予約を確認してください。</div>' +
-        '<div class="nrsec">④ 施術担当</div><div class="nrpills">' + staffPills('staff', '2') + '</div>' +
-        '<div id="nrRoomWrap"><div class="nrsec">⑤ 部屋</div><div class="nrpills">' + roomPills + '</div></div>' +
+        // ★開始時間の欄（2026-08-21 まるちゃん）＝「〇月〇日（水）〇時〇分」＋修正ボタン。パソコン版と同じ。
+        '<div class="nrsec">② 開始時間</div>' +
+        '<div id="nrStartRow" style="display:flex;align-items:center;gap:12px;background:#fff;color:#123;border-radius:12px;padding:12px 14px;font-size:19px;font-weight:900;margin:2px 0 6px">' +
+          '<span id="nrStartDisp">―</span>' +
+          '<button type="button" id="btnStartFix" style="border:0;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:#fff;background:#2C7A99">修正</button>' +
+        '</div>' +
+        '<div id="nrStartEdit" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;background:#fff;border-radius:12px;padding:12px 14px;margin:2px 0 6px">' +
+          '<input type="number" id="nrEdMM" min="1" max="12" placeholder="月" style="width:70px;font-size:18px;font-weight:800;padding:8px;border-radius:10px;border:1px solid #cbd5e1;text-align:center"><span style="color:#123;font-weight:900;margin-right:6px">月</span>' +
+          '<input type="number" id="nrEdDD" min="1" max="31" placeholder="日" style="width:70px;font-size:18px;font-weight:800;padding:8px;border-radius:10px;border:1px solid #cbd5e1;text-align:center"><span style="color:#123;font-weight:900;margin-right:6px">日</span>' +
+          '<input type="number" id="nrEdHH" min="0" max="23" placeholder="時" style="width:70px;font-size:18px;font-weight:800;padding:8px;border-radius:10px;border:1px solid #cbd5e1;text-align:center"><span style="color:#123;font-weight:900;margin-right:6px">時</span>' +
+          '<input type="number" id="nrEdMI" min="0" max="59" step="5" placeholder="分" style="width:70px;font-size:18px;font-weight:800;padding:8px;border-radius:10px;border:1px solid #cbd5e1;text-align:center"><span style="color:#123;font-weight:900;margin-right:6px">分</span>' +
+          '<button type="button" id="btnStartOk" style="border:0;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:#fff;background:#16a34a">決定</button>' +
+          '<button type="button" id="btnStartCancel" style="border:0;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:#fff;background:#64748b">やめる</button>' +
+        '</div>' +
+        '<div class="nrsec">③ 所要時間（分）</div><div class="nrpills nrdur">' + durPills + '</div>' +
+        // ★「カウンセリング無し」も選べる（2026-08-21 まるちゃん）＝選ぶとカウンセリングの枠を作らない。
+        '<div id="secCounsel" style="display:none"><div class="nrsec">④ カウンセリング担当</div><div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) +
+          '<button type="button" class="nrpill" data-grp="counsel" data-val="none" style="background:#475569">カウンセリング無し</button>' + '</div></div>' +
+        '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px">⚠ カウンセリングの部屋（コスモス）が、この時間ふさがっています。<span id="cosmosWho"></span></div>' +
+        '<div class="nrsec">⑤ 施術担当</div><div class="nrpills">' + staffPills('staff', '2') + '</div>' +
+        '<div id="nrRoomWrap"><div class="nrsec">⑥ 部屋</div><div class="nrpills">' + roomPills + '</div></div>' +
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
         '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
         '<div id="secTitle" style="display:none"><div class="nrsec">タイムツリーに登録されるタイトル（直せます）</div><div id="nrTitleWrap"></div></div>' +
