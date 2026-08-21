@@ -1914,16 +1914,31 @@ function backBar_(base, staff, dev) {
     roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a></div>';
 }
 
-// 前日お知らせ画面のCSS。日付を選ぶ帯＋状態表示＋確認画面の枠(iframe)。
+// 前日お知らせ画面のCSS。白いカードの中に「日付を選ぶ」＋作るボタン2つ＋知らせの帯、その下に確認画面の枠。
+// ★★見た目は部屋＆担当 被り検出の画面と同じにそろえる（2026-08-21まるちゃん）＝濃い青緑の背景・白いカード・
+//   青いボタン・黄/緑/赤の知らせ帯。パソコン版の同じ画面（LINE前日お知らせ送信\programs\notice_home.py）と
+//   一字一句そろえてある。★どちらかの見た目を直したら、必ずもう片方も同じに直す（PC版とスマホ版は常に同じ）。
 var ZENJITSUCSS_ =
-  '  .zjbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:sticky; top:0;' +
-  '    background:var(--bg,#2C7A99); padding:8px 0 10px; z-index:5; }' +
-  '  #zjdate { font-size:1.05rem; padding:11px 12px; border-radius:12px; border:0; }' +
-  '  #zjgo { font-size:1rem; font-weight:800; padding:11px 18px; border:0; border-radius:12px; background:#db2777; color:#fff; }' +
-  '  #zjgo:disabled { opacity:.6; }' +
-  '  .zjstatus { color:#eaf3f7; font-size:.92rem; margin:2px 2px 10px; min-height:1.2em; }' +
+  '  .zjcard { background:#fff; border:1px solid #e2e8f0; border-left:4px solid #2563eb;' +
+  '    border-radius:12px; padding:16px 16px 18px; box-shadow:0 1px 3px rgba(0,0,0,.06); margin-top:6px; }' +
+  '  .zjlabel { font-size:1.37rem; font-weight:800; color:#64748b; margin-bottom:8px; }' +
+  '  #zjdate { width:100%; background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0;' +
+  '    border-radius:10px; padding:14px 16px; font:inherit; font-size:2rem; font-weight:900;' +
+  '    font-variant-numeric:tabular-nums; letter-spacing:.02em; }' +
+  '  #zjdate::-webkit-calendar-picker-indicator { transform:scale(1.5); margin-left:10px; opacity:.85; }' +
+  '  .zjopts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }' +
+  '  .zjopt { font:inherit; font-size:1.35rem; font-weight:700; line-height:1.4; color:#fff;' +
+  '    background:#2563eb; border:1px solid #2563eb; border-radius:10px; padding:16px 8px; cursor:pointer; }' +
+  '  .zjopt:active { transform:translateY(1px); }' +
+  '  .zjopt:disabled { opacity:.4; cursor:default; }' +
+  '  @media (max-width:560px) { .zjopts { grid-template-columns:1fr; } }' +
+  '  .zjstatus { margin-top:12px; padding:12px 14px; border-radius:10px; font-size:1.05rem;' +
+  '    font-weight:700; line-height:1.5; }' +
+  '  .zjstatus.wait { background:#fef9c3; color:#854d0e; }' +
+  '  .zjstatus.ok { background:#dcfce7; color:#166534; }' +
+  '  .zjstatus.err { background:#fee2e2; color:#991b1b; }' +
   '  .zjframe { width:100%; min-height:60vh; border:0; border-radius:14px; background:#fff;' +
-  '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; }';
+  '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; margin-top:12px; }';
 
 /** 前日お知らせ（社長確認用・開発URL専用）。PC版と同じ「来店日を選ぶ」入口。
  *  日付を選んで押す→事務所PCへ依頼(op=zenjitsu)→PCが確認画面HTMLを notice_<端末>.json に書き出す
@@ -1936,39 +1951,55 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
   'var slot=(idn.device||"d0").toLowerCase().replace(/[^a-z0-9_]/g,"").slice(0,32)||"default";' +
-  'var dEl=document.getElementById("zjdate"),goEl=document.getElementById("zjgo"),stEl=document.getElementById("zjstatus"),resEl=document.getElementById("zjres");' +
+  'var dEl=document.getElementById("zjdate"),stEl=document.getElementById("zjstatus"),resEl=document.getElementById("zjres");' +
+  'var btns=[].slice.call(document.querySelectorAll(".zjopt"));' +
+  'function lock(b){btns.forEach(function(x){x.disabled=b;});}' +
+  'function setSt(t,c){stEl.textContent=t;stEl.className="zjstatus "+(c||"");}' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function jsonp(params,onR){var cb="__zj"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
   'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
   'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
   'function fit(f){try{f.style.height="0";var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
-  'function showResult(d){if(!d||!d.body_html){stEl.textContent=(d&&d.error)?("エラー："+d.error):"この日は予約がありませんでした。";resEl.innerHTML="";return;}' +
-  'stEl.textContent="この日の確認（"+esc(d.date||"")+"・"+((d.count!=null)?d.count:"?")+"件）／作成 "+esc(d.generated_at||"");' +
+  'function showResult(d){' +
+  'if(!d||!d.body_html){setSt((d&&d.error)?("エラー："+d.error):"この日は予約がありませんでした。",(d&&d.error)?"err":"ok");resEl.innerHTML="";return;}' +
+  'if(d.count===0&&d.mode==="unsent"){setSt("まだ送っていない人はいません（この日は全員へ送信済みです）。","ok");resEl.innerHTML="";return;}' +
+  'setSt("できました（"+((d.count!=null)?d.count:"?")+"件"+((d.mode==="unsent")?"・まだ送っていない人の分だけ":"")+"）／作成 "+esc(d.generated_at||""),"ok");' +
   'resEl.innerHTML="<iframe id=\\"zjframe\\" class=\\"zjframe\\" srcdoc=\\""+esc(d.body_html)+"\\"></iframe>";' +
   'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});' +
   'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);setTimeout(function(){fit(f);},3200);' +
   'window.addEventListener("resize",function(){fit(f);});}' +
-  'var polls=0;function poll(id){polls++;if(polls>40){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";goEl.disabled=false;return;}' +
-  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");goEl.disabled=false;return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>40){setSt("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。","err");lock(false);return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");lock(false);return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1300);return;}' +
-  'goEl.disabled=false;' +
-  'if(r.status!=="done"){stEl.textContent="作成に失敗しました："+esc(r.result||r.status);return;}' +
+  'lock(false);' +
+  'if(r.status!=="done"){setSt("作成に失敗しました："+esc(r.result||r.status),"err");return;}' +
   'jsonp({action:"data",name:"notice_"+slot+".json"},function(d){showResult(d);});});}' +
-  'function run(){var date=(dEl.value||"").trim();if(!date){stEl.textContent="来店日を選んでください。";return;}' +
-  'goEl.disabled=true;stEl.textContent="事務所PCで作成中…（十数秒かかります）";resEl.innerHTML="";polls=0;' +
-  'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot})},' +
-  'function(r){if(!r||!r.ok||!r.id){stEl.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");goEl.disabled=false;return;}setTimeout(function(){poll(r.id);},1000);});}' +
+  /* ★押したボタンの方で作る（mode="all"＝全員分／"unsent"＝まだLINEで送っていない人の分だけ）。
+     依頼の中身は必ず fields のひとまとめ箱に入れる＝Google側の窓口は中身を判断せず素通しするだけ。 */
+  'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選んでください。","err");return;}' +
+  'lock(true);setSt((mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…（十数秒かかります）":"全員分を事務所PCで作成中…（十数秒かかります）","wait");' +
+  'resEl.innerHTML="";polls=0;' +
+  'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode})},' +
+  'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");lock(false);return;}setTimeout(function(){poll(r.id);},1000);});}' +
   'var t=new Date();t.setDate(t.getDate()+2);dEl.value=t.toISOString().slice(0,10);' +
-  'goEl.addEventListener("click",run);dEl.addEventListener("change",run);' +
-  'run();' +
+  'btns.forEach(function(b){b.addEventListener("click",function(){run(b.getAttribute("data-mode"));});});' +
+  'dEl.addEventListener("change",function(){run("all");});' +
+  'run("all");' +
   '})();</script>';
   return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
   '<div class="home">' +
     backBar_(base, staff, dev) +
     '<div class="hhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
-    '<div class="zjbar"><label style="color:#fff;font-weight:700;">来店日 <input type="date" id="zjdate"></label>' +
-      '<button id="zjgo" type="button">この日で確認</button></div>' +
-    '<div class="zjstatus" id="zjstatus">来店日を選ぶと、事務所PCが確認画面を作って表示します（お客様には送りません＝見るだけ）。</div>' +
+    '<div class="zjcard">' +
+      '<div class="zjlabel">日付を選ぶ</div>' +
+      '<input type="date" id="zjdate">' +
+      /* ★押したボタンの方で作り始める（パソコン版の窓とまったく同じ2つのボタン・2026-08-21まるちゃん） */
+      '<div class="zjopts">' +
+        '<button type="button" class="zjopt" data-mode="all">全員分を作成</button>' +
+        '<button type="button" class="zjopt" data-mode="unsent">まだLINEで送っていない人の分だけ作成</button>' +
+      '</div>' +
+      '<div class="zjstatus" id="zjstatus">日付を選んで、どちらかのボタンを押すと、事務所PCが確認画面を作って表示します（お客様には送りません＝見るだけ）。</div>' +
+    '</div>' +
     '<div id="zjres"></div>' +
   '</div>' + script;
 }
