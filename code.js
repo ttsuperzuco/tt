@@ -3119,7 +3119,24 @@ var RIREKI_CSS_ =
   '.rktreat.empty{color:#cbd5e1;}' +
   '.rkfull{background:rgba(255,255,255,.08);color:#fff;font-size:1.26rem;}' +
   '.rknone{color:#cbd5e1;font-size:1.26rem;}' +
-  '.rkpick{background:#0d1117;color:#fff;font-size:1.5rem;}';
+  '.rkpick{background:#0d1117;color:#fff;font-size:1.5rem;}' +
+  /* ―― 💰これまでの購入とお金（2026-08-21：パソコン版と同じ中身をスマホにも） ―― */
+  '.rksec.money>.rklbl{border-left-color:#f6c945;}' +
+  '.rksubh{font-weight:800;font-size:1.3rem;margin:14px 0 6px;padding-left:8px;border-left:4px solid #f6c945;}' +
+  '.rkuline{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px dashed rgba(255,255,255,.18);font-size:1.3rem;}' +
+  '.rkuline .un{font-weight:700;}' +
+  '.rkuline .ur{color:#7cffa0;font-weight:800;white-space:nowrap;}' +
+  '.rknone2{color:#cbd5e1;font-size:1.2rem;padding:3px 0;}' +
+  '.rkparts{margin:6px 0 10px;display:flex;flex-wrap:wrap;gap:8px;}' +
+  '.rkpchip{display:inline-block;background:rgba(124,192,255,.16);border:1px solid rgba(124,192,255,.35);color:#dbeafe;border-radius:999px;padding:3px 12px;font-size:1.2rem;font-weight:700;}' +
+  '.rktotal{font-size:1.5rem;margin:2px 0 8px;}' +
+  '.rktotal b{color:#ffd400;}' +
+  '.rkmnote{color:#cbd5e1;font-size:1.05rem;margin-left:8px;}' +
+  '.rkbuy{padding:6px 0;border-top:1px dashed rgba(255,255,255,.18);font-size:1.25rem;line-height:1.55;}' +
+  '.rkbuy .bn{font-weight:800;}' +
+  '.rkbuy .bp{color:#ffd400;font-weight:800;margin-left:8px;}' +
+  '.rkbuy .bc{color:#cbd5e1;margin-left:6px;}' +
+  '.rkbuy .bd{color:#94a3b8;font-size:1.05rem;}';
 
 function renderRirekiPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
@@ -3145,13 +3162,36 @@ function renderRirekiPage_(base, staff, dev) {
   'var memo=nt?("<details class=\\"rkmemo2\\" open><summary>予約メモ</summary><pre class=\\"rkfull\\">"+esc(nt)+"</pre></details>"):"<div class=\\"rktreat empty\\">（予約メモなし）</div>";' +
   'return "<div class=\\"rkrec\\"><div><span class=\\"rkdd\\">"+esc(r.d)+"（"+esc(r.w)+"）</span><span class=\\"rktt\\">"+tspan+"</span></div>"+' +
   'badge+room+memo+"</div>";}' +
+  'function money_(n){return Number(n).toLocaleString("ja-JP")+"元";}' +
+  /* ★2026-08-21まるちゃん：スマホ版とパソコン版は常に同じにする（掟）。'
+     パソコン版の顧客履歴と同じ「💰これまでの購入とお金」をここでも出す。 */
+  'function moneyHtml_(p){' +
+  'if(!p||!p.found){return "<div class=\\"rksec money\\"><div class=\\"rklbl\\">\\uD83D\\uDCB0 これまでの購入とお金</div><div class=\\"rknone\\">購入の記録がありません（昔のお客様は未整理のことがあります）。</div></div>";}' +
+  'var remain=(p.courses||[]).filter(function(c){return c.remaining>0;}).map(function(c){' +
+  'return "<div class=\\"rkuline\\"><span class=\\"un\\">"+esc(c.name)+"</span><span class=\\"ur\\">全"+c.total_count+"回・済"+c.used+"回・残り"+c.remaining+"回</span></div>";}).join("");' +
+  'var pre=(p.prepaid||[]).map(function(c){var day=c.bought_date?("　払った日 "+esc(c.bought_date)):"";' +
+  'return "<div class=\\"rkuline\\"><span class=\\"un\\">"+esc(c.name)+"</span><span class=\\"ur\\">次回分 "+c.remaining+"回分 お支払い済み"+day+"</span></div>";}).join("");' +
+  'var parts=(p.parts||[]).map(function(pt){return "<span class=\\"rkpchip\\">"+esc(pt.name)+" "+pt.done+"回</span>";}).join("");' +
+  'var total=(p.total_spent==null)?"記録なし":money_(p.total_spent);' +
+  'var tn=p.has_missing_price?"<span class=\\"rkmnote\\">（一部は金額の記録なし）</span>":"";' +
+  'var buys=(p.contracts||[]).map(function(c){var price=(c.price==null)?"金額の記録なし":money_(c.price);var cnt="";' +
+  'if(c.total_count!=null){var ext=(c.extra&&c.extra>0)?(" ＋都度"+c.extra+"回 継続中"):"";cnt="（"+c.total_count+"回コース・済"+c.used+"回・残り"+c.remaining+"回）"+ext;}' +
+  'else if(c.used){cnt="（済"+c.used+"回）";}' +
+  'var day=c.bought_date?("　買った日 "+esc(c.bought_date)):"";' +
+  'return "<div class=\\"rkbuy\\"><span class=\\"bn\\">"+esc(c.name)+"</span><span class=\\"bp\\">"+price+"</span><span class=\\"bc\\">"+cnt+"</span><span class=\\"bd\\">"+day+"</span></div>";}).join("");' +
+  'var h="<div class=\\"rksec money\\"><div class=\\"rklbl\\">\\uD83D\\uDCB0 これまでの購入とお金</div>";' +
+  'h+="<div class=\\"rksubh\\">未消化コース回数</div>"+(remain||"<div class=\\"rknone2\\">未消化のコースはありません</div>");' +
+  'if(pre){h+="<div class=\\"rksubh\\">次回分お支払い済み</div>"+pre;}' +
+  'h+="<div class=\\"rksubh\\">各施術回数合計</div><div class=\\"rkparts\\">"+(parts||"<span class=\\"rknone2\\">施術の記録なし</span>")+"</div>";' +
+  'h+="<div class=\\"rksubh\\">購入履歴</div><div class=\\"rktotal\\">お支払い合計 <b>"+total+"</b>"+tn+"</div><div>"+buys+"</div>";' +
+  'return h+"</div>";}' +
   'function custHtml(c){var up=[],pa=[],i;for(i=0;i<(c.recs||[]).length;i++){(c.recs[i].up?up:pa).push(c.recs[i]);}' +
   'var ph=c.ph?("<span class=\\"rkph\\">"+esc(c.ph)+"</span>"):"";' +
   'var head="<div class=\\"rkwho\\"><span class=\\"rkcode\\">"+esc(c.code)+"</span>"+esc(c.name||"（名前メモなし）")+ph+"</div>"+' +
   '"<div class=\\"rkmeta\\">来店 "+c.v+" 回 ／ 初回 "+esc(c.f)+" ／ 最終 "+esc(c.l)+"</div>";' +
   'var upB=up.length?up.map(recHtml).join(""):"<div class=\\"rknone\\">今日以降の予約はありません。</div>";' +
   'var paB=pa.length?pa.map(recHtml).join(""):"<div class=\\"rknone\\">過去の予約はありません。</div>";' +
-  'return "<div class=\\"rkcust\\">"+head+"<div class=\\"rksec\\"><div class=\\"rklbl\\">🔔 今回の予約（今日以降）</div>"+upB+"</div>"+' +
+  'return "<div class=\\"rkcust\\">"+head+moneyHtml_(c.purchase)+"<div class=\\"rksec\\"><div class=\\"rklbl\\">🔔 今回の予約（今日以降）</div>"+upB+"</div>"+' +
   '"<div class=\\"rksec past\\"><div class=\\"rklbl\\">🕘 前回までの予約一覧</div>"+paB+"</div></div>";}' +
   'function pickHtml(c){return "<button type=\\"button\\" class=\\"rkpick\\" data-code=\\""+esc(c.code)+"\\"><span class=\\"rkcode\\">"+esc(c.code)+"</span>"+esc(c.name||"（名前メモなし）")+" ・ 来店"+c.v+"回</button>";}' +
   'function toTop(){setTimeout(function(){try{stEl.scrollIntoView({behavior:"smooth",block:"start"});}catch(e){stEl.scrollIntoView();}},80);}' +
