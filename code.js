@@ -1922,16 +1922,23 @@ var ZENJITSUCSS_ =
   '  .zjcard { background:#fff; border:1px solid #e2e8f0; border-left:4px solid #2563eb;' +
   '    border-radius:12px; padding:16px 16px 18px; box-shadow:0 1px 3px rgba(0,0,0,.06); margin-top:6px; }' +
   '  .zjlabel { font-size:1.37rem; font-weight:800; color:#64748b; margin-bottom:8px; }' +
-  '  #zjdate { width:100%; background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0;' +
-  '    border-radius:10px; padding:14px 16px; font:inherit; font-size:2rem; font-weight:900;' +
+  /* ★日付は「押して選べる」と分かる見た目に（青い枠＋右端に大きなカレンダーの絵・2026-08-21まるちゃん） */
+  '  .zjdatebox { display:flex; align-items:center; gap:10px; background:#f1f5f9;' +
+  '    border:2px solid #2563eb; border-radius:10px; padding:6px 12px 6px 6px; cursor:pointer; }' +
+  '  .zjdatepick { font-size:1.8rem; line-height:1; pointer-events:none; }' +
+  '  #zjdate { flex:1 1 auto; width:100%; background:transparent; color:#0f172a; border:0;' +
+  '    padding:10px 6px; font:inherit; font-size:2rem; font-weight:900; cursor:pointer;' +
   '    font-variant-numeric:tabular-nums; letter-spacing:.02em; }' +
+  '  #zjdate:focus { outline:none; }' +
   '  #zjdate::-webkit-calendar-picker-indicator { transform:scale(1.5); margin-left:10px; opacity:.85; }' +
+  /* ★左右に必ず並べる（狭い画面でも縦積みにしない・2026-08-21まるちゃん） */
   '  .zjopts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }' +
   '  .zjopt { font:inherit; font-size:1.35rem; font-weight:700; line-height:1.4; color:#fff;' +
   '    background:#2563eb; border:1px solid #2563eb; border-radius:10px; padding:16px 8px; cursor:pointer; }' +
   '  .zjopt:active { transform:translateY(1px); }' +
   '  .zjopt:disabled { opacity:.4; cursor:default; }' +
-  '  @media (max-width:560px) { .zjopts { grid-template-columns:1fr; } }' +
+  /* 幅が狭い時も左右のままにして、文字だけ少し小さくする（縦積みにしない）。 */
+  '  @media (max-width:480px) { .zjopt { font-size:1.05rem; padding:14px 6px; } }' +
   '  .zjstatus { margin-top:12px; padding:12px 14px; border-radius:10px; font-size:1.05rem;' +
   '    font-weight:700; line-height:1.5; }' +
   '  .zjstatus.wait { background:#fef9c3; color:#854d0e; }' +
@@ -1990,6 +1997,9 @@ function renderZenjitsuPage_(base, staff, dev) {
   'dEl.value=nextBizDay();' +
   /* ★画面を開いただけでは作らない＝押した時だけ作る（2026-08-21まるちゃん「自動はやめて」）。
      パソコンの窓と同じ動き。日付を変えただけでも作らない。 */
+  /* 日付の枠のどこを押してもカレンダーが開く（押せると分かりやすくするため）。 */
+  'var dbox=document.getElementById("zjdatebox");' +
+  'if(dbox){dbox.addEventListener("click",function(){try{dEl.showPicker();}catch(e){dEl.focus();}});}' +
   'btns.forEach(function(b){b.addEventListener("click",function(){run(b.getAttribute("data-mode"));});});' +
   '})();</script>';
   return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
@@ -1998,13 +2008,16 @@ function renderZenjitsuPage_(base, staff, dev) {
     '<div class="hhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
     '<div class="zjcard">' +
       '<div class="zjlabel">日付を選ぶ</div>' +
-      '<input type="date" id="zjdate">' +
+      '<div class="zjdatebox" id="zjdatebox">' +
+        '<input type="date" id="zjdate">' +
+        '<span class="zjdatepick">📅</span>' +
+      '</div>' +
       /* ★押したボタンの方で作り始める（パソコン版の窓とまったく同じ2つのボタン・2026-08-21まるちゃん） */
       '<div class="zjopts">' +
         '<button type="button" class="zjopt" data-mode="all">全員分を作成</button>' +
-        '<button type="button" class="zjopt" data-mode="unsent">まだLINEで送っていない人の分だけ作成</button>' +
+        '<button type="button" class="zjopt" data-mode="unsent">未送信の分だけ作成</button>' +
       '</div>' +
-      '<div class="zjstatus" id="zjstatus">日付を選んで、どちらかのボタンを押すと、事務所PCが確認画面を作って表示します（お客様には送りません＝見るだけ）。</div>' +
+      '<div class="zjstatus" id="zjstatus">日付を選んで、どちらかのボタンを押すとお知らせが作成されます（お客様には送りません＝見るだけ）。</div>' +
     '</div>' +
     '<div id="zjres"></div>' +
   '</div>' + script;
