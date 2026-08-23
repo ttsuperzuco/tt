@@ -3485,6 +3485,9 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrslot{border:2px solid rgba(255,255,255,.28);border-radius:14px;padding:4px 12px 12px;margin:14px 0;}' +
     '.nrsub{font-weight:800;margin:12px 2px 6px;font-size:15px;color:#dbeafe;}' +
     '.nrnote2{color:#cfe6ef;font-size:14px;margin:0 2px 8px;}' +
+    '.nrcoswarn{background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:8px 0;}' +
+    '.nrslot.nrlock .nrpills{pointer-events:none;opacity:.3;}' +
+    '.nrslot.nrlock .nrsub{opacity:.5;}' +
     '.nrorow{display:flex;align-items:center;gap:10px;background:#fff;color:#123;border-radius:12px;padding:12px 14px;margin:8px 0;font-size:17px;font-weight:900;}' +
     '.nrono{background:#2C7A99;color:#fff;border-radius:999px;min-width:32px;text-align:center;padding:2px 8px;}' +
     '.nroname{flex:1;}' +
@@ -3520,6 +3523,14 @@ function renderNewReservationPage_(base, staff, dev) {
     'function nrShowNone(g,id){var el=document.getElementById(id);if(!el)return;var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),n=0;' +
     'for(var i=0;i<pl.length;i++){if(pl[i].style.display!=="none")n++;}el.style.display=n?"none":"inline";}' +
     'function applyAvail(av){if(!av)return;var cw=document.getElementById("cosmosWarn"),cwho=document.getElementById("cosmosWho");' +
+    // ★カウンセリングの部屋（コスモス）がふさがっている時は、1つ目のカウンセリングの枠の中に知らせを出し、
+    //   その枠の所要時間・担当を選べないようにする（2026-08-23 まるちゃん）。
+    '(function(){var S=window.__nrSlots||[],ci=-1;for(var z=0;z<S.length;z++){if(S[z].kind==="counsel"){ci=z;break;}}' +
+    'if(ci<0)return;var boxes=document.querySelectorAll("#nrSlotWrap .nrslot"),box=boxes[ci],w=document.getElementById("cosWarn"+ci);' +
+    'if(w){w.textContent="⚠ この時間、カウンセリングの部屋（コスモス）がうまっています。"+(av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"")+" 上の「開始時間」を変えてください。";' +
+    'w.style.display=av.cosmos_busy?"":"none";}' +
+    'if(box){if(av.cosmos_busy){box.classList.add("nrlock");}else{box.classList.remove("nrlock");}}' +
+    'if(cw)cw.style.display="none";})();' +
     'if(cw)cw.style.display=av.cosmos_busy?"":"none";if(cwho)cwho.textContent=av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"";' +
     'nrHideBusy("room",av.occ_rooms);nrHideBusy("staff",av.busy_staff);nrHideBusy("counsel",av.busy_counsel_staff);nrMayuVis();' +
     'nrShowNone("counsel","noneCounsel");nrShowNone("staff","noneStaff");nrShowNone("room","noneRoom");nrSlotAvail();}' +
@@ -3602,7 +3613,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var sp="";for(var b2=0;b2<ST.length;b2++){if(isC&&ST[b2][0]!=="1"&&ST[b2][0]!=="2")continue;sp+=pl("staff#"+i,ST[b2][0],ST[b2][1],ST[b2][2],ST[b2][0]===String(s.staff));}' +
     'var rp="";for(var c2=0;c2<RM.length;c2++){rp+=pl("room#"+i,RM[c2][0],RM[c2][1],RM[c2][2],RM[c2][0]===String(s.room));}' +
     'var ns="<span style=\\"display:none;margin-left:10px;color:#ff9b9b;font-weight:900;font-size:14px\\"";' +
-    'h+="<div class=\\"nrslot\\"><div class=\\"nrsec\\">"+(i+1)+"つ目："+esc(s.label||"施術")+(isC?"（コスモス）":"")+"</div>"' +
+    'h+="<div class=\\"nrslot\\"><div class=\\"nrsec\\">"+(i+1)+"つ目："+esc(s.label||"施術")+(isC?"（コスモス）":"")+"</div>"+(isC?("<div class=\\"nrcoswarn\\" id=\\"cosWarn"+i+"\\" style=\\"display:none\\"></div>"):"")' +
     '+"<div class=\\"nrsub\\">所要時間（分）</div><div class=\\"nrpills nrdur\\">"+dp+"</div>"' +
     '+"<div class=\\"nrsub\\">"+(isC?"カウンセリング担当":"施術担当")+ns+" id=\\"noneStaff"+i+"\\">その時間は担当者が空いていません</span></div><div class=\\"nrpills\\">"+sp+"</div>"' +
     '+(isC?"":("<div class=\\"nrsub\\">部屋"+ns+" id=\\"noneRoom"+i+"\\">その時間は部屋が空いていません</span></div><div class=\\"nrpills\\">"+rp+"</div>"))+"</div>";}' +
