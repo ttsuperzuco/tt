@@ -1147,10 +1147,19 @@ function szBusyHtml_(title, sub) {
     "<div style='color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;'>" +
     (sub || "タイムツリーへの書き込みが完了したら自動で切り替わりますので、しばらくお待ちください。") + "</div>";
 }
-function szDoneHtml_(title, backLabel) {
+function szDoneHtml_(title, backLabel, openUrl) {
+  // ★openUrl＝あれば「タイムツリーを確認」ボタンを戻るの下に出す（2026-08-23 まるちゃん）。
+  //   見た目・文言・並びはパソコン版（gui.py の .ov-b2）とまったく同じにそろえる＝勝手に作り直さない。
+  var extra = openUrl
+    ? "<a id='szDoneOpen' href='" + openUrl + "' target='_blank' rel='noopener' " +
+      "style='display:block;margin:14px auto 0;font:inherit;font-size:1.05rem;font-weight:800;color:#fff;" +
+      "background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;" +
+      "text-decoration:none;'>タイムツリーを確認</a>"
+    : "";
   return "<div style='font-size:92px;margin-bottom:16px;'>✓</div>" +
     "<div style='color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;'>" + title + "</div>" +
-    "<button type='button' id='szDoneBack' style='font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;'>" + (backLabel || '戻る') + "</button>";
+    "<button type='button' id='szDoneBack' style='font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;'>" + (backLabel || '戻る') + "</button>" +
+    extra;
 }
 // ★共通ルール(2026-08-05まるちゃん)：知らせ・警告・確認の小窓は、どのページでも必ずこのスーパーズコの
 //   見た目にそろえる。素っ気ない標準の警告(alert/confirm)を使わない。どのページのスクリプトからも
@@ -3592,7 +3601,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
     'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
-    'goEl.disabled=false;txtEl.value="";szOvShow_(szDoneHtml_("予約を登録しました","予約入力に戻る"),"#16a34a");var _bb=document.getElementById("szDoneBack");if(_bb){_bb.addEventListener("click",function(){location.href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '";});}});}' +
+    // ★事務所パソコンが返す文の後ろに、作った予約の住所が付いてくる＝「タイムツリーで見る」に使う（2026-08-23 まるちゃん）。
+    'var _tt=(String(r.result||"").match(/https?:\\/\\/\\S+/)||[""])[0];' +
+    'goEl.disabled=false;txtEl.value="";szOvShow_(szDoneHtml_("予約を登録しました","予約入力に戻る",_tt),"#16a34a");var _bb=document.getElementById("szDoneBack");if(_bb){_bb.addEventListener("click",function(){location.href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '";});}});}' +
     'var ppolls=0;function pollPrev(id){ppolls++;if(ppolls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);readEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
