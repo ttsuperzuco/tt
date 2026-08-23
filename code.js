@@ -3509,7 +3509,11 @@ function renderNewReservationPage_(base, staff, dev) {
     'function nrHideBusy(g,list){list=(list||[]).map(String);var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),selH=false,first=null;for(var i=0;i<pl.length;i++){var busy=list.indexOf(pl[i].getAttribute("data-val"))>=0;pl[i].style.display=busy?"none":"";if(!busy&&!first){first=pl[i];}if(busy&&pl[i].classList.contains("sel")){selH=true;}}if(selH&&first){sel[g]=first.getAttribute("data-val");for(var j=0;j<pl.length;j++){pl[j].classList.toggle("sel",pl[j]===first);}}}' +
     // ★デザイン眉・まつエク＝パイン🍍だけ選べる（他4人は隠す）・部屋は取らない（土曜だけ部屋欄を出す）。
     'function nrMayuVis(){var isMayu=!!window.__nrMayu,isSat=!!window.__nrSat;var sp=document.querySelectorAll(".nrpill[data-grp=\\"staff\\"]");for(var k=0;k<sp.length;k++){var pine=sp[k].getAttribute("data-val")==="5";if(isMayu){sp[k].style.display=pine?"":"none";}else if(pine){sp[k].style.display="none";}}' +
-    'var rw=document.getElementById("nrRoomWrap");if(rw)rw.style.display=isMayu?(isSat?"":"none"):"";' +
+    // ★枠ごとに選ぶ形（施術が2つ以上）の時は、下の全体の「⑦ 部屋」等は出さない（2026-08-23 まるちゃん）。
+    'var _ps=!!(window.__nrSlots&&window.__nrSlots.length>=2);' +
+    'var rw=document.getElementById("nrRoomWrap");if(rw)rw.style.display=_ps?"none":(isMayu?(isSat?"":"none"):"");' +
+    'var sw2=document.getElementById("secStaffWrap");if(sw2&&_ps)sw2.style.display="none";' +
+    'var dw2=document.getElementById("secDurWrap");if(dw2&&_ps)dw2.style.display="none";' +
     'if(isMayu){selVal("staff","5");if(isSat){var rp=document.querySelectorAll(".nrpill[data-grp=\\"room\\"]"),rf=null;for(var m=0;m<rp.length;m++){if(rp[m].style.display!=="none"&&!rf){rf=rp[m];}}if(rf){sel.room=rf.getAttribute("data-val");for(var n=0;n<rp.length;n++){rp[n].classList.toggle("sel",rp[n]===rf);}}}else{sel.room="";}}}' +
     // ★空きの結果を画面に反映（開始時間・所要時間・カウンセリングの有無を変えるたびに呼ぶ）。
     // ★選べる物が1つも無くなったら、見出しの右に赤い知らせを出す（2026-08-21 まるちゃん）。
