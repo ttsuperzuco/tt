@@ -3572,17 +3572,17 @@ function renderNewReservationPage_(base, staff, dev) {
     'var DU=[15,20,30,40,45,50,60,70,80,90,120,150];' +
     'var ST=[["2","🍊 みかん","#e08a1e"],["3","🫒 オリーブ","#4b8b3b"],["1","🍅 トマト","#d1443c"],["4","🥭 マンゴー","#c9a227"]];' +
     'var RM=[["FREEDOM","FREEDOM","#2ecc87"],["HAPPY","HAPPY","#e73b3b"],["LUCKY","LUCKY","#fdc02d"],["STAR/福/🇫🇷","STAR/福","#b38bdc"]];' +
-    'function pl(g,v,l,c,on){var o=(c?" style=\"background:"+c+"\"":"");return "<button type=\"button\" class=\"nrpill"+(c?"":" plain")+(on?" sel":"")+"\" data-grp=\""+g+"\" data-val=\""+v+"\""+o+">"+l+"</button>";}' +
+    'function pl(g,v,l,c,on){var o=(c?" style=\\"background:"+c+"\\"":"");return "<button type=\\"button\\" class=\\"nrpill"+(c?"":" plain")+(on?" sel":"")+"\\" data-grp=\\""+g+"\\" data-val=\\""+v+"\\""+o+">"+l+"</button>";}' +
     'var h="";for(var i=0;i<slots.length;i++){var s=slots[i];' +
     'sel["dur#"+i]=String(s.dur||"30");sel["staff#"+i]=String(s.staff||"2");sel["room#"+i]=String(s.room||"FREEDOM");' +
     'var dp="";for(var a=0;a<DU.length;a++){dp+=pl("dur#"+i,DU[a],DU[a],"",String(DU[a])===String(s.dur));}' +
     'var sp="";for(var b2=0;b2<ST.length;b2++){sp+=pl("staff#"+i,ST[b2][0],ST[b2][1],ST[b2][2],ST[b2][0]===String(s.staff));}' +
     'var rp="";for(var c2=0;c2<RM.length;c2++){rp+=pl("room#"+i,RM[c2][0],RM[c2][1],RM[c2][2],RM[c2][0]===String(s.room));}' +
-    'var ns="<span style=\"display:none;margin-left:10px;color:#ff9b9b;font-weight:900;font-size:14px\"";' +
-    'h+="<div class=\"nrslot\"><div class=\"nrsec\">"+(i+1)+"つ目の枠："+esc(s.label||"施術")+"</div>"' +
-    '+"<div class=\"nrsub\">所要時間（分）</div><div class=\"nrpills nrdur\">"+dp+"</div>"' +
-    '+"<div class=\"nrsub\">施術担当"+ns+" id=\"noneStaff"+i+"\">その時間は担当者が空いていません</span></div><div class=\"nrpills\">"+sp+"</div>"' +
-    '+"<div class=\"nrsub\">部屋"+ns+" id=\"noneRoom"+i+"\">その時間は部屋が空いていません</span></div><div class=\"nrpills\">"+rp+"</div></div>";}' +
+    'var ns="<span style=\\"display:none;margin-left:10px;color:#ff9b9b;font-weight:900;font-size:14px\\"";' +
+    'h+="<div class=\\"nrslot\\"><div class=\\"nrsec\\">"+(i+1)+"つ目の枠："+esc(s.label||"施術")+"</div>"' +
+    '+"<div class=\\"nrsub\\">所要時間（分）</div><div class=\\"nrpills nrdur\\">"+dp+"</div>"' +
+    '+"<div class=\\"nrsub\\">施術担当"+ns+" id=\\"noneStaff"+i+"\\">その時間は担当者が空いていません</span></div><div class=\\"nrpills\\">"+sp+"</div>"' +
+    '+"<div class=\\"nrsub\\">部屋"+ns+" id=\\"noneRoom"+i+"\\">その時間は部屋が空いていません</span></div><div class=\\"nrpills\\">"+rp+"</div></div>";}' +
     'wrap.innerHTML=h;wrap.style.display="";}' +
     'nrStartEditInit();' +
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
