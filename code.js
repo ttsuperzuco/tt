@@ -1152,14 +1152,14 @@ function szDoneHtml_(title, backLabel, openUrl) {
   //   見た目・文言・並びはパソコン版（gui.py の .ov-b2）とまったく同じにそろえる＝勝手に作り直さない。
   var extra = openUrl
     ? "<a id='szDoneOpen' href='" + openUrl + "' target='_blank' rel='noopener' " +
-      "style='display:block;margin:0 auto 16px;font:inherit;font-size:1.05rem;font-weight:800;color:#fff;" +
-      "background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;" +
-      "text-decoration:none;'>タイムツリーを確認</a>"
+      "style='display:block;margin:0 auto 16px;font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;" +
+      "background:#fff;border:0;border-radius:12px;padding:14px 26px;text-decoration:none;" +
+      "box-shadow:0 4px 10px rgba(0,0,0,.18);'>タイムツリーを確認</a>"
     : "";
   return "<div style='font-size:92px;margin-bottom:16px;'>✓</div>" +
     "<div style='color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;'>" + title + "</div>" +
     extra +
-    "<button type='button' id='szDoneBack' style='font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;'>" + (backLabel || '戻る') + "</button>";
+    "<button type='button' id='szDoneBack' style='font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.18);'>" + (backLabel || '戻る') + "</button>";
 }
 // ★共通ルール(2026-08-05まるちゃん)：知らせ・警告・確認の小窓は、どのページでも必ずこのスーパーズコの
 //   見た目にそろえる。素っ気ない標準の警告(alert/confirm)を使わない。どのページのスクリプトからも
