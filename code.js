@@ -3486,8 +3486,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrsub{font-weight:800;margin:12px 2px 6px;font-size:15px;color:#dbeafe;}' +
     '.nrnote2{color:#cfe6ef;font-size:14px;margin:0 2px 8px;}' +
     '.nrcoswarn{background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:8px 0;}' +
-    '.nrslot.nrlock .nrpills{pointer-events:none;opacity:.3;}' +
-    '.nrslot.nrlock .nrsub{opacity:.5;}' +
+    '.nrslot.nrlock .nrpills,.nrslot.nrlock .nrsub{display:none;}' +
     '.nrorow{display:flex;align-items:center;gap:10px;background:#fff;color:#123;border-radius:12px;padding:12px 14px;margin:8px 0;font-size:17px;font-weight:900;}' +
     '.nrono{background:#2C7A99;color:#fff;border-radius:999px;min-width:32px;text-align:center;padding:2px 8px;}' +
     '.nroname{flex:1;}' +
@@ -3525,28 +3524,32 @@ function renderNewReservationPage_(base, staff, dev) {
     'function applyAvail(av){if(!av)return;var cw=document.getElementById("cosmosWarn"),cwho=document.getElementById("cosmosWho");' +
     // ★カウンセリングの部屋（コスモス）がふさがっている時は、1つ目のカウンセリングの枠の中に知らせを出し、
     //   その枠の所要時間・担当を選べないようにする（2026-08-23 まるちゃん）。
-    '(function(){var S=window.__nrSlots||[],ci=-1;for(var z=0;z<S.length;z++){if(S[z].kind==="counsel"){ci=z;break;}}' +
-    'if(ci<0)return;var boxes=document.querySelectorAll("#nrSlotWrap .nrslot"),box=boxes[ci],w=document.getElementById("cosWarn"+ci);' +
-    'if(w){w.textContent="⚠ この時間、カウンセリングの部屋（コスモス）がうまっています。"+(av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"")+" 上の「開始時間」を変えてください。";' +
-    'w.style.display=av.cosmos_busy?"":"none";}' +
-    'if(box){if(av.cosmos_busy){box.classList.add("nrlock");}else{box.classList.remove("nrlock");}}' +
-    'if(cw)cw.style.display="none";})();' +
+    // ★枠ごとに選ぶ形の時、コスモスの空きは「カウンセリングの枠が実際に始まる時刻」で見る（下の nrSlotAvail）。
+    '(function(){var S=window.__nrSlots||[];for(var z=0;z<S.length;z++){if(S[z].kind==="counsel"&&cw){cw.style.display="none";}}})();' +
     'if(cw)cw.style.display=av.cosmos_busy?"":"none";if(cwho)cwho.textContent=av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"";' +
     'nrHideBusy("room",av.occ_rooms);nrHideBusy("staff",av.busy_staff);nrHideBusy("counsel",av.busy_counsel_staff);nrMayuVis();' +
     'nrShowNone("counsel","noneCounsel");nrShowNone("staff","noneStaff");nrShowNone("room","noneRoom");nrSlotAvail();}' +
     // ★枠ごとに「その枠の時間に空いている担当・部屋」だけを出す（2つ目の枠は1つ目の後に始まる）。
     'function nrSlotAvail(){var S=window.__nrSlots;if(!S||S.length<2)return;var d=window.__rvdt;if(!d||!window.__nrDate)return;' +
-    'var st=Number(d.hh)*60+Number(d.mi)+(((!!window.__nrNeedCounsel)&&sel.needc!=="no")?30:0);' +
-    'function step(i,pos){if(i>=S.length)return;var du=Number(sel["dur#"+i]||30);' +
+    'var st=Number(d.hh)*60+Number(d.mi);' +
+    'function hhmm(m){var h=Math.floor(m/60),i2=m%60;return h+"時"+(i2<10?"0":"")+i2+"分";}' +
+    'function step(i,pos){if(i>=S.length)return;var isC=(S[i].kind==="counsel");' +
+    'if(isC&&sel.needc==="no"){step(i+1,pos);return;}var du=Number(sel["dur#"+i]||30);' +
     'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
-    'fields:JSON.stringify({date:window.__nrDate,start_min:pos,dur:du,need_counsel:"0"})},function(r){' +
+    'fields:JSON.stringify({date:window.__nrDate,start_min:pos,dur:du,need_counsel:(isC?"1":"0")})},function(r){' +
     'if(!r||!r.ok||!r.id){step(i+1,pos+du);return;}var n=0;' +
     '(function pw(){n++;if(n>30){step(i+1,pos+du);return;}' +
     'jsonp({action:"status",key:KEY,id:r.id},function(x){if(!x||!x.ok){step(i+1,pos+du);return;}' +
     'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(pw,700);return;}' +
     'if(x.status==="done"){var av={};try{av=JSON.parse(x.result||"{}");}catch(e){}' +
-    'if(av&&av.ok){nrHideBusy("room#"+i,av.occ_rooms);nrHideBusy("staff#"+i,av.busy_staff);' +
-    'nrShowNone("staff#"+i,"noneStaff"+i);nrShowNone("room#"+i,"noneRoom"+i);}}' +
+    'if(av&&av.ok){if(isC){var bx=document.querySelectorAll("#nrSlotWrap .nrslot")[i],w=document.getElementById("cosWarn"+i);' +
+    'if(w){w.textContent="⚠ この時間（"+hhmm(pos)+"〜）、カウンセリングの部屋（コスモス）がうまっています。"' +
+    '+(av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"")+" 上の「開始時間」を変えるか、やる順番を変えてください。";' +
+    'w.style.display=av.cosmos_busy?"":"none";}' +
+    'if(bx){if(av.cosmos_busy){bx.classList.add("nrlock");}else{bx.classList.remove("nrlock");}}' +
+    'nrHideBusy("staff#"+i,av.busy_counsel_staff);nrShowNone("staff#"+i,"noneStaff"+i);}' +
+    'else{nrHideBusy("room#"+i,av.occ_rooms);nrHideBusy("staff#"+i,av.busy_staff);' +
+    'nrShowNone("staff#"+i,"noneStaff"+i);nrShowNone("room#"+i,"noneRoom"+i);}}}' +
     'step(i+1,pos+du);});})();});}' +
     'step(0,st);}' +
     // ★カウンセリングの必要（④）で、カウンセリング担当（⑤）の出し入れをする。
