@@ -3878,7 +3878,12 @@ function renderNewReservationPage_(base, staff, dev) {
     'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
     'fields:JSON.stringify({date:window.__nrDate,start_min:(Number(d.hh)*60+Number(d.mi)),dur:Number(sel.dur||60),need_counsel:need})},' +
     'function(r){if(!r||!r.ok||!r.id){if(done)done();return;}nrAvPolls=0;setTimeout(function(){nrAvPoll(r.id,done);},700);});}' +
-    'function nrAvPoll(id,done){nrAvPolls++;if(nrAvPolls>30){if(done)done();return;}' +
+        // ★2026-08-24（再点検で見つけた穴）：30回×0.7秒＝約54秒であきらめていたが、
+    //   事務所パソコンは空きの計算に120秒まで許している＝**答えが出ているのに先にあきらめ**、
+    //   その枠の「埋まっている担当・部屋を消す」が黙って抜け落ちていた（＝埋まっている人を選べる）。
+    //   200回×0.7秒＝約6分に伸ばして、事務所パソコンより先にあきらめないようにした。
+    //   ★事務所パソコン側の制限を伸ばす時は、ここも必ず一緒に伸ばすこと。
+    'function nrAvPoll(id,done){nrAvPolls++;if(nrAvPolls>200){if(done)done();return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(done)done();return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){nrAvPoll(id,done);},700);return;}' +
     'if(r.status!=="done"){if(done)done();return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
