@@ -124,7 +124,7 @@
 })();
 </script>
 <script src="detect_core.js?v=3152ffbb7b"></script>
-<script src="code.js?v=6256ee3426"></script>
+<script src="code.js?v=86f41e5540"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -452,6 +452,28 @@
     var s = document.createElement('script');
     s.src = EXEC + '?action=data&name=koukoku.json&callback=' + cb + '&cb=' + Date.now();
     s.onerror = function () { try { mount(renderKoukokuPage_({ ads: [] }, base, staff, dev)); } catch (e) {} };
+    document.head.appendChild(s);
+  }
+
+  // 自宅PC（開発URL専用）。事務所PCが1分ごとに送る pc_status.json を窓口(action=data)で取ってきて、
+  // renderPcStatusPage_ で「動いているか／止まっているなら何が起きたか」を出す。
+  // ★この画面だけは先読み(__PF_)に入れない＝知りたいのは「今この瞬間の生死」で、
+  //   古い先読みを一瞬でも見せると「動いている」と誤解させるため（必ず取り直す）。
+  // ★取れなかった時は「動いている」と偽らない＝そのまま renderPcStatusPage_ に渡し、
+  //   「まだ分かりません」を出す（安全側）。
+  function showPcStatus() {
+    var cb = '__pcst' + Date.now();
+    window[cb] = function (payload) {
+      try { delete window[cb]; } catch (e) {}
+      try { mount(renderPcStatusPage_(payload || {}, base, staff, dev)); }
+      catch (e) { fail('描画エラー：' + e); }
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=data&name=pc_status.json&callback=' + cb + '&cb=' + Date.now();
+    s.onerror = function () {
+      try { mount(renderPcStatusPage_({ error: '通信エラーです。通信環境をご確認ください。' }, base, staff, dev)); }
+      catch (e) {}
+    };
     document.head.appendChild(s);
   }
 
@@ -802,6 +824,7 @@
     else if (v === 'zenjitsu') showZenjitsu();
     else if (v === 'cost') showCost();
     else if (v === 'koukoku') showKoukoku();
+    else if (v === 'pcstatus') showPcStatus();
     else if (v === 'instadm') showInstaDm();
     else if (v === 'igdm') showIgdm();
     else if (v === 'claudetools') showClaudeTools();

@@ -140,6 +140,9 @@ function doGet(e) {
   } else if (view === 'procell') {
     title = 'プロセル 残り本数';                         // ★開発URL(?dev=1)専用。美容液を何本注文するかの数
     html = renderProcell_(base, staff, dev);
+  } else if (view === 'pcstatus') {
+    title = '自宅PC';                                   // ★開発URL(?dev=1)専用。事務所PCの生き死にと止まった理由
+    html = renderPcStatus_(base, staff, dev);
   } else if (view === 'kanshi') {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
@@ -855,6 +858,25 @@ function getProcellFile_() {
   return newest;
 }
 
+// ★自宅PCの生き死に（2026-08-24 まるちゃん決定）＝事務所PCが1分ごとに置き場へ送る。
+var PCSTATUS_FILENAME = 'pc_status.json';
+function getPcStatusFile_() {
+  var props = PropertiesService.getScriptProperties();
+  var id = props.getProperty('PCSTATUS_FILE_ID');
+  if (id) {
+    try { return DriveApp.getFileById(id); } catch (ignore) { /* IDが古い→探し直す */ }
+  }
+  var it = DriveApp.getFilesByName(PCSTATUS_FILENAME);
+  var newest = null;
+  while (it.hasNext()) {
+    var f = it.next();
+    if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
+  }
+  if (!newest) throw new Error(PCSTATUS_FILENAME + ' が見つかりません（事務所PCで書き出してください）。');
+  props.setProperty('PCSTATUS_FILE_ID', newest.getId());
+  return newest;
+}
+
 function getAkijikanFile_() {
   var props = PropertiesService.getScriptProperties();
   var id = props.getProperty('AKIJIKAN_FILE_ID');
@@ -949,12 +971,15 @@ var DEFAULT_TILE_SETTINGS_ = {
   claudetools: { exec: false, staff: false },
   // ★プロセル残り本数＝オーナー(開発者)専用。kanshi/costと同じく開発URL(?dev=1)専用
   //   （tile_settings.py の TILES にも入れない＝誰もONにできない・共通ルール16）。
-  procell:    { exec: false, staff: false }
+  procell:    { exec: false, staff: false },
+  // ★自宅PC＝事務所PCが今動いているか／止まっているなら何が起きたか。オーナー(開発者)専用＝
+  //   開発URL(?dev=1)だけに出る（tile_settings.py の TILES にも入れない・共通ルール16）。2026-08-24。
+  pcstatus:   { exec: false, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'timedsend', 'yoyaku', 'procell'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'timedsend', 'yoyaku', 'procell', 'pcstatus'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1615,6 +1640,10 @@ var TILE_DEFS_ = [
   //   事務所PCが毎晩そろえた procell.json を読んで出すだけ（計算はPC側・2026-08-20）。
   { id: 'procell', cls: 'procell', view: 'procell',
     icon: '<span class="ticon">🧴</span>', label: 'プロセル\n残り本数' },
+  // ★自宅PC＝事務所PCが今動いているか／止まっているなら何が起きたか（2026-08-24 まるちゃん決定）。
+  //   開発URL(?dev=1)専用。事務所PCが1分ごとに送る pc_status.json を読むだけ。
+  { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
+    icon: '<span class="ticon">🖥️</span>', label: '自宅\nPC' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
     icon: '<span class="ticon">📝</span>', label: '予約\n入力' }
 ];
@@ -1626,7 +1655,7 @@ var TILE_DEFS_ = [
 // ★2026-08-19 まるちゃん決定：売上転記(uriage)は実務者用へ移した（ここに書かない＝実務者用になる）。
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
-  instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri',
+  instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', timedsend: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
@@ -5164,6 +5193,16 @@ function renderProcell_(base, staff, dev) {
   }
 }
 
+// GAS側から開いた時用（静的アプリは index.html が窓口から取って renderPcStatusPage_ を直接呼ぶ）。
+function renderPcStatus_(base, staff, dev) {
+  try {
+    return renderPcStatusPage_(
+      JSON.parse(getPcStatusFile_().getBlob().getDataAsString('UTF-8')), base, staff, dev);
+  } catch (err) {
+    return renderPcStatusPage_({ error: (err && err.message) ? err.message : String(err) }, base, staff, dev);
+  }
+}
+
 function renderProcellPage_(d, base, staff, dev) {
   var o = d.order || {}, r = d.rest || {}, k = d.expired || {};
   var kinds = [['頭皮', '頭皮用'], ['顔MD', '顔MD用'], ['顔Pro', '顔Pro用']];
@@ -5208,6 +5247,122 @@ function renderProcellPage_(d, base, staff, dev) {
     '<div class="pcFoot">そろえた時刻：' + esc_(d.generated_at || '') + '（毎晩そろえます）</div>' +
   '</div>';
 }
+
+// ========== 自宅PC（2026-08-24 まるちゃん決定・開発URL専用） ==========
+// 事務所PCが1分ごとに送る pc_status.json を読んで「今動いているか／止まっているなら何が起きたか」を出す。
+//
+// ★ここだけ画面側で判定する理由（＝ふだんの決まり「判定はPC側で完結」の唯一の例外）：
+//   知りたいのは「事務所PCが止まっていないか」。止まっている時、そのPCは何も送れないので、
+//   PC側に判定させることが原理的にできない（死人は口をきけない）。そこでPC側は材料だけ渡す
+//   ＝「最後に送った時刻」「何分で止まったと見なすか(stale_min)」。引き算はここで行う。
+//   ★これは「判定ロジックを2か所に書く」ことではない（PC側に同じ判定は無い）。
+//
+// ★理由が確定するのは2段階（まるちゃんに説明済み）：
+//   ①止まっている最中 … 自分で切った予告がある時だけ「まるちゃんが切りました」と確実に言える。
+//     予告なしで途絶えた時は、停電・異常終了・固まったのどれかまでしか言えない（正直に3つ並べる）。
+//   ②立ち上がり直した時 … PCがWindowsの日記を読んで確定させ、last_end に入れて送ってくる。
+function renderPcStatusPage_(d, base, staff, dev) {
+  d = d || {};
+  var err = d.error || (!d.sent_at ? 'まだ事務所PCから届いていません。' : '');
+  if (err) {
+    return '<style>' + HOMECSS_ + PCSTCSS_ + '</style>' +
+      '<div class="home">' + backBar_(base, staff, dev) +
+      '<div class="hhead"><span class="bmark">🖥️</span><span class="bname">自宅PC</span></div>' +
+      '<div class="soon"><div class="soonic">📄</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">まだ分かりません</div>' +
+      '<div class="soondesc">' + esc_(err) + '</div></div></div>';
+  }
+
+  var staleMin = d.stale_min || 5;
+  var mins = pcstMinutesSince_(d.sent_at);
+  var alive = (mins !== null && mins < staleMin);
+
+  // 止まっている時の理由。予告があればそれが最優先（＝確実に分かる唯一の場合）。
+  var why = '', whySub = '';
+  if (!alive) {
+    if (d.shutdown_notice_at) {
+      why = 'まるちゃんが自分で切りました';
+      whySub = '切る直前に「今から切ります」と届いています（' + esc_(pcstFmt_(d.shutdown_notice_at)) + '）。心配は要りません。';
+    } else {
+      why = '予告なしで止まりました';
+      whySub = '停電・異常終了（青い画面など）・固まった、のどれかです。'
+             + 'どれだったかは、パソコンが立ち上がり直した時にここへ出ます。';
+    }
+  }
+
+  var le = d.last_end || {};
+  var rows =
+    pcstRow_('続けて動いている時間', (d.uptime_hours === null || d.uptime_hours === undefined)
+              ? '—' : (d.uptime_hours + ' 時間')) +
+    pcstRow_('前に立ち上がった時刻', pcstFmt_(d.boot_at)) +
+    pcstRow_('その前はどう終わったか', esc_(le.label || '—')
+              + (le.at ? '<span class="pcstDim">（' + esc_(pcstFmt_(le.at)) + '）</span>' : '')) +
+    pcstRow_('最後に届いた時刻', pcstFmt_(d.sent_at)
+              + (mins === null ? '' : '<span class="pcstDim">（' + pcstAgo_(mins) + '）</span>')) +
+    pcstRow_('パソコンの名前', esc_(d.host || '—'));
+
+  return '<style>' + HOMECSS_ + PCSTCSS_ + '</style>' +
+  '<div class="home">' +
+    backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🖥️</span><span class="bname">自宅PC</span></div>' +
+    '<div class="pcstBig ' + (alive ? 'ok' : 'ng') + '">' +
+      '<div class="pcstIc">' + (alive ? '🟢' : '🔴') + '</div>' +
+      '<div class="pcstMain">' + (alive ? '動いています' : '止まっています') + '</div>' +
+      '<div class="pcstSub">' +
+        (alive ? ('最後の合図は ' + pcstAgo_(mins) + '（' + staleMin + '分おきに見ています）')
+               : (pcstAgo_(mins) + 'から合図が届いていません')) +
+      '</div>' +
+    '</div>' +
+    (alive ? '' :
+      '<div class="pcstWhy">' +
+        '<div class="pcstWhyT">' + esc_(why) + '</div>' +
+        '<div class="pcstWhyS">' + whySub + '</div>' +
+      '</div>') +
+    '<div class="pcstTable">' + rows + '</div>' +
+    '<div class="pcFoot">事務所PCが1分ごとに合図を送っています。この画面は開くたびに最新を取り直します。</div>' +
+  '</div>';
+}
+
+function pcstRow_(k, v) {
+  return '<div class="pcstR"><div class="pcstK">' + esc_(k) + '</div><div class="pcstV">' + v + '</div></div>';
+}
+/** 文字列の時刻から今までの分数（分からなければ null）。 */
+function pcstMinutesSince_(s) {
+  if (!s) return null;
+  var t = new Date(String(s).replace(' ', 'T'));
+  if (isNaN(t.getTime())) return null;
+  return Math.floor((new Date().getTime() - t.getTime()) / 60000);
+}
+function pcstAgo_(m) {
+  if (m === null || m === undefined) return '—';
+  if (m < 1) return 'たった今';
+  if (m < 60) return m + '分前';
+  var h = Math.floor(m / 60);
+  if (h < 24) return h + '時間' + (m % 60) + '分前';
+  return Math.floor(h / 24) + '日' + (h % 24) + '時間前';
+}
+function pcstFmt_(s) {
+  if (!s) return '—';
+  var t = String(s).replace('T', ' ');
+  return t.length > 16 ? t.slice(0, 16) : t;
+}
+
+var PCSTCSS_ = ''
++ '.pcstBig{border-radius:16px;padding:22px 16px;text-align:center;margin:10px 0 14px}'
++ '.pcstBig.ok{background:#123626;border:1px solid #1f6b45}'
++ '.pcstBig.ng{background:#3a1620;border:1px solid #7b2740}'
++ '.pcstIc{font-size:2.6rem;line-height:1}'
++ '.pcstMain{font-size:1.8rem;font-weight:800;margin:6px 0 4px}'
++ '.pcstSub{font-size:.95rem;opacity:.85}'
++ '.pcstWhy{background:#16283a;border-radius:14px;padding:14px 14px;margin-bottom:14px}'
++ '.pcstWhyT{font-size:1.15rem;font-weight:700;margin-bottom:6px}'
++ '.pcstWhyS{font-size:.95rem;line-height:1.6;opacity:.88}'
++ '.pcstTable{background:#16283a;border-radius:14px;overflow:hidden}'
++ '.pcstR{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.07)}'
++ '.pcstR:last-child{border-bottom:none}'
++ '.pcstK{flex:0 0 44%;font-size:.92rem;opacity:.8}'
++ '.pcstV{flex:1 1 auto;font-size:.98rem;font-weight:600;word-break:break-all}'
++ '.pcstDim{font-weight:400;opacity:.7;margin-left:6px;font-size:.88rem}';
 
 var PROCELLCSS_ = ''
 + '.pcLead{margin:10px 4px 14px;font-size:1rem;line-height:1.6;opacity:.9}'
