@@ -2408,11 +2408,11 @@ function renderInstaDmPage_(d, base, staff, dev) {
       var locRes = idmResGet_();
       waiting = waiting.filter(function (x) {
         var kk = 't:' + a.key + ':' + (x.t.id || '');
-        return idmWithinMonth_(x.t.last_ts) && !x.t.resolved && locRes[kk] !== (x.t.last_ts || '');
+        return idmWithinMonth_(x.t.last_ts) && !x.t.resolved && !idmLocHide_('t', locRes[kk], x.t.last_ts || '');
       });
       var reqsShown = reqs.filter(function (r) {
         var kk = 'r:' + a.key + ':' + idmStripNum_(r.name);
-        return idmWithinMonth_(r.ts) && !r.resolved && locRes[kk] !== ((r.preview || '') + '|' + (r.ts || ''));
+        return idmWithinMonth_(r.ts) && !r.resolved && !idmLocHide_('r', locRes[kk], idmReqSig_(r));
       });
       // ★2026-08-03 まるちゃん決定：「返事待ち（既存客）」と「初めての人」は分けず、
       //   「当店が未返信」の1つにまとめる（どちらもお店がまだ返していない＝要返信で同じ）。
@@ -2433,7 +2433,7 @@ function renderInstaDmPage_(d, base, staff, dev) {
           var sp = reqsShown[r].spam ? '<span class="idmtag spam">🚫 スパムかも</span>' : '';
           var occ = idmOccOf_(reqs, reqsShown[r]);   // 同じ名前の中で上から何番目か
           var rKey = 'r:' + a.key + ':' + idmStripNum_(reqsShown[r].name);
-          var rSig = (reqsShown[r].preview || '') + '|' + (reqsShown[r].ts || '');
+          var rSig = idmReqSig_(reqsShown[r]);
           body += rcard(a.key, reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un, occ, rKey, rSig);
         }
       } else { body += '<div class="idmempty">1ヶ月以内に未返信はありません。</div>'; }
@@ -2473,9 +2473,39 @@ function idmOccOf_(reqs, item) {
 function idmStripNum_(s) { return idmNorm_(s).replace(/\s*\d+\s*$/, '').trim(); }
 
 // この端末が覚えている「解決済にした相手」（key→そのときの状態sig）。事務所PCの読み直しが
-// 追いつくまでの間も、再表示で隠れたままにするため。新しいやり取りが来て sig が変われば自動で戻る。
+// 追いつくまでの間も、再表示で隠れたままにするため。相手から新しいやり取りが来た時だけ戻る。
 function idmResGet_() { try { return JSON.parse(localStorage.getItem('idm_resolved') || '{}') || {}; } catch (e) { return {}; } }
 function idmResAdd_(key, sig) { try { var m = idmResGet_(); m[key] = sig; localStorage.setItem('idm_resolved', JSON.stringify(m)); } catch (e) {} }
+function idmResDel_(key) { try { var m = idmResGet_(); delete m[key]; localStorage.setItem('idm_resolved', JSON.stringify(m)); } catch (e) {} }
+
+// 初めての人の「今の状態」の合図＝最初の一言＋未読かどうか。
+// ★一覧に出る時刻（「2日」「4週間」＝今から何日前か）は日が経つと必ず変わるので合図に入れない。
+//   入れると、新しいメッセージが来ていないのに解決済みが勝手に解けて一覧へ戻ってしまう
+//   （2026-08-24 まるちゃん「解決済みをおしたらもう出ないようにして」の原因のひとつ）。
+function idmReqSig_(r) { return (r.preview || '') + '|u' + (r.unread ? '1' : '0'); }
+
+// 解決済みの印が今も有効か（＝一覧から隠すか）。事務所PC側 read_dms.py の _resolved_hide と同じ判定。
+// 片方だけ直さない（両方そろえる）。
+function idmLocHide_(kind, stored, now) {
+  if (!stored) return false;
+  if (kind === 't') {
+    // 会話＝最後のやり取りの時刻。「YYYY/MM/DD HH:MM」はそのまま文字の大小で新旧が分かる。
+    // 印を付けた時より新しいやり取りが来た時だけ表示に戻す。
+    if (!now) return true;
+    return String(now) <= String(stored);
+  }
+  var a = idmReqSplit_(stored), b = idmReqSplit_(now);
+  if (a.prev !== b.prev) return false;                 // 最初の一言が変わった＝新しいメッセージ
+  if (a.unread === false && b.unread === true) return false;  // 既読だったのに未読に戻った＝新着
+  return true;
+}
+// 合図を「最初の一言」と「未読か」に分ける（古い形＝末尾が相対時刻の物は時刻を捨てる）。
+function idmReqSplit_(sig) {
+  var s = String(sig || ''), m = s.match(/\|u([01])$/);
+  if (m) return { prev: s.slice(0, s.length - m[0].length), unread: m[1] === '1' };
+  var i = s.lastIndexOf('|');
+  return { prev: i >= 0 ? s.slice(0, i) : s, unread: null };
+}
 
 // 返信の入力欄（各カードの中に隠して置く。返信ボタンで開く）。
 function idmReplyBox_() {
@@ -2522,24 +2552,32 @@ function idmSendReply(btn) {
 }
 
 // 「✓ 解決済」＝この相手を未返信一覧から隠す（削除はしない・全員で共有）。新しいメッセージが来たら戻る。
+// ★2026-08-24 まるちゃん「解決済みをおしたら、もうここには出ないようにして」で作り直した：
+//   ①確認はスーパーズコの小窓（共通ルール。ブラウザ標準の窓は使わない）
+//   ②押したらその場ですぐ消す＋この端末に覚えさせる（事務所PCの返事は30秒ほどかかるので、
+//     待っている間「押しても何も起きない」ように見えていた＝これが「消えない」の正体）
+//   ③事務所PCに書けなかった時だけ、小さな警告を出して行を戻す（黙って失敗しない）
 function idmResolve(btn) {
   if (!btn) return;
   var key = btn.getAttribute('data-key') || '';
   var sig = btn.getAttribute('data-sig') || '';
   if (!key) return;
-  if (!confirm('この相手を「解決済み」にして一覧から隠しますか？\n（消しません。相手から新しいメッセージが来たらまた出ます）')) return;
   var card = btn;
   for (var k = 0; k < 4 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
-  if (window.igdmResolve) window.igdmResolve(key, sig, function (m) {
-    // 隠せたら、この端末にも覚えさせて（再表示でも隠す）、その行を画面から消す。
-    if (m && m.indexOf('解決済み') >= 0) {
-      idmResAdd_(key, sig);
-      if (card && card.parentNode) {
-        card.style.transition = 'opacity .4s'; card.style.opacity = '0';
-        setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 400);
-      }
-    }
-  });
+  szPopup_('この相手を「解決済み」にして一覧から隠しますか？\n（消しません。相手から新しいメッセージが来たら、その時だけまた出ます）',
+    { icon: '✓', cancel: true, yesLabel: '解決済みにする', onYes: function () {
+      idmResAdd_(key, sig);                       // 先に覚える＝開き直しても消えたまま
+      if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0';
+        setTimeout(function () { if (card) card.style.display = 'none'; }, 300); }
+      if (!window.igdmResolve) return;
+      window.igdmResolve(key, sig, function (m) {
+        if (m && ('' + m).indexOf('解決済み') >= 0) return;   // 事務所PCにも書けた＝そのまま
+        // 書けなかった＝この端末だけ隠れている状態。行を戻して知らせる。
+        idmResDel_(key);
+        if (card) { card.style.display = ''; card.style.opacity = '1'; }
+        szPopup_('うまくいきませんでした。もう一度押してください。\n（' + ('' + (m || 'つながりませんでした')) + '）');
+      });
+    } });
 }
 
 // IGのDMの初めての人カードの「🚫 削除」。中身（最初の一言）を見た上で、押した1件だけ・確認してから。戻せない。
