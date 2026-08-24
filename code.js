@@ -2065,8 +2065,10 @@ function renderZenjitsuPage_(base, staff, dev) {
         '<button type="button" class="zjopt" data-mode="all">全員分を作成</button>' +
         (staff ? '' : '<button type="button" class="zjopt" data-mode="unsent">未送信の分だけ作成</button>') +
       '</div>' +
+      /* ★2026-08-24 まるちゃん指示：「（お客様には送りません＝見るだけ）」の一言は消した
+           （パソコン版の窓の同じ一言も一緒に消してある）。 */
       '<div class="zjstatus" id="zjstatus">日付を選んで、' + (staff ? 'ボタン' : 'どちらかのボタン') +
-        'を押すとお知らせが作成されます（お客様には送りません＝見るだけ）。</div>' +
+        'を押すとお知らせが作成されます。</div>' +
     '</div>' +
     '<div id="zjres"></div>' +
   '</div>' + script;
