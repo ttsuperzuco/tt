@@ -3695,11 +3695,12 @@ function renderNewReservationPage_(base, staff, dev) {
     //   その実績どおりの見込みを、経過に合わせて出す（黙って待たせない）。
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){' +
     'var _es=prevT0?Math.round((Date.now()-prevT0)/1000):0;' +
-    'var _mg=(_es<15)?"ふつうは10秒ほどで終わります。"' +
-    ':(_es<40)?"用紙が読みにくいのでAIに聞いています。あと30秒ほどかかります。"' +
-    ':(_es<100)?"まだAIに聞いています。あと1分ほどかかることがあります。"' +
-    ':"時間がかかっています。あと少しで終わらなければ、もう一度お試しください。";' +
-    'status("変換中です（"+_es+"秒）。"+_mg,false);' +
+    // ★2026-08-24 まるちゃん指定の言い回し。「用紙」では何を指すか分からないので「貼った内容」。
+    'var _mg=(_es<15)?"変換中です。通常は10秒以内に終わります。"' +
+    ':(_es<40)?"変換中です（"+_es+"秒）。貼った内容が読み取りにくいので、AIに聞いています。あと30秒ほどかかります。"' +
+    ':(_es<100)?"変換中です（"+_es+"秒）。まだAIに聞いています。あと1分ほどかかることがあります。"' +
+    ':"変換中です（"+_es+"秒）。時間がかかっています。終わらなければ、もう一度お試しください。";' +
+    'status(_mg,false);' +
     'setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
@@ -3723,7 +3724,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
     'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var base=this.getAttribute("data-procell");var tw=(base==="頭皮プロセル")?"トライアル":(window.__procellWord||"トライアル");var sh=(base==="頭皮プロセル")?"プロ頭":(base==="顔プロセルPro"?"プロ肌Pro":"プロ肌MD");var full=sh+" "+tw.replace("キャンペーン","キャ").replace("トライアル","トラ");var lines=prevEl.value.split("\\n");for(var k=0;k<lines.length;k++){lines[k]=lines[k].replace(/(?:(?:顔|頭皮)?プロセル(?:セラピーズ)?|procell|プロ肌|プロ頭|プロ(?!グラム))(?:[ \\u3000]*(?:キャンペーントライアル|トライアル|キャトラ|トラ))?/gi,full);}prevEl.value=lines.join("\\n");prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
-    'readEl.disabled=true;prevT0=Date.now();status("変換中です。しばらくお待ちください。（0秒）",false);' +
+    'readEl.disabled=true;prevT0=Date.now();status("変換中です。通常は10秒以内に終わります。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},1200);});}' +
     'readEl.addEventListener("click",readGo);' +
