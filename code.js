@@ -2136,6 +2136,7 @@ function renderCostPage_(base, staff, dev) {
     '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
+    'var slot=(idn.device||"d0").toLowerCase().replace(/[^a-z0-9_]/g,"").slice(0,32)||"default";' +
     'var b=document.getElementById("cgo"),st=document.getElementById("cstatus"),res=document.getElementById("cres");' +
     'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
     'function jsonp(params,onR){var cb="__ct"+Date.now()+Math.floor(Math.random()*1000);' +
@@ -2152,9 +2153,13 @@ function renderCostPage_(base, staff, dev) {
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},700);return;}' +
     'b.disabled=false;' +
     'if(r.status!=="done"){st.textContent=String(r.result||"出せませんでした。");return;}' +
-    'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
-    'if(!d.ok||!d.body_html){st.textContent="出せませんでした："+((d&&d.error)||"中身が空です");return;}' +
-    'st.textContent="";show(d.body_html);});}' +
+    // ★大きな表は答えに載せられないので、事務所パソコンが置き場所へ置いた物を読みに行く
+    //   （前日お知らせと同じやり方・2026-08-24）。
+    'st.textContent="受け取っています…";' +
+    'jsonp({action:"data",name:"cost_"+slot},function(x){' +
+    'var d=(x&&x.data)?x.data:x;' +
+    'if(!d||!d.ok||!d.body_html){st.textContent="出せませんでした："+((d&&d.error)||"中身が空です");return;}' +
+    'st.textContent="";show(d.body_html);});});}' +
     'if(b){b.addEventListener("click",function(){b.disabled=true;res.innerHTML="";' +
     'st.textContent="事務所パソコンで計算しています…（少し待ってください）";polls=0;' +
     'jsonp({action:"submit",key:KEY,op:"cost",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({part:"cost"})},' +
