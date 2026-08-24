@@ -5309,20 +5309,34 @@ function renderPcStatusPage_(d, base, staff, dev) {
       whySub = '切る直前に「今から切ります」と届いています（' + esc_(pcstFmt_(d.shutdown_notice_at)) + '）。心配は要りません。';
     } else {
       why = '予告なしで止まりました';
-      whySub = '停電・異常終了（青い画面など）・固まった、のどれかです。'
-             + 'どれだったかは、パソコンが立ち上がり直した時にここへ出ます。';
+      whySub = '停電・眠っている（スリープ）・異常終了（青い画面など）・固まった、のどれかです。'
+             + '<br>どれだったかは、パソコンが戻ってきた時にここへ必ず出ます'
+             + '（パソコン自身がWindowsの日記を読んで確かめます）。';
     }
   }
 
   var le = d.last_end || {};
+  // ★「前に止まった時は何だったか」＝復帰したあとにパソコンが日記から確定させた理由
+  //   （シャットダウン／スリープ／停電／合図だけ止まった の4つを見分ける・2026-08-24 まるちゃん）。
+  var gp = d.last_gap;
+  var gapRow = '';
+  if (gp && gp.label) {
+    gapRow = pcstRow_('前に止まった時は',
+      esc_(gp.label) +
+      '<span class="pcstDim">' +
+        (gp.minutes ? ('およそ' + gp.minutes + '分間') : '') +
+        (gp.from ? '（' + esc_(pcstFmt_(gp.from)) + ' から）' : '') +
+      '</span>');
+  }
   var rows =
     pcstRow_('続けて動いている時間', (d.uptime_hours === null || d.uptime_hours === undefined)
               ? '—' : (d.uptime_hours + ' 時間')) +
+    gapRow +
     pcstRow_('前に立ち上がった時刻', pcstFmt_(d.boot_at)) +
     pcstRow_('その前はどう終わったか', esc_(le.label || '—')
-              + (le.at ? '<span class="pcstDim">（' + esc_(pcstFmt_(le.at)) + '）</span>' : '')) +
+              + (le.at ? '<span class="pcstDim">' + esc_(pcstFmt_(le.at)) + '</span>' : '')) +
     pcstRow_('最後に届いた時刻', pcstFmt_(d.sent_at)
-              + (mins === null ? '' : '<span class="pcstDim">（' + pcstAgo_(mins) + '）</span>')) +
+              + (mins === null ? '' : '<span class="pcstDim">' + pcstAgo_(mins) + '</span>')) +
     pcstRow_('パソコンの名前', esc_(d.host || '—'));
 
   return '<style>' + HOMECSS_ + PCSTCSS_ + '</style>' +
