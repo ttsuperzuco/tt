@@ -3659,8 +3659,11 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★枠ごとの「始まる時刻」の積み上げは共通の1本（NR）に聞く＝パソコン版と必ず同じ答えになる。
     'var durs=[];for(var q=0;q<S.length;q++){durs.push(sel["dur#"+q]);}' +
     'var PLAN=NR.slotStarts(S,durs,Number(d.hh)*60+Number(d.mi),sel.needc);' +
+    'window.__nrAvPending=true;nrGoCheck();' +          // ★答えが揃うまでは押させない
+
     'function hhmm(m){var h=Math.floor(m/60),i2=m%60;return h+"時"+(i2<10?"0":"")+i2+"分";}' +
-    'function step(i,pos){if(i>=S.length)return;var pp=PLAN[i];var isC=pp.isCounsel,du=pp.dur;pos=pp.startMin;' +
+    'function step(i,pos){if(i>=S.length){window.__nrAvPending=false;nrGoCheck();return;}' +
+    'var pp=PLAN[i];var isC=pp.isCounsel,du=pp.dur;pos=pp.startMin;' +
     'if(pp.skip){step(i+1,pos);return;}' +
     'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
     'fields:JSON.stringify({date:window.__nrDate,start_min:pos,dur:du,need_counsel:(isC?"1":"0")})},function(r){' +
@@ -3709,7 +3712,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'else{var needC=(window.__nrNeedCounsel&&sel.needc!=="no");' +
     'if(needC)rows.push({name:"カウンセリング",locked:false,staffOk:nrAnySel("counsel"),roomNeeded:false,roomOk:true});' +
     'rows.push({name:"施術",locked:false,staffOk:nrAnySel("staff"),roomNeeded:!window.__nrMayu,roomOk:nrAnySel("room")});}' +
-    'var r=NR.canRegister(rows);btn.disabled=!r.ok;' +
+    'var r=NR.canRegister(rows,!!window.__nrAvPending);btn.disabled=!r.ok;' +
     'if(ngbox){ngbox.textContent=r.msg;ngbox.style.display=r.ok?"none":"";}}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。

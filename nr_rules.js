@@ -174,8 +174,15 @@
      rows＝画面が集めた枠ごとの状態の並び：
        { name:枠の名前, locked:その時間は使えない(部屋がふさがっている等),
          staffOk:担当が決まっているか, roomNeeded:部屋が要るか, roomOk:部屋が決まっているか }
+     checking＝**まだ空き具合の答えを待っている**（true の間は押させない）。
+       ★これが要る理由＝枠ごとの空きは事務所パソコンに聞きに行くので数秒あとに届く。
+         その間ボタンが押せると、ふさがっているのに登録できてしまう隙ができる（実測で起きた）。
      返り：{ ok:登録してよいか, ng:[{name, why}], msg:画面に出す1行 } */
-  NR.canRegister = function (rows) {
+  NR.canRegister = function (rows, checking) {
+    if (checking) {
+      return { ok: false, ng: [{ name: "", why: "確かめ中" }],
+               msg: "空き具合を確かめています。少しお待ちください。" };
+    }
     var R = rows || [], ng = [];
     for (var i = 0; i < R.length; i++) {
       var r = R[i] || {}, nm = r.name || ("枠" + (i + 1));
