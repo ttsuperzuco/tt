@@ -3471,7 +3471,13 @@ function renderHonyakuPage_(base, staff, dev) {
     '.hyseg{display:flex;gap:8px;margin:4px 4px 0;}' +
     '.hyseg button{flex:1;padding:12px;border:0;border-radius:12px;font-weight:800;font-size:15px;' +
     'background:rgba(255,255,255,.16);color:#eaf3f7;}' +
-    '.hyseg button.sel{background:#2C7A99;color:#fff;}';
+    '.hyseg button.sel{background:#2C7A99;color:#fff;}' +
+    '.hysub{display:block;width:100%;margin:10px 0 4px;padding:12px;font-size:16px;font-weight:800;' +
+    'border:0;border-radius:12px;background:rgba(255,255,255,.16);color:#eaf3f7;}' +
+    '.hysub:disabled{opacity:.5;}' +
+    '.hyrow{display:flex;gap:8px;}' +
+    '.hyrow input{flex:1;box-sizing:border-box;font-size:16px;padding:12px;border-radius:12px;' +
+    'border:1px solid #cbd5e1;background:#fff;color:#123;}';
   var script =
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
@@ -3502,6 +3508,26 @@ function renderHonyakuPage_(base, staff, dev) {
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");goEl.disabled=false;return;}' +
   'polls=0;setTimeout(function(){poll(r.id);},1000);});}' +
   'goEl.addEventListener("click",go);' +
+  // ★覚えさせる／用語を足す＝どちらも事務所パソコンの同じ道（op=translate）に頼む。
+  //   覚え方・用語の当て方は translate_core の1本＝パソコン版とまったく同じ答えになる。
+  'var remEl=document.getElementById("hyrem"),termEl=document.getElementById("hyterm");' +
+  'var tjaEl=document.getElementById("hytja"),tzhEl=document.getElementById("hytzh");' +
+  'var sPolls=0;function pollSub(id,btn){sPolls++;if(sPolls>200){setSt("時間がかかりすぎました。","err");btn.disabled=false;return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");btn.disabled=false;return;}' +
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollSub(id,btn);},600);return;}' +
+  'btn.disabled=false;setSt(String(r.result||""),(r.status==="done")?"ok":"err");});}' +
+  'function ask(fields,btn){btn.disabled=true;setSt("事務所パソコンに伝えています…","wait");sPolls=0;' +
+  'jsonp({action:"submit",key:KEY,op:"translate",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},' +
+  'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした。","err");btn.disabled=false;return;}' +
+  'setTimeout(function(){pollSub(r.id,btn);},900);});}' +
+  'if(remEl){remEl.addEventListener("click",function(){' +
+  'var t=(srcEl.value||"").trim(),d=(dstEl.value||"").trim();' +
+  'if(!t||!d){setSt("日本語と、覚えさせたい中国語の両方が要ります。","err");return;}' +
+  'ask({text:t,gender:gender,remember:d},remEl);});}' +
+  'if(termEl){termEl.addEventListener("click",function(){' +
+  'var a=(tjaEl.value||"").trim(),b=(tzhEl.value||"").trim();' +
+  'if(!a||!b){setSt("日本語と中国語の両方を入れてください。","err");return;}' +
+  'ask({text:a,gender:gender,term_ja:a,term_zh:b},termEl);});}' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
@@ -3517,8 +3543,16 @@ function renderHonyakuPage_(base, staff, dev) {
       '<textarea id="hysrc" placeholder="配信したい日本語をそのまま貼ってください"></textarea>' +
       '<button type="button" class="hygo" id="hygo">訳す</button>' +
       '<div class="hystatus" id="hystatus">日本語を入れて「訳す」を押してください。</div>' +
-      '<div class="hylbl">台湾中国語（なぞってコピー）</div>' +
+      '<div class="hylbl">台湾中国語（なぞってコピー・直せます）</div>' +
       '<textarea id="hydst" placeholder=""></textarea>' +
+      // ★パソコン版と同じ「覚えさせる」機能（2026-08-24 まるちゃん）。
+      '<button type="button" class="hysub" id="hyrem">この訳で覚える</button>' +
+      '<div class="hylbl" style="margin-top:22px">用語を登録（次の翻訳から効きます）</div>' +
+      '<div class="hyrow">' +
+        '<input type="text" id="hytja" placeholder="日本語（例 プロセル）">' +
+        '<input type="text" id="hytzh" placeholder="中国語（例 Procell）">' +
+      '</div>' +
+      '<button type="button" class="hysub" id="hyterm">用語を登録</button>' +
     '</div>' +
   '</div>' + script;
 }
