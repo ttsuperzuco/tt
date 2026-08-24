@@ -670,6 +670,8 @@
 
   // ★時間指定LINE送信＝開発URL専用。決めた時刻に文章＋画像を送る予約（renderTimedSendPage_ 内スクリプトが窓口へ依頼）。
   function showTimedSend() { mount(renderTimedSendPage_(base, staff, dev)); }
+  // ★翻訳（日→台湾中国語）＝開発者のスマホだけ（まるちゃん決定 2026-08-24）。
+  function showHonyaku() { mount(renderHonyakuPage_(base, staff, dev)); }
 
   // ★予約入力＝開発URL専用。貼って選ぶ→事務所PC(edit_worker op=new_reservation)が新規予約を作る（renderNewReservationPage_ 内スクリプトが窓口へ依頼）。
   function showYoyaku() { mount(renderReservationHomePage_(base, staff, dev)); }        // トップ画面（新規/既存/変更）
@@ -836,6 +838,7 @@
     else if (v === 'igdm') showIgdm();
     else if (v === 'claudetools') showClaudeTools();
     else if (v === 'timedsend') showTimedSend();
+    else if (v === 'honyaku') showHonyaku();
     else if (v === 'yoyaku') showYoyaku();
     else if (v === 'yoyaku_new') showYoyakuNew();
     else if (v === 'yoyaku_kizon') showYoyakuKizon();
