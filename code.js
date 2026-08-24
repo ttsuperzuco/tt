@@ -3628,37 +3628,40 @@ function renderNewReservationPage_(base, staff, dev) {
     'function esc(s){return (s==null?"":String(s));}' +
     'function selVal(g,v){if(!v)return;sel[g]=String(v);var sib=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.toggle("sel",sib[j].getAttribute("data-val")===String(v));}' +
     // ★空いていない部屋・担当のボタンを消す（埋まっている所は選べないように）。パソコン版と同じ考え方。
-    'function nrHideBusy(g,list){list=(list||[]).map(String);var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),selH=false,first=null;for(var i=0;i<pl.length;i++){var busy=list.indexOf(pl[i].getAttribute("data-val"))>=0;pl[i].style.display=busy?"none":"";if(!busy&&!first){first=pl[i];}if(busy&&pl[i].classList.contains("sel")){selH=true;}}if(selH&&first){sel[g]=first.getAttribute("data-val");for(var j=0;j<pl.length;j++){pl[j].classList.toggle("sel",pl[j]===first);}}}' +
+    'function nrHideBusy(g,list){var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),vals=[];' + 'for(var i=0;i<pl.length;i++){vals.push(pl[i].getAttribute("data-val"));}' + 'var r=NR.hideBusy(vals,list,sel[g]);' + 'for(var k=0;k<pl.length;k++){pl[k].style.display=r.hidden[k]?"none":"";}' + 'if(r.sel!==sel[g]){sel[g]=r.sel;for(var m=0;m<pl.length;m++){pl[m].classList.toggle("sel",pl[m].getAttribute("data-val")===r.sel);}}}' +
     // ★デザイン眉・まつエク＝パイン🍍だけ選べる（他4人は隠す）・部屋は取らない（土曜だけ部屋欄を出す）。
-    'function nrMayuVis(){var isMayu=!!window.__nrMayu,isSat=!!window.__nrSat;var sp=document.querySelectorAll(".nrpill[data-grp=\\"staff\\"]");for(var k=0;k<sp.length;k++){var pine=sp[k].getAttribute("data-val")==="5";if(isMayu){sp[k].style.display=pine?"":"none";}else if(pine){sp[k].style.display="none";}}' +
-    // ★枠ごとに選ぶ形（施術が2つ以上）の時は、下の全体の「⑦ 部屋」等は出さない（2026-08-23 まるちゃん）。
-    'var _ps=!!(window.__nrSlots&&window.__nrSlots.length>=2);' +
-    'var rw=document.getElementById("nrRoomWrap");if(rw)rw.style.display=_ps?"none":(isMayu?(isSat?"":"none"):"");' +
-    'var sw2=document.getElementById("secStaffWrap");if(sw2&&_ps)sw2.style.display="none";' +
-    'var dw2=document.getElementById("secDurWrap");if(dw2&&_ps)dw2.style.display="none";' +
-    'if(isMayu){selVal("staff","5");if(isSat){var rp=document.querySelectorAll(".nrpill[data-grp=\\"room\\"]"),rf=null;for(var m=0;m<rp.length;m++){if(rp[m].style.display!=="none"&&!rf){rf=rp[m];}}if(rf){sel.room=rf.getAttribute("data-val");for(var n=0;n<rp.length;n++){rp[n].classList.toggle("sel",rp[n]===rf);}}}else{sel.room="";}}}' +
+    // ★判断は共通の1本（NR）に聞く。ここは答えを画面に当てはめるだけ（2026-08-24）。
+    'function nrMayuVis(){var v=NR.mayuView(window.__nrMayu,window.__nrSat,window.__nrSlots),o=NR.outerSectionsShown(window.__nrSlots);' +
+    'var sp=document.querySelectorAll(".nrpill[data-grp=\\"staff\\"]");for(var k=0;k<sp.length;k++){var pine=sp[k].getAttribute("data-val")==="5";if(v.pineOnly){sp[k].style.display=pine?"":"none";}else if(pine){sp[k].style.display="none";}}' +
+    'var rw=document.getElementById("nrRoomWrap");if(rw)rw.style.display=v.roomWrapShown?"":"none";' +
+    'var sw2=document.getElementById("secStaffWrap");if(sw2&&!o.staff)sw2.style.display="none";' +
+    'var dw2=document.getElementById("secDurWrap");if(dw2&&!o.dur)dw2.style.display="none";' +
+    'if(v.forceStaff){selVal("staff",v.forceStaff);}' +
+    'if(v.pickFirstFreeRoom){var rp=document.querySelectorAll(".nrpill[data-grp=\\"room\\"]"),rf=null;for(var m=0;m<rp.length;m++){if(rp[m].style.display!=="none"&&!rf){rf=rp[m];}}if(rf){sel.room=rf.getAttribute("data-val");for(var n=0;n<rp.length;n++){rp[n].classList.toggle("sel",rp[n]===rf);}}}else if(v.clearRoom){sel.room="";}}' +
     // ★空きの結果を画面に反映（開始時間・所要時間・カウンセリングの有無を変えるたびに呼ぶ）。
     // ★選べる物が1つも無くなったら、見出しの右に赤い知らせを出す（2026-08-21 まるちゃん）。
-    'function nrShowNone(g,id){var el=document.getElementById(id);if(!el)return;var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),n=0;' +
-    'for(var i=0;i<pl.length;i++){if(pl[i].style.display!=="none")n++;}el.style.display=n?"none":"inline";}' +
+    'function nrShowNone(g,id){var el=document.getElementById(id);if(!el)return;var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),h=[];' +
+    'for(var i=0;i<pl.length;i++){h.push(pl[i].style.display==="none");}el.style.display=NR.noneLeft(h)?"inline":"none";}' +
     'function applyAvail(av){if(!av)return;var cw=document.getElementById("cosmosWarn"),cwho=document.getElementById("cosmosWho");' +
     // ★カウンセリングの部屋（コスモス）がふさがっている時は、1つ目のカウンセリングの枠の中に知らせを出し、
     //   その枠の所要時間・担当を選べないようにする（2026-08-23 まるちゃん）。
     // ★枠ごとに選ぶ形の時、コスモスの空きは「カウンセリングの枠が実際に始まる時刻」で見る（下の nrSlotAvail）。
-    'if(cw)cw.style.display=av.cosmos_busy?"":"none";if(cwho)cwho.textContent=av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"";' +
+    'if(cw)cw.style.display=NR.cosmosWarnOutside(av,window.__nrSlots,window.__nrNeedCounsel,sel.needc)?"":"none";' + 'if(cwho)cwho.textContent=av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"";' +
     // ★2026-08-24 まるちゃん「コスモスが埋まってますの知らせが、1つ目の枠の中と一番下の2か所に出る」。
     //   原因＝この2行が逆さまだった（先に「枠があるから出さない」と隠したのに、次の行が
     //   埋まり具合でまた出し直していた）。パソコン版と同じ「出し入れを決めたあとに隠す」順番にそろえる。
     //   ★この2行の順番を入れ替えないこと。
-    '(function(){var S=window.__nrSlots||[];for(var z=0;z<S.length;z++){if(S[z].kind==="counsel"&&cw){cw.style.display="none";}}})();' +
+    
     'nrHideBusy("room",av.occ_rooms);nrHideBusy("staff",av.busy_staff);nrHideBusy("counsel",av.busy_counsel_staff);nrMayuVis();' +
     'nrShowNone("counsel","noneCounsel");nrShowNone("staff","noneStaff");nrShowNone("room","noneRoom");nrSlotAvail();}' +
     // ★枠ごとに「その枠の時間に空いている担当・部屋」だけを出す（2つ目の枠は1つ目の後に始まる）。
-    'function nrSlotAvail(){var S=window.__nrSlots;if(!S||S.length<2)return;var d=window.__rvdt;if(!d||!window.__nrDate)return;' +
-    'var st=Number(d.hh)*60+Number(d.mi);' +
+    'function nrSlotAvail(){var S=window.__nrSlots;if(!NR.perSlot(S))return;var d=window.__rvdt;if(!d||!window.__nrDate)return;' +
+    // ★枠ごとの「始まる時刻」の積み上げは共通の1本（NR）に聞く＝パソコン版と必ず同じ答えになる。
+    'var durs=[];for(var q=0;q<S.length;q++){durs.push(sel["dur#"+q]);}' +
+    'var PLAN=NR.slotStarts(S,durs,Number(d.hh)*60+Number(d.mi),sel.needc);' +
     'function hhmm(m){var h=Math.floor(m/60),i2=m%60;return h+"時"+(i2<10?"0":"")+i2+"分";}' +
-    'function step(i,pos){if(i>=S.length)return;var isC=(S[i].kind==="counsel");' +
-    'if(isC&&sel.needc==="no"){step(i+1,pos);return;}var du=Number(sel["dur#"+i]||30);' +
+    'function step(i,pos){if(i>=S.length)return;var pp=PLAN[i];var isC=pp.isCounsel,du=pp.dur;pos=pp.startMin;' +
+    'if(pp.skip){step(i+1,pos);return;}' +
     'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
     'fields:JSON.stringify({date:window.__nrDate,start_min:pos,dur:du,need_counsel:(isC?"1":"0")})},function(r){' +
     'if(!r||!r.ok||!r.id){step(i+1,pos+du);return;}var n=0;' +
@@ -3679,19 +3682,18 @@ function renderNewReservationPage_(base, staff, dev) {
     'else{nrHideBusy("room#"+i,av.occ_rooms);nrHideBusy("staff#"+i,av.busy_staff);' +
     'nrShowNone("staff#"+i,"noneStaff"+i);nrShowNone("room#"+i,"noneRoom"+i);}}}' +
     'step(i+1,pos+du);});})();});}' +
-    'step(0,st);}' +
+    'step(0,0);}' +
     // ★カウンセリングの必要（④）で、カウンセリング担当（⑤）の出し入れをする。
-    'function nrApplyNeedC(){var on=(window.__nrNeedCounsel&&sel.needc!=="no");' +
-    'var sn=document.getElementById("secNeedC");if(sn)sn.style.display=window.__nrNeedCounsel?"":"none";' +
-    'var S=window.__nrSlots||[],hasC=false;for(var z=0;z<S.length;z++){if(S[z].kind==="counsel")hasC=true;}' +
-    'if(hasC){var rows=document.querySelectorAll("#nrSlotWrap .nrslot");' +
-    'for(var y=0;y<S.length;y++){if(S[y].kind==="counsel"&&rows[y])rows[y].style.display=on?"":"none";}' +
-    'buildOrderUI();var sc0=document.getElementById("secCounsel");if(sc0)sc0.style.display="none";return;}' +
-    'var sc=document.getElementById("secCounsel");if(sc)sc.style.display=on?"":"none";' +
-    'if(!on){var cw2=document.getElementById("cosmosWarn");if(cw2)cw2.style.display="none";}}' +
+    // ★判断は共通の1本（NR）に聞く。ここは答えを画面に当てはめるだけ（2026-08-24）。
+    'function nrApplyNeedC(){var v=NR.needCounselView(window.__nrSlots,window.__nrNeedCounsel,sel.needc);' +
+    'var sn=document.getElementById("secNeedC");if(sn)sn.style.display=v.needCSec?"":"none";' +
+    'var sc=document.getElementById("secCounsel");if(sc)sc.style.display=v.counselSec?"":"none";' +
+    'if(v.rebuildOrder){var S=window.__nrSlots||[],rows=document.querySelectorAll("#nrSlotWrap .nrslot");' +
+    'for(var y=0;y<S.length;y++){if(S[y].kind==="counsel"&&rows[y])rows[y].style.display=v.counselSlotShown?"":"none";}' +
+    'buildOrderUI();}' +
+    'if(!v.counselSec&&!v.rebuildOrder){var cw2=document.getElementById("cosmosWarn");if(cw2)cw2.style.display="none";}}' +
     // ★開始時間「〇月〇日（水）〇時〇分」を出す。
-    'function nrStartText(){var d=window.__rvdt;if(!d||d.mm==null)return "―";var wd=window.__nrWd?("（"+window.__nrWd+"）"):"";' +
-    'var mi=String(d.mi);if(mi.length<2)mi="0"+mi;return Number(d.mm)+"月"+Number(d.dd)+"日"+wd+" "+Number(d.hh)+"時"+mi+"分";}' +
+    'function nrStartText(){return NR.startText(window.__rvdt,window.__nrWd);}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
     'var nrAvTimer=null;function nrScheduleAvail(){if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
@@ -3731,8 +3733,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'function buildSlotUI(slots){var wrap=document.getElementById("nrSlotWrap");' +
     'var dw=document.getElementById("secDurWrap"),sw=document.getElementById("secStaffWrap"),rw=document.getElementById("nrRoomWrap");' +
     'window.__nrSlots=slots||[];if(!wrap)return;' +
-    'if(!slots||slots.length<2){wrap.style.display="none";wrap.innerHTML="";if(dw)dw.style.display="";if(sw)sw.style.display="";if(rw)rw.style.display="";return;}' +
-    'if(dw)dw.style.display="none";if(sw)sw.style.display="none";if(rw)rw.style.display="none";' +
+    // ★全体の③⑥⑦を出すかは共通の1本（NR）に聞く（2026-08-24）。
+    'var o=NR.outerSectionsShown(window.__nrSlots);' +
+    'if(dw)dw.style.display=o.dur?"":"none";if(sw)sw.style.display=o.staff?"":"none";if(rw)rw.style.display=o.room?"":"none";' +
+    'if(!NR.perSlot(window.__nrSlots)){wrap.style.display="none";wrap.innerHTML="";return;}' +
     'var DU=[15,20,30,40,45,50,60,70,80,90,120,150];' +
     'var ST=[["2","🍊 みかん","#e08a1e"],["3","🫒 オリーブ","#4b8b3b"],["1","🍅 トマト","#d1443c"],["4","🥭 マンゴー","#c9a227"]];' +
     'var RM=[["FREEDOM","FREEDOM","#2ecc87"],["HAPPY","HAPPY","#e73b3b"],["LUCKY","LUCKY","#fdc02d"],["STAR/福/🇫🇷","STAR/福","#b38bdc"]];' +
@@ -3741,7 +3745,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'sel["dur#"+i]=String(s.dur||"30");sel["staff#"+i]=String(s.staff||"2");sel["room#"+i]=String(s.room||"FREEDOM");' +
     'var isC=(s.kind==="counsel");' +
     'var dp="";for(var a=0;a<DU.length;a++){dp+=pl("dur#"+i,DU[a],DU[a],"",String(DU[a])===String(s.dur));}' +
-    'var sp="";for(var b2=0;b2<ST.length;b2++){if(isC&&ST[b2][0]!=="1"&&ST[b2][0]!=="2")continue;sp+=pl("staff#"+i,ST[b2][0],ST[b2][1],ST[b2][2],ST[b2][0]===String(s.staff));}' +
+    'var STC=NR.slotStaffChoices(ST,isC);var sp="";for(var b2=0;b2<STC.length;b2++){sp+=pl("staff#"+i,STC[b2][0],STC[b2][1],STC[b2][2],STC[b2][0]===String(s.staff));}' +
     'var rp="";for(var c2=0;c2<RM.length;c2++){rp+=pl("room#"+i,RM[c2][0],RM[c2][1],RM[c2][2],RM[c2][0]===String(s.room));}' +
     'var ns="<span style=\\"display:none;margin-left:10px;color:#ff9b9b;font-weight:900;font-size:14px\\"";' +
     'h+="<div class=\\"nrslot\\"><div class=\\"nrsec\\">"+(i+1)+"つ目："+esc(s.label||"施術")+(isC?"（コスモス）":"")+"</div>"+(isC?("<div class=\\"nrcoswarn\\" id=\\"cosWarn"+i+"\\" style=\\"display:none\\"></div>"):"")' +
@@ -3751,15 +3755,16 @@ function renderNewReservationPage_(base, staff, dev) {
     'wrap.innerHTML=h;wrap.style.display="";buildOrderUI();}' +
     // ★やる順番（カウンセリングも含む）。上から順に登録される。「↑ 上へ」で入れ替える。
     'function buildOrderUI(){var sec=document.getElementById("secOrder"),lst=document.getElementById("nrOrderList");'  +
-    'var S=window.__nrSlots||[];if(!sec||!lst)return;if(S.length<2){sec.style.display="none";return;}sec.style.display="";' +
-    'var h="";for(var i=0;i<S.length;i++){h+="<div class=\\"nrorow\\"><span class=\\"nrono\\">"+(i+1)+"</span><span class=\\"nroname\\">"+esc(S[i].label||"施術")+"</span>"' +
-    '+(i>0?("<button type=\\"button\\" class=\\"nroup\\" data-up=\\""+i+"\\">↑ 上へ</button>"):"")+"</div>";}lst.innerHTML=h;' +
+    // ★並べ方・入れ替え方の判断は共通の1本（NR）に聞く（2026-08-24）。
+    'if(!sec||!lst)return;var o=NR.orderRows(window.__nrSlots);' +
+    'if(!o.shown){sec.style.display="none";return;}sec.style.display="";' +
+    'var h="";for(var i=0;i<o.rows.length;i++){var rr=o.rows[i];h+="<div class=\\"nrorow\\"><span class=\\"nrono\\">"+rr.no+"</span><span class=\\"nroname\\">"+esc(rr.name)+"</span>"' +
+    '+(rr.canUp?("<button type=\\"button\\" class=\\"nroup\\" data-up=\\""+(rr.no-1)+"\\">↑ 上へ</button>"):"")+"</div>";}lst.innerHTML=h;' +
     'var bs=lst.querySelectorAll(".nroup");for(var j=0;j<bs.length;j++){bs[j].addEventListener("click",function(){' +
     'var i=Number(this.getAttribute("data-up")),S2=window.__nrSlots,keep=[];' +
     'for(var k=0;k<S2.length;k++){keep.push({dur:sel["dur#"+k],staff:sel["staff#"+k],room:sel["room#"+k]});}' +
-    'var t=S2[i-1];S2[i-1]=S2[i];S2[i]=t;var t2=keep[i-1];keep[i-1]=keep[i];keep[i]=t2;' +
-    'for(var m=0;m<S2.length;m++){S2[m].dur=keep[m].dur;S2[m].staff=keep[m].staff;S2[m].room=keep[m].room;}' +
-    'buildSlotUI(S2);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");nrScheduleAvail();});}}' +
+    'var mv=NR.moveUp(S2,keep,i);window.__nrSlots=mv.slots;' +
+    'buildSlotUI(window.__nrSlots);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");nrScheduleAvail();});}}' +
     'nrStartEditInit();' +
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
