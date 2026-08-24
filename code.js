@@ -3690,9 +3690,16 @@ function renderNewReservationPage_(base, staff, dev) {
     'var ppolls=0,prevT0=0;function pollPrev(id){ppolls++;' +
     'if(prevT0&&(Date.now()-prevT0)>210000){status("読み取りに時間がかかりすぎました。もう一度お試しください。",true);readEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
+    // ★2026-08-24 まるちゃん「処理中に予測時間を表示するのはむずかしい？」への答え。
+    //   実績（読み取り34件）＝半分は9秒以内・4分の3は15秒以内・1割ほどが1分を超える。
+    //   その実績どおりの見込みを、経過に合わせて出す（黙って待たせない）。
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){' +
     'var _es=prevT0?Math.round((Date.now()-prevT0)/1000):0;' +
-    'status("変換中です。しばらくお待ちください。（"+_es+"秒）",false);' +
+    'var _mg=(_es<15)?"ふつうは10秒ほどで終わります。"' +
+    ':(_es<40)?"用紙が読みにくいのでAIに聞いています。あと30秒ほどかかります。"' +
+    ':(_es<100)?"まだAIに聞いています。あと1分ほどかかることがあります。"' +
+    ':"時間がかかっています。あと少しで終わらなければ、もう一度お試しください。";' +
+    'status("変換中です（"+_es+"秒）。"+_mg,false);' +
     'setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
