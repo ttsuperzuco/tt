@@ -3589,6 +3589,32 @@ function renderTimedSendPage_(base, staff, dev) {
   'jsonp({action:"submit",key:KEY,op:"timed_line_send",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({message:msg,send_at:send_at,target:target,images:names})},' +
   'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1000);});' +
   '}).catch(function(){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。画像の送信でつまずきました。もう一度お試しください。");});}' +
+  // ★登録した送信の一覧＝パソコン版と同じ1本（sends_view.py）が作った物をそのまま並べる。
+  //   状態の言い方・相手の書き方は事務所パソコンが決める＝スマホ側に写しを持たない（2026-08-24）。
+  'var listEl=document.getElementById("tslist");' +
+  'function drawSends(rows){if(!listEl)return;if(!rows||!rows.length){listEl.innerHTML="<div class=\\"tssub\\">（まだありません）</div>";return;}' +
+  'var h="";for(var i=0;i<rows.length;i++){var r=rows[i];' +
+  'h+="<div style=\\"background:#fff;color:#0f172a;border-radius:12px;padding:10px 12px;margin:8px 0;\\">"' +
+  '+"<div style=\\"font-weight:800\\">"+esc(r.st)+"　"+esc(r.at)+"</div>"' +
+  '+"<div style=\\"font-size:14px;margin-top:2px\\">"+esc(r.who)+"　"+esc(r.head)+(r.imgs?("　画像"+r.imgs+"枚"):"")+"</div>"' +
+  '+(r.note?("<div style=\\"font-size:13px;color:#7f1d1d;margin-top:2px\\">"+esc(r.note)+"</div>"):"")' +
+  '+(r.cancelable?("<button type=\\"button\\" class=\\"tscancel\\" data-id=\\""+esc(r.id)+"\\" style=\\"margin-top:8px;font:inherit;font-weight:800;color:#fff;background:#b91c1c;border:0;border-radius:10px;padding:8px 14px;\\">取り消し</button>"):"")' +
+  '+"</div>";}' +
+  'listEl.innerHTML=h;' +
+  'var cbs=listEl.querySelectorAll(".tscancel");for(var j=0;j<cbs.length;j++){cbs[j].addEventListener("click",function(){' +
+  'var id=this.getAttribute("data-id");szPopup_("この送信を取り消しますか？",{cancel:true,onYes:function(){askSends("timedsend_cancel",id);}});});}}' +
+  'var tsPolls=0;function pollSends(qid){tsPolls++;if(tsPolls>120){listEl.textContent="読み込めませんでした。";return;}' +
+  'jsonp({action:"status",key:KEY,id:qid},function(r){if(!r||!r.ok){listEl.textContent="読み込めませんでした。";return;}' +
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollSends(qid);},700);return;}' +
+  'if(r.status!=="done"){listEl.textContent=String(r.result||"読み込めませんでした。");return;}' +
+  'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
+  'if(d.note){status(d.note,!d.ok);}' +
+  'drawSends(d.sends||[]);});}' +
+  'function askSends(op,id){if(listEl)listEl.textContent="読み込み中…";tsPolls=0;' +
+  'jsonp({action:"submit",key:KEY,op:op,who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(id?{id:id}:{})},' +
+  'function(r){if(!r||!r.ok||!r.id){if(listEl)listEl.textContent="読み込めませんでした。";return;}' +
+  'setTimeout(function(){pollSends(r.id);},900);});}' +
+  'askSends("timedsend_list");' +
   'goEl.addEventListener("click",go);' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
@@ -3605,15 +3631,17 @@ function renderTimedSendPage_(base, staff, dev) {
       '<div class="tslbl">送る日時</div>' +
       '<div class="tsrow"><div><input type="date" id="tsdate"></div><div><input type="time" id="tstime"></div></div>' +
       '<div class="tslbl">送る相手</div>' +
-      '<label class="tsmode"><input type="radio" name="tsmode" value="person" checked> 個人に送る（番号 例 M123）</label>' +
+      '<label class="tsmode"><input type="radio" name="tsmode" value="person" checked> 個人（番号）</label>' +
       '<div class="tssub"><input type="text" id="tscodes" placeholder="M123, F45（カンマや空白で複数可）"></div>' +
-      '<label class="tsmode"><input type="radio" name="tsmode" value="group"> グループに送る</label>' +
+      '<label class="tsmode"><input type="radio" name="tsmode" value="group"> グループ</label>' +
       '<div class="tssub"><select id="tsgroup"><option value="">（グループ一覧を読み込み中…）</option></select></div>' +
-      '<label class="tsmode"><input type="radio" name="tsmode" value="all"> やり取りのある全員</label>' +
-      '<label class="tsmode"><input type="radio" name="tsmode" value="owner"> オーナー本人だけ（練習・確認用）</label>' +
-      '<button type="button" class="tsgo" id="tsgo">この内容で予約する</button>' +
+      '<label class="tsmode"><input type="radio" name="tsmode" value="all"> やり取りのある全員（多いので上限あり）</label>' +
+      '<label class="tsmode"><input type="radio" name="tsmode" value="owner"> 本人（練習）</label>' +
+      '<button type="button" class="tsgo" id="tsgo">この内容で登録する</button>' +
       '<div class="tsstatus" id="tsstatus">決めた時刻に、選んだ相手へ自動で送ります。</div>' +
-    '</div>' +
+          '<div class="tslbl" style="margin-top:26px">登録した送信（新しい順）</div>' +
+      '<div id="tslist">読み込み中…</div>' +
+'</div>' +
   '</div>' +
   script;
 }
