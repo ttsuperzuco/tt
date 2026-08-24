@@ -215,4 +215,4 @@
   };
 
   root.NR = NR;
-})(typeof window !== "undefined" ? window : this);
+})(typeof window !== "undefined" ? window : (typeof globalThis !== "undefined" ? globalThis : this));

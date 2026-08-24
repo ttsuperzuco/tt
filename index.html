@@ -126,8 +126,12 @@
 <script src="detect_core.js?v=3152ffbb7b"></script>
 <!-- 新規予約入力の「出し入れの判断」＝パソコン版と共有する唯一の正本の写し。
      正本＝AI自動プログラム\共通\画面\新規予約入力_判断.js（手で書き写さない・共通\画面\スマホへ配る.py が写す）。code.js より前に読む。 -->
-<script src="nr_rules.js?v=84766277bf"></script>
-<script src="code.js?v=4d449ac81c"></script>
+<!-- お店の決まり（定休日など）＝共通usiness_day.py から自動で作った写し。手で書き換えない。 -->
+<script src="shop_rules.js?v=32af77593f"></script>
+<!-- 前日お知らせの「出し入れの判断」＝パソコン版と共有する正本の写し。 -->
+<script src="zj_rules.js?v=f967484421"></script>
+<script src="nr_rules.js?v=0c9a2578fd"></script>
+<script src="code.js?v=c89ff12024"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
