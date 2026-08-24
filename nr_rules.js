@@ -93,6 +93,17 @@
     return { hidden: hidden, sel: sel, none: (first === null) };
   };
 
+  /* ── ⑥-2 「その時間は空いていません」の赤い字を出すか ──────────
+     hiddenFlags＝並んでいる選択肢が「出していない」かどうかの並び。全部出していなければ true。 */
+  NR.noneLeft = function (hiddenFlags) {
+    var H = hiddenFlags || [];
+    if (!H.length) return false;
+    for (var i = 0; i < H.length; i++) {
+      if (!H[i]) return false;
+    }
+    return true;
+  };
+
   /* ── ⑦ デザイン眉・まつエクの時の見せ方 ──────────────────
      返り：{ pineOnly:担当をパインだけにするか, roomWrapShown:外の⑦部屋を出すか,
              forceStaff:担当を強制する値(無ければ null), clearRoom:部屋を空にするか,
