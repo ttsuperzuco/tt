@@ -3800,7 +3800,10 @@ function renderNewReservationPage_(base, staff, dev) {
 
     // ★タイトルまで作り終えてから、まとめて1回だけ画面に出す（2026-08-24 まるちゃん）。
     //   タイトルが作れなかった時も必ずここへ来る＝画面が出ないままにはならない。
-    'var _shown=false;function _showAll(){if(_shown)return;_shown=true;' +
+        // ★2026-08-24 まるちゃん「スマホだけ⑤カウンセリング担当がまだ出る」への保険。
+    //   出す/隠すの判断を**画面を出す直前にもう一度**やる＝途中の順番や、あとから届く
+    //   空きの答えで狂っても、出た瞬間の姿は必ず正しくなる（枠の中で選ぶ時は外の⑤を出さない）。
+    'var _shown=false;function _showAll(){if(_shown)return;_shown=true;nrApplyNeedC();' +
     'prevWrap.style.display="";var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
