@@ -1980,11 +1980,15 @@ var ZENJITSUCSS_ =
   '  .zjdatebox { display:flex; align-items:center; gap:10px; background:#0b1220; color-scheme:dark;' +
   '    border:2px solid #2563eb; border-radius:10px; padding:6px 12px 6px 6px; cursor:pointer; }' +
   '  .zjdatepick { font-size:1.8rem; line-height:1; pointer-events:none; }' +
-  '  #zjdate { flex:1 1 auto; width:100%; background:transparent; color:#e8eef7; border:0;' +
+  /* ★横幅は「残りに合わせる」（100%にすると右のカレンダーの絵が枠から押し出される）。 */
+  '  #zjdate { flex:1 1 0; min-width:0; width:auto; background:transparent; color:#e8eef7; border:0;' +
   '    padding:10px 6px; font:inherit; font-size:2rem; font-weight:900; cursor:pointer;' +
   '    font-variant-numeric:tabular-nums; letter-spacing:.02em; }' +
   '  #zjdate:focus { outline:none; }' +
-  '  #zjdate::-webkit-calendar-picker-indicator { transform:scale(1.5); margin-left:10px; opacity:.85; }' +
+  /* ★2026-08-24 まるちゃん指摘「カレンダーが二つにずれてる」：日付欄が自分で出すカレンダーの絵を
+     消して、こちらで置いた絵（📅）1つだけにする。枠のどこを押してもカレンダーは開く。 */
+  '  #zjdate::-webkit-calendar-picker-indicator { -webkit-appearance:none; appearance:none;' +
+  '    display:none; opacity:0; width:0; padding:0; margin:0; border:0; }' +
   /* ★左右に必ず並べる（狭い画面でも縦積みにしない・2026-08-21まるちゃん） */
   '  .zjopts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }' +
   /* ボタンが1つだけの時（スタッフ版＝未送信の分だけ作成を出さない）は横いっぱいに広げる。 */
