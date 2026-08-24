@@ -2091,10 +2091,13 @@ function renderZenjitsuPage_(base, staff, dev) {
 // ====== 台湾トマト 売上・コスト（view=cost・開発URL専用／2026-07-25追加） ======
 // ★開発URL(?dev=1)専用＝オーナー(開発者)だけが見られる内部ツール（kanshi/zenjitsuと同じ）。
 //   tile_settings.py の TILES には入れない＝人ごとの権限画面に出ない＝誰もONにできない。
-// ★数字は**事務所パソコンが作った物をそのまま出す**（2026-08-24 まるちゃん決定）。
-//   以前はここに費目を1件ずつ書き写す作りだったが、空っぽのままで**押しても何も出なかった**。
-//   パソコン版（台湾トマト経営\programs\cost_view.py）が作る表を、受付係の op=cost で
-//   そのまま受け取って枠に出す＝**写しを持たない＝ずれない**（前日お知らせと同じやり方）。
+// ★コストの費目・金額はオーナーから随時教わって、下の COST_ITEMS_ に1件ずつ足していく：
+//     { name:'費目名', amount:金額(数字・元), note:'補足(任意・無ければ省略)' }
+//   足したら必ず index.html の code.js?v= と sw.js の CACHE 名を1つ上げて push すること
+//   （でないとスマホに新しい費目が届かない＝スーパーズコApp_必読.md「キャッシュ」参照）。
+var COST_ITEMS_ = [
+  // 例) { name:'家賃', amount:30000, note:'毎月1日引き落とし' },
+];
 
 var COSTCSS_ =
   '  .ctwrap { max-width:640px; margin:0 auto; }' +
@@ -2130,49 +2133,41 @@ function _costYen_(n) {
  *  最初は「月間コスト計算」ボタンだけ。押すと COST_ITEMS_ の費目一覧＋合計の表を出す。
  *  純JS（GAS API不使用）＝①GAS直も②静的アプリも同じこの関数を呼ぶ。 */
 function renderCostPage_(base, staff, dev) {
-  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
-  var KEY = 'kx7Q2p9mVt4Zr8';
+  var rows = '', total = 0;
+  for (var i = 0; i < COST_ITEMS_.length; i++) {
+    var it = COST_ITEMS_[i] || {}, amt = Number(it.amount) || 0;
+    total += amt;
+    rows += '<tr><td class="cname">' + esc_(it.name || '') +
+      (it.note ? '<div class="cnote">' + esc_(it.note) + '</div>' : '') + '</td>' +
+      '<td class="amt">' + esc_(_costYen_(amt)) + '</td></tr>';
+  }
+  var body;
+  if (COST_ITEMS_.length === 0) {
+    body = '<div class="cempty">まだ費目が登録されていません。<br>これから1つずつ足していきます。</div>';
+  } else {
+    body = '<table class="ctab"><thead><tr><th>費目</th><th class="amt">金額</th></tr></thead><tbody>' +
+      rows +
+      '<tr class="total"><td>月間コスト合計</td><td class="amt">' + esc_(_costYen_(total)) + '</td></tr>' +
+      '</tbody></table>';
+  }
   var script =
     '<script>(function(){' +
-    'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
-    'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-    'var b=document.getElementById("cgo"),st=document.getElementById("cstatus"),res=document.getElementById("cres");' +
-    'function esc(s){return (s==null?"":String(s)).replace(/[&<>\"\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\x27":"&#39;"}[c];});}' +
-    'function jsonp(params,onR){var cb="__ct"+Date.now()+Math.floor(Math.random()*1000);' +
-    'window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
-    'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
-    'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();' +
-    'sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
-    'function fit(f){try{f.style.height="0";var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
-    'function show(html){res.innerHTML="<iframe id=\"cframe\" class=\"cframe\" srcdoc=\""+esc(html)+"\"></iframe>";' +
-    'var f=document.getElementById("cframe");f.addEventListener("load",function(){fit(f);});' +
-    'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1800);}' +
-    'var polls=0;function poll(id){polls++;if(polls>200){st.textContent="時間がかかりすぎました。もう一度お試しください。";b.disabled=false;return;}' +
-    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){st.textContent="エラー："+((r&&r.error)||"不明");b.disabled=false;return;}' +
-    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},700);return;}' +
-    'b.disabled=false;' +
-    'if(r.status!=="done"){st.textContent=String(r.result||"出せませんでした。");return;}' +
-    'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
-    'if(!d.ok||!d.body_html){st.textContent="出せませんでした："+((d&&d.error)||"中身が空です");return;}' +
-    'st.textContent="";show(d.body_html);});}' +
-    'if(b){b.addEventListener("click",function(){b.disabled=true;res.innerHTML="";' +
-    'st.textContent="事務所パソコンで計算しています…（少し待ってください）";polls=0;' +
-    'jsonp({action:"submit",key:KEY,op:"cost",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({part:"cost"})},' +
-    'function(r){if(!r||!r.ok||!r.id){st.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");b.disabled=false;return;}' +
-    'setTimeout(function(){poll(r.id);},1000);});});}' +
+    'var b=document.getElementById("cgo"),c=document.getElementById("ccard");' +
+    'if(b&&c){b.addEventListener("click",function(){c.classList.remove("hidden");' +
+    'try{c.scrollIntoView({behavior:"smooth",block:"start"});}catch(e){}});}' +
     '})();</script>';
-  return '<style>' + HOMECSS_ + COSTCSS_ +
-      '.cframe{width:100%;border:0;background:#0b2a36;border-radius:14px;}' +
-      '.cstatus{color:#eaf3f7;font-weight:800;margin:10px 4px;font-size:15px;text-align:center;}' +
-    '</style>' +
+  return '<style>' + HOMECSS_ + COSTCSS_ + '</style>' +
     '<div class="home">' +
       backBar_(base, staff, dev) +
       '<div class="hhead"><span class="bmark">🍅</span><span class="bname">台湾トマト</span></div>' +
       '<div class="hsub" style="color:#fff;text-align:center;font-weight:700;margin:0 0 6px;letter-spacing:.06em;">売上・コスト</div>' +
       '<div class="ctwrap">' +
         '<div class="cbtnrow"><button id="cgo" type="button">月間コスト計算</button></div>' +
-        '<div class="cstatus" id="cstatus">ボタンを押すと、事務所パソコンが今の数字で計算します。</div>' +
-        '<div id="cres"></div>' +
+        '<div id="ccard" class="costcard hidden">' +
+          '<div class="ctitle">🍅 台湾トマト 月間コスト</div>' +
+          '<div class="csub">毎月かかる決まった費用の一覧です。</div>' +
+          body +
+        '</div>' +
       '</div>' +
     '</div>' + script;
 }
