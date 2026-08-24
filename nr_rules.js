@@ -167,6 +167,32 @@
     return { shown: true, rows: rows };
   };
 
+  /* ── ⑪-2 登録してよいか（決まっていない枠があれば押させない） ──────
+     ★まるちゃん決定（2026-08-24）：「カウンセリングと脱毛のどちらか、あるいは複数のサービスの
+       どれかが**確定できない状態**のときは、登録ボタンが押せないようにする」。
+       ＝登録の処理は空き具合をいっさい見ないので、押せてしまうと**同じ部屋に二重で予約が入る**。
+     rows＝画面が集めた枠ごとの状態の並び：
+       { name:枠の名前, locked:その時間は使えない(部屋がふさがっている等),
+         staffOk:担当が決まっているか, roomNeeded:部屋が要るか, roomOk:部屋が決まっているか }
+     返り：{ ok:登録してよいか, ng:[{name, why}], msg:画面に出す1行 } */
+  NR.canRegister = function (rows) {
+    var R = rows || [], ng = [];
+    for (var i = 0; i < R.length; i++) {
+      var r = R[i] || {}, nm = r.name || ("枠" + (i + 1));
+      if (r.locked) { ng.push({ name: nm, why: "その時間は部屋がふさがっています" }); continue; }
+      if (!r.staffOk) { ng.push({ name: nm, why: "担当が決まっていません" }); continue; }
+      if (r.roomNeeded && !r.roomOk) { ng.push({ name: nm, why: "部屋が決まっていません" }); }
+    }
+    var msg = "";
+    if (ng.length) {
+      var parts = [];
+      for (var k = 0; k < ng.length; k++) parts.push(ng[k].name + "：" + ng[k].why);
+      msg = "この内容では登録できません（" + parts.join("／") +
+            "）。上の「開始時間」を変えるか、やる順番を変えてください。";
+    }
+    return { ok: (ng.length === 0), ng: ng, msg: msg };
+  };
+
   /* ── ⑫ 順番の入れ替え（枠と、選んでいる中身を一緒に動かす） ─────
      picks＝[{dur,staff,room}...]（枠と同じ並び）。返り：{ slots, picks } */
   NR.moveUp = function (slots, picks, i) {
