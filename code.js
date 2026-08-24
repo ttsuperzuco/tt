@@ -3727,7 +3727,11 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★開始時間の欄に出す材料を覚える（2026-08-21 まるちゃん）。パソコン版と同じ作り。
     'window.__nrDate=d.date||"";window.__nrWd=d.weekday||"";window.__nrNeedCounsel=!!d.need_counsel;' +
     'window.__nrMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");window.__nrSat=d.date?(new Date(d.date+"T00:00:00").getDay()===6):false;' +
-    'selVal("needc","yes");nrApplyNeedC();nrShowStart();buildSlotUI(d.slots);applyAvail(d);' +   // 開始時間を出す／埋まっている部屋・担当を消す／コスモスの注意書き
+    // ★2026-08-24 まるちゃん指摘「スマホだけ⑤カウンセリング担当が出る。1つ目でカウンセリング担当を
+    //   選ぶので重複」。原因＝出す/隠すの判断(nrApplyNeedC)を、枠を組み立てる前にやっていたので
+    //   「カウンセリングの枠がある」ことをまだ知らず、外の⑤を出してしまっていた。
+    //   → パソコン版と同じ「枠を作ってから判断する」順番にそろえる。
+    'selVal("needc","yes");nrShowStart();buildSlotUI(d.slots);nrApplyNeedC();applyAvail(d);' +   // 開始時間を出す／埋まっている部屋・担当を消す／コスモスの注意書き
 
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
