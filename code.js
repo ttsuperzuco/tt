@@ -958,7 +958,8 @@ var DEFAULT_TILE_SETTINGS_ = {
   kanshi:     { exec: false, staff: false },
   // ★前日お知らせ＝2026-08-24 まるちゃん決定でスタッフにも見せる（それまでは開発URL専用だった）。
   //   人ごとのON/OFF対象＝tile_settings.py の STAFF_ASSIGNABLE にも入れてある。
-  //   ★「未送信の分だけ作成」のボタンだけは、まだスタッフには出さない（renderZenjitsuPage_ で出し分け）。
+  //   ★「未送信の分だけ作成」のボタンは、まだ隠しておく＝スタッフ版も社長版も出さない
+  //     （開発版(?dev=1)だけ出す。renderZenjitsuPage_ で出し分け）。
   zenjitsu:   { exec: true, staff: true },
   rireki:     { exec: false, staff: false },   // ★顧客履歴検索＝初期は開発URL(?dev=1)だけ（共通ルール16＝新ボタンは既定で開発者だけ表示。自動監視からONにして開放）
   // ★台湾トマト 売上・コスト＝オーナー(開発者)専用の内部ツール。kanshi/zenjitsuと同じく
@@ -1609,7 +1610,7 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' },
   // ★前日お知らせ＝2026-08-24 まるちゃん決定でスタッフにも見せる（それまでは開発URL専用）。
   //   実際の作成は事務所PCが行い、この画面は日付を選んで頼むだけ（renderZenjitsuPage_）。
-  //   ★スタッフには「未送信の分だけ作成」のボタンを出さない（renderZenjitsuPage_ の staff で出し分け）。
+  //   ★「未送信の分だけ作成」は隠す＝スタッフ版も社長版も出さない（開発版だけ出る）。
   { id: 'zenjitsu', cls: 'zenjitsu', view: 'zenjitsu',
     icon: '<span class="ticon">🔔</span>', label: '前日\nお知らせ' },
   // ★顧客履歴検索＝番号/氏名で客を探し、今回の予約と過去予約(メモ込み)を見る。事務所PCが検索
@@ -2058,16 +2059,16 @@ function renderZenjitsuPage_(base, staff, dev) {
         '<input type="date" id="zjdate">' +
         '<span class="zjdatepick">📅</span>' +
       '</div>' +
-      /* ★押したボタンの方で作り始める（パソコン版の窓とまったく同じ2つのボタン・2026-08-21まるちゃん）。
-         ★2026-08-24 まるちゃん決定：スタッフには「未送信の分だけ作成」を出さない（まだ隠しておく）。
-           社長版・開発版は今までどおり2つとも出る。 */
-      '<div class="zjopts' + (staff ? ' one' : '') + '">' +
+      /* ★2026-08-24 まるちゃん決定：「未送信の分だけ作成」はまだ隠しておく。
+           スタッフ版も社長版も同じ見た目にそろえる＝「全員分を作成」の1つだけ。
+           試せる場所を残すため、開発版(?dev=1)だけは今までどおり2つとも出る。 */
+      '<div class="zjopts' + (dev ? '' : ' one') + '">' +
         '<button type="button" class="zjopt" data-mode="all">全員分を作成</button>' +
-        (staff ? '' : '<button type="button" class="zjopt" data-mode="unsent">未送信の分だけ作成</button>') +
+        (dev ? '<button type="button" class="zjopt" data-mode="unsent">未送信の分だけ作成</button>' : '') +
       '</div>' +
       /* ★2026-08-24 まるちゃん指示：「（お客様には送りません＝見るだけ）」の一言は消した
            （パソコン版の窓の同じ一言も一緒に消してある）。 */
-      '<div class="zjstatus" id="zjstatus">日付を選んで、' + (staff ? 'ボタン' : 'どちらかのボタン') +
+      '<div class="zjstatus" id="zjstatus">日付を選んで、' + (dev ? 'どちらかのボタン' : 'ボタン') +
         'を押すとお知らせが作成されます。</div>' +
     '</div>' +
     '<div id="zjres"></div>' +
