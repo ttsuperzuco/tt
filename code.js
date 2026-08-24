@@ -2148,7 +2148,7 @@ function renderCostPage_(base, staff, dev) {
     'function show(html){res.innerHTML="<iframe id=\\"cframe\\" class=\\"cframe\\" srcdoc=\\""+esc(html)+"\\"></iframe>";' +
     'var f=document.getElementById("cframe");f.addEventListener("load",function(){fit(f);});' +
     'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1800);}' +
-    'var polls=0;function poll(id){polls++;if(polls>200){st.textContent="時間がかかりすぎました。もう一度お試しください。";b.disabled=false;return;}' +
+    'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("cost",700)){st.textContent="時間がかかりすぎました。もう一度お試しください。";b.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){st.textContent="エラー："+((r&&r.error)||"不明");b.disabled=false;return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},700);return;}' +
     'b.disabled=false;' +
@@ -3495,7 +3495,7 @@ function renderHonyakuPage_(base, staff, dev) {
   'segs.forEach(function(b){b.addEventListener("click",function(){' +
   'gender=b.getAttribute("data-g");segs.forEach(function(x){x.classList.remove("sel");});b.classList.add("sel");});});' +
   // ★あきらめるまで＝事務所パソコン側の制限(180秒)より長くする（短いと答えが出ても画面が止まる）。
-  'var polls=0;function poll(id){polls++;if(polls>300){setSt("時間がかかりすぎました。もう一度お試しください。","err");goEl.disabled=false;return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("translate",700)){setSt("時間がかかりすぎました。もう一度お試しください。","err");goEl.disabled=false;return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");goEl.disabled=false;return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setSt("訳しています…（少し待ってください）","wait");setTimeout(function(){poll(id);},700);return;}' +
   'goEl.disabled=false;' +
@@ -3512,7 +3512,7 @@ function renderHonyakuPage_(base, staff, dev) {
   //   覚え方・用語の当て方は translate_core の1本＝パソコン版とまったく同じ答えになる。
   'var remEl=document.getElementById("hyrem"),termEl=document.getElementById("hyterm");' +
   'var tjaEl=document.getElementById("hytja"),tzhEl=document.getElementById("hytzh");' +
-  'var sPolls=0;function pollSub(id,btn){sPolls++;if(sPolls>200){setSt("時間がかかりすぎました。","err");btn.disabled=false;return;}' +
+  'var sPolls=0;function pollSub(id,btn){sPolls++;if(sPolls>LIMITS.tries("translate",600)){setSt("時間がかかりすぎました。","err");btn.disabled=false;return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");btn.disabled=false;return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollSub(id,btn);},600);return;}' +
   'btn.disabled=false;setSt(String(r.result||""),(r.status==="done")?"ok":"err");});}' +
@@ -3637,7 +3637,7 @@ function renderTimedSendPage_(base, staff, dev) {
   'listEl.innerHTML=h;' +
   'var cbs=listEl.querySelectorAll(".tscancel");for(var j=0;j<cbs.length;j++){cbs[j].addEventListener("click",function(){' +
   'var id=this.getAttribute("data-id");szPopup_("この送信を取り消しますか？",{cancel:true,onYes:function(){askSends("timedsend_cancel",id);}});});}}' +
-  'var tsPolls=0;function pollSends(qid){tsPolls++;if(tsPolls>120){listEl.textContent="読み込めませんでした。";return;}' +
+  'var tsPolls=0;function pollSends(qid){tsPolls++;if(tsPolls>LIMITS.tries("timedsend_list",700)){listEl.textContent="読み込めませんでした。";return;}' +
   'jsonp({action:"status",key:KEY,id:qid},function(r){if(!r||!r.ok){listEl.textContent="読み込めませんでした。";return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollSends(qid);},700);return;}' +
   'if(r.status!=="done"){listEl.textContent=String(r.result||"読み込めませんでした。");return;}' +
@@ -3883,7 +3883,7 @@ function renderNewReservationPage_(base, staff, dev) {
     //   その枠の「埋まっている担当・部屋を消す」が黙って抜け落ちていた（＝埋まっている人を選べる）。
     //   200回×0.7秒＝約6分に伸ばして、事務所パソコンより先にあきらめないようにした。
     //   ★事務所パソコン側の制限を伸ばす時は、ここも必ず一緒に伸ばすこと。
-    'function nrAvPoll(id,done){nrAvPolls++;if(nrAvPolls>200){if(done)done();return;}' +
+    'function nrAvPoll(id,done){nrAvPolls++;if(nrAvPolls>LIMITS.tries("new_availability",700)){if(done)done();return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(done)done();return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){nrAvPoll(id,done);},700);return;}' +
     'if(r.status!=="done"){if(done)done();return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
@@ -4034,7 +4034,7 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★cb＝タイトルの答えが出た（または出せなかった）時に必ず1回呼ぶ後始末。読み取り直後は
     //   これで「まとめて1回だけ画面に出す」＝タイトルが後から出てこない（2026-08-24 まるちゃん）。
     //   どの終わり方（返事なし・失敗・待ちすぎ）でも呼ぶこと。呼び忘れると画面が出ないままになる。
-    'var tpolls=0;function pollTitles(id,myReq,cb){tpolls++;if(tpolls>80){if(cb)cb();return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(cb)cb();return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb);},400);return;}if(r.status!=="done"){if(cb)cb();return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){if(cb)cb();return;}if(myReq!==titleReq||titleEdited){if(cb)cb();return;}fillTitles(d.titles||[],d.disps||[]);if(cb)cb();});}' +
+    'var tpolls=0;function pollTitles(id,myReq,cb){tpolls++;if(tpolls>LIMITS.tries("preview_new_titles",400)){if(cb)cb();return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(cb)cb();return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb);},400);return;}if(r.status!=="done"){if(cb)cb();return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){if(cb)cb();return;}if(myReq!==titleReq||titleEdited){if(cb)cb();return;}fillTitles(d.titles||[],d.disps||[]);if(cb)cb();});}' +
     'function refreshTitles(cb){if(titleEdited){if(cb)cb();return;}var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim()){if(cb)cb();return;}var myReq=++titleReq;tpolls=0;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id){if(cb)cb();return;}setTimeout(function(){pollTitles(r.id,myReq,cb);},400);});}' +
     'function scheduleTitleRefresh(g){if(["staff","counsel","gender","tw","room"].indexOf(g)<0)return;if(_titleTimer)clearTimeout(_titleTimer);_titleTimer=setTimeout(function(){refreshTitles();},350);}' +
     'window.__nrSchedTitle=scheduleTitleRefresh;' +
