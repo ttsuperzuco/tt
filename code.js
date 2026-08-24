@@ -956,8 +956,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★kanshi(自動監視)＝開発URL(?dev=1)専用。tile_settings.py の TILES にも入れない＝
   //   人ごとの権限画面に出てこない＝誰にもONにできない＝開発URLだけに出る（2026-07-16ユーザー指定）。
   kanshi:     { exec: false, staff: false },
-  // ★前日お知らせ＝社長確認用。kanshiと同じく開発URL(?dev=1)専用（tile_settings.py にも入れない）。
-  zenjitsu:   { exec: false, staff: false },
+  // ★前日お知らせ＝2026-08-24 まるちゃん決定でスタッフにも見せる（それまでは開発URL専用だった）。
+  //   人ごとのON/OFF対象＝tile_settings.py の STAFF_ASSIGNABLE にも入れてある。
+  //   ★「未送信の分だけ作成」のボタンだけは、まだスタッフには出さない（renderZenjitsuPage_ で出し分け）。
+  zenjitsu:   { exec: true, staff: true },
   rireki:     { exec: false, staff: false },   // ★顧客履歴検索＝初期は開発URL(?dev=1)だけ（共通ルール16＝新ボタンは既定で開発者だけ表示。自動監視からONにして開放）
   // ★台湾トマト 売上・コスト＝オーナー(開発者)専用の内部ツール。kanshi/zenjitsuと同じく
   //   開発URL(?dev=1)専用（tile_settings.py の TILES にも入れない＝誰もONにできない）。
@@ -1007,7 +1009,8 @@ function defaultPerms_(people) {
   var perms = {};
   for (var i = 0; i < list.length; i++) {
     // ★yoyaku(予約入力)＝幹部(🍅トマト=kanbu)だけ既定ON・他スタッフは非表示（2026-08-11 まるちゃん決定）。中は新規のみ(viewAllowed_)。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, yoyaku: (list[i] === 'kanbu') };
+    // ★zenjitsu(前日お知らせ)＝2026-08-24 まるちゃん決定で全員ON（スタッフにも見せる）。
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: (list[i] === 'kanbu') };
   }
   return perms;
 }
@@ -1099,7 +1102,7 @@ function getResets_() {
 function personPerms_(perms, staff, dev, who) {
   if (dev) return null;   // null = すべて許可
   var pid = staff ? String(who || '') : 'kanbu';
-  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: false, rireki: false, kanshi: false };
+  return (perms && perms[pid]) || { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: false, rireki: false, kanshi: false, zenjitsu: true };
 }
 // そのviewを見る権限があるか（home/notice は常に可）。allow=null(dev)は常に可。
 function viewAllowed_(view, allow) {
@@ -3633,8 +3636,12 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★カウンセリングの部屋（コスモス）がふさがっている時は、1つ目のカウンセリングの枠の中に知らせを出し、
     //   その枠の所要時間・担当を選べないようにする（2026-08-23 まるちゃん）。
     // ★枠ごとに選ぶ形の時、コスモスの空きは「カウンセリングの枠が実際に始まる時刻」で見る（下の nrSlotAvail）。
-    '(function(){var S=window.__nrSlots||[];for(var z=0;z<S.length;z++){if(S[z].kind==="counsel"&&cw){cw.style.display="none";}}})();' +
     'if(cw)cw.style.display=av.cosmos_busy?"":"none";if(cwho)cwho.textContent=av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"";' +
+    // ★2026-08-24 まるちゃん「コスモスが埋まってますの知らせが、1つ目の枠の中と一番下の2か所に出る」。
+    //   原因＝この2行が逆さまだった（先に「枠があるから出さない」と隠したのに、次の行が
+    //   埋まり具合でまた出し直していた）。パソコン版と同じ「出し入れを決めたあとに隠す」順番にそろえる。
+    //   ★この2行の順番を入れ替えないこと。
+    '(function(){var S=window.__nrSlots||[];for(var z=0;z<S.length;z++){if(S[z].kind==="counsel"&&cw){cw.style.display="none";}}})();' +
     'nrHideBusy("room",av.occ_rooms);nrHideBusy("staff",av.busy_staff);nrHideBusy("counsel",av.busy_counsel_staff);nrMayuVis();' +
     'nrShowNone("counsel","noneCounsel");nrShowNone("staff","noneStaff");nrShowNone("room","noneRoom");nrSlotAvail();}' +
     // ★枠ごとに「その枠の時間に空いている担当・部屋」だけを出す（2つ目の枠は1つ目の後に始まる）。
