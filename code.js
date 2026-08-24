@@ -3372,7 +3372,7 @@ function renderTimedSendPage_(base, staff, dev) {
     '.tsthumb{margin:8px 2px 0;}.tsthumb img{height:70px;border-radius:8px;margin:0 8px 8px 0;vertical-align:top;box-shadow:0 1px 4px rgba(0,0,0,.2);}' +
     '.tsgo{display:block;width:100%;margin:22px 0 8px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#0f766e;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
     '.tsgo:disabled{opacity:.5;}' +
-    '.tsstatus{font-weight:800;color:#0a7;min-height:24px;margin:10px 4px;font-size:15px;}' +
+    '.tsstatus{font-weight:800;min-height:0;margin:10px 4px;font-size:15px;border-radius:12px;padding:0;}.tsstatus.on{background:#fff;color:#0f172a;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.12);}.tsstatus.ng{background:#7f1d1d;color:#fecaca;padding:10px 14px;}' +
     '.tsclr{font-size:13px;padding:6px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;margin-top:6px;}';
   var script =
   '<script>(function(){' +
@@ -3383,7 +3383,7 @@ function renderTimedSendPage_(base, staff, dev) {
   'var dateEl=document.getElementById("tsdate"),timeEl=document.getElementById("tstime"),codesEl=document.getElementById("tscodes");' +
   'var groupEl=document.getElementById("tsgroup"),stEl=document.getElementById("tsstatus"),goEl=document.getElementById("tsgo"),banEl=document.getElementById("tsbanner");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
-  'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
+  'function status(t,err){stEl.textContent=t;stEl.className="tsstatus"+(t?(err?" ng":" on"):"");}' +
   'function jsonp(params,onR){var cb="__ts"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
   'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
   'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
@@ -3532,14 +3532,27 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrread{display:block;width:100%;margin:12px 0 4px;padding:14px;font-size:17px;font-weight:800;border:0;border-radius:14px;background:#2563eb;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.16);}' +
     '.nrread:disabled{opacity:.5;}' +
     '#nrprev{width:100%;box-sizing:border-box;min-height:120px;font-size:19px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;line-height:1.7;overflow:hidden;}' +
-    '.nrstatus{font-weight:900;color:#fff;min-height:32px;margin:16px 4px;font-size:23px;line-height:1.5;}';
+    // ★2026-08-24 まるちゃん指摘「変換中です の文字が背景とかぶって見にくい・色がかぶってる」。
+    //   文字に色を付けるだけだったので、明るい画面では下地に溶けていた（スマホの明るさ設定で背景が
+    //   白っぽくも黒っぽくも変わるのに、文字だけ緑で固定していたのが原因）。
+    //   → お店の他の画面と同じ「箱に入れる」形にする。色はこの画面に元からある物にそろえる
+    //     （ふつう＝白い箱＋濃い文字＝題名の入力欄と同じ／うまくいかなかった時＝濃い赤 #7f1d1d＋
+    //      薄い赤の文字＝この画面のプロセルの問いかけと同じ）。
+    //   ★この画面の背景そのものが青緑(#2C7A99)なので、青緑の箱は使えない（＝まるちゃんの
+    //     「色がかぶってる」はこれ）。何も出ていない時は箱ごと消す。
+    '.nrstatus{font-weight:900;min-height:0;margin:16px 4px;font-size:23px;line-height:1.5;'
+    + 'border-radius:12px;padding:0;}' +
+    '.nrstatus.on{background:#fff;color:#0f172a;padding:14px 16px;'
+    + 'box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
+    '.nrstatus.ng{background:#7f1d1d;color:#fecaca;padding:14px 16px;}';
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
     'var sel={dur:"60",staff:"2",counsel:"1",needc:"yes",room:"FREEDOM",gender:"",tw:""};' +
     'var stEl=document.getElementById("nrstatus"),goEl=document.getElementById("nrgo"),txtEl=document.getElementById("nrtext");' +
     'var prevEl=document.getElementById("nrprev"),prevWrap=document.getElementById("nrprevwrap"),readEl=document.getElementById("nrread");' +
-    'function status(t,err){stEl.textContent=t;stEl.style.color=err?"#c0392b":"#0a7";}' +
+    // 文字だけでなく箱ごと出す（何も無い時は箱を消す）＝どの明るさの画面でも読める。
+    'function status(t,err){stEl.textContent=t;stEl.className="nrstatus"+(t?(err?" ng":" on"):"");}' +
     'function esc(s){return (s==null?"":String(s));}' +
     'function selVal(g,v){if(!v)return;sel[g]=String(v);var sib=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.toggle("sel",sib[j].getAttribute("data-val")===String(v));}' +
     // ★空いていない部屋・担当のボタンを消す（埋まっている所は選べないように）。パソコン版と同じ考え方。
