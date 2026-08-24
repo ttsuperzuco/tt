@@ -1957,19 +1957,22 @@ function backBar_(base, staff, dev) {
     roleSfx_(staff, dev) + '" target="_top">← 前に戻る</a></div>';
 }
 
-// 前日お知らせ画面のCSS。白いカードの中に「日付を選ぶ」＋作るボタン2つ＋知らせの帯、その下に確認画面の枠。
-// ★★見た目は部屋＆担当 被り検出の画面と同じにそろえる（2026-08-21まるちゃん）＝濃い青緑の背景・白いカード・
-//   青いボタン・黄/緑/赤の知らせ帯。パソコン版の同じ画面（LINE前日お知らせ送信\programs\notice_home.py）と
-//   一字一句そろえてある。★どちらかの見た目を直したら、必ずもう片方も同じに直す（PC版とスマホ版は常に同じ）。
+// 前日お知らせ画面のCSS。カードの中に「日付を選ぶ」＋作るボタン＋知らせの帯、その下に確認画面の枠。
+// ★★見た目はパソコン版の同じ画面（LINE前日お知らせ送信\programs\notice_home.py）と同じにそろえる。
+//   ★2026-08-24 まるちゃん指示「スマホもパソコン版の色合いに」：パソコンの画面は濃い色の設定で使われて
+//     いるので、そこで出ている色（濃い紺のカード・薄い灰色の見出し・明るい文字）をそのまま写した。
+//     見出しの文字もパソコンと同じ白にする（このボタンの画面だけ・他の画面の橙色はそのまま）。
+//   ★どちらかの見た目を直したら、必ずもう片方も同じに直す（PC版とスマホ版は常に同じ）。
 var ZENJITSUCSS_ =
-  '  .zjcard { background:#fff; border:1px solid #e2e8f0; border-left:4px solid #2563eb;' +
+  '  .zjhead .bname { color:#fff; }' +
+  '  .zjcard { background:#131c2e; border:1px solid #26324a; border-left:4px solid #2563eb;' +
   '    border-radius:12px; padding:16px 16px 18px; box-shadow:0 1px 3px rgba(0,0,0,.06); margin-top:6px; }' +
-  '  .zjlabel { font-size:1.37rem; font-weight:800; color:#64748b; margin-bottom:8px; }' +
+  '  .zjlabel { font-size:1.37rem; font-weight:800; color:#94a3b8; margin-bottom:8px; }' +
   /* ★日付は「押して選べる」と分かる見た目に（青い枠＋右端に大きなカレンダーの絵・2026-08-21まるちゃん） */
-  '  .zjdatebox { display:flex; align-items:center; gap:10px; background:#f1f5f9;' +
+  '  .zjdatebox { display:flex; align-items:center; gap:10px; background:#0b1220; color-scheme:dark;' +
   '    border:2px solid #2563eb; border-radius:10px; padding:6px 12px 6px 6px; cursor:pointer; }' +
   '  .zjdatepick { font-size:1.8rem; line-height:1; pointer-events:none; }' +
-  '  #zjdate { flex:1 1 auto; width:100%; background:transparent; color:#0f172a; border:0;' +
+  '  #zjdate { flex:1 1 auto; width:100%; background:transparent; color:#e8eef7; border:0;' +
   '    padding:10px 6px; font:inherit; font-size:2rem; font-weight:900; cursor:pointer;' +
   '    font-variant-numeric:tabular-nums; letter-spacing:.02em; }' +
   '  #zjdate:focus { outline:none; }' +
@@ -2031,7 +2034,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   /* ★押したボタンの方で作る（mode="all"＝全員分／"unsent"＝まだLINEで送っていない人の分だけ）。
      依頼の中身は必ず fields のひとまとめ箱に入れる＝Google側の窓口は中身を判断せず素通しするだけ。 */
   'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選んでください。","err");return;}' +
-  'lock(true);setSt((mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…（十数秒かかります）":"全員分を事務所PCで作成中…（十数秒かかります）","wait");' +
+  'lock(true);setSt((mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…（通常、数十秒かかります）":"全員分を事務所PCで作成中…（通常、数十秒かかります）","wait");' +
   'resEl.innerHTML="";polls=0;' +
   'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode})},' +
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");lock(false);return;}setTimeout(function(){poll(r.id);},1000);});}' +
@@ -2052,7 +2055,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
   '<div class="home">' +
     backBar_(base, staff, dev) +
-    '<div class="hhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
+    '<div class="hhead zjhead"><span class="bmark">🔔</span><span class="bname">前日お知らせ</span></div>' +
     '<div class="zjcard">' +
       '<div class="zjlabel">日付を選ぶ</div>' +
       '<div class="zjdatebox" id="zjdatebox">' +
