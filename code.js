@@ -5347,27 +5347,38 @@ function pcstFmt_(s) {
   return t.length > 16 ? t.slice(0, 16) : t;
 }
 
+// ★色は必ず共通の決め方（--card＝箱の色／--ink＝文字の色／--line＝境目）を使う。
+//   2026-08-24、ここに濃い紺 #16283a を直接書き、文字色を決めなかったため、**明るい画面設定の人には
+//   濃い背景の上に濃い文字が出て真っ暗で読めなかった**（まるちゃん指摘）。色を直に書かない＝共通に従う。
+//   緑・赤の大きな枠だけは、どちらの設定でも濃い色なので文字を白に決め打ちする（これは意図した固定）。
 var PCSTCSS_ = ''
-+ '.pcstBig{border-radius:16px;padding:22px 16px;text-align:center;margin:10px 0 14px}'
-+ '.pcstBig.ok{background:#123626;border:1px solid #1f6b45}'
-+ '.pcstBig.ng{background:#3a1620;border:1px solid #7b2740}'
++ '.pcstBig{border-radius:16px;padding:22px 16px;text-align:center;margin:10px 0 14px;color:#fff}'
++ '.pcstBig.ok{background:#15803d;border:1px solid #1f9d54}'
++ '.pcstBig.ng{background:#b91c1c;border:1px solid #dc2626}'
 + '.pcstIc{font-size:2.6rem;line-height:1}'
-+ '.pcstMain{font-size:1.8rem;font-weight:800;margin:6px 0 4px}'
-+ '.pcstSub{font-size:.95rem;opacity:.85}'
-+ '.pcstWhy{background:#16283a;border-radius:14px;padding:14px 14px;margin-bottom:14px}'
-+ '.pcstWhyT{font-size:1.15rem;font-weight:700;margin-bottom:6px}'
-+ '.pcstWhyS{font-size:.95rem;line-height:1.6;opacity:.88}'
-+ '.pcstTable{background:#16283a;border-radius:14px;overflow:hidden}'
-+ '.pcstR{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.07)}'
++ '.pcstMain{font-size:1.8rem;font-weight:800;margin:6px 0 4px;color:#fff}'
++ '.pcstSub{font-size:.95rem;color:rgba(255,255,255,.92)}'
++ '.pcstWhy{background:var(--card);color:var(--ink);border:1px solid var(--line);'
++   'border-radius:14px;padding:14px 14px;margin-bottom:14px}'
++ '.pcstWhyT{font-size:1.15rem;font-weight:700;margin-bottom:6px;color:var(--ink)}'
++ '.pcstWhyS{font-size:.95rem;line-height:1.6;color:var(--sub)}'
++ '.pcstTable{background:var(--card);color:var(--ink);border:1px solid var(--line);'
++   'border-radius:14px;overflow:hidden}'
++ '.pcstR{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}'
 + '.pcstR:last-child{border-bottom:none}'
-+ '.pcstK{flex:0 0 44%;font-size:.92rem;opacity:.8}'
-+ '.pcstV{flex:1 1 auto;font-size:.98rem;font-weight:600;word-break:break-all}'
-+ '.pcstDim{font-weight:400;opacity:.7;margin-left:6px;font-size:.88rem}';
++ '.pcstK{flex:0 0 44%;font-size:.92rem;color:var(--sub)}'
++ '.pcstV{flex:1 1 auto;font-size:.98rem;font-weight:600;color:var(--ink);word-break:break-all}'
++ '.pcstDim{font-weight:400;color:var(--sub);margin-left:6px;font-size:.88rem}'
++ '.pcFoot{margin-top:12px;font-size:.85rem;color:rgba(255,255,255,.85);text-align:center;line-height:1.6}';
 
 var PROCELLCSS_ = ''
 + '.pcLead{margin:10px 4px 14px;font-size:1rem;line-height:1.6;opacity:.9}'
 + '.pcCards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}'
-+ '.pcCard{flex:1 1 30%;min-width:150px;background:#16283a;border-radius:14px;padding:14px 12px;text-align:center}'
+// ★2026-08-24：濃い紺を直に書いて文字色を決めていなかったので、**明るい画面設定の人には
+//   濃い背景に濃い文字が出て読めなかった**（自宅PCの画面で同じ間違いをして発覚・同じ書き方がここに2か所）。
+//   共通の決め方（--card＝箱の色／--ink＝文字の色）に直した。
++ '.pcCard{flex:1 1 30%;min-width:150px;background:var(--card);color:var(--ink);'
++   'border:1px solid var(--line);border-radius:14px;padding:14px 12px;text-align:center}'
 + '.pcName{font-size:1rem;opacity:.85;margin-bottom:6px}'
 + '.pcNum{font-size:2.4rem;font-weight:800;line-height:1.1;color:#7ad0ff}'
 + '.pcUnit{font-size:1rem;font-weight:600;margin-left:3px;opacity:.85}'
@@ -5375,7 +5386,7 @@ var PROCELLCSS_ = ''
 + '.pcTitle{font-weight:700;font-size:1.1rem;margin:6px 4px 8px}'
 + '.pcTableWrap{overflow-x:auto}'
 + '.pcTable{width:100%;border-collapse:collapse;font-size:.95rem}'
-+ '.pcTable th{background:#16283a;padding:8px 10px;white-space:nowrap}'
++ '.pcTable th{background:var(--card);color:var(--ink);padding:8px 10px;white-space:nowrap}'
 + '.pcTable td{border-bottom:1px solid rgba(255,255,255,.12);padding:8px 10px;white-space:nowrap}'
 + '.pcL{text-align:left}.pcR{text-align:right;font-weight:700}'
 + '.pcDim{opacity:.7}'
