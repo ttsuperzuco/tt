@@ -3777,7 +3777,7 @@ function renderNewReservationPage_(base, staff, dev) {
     ':(_es<100)?"変換中です（"+_es+"秒）。貼った内容が読み取りにくいので、AIに問合せて調べています。数十秒かかる場合があります。"' +
     ':"変換中です（"+_es+"秒）。時間がかかっています。終わらなければ、もう一度お試しください。";' +
     'status(_mg,false);' +
-    'setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
+    'setTimeout(function(){pollPrev(id);},700);return;}readEl.disabled=false;' +
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
@@ -3798,19 +3798,21 @@ function renderNewReservationPage_(base, staff, dev) {
     //   → パソコン版と同じ「枠を作ってから判断する」順番にそろえる。
     'selVal("needc","yes");nrShowStart();buildSlotUI(d.slots);nrApplyNeedC();applyAvail(d);' +   // 開始時間を出す／埋まっている部屋・担当を消す／コスモスの注意書き
 
+    // ★タイトルまで作り終えてから、まとめて1回だけ画面に出す（2026-08-24 まるちゃん）。
+    //   タイトルが作れなかった時も必ずここへ来る＝画面が出ないままにはならない。
     'var _shown=false;function _showAll(){if(_shown)return;_shown=true;' +
     'prevWrap.style.display="";var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
     'status("",false);}' +                                                             // 読み取り後の一言は出さない
     // ★万一タイトルの返事が返ってこなくても、20秒たったら他の欄だけは出す（画面が出ないままにしない）。
-    'titleEdited=false;setTimeout(_showAll,20000);refreshTitles(_showAll);});}' +                                                          // 読み取り後の一言は出さない
+    'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
     'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var base=this.getAttribute("data-procell");var tw=(base==="頭皮プロセル")?"トライアル":(window.__procellWord||"トライアル");var sh=(base==="頭皮プロセル")?"プロ頭":(base==="顔プロセルPro"?"プロ肌Pro":"プロ肌MD");var full=sh+" "+tw.replace("キャンペーン","キャ").replace("トライアル","トラ");var lines=prevEl.value.split("\\n");for(var k=0;k<lines.length;k++){lines[k]=lines[k].replace(/(?:(?:顔|頭皮)?プロセル(?:セラピーズ)?|procell|プロ肌|プロ頭|プロ(?!グラム))(?:[ \\u3000]*(?:キャンペーントライアル|トライアル|キャトラ|トラ))?/gi,full);}prevEl.value=lines.join("\\n");prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
     'readEl.disabled=true;prevT0=Date.now();status("変換中です。通常は10秒以内に終わります。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
-    'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},1200);});}' +
+    'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},400);});}' +
     'readEl.addEventListener("click",readGo);' +
     // 送る中身（貼った文＋選んだ担当/部屋/所要/性別/国籍。extra でタイトルの差し替えを足せる）。
     // ★「カウンセリング無し」を選んだ時は、カウンセリング担当を空で渡す＝枠を作らない（2026-08-21 まるちゃん）。
@@ -3827,8 +3829,8 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★cb＝タイトルの答えが出た（または出せなかった）時に必ず1回呼ぶ後始末。読み取り直後は
     //   これで「まとめて1回だけ画面に出す」＝タイトルが後から出てこない（2026-08-24 まるちゃん）。
     //   どの終わり方（返事なし・失敗・待ちすぎ）でも呼ぶこと。呼び忘れると画面が出ないままになる。
-    'var tpolls=0;function pollTitles(id,myReq,cb){tpolls++;if(tpolls>40){if(cb)cb();return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(cb)cb();return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb);},700);return;}if(r.status!=="done"){if(cb)cb();return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){if(cb)cb();return;}if(myReq!==titleReq||titleEdited){if(cb)cb();return;}fillTitles(d.titles||[],d.disps||[]);if(cb)cb();});}' +
-    'function refreshTitles(cb){if(titleEdited){if(cb)cb();return;}var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim()){if(cb)cb();return;}var myReq=++titleReq;tpolls=0;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id){if(cb)cb();return;}setTimeout(function(){pollTitles(r.id,myReq,cb);},900);});}' +
+    'var tpolls=0;function pollTitles(id,myReq,cb){tpolls++;if(tpolls>80){if(cb)cb();return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(cb)cb();return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb);},400);return;}if(r.status!=="done"){if(cb)cb();return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){if(cb)cb();return;}if(myReq!==titleReq||titleEdited){if(cb)cb();return;}fillTitles(d.titles||[],d.disps||[]);if(cb)cb();});}' +
+    'function refreshTitles(cb){if(titleEdited){if(cb)cb();return;}var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim()){if(cb)cb();return;}var myReq=++titleReq;tpolls=0;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id){if(cb)cb();return;}setTimeout(function(){pollTitles(r.id,myReq,cb);},400);});}' +
     'function scheduleTitleRefresh(g){if(["staff","counsel","gender","tw","room"].indexOf(g)<0)return;if(_titleTimer)clearTimeout(_titleTimer);_titleTimer=setTimeout(function(){refreshTitles();},350);}' +
     'window.__nrSchedTitle=scheduleTitleRefresh;' +
     // 登録＝画面に出ている（人が直せる）タイトルをそのまま使う。
