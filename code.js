@@ -1994,7 +1994,8 @@ var ZENJITSUCSS_ =
   '  .zjstatus.wait { background:#fef9c3; color:#854d0e; }' +
   '  .zjstatus.ok { background:#dcfce7; color:#166534; }' +
   '  .zjstatus.err { background:#fee2e2; color:#991b1b; }' +
-  '  .zjframe { width:100%; min-height:60vh; border:0; border-radius:14px; background:#fff;' +
+  /* できあがったお知らせを入れる枠＝中の紙と同じ黒っぽい色にする（白い縁が見えないように）。 */
+  '  .zjframe { width:100%; min-height:60vh; border:0; border-radius:14px; background:#161210;' +
   '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; margin-top:12px; }';
 
 /** 前日お知らせ（社長確認用・開発URL専用）。PC版と同じ「来店日を選ぶ」入口。
@@ -2017,10 +2018,9 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
   'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
   'function fit(f){try{f.style.height="0";var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
-  'function showResult(d){' +
-  'if(!d||!d.body_html){setSt((d&&d.error)?("エラー："+d.error):"この日は予約がありませんでした。",(d&&d.error)?"err":"ok");resEl.innerHTML="";return;}' +
-  'if(d.count===0&&d.mode==="unsent"){setSt("まだ送っていない人はいません（この日は全員へ送信済みです）。","ok");resEl.innerHTML="";return;}' +
-  'setSt("できました（"+((d.count!=null)?d.count:"?")+"件"+((d.mode==="unsent")?"・まだ送っていない人の分だけ":"")+"）／作成 "+esc(d.generated_at||""),"ok");' +
+  'function showResult(d){var t=ZJ.resultText(d);' +
+  'setSt(t.text,t.kind);' +
+  'if(!t.showBody){resEl.innerHTML="";return;}' +
   'resEl.innerHTML="<iframe id=\\"zjframe\\" class=\\"zjframe\\" srcdoc=\\""+esc(d.body_html)+"\\"></iframe>";' +
   'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});' +
   'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);setTimeout(function(){fit(f);},3200);' +
@@ -2040,13 +2040,10 @@ function renderZenjitsuPage_(base, staff, dev) {
   'resEl.innerHTML="";polls=0;' +
   'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode})},' +
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");lock(false);return;}setTimeout(function(){poll(r.id);},1000);});}' +
-  /* ★最初から入っている日付＝翌営業日（定休の日曜・月曜は飛ばす／2026-08-21まるちゃん）。
-     パソコン側の同じ決まり＝共通\\business_day.py（日曜=0,月曜=1 はJSの数え方）。
-     ★どちらかの決まりを直したら、必ずもう片方も同じに直す（PC版とスマホ版は常に同じ）。 */
-  'function nextBizDay(){var t=new Date();t.setHours(12,0,0,0);' +
-  'do{t.setDate(t.getDate()+1);}while(t.getDay()===0||t.getDay()===1);' +
-  'return t.getFullYear()+"-"+("0"+(t.getMonth()+1)).slice(-2)+"-"+("0"+t.getDate()).slice(-2);}' +
-  'dEl.value=nextBizDay();' +
+  /* ★最初から入っている日付＝翌営業日。**決まりは共通の1本に聞く**（2026-08-24 まるちゃん）。
+     定休日そのものは 共通\business_day.py（Pythonの正本）から自動で作られる shop_rules.js が持つ。
+     ★ここに定休日を書き写さないこと。 */
+  'var _zjd=(typeof ZJ!=="undefined")?ZJ.defaultDateISO():"";if(_zjd)dEl.value=_zjd;' +
   /* ★画面を開いただけでは作らない＝押した時だけ作る（2026-08-21まるちゃん「自動はやめて」）。
      パソコンの窓と同じ動き。日付を変えただけでも作らない。 */
   /* 日付の枠のどこを押してもカレンダーが開く（押せると分かりやすくするため）。 */
@@ -2067,14 +2064,13 @@ function renderZenjitsuPage_(base, staff, dev) {
       /* ★2026-08-24 まるちゃん決定：「未送信の分だけ作成」はまだ隠しておく。
            スタッフ版も社長版も同じ見た目にそろえる＝「全員分を作成」の1つだけ。
            試せる場所を残すため、開発版(?dev=1)だけは今までどおり2つとも出る。 */
-      '<div class="zjopts' + (dev ? '' : ' one') + '">' +
+      '<div class="zjopts' + (ZJ.optionsShown(dev).unsent ? '' : ' one') + '">' +
         '<button type="button" class="zjopt" data-mode="all">全員分を作成</button>' +
-        (dev ? '<button type="button" class="zjopt" data-mode="unsent">未送信の分だけ作成</button>' : '') +
+        (ZJ.optionsShown(dev).unsent ? '<button type="button" class="zjopt" data-mode="unsent">未送信の分だけ作成</button>' : '') +
       '</div>' +
       /* ★2026-08-24 まるちゃん指示：「（お客様には送りません＝見るだけ）」の一言は消した
            （パソコン版の窓の同じ一言も一緒に消してある）。 */
-      '<div class="zjstatus" id="zjstatus">日付を選んで、' + (dev ? 'どちらかのボタン' : 'ボタン') +
-        'を押すとお知らせが作成されます。</div>' +
+      '<div class="zjstatus" id="zjstatus">' + ZJ.optionsShown(dev).hint + '</div>' +
     '</div>' +
     '<div id="zjres"></div>' +
   '</div>' + script;
