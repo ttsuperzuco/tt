@@ -1987,8 +1987,10 @@ var ZENJITSUCSS_ =
   '  .zjopt:disabled { opacity:.4; cursor:default; }' +
   /* 幅が狭い時も左右のままにして、文字だけ少し小さくする（縦積みにしない）。 */
   '  @media (max-width:480px) { .zjopt { font-size:1.05rem; padding:14px 6px; } }' +
+  /* 何も起きていない時の案内文＝濃いカードの上なので明るい文字にする（下の3色が付いた時は
+     それぞれの色が上書きするので、そのまま濃い文字で読める）。 */
   '  .zjstatus { margin-top:12px; padding:12px 14px; border-radius:10px; font-size:1.05rem;' +
-  '    font-weight:700; line-height:1.5; }' +
+  '    font-weight:700; line-height:1.5; color:#e8eef7; }' +
   '  .zjstatus.wait { background:#fef9c3; color:#854d0e; }' +
   '  .zjstatus.ok { background:#dcfce7; color:#166534; }' +
   '  .zjstatus.err { background:#fee2e2; color:#991b1b; }' +
