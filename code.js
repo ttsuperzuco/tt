@@ -3653,7 +3653,7 @@ function renderNewReservationPage_(base, staff, dev) {
     //   ★この2行の順番を入れ替えないこと。
     
     'nrHideBusy("room",av.occ_rooms);nrHideBusy("staff",av.busy_staff);nrHideBusy("counsel",av.busy_counsel_staff);nrMayuVis();' +
-    'nrShowNone("counsel","noneCounsel");nrShowNone("staff","noneStaff");nrShowNone("room","noneRoom");nrSlotAvail();}' +
+    'nrShowNone("counsel","noneCounsel");nrShowNone("staff","noneStaff");nrShowNone("room","noneRoom");nrSlotAvail();nrGoCheck();}' +
     // ★枠ごとに「その枠の時間に空いている担当・部屋」だけを出す（2つ目の枠は1つ目の後に始まる）。
     'function nrSlotAvail(){var S=window.__nrSlots;if(!NR.perSlot(S))return;var d=window.__rvdt;if(!d||!window.__nrDate)return;' +
     // ★枠ごとの「始まる時刻」の積み上げは共通の1本（NR）に聞く＝パソコン版と必ず同じ答えになる。
@@ -3680,7 +3680,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(bx){if(av.cosmos_busy){bx.classList.add("nrlock");}else{bx.classList.remove("nrlock");}}' +
     'nrHideBusy("staff#"+i,av.busy_counsel_staff);nrShowNone("staff#"+i,"noneStaff"+i);}' +
     'else{nrHideBusy("room#"+i,av.occ_rooms);nrHideBusy("staff#"+i,av.busy_staff);' +
-    'nrShowNone("staff#"+i,"noneStaff"+i);nrShowNone("room#"+i,"noneRoom"+i);}}}' +
+    'nrShowNone("staff#"+i,"noneStaff"+i);nrShowNone("room#"+i,"noneRoom"+i);}}nrGoCheck();}' +
     'step(i+1,pos+du);});})();});}' +
     'step(0,0);}' +
     // ★カウンセリングの必要（④）で、カウンセリング担当（⑤）の出し入れをする。
@@ -3694,6 +3694,23 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(!v.counselSec&&!v.rebuildOrder){var cw2=document.getElementById("cosmosWarn");if(cw2)cw2.style.display="none";}}' +
     // ★開始時間「〇月〇日（水）〇時〇分」を出す。
     'function nrStartText(){return NR.startText(window.__rvdt,window.__nrWd);}' +
+    // ★決まっていない枠があれば「この内容で登録する」を押せなくする（2026-08-24 まるちゃん決定）。
+    //   ＝登録の処理は空き具合を見ないので、押せると同じ部屋に二重で予約が入ってしまう。
+    //   何が決まっていないかの判断は共通の1本（NR.canRegister）に聞く＝パソコン版と必ず同じ。
+    'function nrShownPills(g){var a=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),o=[];for(var i=0;i<a.length;i++){if(a[i].style.display!=="none")o.push(a[i]);}return o;}' +
+    'function nrAnySel(g){var a=nrShownPills(g);for(var i=0;i<a.length;i++){if(a[i].classList.contains("sel"))return true;}return false;}' +
+    'function nrGoCheck(){var btn=document.getElementById("nrgo"),ngbox=document.getElementById("nrGoNg");if(!btn)return;' +
+    'var S=window.__nrSlots||[],rows=[];' +
+    'if(NR.perSlot(S)){var bx=document.querySelectorAll("#nrSlotWrap .nrslot");' +
+    'for(var i=0;i<S.length;i++){if(S[i].kind==="counsel"&&sel.needc==="no")continue;' +
+    'var b=bx[i];if(b&&b.style.display==="none")continue;' +
+    'rows.push({name:(i+1)+"つ目："+(S[i].label||"施術"),locked:!!(b&&b.className.indexOf("nrlock")>=0),' +
+    'staffOk:nrAnySel("staff#"+i),roomNeeded:(S[i].kind!=="counsel"),roomOk:nrAnySel("room#"+i)});}}' +
+    'else{var needC=(window.__nrNeedCounsel&&sel.needc!=="no");' +
+    'if(needC)rows.push({name:"カウンセリング",locked:false,staffOk:nrAnySel("counsel"),roomNeeded:false,roomOk:true});' +
+    'rows.push({name:"施術",locked:false,staffOk:nrAnySel("staff"),roomNeeded:!window.__nrMayu,roomOk:nrAnySel("room")});}' +
+    'var r=NR.canRegister(rows);btn.disabled=!r.ok;' +
+    'if(ngbox){ngbox.textContent=r.msg;ngbox.style.display=r.ok?"none":"";}}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
     'var nrAvTimer=null;function nrScheduleAvail(){if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
@@ -3728,7 +3745,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'document.addEventListener("click",function(ev){var b=(ev.target&&ev.target.closest)?ev.target.closest(".nrpill"):null;if(!b)return;' +
     'var g=b.getAttribute("data-grp"),v=b.getAttribute("data-val");if(!g)return;sel[g]=v;' +
     'var sib=document.querySelectorAll(".nrpill[data-grp=\\"" + g + "\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.remove("sel");b.classList.add("sel");if(window.__nrSchedTitle)window.__nrSchedTitle(g);' +
-    'if(g==="needc"){nrApplyNeedC();nrScheduleAvail();}else if(g==="dur"||g.indexOf("dur#")===0){nrScheduleAvail();}});' +
+    'if(g==="needc"){nrApplyNeedC();nrScheduleAvail();}else if(g==="dur"||g.indexOf("dur#")===0){nrScheduleAvail();}nrGoCheck();});' +
     // ★枠ごとの選び欄を作る（施術が2つ以上の時だけ）。
     'function buildSlotUI(slots){var wrap=document.getElementById("nrSlotWrap");' +
     'var dw=document.getElementById("secDurWrap"),sw=document.getElementById("secStaffWrap"),rw=document.getElementById("nrRoomWrap");' +
@@ -3827,7 +3844,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var _shown=false;function _showAll(){if(_shown)return;_shown=true;nrApplyNeedC();' +
     'prevWrap.style.display="";var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
-    'prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
+    'nrGoCheck();prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
     'status("",false);}' +                                                             // 読み取り後の一言は出さない
     // ★万一タイトルの返事が返ってこなくても、20秒たったら他の欄だけは出す（画面が出ないままにしない）。
     'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
@@ -3919,6 +3936,7 @@ function renderNewReservationPage_(base, staff, dev) {
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
         '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
         '<div id="secTitle" style="display:none"><div class="nrsec">タイムツリーに登録されるタイトル（直せます）</div><div id="nrTitleWrap"></div></div>' +
+        '<div id="nrGoNg" class="nrwarn" style="display:none"></div>' +
         '<button type="button" class="nrgo" id="nrgo">この内容で登録する</button>' +
       '</div>' +
       '<div class="nrstatus" id="nrstatus"></div>' +
