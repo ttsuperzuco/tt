@@ -5351,25 +5351,34 @@ function pcstFmt_(s) {
 //   2026-08-24、ここに濃い紺 #16283a を直接書き、文字色を決めなかったため、**明るい画面設定の人には
 //   濃い背景の上に濃い文字が出て真っ暗で読めなかった**（まるちゃん指摘）。色を直に書かない＝共通に従う。
 //   緑・赤の大きな枠だけは、どちらの設定でも濃い色なので文字を白に決め打ちする（これは意図した固定）。
+// ★文字の大きさ（2026-08-24 まるちゃん指摘「それぞれの文字が小さすぎて見えない」で全部大きくした）：
+//   この画面は外出先でとっさに「動いてる？止まってる？」を見る物なので、
+//   細かい注釈でも 1.1rem 以上にする。項目名と値は狭い画面では横に並べず縦に積む（大きくすると窮屈なため）。
 var PCSTCSS_ = ''
-+ '.pcstBig{border-radius:16px;padding:22px 16px;text-align:center;margin:10px 0 14px;color:#fff}'
++ '.pcstBig{border-radius:18px;padding:28px 16px;text-align:center;margin:10px 0 16px;color:#fff}'
 + '.pcstBig.ok{background:#15803d;border:1px solid #1f9d54}'
 + '.pcstBig.ng{background:#b91c1c;border:1px solid #dc2626}'
-+ '.pcstIc{font-size:2.6rem;line-height:1}'
-+ '.pcstMain{font-size:1.8rem;font-weight:800;margin:6px 0 4px;color:#fff}'
-+ '.pcstSub{font-size:.95rem;color:rgba(255,255,255,.92)}'
++ '.pcstIc{font-size:3.2rem;line-height:1}'
++ '.pcstMain{font-size:2.3rem;font-weight:900;margin:8px 0 8px;color:#fff;line-height:1.25}'
++ '.pcstSub{font-size:1.2rem;line-height:1.55;color:rgba(255,255,255,.95)}'
 + '.pcstWhy{background:var(--card);color:var(--ink);border:1px solid var(--line);'
-+   'border-radius:14px;padding:14px 14px;margin-bottom:14px}'
-+ '.pcstWhyT{font-size:1.15rem;font-weight:700;margin-bottom:6px;color:var(--ink)}'
-+ '.pcstWhyS{font-size:.95rem;line-height:1.6;color:var(--sub)}'
++   'border-radius:14px;padding:18px 16px;margin-bottom:16px}'
++ '.pcstWhyT{font-size:1.5rem;font-weight:800;margin-bottom:10px;color:var(--ink);line-height:1.35}'
++ '.pcstWhyS{font-size:1.2rem;line-height:1.7;color:var(--ink);opacity:.9}'
 + '.pcstTable{background:var(--card);color:var(--ink);border:1px solid var(--line);'
 +   'border-radius:14px;overflow:hidden}'
-+ '.pcstR{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}'
++ '.pcstR{display:flex;gap:12px;padding:16px 16px;border-bottom:1px solid var(--line);align-items:baseline}'
 + '.pcstR:last-child{border-bottom:none}'
-+ '.pcstK{flex:0 0 44%;font-size:.92rem;color:var(--sub)}'
-+ '.pcstV{flex:1 1 auto;font-size:.98rem;font-weight:600;color:var(--ink);word-break:break-all}'
-+ '.pcstDim{font-weight:400;color:var(--sub);margin-left:6px;font-size:.88rem}'
-+ '.pcFoot{margin-top:12px;font-size:.85rem;color:rgba(255,255,255,.85);text-align:center;line-height:1.6}';
++ '.pcstK{flex:0 0 42%;font-size:1.15rem;color:var(--sub);line-height:1.5}'
++ '.pcstV{flex:1 1 auto;font-size:1.35rem;font-weight:700;color:var(--ink);line-height:1.45;word-break:break-word}'
++ '.pcstDim{display:block;font-weight:400;color:var(--sub);margin:3px 0 0;font-size:1.15rem}'
++ '.pcFoot{margin-top:14px;font-size:1.1rem;color:rgba(255,255,255,.92);text-align:center;line-height:1.7}'
+// 狭い画面（スマホ）では、項目名の下に値を置く＝1行が窮屈にならない。
++ '@media (max-width:480px){'
++   '.pcstR{flex-direction:column;gap:4px;padding:15px 16px}'
++   '.pcstK{flex:none;font-size:1.1rem}'
++   '.pcstV{font-size:1.4rem}'
++ '}';
 
 var PROCELLCSS_ = ''
 + '.pcLead{margin:10px 4px 14px;font-size:1rem;line-height:1.6;opacity:.9}'
