@@ -2156,7 +2156,7 @@ function renderCostPage_(base, staff, dev) {
     // ★大きな表は答えに載せられないので、事務所パソコンが置き場所へ置いた物を読みに行く
     //   （前日お知らせと同じやり方・2026-08-24）。
     'st.textContent="受け取っています…";' +
-    'jsonp({action:"data",name:"cost_"+slot},function(x){' +
+    'jsonp({action:"data",name:"cost_"+slot+".json"},function(x){' +
     'var d=(x&&x.data)?x.data:x;' +
     'if(!d||!d.ok||!d.body_html){st.textContent="出せませんでした："+((d&&d.error)||"中身が空です");return;}' +
     'st.textContent="";show(d.body_html);});});}' +
