@@ -1607,8 +1607,9 @@ var TILE_DEFS_ = [
   // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
   { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
     icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' },
-  // ★前日お知らせ＝社長確認用の内部ツール。開発URL(?dev=1)専用（PC版と並びをそろえる・2026-07-19）。
-  //   実際の確認作業は事務所PCで動くので、この画面は要点と案内だけ（renderZenjitsuPage_）。
+  // ★前日お知らせ＝2026-08-24 まるちゃん決定でスタッフにも見せる（それまでは開発URL専用）。
+  //   実際の作成は事務所PCが行い、この画面は日付を選んで頼むだけ（renderZenjitsuPage_）。
+  //   ★スタッフには「未送信の分だけ作成」のボタンを出さない（renderZenjitsuPage_ の staff で出し分け）。
   { id: 'zenjitsu', cls: 'zenjitsu', view: 'zenjitsu',
     icon: '<span class="ticon">🔔</span>', label: '前日\nお知らせ' },
   // ★顧客履歴検索＝番号/氏名で客を探し、今回の予約と過去予約(メモ込み)を見る。事務所PCが検索
@@ -1974,6 +1975,8 @@ var ZENJITSUCSS_ =
   '  #zjdate::-webkit-calendar-picker-indicator { transform:scale(1.5); margin-left:10px; opacity:.85; }' +
   /* ★左右に必ず並べる（狭い画面でも縦積みにしない・2026-08-21まるちゃん） */
   '  .zjopts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }' +
+  /* ボタンが1つだけの時（スタッフ版＝未送信の分だけ作成を出さない）は横いっぱいに広げる。 */
+  '  .zjopts.one { grid-template-columns:1fr; }' +
   '  .zjopt { font:inherit; font-size:1.35rem; font-weight:700; line-height:1.4; color:#fff;' +
   '    background:#2563eb; border:1px solid #2563eb; border-radius:10px; padding:16px 8px; cursor:pointer; }' +
   '  .zjopt:active { transform:translateY(1px); }' +
@@ -2055,12 +2058,15 @@ function renderZenjitsuPage_(base, staff, dev) {
         '<input type="date" id="zjdate">' +
         '<span class="zjdatepick">📅</span>' +
       '</div>' +
-      /* ★押したボタンの方で作り始める（パソコン版の窓とまったく同じ2つのボタン・2026-08-21まるちゃん） */
-      '<div class="zjopts">' +
+      /* ★押したボタンの方で作り始める（パソコン版の窓とまったく同じ2つのボタン・2026-08-21まるちゃん）。
+         ★2026-08-24 まるちゃん決定：スタッフには「未送信の分だけ作成」を出さない（まだ隠しておく）。
+           社長版・開発版は今までどおり2つとも出る。 */
+      '<div class="zjopts' + (staff ? ' one' : '') + '">' +
         '<button type="button" class="zjopt" data-mode="all">全員分を作成</button>' +
-        '<button type="button" class="zjopt" data-mode="unsent">未送信の分だけ作成</button>' +
+        (staff ? '' : '<button type="button" class="zjopt" data-mode="unsent">未送信の分だけ作成</button>') +
       '</div>' +
-      '<div class="zjstatus" id="zjstatus">日付を選んで、どちらかのボタンを押すとお知らせが作成されます（お客様には送りません＝見るだけ）。</div>' +
+      '<div class="zjstatus" id="zjstatus">日付を選んで、' + (staff ? 'ボタン' : 'どちらかのボタン') +
+        'を押すとお知らせが作成されます（お客様には送りません＝見るだけ）。</div>' +
     '</div>' +
     '<div id="zjres"></div>' +
   '</div>' + script;
