@@ -2162,7 +2162,7 @@ function renderCostPage_(base, staff, dev) {
     'st.textContent="";show(d.body_html);});});}' +
     'if(b){b.addEventListener("click",function(){b.disabled=true;res.innerHTML="";' +
     'st.textContent="事務所パソコンで計算しています…（少し待ってください）";polls=0;' +
-    'jsonp({action:"submit",key:KEY,op:"cost",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({part:"cost"})},' +
+    'jsonp({action:"submit",key:KEY,op:"cost",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({part:"cost",slot:slot})},' +
     'function(r){if(!r||!r.ok||!r.id){st.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");b.disabled=false;return;}' +
     'setTimeout(function(){poll(r.id);},1000);});});}' +
     '})();</script>';
