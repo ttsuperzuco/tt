@@ -553,11 +553,11 @@
         statusFn(r.result || (r.status === 'done' ? '送りました' : '送れませんでした'));
         return;
       }
-      setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 1500);
+      setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 700);
     };
     var ss = document.createElement('script');
     ss.src = EXEC + '?action=status&key=' + encodeURIComponent(EDIT_KEY) + '&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
-    ss.onerror = function () { setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 1500); };
+    ss.onerror = function () { setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 700); };
     document.head.appendChild(ss);
   }
   // 「詳細を見る」＝初めての人1件を開いて中身を全部読む依頼→結果(会話JSON)を小窓へ。
@@ -577,11 +577,11 @@
           } else { statusFn(s.result || '読めませんでした。'); }
           return;
         }
-        setTimeout(function () { poll(id, n + 1); }, 1500);
+        setTimeout(function () { poll(id, n + 1); }, 700);
       };
       var ss = document.createElement('script');
       ss.src = EXEC + '?action=status&key=' + encodeURIComponent(EDIT_KEY) + '&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
-      ss.onerror = function () { setTimeout(function () { poll(id, n + 1); }, 1500); };
+      ss.onerror = function () { setTimeout(function () { poll(id, n + 1); }, 700); };
       document.head.appendChild(ss);
     }
     var cbS = '__idmRd' + Date.now();
