@@ -2591,8 +2591,19 @@ function idmDelReq(btn) {
   var card = btn;
   for (var k = 0; k < 4 && card && !(card.className && card.className.indexOf('idmcard') >= 0); k++) card = card.parentElement;
   var st = card ? card.querySelector('.idmdelst') : null;
-  if (st) st.textContent = '削除を依頼中…';
+  // 待っている間、何秒たったかを出す（止まって見えないように・2026-08-24 まるちゃん）。
+  var t0 = new Date().getTime(), tick = null;
+  function stop() { if (tick) { clearInterval(tick); tick = null; } }
+  if (st) {
+    st.textContent = '削除を依頼中… 0秒';
+    tick = setInterval(function () {
+      if (!st) return stop();
+      st.textContent = '削除を依頼中… ' + Math.round((new Date().getTime() - t0) / 1000) + '秒';
+    }, 1000);
+  }
+  if (!window.igdmDelete) stop();
   if (window.igdmDelete) window.igdmDelete(acc, name, prev, occ, function (m) {
+    stop();
     if (st) st.textContent = m;
     // 消えたら、その行を画面からも取り除く（残って見える対策）。
     if (m && m.indexOf('削除しました') >= 0 && card && card.parentNode) {
@@ -2632,10 +2643,21 @@ function idmDoReqDetail(btn) {
   var card = btn;
   for (var k = 0; k < 5 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
   var st = card ? card.querySelector('.idmdelst') : null;
-  if (st) st.textContent = '中身を読んでいます…（開くので既読が付きます・少し待ってください）';
+  // ★2026-08-24 まるちゃん「時間がかかりすぎ」：待っている間、何秒たったかを出して動いていると分かるように
+  //   する（止まって見えるのが一番長く感じる）。読み終わったら数えるのをやめる。
+  var t0 = new Date().getTime(), tick = null;
+  function stop() { if (tick) { clearInterval(tick); tick = null; } }
+  if (st) {
+    st.textContent = '中身を読んでいます… 0秒（開くので既読が付きます）';
+    tick = setInterval(function () {
+      if (!st) return stop();
+      st.textContent = '中身を読んでいます… ' + Math.round((new Date().getTime() - t0) / 1000) + '秒（開くので既読が付きます）';
+    }, 1000);
+  }
   if (window.idmReqDetail) window.idmReqDetail(acc, name, prev, occ,
-    function (m) { if (st) st.textContent = m; },
-    function (d) { idmShowMsgs(d.title, d.msgs); });
+    function (m) { stop(); if (st) st.textContent = m; },
+    function (d) { stop(); if (st) st.textContent = ''; idmShowMsgs(d.title, d.msgs); });
+  else stop();
 }
 
 /** IGのDMの合言葉入力画面。合言葉を入れると showInstaDm(index.html)が秘密の置き場所を取りに行く。 */
