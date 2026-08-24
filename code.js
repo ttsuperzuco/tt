@@ -1984,7 +1984,9 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});' +
   'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);setTimeout(function(){fit(f);},3200);' +
   'window.addEventListener("resize",function(){fit(f);});}' +
-  'var polls=0;function poll(id){polls++;if(polls>40){setSt("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。","err");lock(false);return;}' +
+  // ★2026-08-24：あきらめるまでを 52秒 → 208秒（1.3秒×160回）。前日お知らせ作りは実データで最長45秒あり、
+  //   52秒では足りない回が出る＝出来ているのに「時間切れ」と出てしまう。
+  'var polls=0;function poll(id){polls++;if(polls>160){setSt("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。","err");lock(false);return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");lock(false);return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1300);return;}' +
   'lock(false);' +
@@ -3259,7 +3261,9 @@ function renderRirekiPage_(base, staff, dev) {
   'if(res.multi){stEl.textContent=cs.length+" 人ヒット（タップで詳しく）";resEl.innerHTML=cs.map(pickHtml).join("");' +
   'var bs=resEl.querySelectorAll(".rkpick");for(var i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){doSearch(this.getAttribute("data-code"));});}toTop();return;}' +
   'stEl.textContent=cs.length+" 人ヒット";resEl.innerHTML=cs.map(custHtml).join("");toTop();}' +
-  'var polls=0;function poll(id){polls++;if(polls>30){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";return;}' +
+  // ★2026-08-24：あきらめるまでを 36秒 → 210秒（1.2秒×175回）。事務所パソコンが混んでいる時に
+  //   出来ているのに「時間切れ」と出ていた。
+  'var polls=0;function poll(id){polls++;if(polls>175){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1200);return;}' +
   'if(r.status!=="done"){stEl.textContent="検索に失敗しました："+esc(r.result||r.status);return;}' +
@@ -3371,7 +3375,9 @@ function renderTimedSendPage_(base, staff, dev) {
   'if(d&&d.enabled===false){banEl.style.background="#f8d7da";banEl.textContent="いま送信はOFFです。事務所PCの自動監視でONにするまで、予約しても送られません。";}' +
   'else if(d&&d.practice){banEl.style.background="#fff3cd";banEl.textContent="いまは練習モードです。誰を選んでも、実際にはオーナー本人にしか送りません。";}' +
   'else if(d){banEl.style.background="#d1e7dd";banEl.textContent="いまは本番モードです。選んだ相手に実際に送られます。";}});' +
-  'var polls=0;function poll(id){polls++;if(polls>30){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+  // ★2026-08-24：あきらめるまでを 18秒 → 210秒（0.6秒×350回）。18秒では、送信の予約が出来ているのに
+  //   「失敗しました」と出て、押し直すと二重に予約してしまう危険があった。
+  'var polls=0;function poll(id){polls++;if(polls>350){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
   'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
@@ -3636,16 +3642,29 @@ function renderNewReservationPage_(base, staff, dev) {
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
     'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
-    'var polls=0;function poll(id){polls++;if(polls>40){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+    // ★★2026-08-24 まるちゃん決定：登録をあきらめるまでを 24秒 → 210秒 に伸ばした。
+    //   0.6秒おきに40回＝24秒しか待っていなかったが、実データでは登録に最長66秒かかっている。
+    //   24秒で「通信に失敗しました」と出すと、実際は登録が進んでいるのにスタッフが押し直し、
+    //   **同じ予約を二重に作る**危険があった（0.6秒×350回＝210秒に変更）。
+    'var polls=0;function poll(id){polls++;if(polls>350){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
     'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに連絡しました。");return;}' +
     // ★事務所パソコンが返す文の後ろに、作った予約の住所が付いてくる＝「タイムツリーで見る」に使う（2026-08-23 まるちゃん）。
     'var _tt=(String(r.result||"").match(/https?:\\/\\/\\S+/)||[""])[0];' +
     'goEl.disabled=false;txtEl.value="";szOvShow_(szDoneHtml_("予約を登録しました","予約入力に戻る",_tt),"#16a34a");var _bb=document.getElementById("szDoneBack");if(_bb){_bb.addEventListener("click",function(){location.href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '";});}});}' +
-    'var ppolls=0;function pollPrev(id){ppolls++;if(ppolls>40){status("時間切れです。事務所パソコンが動いているかご確認のうえ、もう一度お試しください。",true);readEl.disabled=false;return;}' +
+    // ★2026-08-24 まるちゃん決定：あきらめるまでの時間を60秒→210秒に伸ばした。
+    //   事務所パソコン側の読み取りの制限が180秒（edit_worker.PREVIEW_TIMEOUT_SEC）なので、
+    //   それより先にスマホがあきらめると、答えが出ているのに画面が「変換中」のまま止まる。
+    //   ★片方だけ変えないこと（60秒のままだったのが8/24の詰まりの正体）。
+    //   あわせて、待っている間は経過秒数を出す＝スタッフが「止まった」と思わずに済む。
+    'var ppolls=0,prevT0=0;function pollPrev(id){ppolls++;' +
+    'if(prevT0&&(Date.now()-prevT0)>210000){status("読み取りに時間がかかりすぎました。もう一度お試しください。",true);readEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
-    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
+    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){' +
+    'var _es=prevT0?Math.round((Date.now()-prevT0)/1000):0;' +
+    'status("変換中です。しばらくお待ちください。（"+_es+"秒）",false);' +
+    'setTimeout(function(){pollPrev(id);},1500);return;}readEl.disabled=false;' +
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
@@ -3668,7 +3687,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
     'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var base=this.getAttribute("data-procell");var tw=(base==="頭皮プロセル")?"トライアル":(window.__procellWord||"トライアル");var sh=(base==="頭皮プロセル")?"プロ頭":(base==="顔プロセルPro"?"プロ肌Pro":"プロ肌MD");var full=sh+" "+tw.replace("キャンペーン","キャ").replace("トライアル","トラ");var lines=prevEl.value.split("\\n");for(var k=0;k<lines.length;k++){lines[k]=lines[k].replace(/(?:(?:顔|頭皮)?プロセル(?:セラピーズ)?|procell|プロ肌|プロ頭|プロ(?!グラム))(?:[ \\u3000]*(?:キャンペーントライアル|トライアル|キャトラ|トラ))?/gi,full);}prevEl.value=lines.join("\\n");prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
-    'readEl.disabled=true;status("変換中です。しばらくお待ちください。",false);' +
+    'readEl.disabled=true;prevT0=Date.now();status("変換中です。しばらくお待ちください。（0秒）",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},1200);});}' +
     'readEl.addEventListener("click",readGo);' +
@@ -4024,7 +4043,9 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
     'function esc(s){return (s==null?"":String(s));}' +
     'function jsonp(params,onR){var cb="__ck"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
-    'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>40){document.getElementById("expickst").textContent="時間切れです。事務所パソコンが動いているかご確認ください。";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},600);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
+    // ★2026-08-24：あきらめるまでを 24秒 → 210秒（0.6秒×350回）。事務所パソコンが混んでいる時に
+    //   出来ているのに「時間切れ」と出ていた。
+    'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>350){document.getElementById("expickst").textContent="時間切れです。事務所パソコンが動いているかご確認ください。";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},600);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
     'function loadPicks(){isNewCust=false;document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="「"+disp()+"」の予約";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="予約をさがしています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp()})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
     'function renderPicks(list){var el=document.getElementById("expicklist");document.getElementById("expickst").textContent=list.length?"":(isNewCust?"番号なしの新規のお客様の予約が見つかりません。":"この番号の予約が見つかりません。");document.getElementById("expickwho").textContent=isNewCust?"新規のお客様（番号なし）":("「"+disp()+"」"+((list.length&&list[0].name)?list[0].name+"様":"の予約"));var h="";for(var i=0;i<list.length;i++){var r=list[i];var pm=(r.parts||[]).join("・")||"—";var past=r.is_past?"（過去）":"";var rk=roomVal(r.room);var rc=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var nameLine=isNewCust?("<span class=\\"pname\\" style=\\"font-weight:900\\">お名前："+esc(r.name||"?")+"</span>"):"";h+="<button class=\\"expickrow\\" data-i=\\""+i+"\\">"+nameLine+"<span class=\\"pd\\">"+past+r.date+" "+r.start_hm+" "+(r.dur_min||"")+"分</span><span class=\\"pm\\">担当 "+esc(r.staff_emoji||"?")+"　<span class=\\"proom\\" style=\\"background:"+rc+"\\">"+esc(rn)+"</span></span><span class=\\"ppart\\">施術部位："+esc(pm)+"</span></button>";}el.innerHTML=h;window.__PICKS=list;var rows=el.querySelectorAll(".expickrow");for(var j=0;j<rows.length;j++){(function(k){rows[k].addEventListener("click",function(){chosen=window.__PICKS[k];showMenu();});})(j);}}' +
     'var isNewCust=false;' +
