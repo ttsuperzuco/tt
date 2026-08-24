@@ -2137,14 +2137,14 @@ function renderCostPage_(base, staff, dev) {
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
     'var b=document.getElementById("cgo"),st=document.getElementById("cstatus"),res=document.getElementById("cres");' +
-    'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
+    'function esc(s){return (s==null?"":String(s)).replace(/[&<>\"\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\x27":"&#39;"}[c];});}' +
     'function jsonp(params,onR){var cb="__ct"+Date.now()+Math.floor(Math.random()*1000);' +
     'window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
     'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();' +
     'sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
     'function fit(f){try{f.style.height="0";var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
-    'function show(html){res.innerHTML="<iframe id=\\"cframe\\" class=\\"cframe\\" srcdoc=\\""+esc(html)+"\\"></iframe>";' +
+    'function show(html){res.innerHTML="<iframe id=\"cframe\" class=\"cframe\" srcdoc=\""+esc(html)+"\"></iframe>";' +
     'var f=document.getElementById("cframe");f.addEventListener("load",function(){fit(f);});' +
     'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1800);}' +
     'var polls=0;function poll(id){polls++;if(polls>200){st.textContent="時間がかかりすぎました。もう一度お試しください。";b.disabled=false;return;}' +
