@@ -23,9 +23,14 @@
 
   /* ── ① 開始時間の文 ───────────────────────────────
      rvdt＝{mm,dd,hh,mi}／weekday＝"水" など。読めていなければ「―」。 */
-  NR.startText = function (rvdt, weekday) {
+  NR.startText = function (rvdt, weekday, timeMissing) {
     var d = rvdt;
     if (!d || d.mm == null) return "―";
+    // ★時刻が読めなかった用紙は、日付だけ出して「時刻を入れてください」と促す（2026-08-25）。
+    if (timeMissing) {
+      var wd0 = weekday ? ("（" + weekday + "）") : "";
+      return Number(d.mm) + "月" + Number(d.dd) + "日" + wd0 + " ★時刻を入れてください";
+    }
     var wd = weekday ? ("（" + weekday + "）") : "";
     var mi = String(d.mi);
     if (mi.length < 2) mi = "0" + mi;
@@ -178,7 +183,13 @@
        ★これが要る理由＝枠ごとの空きは事務所パソコンに聞きに行くので数秒あとに届く。
          その間ボタンが押せると、ふさがっているのに登録できてしまう隙ができる（実測で起きた）。
      返り：{ ok:登録してよいか, ng:[{name, why}], msg:画面に出す1行 } */
-  NR.canRegister = function (rows, checking) {
+  NR.canRegister = function (rows, checking, timeMissing) {
+    // ★時刻が読めなかった用紙（昔は時刻の欄が無かった）＝人が「開始時間」を入れるまで登録させない
+    //   （2026-08-25 まるちゃん決定）。
+    if (timeMissing) {
+      return { ok: false, ng: [{ name: "", why: "開始時間が入っていません" }],
+               msg: "開始時間が読み取れませんでした。上の「修正」から時刻を入れてください。" };
+    }
     if (checking) {
       return { ok: false, ng: [{ name: "", why: "確かめ中" }],
                msg: "空き具合を確かめています。少しお待ちください。" };

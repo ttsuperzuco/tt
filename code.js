@@ -3854,7 +3854,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'buildOrderUI();}' +
     'if(!v.counselSec&&!v.rebuildOrder){var cw2=document.getElementById("cosmosWarn");if(cw2)cw2.style.display="none";}}' +
     // ★開始時間「〇月〇日（水）〇時〇分」を出す。
-    'function nrStartText(){return NR.startText(window.__rvdt,window.__nrWd);}' +
+    'function nrStartText(){return NR.startText(window.__rvdt,window.__nrWd,!!window.__nrTimeMissing);}' +
     // ★決まっていない枠があれば「この内容で登録する」を押せなくする（2026-08-24 まるちゃん決定）。
     //   ＝登録の処理は空き具合を見ないので、押せると同じ部屋に二重で予約が入ってしまう。
     //   何が決まっていないかの判断は共通の1本（NR.canRegister）に聞く＝パソコン版と必ず同じ。
@@ -3870,7 +3870,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'else{var needC=(window.__nrNeedCounsel&&sel.needc!=="no");' +
     'if(needC)rows.push({name:"カウンセリング",locked:false,staffOk:nrAnySel("counsel"),roomNeeded:false,roomOk:true});' +
     'rows.push({name:"施術",locked:false,staffOk:nrAnySel("staff"),roomNeeded:!window.__nrMayu,roomOk:nrAnySel("room")});}' +
-    'var r=NR.canRegister(rows,!!window.__nrAvPending);window.__nrCanReg=r;btn.disabled=!r.ok;' +
+    'var r=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing);window.__nrCanReg=r;btn.disabled=!r.ok;' +
     'if(ngbox){ngbox.textContent=r.msg;ngbox.style.display=r.ok?"none":"";}' +
     // ★担当か部屋が決まらない＝中身が確定しないので、タイトルは出さない（判断は共通の1本に聞く）。
     'var tv=NR.titleView(r),tsec=document.getElementById("secTitle");' +
@@ -3907,7 +3907,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var y=window.__nrDate?Number(window.__nrDate.slice(0,4)):(new Date()).getFullYear();var dt=new Date(y,mm-1,dd);var today=new Date();today.setHours(0,0,0,0);' +
     'if((today-dt)>31*24*3600*1000){y+=1;dt=new Date(y,mm-1,dd);}' +
     'if(dt.getMonth()!==mm-1){szPopup_("その日付はありません。");return;}' +
-    'window.__rvdt={mm:mm,dd:dd,hh:hh,mi:mi};' +
+    'window.__rvdt={mm:mm,dd:dd,hh:hh,mi:mi};window.__nrTimeMissing=false;' +
     'window.__nrDate=y+"-"+(mm<10?"0":"")+mm+"-"+(dd<10?"0":"")+dd;' +
     'window.__nrWd="日月火水木金土".charAt(dt.getDay());window.__nrSat=(dt.getDay()===6);' +
     'close();nrShowStart();nrRecheckAvail();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
@@ -3998,7 +3998,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(d.tw){selVal("tw",d.tw);if(stw)stw.style.display="none";}else if(stw)stw.style.display="";' +          // 読めたら国籍欄は隠す
     'var scn=document.getElementById("secCounsel");if(scn)scn.style.display=d.datsumo?"":"none";' +            // カウンセリング担当は脱毛のときだけ
     // ★開始時間の欄に出す材料を覚える（2026-08-21 まるちゃん）。パソコン版と同じ作り。
-    'window.__nrDate=d.date||"";window.__nrWd=d.weekday||"";window.__nrNeedCounsel=!!d.need_counsel;' +
+    'window.__nrDate=d.date||"";window.__nrWd=d.weekday||"";window.__nrNeedCounsel=!!d.need_counsel;window.__nrTimeMissing=!!d.time_missing;' +
     'window.__nrMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");window.__nrSat=d.date?(new Date(d.date+"T00:00:00").getDay()===6):false;' +
     // ★2026-08-24 まるちゃん指摘「スマホだけ⑤カウンセリング担当が出る。1つ目でカウンセリング担当を
     //   選ぶので重複」。原因＝出す/隠すの判断(nrApplyNeedC)を、枠を組み立てる前にやっていたので
