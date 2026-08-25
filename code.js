@@ -3990,7 +3990,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
     'prevEl.value=d.memo||"";selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);if(d.room)selVal("room",d.room);window.__rvdt={mm:d.mm,dd:d.dd,hh:d.hh,mi:d.mi};' +
-    'var _mm=d.memo||"",_hasPro=(/procell/i.test(_mm)||/プロセル/.test(_mm)||/プロ肌|プロ頭|プロ(?!グラム)/.test(_mm)),_hasF=(/顔プロセル/.test(_mm)||/プロ肌/.test(_mm)),_hasS=(/頭皮プロセル/.test(_mm)||/プロ頭/.test(_mm));var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display=(_hasPro&&!_hasF&&!_hasS)?"":"none";window.__procellWord=d.procell_face_word||"トライアル";var _pp=document.querySelector(\'[data-procell="顔プロセルPro"]\');if(_pp)_pp.textContent="顔プロセルPro "+window.__procellWord;var _pm=document.querySelector(\'[data-procell="顔プロセルMD"]\');if(_pm)_pm.textContent="顔プロセルMD "+window.__procellWord;' +
+    'var _mm=d.memo||"",_hasPro=(/procell/i.test(_mm)||/プロセル/.test(_mm)||/プロ肌|プロ頭|プロ(?!グラム)/.test(_mm)),_hasF=(/顔プロセル/.test(_mm)||/プロ肌/.test(_mm)),_hasS=(/頭皮プロセル/.test(_mm)||/プロ頭/.test(_mm));var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display=(_hasPro&&!_hasF&&!_hasS)?"":"none";window.__procellWord=d.procell_face_word||"トライアル";var _pp=document.querySelector(\'[data-procell="顔プロセルPro"]\');if(_pp)_pp.textContent="顔プロセルPro "+window.__procellWord;var _pm=document.querySelector(\'[data-procell="顔プロセルMD"]\');if(_pm)_pm.textContent="顔プロセルMD "+window.__procellWord;window.__nrCouns=d.counseling||{kind:"3",hint:false,memos:{}};window.__nrApplyCouns(NR.counselingView(window.__nrCouns.kind,window.__nrCouns.hint));' +
     // ★2026-08-24 まるちゃん指摘「タイトルが後から表示される」＝ここではまだ画面に出さない。
     //   タイトルまで作り終えてから、下の refreshTitles の答えが返った所でまとめて1回だけ出す。
     'var sg=document.getElementById("secGender"),stw=document.getElementById("secTw");' +
@@ -4019,6 +4019,8 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★万一タイトルの返事が返ってこなくても、20秒たったら他の欄だけは出す（画面が出ないままにしない）。
     'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";});' +
+    'window.__nrApplyCouns=function(v){var box=document.getElementById("nrCounsAsk");if(!box)return;box.style.display=v.shown?"":"none";var lb=document.getElementById("nrCounsLabel");if(lb)lb.textContent=v.label;var wy=document.getElementById("nrCounsWhy"),why=(window.__nrCouns&&window.__nrCouns.why)||"";if(wy){wy.textContent=why?("AIが読んだ理由："+why):"";wy.style.display=why?"":"none";}var bs=document.querySelectorAll("[data-couns]");for(var i=0;i<bs.length;i++){if(bs[i].getAttribute("data-couns")===String(v.sel))bs[i].classList.add("sel");else bs[i].classList.remove("sel");}};' +
+    'var _cab=document.querySelectorAll("[data-couns]");for(var _j=0;_j<_cab.length;_j++){_cab[_j].addEventListener("click",function(){var k=this.getAttribute("data-couns"),c=window.__nrCouns||{memos:{}};prevEl.value=NR.counselingMemo(c.memos,k,prevEl.value);prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";c.kind=k;window.__nrApplyCouns(NR.counselingView(k,true));if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var base=this.getAttribute("data-procell");var tw=(base==="頭皮プロセル")?"トライアル":(window.__procellWord||"トライアル");var sh=(base==="頭皮プロセル")?"プロ頭":(base==="顔プロセルPro"?"プロ肌Pro":"プロ肌MD");var full=sh+" "+tw.replace("キャンペーン","キャ").replace("トライアル","トラ");var lines=prevEl.value.split("\\n");for(var k=0;k<lines.length;k++){lines[k]=lines[k].replace(/(?:(?:顔|頭皮)?プロセル(?:セラピーズ)?|procell|プロ肌|プロ頭|プロ(?!グラム))(?:[ \\u3000]*(?:キャンペーントライアル|トライアル|キャトラ|トラ))?/gi,full);}prevEl.value=lines.join("\\n");prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
     'readEl.disabled=true;prevT0=Date.now();status("変換中です。通常は10秒以内に終わります。",false);' +
@@ -4073,6 +4075,16 @@ function renderNewReservationPage_(base, staff, dev) {
             '<button type="button" class="nrpill" data-procell="顔プロセルPro" style="background:#2563eb">顔プロセルPro</button>' +
             '<button type="button" class="nrpill" data-procell="顔プロセルMD" style="background:#0891b2">顔プロセルMD</button>' +
             '<button type="button" class="nrpill" data-procell="頭皮プロセル" style="background:#7c3aed">頭皮プロセル</button>' +
+          '</div>' +
+        '</div>' +
+        // ★相談（カウンセリング）の回か＝AIが読んだ答えを初期値に出し、スタッフが押して直せる（2026-08-25 まるちゃん）
+        '<div id="nrCounsAsk" style="display:none">' +
+          '<div id="nrCounsLabel" style="background:#1e3a8a;color:#dbeafe;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0"></div>' +
+          '<div id="nrCounsWhy" style="display:none;color:#cbd5e1;font-size:14px;line-height:1.5;margin:0 2px 6px"></div>' +
+          '<div class="nrpills">' +
+            '<button type="button" class="nrpill" data-couns="1">①相談だけ（施術なし）</button>' +
+            '<button type="button" class="nrpill" data-couns="2">②相談してから決める</button>' +
+            '<button type="button" class="nrpill" data-couns="3">③ふつうの施術</button>' +
           '</div>' +
         '</div>' +
       '</div>' +
