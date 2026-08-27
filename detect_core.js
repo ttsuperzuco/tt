@@ -246,7 +246,8 @@ function detect(events, withNail, dateFrom) {
  *
  * 「同じ担当（タイトル先頭の果物マーク）が・同じ日で・時間帯が重なる別の予約を持つ」＝
  * 1人が同時に2件を掛け持ちしている状態を探す。部屋は問わない。除外は施術室被りと同じ
- * （🥝＝自店外／分施＝意図的同時／同伴家族。同一客二重は dup_suspect の印だけ付けて出す）。
+ * （NAIL＝うちのサービスでない／🥝＝自店外／分施＝意図的同時／同伴家族。
+ *   同一客二重は dup_suspect の印だけ付けて出す）。
  */
 function detectStaff(events, dateFrom) {
   function roomOf(r) {
@@ -256,12 +257,22 @@ function detectStaff(events, dateFrom) {
     return (n != null) ? n : '';
   }
 
-  // --- 対象の絞り込み（預約・担当マークあり・🥝でない・dateFrom以降）---
+  // --- 対象の絞り込み（預約・ネイル以外・担当マークあり・🥝でない・dateFrom以降）---
   var target = [];
   for (var i = 0; i < events.length; i++) {
     var r = events[i];
     if (dateFrom && (r.date || '') < dateFrom) continue;
     if ((r.title || '').indexOf(RESERVE_MARK) === -1) continue;
+    // ★ネイル(ラベル7)はうちのサービスでない＝外部の方の間借り。施術室被りが既に恒久除外して
+    //   いるのと同じ理由で、施術者被りからも部屋そのもので外す（2026-08-27まるちゃん指示）。
+    //   🥝の判定だけでは足りない：staffOf はタイトル「先頭の1文字」しか見ないので、
+    //   「🖐🏻🦶🏻🥝💅🏻預約N240」のように🥝が先頭でない書き方だと素通りし、ネイルの二重登録が
+    //   うちの担当のかけ持ちとして出てしまう（11/14 N240で実際に発生）。
+    //   ★逆に「タイトルのどこかに🥝があれば外す」にしてはいけない：うちのお客様の予約にも
+    //   🥝が混じる書き方が221件あり、本物の被りを隠してしまう（実データで確認済み）。
+    //   ※detect_core.py の detect_staff と同じ位置・同じ判定にすること（parityで担保）。
+    var effRoom_ = roomLabelOf(r.calendar_id, r.label_id, r.title || '', ALL_ROOM_LABELS);
+    if (effRoom_ != null && (effRoom_ in NAIL_LABEL)) continue;
     var s = staffOf(r.title || '');
     if (!s || s === IGNORE_STAFF) continue;
     r._staff = s;
