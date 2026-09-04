@@ -2039,18 +2039,26 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});' +
   'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);setTimeout(function(){fit(f);},3200);' +
   'window.addEventListener("resize",function(){fit(f);});}' +
-  // ★2026-08-24：あきらめるまでを 52秒 → 208秒（1.3秒×160回）。前日お知らせ作りは実データで最長45秒あり、
-  //   52秒では足りない回が出る＝出来ているのに「時間切れ」と出てしまう。
-  'var polls=0;function poll(id){polls++;if(polls>160){setSt("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。","err");lock(false);return;}' +
+  // ★2026-09-04：あきらめるまでの回数を**自分で決めない**。事務所パソコンが許している秒数
+  //   （受付係のコードから機械で写した op_limits.js）に聞く＝LIMITS.tries("zenjitsu",1300)。
+  //   前は「1.3秒×160回＝208秒」と手で書いており、事務所側を伸ばしても画面が先にあきらめる形だった。
+  //   （元の数字は2026-08-24に「お知らせ作りは実データで最長45秒」の前提で決めた物。
+  //     その後8/25に下ごしらえ（最新化＋やること一覧の作り直し）が入って中身が重くなっている。）
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("zenjitsu",1300)){setSt("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。","err");lock(false);return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");lock(false);return;}' +
-  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1300);return;}' +
+  /* ★待っている間、何秒たったかを出す（パソコンの窓と同じ）。長くかかる時に固まったように見えないため。 */
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){' +
+  'setSt(waitMsg+"（"+Math.round((Date.now()-startedAt)/1000)+"秒）","wait");' +
+  'setTimeout(function(){poll(id);},1300);return;}' +
   'lock(false);' +
   'if(r.status!=="done"){setSt("作成に失敗しました："+esc(r.result||r.status),"err");return;}' +
   'jsonp({action:"data",name:"notice_"+slot+".json"},function(d){showResult(d);});});}' +
   /* ★押したボタンの方で作る（mode="all"＝全員分／"unsent"＝まだLINEで送っていない人の分だけ）。
      依頼の中身は必ず fields のひとまとめ箱に入れる＝Google側の窓口は中身を判断せず素通しするだけ。 */
+  'var waitMsg="",startedAt=0;' +
   'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選んでください。","err");return;}' +
-  'lock(true);setSt((mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…（通常、数十秒かかります）":"全員分を事務所PCで作成中…（通常、数十秒かかります）","wait");' +
+  'waitMsg=(mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…":"全員分を事務所PCで作成中…";startedAt=Date.now();' +
+  'lock(true);setSt(waitMsg+"（通常、数十秒かかります）","wait");' +
   'resEl.innerHTML="";polls=0;' +
   'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode})},' +
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");lock(false);return;}setTimeout(function(){poll(r.id);},1000);});}' +
