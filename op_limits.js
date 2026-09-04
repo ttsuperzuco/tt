@@ -33,7 +33,7 @@
     "timedsend_cancel": 180,
     "timedsend_list": 60,
     "translate": 120,
-    "zenjitsu": 180
+    "zenjitsu": 360
   };
   /* 窓口との往復にかかるおよその時間（実測）。 */
   LIMITS.roundTripMs = 1100;
