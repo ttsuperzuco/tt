@@ -172,6 +172,39 @@
     return { shown: true, rows: rows };
   };
 
+  /* ── ⑪-1 予約メモに【要確認】が残っていないか ─────────────────
+     ★まるちゃん決定（2026-09-04）：**変換した予約メモに【要確認】が残っている間は登録させない**。
+       ＝分からないまま登録すると、その中身がそのままお客様への前日お知らせに流れる。
+     memo＝白い枠の**今の文**（人が直したあとの文を見る）。
+     返り＝要確認になっている物の名前の並び（例 ["メニュー"]）。無ければ空。
+     ★名前の取り方（実際に出る書き方を全部見て決めた）：
+       「要確認：メニュー」→メニュー ／「要確認：経由 Ig看到」→経由 ／
+       「部位を要確認：LINE会話を見る」→部位 ／「経由→【要確認】」→経由（同じ行の頭から取る）。
+       どれでも取れない長い文は「予約メモ」とだけ言う（勝手に言葉を作らない）。 */
+  NR.pendingChecks = function (memo) {
+    var s = String(memo || ""), out = [], re = /【([^】]*)】/g, m;
+    while ((m = re.exec(s))) {
+      var inner = m[1] || "";
+      var word = (inner.indexOf("要確認") >= 0) ? "要確認"
+               : (inner.indexOf("要記入") >= 0) ? "要記入" : "";
+      if (!word) continue;
+      var i = inner.indexOf(word);
+      var before = inner.slice(0, i).replace(/[をがの・\s　]+$/, "").split(/[・、]/).pop();
+      var after = inner.slice(i + word.length).replace(/^[：:\s　]+/, "").split(/[\s　＝=、。]/)[0];
+      var lab = "";
+      if (before && before.length <= 14) lab = before;
+      else if (after && after.length <= 14) lab = after;
+      if (!lab) {                       // 同じ行の【より前（例「経由→」）から取る
+        var head = s.slice(0, m.index).split("\n").pop() || "";
+        head = head.replace(/[◉●・\s　]/g, "").replace(/[→:：]+$/, "");
+        if (head && head.length <= 14) lab = head;
+      }
+      if (!lab) lab = "予約メモ";
+      if (out.indexOf(lab) < 0) out.push(lab);
+    }
+    return out;
+  };
+
   /* ── ⑪-2 登録してよいか（決まっていない枠があれば押させない） ──────
      ★まるちゃん決定（2026-08-24）：「カウンセリングと脱毛のどちらか、あるいは複数のサービスの
        どれかが**確定できない状態**のときは、登録ボタンが押せないようにする」。
@@ -182,8 +215,19 @@
      checking＝**まだ空き具合の答えを待っている**（true の間は押させない）。
        ★これが要る理由＝枠ごとの空きは事務所パソコンに聞きに行くので数秒あとに届く。
          その間ボタンが押せると、ふさがっているのに登録できてしまう隙ができる（実測で起きた）。
+     memo＝白い枠の今の文（【要確認】が残っている間は押させない・2026-09-04 まるちゃん決定）。
      返り：{ ok:登録してよいか, ng:[{name, why}], msg:画面に出す1行 } */
-  NR.canRegister = function (rows, checking, timeMissing) {
+  NR.canRegister = function (rows, checking, timeMissing, memo) {
+    // ★予約メモに【要確認】が残っている間は登録させない（2026-09-04 まるちゃん決定）。
+    //   ＝分からないまま登録すると、その中身がそのままお客様への前日お知らせに流れる。
+    var pend = NR.pendingChecks(memo);
+    if (pend.length) {
+      var ngp = [];
+      for (var p = 0; p < pend.length; p++) ngp.push({ name: pend[p], why: "要確認のままです" });
+      return { ok: false, ng: ngp,
+               msg: pend.join("・") + "が要確認になっています。正しい内容に修正してから、" +
+                    "「この内容で登録する」を押してください。" };
+    }
     // ★時刻が読めなかった用紙（昔は時刻の欄が無かった）＝人が「開始時間」を入れるまで登録させない
     //   （2026-08-25 まるちゃん決定）。
     if (timeMissing) {
