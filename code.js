@@ -3721,7 +3721,7 @@ function renderBroadcastPage_(base, staff, dev) {
     'width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;}' +
     '.bc textarea{min-height:150px;}' +
     '.bcrow{display:flex;gap:10px;}.bcrow>div{flex:1;}' +
-    '.bcbanner{padding:10px 12px;border-radius:12px;font-weight:800;margin:6px 4px 10px;font-size:14px;}' +
+    '.bcbanner{padding:10px 12px;border-radius:12px;font-weight:800;margin:6px 4px 10px;font-size:14px;color:#0f172a;}' +
     '.bcstep{font-size:13px;color:#e6f3f8;opacity:.9;margin:0 4px 6px;font-weight:700;}' +
     '.bccard{background:#fff;border-radius:14px;padding:14px 16px;margin:10px 0;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
     '.bcname{font-weight:800;font-size:19px;color:#0f172a;}' +
@@ -3794,7 +3794,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'box.innerHTML=\'<div class="bccard"><div class="bcname">どのまとまりを送りますか</div>\'+' +
   '\'<div class="bcwho">いまは「\'+esc(CAT)+\'」の\'+TPL.length+\'通りです。1つずつ中身を決めて進みます。</div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcstart">はじめる</button>\'+' +
-  '\'<div class="bclbl" style="margin-top:26px">置いた配信（新しい順）</div><div id="bclist">読み込み中…</div>\';' +
+  '\'<div class="bclbl" style="margin-top:26px">予約した配信（新しい順）</div><div id="bclist">読み込み中…</div>\';' +
   'document.getElementById("bcstart").onclick=function(){step=0;mode="";draw();};' +
   'loadList();}' +
   'function drawOne(){' +
@@ -3823,7 +3823,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcnext"\'+(n?"":" disabled")+\'>この相手はこれで完了 →</button>\'+' +
   '\'<button type="button" class="bcskip" id="bcskip">この相手は送らない（飛ばす）</button>\';' +
-  'if(step>0)h+=\'<button type="button" class="bcback2" id="bcprev">← 前の相手にもどる</button>\';}' +
+  'if(step>0)h+=\'<button type="button" class="bcback2" id="bcprev">◀ 1つ前の相手を直す</button>\';}' +
   'box.innerHTML=h;bindOne();}' +
   'function bindOne(){' +
   'var d=DATA[step];' +
@@ -3862,9 +3862,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'</div><div class="bclbl">送る日時（1本目。2本目からは少しずつ後ろへずらします）</div>\'+' +
   '\'<div class="bcrow"><div><input type="date" id="bcdate" value="\'+t.getFullYear()+"-"+two(t.getMonth()+1)+"-"+two(t.getDate())+\'"></div>\'+' +
   '\'<div><input type="time" id="bctime" value="11:00"></div></div>\'+' +
-  '\'<button type="button" class="bcgo" id="bcplace">この内容で置く</button>\'+' +
-  '\'<button type="button" class="bcback2" id="bcprev2">← 相手の設定にもどる</button>\'+' +
-  '\'<div class="bclbl" style="margin-top:26px">置いた配信（新しい順）</div><div id="bclist">読み込み中…</div>\';' +
+  '\'<button type="button" class="bcgo" id="bcplace">この内容で配信を予約する</button>\'+' +
+  '\'<button type="button" class="bcback2" id="bcprev2">◀ 相手の設定を直す</button>\'+' +
+  '\'<div class="bclbl" style="margin-top:26px">予約した配信（新しい順）</div><div id="bclist">読み込み中…</div>\';' +
   'box.innerHTML=h;' +
   'document.getElementById("bcprev2").onclick=function(){step=TPL.length-1;mode="";draw();};' +
   'document.getElementById("bcplace").onclick=doPlace;' +
@@ -3875,22 +3875,22 @@ function renderBroadcastPage_(base, staff, dev) {
   'var items=[],n=0;' +
   'TPL.forEach(function(t,i){var ps=DATA[i].parts;if(!ps.length)return;n++;' +
   'items.push({name:t.name,parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
-  'if(!n){status("中身の入っている相手が1つもありません。",true);return;}' +
-  'szPopup_(dateEl.value+" "+timeEl.value+" から、"+n+"通りを置きます。よろしいですか？",{cancel:true,onYes:function(){try{' +
+  'if(!n){status("文章か画像を入れた相手が1つもありません。",true);return;}' +
+  'szPopup_(dateEl.value+" "+timeEl.value+" から、"+n+"通りの配信を予約します。よろしいですか？",{cancel:true,onYes:function(){try{' +
   'var go=document.getElementById("bcplace");go.disabled=true;' +
-  'szOvShow_(szBusyHtml_("配信を置いています"),"#2C7A99");' +
+  'szOvShow_(szBusyHtml_("配信を予約しています"),"#2C7A99");' +
   // その場で選んだ写真だけ先に窓口へ預ける（よく使う画像は名前だけでよい）
   'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
   'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
   'delete p.b64;});});' +
   'Promise.all(jobs).catch(function(){}).then(function(){setTimeout(function(){' +
   'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:dateEl.value,time:timeEl.value,items:items,who:idn.who})},' +
-  'function(d){go.disabled=false;szOvHide_();status(d.note||"置きました。",!d.ok);' +
+  'function(d){go.disabled=false;szOvHide_();status(d.note||"予約しました。",!d.ok);' +
   'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});}' +
   'loadList();},' +
   'function(m){go.disabled=false;szOvHide_();status(m,true);});},1200);});' +
   '}catch(err){var g2=document.getElementById("bcplace");if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
-  'status("置けませんでした："+(err&&err.message?err.message:err),true);}}});}' +
+  'status("予約できませんでした："+(err&&err.message?err.message:err),true);}}});}' +
   // ── 置いた配信の一覧 ────────────────────────────────
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
   'ask("bc_list",{},function(d){drawList(d.posts);},function(){el.textContent="読み込めませんでした。";});}' +
