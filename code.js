@@ -3701,70 +3701,105 @@ function renderTimedSendPage_(base, staff, dev) {
   script;
 }
 
-/** LINE一斉配信予約（スーパーズコ）＝相手のまとまりごとに、吹き出しを1つずつ作って進む画面。
+/** LINE一斉配信予約（スーパーズコ）＝送る対象ごとに、吹き出しを1つずつ作って進む画面。
  *  ★まるちゃんの決まり（2026-09-05）：
  *    ①①新規 日本男性から**1つずつ設定して次へ進む**（一度に全部出さない）
  *    ②吹き出しは**3つまで**（文章500文字で1つぶん／画像1枚で1つぶん）＝LINEの決まり
  *    ③1つ目が画像でも文章でもよい（**順番は人が決める**）
  *    ④画像は**よく使う画像**（プロセル・チャレンジ4の日本語/中文）から選べる＋別の画像も選べる
- *    ⑤**送る日時はいちばん最後**に決める
- *    ⑥使わない相手は**飛ばせる**
- *  ★型（誰に送るか）・安全弁・置く処理は全部事務所パソコン側＝ここは集めて渡すだけ。
- *  ★パソコン版は**この同じ画面を窓で開く**（部屋＆担当被り検出と同じやり方）＝見た目が必ずそろう。
- *  開発URL(?dev=1)専用。 */
+ *    ⑤**送る日時はいちばん最後**に決める／使わない対象は飛ばせる
+ *    ⑥言い方は「相手」ではなく**「対象」**
+ *  ★見た目は**部屋＆担当被り検出とそろえる**（まるちゃん「台湾トマトフォーマットで」）＝
+ *    実測して合わせた色：カード #131C2E ／ 中の小箱 #0B1220 ／ 文字 #E8EEF7 ／
+ *    added字 #94A3B8 ／ 枠 #26324A ／ 主要ボタン #2563EB。
+ *    ★**白いカードにしない**（一度そうして「見づらい」と言われた。地が濃い青なので浮いて見え、
+ *      さらに地の上に置いた濃い文字が読めなくなる）。
+ *  ★型（誰に送るか）・安全弁・予約する処理は全部事務所パソコン側＝ここは集めて渡すだけ。
+ *  ★パソコン版は**この同じ画面を窓で開く**（部屋＆担当被り検出と同じやり方）。開発URL専用。 */
 function renderBroadcastPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
-  var css = '.uhome{background:#131C2E;border:1px solid #26324A;color:#E8EEF7;'+'border-radius:10px;padding:10px 14px;font-size:.9rem;font-weight:700;box-shadow:none;}' +
-    '.bc{max-width:560px;margin:0 auto;padding:0 6px 48px;text-align:left;}' +
-    '.bccat{display:flex;align-items:center;gap:10px;margin:2px 4px 8px;font-size:14px;color:#e6f3f8;}' +
-    '.bccat b{background:#fff;color:#0f172a;border-radius:999px;padding:7px 16px;font-size:15px;}' +
-    '.bclbl{font-weight:800;margin:16px 4px 6px;font-size:16px;}' +
-    '.bc textarea,.bc input[type=date],.bc input[type=time],.bc select{' +
-    'width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;}' +
-    '.bc textarea{min-height:150px;}' +
-    '.bcrow{display:flex;gap:10px;}.bcrow>div{flex:1;}' +
-    '.bcbanner{padding:10px 12px;border-radius:12px;font-weight:800;margin:6px 4px 10px;font-size:14px;color:#0f172a;}' +
-    '.bcstep{font-size:13px;color:#e6f3f8;opacity:.9;margin:0 4px 6px;font-weight:700;}' +
-    '.bccard{background:#fff;border-radius:14px;padding:14px 16px;margin:10px 0;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
-    '.bcname{font-weight:800;font-size:19px;color:#0f172a;}' +
-    '.bcwho{font-size:12.5px;color:#64748b;margin:4px 0 0;}' +
-    '.bcpart{display:flex;align-items:center;gap:10px;background:#f1f5f9;border-radius:12px;padding:10px 12px;margin:8px 0;}' +
-    '.bcpart img{width:44px;height:44px;object-fit:cover;border-radius:8px;}' +
-    '.bcpno{font-weight:800;color:#0f766e;font-size:13px;white-space:nowrap;}' +
-    '.bcptx{flex:1;min-width:0;font-size:13.5px;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
-    '.bcdel{border:1px solid #b91c1c;background:#fff;color:#b91c1c;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:800;}' +
-    '.bcleft{font-size:13px;color:#475569;margin:10px 2px 4px;font-weight:700;}' +
-    '.bcadd{display:flex;gap:10px;margin-top:6px;}' +
-    '.bcadd button{flex:1;padding:14px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;background:#e2e8f0;color:#0f172a;}' +
-    '.bcadd button:disabled{opacity:.42;}' +
-    '.bcgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}' +
-    '.bcpick{background:#fff;border:2px solid #cbd5e1;border-radius:12px;padding:8px;text-align:center;}' +
+  var css =
+    // 「← 前に戻る」＝部屋被りと同じ濃い地（共通の白いボタンだとこの画面では文字が消える）
+    '.uhome{background:#131C2E;border:1px solid #26324A;color:#E8EEF7;border-radius:10px;' +
+    'padding:10px 14px;font-size:.9rem;font-weight:700;box-shadow:none;}' +
+    '.bc{max-width:560px;margin:0 auto;padding:0 4px 44px;text-align:left;}' +
+    // 上の帯（練習/本番）
+    '.bcbanner{padding:11px 14px;border-radius:12px;font-weight:800;margin:4px 0 12px;' +
+    'font-size:14px;color:#0f172a;line-height:1.5;}' +
+    // 配信内容＋いま何番目か（1行にまとめて場所を取らない）
+    '.bctop{display:flex;align-items:center;gap:10px;margin:0 2px 10px;flex-wrap:wrap;}' +
+    '.bctop .lb{font-size:13px;color:#B9CCDA;font-weight:700;}' +
+    '.bctop b{background:#131C2E;border:1px solid #26324A;color:#E8EEF7;border-radius:999px;' +
+    'padding:7px 15px;font-size:14.5px;font-weight:800;}' +
+    '.bctop .no{margin-left:auto;font-size:13px;color:#B9CCDA;font-weight:800;}' +
+    // カード（部屋被りと同じ）
+    '.bccard{background:#131C2E;border-radius:12px;padding:16px 16px 18px;margin:0 0 12px;' +
+    'box-shadow:0 1px 3px rgba(0,0,0,.06);color:#E8EEF7;}' +
+    '.bcname{font-size:26px;font-weight:900;line-height:1.25;}' +
+    '.bcwho{font-size:13px;color:#94A3B8;margin-top:6px;line-height:1.5;}' +
+    '.bchr{border-top:1px solid #26324A;margin:14px 0 12px;}' +
+    // 入れた中身（カードの中の小箱）
+    '.bcpart{display:flex;align-items:center;gap:10px;background:#0B1220;border-radius:10px;' +
+    'padding:9px 10px;margin:0 0 8px;}' +
+    '.bcpart img{width:42px;height:42px;object-fit:cover;border-radius:8px;flex:0 0 auto;}' +
+    '.bcpno{background:#26324A;color:#E8EEF7;border-radius:999px;padding:5px 10px;' +
+    'font-size:12px;font-weight:800;white-space:nowrap;flex:0 0 auto;}' +
+    '.bcptx{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    '.bcdel{border:1px solid #7f1d1d;background:#2a1214;color:#fca5a5;border-radius:9px;' +
+    'padding:7px 11px;font-size:12.5px;font-weight:800;flex:0 0 auto;}' +
+    '.bcempty{font-size:14px;color:#94A3B8;padding:2px 0 4px;}' +
+    '.bcleft{font-size:13px;color:#94A3B8;font-weight:700;margin:0 0 8px;}' +
+    // 「今やること」のボタン＝いちばん目立たせる
+    '.bcadd{display:flex;gap:10px;}' +
+    '.bcadd button{flex:1;padding:16px 8px;font-size:16.5px;font-weight:800;border:0;' +
+    'border-radius:12px;background:#2563EB;color:#fff;}' +
+    '.bcadd button:disabled{background:#26324A;color:#94A3B8;}' +
+    // 画像の選択
+    '.bcgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
+    '.bcpick{background:#0B1220;border:1px solid #26324A;border-radius:12px;padding:8px;text-align:center;}' +
     '.bcpick img{width:100%;border-radius:8px;display:block;}' +
-    '.bcpick span{display:block;font-size:12.5px;font-weight:800;color:#0f172a;margin-top:6px;}' +
-    '.bcgo{display:block;width:100%;margin:16px 0 6px;padding:18px;font-size:20px;font-weight:800;border:0;border-radius:16px;background:#2563eb;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
-    '.bcgo:disabled{opacity:.5;}' +
-    '.bcskip{display:block;width:100%;margin:4px 0 6px;padding:13px;font-size:15px;font-weight:800;border:1px solid #94a3b8;border-radius:14px;background:#fff;color:#475569;}' +
-    '.bcback2{display:block;width:100%;margin:4px 0 6px;padding:12px;font-size:14.5px;font-weight:800;border:1px solid #cbd5e1;border-radius:14px;background:#fff;color:#475569;}' +
-    '.bcsub{font-size:13.5px;padding:9px 14px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font-weight:800;}' +
-    '.bccount{font-size:13px;font-weight:800;margin:8px 2px;color:#0f766e;}' +
-    '.bccount.over{color:#b91c1c;}' +
-    '.bcsum{display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid #e2e8f0;font-size:14px;}' +
-    '.bcsum b{font-weight:800;color:#0f172a;}' +
-    '.bcsum span{color:#64748b;white-space:nowrap;}' +
-    '.bcstatus{font-weight:800;margin:10px 4px;font-size:15px;border-radius:12px;padding:0;}' +
-    '.bcstatus.on{background:#fff;color:#0f172a;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
-    '.bcstatus.ng{background:#7f1d1d;color:#fecaca;padding:10px 14px;}' +
-    '.bcitem{background:#fff;border-radius:12px;padding:10px 12px;margin:8px 0;box-shadow:0 1px 4px rgba(0,0,0,.1);}' +
-    '.bcit1{font-weight:800;font-size:14px;color:#0f172a;}' +
-    '.bcit2{font-size:12.5px;color:#64748b;margin-top:3px;}' +
-    '.bccx{margin-top:8px;font-size:13px;padding:7px 14px;border-radius:10px;border:1px solid #b91c1c;background:#fff;color:#b91c1c;font-weight:800;}';
+    '.bcpick span{display:block;font-size:12.5px;font-weight:800;color:#E8EEF7;margin-top:7px;}' +
+    '.bc input[type=file]{color:#E8EEF7;font-size:13px;}' +
+    // 文章
+    '.bc textarea,.bc input[type=date],.bc input[type=time]{width:100%;box-sizing:border-box;' +
+    'font-size:16.5px;padding:12px;border-radius:10px;border:1px solid #26324A;background:#fff;color:#0f172a;}' +
+    '.bc textarea{min-height:150px;line-height:1.6;}' +
+    '.bccount{font-size:13px;font-weight:800;margin:8px 2px 10px;color:#94A3B8;}' +
+    '.bccount.over{color:#fca5a5;}' +
+    // 進む・飛ばす
+    '.bcgo{display:block;width:100%;margin:0 0 10px;padding:17px;font-size:19px;font-weight:800;' +
+    'border:0;border-radius:12px;background:#2563EB;color:#fff;}' +
+    '.bcghost{display:block;width:100%;margin:0 0 10px;padding:14px;font-size:15px;font-weight:800;' +
+    'border:1px solid #26324A;border-radius:12px;background:#131C2E;color:#E8EEF7;}' +
+    '.bcmini{display:block;width:100%;margin:2px 0 8px;padding:10px;font-size:13.5px;font-weight:700;' +
+    'border:0;background:transparent;color:#B9CCDA;text-decoration:underline;}' +
+    // 最後の確認
+    '.bcsum{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;' +
+    'border-bottom:1px solid #26324A;font-size:15px;}' +
+    '.bcsum:last-child{border-bottom:0;}' +
+    '.bcsum b{font-weight:800;}' +
+    '.bcsum span{color:#94A3B8;white-space:nowrap;font-size:13.5px;}' +
+    '.bcsum span.on{color:#7dd3a0;font-weight:800;}' +
+    '.bcdt{display:flex;gap:10px;margin:0 0 12px;}.bcdt>div{flex:1;}' +
+    '.bclbl{font-size:13px;color:#B9CCDA;font-weight:800;margin:16px 2px 8px;}' +
+    // 予約した配信の一覧
+    '.bcitem{background:#131C2E;border-radius:11px;padding:11px 13px;margin:0 0 8px;color:#E8EEF7;}' +
+    '.bcit1{font-weight:800;font-size:14px;}' +
+    '.bcit2{font-size:12.5px;color:#94A3B8;margin-top:4px;}' +
+    '.bccx{margin-top:9px;font-size:12.5px;padding:7px 13px;border-radius:9px;' +
+    'border:1px solid #7f1d1d;background:#2a1214;color:#fca5a5;font-weight:800;}' +
+    // 知らせ
+    '.bcstatus{font-weight:800;margin:10px 2px;font-size:14.5px;border-radius:11px;padding:0;}' +
+    '.bcstatus.on{background:#131C2E;color:#E8EEF7;padding:11px 14px;}' +
+    '.bcstatus.ng{background:#2a1214;color:#fca5a5;padding:11px 14px;}';
   var script =
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
   'var TPL=[],PRE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="";' +
-  'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner"),stepEl=document.getElementById("bcstep");' +
+  'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
+  'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function status(t,err){stEl.textContent=t;stEl.className="bcstatus"+(t?(err?" ng":" on"):"");}' +
   'function jsonp(params,onR){var cb="__bc"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
@@ -3784,42 +3819,44 @@ function renderBroadcastPage_(base, staff, dev) {
   'onDone(d);});})();});}' +
   // ── 中身の言い方（1か所）────────────────────────────────
   'function preOf(key){for(var i=0;i<PRE.length;i++)if(PRE[i].key===key)return PRE[i];return null;}' +
-  'function partLabel(p){if(p.kind==="text")return "文章（"+p.text.length+"文字）　"+p.text.replace(/\\n/g," ").slice(0,26);' +
-  'var pr=preOf((p.src||"").replace("preset:",""));return pr?("画像　"+pr.label):"画像　その場で選んだ写真";}' +
+  'function partLabel(p){if(p.kind==="text")return "文章 "+p.text.length+"文字　"+p.text.replace(/\\n/g," ").slice(0,22);' +
+  'var pr=preOf((p.src||"").replace("preset:",""));return pr?pr.label:"その場で選んだ写真";}' +
   'function partThumb(p){if(p.kind==="text")return "";var pr=preOf((p.src||"").replace("preset:",""));' +
   'return pr?pr.thumb:(p.thumb||"");}' +
   'function filled(i){return (DATA[i]&&DATA[i].parts||[]).length;}' +
   // ── 画面を描く ────────────────────────────────────────
   'function draw(){' +
   'if(step<TPL.length){drawOne();}else{drawLast();}' +
-  'stepEl.textContent = (step<TPL.length)?("相手 "+(step+1)+" / "+TPL.length):"最後の確認";}' +
+  'noEl.textContent=(step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認";}' +
   'function drawOne(){' +
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
   'var h=\'<div class="bccard"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
-  '\'<div class="bcwho">送る相手：\'+esc(t.who)+\'</div></div>\';' +
+  '\'<div class="bcwho">\'+esc(t.who)+\'</div><div class="bchr"></div>\';' +
   'if(n){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
   '(th?(\'<img src="\'+th+\'">\'):"")+\'<span class="bcptx">\'+esc(partLabel(p))+\'</span>\'+' +
   '\'<button type="button" class="bcdel" data-del="\'+i+\'">消す</button></div>\';}).join("");}' +
-  'else{h+=\'<div class="bcleft">まだ何も入っていません。</div>\';}' +
+  'else{h+=\'<div class="bcempty">まだ何も入っていません。下のボタンで画像か文章を入れてください。</div>\';}' +
   'if(mode==="img"){' +
-  'h+=\'<div class="bcleft">よく使う画像から選ぶ</div><div class="bcgrid">\'+' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">よく使う画像から選ぶ</div><div class="bcgrid">\'+' +
   'PRE.map(function(p){return \'<button type="button" class="bcpick" data-pre="\'+esc(p.key)+\'">\'+' +
   '\'<img src="\'+p.thumb+\'"><span>\'+esc(p.label)+\'</span></button>\';}).join("")+\'</div>\'+' +
-  '\'<div class="bcleft">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
-  '\'<button type="button" class="bcback2" id="bccancel">やめる</button>\';}' +
+  '\'<div class="bcleft" style="margin-top:14px">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
+  '\'</div><button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="txt"){' +
-  'h+=\'<div class="bcleft">文章を入れる</div><textarea id="bctxt" placeholder="この相手へ送る文章"></textarea>\'+' +
-  '\'<div class="bccount" id="bccnt">0 / \'+MAXT+\' 文字</div>\'+' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">文章を入れる（\'+MAXT+\'文字まで）</div>\'+' +
+  '\'<textarea id="bctxt" placeholder="この対象へ送る文章"></textarea>\'+' +
+  '\'<div class="bccount" id="bccnt">0 / \'+MAXT+\' 文字</div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcaddtxt">この文章を入れる</button>\'+' +
-  '\'<button type="button" class="bcback2" id="bccancel">やめる</button>\';}' +
+  '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else{' +
-  'h+=\'<div class="bcleft">あと \'+left+\' つ入れられます（ぜんぶで\'+MAXP+\'つまで）</div>\'+' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">あと \'+left+\' つ入れられます（ぜんぶで\'+MAXP+\'つまで）</div>\'+' +
   '\'<div class="bcadd"><button type="button" id="bcimg"\'+(left?"":" disabled")+\'>🖼 画像を入れる</button>\'+' +
-  '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div>\'+' +
-  '\'<button type="button" class="bcgo" id="bcnext"\'+(n?"":" disabled")+\'>この相手はこれで完了 →</button>\'+' +
-  '\'<button type="button" class="bcskip" id="bcskip">この相手は送らない（飛ばす）</button>\';' +
-  'if(step>0)h+=\'<button type="button" class="bcback2" id="bcprev">◀ 1つ前の相手を直す</button>\';}' +
+  '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div></div>\';' +
+  // ★中身が無いうちは「完了」を出さない（押せない灰色ボタンを見せない＝迷わせない）
+  'if(n)h+=\'<button type="button" class="bcgo" id="bcnext">この対象はこれで完了 →</button>\';' +
+  'h+=\'<button type="button" class="bcmini" id="bcskip">この対象は送らない（飛ばす）</button>\';' +
+  'if(step>0)h+=\'<button type="button" class="bcmini" id="bcprev">◀ 1つ前の対象を直す</button>\';}' +
   'box.innerHTML=h;bindOne();}' +
   'function bindOne(){' +
   'var d=DATA[step];' +
@@ -3829,9 +3866,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(e=document.getElementById("bcimg"))e.onclick=function(){mode="img";draw();};' +
   'if(e=document.getElementById("bctx"))e.onclick=function(){mode="txt";draw();};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){mode="";draw();};' +
-  'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";draw();};' +
-  'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";draw();};' +
-  'if(e=document.getElementById("bcprev"))e.onclick=function(){step--;mode="";draw();};' +
+  'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";status("");draw();};' +
+  'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";status("");draw();};' +
+  'if(e=document.getElementById("bcprev"))e.onclick=function(){step--;mode="";status("");draw();};' +
   '[].slice.call(box.querySelectorAll("[data-pre]")).forEach(function(b){b.onclick=function(){' +
   'd.parts.push({kind:"image",src:"preset:"+b.getAttribute("data-pre")});mode="";draw();};});' +
   'var fe=document.getElementById("bcfile");' +
@@ -3851,48 +3888,48 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 最後（確認＋日時）────────────────────────────────
   'function drawLast(){' +
   'function two(n){return ("0"+n).slice(-2);}' +
-  'var t=new Date();t.setDate(t.getDate()+1);' +
-  'var h=\'<div class="bccard"><div class="bcname">最後の確認</div>\';' +
-  'TPL.forEach(function(x,i){var n=filled(i);' +
-  'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span>\'+(n?(n+"つ入り"):"送らない")+\'</span></div>\';});' +
-  'h+=\'</div><div class="bclbl">送る日時（1本目。2本目からは少しずつ後ろへずらします）</div>\'+' +
-  '\'<div class="bcrow"><div><input type="date" id="bcdate" value="\'+t.getFullYear()+"-"+two(t.getMonth()+1)+"-"+two(t.getDate())+\'"></div>\'+' +
-  '\'<div><input type="time" id="bctime" value="11:00"></div></div>\'+' +
-  '\'<button type="button" class="bcgo" id="bcplace">この内容で配信を予約する</button>\'+' +
-  '\'<button type="button" class="bcback2" id="bcprev2">◀ 相手の設定を直す</button>\'+' +
-  '\'<div id="bclist"></div>\';' +
+  'var t=new Date();t.setDate(t.getDate()+1);var m=0;' +
+  'var h=\'<div class="bccard"><div class="bcname">最後の確認</div><div class="bchr"></div>\';' +
+  'TPL.forEach(function(x,i){var n=filled(i);if(n)m++;' +
+  'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="\'+(n?"on":"")+\'">\'+' +
+  '(n?(n+"つ入り"):"送らない")+\'</span></div>\';});' +
+  'h+=\'</div><div class="bccard"><div class="bcleft">送る日時（1本目。2本目からは少しずつ後ろへずらします）</div>\'+' +
+  '\'<div class="bcdt"><div><input type="date" id="bcdate" value="\'+t.getFullYear()+"-"+two(t.getMonth()+1)+"-"+two(t.getDate())+\'"></div>\'+' +
+  '\'<div><input type="time" id="bctime" value="11:00"></div></div></div>\';' +
+  'if(m)h+=\'<button type="button" class="bcgo" id="bcplace">この内容で \'+m+\'通り 予約する</button>\';' +
+  'else h+=\'<div class="bcstatus on">中身を入れた対象がありません。下の「対象の設定を直す」から入れてください。</div>\';' +
+  'h+=\'<button type="button" class="bcghost" id="bcprev2">◀ 対象の設定を直す</button><div id="bclist"></div>\';' +
   'box.innerHTML=h;' +
-  'document.getElementById("bcprev2").onclick=function(){step=TPL.length-1;mode="";draw();};' +
-  'document.getElementById("bcplace").onclick=doPlace;' +
+  'document.getElementById("bcprev2").onclick=function(){step=TPL.length-1;mode="";status("");draw();};' +
+  'var pl=document.getElementById("bcplace");if(pl)pl.onclick=doPlace;' +
   'loadList();}' +
-  // ── 置く ────────────────────────────────────────────
+  // ── 予約する ────────────────────────────────────────
   'function doPlace(){' +
   'var dateEl=document.getElementById("bcdate"),timeEl=document.getElementById("bctime");' +
   'var items=[],n=0;' +
   'TPL.forEach(function(t,i){var ps=DATA[i].parts;if(!ps.length)return;n++;' +
   'items.push({name:t.name,parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
-  'if(!n){status("文章か画像を入れた相手が1つもありません。",true);return;}' +
+  'if(!n){status("文章か画像を入れた対象が1つもありません。",true);return;}' +
   'szPopup_(dateEl.value+" "+timeEl.value+" から、"+n+"通りの配信を予約します。よろしいですか？",{cancel:true,onYes:function(){try{' +
   'var go=document.getElementById("bcplace");go.disabled=true;' +
   'szOvShow_(szBusyHtml_("配信を予約しています"),"#2C7A99");' +
-  // その場で選んだ写真だけ先に窓口へ預ける（よく使う画像は名前だけでよい）
   'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
   'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
   'delete p.b64;});});' +
   'Promise.all(jobs).catch(function(){}).then(function(){setTimeout(function(){' +
   'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:dateEl.value,time:timeEl.value,items:items,who:idn.who})},' +
   'function(d){go.disabled=false;szOvHide_();status(d.note||"予約しました。",!d.ok);' +
-  'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});}' +
+  'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});draw();}' +
   'loadList();},' +
-  'function(m){go.disabled=false;szOvHide_();status(m,true);});},1200);});' +
+  'function(m2){go.disabled=false;szOvHide_();status(m2,true);});},1200);});' +
   '}catch(err){var g2=document.getElementById("bcplace");if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
   'status("予約できませんでした："+(err&&err.message?err.message:err),true);}}});}' +
-  // ── 置いた配信の一覧 ────────────────────────────────
+  // ── 予約した配信の一覧（中身があるときだけ出す）──────────────
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
-  'ask("bc_list",{},function(d){drawList(d.posts);},function(){el.textContent="読み込めませんでした。";});}' +
+  'ask("bc_list",{},function(d){drawList(d.posts);},function(){});}' +
   'function drawList(posts){var el=document.getElementById("bclist");if(!el)return;' +
   'if(!posts||!posts.length){el.innerHTML="";return;}' +
-  'el.innerHTML=\'<div class="bclbl" style="margin-top:26px">予約した配信（新しい順）</div>\'+posts.map(function(r){' +
+  'el.innerHTML=\'<div class="bclbl">予約した配信（新しい順）</div>\'+posts.map(function(r){' +
   'return \'<div class="bcitem"><div class="bcit1">\'+esc(r.st)+"　"+esc(r.at)+"　"+esc(r.template_name)+\'</div>\'+' +
   '\'<div class="bcit2">画像\'+r.imgs+\'枚　「\'+esc(r.head)+\'」\'+(r.note?("　"+esc(r.note)):"")+\'</div>\'+' +
   '(r.cancelable?(\'<button type="button" class="bccx" data-cx="\'+r.broadcast_id+\'">取り消し</button>\'):"")+' +
@@ -3900,26 +3937,26 @@ function renderBroadcastPage_(base, staff, dev) {
   '[].slice.call(el.querySelectorAll("[data-cx]")).forEach(function(b){b.onclick=function(){' +
   'szPopup_("この配信を取り消しますか？",{cancel:true,onYes:function(){status("取り消しています…");' +
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
-  'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m){status(m,true);});}});};});}' +
+  'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m3){status(m3,true);});}});};});}' +
   // ── 立ち上がり ────────────────────────────────────────
   'status("読み込んでいます…");' +
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
   'CAT=d.category||"";TPL=d.templates;PRE=d.presets||[];MAXP=d.max_parts||3;MAXT=d.max_text||500;' +
-  'document.getElementById("bccatname").textContent=CAT;' +
   'DATA=TPL.map(function(){return {parts:[]};});' +
+  'catEl.textContent=CAT;' +
   'if(d.banner){banEl.textContent=d.banner.text;' +
   'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":((d.banner.kind==="practice")?"#fff3cd":"#d1e7dd");}' +
   'status("");draw();' +
-  '},function(m){status(m,true);});' +
+  '},function(m4){status(m4,true);});' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
     '<h2 class="htitle">LINE一斉配信予約</h2>' +
     '<div class="bc">' +
       '<div class="bcbanner" id="bcbanner">読み込み中…</div>' +
-      '<div class="bccat">配信内容<b id="bccatname">…</b></div>' +
-      '<div class="bcstep" id="bcstep"></div>' +
+      '<div class="bctop"><span class="lb">配信内容</span><b id="bccatname">…</b>' +
+        '<span class="no" id="bcno"></span></div>' +
       '<div id="bcbody"></div>' +
       '<div class="bcstatus" id="bcstatus"></div>' +
     '</div>' +
