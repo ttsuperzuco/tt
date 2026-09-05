@@ -3797,7 +3797,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '},function(m){status(m,true);});' +
   // ── 今週の空き時間を入れる ─────────────────────────────
   'wakuEl.addEventListener("click",function(){status("空き時間を数えています…");wakuEl.disabled=true;' +
-  'ask("bc_waku",{fields:JSON.stringify({days:daysEl.value})},function(d){wakuEl.disabled=false;' +
+  'ask("bc_waku",{fields:JSON.stringify({days:daysEl.value,from:dateEl.value})},function(d){wakuEl.disabled=false;' +
   'var n=0;TPL.forEach(function(t,i){var v=(d.texts||{})[t.name];if(v==null)return;' +
   'var box=document.getElementById("bcmsg"+i);' +
   'box.value=box.value.trim()?(box.value.replace(/\\s+$/,"")+"\\n\\n"+v):v;if(v)n++;});' +
@@ -3809,8 +3809,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'TPL.forEach(function(t,i){var v=(document.getElementById("bcmsg"+i).value||"").trim();' +
   'var a=IMGS[i]||[];if(!v&&!a.length)return;n++;items.push({name:t.name,message:v,_imgs:a});});' +
   'if(!n){status("文章か画像を入れてください。",true);return;}' +
-  'szPopup_(dateEl.value+" "+timeEl.value+" から、"+n+"通りを置きます。よろしいですか？",{cancel:true,onYes:function(){' +
-  'goEl.disabled=true;szBusy_("配信を置いています","相手ごとに画像を預けてから置くので、少し時間がかかります。");' +
+  'szPopup_(dateEl.value+" "+timeEl.value+" から、"+n+"通りを置きます。よろしいですか？",{cancel:true,onYes:function(){try{' +
+  // ★待ち画面は szOvShow_(szBusyHtml_(…)) が正しい呼び方（szBusy_ はこの画面に無い）。
+  //   2026-09-05、szBusy_ と書いていて押した瞬間に止まり、ボタンが押せないままになった。
+  'goEl.disabled=true;szOvShow_(szBusyHtml_("配信を置いています"),"#2C7A99");' +
   // 画像を先に窓口へ預ける（1枚ずつ名前を付けて）。全部預け終わってから依頼を送る。
   'var jobs=[];items.forEach(function(it){it.images=[];(it._imgs||[]).forEach(function(o){' +
   'var nm=rnd();it.images.push(nm);jobs.push(pushImage(nm,o));});delete it._imgs;});' +
@@ -3819,7 +3821,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'items:items,who:idn.who})},function(d){goEl.disabled=false;szOvHide_();' +
   'status(d.note||"置きました。",!d.ok);' +
   'ask("bc_list",{},function(e){drawList(e.posts);},function(){});},' +
-  'function(m){goEl.disabled=false;szOvHide_();status(m,true);});},1200);});}});});' +
+  'function(m){goEl.disabled=false;szOvHide_();status(m,true);});},1200);});' +
+  // ★何かで転んでも、押せないままにしない（2026-09-05に待ち画面の呼び名を間違えて実際に固まった）。
+  '}catch(err){goEl.disabled=false;try{szOvHide_();}catch(e2){}' +
+  'status("置けませんでした："+(err&&err.message?err.message:err),true);}' +
+  '}});});' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
