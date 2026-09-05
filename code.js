@@ -3783,7 +3783,9 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'</div>\';}).join(""):\'<div class="bcit2" style="padding:6px">（まだありません）</div>\';' +
   '[].slice.call(listEl.querySelectorAll("[data-cx]")).forEach(function(b){b.addEventListener("click",function(){' +
   'szPopup_("この配信を取り消しますか？",{cancel:true,onYes:function(){status("取り消しています…");' +
-  'ask("bc_cancel",{fields:JSON.stringify({id:b.getAttribute("data-cx")})},function(d){' +
+  // ★名前は id ではなく bid。窓口(gas_pipe submit_)は依頼そのものに id を持っており、
+  //   「同じ名前は上書きしない」作りなので、fields の id は**捨てられて届かない**（2026-09-05に実機で判明）。
+  'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
   'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m){status(m,true);});}});});});}' +
   // ── 立ち上がり ────────────────────────────────────────
   'status("読み込んでいます…");' +
