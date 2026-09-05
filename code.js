@@ -3715,7 +3715,10 @@ function renderTimedSendPage_(base, staff, dev) {
 function renderBroadcastPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
-  var css = '.bc{max-width:560px;margin:0 auto;padding:0 6px 48px;text-align:left;}' +
+  var css = '.uhome{background:#131C2E;border:1px solid #26324A;color:#E8EEF7;'+'border-radius:10px;padding:10px 14px;font-size:.9rem;font-weight:700;box-shadow:none;}' +
+    '.bc{max-width:560px;margin:0 auto;padding:0 6px 48px;text-align:left;}' +
+    '.bccat{display:flex;align-items:center;gap:10px;margin:2px 4px 8px;font-size:14px;color:#e6f3f8;}' +
+    '.bccat b{background:#fff;color:#0f172a;border-radius:999px;padding:7px 16px;font-size:15px;}' +
     '.bclbl{font-weight:800;margin:16px 4px 6px;font-size:16px;}' +
     '.bc textarea,.bc input[type=date],.bc input[type=time],.bc select{' +
     'width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;}' +
@@ -3739,7 +3742,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcpick{background:#fff;border:2px solid #cbd5e1;border-radius:12px;padding:8px;text-align:center;}' +
     '.bcpick img{width:100%;border-radius:8px;display:block;}' +
     '.bcpick span{display:block;font-size:12.5px;font-weight:800;color:#0f172a;margin-top:6px;}' +
-    '.bcgo{display:block;width:100%;margin:16px 0 6px;padding:18px;font-size:20px;font-weight:800;border:0;border-radius:16px;background:#0f766e;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
+    '.bcgo{display:block;width:100%;margin:16px 0 6px;padding:18px;font-size:20px;font-weight:800;border:0;border-radius:16px;background:#2563eb;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
     '.bcgo:disabled{opacity:.5;}' +
     '.bcskip{display:block;width:100%;margin:4px 0 6px;padding:13px;font-size:15px;font-weight:800;border:1px solid #94a3b8;border-radius:14px;background:#fff;color:#475569;}' +
     '.bcback2{display:block;width:100%;margin:4px 0 6px;padding:12px;font-size:14.5px;font-weight:800;border:1px solid #cbd5e1;border-radius:14px;background:#fff;color:#475569;}' +
@@ -3760,7 +3763,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-  'var TPL=[],PRE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=-1,mode="";' +
+  'var TPL=[],PRE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="";' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner"),stepEl=document.getElementById("bcstep");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function status(t,err){stEl.textContent=t;stEl.className="bcstatus"+(t?(err?" ng":" on"):"");}' +
@@ -3788,15 +3791,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function filled(i){return (DATA[i]&&DATA[i].parts||[]).length;}' +
   // ── 画面を描く ────────────────────────────────────────
   'function draw(){' +
-  'if(step<0){drawStart();}else if(step<TPL.length){drawOne();}else{drawLast();}' +
-  'stepEl.textContent = (step<0)?"":((step<TPL.length)?("相手 "+(step+1)+" / "+TPL.length):"最後の確認");}' +
-  'function drawStart(){' +
-  'box.innerHTML=\'<div class="bccard"><div class="bcname">どのまとまりを送りますか</div>\'+' +
-  '\'<div class="bcwho">いまは「\'+esc(CAT)+\'」の\'+TPL.length+\'通りです。1つずつ中身を決めて進みます。</div></div>\'+' +
-  '\'<button type="button" class="bcgo" id="bcstart">はじめる</button>\'+' +
-  '\'<div class="bclbl" style="margin-top:26px">予約した配信（新しい順）</div><div id="bclist">読み込み中…</div>\';' +
-  'document.getElementById("bcstart").onclick=function(){step=0;mode="";draw();};' +
-  'loadList();}' +
+  'if(step<TPL.length){drawOne();}else{drawLast();}' +
+  'stepEl.textContent = (step<TPL.length)?("相手 "+(step+1)+" / "+TPL.length):"最後の確認";}' +
   'function drawOne(){' +
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
   'var h=\'<div class="bccard"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
@@ -3864,7 +3860,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div><input type="time" id="bctime" value="11:00"></div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcplace">この内容で配信を予約する</button>\'+' +
   '\'<button type="button" class="bcback2" id="bcprev2">◀ 相手の設定を直す</button>\'+' +
-  '\'<div class="bclbl" style="margin-top:26px">予約した配信（新しい順）</div><div id="bclist">読み込み中…</div>\';' +
+  '\'<div id="bclist"></div>\';' +
   'box.innerHTML=h;' +
   'document.getElementById("bcprev2").onclick=function(){step=TPL.length-1;mode="";draw();};' +
   'document.getElementById("bcplace").onclick=doPlace;' +
@@ -3895,11 +3891,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
   'ask("bc_list",{},function(d){drawList(d.posts);},function(){el.textContent="読み込めませんでした。";});}' +
   'function drawList(posts){var el=document.getElementById("bclist");if(!el)return;' +
-  'el.innerHTML=(posts&&posts.length)?posts.map(function(r){' +
+  'if(!posts||!posts.length){el.innerHTML="";return;}' +
+  'el.innerHTML=\'<div class="bclbl" style="margin-top:26px">予約した配信（新しい順）</div>\'+posts.map(function(r){' +
   'return \'<div class="bcitem"><div class="bcit1">\'+esc(r.st)+"　"+esc(r.at)+"　"+esc(r.template_name)+\'</div>\'+' +
   '\'<div class="bcit2">画像\'+r.imgs+\'枚　「\'+esc(r.head)+\'」\'+(r.note?("　"+esc(r.note)):"")+\'</div>\'+' +
   '(r.cancelable?(\'<button type="button" class="bccx" data-cx="\'+r.broadcast_id+\'">取り消し</button>\'):"")+' +
-  '\'</div>\';}).join(""):\'<div class="bcit2" style="padding:6px">（まだありません）</div>\';' +
+  '\'</div>\';}).join("");' +
   '[].slice.call(el.querySelectorAll("[data-cx]")).forEach(function(b){b.onclick=function(){' +
   'szPopup_("この配信を取り消しますか？",{cancel:true,onYes:function(){status("取り消しています…");' +
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
@@ -3909,6 +3906,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
   'CAT=d.category||"";TPL=d.templates;PRE=d.presets||[];MAXP=d.max_parts||3;MAXT=d.max_text||500;' +
+  'document.getElementById("bccatname").textContent=CAT;' +
   'DATA=TPL.map(function(){return {parts:[]};});' +
   'if(d.banner){banEl.textContent=d.banner.text;' +
   'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":((d.banner.kind==="practice")?"#fff3cd":"#d1e7dd");}' +
@@ -3920,6 +3918,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '<h2 class="htitle">LINE一斉配信予約</h2>' +
     '<div class="bc">' +
       '<div class="bcbanner" id="bcbanner">読み込み中…</div>' +
+      '<div class="bccat">配信内容<b id="bccatname">…</b></div>' +
       '<div class="bcstep" id="bcstep"></div>' +
       '<div id="bcbody"></div>' +
       '<div class="bcstatus" id="bcstatus"></div>' +
