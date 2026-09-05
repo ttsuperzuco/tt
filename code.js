@@ -5828,6 +5828,7 @@ function akiRoomRows_(roomsFree) {
 
 // 「予約可能枠」＝新規男性／既存男性／新規女性／既存女性の4区分で、案内できる来店時刻。
 // 中身の計算は事務所PCの 共通\予約可能枠.py が唯一の判断。ここは描くだけ（判断を書き写さない）。
+// 見せ方＝区分ごとにひとまとまり（中は日付順）＋区分ごとに【コピー】（まるちゃん指示 2026-09-05）。
 var AKI_WAKU_KINDS_ = ['新規男性', '既存男性', '新規女性', '既存女性'];
 function akiWakuColor_(kind) {
   if (kind === '新規男性') return '#2563eb';
@@ -5835,33 +5836,19 @@ function akiWakuColor_(kind) {
   if (kind === '新規女性') return '#db2777';
   return '#831843';
 }
-function akiWakuRows_(waku) {
-  if (!waku) return '<div class="akinone">データがありません</div>';
-  return AKI_WAKU_KINDS_.map(function (k) {
-    var list = waku[k] || [];
-    var chips = list.length
-      ? list.map(function (t) { return '<span class="akiwt">' + esc_(t) + '</span>'; }).join('')
-      : '<span class="akinone">なし</span>';
-    return '<div class="akirow">' +
-      '<span class="akiwk" style="background:' + akiWakuColor_(k) + '">' + esc_(k) + '</span>' +
-      '<span class="akiwts">' + chips + '</span>' +
-    '</div>';
-  }).join('');
-}
 
 // 1日ぶんのカード。data-date（ISO日付）を持たせて日にち検索の絞り込みに使う。
-// waku＝その日の予約可能枠（定休日は無い＝「予約可能枠」を選んだ時そのカードごと隠す）。
-function akiDayCard_(day, waku) {
+function akiDayCard_(day) {
   var dattr = ' data-date="' + esc_(day.date || '') + '"';
   if (day.kind === 'closed') {
-    return '<div class="akiday akinowaku"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    return '<div class="akiday"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
       '<div class="akiclosed">' + esc_(day.label) + '</div></div>';
   }
   if (day.empty) {
-    return '<div class="akiday akinowaku"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    return '<div class="akiday"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
       '<div class="akinone">（出勤スタッフなし）</div></div>';
   }
-  return '<div class="akiday' + (waku ? '' : ' akinowaku') + '"' + dattr + '>' +
+  return '<div class="akiday"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
     '<div class="akisec akisec-time" data-sec="time">' +
       akiTimeRows_(day.time_slots) +
@@ -5872,9 +5859,6 @@ function akiDayCard_(day, waku) {
     '<div class="akisec akisec-rooms akihidden" data-sec="rooms">' +
       akiRoomRows_(day.rooms_free) +
     '</div>' +
-    '<div class="akisec akisec-waku akihidden" data-sec="waku">' +
-      akiWakuRows_(waku) +
-    '</div>' +
   '</div>';
 }
 
@@ -5884,11 +5868,11 @@ function akiDayCard_(day, waku) {
  *  既定は各時間帯別だけON）。データは全部JSONに入っているので、切替に読み直しは不要。 */
 function renderAkijikanPage_(d, base, staff, dev) {
   var days = d.days || [];
-  var wmap = {};
-  (d.waku || []).forEach(function (w) { wmap[w.date] = w['枠']; });
   var cards = days.length
-    ? days.map(function (dd) { return akiDayCard_(dd, wmap[dd.date]); }).join('\n')
+    ? days.map(akiDayCard_).join('\n')
     : '<div class="akinone">データがありません</div>';
+  // 予約可能枠は日付の絞り込みに合わせてその場で組み直すので、素の材料をページに載せておく。
+  var wakuData = '<script>var AKIWAKU_=' + JSON.stringify(d.waku || []) + ';</scr' + 'ipt>';
 
   return '' +
 '<style>' + AKICSS_ + '</style>' +
@@ -5936,8 +5920,10 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約可能枠出力</button>' +
   '</div>' +
   '<div id="akidays">' + cards + '</div>' +
+  '<div id="akiwakubox" class="akiwakubox akihidden"></div>' +
   '<div class="akinone" id="akiDateEmpty" hidden>この期間には表示できるデータがありません。期間を変えてください。</div>' +
 '</div>' +
+wakuData +
 AKISCRIPT_;
 }
 
@@ -5947,17 +5933,66 @@ AKISCRIPT_;
 var AKISCRIPT_ =
 '<script>(function(){' +
 'var chips=[].slice.call(document.querySelectorAll(".akichip"));' +
+// ★予約可能枠（2026-09-05 まるちゃん指示）＝区分ごとにひとまとまり（中は日付順）＋区分ごとに
+//   【コピー】。日付・曜日の絞り込みに合わせてその場で組み直す。枠が1つも無い日は入れない。
+'var wakuBox=document.getElementById("akiwakubox");' +
+'var daysBox=document.getElementById("akidays");' +
+'var WKINDS=["新規男性","既存男性","新規女性","既存女性"];' +
+'var WCOL={"新規男性":"#2563eb","既存男性":"#1e3a8a","新規女性":"#db2777","既存女性":"#831843"};' +
+'function wakuText_(kind){' +
+'  var out=[];' +
+'  (window.AKIWAKU_||[]).forEach(function(w){' +
+'    if(!dateVisible_(w.date)) return;' +
+'    var list=(w["枠"]||{})[kind]||[];' +
+'    if(!list.length) return;' +
+'    out.push(w.dh); out.push(list.join(" / "));' +
+'  });' +
+'  return out.join("\\n");' +
+'}' +
+'function drawWaku_(){' +
+'  if(!wakuBox) return;' +
+'  wakuBox.innerHTML = WKINDS.map(function(k){' +
+'    var txt=wakuText_(k);' +
+'    var lines=txt? txt.split("\\n") : [];' +
+'    var body="";' +
+'    for(var i=0;i<lines.length;i+=2){' +
+'      body+= \'<div class="akiwdh">\'+lines[i]+\'</div><div class="akiwtimes">\'+lines[i+1]+\'</div>\';' +
+'    }' +
+'    if(!body) body=\'<div class="akinone">この期間に案内できる時間はありません</div>\';' +
+'    return \'<div class="akiwsec" data-kind="\'+k+\'">\'+' +
+'      \'<div class="akiwhead"><span class="akiwk" style="background:\'+WCOL[k]+\'">\'+k+\'</span>\'+' +
+'      \'<button type="button" class="akiwcopy" data-kind="\'+k+\'">コピー</button></div>\'+body+\'</div>\';' +
+'  }).join("");' +
+'  [].slice.call(wakuBox.querySelectorAll(".akiwcopy")).forEach(function(b){' +
+'    b.addEventListener("click",function(){ copyWaku_(b); });' +
+'  });' +
+'}' +
+'function copyWaku_(btn){' +
+'  var txt=wakuText_(btn.getAttribute("data-kind"));' +
+'  if(!txt){ btn.textContent="なし"; setTimeout(function(){ btn.textContent="コピー"; },1200); return; }' +
+'  function done(){ btn.textContent="コピーしました"; btn.classList.add("done");' +
+'    setTimeout(function(){ btn.textContent="コピー"; btn.classList.remove("done"); },1500); }' +
+'  if(navigator.clipboard&&navigator.clipboard.writeText){' +
+'    navigator.clipboard.writeText(txt).then(done,function(){ fallbackCopy_(txt,done); });' +
+'  } else { fallbackCopy_(txt,done); }' +
+'}' +
+'function fallbackCopy_(txt,cb){' +
+'  var ta=document.createElement("textarea"); ta.value=txt;' +
+'  ta.style.position="fixed"; ta.style.left="-9999px"; document.body.appendChild(ta);' +
+'  ta.select(); try{ document.execCommand("copy"); cb(); }catch(e){}' +
+'  document.body.removeChild(ta);' +
+'}' +
 'chips.forEach(function(c){ c.addEventListener("click",function(){' +
 '  var sec=c.getAttribute("data-sec");' +
 '  chips.forEach(function(x){ x.classList.toggle("on", x===c); });' +
-'  ["time","staff","rooms","waku"].forEach(function(s){' +
+'  var isWaku=(sec==="waku");' +
+'  if(daysBox) daysBox.classList.toggle("akihidden", isWaku);' +
+'  if(wakuBox) wakuBox.classList.toggle("akihidden", !isWaku);' +
+'  if(isWaku){ drawWaku_(); return; }' +
+'  ["time","staff","rooms"].forEach(function(s){' +
 '    [].slice.call(document.querySelectorAll(".akisec-"+s)).forEach(function(el){' +
 '      el.classList.toggle("akihidden", s!==sec);' +
 '    });' +
-'  });' +
-// 予約可能枠は定休日・出勤者なしの日を出さない（まるちゃん指示 2026-09-05）＝カードごと隠す。
-'  [].slice.call(document.querySelectorAll(".akiday.akinowaku")).forEach(function(el){' +
-'    el.classList.toggle("akiwakuhide", sec==="waku");' +
 '  });' +
 '}); });' +
 '' +
@@ -6046,16 +6081,21 @@ var AKISCRIPT_ =
 'var selectedWd=null;' +   // null=「全て」＝曜日での絞り込み無し。配列の時はその曜日番号(getDay())だけ表示。
 'function wdVisible_(dt){ if(!selectedWd) return true; var d=new Date(dt+"T00:00:00"); return selectedWd.indexOf(d.getDay())>-1; }' +
 'var rangeFrom=minD, rangeTo=minD;' +   // プリセット(今日/明日/今・来週/全期間)が使う範囲
+// その日を出すか（期間＋曜日の絞り込み）。日カードも予約可能枠も同じこの1つで決める
+// ＝2つに書き写すと必ずズレるため（2026-09-05）。
+'function dateVisible_(dt){' +
+'  if(!dt) return false;' +
+'  if(manualDates&&manualDates.length) return manualDates.indexOf(dt)>-1 && wdVisible_(dt);' +
+'  return dt>=rangeFrom && dt<=rangeTo && wdVisible_(dt);' +
+'}' +
 'function applyFilter(){' +
 '  var shown=0;' +
 '  days.forEach(function(el){' +
-'    var dt=el.getAttribute("data-date")||"";' +
-'    var vis;' +
-'    if(manualDates&&manualDates.length){ vis = manualDates.indexOf(dt)>-1 && wdVisible_(dt); }' +
-'    else { vis = dt && dt>=rangeFrom && dt<=rangeTo && wdVisible_(dt); }' +
+'    var vis=dateVisible_(el.getAttribute("data-date")||"");' +
 '    el.classList.toggle("akidatehide", !vis);' +
 '    if(vis) shown++;' +
 '  });' +
+'  if(wakuBox&&!wakuBox.classList.contains("akihidden")) drawWaku_();' +
 '  if(emptyMsg) emptyMsg.hidden = shown>0;' +
 '}' +
 'function setRange(f,t){ rangeFrom=clamp(f); rangeTo=clamp(t); manualDates=null; updateDateBoxLabel_(); applyFilter(); }' +
@@ -6190,14 +6230,25 @@ var AKICSS_ =
 '    padding-bottom:6px; margin-bottom:8px; }' +
 '  .akiclosed{ color:#c33; font-weight:700; font-size:16px; }' +
 '  .akisec.akihidden{ display:none; }' +
-// 予約可能枠（新規男性／既存男性／新規女性／既存女性）。定休日の日はカードごと隠す。
-'  .akiday.akiwakuhide{ display:none; }' +
-'  .akiwk{ display:inline-block; color:#fff; font-weight:800; font-size:clamp(14px,4.8vw,18px);' +
-'    padding:6px 12px; border-radius:11px; min-width:clamp(88px,29vw,110px); text-align:center; }' +
-'  .akiwts{ display:flex; gap:clamp(5px,2.1vw,8px); flex-wrap:wrap; align-items:center; }' +
-'  .akiwt{ display:inline-block; font-weight:800; font-variant-numeric:tabular-nums;' +
-'    font-size:clamp(16px,5.6vw,21px); color:var(--akiink); background:rgba(128,128,128,.18);' +
-'    border:1px solid var(--akiline); border-radius:10px; padding:5px 11px; }' +
+// 予約可能枠（新規男性／既存男性／新規女性／既存女性）＝区分ごとにひとまとまり＋コピー。
+// ★予約可能枠を選んでいる間は日ごとのカードを丸ごと隠す（この1行が無いと両方出てしまう）。
+'  #akidays.akihidden{ display:none; }' +
+'  .akiwakubox.akihidden{ display:none; }' +
+'  .akiwsec{ background:var(--akicard); border:1px solid var(--akiline); border-radius:14px;' +
+'    padding:12px clamp(8px,3.6vw,14px); margin-bottom:12px; }' +
+'  .akiwhead{ display:flex; align-items:center; justify-content:space-between; gap:10px;' +
+'    border-bottom:1px solid var(--akiline); padding-bottom:9px; margin-bottom:9px; }' +
+'  .akiwk{ display:inline-block; color:#fff; font-weight:800; font-size:clamp(15px,5vw,19px);' +
+'    padding:7px 14px; border-radius:11px; }' +
+'  .akiwcopy{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:800; color:#fff;' +
+'    background:var(--akiprimary); border:1px solid var(--akiprimary); border-radius:10px;' +
+'    padding:9px clamp(10px,4vw,16px); cursor:pointer; white-space:nowrap; }' +
+'  .akiwcopy:active{ transform:translateY(1px); }' +
+'  .akiwcopy.done{ background:#16a34a; border-color:#16a34a; }' +
+'  .akiwdh{ font-weight:800; font-size:clamp(15px,5vw,19px); color:var(--akisub); margin-top:8px; }' +
+'  .akiwdh:first-of-type{ margin-top:0; }' +
+'  .akiwtimes{ font-weight:800; font-variant-numeric:tabular-nums; line-height:1.6;' +
+'    font-size:clamp(16px,5.4vw,21px); color:var(--akiink); margin:2px 0 4px; }' +
 '  .akisl{ font-size:15px; font-weight:800; color:var(--akiprimary); margin:8px 0 6px; }' +
 '  .akirow{ display:flex; align-items:center; gap:clamp(5px,2.1vw,8px); flex-wrap:wrap; padding:8px 0;' +
 '    border-bottom:1px solid var(--akiline); font-size:clamp(13px,4.5vw,17px); }' +
