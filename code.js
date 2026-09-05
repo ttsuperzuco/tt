@@ -3701,27 +3701,54 @@ function renderTimedSendPage_(base, staff, dev) {
   script;
 }
 
-/** LINE一斉配信予約（スマホ版）＝相手のまとまりごとに文章と画像を決め、日時を選んで
- *  公式LINEの一斉配信として「置く」。★送るのはLINEのサーバー＝事務所パソコンが止まっていても届く。
- *  ★型（誰に送るか）・安全弁・置く処理は全部事務所パソコン側（bc_engine）が持つ＝ここは集めて渡すだけ。
- *  開発URL(?dev=1)専用（kanshi/cost/timedsend と同じ＝tile_settings.py に入れない）。 */
+/** LINE一斉配信予約（スーパーズコ）＝相手のまとまりごとに、吹き出しを1つずつ作って進む画面。
+ *  ★まるちゃんの決まり（2026-09-05）：
+ *    ①①新規 日本男性から**1つずつ設定して次へ進む**（一度に全部出さない）
+ *    ②吹き出しは**3つまで**（文章500文字で1つぶん／画像1枚で1つぶん）＝LINEの決まり
+ *    ③1つ目が画像でも文章でもよい（**順番は人が決める**）
+ *    ④画像は**よく使う画像**（プロセル・チャレンジ4の日本語/中文）から選べる＋別の画像も選べる
+ *    ⑤**送る日時はいちばん最後**に決める
+ *    ⑥使わない相手は**飛ばせる**
+ *  ★型（誰に送るか）・安全弁・置く処理は全部事務所パソコン側＝ここは集めて渡すだけ。
+ *  ★パソコン版は**この同じ画面を窓で開く**（部屋＆担当被り検出と同じやり方）＝見た目が必ずそろう。
+ *  開発URL(?dev=1)専用。 */
 function renderBroadcastPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
   var css = '.bc{max-width:560px;margin:0 auto;padding:0 6px 48px;text-align:left;}' +
     '.bclbl{font-weight:800;margin:16px 4px 6px;font-size:16px;}' +
-    '.bc textarea,.bc input[type=date],.bc input[type=time],.bc input[type=number],.bc select{' +
+    '.bc textarea,.bc input[type=date],.bc input[type=time],.bc select{' +
     'width:100%;box-sizing:border-box;font-size:17px;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#123;}' +
-    '.bc textarea{min-height:110px;}' +
+    '.bc textarea{min-height:150px;}' +
     '.bcrow{display:flex;gap:10px;}.bcrow>div{flex:1;}' +
-    '.bcbanner{padding:10px 12px;border-radius:12px;font-weight:800;margin:6px 4px 4px;font-size:14px;}' +
-    '.bccard{background:#fff;border-radius:14px;padding:12px 14px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
-    '.bcname{font-weight:800;font-size:16px;color:#0f172a;}' +
-    '.bcwho{font-size:12.5px;color:#64748b;margin:3px 0 8px;}' +
-    '.bcthumb{margin:8px 0 0;}.bcthumb img{height:64px;border-radius:8px;margin:0 8px 8px 0;vertical-align:top;box-shadow:0 1px 4px rgba(0,0,0,.2);}' +
-    '.bcsub{font-size:13px;padding:6px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;margin-top:6px;}' +
-    '.bcgo{display:block;width:100%;margin:22px 0 8px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#0f766e;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
+    '.bcbanner{padding:10px 12px;border-radius:12px;font-weight:800;margin:6px 4px 10px;font-size:14px;}' +
+    '.bcstep{font-size:13px;color:#e6f3f8;opacity:.9;margin:0 4px 6px;font-weight:700;}' +
+    '.bccard{background:#fff;border-radius:14px;padding:14px 16px;margin:10px 0;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
+    '.bcname{font-weight:800;font-size:19px;color:#0f172a;}' +
+    '.bcwho{font-size:12.5px;color:#64748b;margin:4px 0 0;}' +
+    '.bcpart{display:flex;align-items:center;gap:10px;background:#f1f5f9;border-radius:12px;padding:10px 12px;margin:8px 0;}' +
+    '.bcpart img{width:44px;height:44px;object-fit:cover;border-radius:8px;}' +
+    '.bcpno{font-weight:800;color:#0f766e;font-size:13px;white-space:nowrap;}' +
+    '.bcptx{flex:1;min-width:0;font-size:13.5px;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    '.bcdel{border:1px solid #b91c1c;background:#fff;color:#b91c1c;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:800;}' +
+    '.bcleft{font-size:13px;color:#475569;margin:10px 2px 4px;font-weight:700;}' +
+    '.bcadd{display:flex;gap:10px;margin-top:6px;}' +
+    '.bcadd button{flex:1;padding:14px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;background:#e2e8f0;color:#0f172a;}' +
+    '.bcadd button:disabled{opacity:.42;}' +
+    '.bcgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}' +
+    '.bcpick{background:#fff;border:2px solid #cbd5e1;border-radius:12px;padding:8px;text-align:center;}' +
+    '.bcpick img{width:100%;border-radius:8px;display:block;}' +
+    '.bcpick span{display:block;font-size:12.5px;font-weight:800;color:#0f172a;margin-top:6px;}' +
+    '.bcgo{display:block;width:100%;margin:16px 0 6px;padding:18px;font-size:20px;font-weight:800;border:0;border-radius:16px;background:#0f766e;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
     '.bcgo:disabled{opacity:.5;}' +
+    '.bcskip{display:block;width:100%;margin:4px 0 6px;padding:13px;font-size:15px;font-weight:800;border:1px solid #94a3b8;border-radius:14px;background:#fff;color:#475569;}' +
+    '.bcback2{display:block;width:100%;margin:4px 0 6px;padding:12px;font-size:14.5px;font-weight:800;border:1px solid #cbd5e1;border-radius:14px;background:#fff;color:#475569;}' +
+    '.bcsub{font-size:13.5px;padding:9px 14px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font-weight:800;}' +
+    '.bccount{font-size:13px;font-weight:800;margin:8px 2px;color:#0f766e;}' +
+    '.bccount.over{color:#b91c1c;}' +
+    '.bcsum{display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid #e2e8f0;font-size:14px;}' +
+    '.bcsum b{font-weight:800;color:#0f172a;}' +
+    '.bcsum span{color:#64748b;white-space:nowrap;}' +
     '.bcstatus{font-weight:800;margin:10px 4px;font-size:15px;border-radius:12px;padding:0;}' +
     '.bcstatus.on{background:#fff;color:#0f172a;padding:10px 14px;box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
     '.bcstatus.ng{background:#7f1d1d;color:#fecaca;padding:10px 14px;}' +
@@ -3733,11 +3760,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-  'var TPL=[],IMGS={},CAT="";' +
-  'var stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
-  'var dateEl=document.getElementById("bcdate"),timeEl=document.getElementById("bctime");' +
-  'var cardsEl=document.getElementById("bccards"),listEl=document.getElementById("bclist");' +
-  'var goEl=document.getElementById("bcgo"),wakuEl=document.getElementById("bcwaku"),daysEl=document.getElementById("bcdays");' +
+  'var TPL=[],PRE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=-1,mode="";' +
+  'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner"),stepEl=document.getElementById("bcstep");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function status(t,err){stEl.textContent=t;stEl.className="bcstatus"+(t?(err?" ng":" on"):"");}' +
   'function jsonp(params,onR){var cb="__bc"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
@@ -3745,7 +3769,6 @@ function renderBroadcastPage_(base, staff, dev) {
   'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
   'function pushImage(name,obj){return fetch(EXEC+"?action=push&key="+KEY+"&name="+name,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(obj)});}' +
   'function rnd(){var s="bc_img_",c="abcdefghijklmnopqrstuvwxyz0123456789",i;for(i=0;i<12;i++)s+=c[Math.floor(Math.random()*36)];return s+".json";}' +
-  // ── 事務所パソコンへ聞く（読むだけの用事）───────────────────────
   'function ask(op,fields,onDone,onFail){' +
   'var f=fields||{};var p={action:"submit",key:KEY,op:op,who:idn.who,role:idn.role,device:idn.device};' +
   'for(var k in f)p[k]=f[k];' +
@@ -3756,97 +3779,150 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.status!=="done"){(onFail||function(){})(String(s.result||"うまくいきませんでした。"));return;}' +
   'var d=null;try{d=JSON.parse(s.result);}catch(e){d={ok:true,note:String(s.result||"")};}' +
   'onDone(d);});})();});}' +
+  // ── 中身の言い方（1か所）────────────────────────────────
+  'function preOf(key){for(var i=0;i<PRE.length;i++)if(PRE[i].key===key)return PRE[i];return null;}' +
+  'function partLabel(p){if(p.kind==="text")return "文章（"+p.text.length+"文字）　"+p.text.replace(/\\n/g," ").slice(0,26);' +
+  'var pr=preOf((p.src||"").replace("preset:",""));return pr?("画像　"+pr.label):"画像　その場で選んだ写真";}' +
+  'function partThumb(p){if(p.kind==="text")return "";var pr=preOf((p.src||"").replace("preset:",""));' +
+  'return pr?pr.thumb:(p.thumb||"");}' +
+  'function filled(i){return (DATA[i]&&DATA[i].parts||[]).length;}' +
   // ── 画面を描く ────────────────────────────────────────
-  'function drawCards(){' +
-  'cardsEl.innerHTML=TPL.map(function(t,i){return \'<div class="bccard">\'+' +
-  '\'<div class="bcname">\'+esc(t.name)+\'</div><div class="bcwho">送る相手：\'+esc(t.who)+\'</div>\'+' +
-  '\'<textarea id="bcmsg\'+i+\'" placeholder="この相手へ送る文章"></textarea>\'+' +
-  '\'<div><input type="file" accept="image/*" multiple id="bcfile\'+i+\'" style="margin-top:8px"></div>\'+' +
-  '\'<div class="bcthumb" id="bcth\'+i+\'"></div></div>\';}).join("");' +
-  'TPL.forEach(function(t,i){var fe=document.getElementById("bcfile"+i);' +
-  'fe.addEventListener("change",function(){addFiles(i,fe.files);});});}' +
-  'function drawThumbs(i){var el=document.getElementById("bcth"+i);var a=IMGS[i]||[];' +
-  'el.innerHTML=a.map(function(o){return "<img src=\\"data:"+o.mime+";base64,"+o.b64+"\\">";}).join("")+' +
-  '(a.length?"<div><button type=\\"button\\" class=\\"bcsub\\" data-clr=\\""+i+"\\">画像を消す</button></div>":"");' +
-  'var b=el.querySelector("[data-clr]");if(b)b.addEventListener("click",function(){IMGS[i]=[];' +
-  'var fe=document.getElementById("bcfile"+i);if(fe)fe.value="";drawThumbs(i);});}' +
-  'function addFiles(i,files){Array.prototype.slice.call(files).forEach(function(f){if(!/^image\\//.test(f.type))return;' +
+  'function draw(){' +
+  'if(step<0){drawStart();}else if(step<TPL.length){drawOne();}else{drawLast();}' +
+  'stepEl.textContent = (step<0)?"":((step<TPL.length)?("相手 "+(step+1)+" / "+TPL.length):"最後の確認");}' +
+  'function drawStart(){' +
+  'box.innerHTML=\'<div class="bccard"><div class="bcname">どのまとまりを送りますか</div>\'+' +
+  '\'<div class="bcwho">いまは「\'+esc(CAT)+\'」の\'+TPL.length+\'通りです。1つずつ中身を決めて進みます。</div></div>\'+' +
+  '\'<button type="button" class="bcgo" id="bcstart">はじめる</button>\'+' +
+  '\'<div class="bclbl" style="margin-top:26px">置いた配信（新しい順）</div><div id="bclist">読み込み中…</div>\';' +
+  'document.getElementById("bcstart").onclick=function(){step=0;mode="";draw();};' +
+  'loadList();}' +
+  'function drawOne(){' +
+  'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
+  'var h=\'<div class="bccard"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
+  '\'<div class="bcwho">送る相手：\'+esc(t.who)+\'</div></div>\';' +
+  'if(n){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
+  'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
+  '(th?(\'<img src="\'+th+\'">\'):"")+\'<span class="bcptx">\'+esc(partLabel(p))+\'</span>\'+' +
+  '\'<button type="button" class="bcdel" data-del="\'+i+\'">消す</button></div>\';}).join("");}' +
+  'else{h+=\'<div class="bcleft">まだ何も入っていません。</div>\';}' +
+  'if(mode==="img"){' +
+  'h+=\'<div class="bcleft">よく使う画像から選ぶ</div><div class="bcgrid">\'+' +
+  'PRE.map(function(p){return \'<button type="button" class="bcpick" data-pre="\'+esc(p.key)+\'">\'+' +
+  '\'<img src="\'+p.thumb+\'"><span>\'+esc(p.label)+\'</span></button>\';}).join("")+\'</div>\'+' +
+  '\'<div class="bcleft">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
+  '\'<button type="button" class="bcback2" id="bccancel">やめる</button>\';}' +
+  'else if(mode==="txt"){' +
+  'h+=\'<div class="bcleft">文章を入れる</div><textarea id="bctxt" placeholder="この相手へ送る文章"></textarea>\'+' +
+  '\'<div class="bccount" id="bccnt">0 / \'+MAXT+\' 文字</div>\'+' +
+  '\'<button type="button" class="bcgo" id="bcaddtxt">この文章を入れる</button>\'+' +
+  '\'<button type="button" class="bcback2" id="bccancel">やめる</button>\';}' +
+  'else{' +
+  'h+=\'<div class="bcleft">あと \'+left+\' つ入れられます（ぜんぶで\'+MAXP+\'つまで）</div>\'+' +
+  '\'<div class="bcadd"><button type="button" id="bcimg"\'+(left?"":" disabled")+\'>🖼 画像を入れる</button>\'+' +
+  '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div>\'+' +
+  '\'<button type="button" class="bcgo" id="bcnext"\'+(n?"":" disabled")+\'>この相手はこれで完了 →</button>\'+' +
+  '\'<button type="button" class="bcskip" id="bcskip">この相手は送らない（飛ばす）</button>\';' +
+  'if(step>0)h+=\'<button type="button" class="bcback2" id="bcprev">← 前の相手にもどる</button>\';}' +
+  'box.innerHTML=h;bindOne();}' +
+  'function bindOne(){' +
+  'var d=DATA[step];' +
+  '[].slice.call(box.querySelectorAll("[data-del]")).forEach(function(b){b.onclick=function(){' +
+  'd.parts.splice(+b.getAttribute("data-del"),1);draw();};});' +
+  'var e;' +
+  'if(e=document.getElementById("bcimg"))e.onclick=function(){mode="img";draw();};' +
+  'if(e=document.getElementById("bctx"))e.onclick=function(){mode="txt";draw();};' +
+  'if(e=document.getElementById("bccancel"))e.onclick=function(){mode="";draw();};' +
+  'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";draw();};' +
+  'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";draw();};' +
+  'if(e=document.getElementById("bcprev"))e.onclick=function(){step--;mode="";draw();};' +
+  '[].slice.call(box.querySelectorAll("[data-pre]")).forEach(function(b){b.onclick=function(){' +
+  'd.parts.push({kind:"image",src:"preset:"+b.getAttribute("data-pre")});mode="";draw();};});' +
+  'var fe=document.getElementById("bcfile");' +
+  'if(fe)fe.onchange=function(){var f=fe.files&&fe.files[0];if(!f||!/^image\\//.test(f.type))return;' +
   'var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){' +
   'var mx=1280,w=im.width,h=im.height;if(w>mx||h>mx){if(w>=h){h=Math.round(h*mx/w);w=mx;}else{w=Math.round(w*mx/h);h=mx;}}' +
   'var cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);' +
-  'var durl=cv.toDataURL("image/jpeg",0.82);(IMGS[i]=IMGS[i]||[]).push({b64:durl.split(",")[1],mime:"image/jpeg"});' +
-  'drawThumbs(i);};im.src=fr.result;};fr.readAsDataURL(f);});}' +
-  'function drawList(posts){listEl.innerHTML=(posts&&posts.length)?posts.map(function(r){' +
+  'var durl=cv.toDataURL("image/jpeg",0.82);' +
+  'd.parts.push({kind:"image",src:"",b64:durl.split(",")[1],thumb:durl});mode="";draw();};im.src=fr.result;};fr.readAsDataURL(f);};' +
+  'var ta=document.getElementById("bctxt"),cnt=document.getElementById("bccnt"),ad=document.getElementById("bcaddtxt");' +
+  'if(ta){ta.focus();ta.oninput=function(){var L=ta.value.length;cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?"（長すぎます）":"");' +
+  'cnt.className="bccount"+(L>MAXT?" over":"");};' +
+  'ad.onclick=function(){var v=(ta.value||"").trim();' +
+  'if(!v){status("文章が空です。",true);return;}' +
+  'if(v.length>MAXT){status("文章は"+MAXT+"文字までです（いまは"+v.length+"文字）。",true);return;}' +
+  'd.parts.push({kind:"text",text:v});mode="";status("");draw();};}}' +
+  // ── 最後（確認＋日時）────────────────────────────────
+  'function drawLast(){' +
+  'function two(n){return ("0"+n).slice(-2);}' +
+  'var t=new Date();t.setDate(t.getDate()+1);' +
+  'var h=\'<div class="bccard"><div class="bcname">最後の確認</div>\';' +
+  'TPL.forEach(function(x,i){var n=filled(i);' +
+  'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span>\'+(n?(n+"つ入り"):"送らない")+\'</span></div>\';});' +
+  'h+=\'</div><div class="bclbl">送る日時（1本目。2本目からは少しずつ後ろへずらします）</div>\'+' +
+  '\'<div class="bcrow"><div><input type="date" id="bcdate" value="\'+t.getFullYear()+"-"+two(t.getMonth()+1)+"-"+two(t.getDate())+\'"></div>\'+' +
+  '\'<div><input type="time" id="bctime" value="11:00"></div></div>\'+' +
+  '\'<button type="button" class="bcgo" id="bcplace">この内容で置く</button>\'+' +
+  '\'<button type="button" class="bcback2" id="bcprev2">← 相手の設定にもどる</button>\'+' +
+  '\'<div class="bclbl" style="margin-top:26px">置いた配信（新しい順）</div><div id="bclist">読み込み中…</div>\';' +
+  'box.innerHTML=h;' +
+  'document.getElementById("bcprev2").onclick=function(){step=TPL.length-1;mode="";draw();};' +
+  'document.getElementById("bcplace").onclick=doPlace;' +
+  'loadList();}' +
+  // ── 置く ────────────────────────────────────────────
+  'function doPlace(){' +
+  'var dateEl=document.getElementById("bcdate"),timeEl=document.getElementById("bctime");' +
+  'var items=[],n=0;' +
+  'TPL.forEach(function(t,i){var ps=DATA[i].parts;if(!ps.length)return;n++;' +
+  'items.push({name:t.name,parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
+  'if(!n){status("中身の入っている相手が1つもありません。",true);return;}' +
+  'szPopup_(dateEl.value+" "+timeEl.value+" から、"+n+"通りを置きます。よろしいですか？",{cancel:true,onYes:function(){try{' +
+  'var go=document.getElementById("bcplace");go.disabled=true;' +
+  'szOvShow_(szBusyHtml_("配信を置いています"),"#2C7A99");' +
+  // その場で選んだ写真だけ先に窓口へ預ける（よく使う画像は名前だけでよい）
+  'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
+  'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
+  'delete p.b64;});});' +
+  'Promise.all(jobs).catch(function(){}).then(function(){setTimeout(function(){' +
+  'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:dateEl.value,time:timeEl.value,items:items,who:idn.who})},' +
+  'function(d){go.disabled=false;szOvHide_();status(d.note||"置きました。",!d.ok);' +
+  'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});}' +
+  'loadList();},' +
+  'function(m){go.disabled=false;szOvHide_();status(m,true);});},1200);});' +
+  '}catch(err){var g2=document.getElementById("bcplace");if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
+  'status("置けませんでした："+(err&&err.message?err.message:err),true);}}});}' +
+  // ── 置いた配信の一覧 ────────────────────────────────
+  'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
+  'ask("bc_list",{},function(d){drawList(d.posts);},function(){el.textContent="読み込めませんでした。";});}' +
+  'function drawList(posts){var el=document.getElementById("bclist");if(!el)return;' +
+  'el.innerHTML=(posts&&posts.length)?posts.map(function(r){' +
   'return \'<div class="bcitem"><div class="bcit1">\'+esc(r.st)+"　"+esc(r.at)+"　"+esc(r.template_name)+\'</div>\'+' +
   '\'<div class="bcit2">画像\'+r.imgs+\'枚　「\'+esc(r.head)+\'」\'+(r.note?("　"+esc(r.note)):"")+\'</div>\'+' +
   '(r.cancelable?(\'<button type="button" class="bccx" data-cx="\'+r.broadcast_id+\'">取り消し</button>\'):"")+' +
   '\'</div>\';}).join(""):\'<div class="bcit2" style="padding:6px">（まだありません）</div>\';' +
-  '[].slice.call(listEl.querySelectorAll("[data-cx]")).forEach(function(b){b.addEventListener("click",function(){' +
+  '[].slice.call(el.querySelectorAll("[data-cx]")).forEach(function(b){b.onclick=function(){' +
   'szPopup_("この配信を取り消しますか？",{cancel:true,onYes:function(){status("取り消しています…");' +
-  // ★名前は id ではなく bid。窓口(gas_pipe submit_)は依頼そのものに id を持っており、
-  //   「同じ名前は上書きしない」作りなので、fields の id は**捨てられて届かない**（2026-09-05に実機で判明）。
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
-  'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m){status(m,true);});}});});});}' +
+  'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m){status(m,true);});}});};});}' +
   // ── 立ち上がり ────────────────────────────────────────
   'status("読み込んでいます…");' +
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
-  'CAT=d.category||"";TPL=d.templates;dateEl.value=d.date;timeEl.value=d.time;' +
+  'CAT=d.category||"";TPL=d.templates;PRE=d.presets||[];MAXP=d.max_parts||3;MAXT=d.max_text||500;' +
+  'DATA=TPL.map(function(){return {parts:[]};});' +
   'if(d.banner){banEl.textContent=d.banner.text;' +
   'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":((d.banner.kind==="practice")?"#fff3cd":"#d1e7dd");}' +
-  'drawCards();status("");' +
-  'ask("bc_list",{},function(e){drawList(e.posts);},function(){});' +
+  'status("");draw();' +
   '},function(m){status(m,true);});' +
-  // ── 今週の空き時間を入れる ─────────────────────────────
-  'wakuEl.addEventListener("click",function(){status("空き時間を数えています…");wakuEl.disabled=true;' +
-  'ask("bc_waku",{fields:JSON.stringify({days:daysEl.value,from:dateEl.value})},function(d){wakuEl.disabled=false;' +
-  'var n=0;TPL.forEach(function(t,i){var v=(d.texts||{})[t.name];if(v==null)return;' +
-  'var box=document.getElementById("bcmsg"+i);' +
-  'box.value=box.value.trim()?(box.value.replace(/\\s+$/,"")+"\\n\\n"+v):v;if(v)n++;});' +
-  'status(n?("空き時間を "+n+" 通りに入れました。前後の文はここで足せます。"):"案内できる空き時間がありませんでした。",!n);},' +
-  'function(m){wakuEl.disabled=false;status(m,true);});});' +
-  // ── 置く ────────────────────────────────────────────
-  'goEl.addEventListener("click",function(){' +
-  'var items=[],n=0;' +
-  'TPL.forEach(function(t,i){var v=(document.getElementById("bcmsg"+i).value||"").trim();' +
-  'var a=IMGS[i]||[];if(!v&&!a.length)return;n++;items.push({name:t.name,message:v,_imgs:a});});' +
-  'if(!n){status("文章か画像を入れてください。",true);return;}' +
-  'szPopup_(dateEl.value+" "+timeEl.value+" から、"+n+"通りを置きます。よろしいですか？",{cancel:true,onYes:function(){try{' +
-  // ★待ち画面は szOvShow_(szBusyHtml_(…)) が正しい呼び方（szBusy_ はこの画面に無い）。
-  //   2026-09-05、szBusy_ と書いていて押した瞬間に止まり、ボタンが押せないままになった。
-  'goEl.disabled=true;szOvShow_(szBusyHtml_("配信を置いています"),"#2C7A99");' +
-  // 画像を先に窓口へ預ける（1枚ずつ名前を付けて）。全部預け終わってから依頼を送る。
-  'var jobs=[];items.forEach(function(it){it.images=[];(it._imgs||[]).forEach(function(o){' +
-  'var nm=rnd();it.images.push(nm);jobs.push(pushImage(nm,o));});delete it._imgs;});' +
-  'Promise.all(jobs).catch(function(){}).then(function(){setTimeout(function(){' +
-  'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:dateEl.value,time:timeEl.value,' +
-  'items:items,who:idn.who})},function(d){goEl.disabled=false;szOvHide_();' +
-  'status(d.note||"置きました。",!d.ok);' +
-  'ask("bc_list",{},function(e){drawList(e.posts);},function(){});},' +
-  'function(m){goEl.disabled=false;szOvHide_();status(m,true);});},1200);});' +
-  // ★何かで転んでも、押せないままにしない（2026-09-05に待ち画面の呼び名を間違えて実際に固まった）。
-  '}catch(err){goEl.disabled=false;try{szOvHide_();}catch(e2){}' +
-  'status("置けませんでした："+(err&&err.message?err.message:err),true);}' +
-  '}});});' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
     '<h2 class="htitle">LINE一斉配信予約</h2>' +
     '<div class="bc">' +
       '<div class="bcbanner" id="bcbanner">読み込み中…</div>' +
-      '<div class="bclbl">送る日時（1本目。2本目からは少しずつ後ろへずらします）</div>' +
-      '<div class="bcrow"><div><input type="date" id="bcdate"></div>' +
-        '<div><input type="time" id="bctime"></div></div>' +
-      '<div class="bclbl">今週の空き時間（押すと下の文章に入ります・あとで直せます）</div>' +
-      '<div class="bcrow"><div><input type="number" id="bcdays" value="14" min="1" max="60"></div>' +
-        '<div><button type="button" class="bcsub" id="bcwaku" style="width:100%;padding:12px">' +
-        '日ぶんを入れる</button></div></div>' +
-      '<div class="bclbl">相手ごとの文章と画像（入れたものだけ置きます）</div>' +
-      '<div id="bccards"></div>' +
-      '<button type="button" class="bcgo" id="bcgo">この内容で置く</button>' +
+      '<div class="bcstep" id="bcstep"></div>' +
+      '<div id="bcbody"></div>' +
       '<div class="bcstatus" id="bcstatus"></div>' +
-      '<div class="bclbl" style="margin-top:26px">置いた配信（新しい順）</div>' +
-      '<div id="bclist">読み込み中…</div>' +
     '</div>' +
   '</div>' +
   script;
