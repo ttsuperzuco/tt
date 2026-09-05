@@ -5826,18 +5826,42 @@ function akiRoomRows_(roomsFree) {
   }).join('');
 }
 
+// 「予約可能枠」＝新規男性／既存男性／新規女性／既存女性の4区分で、案内できる来店時刻。
+// 中身の計算は事務所PCの 共通\予約可能枠.py が唯一の判断。ここは描くだけ（判断を書き写さない）。
+var AKI_WAKU_KINDS_ = ['新規男性', '既存男性', '新規女性', '既存女性'];
+function akiWakuColor_(kind) {
+  if (kind === '新規男性') return '#2563eb';
+  if (kind === '既存男性') return '#1e3a8a';
+  if (kind === '新規女性') return '#db2777';
+  return '#831843';
+}
+function akiWakuRows_(waku) {
+  if (!waku) return '<div class="akinone">データがありません</div>';
+  return AKI_WAKU_KINDS_.map(function (k) {
+    var list = waku[k] || [];
+    var chips = list.length
+      ? list.map(function (t) { return '<span class="akiwt">' + esc_(t) + '</span>'; }).join('')
+      : '<span class="akinone">なし</span>';
+    return '<div class="akirow">' +
+      '<span class="akiwk" style="background:' + akiWakuColor_(k) + '">' + esc_(k) + '</span>' +
+      '<span class="akiwts">' + chips + '</span>' +
+    '</div>';
+  }).join('');
+}
+
 // 1日ぶんのカード。data-date（ISO日付）を持たせて日にち検索の絞り込みに使う。
-function akiDayCard_(day) {
+// waku＝その日の予約可能枠（定休日は無い＝「予約可能枠」を選んだ時そのカードごと隠す）。
+function akiDayCard_(day, waku) {
   var dattr = ' data-date="' + esc_(day.date || '') + '"';
   if (day.kind === 'closed') {
-    return '<div class="akiday"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    return '<div class="akiday akinowaku"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
       '<div class="akiclosed">' + esc_(day.label) + '</div></div>';
   }
   if (day.empty) {
-    return '<div class="akiday"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    return '<div class="akiday akinowaku"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
       '<div class="akinone">（出勤スタッフなし）</div></div>';
   }
-  return '<div class="akiday"' + dattr + '>' +
+  return '<div class="akiday' + (waku ? '' : ' akinowaku') + '"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
     '<div class="akisec akisec-time" data-sec="time">' +
       akiTimeRows_(day.time_slots) +
@@ -5848,6 +5872,9 @@ function akiDayCard_(day) {
     '<div class="akisec akisec-rooms akihidden" data-sec="rooms">' +
       akiRoomRows_(day.rooms_free) +
     '</div>' +
+    '<div class="akisec akisec-waku akihidden" data-sec="waku">' +
+      akiWakuRows_(waku) +
+    '</div>' +
   '</div>';
 }
 
@@ -5857,8 +5884,10 @@ function akiDayCard_(day) {
  *  既定は各時間帯別だけON）。データは全部JSONに入っているので、切替に読み直しは不要。 */
 function renderAkijikanPage_(d, base, staff, dev) {
   var days = d.days || [];
+  var wmap = {};
+  (d.waku || []).forEach(function (w) { wmap[w.date] = w['枠']; });
   var cards = days.length
-    ? days.map(akiDayCard_).join('\n')
+    ? days.map(function (dd) { return akiDayCard_(dd, wmap[dd.date]); }).join('\n')
     : '<div class="akinone">データがありません</div>';
 
   return '' +
@@ -5904,6 +5933,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '<button type="button" class="akichip on" data-sec="time">各時間帯別</button>' +
     '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
     '<button type="button" class="akichip" data-sec="rooms">施術室別</button>' +
+    '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約可能枠出力</button>' +
   '</div>' +
   '<div id="akidays">' + cards + '</div>' +
   '<div class="akinone" id="akiDateEmpty" hidden>この期間には表示できるデータがありません。期間を変えてください。</div>' +
@@ -5920,10 +5950,14 @@ var AKISCRIPT_ =
 'chips.forEach(function(c){ c.addEventListener("click",function(){' +
 '  var sec=c.getAttribute("data-sec");' +
 '  chips.forEach(function(x){ x.classList.toggle("on", x===c); });' +
-'  ["time","staff","rooms"].forEach(function(s){' +
+'  ["time","staff","rooms","waku"].forEach(function(s){' +
 '    [].slice.call(document.querySelectorAll(".akisec-"+s)).forEach(function(el){' +
 '      el.classList.toggle("akihidden", s!==sec);' +
 '    });' +
+'  });' +
+// 予約可能枠は定休日・出勤者なしの日を出さない（まるちゃん指示 2026-09-05）＝カードごと隠す。
+'  [].slice.call(document.querySelectorAll(".akiday.akinowaku")).forEach(function(el){' +
+'    el.classList.toggle("akiwakuhide", sec==="waku");' +
 '  });' +
 '}); });' +
 '' +
@@ -6156,6 +6190,14 @@ var AKICSS_ =
 '    padding-bottom:6px; margin-bottom:8px; }' +
 '  .akiclosed{ color:#c33; font-weight:700; font-size:16px; }' +
 '  .akisec.akihidden{ display:none; }' +
+// 予約可能枠（新規男性／既存男性／新規女性／既存女性）。定休日の日はカードごと隠す。
+'  .akiday.akiwakuhide{ display:none; }' +
+'  .akiwk{ display:inline-block; color:#fff; font-weight:800; font-size:clamp(14px,4.8vw,18px);' +
+'    padding:6px 12px; border-radius:11px; min-width:clamp(88px,29vw,110px); text-align:center; }' +
+'  .akiwts{ display:flex; gap:clamp(5px,2.1vw,8px); flex-wrap:wrap; align-items:center; }' +
+'  .akiwt{ display:inline-block; font-weight:800; font-variant-numeric:tabular-nums;' +
+'    font-size:clamp(16px,5.6vw,21px); color:var(--akiink); background:rgba(128,128,128,.18);' +
+'    border:1px solid var(--akiline); border-radius:10px; padding:5px 11px; }' +
 '  .akisl{ font-size:15px; font-weight:800; color:var(--akiprimary); margin:8px 0 6px; }' +
 '  .akirow{ display:flex; align-items:center; gap:clamp(5px,2.1vw,8px); flex-wrap:wrap; padding:8px 0;' +
 '    border-bottom:1px solid var(--akiline); font-size:clamp(13px,4.5vw,17px); }' +
