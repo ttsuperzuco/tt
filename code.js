@@ -5872,7 +5872,12 @@ function renderAkijikanPage_(d, base, staff, dev) {
     ? days.map(akiDayCard_).join('\n')
     : '<div class="akinone">データがありません</div>';
   // 予約可能枠は日付の絞り込みに合わせてその場で組み直すので、素の材料をページに載せておく。
-  var wakuData = '<script>var AKIWAKU_=' + JSON.stringify(d.waku || []) + ';</scr' + 'ipt>';
+  // ★開発者だけに出す（まるちゃん指示 2026-09-05／新しいボタンは既定で開発者のみ＝共通の決まり）。
+  //   スタッフ・幹部にはボタンも材料も渡さない（画面のもとを見ても中身が分からない）。
+  var wakuOn = !!dev && !staff;
+  var wakuData = wakuOn
+    ? '<script>var AKIWAKU_=' + JSON.stringify(d.waku || []) + ';</scr' + 'ipt>'
+    : '';
 
   return '' +
 '<style>' + AKICSS_ + '</style>' +
@@ -5917,10 +5922,10 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '<button type="button" class="akichip on" data-sec="time">各時間帯別</button>' +
     '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
     '<button type="button" class="akichip" data-sec="rooms">施術室別</button>' +
-    '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約可能枠出力</button>' +
+    (wakuOn ? '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約可能枠出力</button>' : '') +
   '</div>' +
   '<div id="akidays">' + cards + '</div>' +
-  '<div id="akiwakubox" class="akiwakubox akihidden"></div>' +
+  (wakuOn ? '<div id="akiwakubox" class="akiwakubox akihidden"></div>' : '') +
   '<div class="akinone" id="akiDateEmpty" hidden>この期間には表示できるデータがありません。期間を変えてください。</div>' +
 '</div>' +
 wakuData +
@@ -5939,36 +5944,45 @@ var AKISCRIPT_ =
 'var daysBox=document.getElementById("akidays");' +
 'var WKINDS=["新規男性","既存男性","新規女性","既存女性"];' +
 'var WCOL={"新規男性":"#2563eb","既存男性":"#1e3a8a","新規女性":"#db2777","既存女性":"#831843"};' +
-'function wakuText_(kind){' +
+// 日本のお客様向け（🇯🇵・9/8（火））を4つ出したあと、台湾のお客様向け（🇹🇼・9/8（二））を4つ出す。
+// 曜日の書き分けは事務所PCが両方の形で渡してくる（dh／dh_zh）＝画面で作らない。
+'var WGROUPS=[{flag:"🇯🇵",zh:false},{flag:"🇹🇼",zh:true}];' +
+'function wakuText_(kind,zh){' +
 '  var out=[];' +
 '  (window.AKIWAKU_||[]).forEach(function(w){' +
 '    if(!dateVisible_(w.date)) return;' +
 '    var list=(w["枠"]||{})[kind]||[];' +
 '    if(!list.length) return;' +
-'    out.push(w.dh); out.push(list.join(" / "));' +
+'    out.push(zh ? (w.dh_zh||w.dh) : w.dh); out.push(list.join(" / "));' +
 '  });' +
 '  return out.join("\\n");' +
 '}' +
 'function drawWaku_(){' +
 '  if(!wakuBox) return;' +
-'  wakuBox.innerHTML = WKINDS.map(function(k){' +
-'    var txt=wakuText_(k);' +
-'    var lines=txt? txt.split("\\n") : [];' +
-'    var body="";' +
-'    for(var i=0;i<lines.length;i+=2){' +
-'      body+= \'<div class="akiwdh">\'+lines[i]+\'</div><div class="akiwtimes">\'+lines[i+1]+\'</div>\';' +
-'    }' +
-'    if(!body) body=\'<div class="akinone">この期間に案内できる時間はありません</div>\';' +
-'    return \'<div class="akiwsec" data-kind="\'+k+\'">\'+' +
-'      \'<div class="akiwhead"><span class="akiwk" style="background:\'+WCOL[k]+\'">\'+k+\'</span>\'+' +
-'      \'<button type="button" class="akiwcopy" data-kind="\'+k+\'">コピー</button></div>\'+body+\'</div>\';' +
-'  }).join("");' +
+'  var html="";' +
+'  WGROUPS.forEach(function(g){' +
+'    html += WKINDS.map(function(k){' +
+'      var txt=wakuText_(k,g.zh);' +
+'      var lines=txt? txt.split("\\n") : [];' +
+'      var body="";' +
+'      for(var i=0;i<lines.length;i+=2){' +
+'        body+= \'<div class="akiwdh">\'+lines[i]+\'</div><div class="akiwtimes">\'+lines[i+1]+\'</div>\';' +
+'      }' +
+'      if(!body) body=\'<div class="akinone">この期間に案内できる時間はありません</div>\';' +
+'      var za=\' data-zh="\'+(g.zh?"1":"0")+\'"\';' +
+'      return \'<div class="akiwsec" data-kind="\'+k+\'"\'+za+\'>\'+' +
+'        \'<div class="akiwhead"><span class="akiwk" style="background:\'+WCOL[k]+\'">\'+' +
+'          \'<span class="akiwflag">\'+g.flag+\'</span>\'+k+\'</span>\'+' +
+'        \'<button type="button" class="akiwcopy" data-kind="\'+k+\'"\'+za+\'>コピー</button></div>\'+body+\'</div>\';' +
+'    }).join("");' +
+'  });' +
+'  wakuBox.innerHTML = html;' +
 '  [].slice.call(wakuBox.querySelectorAll(".akiwcopy")).forEach(function(b){' +
 '    b.addEventListener("click",function(){ copyWaku_(b); });' +
 '  });' +
 '}' +
 'function copyWaku_(btn){' +
-'  var txt=wakuText_(btn.getAttribute("data-kind"));' +
+'  var txt=wakuText_(btn.getAttribute("data-kind"), btn.getAttribute("data-zh")==="1");' +
 '  if(!txt){ btn.textContent="なし"; setTimeout(function(){ btn.textContent="コピー"; },1200); return; }' +
 '  function done(){ btn.textContent="コピーしました"; btn.classList.add("done");' +
 '    setTimeout(function(){ btn.textContent="コピー"; btn.classList.remove("done"); },1500); }' +
@@ -6238,8 +6252,9 @@ var AKICSS_ =
 '    padding:12px clamp(8px,3.6vw,14px); margin-bottom:12px; }' +
 '  .akiwhead{ display:flex; align-items:center; justify-content:space-between; gap:10px;' +
 '    border-bottom:1px solid var(--akiline); padding-bottom:9px; margin-bottom:9px; }' +
-'  .akiwk{ display:inline-block; color:#fff; font-weight:800; font-size:clamp(15px,5vw,19px);' +
-'    padding:7px 14px; border-radius:11px; }' +
+'  .akiwk{ display:inline-flex; align-items:center; gap:7px; color:#fff; font-weight:800;' +
+'    font-size:clamp(15px,5vw,19px); padding:7px 14px; border-radius:11px; }' +
+'  .akiwflag{ font-size:clamp(17px,5.6vw,21px); line-height:1; }' +
 '  .akiwcopy{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:800; color:#fff;' +
 '    background:var(--akiprimary); border:1px solid var(--akiprimary); border-radius:10px;' +
 '    padding:9px clamp(10px,4vw,16px); cursor:pointer; white-space:nowrap; }' +
