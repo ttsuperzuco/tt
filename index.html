@@ -133,7 +133,7 @@
 <!-- 前日お知らせの「出し入れの判断」＝パソコン版と共有する正本の写し。 -->
 <script src="zj_rules.js?v=cb75dce7e8"></script>
 <script src="nr_rules.js?v=2539f81b75"></script>
-<script src="code.js?v=1662487f01"></script>
+<script src="code.js?v=6272324aeb"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -528,7 +528,7 @@
     window[cbS] = function (r) {
       try { delete window[cbS]; } catch (e) {}
       if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '送信を受け付けられませんでした'); return; }
-      igdmPoll_(r.id, statusFn, 0);
+      igdmPoll_(r.id, statusFn, 0, 'instadm_reply');
     };
     var s = document.createElement('script');
     s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
@@ -544,7 +544,7 @@
     window[cbS] = function (r) {
       try { delete window[cbS]; } catch (e) {}
       if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '受け付けられませんでした'); return; }
-      igdmPoll_(r.id, statusFn, 0);
+      igdmPoll_(r.id, statusFn, 0, 'instadm_approve_reply');
     };
     var s = document.createElement('script');
     s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
@@ -553,8 +553,12 @@
     s.onerror = function () { statusFn('つながりませんでした。'); };
     document.head.appendChild(s);
   };
-  function igdmPoll_(id, statusFn, n) {
-    if (n > 40) { statusFn('時間がかかっています。あとで会話を更新して確かめてください。'); return; }
+  // ★あきらめる回数を自分で決めない＝受付係の制限から機械で作った op_limits.js に聞く
+  //   （共通ルール。前は40回＝約72秒で切っていて、事務所PCの制限120〜150秒より先にあきらめていた
+  //     ＝送れているのに「時間がかかっています」と出て、送れたか分からなくなっていた）。
+  function igdmPoll_(id, statusFn, n, op) {
+    var max = (window.LIMITS && LIMITS.tries) ? LIMITS.tries(op || 'instadm_reply', 700) : 100;
+    if (n > max) { statusFn('時間がかかっています。あとで会話を更新して確かめてください。'); return; }
     var cb = '__idmSt' + Date.now();
     window[cb] = function (r) {
       try { delete window[cb]; } catch (e) {}
@@ -562,11 +566,11 @@
         statusFn(r.result || (r.status === 'done' ? '送りました' : '送れませんでした'));
         return;
       }
-      setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 700);
+      setTimeout(function () { igdmPoll_(id, statusFn, n + 1, op); }, 700);
     };
     var ss = document.createElement('script');
     ss.src = EXEC + '?action=status&key=' + encodeURIComponent(EDIT_KEY) + '&id=' + encodeURIComponent(id) + '&callback=' + cb + '&cb=' + Date.now();
-    ss.onerror = function () { setTimeout(function () { igdmPoll_(id, statusFn, n + 1); }, 700); };
+    ss.onerror = function () { setTimeout(function () { igdmPoll_(id, statusFn, n + 1, op); }, 700); };
     document.head.appendChild(ss);
   }
   // 「詳細を見る」＝初めての人1件を開いて中身を全部読む依頼→結果(会話JSON)を小窓へ。
@@ -615,7 +619,7 @@
     window[cbS] = function (r) {
       try { delete window[cbS]; } catch (e) {}
       if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '削除を受け付けられませんでした'); return; }
-      igdmPoll_(r.id, statusFn, 0);
+      igdmPoll_(r.id, statusFn, 0, 'instadm_delete');
     };
     var s = document.createElement('script');
     s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
@@ -631,7 +635,7 @@
     window[cbS] = function (r) {
       try { delete window[cbS]; } catch (e) {}
       if (!r || !r.ok || !r.id) { statusFn((r && r.error) || '受け付けられませんでした'); return; }
-      igdmPoll_(r.id, statusFn, 0);
+      igdmPoll_(r.id, statusFn, 0, 'instadm_resolve');
     };
     var s = document.createElement('script');
     s.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +

@@ -2831,7 +2831,8 @@ function igdmBuildItems_(a) {
   var items = [], reqs = a.requests || [];
   for (var r = 0; r < reqs.length; r++) {
     var q = reqs[r];
-    items.push({ req: true, title: q.name, unread: q.unread, waiting: true, spam: q.spam,
+    // occ＝同じ名前の中で上から何番目か（0始まり）。名前がかぶった時に事務所PCが1件を狙うのに要る。
+    items.push({ req: true, title: q.name, occ: idmOccOf_(reqs, q), unread: q.unread, waiting: true, spam: q.spam,
       last_text: q.preview, last_ts: q.ts || '',
       msgs: [{ me: false, text: q.preview || '（本文なし）', ts: q.ts || '' }] });
   }
@@ -2906,10 +2907,18 @@ function igdmSelect(i) {
     '</div>';
   }
   if (t.req) {
+    // ★初めての人にも返信できる（2026-09-05 まるちゃん「返信できないよ？できるようにして」）。
+    //   初めての人はまだ会話が始まっていないので、事務所PCが先に「承認」を押してから送る
+    //   （＝IGのDM画面の「承認して返信」とまったく同じ道＝instadm_approve_reply）。
+    body += '<div class="igdmreply">' +
+      '<textarea id="igdmReplyTxt" class="igdmrtxt" placeholder="返信を入力（承認してからお客さんに届きます）"></textarea>' +
+      '<div class="igdmrrow"><button type="button" class="igdmrsend" onclick="igdmDoApproveReply()">承認して送る</button>' +
+      '<span class="igdmrstatus" id="igdmRStatus"></span></div>' +
+    '</div>';
     // ★初めての人（スパムが来る所）＝中身を見た上で「削除」できる。押した1件だけ・確認あり・戻せない。
     body += '<div class="igdmreply">' +
       '<button type="button" class="igdmdel" onclick="igdmDoDelete()">🚫 この初めての人を削除</button>' +
-      '<div class="igdmrstatus" id="igdmRStatus" style="margin-top:8px;"></div>' +
+      '<div class="igdmrstatus" id="igdmDStatus" style="margin-top:8px;"></div>' +
     '</div>';
   }
   pane.innerHTML = body;
@@ -2917,24 +2926,60 @@ function igdmSelect(i) {
   var lg = pane.querySelector('.igdmth-log'); if (lg) lg.scrollTop = lg.scrollHeight;
 }
 
-// 返信を送る（本物の会話だけ）。確認してから、事務所PCへ送信を依頼し、結果を下に出す。
+// 送った結果の見せ方（書き込み系ボタンの共通ルール＝処理中は全画面／成功は緑の全画面／
+//   失敗は小さな警告だけ出して事務所PC側からりゅうさんへ知らせが飛ぶ）。返信2種で共有する。
+function igdmSendResult_(m) {
+  var ms = '' + (m || '');
+  if (ms.indexOf('送りました') >= 0) {
+    var ta = document.getElementById('igdmReplyTxt'); if (ta) ta.value = '';
+    szOvShow_(szDoneHtml_(ms.indexOf('承認') >= 0 ? '承認して送りました' : '送りました', '会話に戻る'), '#16a34a');
+    var b = document.getElementById('szDoneBack');
+    if (b) b.addEventListener('click', function () { szOvHide_(); });
+  } else {
+    szOvHide_();
+    szPopup_(ms || 'エラーが発生しました。りゅうさんにお伝えください。');
+  }
+}
+
+// 返信を送る（本物の会話だけ）。確認してから、事務所PCへ送信を依頼し、結果を出す。
 function igdmDoReply() {
   var t = (IGDM_STATE_.items || [])[IGDM_STATE_.sel]; if (!t || t.req || !t.id) return;
   var ta = document.getElementById('igdmReplyTxt'); var txt = ta ? ta.value.trim() : '';
-  if (!txt) return;
-  if (!confirm('このお客さんに送りますか？\n\n' + txt)) return;
+  if (!txt) { szPopup_('本文が空です。'); return; }
   var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
-  var st = document.getElementById('igdmRStatus'); if (st) st.textContent = '送信中…';
-  if (window.igdmReply) window.igdmReply(acc, t.id, txt, function (m) { if (st) st.textContent = m; });
+  szPopup_('このお客さんに送りますか？\n\n' + txt, { icon: '✉️', cancel: true, yesLabel: '送る', onYes: function () {
+    szOvShow_(szBusyHtml_('送っています', 'インスタへの書き込みが終わったら自動で切り替わりますので、しばらくお待ちください。'), '#2C7A99');
+    if (window.igdmReply) window.igdmReply(acc, t.id, txt, igdmSendResult_);
+    else { szOvHide_(); szPopup_('この画面からは送れません。りゅうさんにお伝えください。'); }
+  } });
+}
+
+// 初めての人へ返信する＝先に「承認」を押してから送る（インスタの決まり。承認すると相手が
+//   ふつうの会話に入る＝戻せない）。事務所PCが人と同じように画面を操作して送る。
+function igdmDoApproveReply() {
+  var t = (IGDM_STATE_.items || [])[IGDM_STATE_.sel]; if (!t || !t.req) return;
+  var ta = document.getElementById('igdmReplyTxt'); var txt = ta ? ta.value.trim() : '';
+  if (!txt) { szPopup_('本文が空です。'); return; }
+  var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
+  var nm = t.title || '', occ = t.occ || 0;
+  szPopup_('この初めての人「' + nm + '」を承認して、この返信を送りますか？\n\n' + txt,
+    { icon: '✉️', cancel: true, yesLabel: '承認して送る', onYes: function () {
+      szOvShow_(szBusyHtml_('承認して送っています', 'インスタへの書き込みが終わったら自動で切り替わりますので、しばらくお待ちください。'), '#2C7A99');
+      if (window.igdmApproveReply) window.igdmApproveReply(acc, nm, occ, txt, igdmSendResult_);
+      else { szOvHide_(); szPopup_('この画面からは送れません。りゅうさんにお伝えください。'); }
+    } });
 }
 
 // 初めての人（スパム）を削除する。中身を見た上で、押した1件だけ・確認してから。戻せない。
 function igdmDoDelete() {
   var t = (IGDM_STATE_.items || [])[IGDM_STATE_.sel]; if (!t || !t.req) return;
-  if (!confirm('この初めての人「' + (t.title || '') + '」を削除しますか？\n消すと元に戻せません。')) return;
+  szPopup_('この初めての人「' + (t.title || '') + '」を削除しますか？\n消すと元に戻せません。',
+    { cancel: true, yesLabel: '削除する', onYes: function () { igdmDoDeleteGo_(t); } });
+}
+function igdmDoDeleteGo_(t) {
   var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
   szOvShow_(szBusyHtml_('削除しています'), '#2C7A99');   // 部屋かぶりと同じ全画面表示（共通ルール）
-  if (window.igdmDelete) window.igdmDelete(acc, t.title, t.last_text, function (m) {
+  if (window.igdmDelete) window.igdmDelete(acc, t.title, t.last_text, t.occ || 0, function (m) {
     var ms = '' + (m || '');
     if (ms.indexOf('エラー') >= 0 || ms.indexOf('失敗') >= 0 || ms.indexOf('できません') >= 0 || ms.indexOf('つながり') >= 0 || ms.indexOf('時間がかかって') >= 0) {
       szOvHide_(); szPopup_(ms || 'エラーが発生しました。りゅうさんにお伝えください。');
