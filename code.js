@@ -2593,17 +2593,36 @@ function idmSendReply(btn) {
   if (!txt) { if (st) st.textContent = '本文が空です。'; return; }
   var kind = card.getAttribute('data-rkind') || '';
   var acc = card.getAttribute('data-racc') || '';
+  // ★送り終わったあとの後片付け（2026-09-05 まるちゃん「おくったあとも前のメッセージが残ってる」）。
+  //   送れたら入力欄を空にして返信欄を閉じる＝打った文が残っていると、もう一度押して
+  //   同じ文が二重に届く事故のもと。送れなかった時だけ文を残す（そのまま送り直せる）。
+  function idmDone_(m) {
+    btn.disabled = false;
+    var ms = '' + (m || '');
+    if (st) st.textContent = ms;
+    if (ms.indexOf('送りました') >= 0) {
+      if (ta) ta.value = '';
+      if (box) box.style.display = 'none';
+      szPopup_(ms, { icon: '✓' });
+    }
+  }
+  function idmGo_(waitMsg, fn) {
+    btn.disabled = true;                       // 返事が来るまで二度押しできないようにする
+    if (st) st.textContent = waitMsg;
+    if (fn) fn(); else { btn.disabled = false; if (st) st.textContent = 'この画面からは送れません。'; }
+  }
   if (kind === 't') {
     var thId = card.getAttribute('data-rid') || '';
-    if (!confirm('このお客さんに送りますか？\n\n' + txt)) return;
-    if (st) st.textContent = '送信中…';
-    if (window.igdmReply) window.igdmReply(acc, thId, txt, function (m) { if (st) st.textContent = m; });
+    szPopup_('このお客さんに送りますか？\n\n' + txt, { icon: '✉️', cancel: true, yesLabel: '送る', onYes: function () {
+      idmGo_('送信中…', window.igdmReply && function () { window.igdmReply(acc, thId, txt, idmDone_); });
+    } });
   } else if (kind === 'r') {
     var name = card.getAttribute('data-rname') || '';
     var occ = parseInt(card.getAttribute('data-rocc') || '0', 10) || 0;
-    if (!confirm('この初めての人「' + name + '」を承認して、返信を送りますか？\n\n' + txt)) return;
-    if (st) st.textContent = '承認して送信中…';
-    if (window.igdmApproveReply) window.igdmApproveReply(acc, name, occ, txt, function (m) { if (st) st.textContent = m; });
+    szPopup_('この初めての人「' + name + '」を承認して、返信を送りますか？\n\n' + txt,
+      { icon: '✉️', cancel: true, yesLabel: '承認して送る', onYes: function () {
+        idmGo_('承認して送信中…', window.igdmApproveReply && function () { window.igdmApproveReply(acc, name, occ, txt, idmDone_); });
+      } });
   }
 }
 
