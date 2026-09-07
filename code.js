@@ -3893,7 +3893,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var f=fields||{};var p={action:"submit",key:KEY,op:op,who:idn.who,role:idn.role,device:idn.device};' +
   'for(var k in f)p[k]=f[k];' +
   'jsonp(p,function(r){if(!r||!r.ok||!r.id){(onFail||function(){})("依頼を送れませんでした。");return;}' +
-  'var n=0;(function poll(){n++;if(n>350){(onFail||function(){})("時間がかかりすぎました。");return;}' +
+  'var n=0;(function poll(){n++;if(n>500){(onFail||function(){})("時間がかかりすぎました。");return;}' +
   'jsonp({action:"status",key:KEY,id:r.id},function(s){if(!s||!s.ok){(onFail||function(){})("通信に失敗しました。");return;}' +
   'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
   'if(s.status!=="done"){(onFail||function(){})(String(s.result||"うまくいきませんでした。"));return;}' +
@@ -3927,7 +3927,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcleft" style="margin-top:14px">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
   '\'</div><button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="waku"){' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">今週の予約可能枠（直せます・空にするとその日は満員として入ります）</div>\'+' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">今週の予約可能枠（直せます・空にするとその日は満員として入ります）。AIが日数に合わせて枠ごと組み直します</div>\'+' +
   '(WDAYS.length?WDAYS.map(function(d,i){return \'<div class="bcwrow">\'+' +
   '\'<input class="d" id="bcwd\'+i+\'" value="\'+esc(d.date)+\'">\'+' +
   '\'<input class="t" id="bcwt\'+i+\'" value="\'+esc((d.times||[]).join(" / "))+\'"></div>\';}).join("")' +
@@ -3971,7 +3971,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'return {date:dv, times:tv?tv.split(/[\\s\\/,、]+/).filter(function(x){return x;}):[]};' +
   '}).filter(function(x){return x.date;});' +
   'if(!ds.length){status("日付が1つも入っていません。",true);return;}' +
-  'mk.disabled=true;status("画像を作っています…");' +
+  'mk.disabled=true;status("AIが画像を作っています…1〜2分かかります。");' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",template:TPL[step].name,days:ds})},' +
   'function(r){mk.disabled=false;if(!r||!r.ok){status((r&&r.note)||"作れませんでした。",true);return;}' +
   'DATA[step].parts.push({kind:"image",src:"made:"+r.name,thumb:r.thumb});' +
