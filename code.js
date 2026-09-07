@@ -4122,9 +4122,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
   'CAT=d.category||"";TPL=d.templates;PRE=d.presets||[];MAXP=d.max_parts||3;MAXT=d.max_text||500;' +
-  'MADE=(d.recent||[]).map(function(x){return {key:x.key,label:x.label,thumb:x.thumb,made:true};});' +
-  'DATA=TPL.map(function(){return {parts:[]};});' +
+    'DATA=TPL.map(function(){return {parts:[]};});' +
   'if(loadSaved())status("前回の続きから開きました。");' +
+  // ★最近作った絵は別便で取る（templates の答えに載せると大きすぎて窓口を通らない）
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"recent"})},function(r){' +
+  'MADE=((r&&r.recent)||[]).map(function(x){return {key:x.key,label:x.label,thumb:x.thumb,made:true};});' +
+  'draw();},function(){});' +
   'catEl.textContent=CAT;' +
   'if(d.banner){banEl.textContent=d.banner.text;' +
   'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":((d.banner.kind==="practice")?"#fff3cd":"#d1e7dd");}' +
