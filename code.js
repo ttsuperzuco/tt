@@ -3785,37 +3785,36 @@ function renderTimedSendPage_(base, staff, dev) {
  *    ④画像は**よく使う画像**（プロセル・チャレンジ4の日本語/中文）から選べる＋別の画像も選べる
  *    ⑤**送る日時はいちばん最後**に決める／使わない対象は飛ばせる
  *    ⑥言い方は「相手」ではなく**「対象」**
- *  ★見た目は**部屋＆担当被り検出とそろえる**（まるちゃん「台湾トマトフォーマットで」）＝
- *    実測して合わせた色：カード #131C2E ／ 中の小箱 #0B1220 ／ 文字 #E8EEF7 ／
- *    added字 #94A3B8 ／ 枠 #26324A ／ 主要ボタン #2563EB。
- *    ★**白いカードにしない**（一度そうして「見づらい」と言われた。地が濃い青なので浮いて見え、
- *      さらに地の上に置いた濃い文字が読めなくなる）。
- *  ★型（誰に送るか）・安全弁・予約する処理は全部事務所パソコン側＝ここは集めて渡すだけ。
- *  ★パソコン版は**この同じ画面を窓で開く**（部屋＆担当被り検出と同じやり方）。開発URL専用。 */
+ *    ⑦**「予約可能枠の画像を作る」は配信内容の下に目立つ色で置き、押すと専用の画面へ飛ぶ**。
+ *      その画面は「日時入力欄」の右に【自動入力】があり、**入力欄は最初は空**。
+ *      自分で入れる（または自動入力を押す）→【画像を作る】でAIが作る。
+ *      できた絵は各対象の「画像を入れる」の先頭に並ぶ＝好きな対象に入れられる。
+ *  ★見た目は**部屋＆担当被り検出とそろえる**（カード #131C2E ／ 中の小箱 #0B1220 ／ 文字 #E8EEF7 ／
+ *    添え字 #94A3B8 ／ 枠 #26324A ／ 主要ボタン #2563EB）。**白いカードにしない。**
+ *  ★型・安全弁・予約する処理・絵を作る処理は全部事務所パソコン側＝ここは集めて渡すだけ。
+ *  開発URL(?dev=1)専用。 */
 function renderBroadcastPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
   var css =
-    // 「← 前に戻る」＝部屋被りと同じ濃い地（共通の白いボタンだとこの画面では文字が消える）
     '.uhome{background:#131C2E;border:1px solid #26324A;color:#E8EEF7;border-radius:10px;' +
     'padding:10px 14px;font-size:.9rem;font-weight:700;box-shadow:none;}' +
     '.bc{max-width:560px;margin:0 auto;padding:0 4px 44px;text-align:left;}' +
-    // 上の帯（練習/本番）
     '.bcbanner{padding:11px 14px;border-radius:12px;font-weight:800;margin:4px 0 12px;' +
     'font-size:14px;color:#0f172a;line-height:1.5;}' +
-    // 配信内容＋いま何番目か（1行にまとめて場所を取らない）
     '.bctop{display:flex;align-items:center;gap:10px;margin:0 2px 10px;flex-wrap:wrap;}' +
     '.bctop .lb{font-size:13px;color:#B9CCDA;font-weight:700;}' +
     '.bctop b{background:#131C2E;border:1px solid #26324A;color:#E8EEF7;border-radius:999px;' +
     'padding:7px 15px;font-size:14.5px;font-weight:800;}' +
     '.bctop .no{margin-left:auto;font-size:13px;color:#B9CCDA;font-weight:800;}' +
-    // カード（部屋被りと同じ）
+    // ★配信内容の下に置く「予約可能枠の画像を作る」＝目立つ色（まるちゃん指示）
+    '.bcmake{display:block;width:100%;margin:0 0 14px;padding:15px;font-size:17px;font-weight:800;' +
+    'border:0;border-radius:12px;background:#D97706;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
     '.bccard{background:#131C2E;border-radius:12px;padding:16px 16px 18px;margin:0 0 12px;' +
     'box-shadow:0 1px 3px rgba(0,0,0,.06);color:#E8EEF7;}' +
     '.bcname{font-size:26px;font-weight:900;line-height:1.25;}' +
     '.bcwho{font-size:13px;color:#94A3B8;margin-top:6px;line-height:1.5;}' +
     '.bchr{border-top:1px solid #26324A;margin:14px 0 12px;}' +
-    // 入れた中身（カードの中の小箱）
     '.bcpart{display:flex;align-items:center;gap:10px;background:#0B1220;border-radius:10px;' +
     'padding:9px 10px;margin:0 0 8px;}' +
     '.bcpart img{width:42px;height:42px;object-fit:cover;border-radius:8px;flex:0 0 auto;}' +
@@ -3826,52 +3825,54 @@ function renderBroadcastPage_(base, staff, dev) {
     'padding:7px 11px;font-size:12.5px;font-weight:800;flex:0 0 auto;}' +
     '.bcempty{font-size:14px;color:#94A3B8;padding:2px 0 4px;}' +
     '.bcleft{font-size:13px;color:#94A3B8;font-weight:700;margin:0 0 8px;}' +
-    // 「今やること」のボタン＝いちばん目立たせる
     '.bcadd{display:flex;gap:10px;}' +
     '.bcadd button{flex:1;padding:16px 8px;font-size:16.5px;font-weight:800;border:0;' +
     'border-radius:12px;background:#2563EB;color:#fff;}' +
     '.bcadd button:disabled{background:#26324A;color:#94A3B8;}' +
-    // 画像の選択
     '.bcgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
-    '.bcwrow{display:flex;gap:8px;margin:0 0 8px;}' +
-    '.bcwrow input{box-sizing:border-box;font-size:15px;padding:10px;border-radius:9px;'+
-    'border:1px solid #26324A;background:#fff;color:#0f172a;}' +
-    '.bcwrow .d{flex:0 0 122px;text-align:center;}' +
-    '.bcwrow .t{flex:1;min-width:0;}' +
-    '.bcwimg{width:100%;border-radius:10px;display:block;margin:10px 0 0;}' +
     '.bcpick{background:#0B1220;border:1px solid #26324A;border-radius:12px;padding:8px;text-align:center;}' +
+    '.bcpick.new{border-color:#D97706;}' +
     '.bcpick img{width:100%;border-radius:8px;display:block;}' +
     '.bcpick span{display:block;font-size:12.5px;font-weight:800;color:#E8EEF7;margin-top:7px;}' +
     '.bc input[type=file]{color:#E8EEF7;font-size:13px;}' +
-    // 文章
-    '.bc textarea,.bc input[type=date],.bc input[type=time]{width:100%;box-sizing:border-box;' +
+    '.bc textarea,.bc input[type=date],.bc input[type=time],.bc select{width:100%;box-sizing:border-box;' +
     'font-size:16.5px;padding:12px;border-radius:10px;border:1px solid #26324A;background:#fff;color:#0f172a;}' +
     '.bc textarea{min-height:150px;line-height:1.6;}' +
     '.bccount{font-size:13px;font-weight:800;margin:8px 2px 10px;color:#94A3B8;}' +
     '.bccount.over{color:#fca5a5;}' +
-    // 進む・飛ばす
+    // 予約可能枠の画像を作る画面
+    '.bcwhead{display:flex;align-items:center;gap:10px;margin:0 0 10px;}' +
+    '.bcwhead .lb{flex:1;font-size:14px;color:#E8EEF7;font-weight:800;}' +
+    '.bcwauto{border:0;border-radius:10px;padding:11px 16px;font-size:14px;font-weight:800;' +
+    'background:#D97706;color:#fff;white-space:nowrap;}' +
+    '.bcwrow{display:flex;gap:8px;margin:0 0 8px;}' +
+    '.bcwrow input{box-sizing:border-box;font-size:15px;padding:10px;border-radius:9px;' +
+    'border:1px solid #26324A;background:#fff;color:#0f172a;}' +
+    '.bcwrow .d{flex:0 0 128px;text-align:center;}' +
+    '.bcwrow .t{flex:1;min-width:0;}' +
+    '.bcseg{display:flex;gap:8px;margin:0 0 12px;}' +
+    '.bcseg button{flex:1;padding:12px 6px;font-size:14.5px;font-weight:800;border:1px solid #26324A;' +
+    'border-radius:10px;background:#0B1220;color:#94A3B8;}' +
+    '.bcseg button.on{background:#2563EB;color:#fff;border-color:#2563EB;}' +
+    '.bcwimg{width:100%;border-radius:12px;display:block;margin:12px 0 0;}' +
     '.bcgo{display:block;width:100%;margin:0 0 10px;padding:17px;font-size:19px;font-weight:800;' +
     'border:0;border-radius:12px;background:#2563EB;color:#fff;}' +
     '.bcghost{display:block;width:100%;margin:0 0 10px;padding:14px;font-size:15px;font-weight:800;' +
     'border:1px solid #26324A;border-radius:12px;background:#131C2E;color:#E8EEF7;}' +
     '.bcmini{display:block;width:100%;margin:2px 0 8px;padding:10px;font-size:13.5px;font-weight:700;' +
     'border:0;background:transparent;color:#B9CCDA;text-decoration:underline;}' +
-    // 最後の確認
     '.bcsum{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;' +
     'border-bottom:1px solid #26324A;font-size:15px;}' +
-    '.bcsum:last-child{border-bottom:0;}' +
-    '.bcsum b{font-weight:800;}' +
+    '.bcsum:last-child{border-bottom:0;}.bcsum b{font-weight:800;}' +
     '.bcsum span{color:#94A3B8;white-space:nowrap;font-size:13.5px;}' +
     '.bcsum span.on{color:#7dd3a0;font-weight:800;}' +
     '.bcdt{display:flex;gap:10px;margin:0 0 12px;}.bcdt>div{flex:1;}' +
     '.bclbl{font-size:13px;color:#B9CCDA;font-weight:800;margin:16px 2px 8px;}' +
-    // 予約した配信の一覧
     '.bcitem{background:#131C2E;border-radius:11px;padding:11px 13px;margin:0 0 8px;color:#E8EEF7;}' +
     '.bcit1{font-weight:800;font-size:14px;}' +
     '.bcit2{font-size:12.5px;color:#94A3B8;margin-top:4px;}' +
     '.bccx{margin-top:9px;font-size:12.5px;padding:7px 13px;border-radius:9px;' +
     'border:1px solid #7f1d1d;background:#2a1214;color:#fca5a5;font-weight:800;}' +
-    // 知らせ
     '.bcstatus{font-weight:800;margin:10px 2px;font-size:14.5px;border-radius:11px;padding:0;}' +
     '.bcstatus.on{background:#131C2E;color:#E8EEF7;padding:11px 14px;}' +
     '.bcstatus.ng{background:#2a1214;color:#fca5a5;padding:11px 14px;}';
@@ -3879,9 +3880,10 @@ function renderBroadcastPage_(base, staff, dev) {
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-  'var TPL=[],PRE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",WDAYS=[];' +
+  'var TPL=[],PRE=[],MADE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",page="t";' +
+  'var WK="ja",WWAKU="新規男性",WROWS=5,WLAST=null;' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
-  'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno");' +
+  'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno"),mkEl=document.getElementById("bcmakebtn");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function status(t,err){stEl.textContent=t;stEl.className="bcstatus"+(t?(err?" ng":" on"):"");}' +
   'function jsonp(params,onR){var cb="__bc"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
@@ -3899,18 +3901,69 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.status!=="done"){(onFail||function(){})(String(s.result||"うまくいきませんでした。"));return;}' +
   'var d=null;try{d=JSON.parse(s.result);}catch(e){d={ok:true,note:String(s.result||"")};}' +
   'onDone(d);});})();});}' +
-  // ── 中身の言い方（1か所）────────────────────────────────
-  'function preOf(key){for(var i=0;i<PRE.length;i++)if(PRE[i].key===key)return PRE[i];return null;}' +
+  // ── 中身の言い方 ──────────────────────────────────────
+  'function picks(){return MADE.concat(PRE);}' +
+  'function preOf(key){var a=picks();for(var i=0;i<a.length;i++)if(a[i].key===key)return a[i];return null;}' +
   'function partLabel(p){if(p.kind==="text")return "文章 "+p.text.length+"文字　"+p.text.replace(/\\n/g," ").slice(0,22);' +
-  'if((p.src||"").indexOf("made:")===0)return "予約可能枠の画像";' +
-  'var pr=preOf((p.src||"").replace("preset:",""));return pr?pr.label:"その場で選んだ写真";}' +
-  'function partThumb(p){if(p.kind==="text")return "";var pr=preOf((p.src||"").replace("preset:",""));' +
-  'return pr?pr.thumb:(p.thumb||"");}' +
+  'var pr=preOf((p.src||"").replace(/^(preset|made):/,""));return pr?pr.label:"その場で選んだ写真";}' +
+  'function partThumb(p){if(p.kind==="text")return "";' +
+  'var pr=preOf((p.src||"").replace(/^(preset|made):/,""));return pr?pr.thumb:(p.thumb||"");}' +
   'function filled(i){return (DATA[i]&&DATA[i].parts||[]).length;}' +
   // ── 画面を描く ────────────────────────────────────────
   'function draw(){' +
-  'if(step<TPL.length){drawOne();}else{drawLast();}' +
-  'noEl.textContent=(step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認";}' +
+  'if(page==="w"){drawWaku();}else if(step<TPL.length){drawOne();}else{drawLast();}' +
+  'noEl.textContent=(page==="w")?"画像づくり":((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認");' +
+  'mkEl.style.display=(page==="w")?"none":"block";}' +
+  // ── 予約可能枠の画像を作る（専用の画面）──────────────────
+  'function drawWaku(){' +
+  'var h=\'<div class="bccard"><div class="bcname">予約可能枠の画像を作る</div>\'+' +
+  '\'<div class="bcwho">元の絵と同じデザインのまま、入れた日時に合わせてAIが枠ごと組み直します（1〜2分）。</div>\'+' +
+  '\'<div class="bchr"></div><div class="bcleft">どちら向けの絵にしますか</div>\'+' +
+  '\'<div class="bcseg"><button type="button" data-k="ja" class="\'+(WK==="ja"?"on":"")+\'">日本のお客様向け</button>\'+' +
+  '\'<button type="button" data-k="zh" class="\'+(WK==="zh"?"on":"")+\'">台湾のお客様向け</button></div>\'+' +
+  '\'<div class="bcwhead"><span class="lb">日時入力欄</span>\'+' +
+  '\'<button type="button" class="bcwauto" id="bcwauto">自動入力</button></div>\';' +
+  'for(var i=0;i<WROWS;i++){' +
+  'h+=\'<div class="bcwrow"><input class="d" id="bcwd\'+i+\'" placeholder="9/9（水）">\'+' +
+  '\'<input class="t" id="bcwt\'+i+\'" placeholder="11:00 / 13:00（空なら満員）"></div>\';}' +
+  'h+=\'<div class="bcleft" style="margin-top:10px">自動入力のもとにする区分</div>\'+' +
+  '\'<select id="bcwwaku">\'+["新規男性","新規女性","既存男性","既存女性"].map(function(x){' +
+  'return \'<option\'+(x===WWAKU?" selected":"")+\'>\'+x+\'</option>\';}).join("")+\'</select>\';' +
+  'if(WLAST)h+=\'<img class="bcwimg" src="\'+WLAST.thumb+\'">\';' +
+  'h+=\'</div><button type="button" class="bcgo" id="bcwmake">この内容で画像を作る</button>\';' +
+  'if(WLAST)h+=\'<div class="bcstatus on">できました。各対象の「画像を入れる」の先頭に出るので、入れたい対象で選んでください。</div>\';' +
+  'h+=\'<button type="button" class="bcghost" id="bcwback">◀ 対象の設定にもどる</button>\';' +
+  'box.innerHTML=h;bindWaku();}' +
+  'function bindWaku(){' +
+  '[].slice.call(box.querySelectorAll("[data-k]")).forEach(function(b){b.onclick=function(){' +
+  'WK=b.getAttribute("data-k");WLAST=null;draw();};});' +
+  'document.getElementById("bcwback").onclick=function(){page="t";status("");draw();};' +
+  'var sel=document.getElementById("bcwwaku");if(sel)sel.onchange=function(){WWAKU=sel.value;};' +
+  'document.getElementById("bcwauto").onclick=function(){' +
+  'var b=document.getElementById("bcwauto");b.disabled=true;status("今週の空き枠を数えています…");' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"suggest",kind:WK,waku:(sel?sel.value:WWAKU)})},' +
+  'function(r){b.disabled=false;var ds=(r&&r.days)||[];' +
+  'for(var i=0;i<WROWS;i++){var d=ds[i]||{date:"",times:[]};' +
+  'document.getElementById("bcwd"+i).value=d.date||"";' +
+  'document.getElementById("bcwt"+i).value=(d.times||[]).join(" / ");}' +
+  'status(ds.length?("空き枠を "+ds.length+" 日ぶん入れました。直せます。"):"案内できる空き枠がありませんでした。",!ds.length);},' +
+  'function(m){b.disabled=false;status(m,true);});};' +
+  'document.getElementById("bcwmake").onclick=function(){' +
+  'var mk=document.getElementById("bcwmake");' +
+  'var ds=[];for(var i=0;i<WROWS;i++){' +
+  'var dv=(document.getElementById("bcwd"+i).value||"").trim();' +
+  'var tv=(document.getElementById("bcwt"+i).value||"").trim();' +
+  'if(dv)ds.push({date:dv,times:tv?tv.split(/[\\s\\/,、]+/).filter(function(x){return x;}):[]});}' +
+  'if(!ds.length){status("日時入力欄が空です。自分で入れるか「自動入力」を押してください。",true);return;}' +
+  'mk.disabled=true;status("AIが画像を作っています…1〜2分かかります。");' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:WK,days:ds})},' +
+  'function(r){mk.disabled=false;if(!r||!r.ok){status((r&&r.note)||"作れませんでした。",true);return;}' +
+  'var lab="今週の予約可能枠（"+(WK==="zh"?"中文":"日本語")+"）";' +
+  'MADE=MADE.filter(function(x){return x.label!==lab;});' +
+  'MADE.unshift({key:r.name,label:lab,thumb:r.thumb,made:true});' +
+  'WLAST={thumb:r.thumb};status("");draw();},' +
+  'function(m){mk.disabled=false;status(m,true);});};}' +
+  // ── 対象1つぶんの設定 ────────────────────────────────
   'function drawOne(){' +
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
   'var h=\'<div class="bccard"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
@@ -3921,19 +3974,11 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" class="bcdel" data-del="\'+i+\'">消す</button></div>\';}).join("");}' +
   'else{h+=\'<div class="bcempty">まだ何も入っていません。下のボタンで画像か文章を入れてください。</div>\';}' +
   'if(mode==="img"){' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">よく使う画像から選ぶ</div><div class="bcgrid">\'+' +
-  'PRE.map(function(p){return \'<button type="button" class="bcpick" data-pre="\'+esc(p.key)+\'">\'+' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">画像を選ぶ</div><div class="bcgrid">\'+' +
+  'picks().map(function(p){return \'<button type="button" class="bcpick\'+(p.made?" new":"")+\'" data-pre="\'+esc(p.key)+\'">\'+' +
   '\'<img src="\'+p.thumb+\'"><span>\'+esc(p.label)+\'</span></button>\';}).join("")+\'</div>\'+' +
   '\'<div class="bcleft" style="margin-top:14px">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
   '\'</div><button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
-  'else if(mode==="waku"){' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">今週の予約可能枠（直せます・空にするとその日は満員として入ります）。AIが日数に合わせて枠ごと組み直します</div>\'+' +
-  '(WDAYS.length?WDAYS.map(function(d,i){return \'<div class="bcwrow">\'+' +
-  '\'<input class="d" id="bcwd\'+i+\'" value="\'+esc(d.date)+\'">\'+' +
-  '\'<input class="t" id="bcwt\'+i+\'" value="\'+esc((d.times||[]).join(" / "))+\'"></div>\';}).join("")' +
-  ':\'<div class="bcempty">読み込んでいます…</div>\')+\'</div>\'+' +
-  '(WDAYS.length?\'<button type="button" class="bcgo" id="bcwmake">この内容で画像を作る</button>\':"")+' +
-  '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="txt"){' +
   'h+=\'<div class="bchr"></div><div class="bcleft">文章を入れる（\'+MAXT+\'文字まで）</div>\'+' +
   '\'<textarea id="bctxt" placeholder="この対象へ送る文章"></textarea>\'+' +
@@ -3943,10 +3988,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'else{' +
   'h+=\'<div class="bchr"></div><div class="bcleft">あと \'+left+\' つ入れられます（ぜんぶで\'+MAXP+\'つまで）</div>\'+' +
   '\'<div class="bcadd"><button type="button" id="bcimg"\'+(left?"":" disabled")+\'>🖼 画像を入れる</button>\'+' +
-  '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div>\'+' +
-  '\'<button type="button" class="bcghost" id="bcwaku" style="margin-top:10px"\'+(left?"":" disabled")+\'>\'+' +
-  '\'📅 予約可能枠の画像を作る</button></div>\';' +
-  // ★中身が無いうちは「完了」を出さない（押せない灰色ボタンを見せない＝迷わせない）
+  '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div></div>\';' +
   'if(n)h+=\'<button type="button" class="bcgo" id="bcnext">この対象はこれで完了 →</button>\';' +
   'h+=\'<button type="button" class="bcmini" id="bcskip">この対象は送らない（飛ばす）</button>\';' +
   'if(step>0)h+=\'<button type="button" class="bcmini" id="bcprev">◀ 1つ前の対象を直す</button>\';}' +
@@ -3958,31 +4000,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'var e;' +
   'if(e=document.getElementById("bcimg"))e.onclick=function(){mode="img";draw();};' +
   'if(e=document.getElementById("bctx"))e.onclick=function(){mode="txt";draw();};' +
-  'if(e=document.getElementById("bcwaku"))e.onclick=function(){mode="waku";WDAYS=[];draw();' +
-  'status("今週の空き枠を数えています…");' +
-  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"suggest",template:TPL[step].name})},' +
-  'function(r){WDAYS=(r&&r.days)||[];status("");if(mode==="waku")draw();},' +
-  'function(m5){status(m5,true);});};' +
-  'if(e=document.getElementById("bcwmake"))e.onclick=function(){' +
-  'var mk=document.getElementById("bcwmake");' +
-  'var ds=WDAYS.map(function(_d,i){' +
-  'var dv=(document.getElementById("bcwd"+i).value||"").trim();' +
-  'var tv=(document.getElementById("bcwt"+i).value||"").trim();' +
-  'return {date:dv, times:tv?tv.split(/[\\s\\/,、]+/).filter(function(x){return x;}):[]};' +
-  '}).filter(function(x){return x.date;});' +
-  'if(!ds.length){status("日付が1つも入っていません。",true);return;}' +
-  'mk.disabled=true;status("AIが画像を作っています…1〜2分かかります。");' +
-  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",template:TPL[step].name,days:ds})},' +
-  'function(r){mk.disabled=false;if(!r||!r.ok){status((r&&r.note)||"作れませんでした。",true);return;}' +
-  'DATA[step].parts.push({kind:"image",src:"made:"+r.name,thumb:r.thumb});' +
-  'mode="";status("予約可能枠の画像を入れました。");draw();},' +
-  'function(m6){mk.disabled=false;status(m6,true);});};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){mode="";draw();};' +
   'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";status("");draw();};' +
   'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";status("");draw();};' +
   'if(e=document.getElementById("bcprev"))e.onclick=function(){step--;mode="";status("");draw();};' +
   '[].slice.call(box.querySelectorAll("[data-pre]")).forEach(function(b){b.onclick=function(){' +
-  'd.parts.push({kind:"image",src:"preset:"+b.getAttribute("data-pre")});mode="";draw();};});' +
+  'var k=b.getAttribute("data-pre");var pr=preOf(k);' +
+  'd.parts.push({kind:"image",src:(pr&&pr.made?"made:":"preset:")+k});mode="";draw();};});' +
   'var fe=document.getElementById("bcfile");' +
   'if(fe)fe.onchange=function(){var f=fe.files&&fe.files[0];if(!f||!/^image\\//.test(f.type))return;' +
   'var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){' +
@@ -4051,6 +4075,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
   'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m3){status(m3,true);});}});};});}' +
   // ── 立ち上がり ────────────────────────────────────────
+  'mkEl.onclick=function(){page="w";mode="";status("");draw();};' +
   'status("読み込んでいます…");' +
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
@@ -4069,6 +4094,7 @@ function renderBroadcastPage_(base, staff, dev) {
       '<div class="bcbanner" id="bcbanner">読み込み中…</div>' +
       '<div class="bctop"><span class="lb">配信内容</span><b id="bccatname">…</b>' +
         '<span class="no" id="bcno"></span></div>' +
+      '<button type="button" class="bcmake" id="bcmakebtn">📅 予約可能枠の画像を作る</button>' +
       '<div id="bcbody"></div>' +
       '<div class="bcstatus" id="bcstatus"></div>' +
     '</div>' +
