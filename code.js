@@ -3915,16 +3915,23 @@ function renderBroadcastPage_(base, staff, dev) {
   'function filled(i){return (DATA[i]&&DATA[i].parts||[]).length;}' +
   // ── 画面を描く ────────────────────────────────────────
   'var SKEY="sz_bcast_v1";' +
-  'function saveNow(){try{localStorage.setItem(SKEY,JSON.stringify({t:Date.now(),step:step,text:WTEXT,' +
-  'data:DATA.map(function(x){return {parts:(x.parts||[]).filter(function(p){return !p.b64;})' +
-  '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src};})};})' +
-  '}));}catch(e){}}' +
+  // ★その場で選んだ写真も覚える（2026-09-05 まるちゃん指摘で実測＝端末は11.7MB以上入る）。
+  //   入りきらない時だけ写真をあきらめる（他の中身は必ず残す）。
+  'function partsFor(x,withPhoto){return (x.parts||[]).filter(function(p){return withPhoto||!p.b64;})' +
+  '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};});}' +
+  'function saveNow(){' +
+  'function pack(withPhoto){return JSON.stringify({t:Date.now(),step:step,text:WTEXT,' +
+  'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})});}' +
+  'try{localStorage.setItem(SKEY,pack(true));return;}catch(e){}' +
+  'try{localStorage.setItem(SKEY,pack(false));}catch(e2){}}' +
   'function loadSaved(){try{var s=JSON.parse(localStorage.getItem(SKEY)||"null");' +
   'if(!s||!s.data||s.data.length!==TPL.length)return false;' +
   'if(Date.now()-(s.t||0)>1000*60*60*24*7){localStorage.removeItem(SKEY);return false;}' +
   'var any=false;' +
   'for(var i=0;i<TPL.length;i++){var ps=(s.data[i]&&s.data[i].parts)||[];' +
-  'DATA[i].parts=ps.slice(0,MAXP);if(ps.length)any=true;}' +
+  'DATA[i].parts=ps.slice(0,MAXP).map(function(p){' +
+  'if(p.kind==="image"&&p.b64&&!p.thumb)p.thumb="data:image/jpeg;base64,"+p.b64;return p;});' +
+  'if(ps.length)any=true;}' +
   'WTEXT=s.text||"";if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;' +
   'return any;}catch(e){return false;}}' +
   // ★大きく見る（押した1枚だけ、事務所パソコンから大きい見本をもらう）
