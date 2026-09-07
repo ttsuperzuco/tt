@@ -3911,7 +3911,31 @@ function renderBroadcastPage_(base, staff, dev) {
   'var pr=preOf((p.src||"").replace(/^(preset|made):/,""));return pr?pr.thumb:(p.thumb||"");}' +
   'function filled(i){return (DATA[i]&&DATA[i].parts||[]).length;}' +
   // ── 画面を描く ────────────────────────────────────────
-  'function draw(){' +
+  'var SKEY="sz_bcast_v1";' +
+  'function saveNow(){try{localStorage.setItem(SKEY,JSON.stringify({t:Date.now(),step:step,text:WTEXT,' +
+  'data:DATA.map(function(x){return {parts:(x.parts||[]).filter(function(p){return !p.b64;})' +
+  '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src};})};})' +
+  '}));}catch(e){}}' +
+  'function loadSaved(){try{var s=JSON.parse(localStorage.getItem(SKEY)||"null");' +
+  'if(!s||!s.data||s.data.length!==TPL.length)return false;' +
+  'if(Date.now()-(s.t||0)>1000*60*60*24*7){localStorage.removeItem(SKEY);return false;}' +
+  'var any=false;' +
+  'for(var i=0;i<TPL.length;i++){var ps=(s.data[i]&&s.data[i].parts)||[];' +
+  'DATA[i].parts=ps.slice(0,MAXP);if(ps.length)any=true;}' +
+  'WTEXT=s.text||"";if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;' +
+  'return any;}catch(e){return false;}}' +
+  // ★大きく見る（押した1枚だけ、事務所パソコンから大きい見本をもらう）
+  'function bigView(src,name){' +
+  'function show(u){szOvShow_(\'<div style="padding:14px;text-align:center">\'+' +
+  '\'<img src="\'+u+\'" style="max-width:92vw;max-height:74vh;border-radius:12px;display:block;margin:0 auto">\'+' +
+  '\'<button type="button" id="bcbigx" style="margin:16px auto 0;display:block;border:0;border-radius:12px;\'+' +
+  '\'padding:14px 34px;font-size:17px;font-weight:800;background:#2563EB;color:#fff">閉じる</button></div>\',"#2C7A99");' +
+  'setTimeout(function(){var b=document.getElementById("bcbigx");if(b)b.onclick=function(){szOvHide_();};},80);}' +
+  'show(src);' +
+  'if(!name)return;' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"big",name:name})},' +
+  'function(r){if(r&&r.ok&&r.big&&document.getElementById("bcbigx"))show(r.big);},function(){});}' +
+  'function draw(){saveNow();' +
   'if(page==="w"){drawWaku();}else if(step<TPL.length){drawOne();}else{drawLast();}' +
   'noEl.textContent=(page==="w")?"画像づくり":((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認");' +
   'mkEl.style.display=(page==="w")?"none":"block";}' +
@@ -3927,7 +3951,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'placeholder="ここに空き時間検索の出力を貼るか、自分で書いてください。&#10;&#10;'+
   '新規&#10;9/8（火）&#10;16:30&#10;9/9（水）&#10;11:00 / 12:00">\'+esc(WTEXT)+\'</textarea>\';' +
   'if(WDONE.length){h+=\'<div class="bchr"></div><div class="bcleft">できた画像</div><div class="bcgrid">\'+' +
-  'WDONE.map(function(x){return \'<div class="bcpick new"><img src="\'+x.thumb+\'"><span>\'+' +
+  'WDONE.map(function(x){return \'<div class="bcpick new"><img src="\'+x.thumb+\'" data-bigw="\'+esc(x.name||"")+\'" style="cursor:zoom-in"><span>\'+' +
   'esc(x.label)+\'</span></div>\';}).join("")+\'</div>\';}' +
   'h+=\'</div>\';' +
   'h+=\'<button type="button" class="bcgo" id="bcwmake"\'+(WBUSY?" disabled":"")+\'>\'+' +
@@ -3938,6 +3962,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function bindWaku(){' +
   'var ta=document.getElementById("bcwtxt");' +
   'if(ta)ta.oninput=function(){WTEXT=ta.value;};' +
+  '[].slice.call(box.querySelectorAll("[data-bigw]")).forEach(function(b){b.onclick=function(){' +
+  'bigView(b.getAttribute("src"),b.getAttribute("data-bigw"));};});' +
   'document.getElementById("bcwback").onclick=function(){page="t";status("");draw();};' +
   'document.getElementById("bcwauto").onclick=function(){' +
   'var b=document.getElementById("bcwauto");b.disabled=true;status("今週の空き枠を数えています…");' +
@@ -3960,7 +3986,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'WMSG=(i+1)+"枚目 / "+jobs.length+"枚　「"+j.label+"」をAIが作っています…";draw();' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:j.kind,days:j.days})},' +
   'function(g){if(g&&g.ok&&g.name){' +
-  'WDONE.push({label:j.label,thumb:g.thumb});' +
+  'WDONE.push({label:j.label,thumb:g.thumb,name:g.name});' +
   'putIntoTargets(j.targets,g.name,g.thumb);}' +
   'i++;next();},' +
   'function(m2){WBUSY=false;WMSG="";status("「"+j.label+"」で止まりました："+m2,true);draw();});' +
@@ -3981,7 +4007,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcwho">\'+esc(t.who)+\'</div><div class="bchr"></div>\';' +
   'if(n){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
-  '(th?(\'<img src="\'+th+\'">\'):"")+\'<span class="bcptx">\'+esc(partLabel(p))+\'</span>\'+' +
+  '(th?(\'<img src="\'+th+\'" data-big="\'+i+\'" style="cursor:zoom-in">\'):"")+' +
+  '\'<span class="bcptx">\'+esc(partLabel(p))+\'</span>\'+' +
   '\'<button type="button" class="bcdel" data-del="\'+i+\'">消す</button></div>\';}).join("");}' +
   'else{h+=\'<div class="bcempty">まだ何も入っていません。下のボタンで画像か文章を入れてください。</div>\';}' +
   'if(mode==="img"){' +
@@ -4008,6 +4035,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'var d=DATA[step];' +
   '[].slice.call(box.querySelectorAll("[data-del]")).forEach(function(b){b.onclick=function(){' +
   'd.parts.splice(+b.getAttribute("data-del"),1);draw();};});' +
+  '[].slice.call(box.querySelectorAll("[data-big]")).forEach(function(b){b.onclick=function(){' +
+  'var p=d.parts[+b.getAttribute("data-big")];if(!p)return;' +
+  'var nm=((p.src||"").indexOf("made:")===0)?p.src.slice(5):"";' +
+  'bigView(partThumb(p),nm);};});' +
   'var e;' +
   'if(e=document.getElementById("bcimg"))e.onclick=function(){mode="img";draw();};' +
   'if(e=document.getElementById("bctx"))e.onclick=function(){mode="txt";draw();};' +
@@ -4091,7 +4122,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
   'CAT=d.category||"";TPL=d.templates;PRE=d.presets||[];MAXP=d.max_parts||3;MAXT=d.max_text||500;' +
+  'MADE=(d.recent||[]).map(function(x){return {key:x.key,label:x.label,thumb:x.thumb,made:true};});' +
   'DATA=TPL.map(function(){return {parts:[]};});' +
+  'if(loadSaved())status("前回の続きから開きました。");' +
   'catEl.textContent=CAT;' +
   'if(d.banner){banEl.textContent=d.banner.text;' +
   'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":((d.banner.kind==="practice")?"#fff3cd":"#d1e7dd");}' +
