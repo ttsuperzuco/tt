@@ -3928,6 +3928,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function bigView(src,name){' +
   'function show(u){szOvShow_(\'<div style="padding:14px;text-align:center">\'+' +
   '\'<img src="\'+u+\'" style="max-width:92vw;max-height:74vh;border-radius:12px;display:block;margin:0 auto">\'+' +
+  '\'<div style="color:#E8EEF7;font-size:13px;margin-top:10px">\'+' +
+  '(u===src?"はっきりした絵を出しています…（15秒ほど）":"")+\'</div>\'+' +
   '\'<button type="button" id="bcbigx" style="margin:16px auto 0;display:block;border:0;border-radius:12px;\'+' +
   '\'padding:14px 34px;font-size:17px;font-weight:800;background:#2563EB;color:#fff">閉じる</button></div>\',"#2C7A99");' +
   'setTimeout(function(){var b=document.getElementById("bcbigx");if(b)b.onclick=function(){szOvHide_();};},80);}' +
