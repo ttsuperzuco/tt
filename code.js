@@ -2032,6 +2032,8 @@ function renderZenjitsuPage_(base, staff, dev) {
   var script =
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
+  /* ★2026-09-07まるちゃん指示：開発版だけ「✔確認済／✎要修正」のボタン付きにする。 */
+  'var DEVFLAG="' + (dev ? '1' : '') + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
   'var slot=(idn.device||"d0").toLowerCase().replace(/[^a-z0-9_]/g,"").slice(0,32)||"default";' +
   'var dEl=document.getElementById("zjdate"),stEl=document.getElementById("zjstatus"),resEl=document.getElementById("zjres");' +
@@ -2071,7 +2073,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'waitMsg=(mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…":"全員分を事務所PCで作成中…";startedAt=Date.now();' +
   'lock(true);setSt(waitMsg+"（通常、数十秒かかります）","wait");' +
   'resEl.innerHTML="";polls=0;' +
-  'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode})},' +
+  'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode,dev:DEVFLAG})},' +
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");lock(false);return;}setTimeout(function(){poll(r.id);},1000);});}' +
   /* ★最初から入っている日付＝翌営業日。**決まりは共通の1本に聞く**（2026-08-24 まるちゃん）。
      定休日そのものは 共通\business_day.py（Pythonの正本）から自動で作られる shop_rules.js が持つ。
@@ -2083,6 +2085,16 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var dbox=document.getElementById("zjdatebox");' +
   'if(dbox){dbox.addEventListener("click",function(){try{dEl.showPicker();}catch(e){dEl.focus();}});}' +
   'btns.forEach(function(b){b.addEventListener("click",function(){run(b.getAttribute("data-mode"));});});' +
+  /* ★2026-09-07：枠の中の確認画面（開発版はボタン付き）から届く合図を受ける。
+     fit＝カードが減って高さが変わった／scrollto＝そのカードの所まで動かしてほしい。
+     画像の入れ替えと送る日時は事務所パソコンの窓でしかできないので、枠の中で隠してある。 */
+  'window.addEventListener("message",function(ev){var m=ev.data||{};if(!m.zj)return;' +
+  'var f=document.getElementById("zjframe");if(!f)return;' +
+  'if(m.zj==="fit"){setTimeout(function(){fit(f);},60);return;}' +
+  'if(m.zj==="scrollto"){setTimeout(function(){fit(f);' +
+  'try{var y=f.getBoundingClientRect().top+window.pageYOffset+(m.top||0)-12;' +
+  'window.scrollTo({top:y,behavior:"smooth"});}catch(e){}},80);return;}' +
+  '});' +
   '})();</script>';
   return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
   '<div class="home">' +
