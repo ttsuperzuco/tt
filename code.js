@@ -3881,7 +3881,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
   'var TPL=[],PRE=[],MADE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",page="t";' +
-  'var WK="ja",WWAKU="新規男性",WROWS=5,WLAST=null;' +
+  'var WTEXT="",WDONE=[],WBUSY=false,WMSG="";' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno"),mkEl=document.getElementById("bcmakebtn");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
@@ -3917,52 +3917,62 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
   'var h=\'<div class="bccard"><div class="bcname">予約可能枠の画像を作る</div>\'+' +
-  '\'<div class="bcwho">元の絵と同じデザインのまま、入れた日時に合わせてAIが枠ごと組み直します（1〜2分）。</div>\'+' +
-  '\'<div class="bchr"></div><div class="bcleft">どちら向けの絵にしますか</div>\'+' +
-  '\'<div class="bcseg"><button type="button" data-k="ja" class="\'+(WK==="ja"?"on":"")+\'">日本のお客様向け</button>\'+' +
-  '\'<button type="button" data-k="zh" class="\'+(WK==="zh"?"on":"")+\'">台湾のお客様向け</button></div>\'+' +
+  '\'<div class="bcwho">元の絵と同じデザインのまま、貼った内容に合わせてAIが枠ごと組み直します。'+
+  '書いてある区分の数だけ作り、できた絵はその対象の1つ目に自動で入ります。</div>\'+' +
+  '\'<div class="bchr"></div>\'+' +
   '\'<div class="bcwhead"><span class="lb">日時入力欄</span>\'+' +
-  '\'<button type="button" class="bcwauto" id="bcwauto">自動入力</button></div>\';' +
-  'for(var i=0;i<WROWS;i++){' +
-  'h+=\'<div class="bcwrow"><input class="d" id="bcwd\'+i+\'" placeholder="9/9（水）">\'+' +
-  '\'<input class="t" id="bcwt\'+i+\'" placeholder="11:00 / 13:00（空なら満員）"></div>\';}' +
-  'h+=\'<div class="bcleft" style="margin-top:10px">自動入力のもとにする区分</div>\'+' +
-  '\'<select id="bcwwaku">\'+["新規男性","新規女性","既存男性","既存女性"].map(function(x){' +
-  'return \'<option\'+(x===WWAKU?" selected":"")+\'>\'+x+\'</option>\';}).join("")+\'</select>\';' +
-  'if(WLAST)h+=\'<img class="bcwimg" src="\'+WLAST.thumb+\'">\';' +
-  'h+=\'</div><button type="button" class="bcgo" id="bcwmake">この内容で画像を作る</button>\';' +
-  'if(WLAST)h+=\'<div class="bcstatus on">できました。各対象の「画像を入れる」の先頭に出るので、入れたい対象で選んでください。</div>\';' +
+  '\'<button type="button" class="bcwauto" id="bcwauto">自動入力</button></div>\'+' +
+  '\'<textarea id="bcwtxt" style="min-height:260px;font-size:14px" \'+' +
+  '\'placeholder="ここに空き時間検索の出力を貼るか、自分で書いてください。&#10;&#10;'+
+  '新規&#10;9/8（火）&#10;16:30&#10;9/9（水）&#10;11:00 / 12:00">\'+esc(WTEXT)+\'</textarea>\';' +
+  'if(WDONE.length){h+=\'<div class="bchr"></div><div class="bcleft">できた画像</div><div class="bcgrid">\'+' +
+  'WDONE.map(function(x){return \'<div class="bcpick new"><img src="\'+x.thumb+\'"><span>\'+' +
+  'esc(x.label)+\'</span></div>\';}).join("")+\'</div>\';}' +
+  'h+=\'</div>\';' +
+  'h+=\'<button type="button" class="bcgo" id="bcwmake"\'+(WBUSY?" disabled":"")+\'>\'+' +
+  '(WBUSY?"作っています…":"この内容で画像を作る")+\'</button>\';' +
+  'if(WMSG)h+=\'<div class="bcstatus on">\'+esc(WMSG)+\'</div>\';' +
   'h+=\'<button type="button" class="bcghost" id="bcwback">◀ 対象の設定にもどる</button>\';' +
   'box.innerHTML=h;bindWaku();}' +
   'function bindWaku(){' +
-  '[].slice.call(box.querySelectorAll("[data-k]")).forEach(function(b){b.onclick=function(){' +
-  'WK=b.getAttribute("data-k");WLAST=null;draw();};});' +
+  'var ta=document.getElementById("bcwtxt");' +
+  'if(ta)ta.oninput=function(){WTEXT=ta.value;};' +
   'document.getElementById("bcwback").onclick=function(){page="t";status("");draw();};' +
-  'var sel=document.getElementById("bcwwaku");if(sel)sel.onchange=function(){WWAKU=sel.value;};' +
   'document.getElementById("bcwauto").onclick=function(){' +
   'var b=document.getElementById("bcwauto");b.disabled=true;status("今週の空き枠を数えています…");' +
-  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"suggest",kind:WK,waku:(sel?sel.value:WWAKU)})},' +
-  'function(r){b.disabled=false;var ds=(r&&r.days)||[];' +
-  'for(var i=0;i<WROWS;i++){var d=ds[i]||{date:"",times:[]};' +
-  'document.getElementById("bcwd"+i).value=d.date||"";' +
-  'document.getElementById("bcwt"+i).value=(d.times||[]).join(" / ");}' +
-  'status(ds.length?("空き枠を "+ds.length+" 日ぶん入れました。直せます。"):"案内できる空き枠がありませんでした。",!ds.length);},' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"auto"})},' +
+  'function(r){b.disabled=false;WTEXT=(r&&r.text)||"";status(WTEXT?"空き枠を入れました。直せます。":"空き枠がありませんでした。",!WTEXT);draw();},' +
   'function(m){b.disabled=false;status(m,true);});};' +
   'document.getElementById("bcwmake").onclick=function(){' +
-  'var mk=document.getElementById("bcwmake");' +
-  'var ds=[];for(var i=0;i<WROWS;i++){' +
-  'var dv=(document.getElementById("bcwd"+i).value||"").trim();' +
-  'var tv=(document.getElementById("bcwt"+i).value||"").trim();' +
-  'if(dv)ds.push({date:dv,times:tv?tv.split(/[\\s\\/,、]+/).filter(function(x){return x;}):[]});}' +
-  'if(!ds.length){status("日時入力欄が空です。自分で入れるか「自動入力」を押してください。",true);return;}' +
-  'mk.disabled=true;status("AIが画像を作っています…1〜2分かかります。");' +
-  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:WK,days:ds})},' +
-  'function(r){mk.disabled=false;if(!r||!r.ok){status((r&&r.note)||"作れませんでした。",true);return;}' +
-  'var lab="今週の予約可能枠（"+(WK==="zh"?"中文":"日本語")+"）";' +
-  'MADE=MADE.filter(function(x){return x.label!==lab;});' +
-  'MADE.unshift({key:r.name,label:lab,thumb:r.thumb,made:true});' +
-  'WLAST={thumb:r.thumb};status("");draw();},' +
-  'function(m){mk.disabled=false;status(m,true);});};}' +
+  'if(ta)WTEXT=ta.value;' +
+  'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してください。",true);return;}' +
+  'WBUSY=true;WDONE=[];WMSG="";status("貼られた内容を読み取っています…");draw();' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"plan",text:WTEXT})},' +
+  'function(r){if(!r||!r.ok||!r.jobs||!r.jobs.length){WBUSY=false;WMSG="";' +
+  'status((r&&r.note)||"読み取れませんでした。",true);draw();return;}' +
+  'var jobs=r.jobs,i=0;' +
+  '(function next(){' +
+  'if(i>=jobs.length){WBUSY=false;' +
+  'WMSG="できました。"+jobs.length+"枚を、それぞれの対象の1つ目に入れました。";' +
+  'status("");draw();return;}' +
+  'var j=jobs[i];' +
+  'WMSG=(i+1)+"枚目 / "+jobs.length+"枚　「"+j.label+"」をAIが作っています…";draw();' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:j.kind,days:j.days})},' +
+  'function(g){if(g&&g.ok&&g.name){' +
+  'WDONE.push({label:j.label,thumb:g.thumb});' +
+  'putIntoTargets(j.targets,g.name,g.thumb);}' +
+  'i++;next();},' +
+  'function(m2){WBUSY=false;WMSG="";status("「"+j.label+"」で止まりました："+m2,true);draw();});' +
+  '})();},' +
+  'function(m){WBUSY=false;WMSG="";status(m,true);draw();});};}' +
+  // できた絵を、その対象の1つ目に入れる（前に入れた予約可能枠の絵は取り替える）
+  'function putIntoTargets(names,name,thumb){' +
+  '(names||[]).forEach(function(nm){' +
+  'for(var i=0;i<TPL.length;i++){if(TPL[i].name!==nm)continue;' +
+  'var ps=DATA[i].parts;' +
+  'for(var k=ps.length-1;k>=0;k--){if(ps[k].kind==="image"&&(ps[k].src||"").indexOf("made:")===0)ps.splice(k,1);}' +
+  'ps.unshift({kind:"image",src:"made:"+name,thumb:thumb});' +
+  'while(ps.length>MAXP)ps.pop();}});}' +
   // ── 対象1つぶんの設定 ────────────────────────────────
   'function drawOne(){' +
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
