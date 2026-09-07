@@ -3833,6 +3833,12 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcadd button:disabled{background:#26324A;color:#94A3B8;}' +
     // 画像の選択
     '.bcgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
+    '.bcwrow{display:flex;gap:8px;margin:0 0 8px;}' +
+    '.bcwrow input{box-sizing:border-box;font-size:15px;padding:10px;border-radius:9px;'+
+    'border:1px solid #26324A;background:#fff;color:#0f172a;}' +
+    '.bcwrow .d{flex:0 0 122px;text-align:center;}' +
+    '.bcwrow .t{flex:1;min-width:0;}' +
+    '.bcwimg{width:100%;border-radius:10px;display:block;margin:10px 0 0;}' +
     '.bcpick{background:#0B1220;border:1px solid #26324A;border-radius:12px;padding:8px;text-align:center;}' +
     '.bcpick img{width:100%;border-radius:8px;display:block;}' +
     '.bcpick span{display:block;font-size:12.5px;font-weight:800;color:#E8EEF7;margin-top:7px;}' +
@@ -3873,7 +3879,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-  'var TPL=[],PRE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="";' +
+  'var TPL=[],PRE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",WDAYS=[];' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
@@ -3896,6 +3902,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 中身の言い方（1か所）────────────────────────────────
   'function preOf(key){for(var i=0;i<PRE.length;i++)if(PRE[i].key===key)return PRE[i];return null;}' +
   'function partLabel(p){if(p.kind==="text")return "文章 "+p.text.length+"文字　"+p.text.replace(/\\n/g," ").slice(0,22);' +
+  'if((p.src||"").indexOf("made:")===0)return "予約可能枠の画像";' +
   'var pr=preOf((p.src||"").replace("preset:",""));return pr?pr.label:"その場で選んだ写真";}' +
   'function partThumb(p){if(p.kind==="text")return "";var pr=preOf((p.src||"").replace("preset:",""));' +
   'return pr?pr.thumb:(p.thumb||"");}' +
@@ -3919,6 +3926,14 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<img src="\'+p.thumb+\'"><span>\'+esc(p.label)+\'</span></button>\';}).join("")+\'</div>\'+' +
   '\'<div class="bcleft" style="margin-top:14px">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
   '\'</div><button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
+  'else if(mode==="waku"){' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">今週の予約可能枠（直せます・空にするとその日は満員として入ります）</div>\'+' +
+  '(WDAYS.length?WDAYS.map(function(d,i){return \'<div class="bcwrow">\'+' +
+  '\'<input class="d" id="bcwd\'+i+\'" value="\'+esc(d.date)+\'">\'+' +
+  '\'<input class="t" id="bcwt\'+i+\'" value="\'+esc((d.times||[]).join(" / "))+\'"></div>\';}).join("")' +
+  ':\'<div class="bcempty">読み込んでいます…</div>\')+\'</div>\'+' +
+  '(WDAYS.length?\'<button type="button" class="bcgo" id="bcwmake">この内容で画像を作る</button>\':"")+' +
+  '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="txt"){' +
   'h+=\'<div class="bchr"></div><div class="bcleft">文章を入れる（\'+MAXT+\'文字まで）</div>\'+' +
   '\'<textarea id="bctxt" placeholder="この対象へ送る文章"></textarea>\'+' +
@@ -3928,7 +3943,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'else{' +
   'h+=\'<div class="bchr"></div><div class="bcleft">あと \'+left+\' つ入れられます（ぜんぶで\'+MAXP+\'つまで）</div>\'+' +
   '\'<div class="bcadd"><button type="button" id="bcimg"\'+(left?"":" disabled")+\'>🖼 画像を入れる</button>\'+' +
-  '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div></div>\';' +
+  '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div>\'+' +
+  '\'<button type="button" class="bcghost" id="bcwaku" style="margin-top:10px"\'+(left?"":" disabled")+\'>\'+' +
+  '\'📅 予約可能枠の画像を作る</button></div>\';' +
   // ★中身が無いうちは「完了」を出さない（押せない灰色ボタンを見せない＝迷わせない）
   'if(n)h+=\'<button type="button" class="bcgo" id="bcnext">この対象はこれで完了 →</button>\';' +
   'h+=\'<button type="button" class="bcmini" id="bcskip">この対象は送らない（飛ばす）</button>\';' +
@@ -3941,6 +3958,24 @@ function renderBroadcastPage_(base, staff, dev) {
   'var e;' +
   'if(e=document.getElementById("bcimg"))e.onclick=function(){mode="img";draw();};' +
   'if(e=document.getElementById("bctx"))e.onclick=function(){mode="txt";draw();};' +
+  'if(e=document.getElementById("bcwaku"))e.onclick=function(){mode="waku";WDAYS=[];draw();' +
+  'status("今週の空き枠を数えています…");' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"suggest",template:TPL[step].name})},' +
+  'function(r){WDAYS=(r&&r.days)||[];status("");if(mode==="waku")draw();},' +
+  'function(m5){status(m5,true);});};' +
+  'if(e=document.getElementById("bcwmake"))e.onclick=function(){' +
+  'var ds=WDAYS.map(function(_d,i){' +
+  'var dv=(document.getElementById("bcwd"+i).value||"").trim();' +
+  'var tv=(document.getElementById("bcwt"+i).value||"").trim();' +
+  'return {date:dv, times:tv?tv.split(/[\\s\\/,、]+/).filter(function(x){return x;}):[]};' +
+  '}).filter(function(x){return x.date;});' +
+  'if(!ds.length){status("日付が1つも入っていません。",true);return;}' +
+  'e.disabled=true;status("画像を作っています…");' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",template:TPL[step].name,days:ds})},' +
+  'function(r){if(!r||!r.ok){status((r&&r.note)||"作れませんでした。",true);return;}' +
+  'DATA[step].parts.push({kind:"image",src:"made:"+r.name,thumb:r.thumb});' +
+  'mode="";status("予約可能枠の画像を入れました。");draw();},' +
+  'function(m6){status(m6,true);});};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){mode="";draw();};' +
   'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";status("");draw();};' +
   'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";status("");draw();};' +
