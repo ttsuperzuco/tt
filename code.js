@@ -3905,6 +3905,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function picks(){return MADE.concat(PRE);}' +
   'function preOf(key){var a=picks();for(var i=0;i<a.length;i++)if(a[i].key===key)return a[i];return null;}' +
   'function partLabel(p){if(p.kind==="text")return "文章 "+p.text.length+"文字　"+p.text.replace(/\\n/g," ").slice(0,22);' +
+  'if((p.src||"").indexOf("made:")===0)return "予約可能枠の画像";' +
   'var pr=preOf((p.src||"").replace(/^(preset|made):/,""));return pr?pr.label:"その場で選んだ写真";}' +
   'function partThumb(p){if(p.kind==="text")return "";' +
   'var pr=preOf((p.src||"").replace(/^(preset|made):/,""));return pr?pr.thumb:(p.thumb||"");}' +
