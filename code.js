@@ -3964,18 +3964,19 @@ function renderBroadcastPage_(base, staff, dev) {
   'function(r){WDAYS=(r&&r.days)||[];status("");if(mode==="waku")draw();},' +
   'function(m5){status(m5,true);});};' +
   'if(e=document.getElementById("bcwmake"))e.onclick=function(){' +
+  'var mk=document.getElementById("bcwmake");' +
   'var ds=WDAYS.map(function(_d,i){' +
   'var dv=(document.getElementById("bcwd"+i).value||"").trim();' +
   'var tv=(document.getElementById("bcwt"+i).value||"").trim();' +
   'return {date:dv, times:tv?tv.split(/[\\s\\/,、]+/).filter(function(x){return x;}):[]};' +
   '}).filter(function(x){return x.date;});' +
   'if(!ds.length){status("日付が1つも入っていません。",true);return;}' +
-  'e.disabled=true;status("画像を作っています…");' +
+  'mk.disabled=true;status("画像を作っています…");' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",template:TPL[step].name,days:ds})},' +
-  'function(r){if(!r||!r.ok){status((r&&r.note)||"作れませんでした。",true);return;}' +
+  'function(r){mk.disabled=false;if(!r||!r.ok){status((r&&r.note)||"作れませんでした。",true);return;}' +
   'DATA[step].parts.push({kind:"image",src:"made:"+r.name,thumb:r.thumb});' +
   'mode="";status("予約可能枠の画像を入れました。");draw();},' +
-  'function(m6){status(m6,true);});};' +
+  'function(m6){mk.disabled=false;status(m6,true);});};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){mode="";draw();};' +
   'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";status("");draw();};' +
   'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";status("");draw();};' +
