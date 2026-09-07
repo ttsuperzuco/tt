@@ -3830,7 +3830,10 @@ function renderBroadcastPage_(base, staff, dev) {
     'border-radius:12px;background:#2563EB;color:#fff;}' +
     '.bcadd button:disabled{background:#26324A;color:#94A3B8;}' +
     '.bcgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
-    '.bcpick{background:#0B1220;border:1px solid #26324A;border-radius:12px;padding:8px;text-align:center;}' +
+    '.bcpick{background:#0B1220;border:1px solid #26324A;border-radius:12px;padding:8px;text-align:center;position:relative;}' +
+    '.bcpick .sel{display:block;width:100%;border:0;background:transparent;padding:0;}' +
+    '.bczoom{display:block;width:100%;margin-top:6px;border:1px solid #26324A;background:#131C2E;' +
+    'color:#B9CCDA;border-radius:9px;padding:7px 4px;font-size:12px;font-weight:800;}' +
     '.bcpick.new{border-color:#D97706;}' +
     '.bcpick img{width:100%;border-radius:8px;display:block;}' +
     '.bcpick span{display:block;font-size:12.5px;font-weight:800;color:#E8EEF7;margin-top:7px;}' +
@@ -4020,8 +4023,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'else{h+=\'<div class="bcempty">まだ何も入っていません。下のボタンで画像か文章を入れてください。</div>\';}' +
   'if(mode==="img"){' +
   'h+=\'<div class="bchr"></div><div class="bcleft">画像を選ぶ</div><div class="bcgrid">\'+' +
-  'picks().map(function(p){return \'<button type="button" class="bcpick\'+(p.made?" new":"")+\'" data-pre="\'+esc(p.key)+\'">\'+' +
-  '\'<img src="\'+p.thumb+\'"><span>\'+esc(p.label)+\'</span></button>\';}).join("")+\'</div>\'+' +
+  'picks().map(function(p){return \'<div class="bcpick\'+(p.made?" new":"")+\'">\'+' +
+  '\'<button type="button" class="sel" data-pre="\'+esc(p.key)+\'">\'+' +
+  '\'<img src="\'+p.thumb+\'"><span>\'+esc(p.label)+\'</span></button>\'+' +
+  '\'<button type="button" class="bczoom" data-zoom="\'+esc(p.key)+\'">🔍 大きく見る</button></div>\';' +
+  '}).join("")+\'</div>\'+' +
   '\'<div class="bcleft" style="margin-top:14px">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
   '\'</div><button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="txt"){' +
@@ -4056,6 +4062,9 @@ function renderBroadcastPage_(base, staff, dev) {
   '[].slice.call(box.querySelectorAll("[data-pre]")).forEach(function(b){b.onclick=function(){' +
   'var k=b.getAttribute("data-pre");var pr=preOf(k);' +
   'd.parts.push({kind:"image",src:(pr&&pr.made?"made:":"preset:")+k});mode="";draw();};});' +
+  '[].slice.call(box.querySelectorAll("[data-zoom]")).forEach(function(b){b.onclick=function(ev){' +
+  'ev.stopPropagation();var k=b.getAttribute("data-zoom");var pr=preOf(k);if(!pr)return;' +
+  'bigView(pr.thumb, pr.made?k:"");};});' +
   'var fe=document.getElementById("bcfile");' +
   'if(fe)fe.onchange=function(){var f=fe.files&&fe.files[0];if(!f||!/^image\\//.test(f.type))return;' +
   'var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){' +
@@ -4132,9 +4141,12 @@ function renderBroadcastPage_(base, staff, dev) {
     'DATA=TPL.map(function(){return {parts:[]};});' +
   'if(loadSaved())status("前回の続きから開きました。");' +
   // ★最近作った絵は別便で取る（templates の答えに載せると大きすぎて窓口を通らない）
-  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"recent"})},function(r){' +
-  'MADE=((r&&r.recent)||[]).map(function(x){return {key:x.key,label:x.label,thumb:x.thumb,made:true};});' +
-  'draw();},function(){});' +
+  'var rslot=(idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d";' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"recent",slot:rslot})},function(r){' +
+  'if(!r||!r.ok)return;' +
+  'jsonp({action:"data",name:"bc_recent_"+(r.slot||rslot)+".json"},function(d2){' +
+  'MADE=((d2&&d2.recent)||[]).map(function(x){return {key:x.key,label:x.label,thumb:x.thumb,made:true};});' +
+  'draw();});},function(){});' +
   'catEl.textContent=CAT;' +
   'if(d.banner){banEl.textContent=d.banner.text;' +
   'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":((d.banner.kind==="practice")?"#fff3cd":"#d1e7dd");}' +
