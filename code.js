@@ -3933,8 +3933,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'setTimeout(function(){var b=document.getElementById("bcbigx");if(b)b.onclick=function(){szOvHide_();};},80);}' +
   'show(src);' +
   'if(!name)return;' +
-  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"big",name:name})},' +
-  'function(r){if(r&&r.ok&&r.big&&document.getElementById("bcbigx"))show(r.big);},function(){});}' +
+  // ★大きい絵は答えに載せられない（窓口を通らない）ので、事務所パソコンが置き場へ置き、
+  //   こちらは置き場から読む（前日お知らせ・コストと同じやり方）。
+  'var slot=(idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d";' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"big",name:name,slot:slot})},' +
+  'function(r){if(!r||!r.ok||!document.getElementById("bcbigx"))return;' +
+  'jsonp({action:"data",name:"bc_big_"+(r.slot||slot)+".json"},function(d){' +
+  'if(d&&d.big&&d.name===name&&document.getElementById("bcbigx"))show(d.big);});},function(){});}' +
   'function draw(){saveNow();' +
   'if(page==="w"){drawWaku();}else if(step<TPL.length){drawOne();}else{drawLast();}' +
   'noEl.textContent=(page==="w")?"画像づくり":((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認");' +
