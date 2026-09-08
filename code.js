@@ -4558,8 +4558,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'var s=(d&&d.data&&d.data.length===TPL.length)?d:null;' +
   'if(!wipAny(s)){status("作業中のデータはありません。",true);return;}' +
   'goSaved(s);status("作業中のデータを復元しました。");draw();});};' +
-  'e=document.getElementById("bcsplitcb");' +
-  'if(e)e.onchange=function(){splitOn(e.checked);};' +
+  // ★ここは専用の入れ物にする。e は下でほかの部品に入れ替わるので、
+  //   e のまま覚えると押した時に別の部品を見てしまう（2026-09-09の不具合）。
+  'var cb=document.getElementById("bcsplitcb");' +
+  'if(cb)cb.onchange=function(){splitOn(cb.checked);};' +
+  'if(cb)cb.onclick=function(){splitOn(cb.checked);};' +
   'e=document.getElementById("bcsnext");' +
   'if(e)e.onclick=function(){var gs=(SRES&&SRES.groups)||[];' +
   'if(SIDX>=gs.length-1){page="m";MSTEP=0;MMSG="";status("");draw();return;}' +
