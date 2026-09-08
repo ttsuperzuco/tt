@@ -4128,6 +4128,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
     'background:#2563EB;color:#fff;}' +
     '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
+    '.bcper button.bcrestore{grid-column:1 / -1;background:#7C3AED;}' +
     '.bccard.bcwide{margin-left:-22px;margin-right:-22px;padding:14px 9px 16px;}' +
     '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
     '.bcsttl{font-size:22px;font-weight:900;color:#fff;}' +
@@ -4280,7 +4281,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function partsFor(x,withPhoto){return (x.parts||[]).filter(function(p){return withPhoto||!p.b64;})' +
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
-  'per:SPER,waku:SRES,sidx:SIDX,' +
+  'per:SPER,waku:SRES,sidx:SIDX,page:page,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   'function saveNow(){if(!WIPON)return;' +
   'if(WIPT)clearTimeout(WIPT);' +
@@ -4292,6 +4293,15 @@ function renderBroadcastPage_(base, staff, dev) {
   'try{pushImage(WIPNAME,{t:Date.now(),data:[]});}catch(e){}}' +
   'function wipCount(s){var k=0;for(var i=0;i<((s&&s.data)||[]).length;i++)' +
   'if(((s.data[i]||{}).parts||[]).length)k++;return k;}' +
+  // ★途中の作業があるか＝対象の中身・予約可能時間文・配信文の本文のどれかがあれば「ある」
+  'function wipAny(s){if(!s)return false;' +
+  'return !!(wipCount(s)||((s.waku||{}).groups||[]).length||' +
+  'String(s.body||"").trim()||String(s.text||"").trim());}' +
+  // ★覚えていた続きの画面へ飛ぶ
+  'function goSaved(s){applySaved(s);FRESH=true;' +
+  'var pg=s.page;if(pg!=="s"&&pg!=="m"&&pg!=="w"&&pg!=="t")' +
+  'pg=((SRES&&SRES.groups||[]).length)?"s":"t";' +
+  'page=pg;mode="";}' +
   'function applySaved(s){' +
   'for(var i=0;i<TPL.length;i++){var ps=((s.data[i]||{}).parts)||[];' +
   'DATA[i].parts=ps.slice(0,MAXP).map(function(p){' +
@@ -4303,16 +4313,17 @@ function renderBroadcastPage_(base, staff, dev) {
   'jsonp({action:"data",name:WIPNAME},function(d){' +
   'var s=(d&&d.data&&d.data.length===TPL.length)?d:null;' +
   'var k=s?wipCount(s):0;' +
-  'if(!k||(Date.now()-(s.t||0))>1000*60*60*24*7){WIPON=true;after();return;}' +
+  'if(!wipAny(s)||(Date.now()-(s.t||0))>1000*60*60*24*7){WIPON=true;after();return;}' +
   'var b=document.createElement("div");b.className="bcask";' +
   'b.innerHTML=\'<div class="bcask-in"><div class="bcaskmsg">途中までの作業を復元しますか？</div>\'+' +
-  '\'<div class="bcasksub">（\'+TPL.length+\'つの対象のうち \'+k+\' つに中身が入っています）</div>\'+' +
+  '\'<div class="bcasksub">\'+(k?("（"+TPL.length+"つの対象のうち "+k+" つに中身が入っています）")' +
+  ':"（予約可能時間文や配信文の下書きがあります）")+\'</div>\'+' +
   '\'<div class="bcaskrow"><button type="button" class="bcaskyes">はい、復元する</button>\'+' +
   '\'<button type="button" class="bcaskno">いいえ、まっさらから始める</button></div></div>\';' +
   'document.body.appendChild(b);' +
   'b.querySelector(".bcaskno").onclick=function(){b.remove();wipClear();WIPON=true;after();};' +
-  'b.querySelector(".bcaskyes").onclick=function(){b.remove();applySaved(s);WIPON=true;' +
-  'FRESH=true;after();status("前回の続きから開きました。");};' +
+  'b.querySelector(".bcaskyes").onclick=function(){b.remove();goSaved(s);WIPON=true;' +
+  'after();status("前回の続きから開きました。");};' +
   '},function(){WIPON=true;after();});}' +
   // ★大きく見る（押した1枚だけ、事務所パソコンから大きい見本をもらう）
   'function bigView(src,name){' +
@@ -4453,7 +4464,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!gs.length){' +
   'h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\'+' +
   '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
-  '(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+\'</div>\';' +
+  '(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
+  '\'<button type="button" class="bcrestore" id="bcrest">\'+' +
+  '\'作業中のデータを復元する</button></div>\';' +
   'if(SRES)h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';' +
   'h+=\'</div><button type="button" class="bcghost" id="bcsback">◀ 対象の設定にもどる</button>\';' +
@@ -4479,6 +4492,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'document.getElementById("bcsback").onclick=function(){page="t";status("");draw();};' +
   'var e=document.getElementById("bcagain");' +
   'if(e)e.onclick=function(){SRES=null;SPER="";SIDX=0;status("");draw();};' +
+  'e=document.getElementById("bcrest");' +
+  'if(e)e.onclick=function(){status("作業中のデータを探しています…");' +
+  'jsonp({action:"data",name:WIPNAME},function(d){' +
+  'var s=(d&&d.data&&d.data.length===TPL.length)?d:null;' +
+  'if(!wipAny(s)){status("作業中のデータはありません。",true);return;}' +
+  'goSaved(s);status("作業中のデータを復元しました。");draw();});};' +
   'e=document.getElementById("bcsprev");' +
   'if(e)e.onclick=function(){SIDX--;status("");draw();};' +
   'e=document.getElementById("bcsnext");' +
