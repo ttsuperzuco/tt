@@ -2192,8 +2192,8 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var b=document.createElement("div");b.className="zjask";' +
   'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">既に作業した確認済・修正済を復元しますか？<br>"' +
   '+"<span class=\\"zjasksub\\">（確認済 "+(st.done||[]).length+" 人ぶん・直した文 "+Object.keys(st.text||{}).length+" 人ぶん）</span></div>"' +
-  '+"<div class=\\"zjaskrow\\"><button type=\\"button\\" class=\\"zjaskyes\\">はい</button>"' +
-  '+"<button type=\\"button\\" class=\\"zjaskno\\">いいえ</button></div></div>";' +
+  '+"<div class=\\"zjaskrow\\"><button type=\\"button\\" class=\\"zjaskyes\\">はい、復元する</button>"' +
+  '+"<button type=\\"button\\" class=\\"zjaskno\\">いいえ、まっさらから始める</button></div></div>";' +
   'document.body.appendChild(b);' +
   'b.querySelector(".zjaskno").onclick=function(){b.remove();zjClearLocal(day);};' +
   'b.querySelector(".zjaskyes").onclick=function(){b.remove();' +
