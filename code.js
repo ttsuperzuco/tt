@@ -4136,6 +4136,11 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bccopy{border:0;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:800;' +
     'background:#2563EB;color:#fff;white-space:nowrap;}' +
     '.bcouttx{white-space:pre-wrap;font-size:14px;line-height:1.75;color:#E8EEF7;}' +
+    '.bc textarea.bcotx{min-height:118px;font-size:14px;line-height:1.7;}' +
+    '.bczhl{font-size:12px;color:#94A3B8;font-weight:700;margin:11px 0 6px;}' +
+    '.bccopy.w{display:block;width:100%;margin-top:9px;}' +
+    '.bcnum{font-size:12px;font-weight:800;color:#94A3B8;margin-top:7px;}' +
+    '.bcnum.over{color:#fca5a5;}' +
     '.bccard{background:#131C2E;border-radius:12px;padding:16px 16px 18px;margin:0 0 12px;' +
     'box-shadow:0 1px 3px rgba(0,0,0,.06);color:#E8EEF7;}' +
     '.bcname{font-size:26px;font-weight:900;line-height:1.25;}' +
@@ -4212,6 +4217,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var TPL=[],PRE=[],MADE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",page="t";' +
   'var WTEXT="",WDONE=[],WBUSY=false,WMSG="";' +
   'var SPER="",SRES=null,SBUSY=false;' +
+  'var MSTEP=0,MBODY="",MJA=[],MZH=[],MBUSY=false,MMSG="";' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno"),mkEl=document.getElementById("bcmakebtn");' +
   'var txEl=document.getElementById("bctxtbtn");' +
@@ -4246,9 +4252,10 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★その場で選んだ写真も覚える（2026-09-05 まるちゃん指摘で実測＝端末は11.7MB以上入る）。
   //   入りきらない時だけ写真をあきらめる（他の中身は必ず残す）。
   'function partsFor(x,withPhoto){return (x.parts||[]).filter(function(p){return withPhoto||!p.b64;})' +
-  '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};});}' +
+  '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function saveNow(){' +
-  'function pack(withPhoto){return JSON.stringify({t:Date.now(),step:step,text:WTEXT,' +
+  'function pack(withPhoto){return JSON.stringify({t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
+  'per:SPER,waku:SRES,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})});}' +
   'try{localStorage.setItem(SKEY,pack(true));return;}catch(e){}' +
   'try{localStorage.setItem(SKEY,pack(false));}catch(e2){}}' +
@@ -4260,7 +4267,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'DATA[i].parts=ps.slice(0,MAXP).map(function(p){' +
   'if(p.kind==="image"&&p.b64&&!p.thumb)p.thumb="data:image/jpeg;base64,"+p.b64;return p;});' +
   'if(ps.length)any=true;}' +
-  'WTEXT=s.text||"";if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;' +
+  'WTEXT=s.text||"";MBODY=s.body||"";SPER=s.per||"";' +
+  'if(s.waku&&s.waku.groups)SRES=s.waku;' +
+  'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;' +
   'return any;}catch(e){return false;}}' +
   // ★大きく見る（押した1枚だけ、事務所パソコンから大きい見本をもらう）
   'function bigView(src,name){' +
@@ -4281,10 +4290,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'jsonp({action:"data",name:"bc_big_"+(r.slot||slot)+".json"},function(d){' +
   'if(d&&d.big&&d.name===name&&document.getElementById("bcbigx"))show(d.big);});},function(){});}' +
   'function draw(){saveNow();' +
-  'if(page==="w"){drawWaku();}else if(page==="s"){drawText();}' +
+  'if(page==="w"){drawWaku();}else if(page==="s"){drawText();}else if(page==="m"){drawMake();}' +
   'else if(step<TPL.length){drawOne();}else{drawLast();}' +
-  'noEl.textContent=(page==="w")?"画像づくり":((page==="s")?"文づくり":' +
-  '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認"));' +
+  'noEl.textContent=(page==="w")?"画像づくり":((page==="s")?"文づくり":((page==="m")?"配信文づくり":' +
+  '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認")));' +
   'var top=(page==="t")?"block":"none";mkEl.style.display=top;txEl.style.display=top;}' +
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
@@ -4319,24 +4328,22 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(ta)WTEXT=ta.value;' +
   'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してください。",true);return;}' +
   'WBUSY=true;WDONE=[];WMSG="";status("");draw();' +
-  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"plan",text:WTEXT})},' +
-  'function(r){if(!r||!r.ok||!r.jobs||!r.jobs.length){WBUSY=false;WMSG="";' +
-  'status((r&&r.note)||"読み取れませんでした。",true);draw();return;}' +
-  'var jobs=r.jobs,i=0;' +
-  '(function next(){' +
-  'if(i>=jobs.length){WBUSY=false;' +
-  'WMSG="できました。"+jobs.length+"枚を、それぞれの対象の1つ目に入れました。";' +
-  'status("");draw();return;}' +
-  'var j=jobs[i];' +
-  'WMSG=(i+1)+"枚目 / "+jobs.length+"枚　"+j.label;draw();' +
+  'runMake(WTEXT,function(i,tot,label){WMSG=(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
+  'function(done,err){WBUSY=false;' +
+  'if(err){WMSG="";status(err,true);}' +
+  'else WMSG="できました。"+done+"枚を、それぞれの対象の1つ目に入れました。";' +
+  'draw();});};}' +
+  'function runMake(text,onStep,onDone){' +
+  'ask("bc_wakuimg",{fields:JSON.stringify({mode:"plan",text:text})},' +
+  'function(r){if(!r||!r.ok||!r.jobs||!r.jobs.length){onDone(0,(r&&r.note)||"読み取れませんでした。");return;}' +
+  'var jobs=r.jobs,i=0,done=0;' +
+  '(function next(){if(i>=jobs.length){onDone(done,"");return;}' +
+  'var j=jobs[i];onStep(i,jobs.length,j.label);' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:j.kind,days:j.days})},' +
-  'function(g){if(g&&g.ok&&g.name){' +
-  'WDONE.push({label:j.label,thumb:g.thumb,name:g.name});' +
-  'putIntoTargets(j.targets,g.name,g.thumb);}' +
-  'i++;next();},' +
-  'function(m2){WBUSY=false;WMSG="";status("「"+j.label+"」で止まりました："+m2,true);draw();});' +
-  '})();},' +
-  'function(m){WBUSY=false;WMSG="";status(m,true);draw();});};}' +
+  'function(g){if(g&&g.ok&&g.name){WDONE.push({label:j.label,thumb:g.thumb,name:g.name});' +
+  'putIntoTargets(j.targets,g.name,g.thumb);done++;}i++;next();},' +
+  'function(m2){onDone(done,"「"+j.label+"」で止まりました："+m2);});})();},' +
+  'function(m){onDone(0,m);});}' +
   // できた絵を、その対象の1つ目に入れる（前に入れた予約可能枠の絵は取り替える）
   'function putIntoTargets(names,name,thumb){' +
   '(names||[]).forEach(function(nm){' +
@@ -4348,37 +4355,146 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 予約可能時間文を生成（専用の画面・2026-09-08 まるちゃんの決めた形）──────
   //   4つのボタンで期間を選ぶと、空き時間検索と同じ答えを事務所パソコンが出す。
   //   男性と女性がずっと同じ時刻なら男女に分けず、一番上に「男性と女性は全く同じ時間帯」と出す。
+  //   ★直せるのは日本語だけ。中国語版は曜日を入れ替えてその場で作る＝直した瞬間に必ずそろう
+  //     （曜日の対応表は事務所パソコンがくれる＝共通\予約可能枠.py の1本だけが持つ）。
+  'function zhOf(s){var w=(SRES&&SRES.wd)||{};' +
+  'return String(s||"").replace(/（([月火水木金土日])）/g,function(m,d){return "（"+(w[d]||d)+"）";});}' +
   'function drawText(){' +
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\'+' +
   '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" class="\'+' +
   '(SPER===x[0]?"on":"")+\'" data-per="\'+x[0]+\'"\'+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';' +
   '}).join("")+\'</div>\';' +
-  'if(SRES&&SRES.blocks&&SRES.blocks.length){h+=\'<div class="bchr"></div>\';' +
+  'var gs=(SRES&&SRES.groups)||[];' +
+  'if(gs.length){h+=\'<div class="bchr"></div>\';' +
   'if(SRES.same)h+=\'<div class="bcsame">男性と女性は全く同じ時間帯</div>\';' +
-  'h+=SRES.blocks.map(function(b,i){return \'<div class="bcout"><div class="bcouth"><b>\'+esc(b.label)+\'</b>\'+' +
+  'h+=gs.map(function(g,i){return \'<div class="bcout"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+i+\'">コピー</button></div>\'+' +
-  '\'<div class="bcouttx">\'+esc(b.text)+\'</div></div>\';}).join("");}' +
+  '\'<textarea class="bcotx" data-ed="\'+i+\'">\'+esc(g.text)+\'</textarea>\'+' +
+  '\'<div class="bczhl">台湾のお客様向け（上を直すとここも変わります）</div>\'+' +
+  '\'<div class="bcouttx" id="bczh\'+i+\'">\'+esc(zhOf(g.text))+\'</div>\'+' +
+  '\'<button type="button" class="bccopy w" data-cz="\'+i+\'">中文をコピー</button></div>\';}).join("");}' +
   'else if(SRES){h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';}' +
-  'h+=\'</div><button type="button" class="bcghost" id="bcsback">◀ 対象の設定にもどる</button>\';' +
+  'h+=\'</div>\';' +
+  'if(gs.length)h+=\'<button type="button" class="bctxt" id="bcmkall">この内容で配信文と\'+' +
+  '\'予約可能枠の画像を生成する</button>\';' +
+  'h+=\'<button type="button" class="bcghost" id="bcsback">◀ 対象の設定にもどる</button>\';' +
   'box.innerHTML=h;bindText();}' +
   'function bindText(){' +
   'document.getElementById("bcsback").onclick=function(){page="t";status("");draw();};' +
+  'var mk=document.getElementById("bcmkall");' +
+  'if(mk)mk.onclick=function(){page="m";MSTEP=0;MMSG="";status("");draw();};' +
   '[].slice.call(box.querySelectorAll("[data-per]")).forEach(function(b){b.onclick=function(){' +
   'var k=b.getAttribute("data-per");SPER=k;SRES=null;SBUSY=true;status("空き時間を数えています…");draw();' +
   'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;' +
   'if(!r||!r.ok){status((r&&r.note)||"出せませんでした。",true);draw();return;}' +
   'SRES=r;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
+  '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
+  'var i=a.getAttribute("data-ed")*1;if(!SRES||!SRES.groups[i])return;' +
+  'SRES.groups[i].text=a.value;' +
+  'var z=document.getElementById("bczh"+i);if(z)z.textContent=zhOf(a.value);};});' +
   '[].slice.call(box.querySelectorAll("[data-cp]")).forEach(function(b){b.onclick=function(){' +
-  'var t=((SRES&&SRES.blocks)||[])[b.getAttribute("data-cp")*1];if(!t||!t.text)return;' +
-  'function done(){b.textContent="コピーしました";setTimeout(function(){b.textContent="コピー";},1500);}' +
+  'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cp")*1];if(g)bcCopy(g.text,b);};});' +
+  '[].slice.call(box.querySelectorAll("[data-cz]")).forEach(function(b){b.onclick=function(){' +
+  'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cz")*1];if(g)bcCopy(zhOf(g.text),b);};});}' +
+  'function bcCopy(s,b){if(!s)return;var old=b.textContent;' +
+  'function done(){b.textContent="コピーしました";setTimeout(function(){b.textContent=old;},1500);}' +
   'if(navigator.clipboard&&navigator.clipboard.writeText){' +
-  'navigator.clipboard.writeText(t.text).then(done,function(){bcFallCopy(t.text,done);});}' +
-  'else bcFallCopy(t.text,done);};});}' +
+  'navigator.clipboard.writeText(s).then(done,function(){bcFallCopy(s,done);});}else bcFallCopy(s,done);}' +
   'function bcFallCopy(s,cb){var ta=document.createElement("textarea");ta.value=s;' +
   'ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();' +
   'try{document.execCommand("copy");cb();}catch(e){}document.body.removeChild(ta);}' +
+  'function joinBody(body,times){body=String(body||"");' +
+  'if(body.indexOf("【時間】")>=0)return body.replace(/【時間】/g,times);' +
+  'return body.replace(/\\s+$/,"")+"\\n\\n"+times;}' +
+  'function tgtNames(atama,sei,lang){var out=[];' +
+  'for(var i=0;i<TPL.length;i++){var nm=TPL[i].name;' +
+  'if(nm.indexOf(atama)<0)continue;' +
+  'if(nm.indexOf(lang==="ja"?"日本":"台湾")<0)continue;' +
+  'if(sei&&nm.indexOf(sei)<0)continue;out.push(nm);}return out;}' +
+  'function putTextInto(names,txt){(names||[]).forEach(function(nm){' +
+  'for(var i=0;i<TPL.length;i++){if(TPL[i].name!==nm)continue;var ps=DATA[i].parts;' +
+  'for(var k=ps.length-1;k>=0;k--){if(ps[k].kind==="text"&&ps[k].g)ps.splice(k,1);}' +
+  'if(ps.length>=MAXP)ps.pop();ps.push({kind:"text",text:txt,g:1});}});}' +
+  'function tooLong(a){for(var i=0;i<a.length;i++)if((a[i].text||"").length>MAXT)return a[i].label;' +
+  'return "";}' +
+  'function cardsOf(a){return a.map(function(x){var over=(x.text||"").length>MAXT;' +
+  'return \'<div class="bcout"><div class="bcouth"><b>\'+esc(x.label)+\'</b></div>\'+' +
+  '\'<div class="bcouttx">\'+esc(x.text)+\'</div>\'+' +
+  '\'<div class="bcnum\'+(over?" over":"")+\'">\'+(x.text||"").length+\'文字\'+' +
+  '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div></div>\';}).join("");}' +
+  // ── 配信文を作る（専用の画面・2026-09-08 まるちゃんの決めた順）──────────
+  //   ①日本語の文章を入れる →②時間が入った文を確かめる →③台湾版（自動で訳す）を確かめる
+  //   →④8つの対象に文を入れ、続けて予約可能枠の画像も作って1つ目に入れる。
+  'function drawMake(){' +
+  'var h=\'<div class="bccard"><div class="bcname">配信文を作る</div><div class="bchr"></div>\';' +
+  'if(MSTEP===0){h+=\'<div class="bcleft">日本語の文章を入れてください</div>\'+' +
+  '\'<textarea id="bcmbody" style="min-height:190px" placeholder="例＝&#10;台湾トマトです&#10;\'+' +
+  '\'今週の空いているお時間をお知らせします。&#10;&#10;【時間】&#10;&#10;ご予約おまちしております！">\'+' +
+  'esc(MBODY)+\'</textarea>\'+' +
+  '\'<div class="bcwho">「【時間】」と書いた所に予約可能時間が入ります。\'+' +
+  '\'書かなければ文の最後に入ります。</div>\';}' +
+  'else if(MSTEP===1){h+=\'<div class="bcleft">この文でよろしいですか？（日本語）</div>\'+cardsOf(MJA);}' +
+  'else if(MSTEP===2){h+=\'<div class="bcleft">台湾のお客様向け（自動で訳しました）</div>\'+cardsOf(MZH);}' +
+  'else{h+=\'<div class="bcouttx">\'+esc(MMSG)+\'</div>\';}' +
+  'h+=\'</div>\';' +
+  'if(!MBUSY){' +
+  'if(MSTEP===0)h+=\'<button type="button" class="bcgo" id="bcmok">OK（この文で作る）</button>\';' +
+  'else if(MSTEP===1){var ng1=tooLong(MJA);' +
+  'h+=ng1?(\'<div class="bcstatus ng">「\'+esc(ng1)+\'」が長すぎます。文を短くしてください。</div>\')' +
+  ':(\'<button type="button" class="bcgo" id="bcmok2">OK（台湾版を作る）</button>\');' +
+  'h+=\'<button type="button" class="bcghost" id="bcmedit">◀ 文を直す</button>\';}' +
+  'else if(MSTEP===2){var ng2=tooLong(MZH);' +
+  'h+=ng2?(\'<div class="bcstatus ng">「\'+esc(ng2)+\'」が長すぎます。文を短くしてください。</div>\')' +
+  ':(\'<button type="button" class="bcgo" id="bcmok3">OK（対象に入れて画像も作る）</button>\');' +
+  'h+=\'<button type="button" class="bcghost" id="bcmedit">◀ 文を直す</button>\';}' +
+  'else h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
+  'if(MMSG&&MSTEP<3)h+=\'<div class="bcstatus on">\'+esc(MMSG)+\'</div>\';' +
+  'h+=\'<button type="button" class="bcghost" id="bcmback">◀ 予約可能時間文にもどる</button>\';' +
+  'box.innerHTML=h;bindMake();}' +
+  'function bindMake(){' +
+  'var ta=document.getElementById("bcmbody");if(ta)ta.oninput=function(){MBODY=ta.value;};' +
+  'document.getElementById("bcmback").onclick=function(){page="s";MMSG="";status("");draw();};' +
+  'var e=document.getElementById("bcmedit");' +
+  'if(e)e.onclick=function(){MSTEP=0;MMSG="";draw();};' +
+  'e=document.getElementById("bcmdone");' +
+  'if(e)e.onclick=function(){page="t";step=0;MMSG="";status("");draw();};' +
+  'e=document.getElementById("bcmok");' +
+  'if(e)e.onclick=function(){if(ta)MBODY=ta.value;' +
+  'if(!(MBODY||"").trim()){status("日本語の文章を入れてください。",true);return;}' +
+  'MJA=((SRES&&SRES.groups)||[]).map(function(g){' +
+  'return {label:g.label,atama:g.atama,sei:g.sei,text:joinBody(MBODY,g.text)};});' +
+  'MSTEP=1;MMSG="";status("");draw();};' +
+  'e=document.getElementById("bcmok2");if(e)e.onclick=function(){makeZh();};' +
+  'e=document.getElementById("bcmok3");if(e)e.onclick=function(){applyAll();};}' +
+  // ★台湾版＝本文だけを訳し、時間の表は訳さず曜日を入れ替えた物を差し込む
+  //   （時間まで訳すと数字や曜日が崩れるため。訳す回数も多くて2回で済む）。
+  'function transOne(s,cb,onErr){if(!String(s||"").trim()){cb("");return;}' +
+  'ask("translate",{fields:JSON.stringify({text:s,gender:"共通",quality:"1"})},' +
+  'function(r){var v=(r&&typeof r==="object")?((r.note!==undefined)?r.note:(r.result||"")):r;' +
+  'cb(String(v==null?"":v));},onErr);}' +
+  'function makeZh(){var body=String(MBODY||""),k=body.indexOf("【時間】");' +
+  'var pre=(k>=0)?body.slice(0,k):body,post=(k>=0)?body.slice(k+4):"";' +
+  'MBUSY=true;MMSG="台湾のお客様向けに訳しています…（1分ほどかかります）";draw();' +
+  'function ng(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();}' +
+  'transOne(pre,function(zpre){transOne(post,function(zpost){' +
+  'MZH=((SRES&&SRES.groups)||[]).map(function(g){var tt=zhOf(g.text);' +
+  'var s=(k>=0)?(zpre+tt+zpost):(String(zpre).replace(/\\s+$/,"")+"\\n\\n"+tt);' +
+  'return {label:g.label,atama:g.atama,sei:g.sei,text:s};});' +
+  'MBUSY=false;MMSG="";MSTEP=2;status("");draw();},ng);},ng);}' +
+  // ★仕上げ＝8つの対象に文を入れ、続けて予約可能枠の画像も作って1つ目に入れる
+  'function applyAll(){MBUSY=true;MMSG="対象に文を入れています…";draw();' +
+  'MJA.forEach(function(x){putTextInto(tgtNames(x.atama,x.sei,"ja"),x.text);});' +
+  'MZH.forEach(function(x){putTextInto(tgtNames(x.atama,x.sei,"zh"),x.text);});' +
+  'var src=((SRES&&SRES.groups)||[]).map(function(g){return g.label+"\\n"+g.text;}).join("\\n\\n");' +
+  'WDONE=[];' +
+  'runMake(src,function(i,tot,label){' +
+  'MMSG="画像を生成しています… "+(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
+  'function(done,err){MBUSY=false;MSTEP=3;' +
+  'MMSG=err?("文は入れました。画像で止まりました："+err)' +
+  ':("できました。文を入れ、画像を"+done+"枚それぞれの対象の1つ目に入れました。");' +
+  'draw();});}' +
   // ── 対象1つぶんの設定 ────────────────────────────────
   'function drawOne(){' +
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
