@@ -4127,6 +4127,9 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
     'background:#2563EB;color:#fff;}' +
     '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
+    '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
+    '.bcsttl{font-size:22px;font-weight:900;color:#fff;}' +
+    '.bcsno{margin-left:auto;font-size:13px;font-weight:800;color:#DCE7F2;}' +
     '.bcagain{margin:0 0 12px;text-align:left;}' +
     '.bcagainbtn{font:inherit;font-size:13px;font-weight:800;color:#cbd5e1;background:#131C2E;' +
     'border:1px solid #26324A;border-radius:999px;padding:9px 15px;}' +
@@ -4138,7 +4141,8 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bccopy{border:0;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:800;' +
     'background:#2563EB;color:#fff;white-space:nowrap;}' +
     '.bcouttx{white-space:pre-wrap;font-size:14px;line-height:1.75;color:#E8EEF7;}' +
-    '.bc textarea.bcotx{min-height:118px;font-size:14px;line-height:1.7;}' +
+    '.bc textarea.bcotx{min-height:120px;font-size:17px;line-height:1.85;' +
+    'overflow:hidden;resize:none;}' +
     '.bcnum{font-size:12px;font-weight:800;color:#94A3B8;margin-top:7px;}' +
     '.bcnum.over{color:#fca5a5;}' +
     // 途中までの作業を復元しますか？（前日お知らせと同じ見た目）
@@ -4236,6 +4240,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno"),mkEl=document.getElementById("bcmakebtn");' +
   'var txEl=document.getElementById("bctxtbtn");' +
+  'var ttlEl=document.getElementById("bctitle"),topEl=document.getElementById("bctoprow");' +
+  'var SIDX=0;' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function status(t,err){stEl.textContent=t;stEl.className="bcstatus"+(t?(err?" ng":" on"):"");}' +
   'function jsonp(params,onR){var cb="__bc"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
@@ -4272,7 +4278,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function partsFor(x,withPhoto){return (x.parts||[]).filter(function(p){return withPhoto||!p.b64;})' +
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
-  'per:SPER,waku:SRES,' +
+  'per:SPER,waku:SRES,sidx:SIDX,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   'function saveNow(){if(!WIPON)return;' +
   'if(WIPT)clearTimeout(WIPT);' +
@@ -4288,7 +4294,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'for(var i=0;i<TPL.length;i++){var ps=((s.data[i]||{}).parts)||[];' +
   'DATA[i].parts=ps.slice(0,MAXP).map(function(p){' +
   'if(p.kind==="image"&&p.b64&&!p.thumb)p.thumb="data:image/jpeg;base64,"+p.b64;return p;});}' +
-  'WTEXT=s.text||"";MBODY=s.body||"";SPER=s.per||"";' +
+  'WTEXT=s.text||"";MBODY=s.body||"";SPER=s.per||"";SIDX=s.sidx||0;' +
   'if(s.waku&&s.waku.groups)SRES=s.waku;' +
   'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;}' +
   'function askRestore(after){' +
@@ -4337,7 +4343,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'else if(step<TPL.length){drawOne();}else{drawLast();}' +
   'noEl.textContent=(page==="w")?"画像づくり":((page==="s")?"文づくり":((page==="m")?"配信文づくり":' +
   '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認")));' +
-  'var top=(page==="t")?"block":"none";mkEl.style.display=top;txEl.style.display=top;}' +
+  'var top=(page==="t")?"block":"none";mkEl.style.display=top;txEl.style.display=top;' +
+  // ★1個ずつ見せる画面では上の帯を出さない（文の欄を大きく使うため・まるちゃん指示）
+  'var slim=(page==="s"&&((SRES&&SRES.groups)||[]).length)?"none":"";' +
+  'if(ttlEl)ttlEl.style.display=slim;if(topEl)topEl.style.display=slim;' +
+  'banEl.style.display=slim;}' +
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
   'var h=\'<div class="bccard"><div class="bcname">予約可能枠の画像を作る</div>\'+' +
@@ -4408,42 +4418,59 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★最初は期間の4つのボタン。算出したあとの画面には4つを出さない（まるちゃん指示 2026-09-08）。
   //   選び直したい時は「↩ 期間を選び直す」で最初に戻る。
   //   ★台湾のお客様向けの下書きは画面に出さない（裏では作っていて、配信文づくりで使う）。
+  // ★算出したあとは**1個ずつ**見せる（まるちゃん指示 2026-09-08）。
+  //   ・上の帯（題・練習モードの案内・配信内容の行）は出さない＝文の欄を大きく使う
+  //   ・「予約可能時間文を生成」は白字で黒い枠の上に出す
+  //   ・文の欄は中身が全部見える高さ（`fitTx`）・字も大きい
+  //   ・下のボタン＝「この内容で保存する」→次の区分へ。最後だけ「この内容で配信」
+  'function fitTx(a){if(!a)return;a.style.height="auto";a.style.height=(a.scrollHeight+8)+"px";}' +
   'function drawText(){' +
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
-  'var gs=(SRES&&SRES.groups)||[];' +
-  'var h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\';' +
+  'var gs=(SRES&&SRES.groups)||[];var h;' +
   'if(!gs.length){' +
-  'h+=\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
+  'h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\'+' +
+  '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
   '(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+\'</div>\';' +
   'if(SRES)h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
-  'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';}' +
-  'else{' +
-  'h+=\'<div class="bcagain"><button type="button" class="bcagainbtn" id="bcagain">\'+' +
+  'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';' +
+  'h+=\'</div><button type="button" class="bcghost" id="bcsback">◀ 対象の設定にもどる</button>\';' +
+  'box.innerHTML=freshBar()+h;bindText();bindFresh();return;}' +
+  'if(SIDX>=gs.length)SIDX=gs.length-1;if(SIDX<0)SIDX=0;' +
+  'var g=gs[SIDX],last=(SIDX===gs.length-1);' +
+  'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間文を生成</span>\'+' +
+  '\'<span class="bcsno">\'+(SIDX+1)+\' / \'+gs.length+\'</span></div>\'+' +
+  '\'<div class="bcagain"><button type="button" class="bcagainbtn" id="bcagain">\'+' +
   '\'↩ 期間を選び直す</button></div>\';' +
-  'if(SRES.same)h+=\'<div class="bcsame">男性と女性は全く同じ時間帯</div>\';' +
-  'h+=gs.map(function(g,i){return \'<div class="bcout"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
-  '\'<button type="button" class="bccopy" data-cp="\'+i+\'">コピー</button></div>\'+' +
-  '\'<textarea class="bcotx" data-ed="\'+i+\'">\'+esc(g.text)+\'</textarea></div>\';}).join("");}' +
-  'h+=\'</div>\';' +
-  'if(gs.length)h+=\'<button type="button" class="bctxt" id="bcmkall">この内容で配信文と\'+' +
-  '\'予約可能枠の画像を生成する</button>\';' +
+  'if(SIDX===0&&SRES.same)h+=\'<div class="bcsame">男性と女性は全く同じ時間帯</div>\';' +
+  'h+=\'<div class="bccard"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
+  '\'<button type="button" class="bccopy" data-cp="\'+SIDX+\'">コピー</button></div>\'+' +
+  '\'<textarea class="bcotx" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
+  'h+=last?\'<button type="button" class="bctxt" id="bcsnext">この内容で配信</button>\'' +
+  ':\'<button type="button" class="bcgo" id="bcsnext">この内容で保存する</button>\';' +
+  'if(SIDX>0)h+=\'<button type="button" class="bcghost" id="bcsprev">◀ 「\'+' +
+  'esc(gs[SIDX-1].label)+\'」にもどる</button>\';' +
   'h+=\'<button type="button" class="bcghost" id="bcsback">◀ 対象の設定にもどる</button>\';' +
-  'box.innerHTML=freshBar()+h;bindText();bindFresh();}' +
+  'box.innerHTML=freshBar()+h;bindText();bindFresh();' +
+  'fitTx(box.querySelector(".bcotx"));}' +
   'function bindText(){' +
   'document.getElementById("bcsback").onclick=function(){page="t";status("");draw();};' +
-  'var mk=document.getElementById("bcmkall");' +
-  'if(mk)mk.onclick=function(){page="m";MSTEP=0;MMSG="";status("");draw();};' +
-  'var ag=document.getElementById("bcagain");' +
-  'if(ag)ag.onclick=function(){SRES=null;SPER="";status("");draw();};' +
+  'var e=document.getElementById("bcagain");' +
+  'if(e)e.onclick=function(){SRES=null;SPER="";SIDX=0;status("");draw();};' +
+  'e=document.getElementById("bcsprev");' +
+  'if(e)e.onclick=function(){SIDX--;status("");draw();};' +
+  'e=document.getElementById("bcsnext");' +
+  'if(e)e.onclick=function(){var gs=(SRES&&SRES.groups)||[];' +
+  'if(SIDX>=gs.length-1){page="m";MSTEP=0;MMSG="";status("");draw();return;}' +
+  'SIDX++;status("");draw();};' +
   '[].slice.call(box.querySelectorAll("[data-per]")).forEach(function(b){b.onclick=function(){' +
-  'var k=b.getAttribute("data-per");SPER=k;SRES=null;SBUSY=true;' +
+  'var k=b.getAttribute("data-per");SPER=k;SRES=null;SIDX=0;SBUSY=true;' +
   'status("空き時間を算出しています…");draw();' +
   'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;' +
   'if(!r||!r.ok){status((r&&r.note)||"算出できませんでした。",true);draw();return;}' +
-  'SRES=r;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
+  'SRES=r;SIDX=0;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
   '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
   'var i=a.getAttribute("data-ed")*1;if(!SRES||!SRES.groups[i])return;' +
-  'SRES.groups[i].text=a.value;saveNow();};});' +
+  'SRES.groups[i].text=a.value;fitTx(a);saveNow();};});' +
   '[].slice.call(box.querySelectorAll("[data-cp]")).forEach(function(b){b.onclick=function(){' +
   'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cp")*1];if(g)bcCopy(g.text,b);};});}' +
   'function bcCopy(s,b){if(!s)return;var old=b.textContent;' +
@@ -4702,10 +4729,10 @@ function renderBroadcastPage_(base, staff, dev) {
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
-    '<h2 class="htitle">LINE一斉配信予約</h2>' +
+    '<h2 class="htitle" id="bctitle">LINE一斉配信予約</h2>' +
     '<div class="bc">' +
       '<div class="bcbanner" id="bcbanner">読み込み中…</div>' +
-      '<div class="bctop"><span class="lb">配信内容</span><b id="bccatname">…</b>' +
+      '<div class="bctop" id="bctoprow"><span class="lb">配信内容</span><b id="bccatname">…</b>' +
         '<span class="no" id="bcno"></span></div>' +
       '<button type="button" class="bcmake" id="bcmakebtn">📅 予約可能枠の画像を作る</button>' +
       '<button type="button" class="bctxt" id="bctxtbtn">📝 予約可能時間文を生成</button>' +
