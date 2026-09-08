@@ -2082,8 +2082,8 @@ var ZENJITSUCSS_ =
   '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; margin-top:12px; }' +
   /* ★2026-09-08まるちゃん指示：「はい、復元する」を押したあとでも、いつでも機械が作ったままに戻せる。 */
   '  .zjfreshbar { display:flex; justify-content:flex-end; margin:12px 2px 0; }' +
-  '  .zjfreshbtn { font:inherit; font-size:.95rem; font-weight:800; color:#94a3b8; background:#0b1220;' +
-  '    border:1px solid #26324a; border-radius:9px; padding:9px 16px; cursor:pointer; }';
+  '  .zjfreshbtn { font:inherit; font-size:1.05rem; font-weight:800; color:#fca5a5; background:#0b1220;' +
+  '    border:2px solid #f87171; border-radius:10px; padding:11px 20px; cursor:pointer; }';
 
 /** 前日お知らせ（社長確認用・開発URL専用）。PC版と同じ「来店日を選ぶ」入口。
  *  日付を選んで押す→事務所PCへ依頼(op=zenjitsu)→PCが確認画面HTMLを notice_<端末>.json に書き出す
