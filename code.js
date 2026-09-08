@@ -4730,6 +4730,10 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 立ち上がり ────────────────────────────────────────
   'mkEl.onclick=function(){page="w";mode="";status("");draw();};' +
   'txEl.onclick=function(){page="s";mode="";status("");draw();};' +
+  // ★窓の幅を変えたら字の大きさを測り直す（パソコンの窓は大きさを変えられるため）
+  'var rsT=null;window.addEventListener("resize",function(){' +
+  'if(rsT)clearTimeout(rsT);rsT=setTimeout(function(){rsT=null;' +
+  'fitTx(box.querySelector(".bcotx"));},200);});' +
   'status("読み込んでいます…");' +
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
