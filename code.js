@@ -4628,21 +4628,38 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("translate",{fields:JSON.stringify({text:s,gender:"共通",quality:"1"})},' +
   'function(r){var v=(r&&typeof r==="object")?((r.note!==undefined)?r.note:(r.result||"")):r;' +
   'cb(String(v==null?"":v));},onErr);}' +
-  'function makeZh(){var N=BORDER.length,zs=[],i=0;' +
+  // ★訳す側に「【時間】」を見せない（見せると「これは空欄です」と独り言を書くことがある＝実測）。
+  //   前半と後半のあいだに飾りの線を入れて1回で訳し、その線の所へ時間の表を差し込む。
+  'var ZSEP="＝＝＝＝＝＝＝＝";' +
+  'function zsplit(s){var m=String(s||"").split(/[＝=]{5,}/);' +
+  'return (m.length>=2)?[m[0],m.slice(1).join("")]:null;}' +
+  'function makeZh(){var N=BORDER.length,zs=[],i=0,lost=0;' +
   'MBUSY=true;MMSG="台湾のお客様向けに訳しています…（1つ1分ほど）";draw();' +
   'function ng(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();}' +
   '(function next(){' +
   'if(i>=N){' +
-  'MZH=BORDER.map(function(x,k){var tt=zhOf(timesOf(x[0],x[1])),z=zs[k]||"";' +
-  'var keep=z.indexOf("【時間】")>=0;' +
-  'var s=keep?z.replace(/【時間】/g,tt):(z?(z+"\\n\\n"+tt):tt);' +
+  'MZH=BORDER.map(function(x,k){var tt=zhOf(timesOf(x[0],x[1])),g=zs[k]||{z:"",had:false};' +
+  'var z=String(g.z||"").replace(/^\\s+|\\s+$/g,""),s;' +
+  'var pair=g.had?zsplit(z):null;' +
+  'if(pair){var a=pair[0].replace(/^\\s+|\\s+$/g,""),b=pair[1].replace(/^\\s+|\\s+$/g,"");' +
+  's=(a?(a+"\\n\\n"):"")+tt+(b?("\\n\\n"+b):"");}' +
+  'else{z=z.replace(/[＝=]{5,}/g,"").replace(/^\\s+|\\s+$/g,"");' +
+  's=z?(z+"\\n\\n"+tt):tt;}' +
   'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:s};});' +
-  'MBUSY=false;MMSG="";MSTEP=2;MIDX=0;status("");draw();return;}' +
+  'MBUSY=false;MSTEP=2;MIDX=0;status("");' +
+  'MMSG=lost?("※"+lost+"つで、時間を入れる場所の目印が訳の中に残らなかったので、"+' +
+  '"時間は文の最後に入れました。"):"";' +
+  'draw();return;}' +
   'MMSG=(i+1)+" / "+N+"　「"+ordLabel(i,false)+"」を訳しています…";draw();' +
-  'var b=String(MBODYS[i]||"").replace(/^\\s+|\\s+$/g,"");' +
-  'var same=-1,k;for(k=0;k<i;k++)if(String(MBODYS[k]||"").replace(/^\\s+|\\s+$/g,"")===b)same=k;' +
+  'var b0=String(MBODYS[i]||"").replace(/^\\s+|\\s+$/g,"");' +
+  'var k0=b0.indexOf("【時間】"),had=(k0>=0);' +
+  'var send=had?(b0.slice(0,k0).replace(/\\s+$/,"")+"\\n\\n"+ZSEP+"\\n\\n"+' +
+  'b0.slice(k0+4).replace(/^\\s+/,"")):b0;' +
+  'var same=-1,q;for(q=0;q<i;q++)if(String(MBODYS[q]||"").replace(/^\\s+|\\s+$/g,"")===b0)same=q;' +
   'if(same>=0){zs[i]=zs[same];i++;next();return;}' +
-  'transOne(b,function(z){zs[i]=String(z||"").replace(/^\\s+|\\s+$/g,"");i++;next();},ng);' +
+  'transOne(send,function(z){var zz=String(z||"").replace(/^\\s+|\\s+$/g,"");' +
+  'if(had&&!zsplit(zz))lost++;' +
+  'zs[i]={z:zz,had:had};i++;next();},ng);' +
   '})();}' +
   'function applyAll(){MBUSY=true;MMSG="対象に文を入れています…";draw();' +
   'MJA.forEach(function(x){putTextInto(tgtNames(x.atama,x.sei,"ja"),x.text);});' +
