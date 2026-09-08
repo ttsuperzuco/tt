@@ -4152,13 +4152,14 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcper{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
     '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
     'background:#2563EB;color:#fff;}' +
-    '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
+    '.bcper button:disabled{background:#0B1220;color:#5B6B85;}' +
     // ★押されたボタンが一目で分かるように（まるちゃん指示 2026-09-09）＝
     //   明るい緑のまま・白い枠・チェックを付ける。押せない間もこの色を保つ。
     '.bcper button.bcon,.bcper button.bcon:disabled{background:#16A34A;color:#fff;' +
     'box-shadow:0 0 0 3px #fff inset;}' +
     '.bcper button.bcon::before{content:"✓ ";}' +
     '.bcper button.bcrestore{grid-column:1 / -1;background:#7C3AED;}' +
+    '.bcper button.bcrestore:disabled{background:#0B1220;color:#5B6B85;}' +
     '.bccard.bcwide{margin-left:-22px;margin-right:-22px;padding:14px 9px 16px;}' +
     '.bc textarea.bcmtx{min-height:200px;font-size:16px;line-height:1.8;padding:9px;}' +
     '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
@@ -4520,7 +4521,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bccard">\'+' +
   '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
   '((x[0]===SPER)?\' class="bcon"\':"")+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
-  '\'<button type="button" class="bcrestore" id="bcrest">\'+' +
+  '\'<button type="button" class="bcrestore" id="bcrest"\'+(SBUSY?" disabled":"")+\'>\'+' +
   '\'作業中のデータを復元する</button></div>\';' +
   'if(SRES)h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';' +
