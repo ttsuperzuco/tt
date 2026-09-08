@@ -2180,23 +2180,14 @@ function renderZenjitsuPage_(base, staff, dev) {
   /* ── 送信を設定する（パソコン版の『送る日時を決める』と同じ流れ） ───────── */
   'var zjRows=[];var zjCurDate="";' +
   /* ── 途中までの作業を、この端末に覚える／読む（他の人には影響しない） ── */
-  'var ZJKEY="zenjitsu_wip_v1";' +
-  'function zjAllLocal(){try{return JSON.parse(localStorage.getItem(ZJKEY)||"{}");}catch(e){return {};}}' +
-  'function zjSaveLocal(day,st){if(!day||!st)return;try{var all=zjAllLocal();' +
-  'var n=(st.done||[]).length+Object.keys(st.text||{}).length;' +
-  'if(n)all[day]={at:Date.now(),state:st};else delete all[day];' +
-  'localStorage.setItem(ZJKEY,JSON.stringify(all));}catch(e){}}' +
-  'function zjToday(){var k=new Date();return k.getFullYear()+"-"+("0"+(k.getMonth()+1)).slice(-2)+"-"+("0"+k.getDate()).slice(-2);}' +
-  /* ★2026-09-08まるちゃん指示：**ご来店の日が過ぎたら捨てる**（もう送ることはないので）。 */
-  'function zjLoadLocal(day){var d=zjAllLocal()[day];if(!d)return null;' +
-  'if(day<zjToday()){zjClearLocal(day);return null;}return d.state||null;}' +
-  'function zjSweepLocal(){try{var all=zjAllLocal();var t=zjToday();var ch=false;' +
-  'Object.keys(all).forEach(function(d){if(d<t){delete all[d];ch=true;}});' +
-  'if(ch)localStorage.setItem(ZJKEY,JSON.stringify(all));}catch(e){}}' +
-  'function zjClearLocal(day){try{var all=zjAllLocal();delete all[day];' +
-  'localStorage.setItem(ZJKEY,JSON.stringify(all));}catch(e){}}' +
+  /* ★2026-09-08：途中までの作業は**事務所のパソコンに、この端末の分だけ**を分けてしまう。
+     （パソコンの窓では端末に記憶できないと分かったので、スマホも同じ道にそろえる＝食い違わない） */
+  'function zjSaveLocal(day,st){if(!day||!st)return;zjAsk("wip_save",{device:slot,date:day,state:st},function(){},function(){});}' +
+  'function zjClearLocal(day){if(!day)return;zjAsk("wip_clear",{device:slot,date:day},function(){},function(){});}' +
+  'function zjLoadLocal(day,onGot){zjAsk("wip_load",{device:slot,date:day},function(r){onGot((r&&r.ok)?(r.state||null):null);},function(){onGot(null);});}' +
+  'function zjSweepLocal(){}' +
   /* 作り直したあと、途中までの作業があれば「復元しますか？」と聞く。 */
-  'function zjAskRestore(day){var st=zjLoadLocal(day);if(!st)return;' +
+  'function zjAskRestore(day){zjLoadLocal(day,function(st){if(!st)return;' +
   'var n=(st.done||[]).length+Object.keys(st.text||{}).length;if(!n)return;' +
   'var b=document.createElement("div");b.className="zjask";' +
   'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">既に作業した確認済・修正済を復元しますか？<br>"' +
@@ -2208,7 +2199,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'b.querySelector(".zjaskyes").onclick=function(){b.remove();' +
   'var f=document.getElementById("zjframe");' +
   'var go=function(){try{f.contentWindow.postMessage({zj:"restore",state:st},"*");}catch(e){}};' +
-  'go();setTimeout(go,700);setTimeout(go,1800);};}' +
+  'go();setTimeout(go,700);setTimeout(go,1800);};});}' +
   'function zjBox(html){var b=document.getElementById("zjbox");' +
   'if(!b){b=document.createElement("div");b.id="zjbox";b.className="zjbox";document.body.appendChild(b);}' +
   'b.innerHTML=html;b.hidden=false;window.scrollTo(0,0);return b;}' +
