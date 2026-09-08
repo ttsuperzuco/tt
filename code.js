@@ -4175,6 +4175,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcsame{background:#0B1220;border:1px solid #7C3AED;color:#E8EEF7;border-radius:10px;' +
     'padding:12px 14px;font-size:15px;font-weight:800;margin:0 0 16px;' +
     'display:flex;align-items:center;justify-content:space-between;gap:12px;}' +
+    '.bcsame.bckage{visibility:hidden;background:transparent;border-color:transparent;}' +
     '.bcout{background:#0B1220;border:1px solid #26324A;border-radius:10px;padding:11px 12px;margin:0 0 10px;}' +
     '.bcouth{display:flex;align-items:center;gap:10px;margin:0 0 8px;}' +
     '.bcouth b{flex:1;font-size:15px;font-weight:800;color:#E8EEF7;}' +
@@ -4538,7 +4539,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を修正</span>\'+' +
   '\'<span class="bcsno">\'+(SIDX+1)+\' / \'+gs.length+\'</span></div>\'+' +
   '\'\';' +
-  'if(SIDX===0)h+=\'<div class="bcsame"><span>\'+' +
+  // ★2枚目からは中身を見せないが、帯そのものは同じ大きさで置く。
+  //   消すと下の欄が上にずれてしまうため（まるちゃん指示 2026-09-09）。
+  'h+=\'<div class="bcsame\'+((SIDX===0)?"":" bckage")+\'"><span>\'+' +
   '(SRES.split?"新規・既存を男女に分けて作成":"新規と既存の二種類だけ作成")+\'</span>\'+' +
   '\'<label class="bcsplit"><input type="checkbox" id="bcsplitcb"\'+' +
   '(SRES.split?" checked":"")+\'>男女版も作成</label></div>\';' +
