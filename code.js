@@ -3959,8 +3959,6 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
   'var h=\'<div class="bccard"><div class="bcname">予約可能枠の画像を作る</div>\'+' +
-  '\'<div class="bcwho">元の絵と同じデザインのまま、貼った内容に合わせてAIが枠ごと組み直します。'+
-  '書いてある区分の数だけ作り、できた絵はその対象の1つ目に自動で入ります。</div>\'+' +
   '\'<div class="bchr"></div>\'+' +
   '\'<div class="bcwhead"><span class="lb">日時入力欄</span>\'+' +
   '\'<button type="button" class="bcwauto" id="bcwauto">自動入力</button></div>\'+' +
@@ -3972,7 +3970,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'esc(x.label)+\'</span></div>\';}).join("")+\'</div>\';}' +
   'h+=\'</div>\';' +
   'h+=\'<button type="button" class="bcgo" id="bcwmake"\'+(WBUSY?" disabled":"")+\'>\'+' +
-  '(WBUSY?"作っています…":"この内容で画像を作る")+\'</button>\';' +
+  '(WBUSY?"画像を生成しています...":"この内容で画像を作る")+\'</button>\';' +
   'if(WMSG)h+=\'<div class="bcstatus on">\'+esc(WMSG)+\'</div>\';' +
   'h+=\'<button type="button" class="bcghost" id="bcwback">◀ 対象の設定にもどる</button>\';' +
   'box.innerHTML=h;bindWaku();}' +
@@ -3990,7 +3988,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'document.getElementById("bcwmake").onclick=function(){' +
   'if(ta)WTEXT=ta.value;' +
   'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してください。",true);return;}' +
-  'WBUSY=true;WDONE=[];WMSG="";status("貼られた内容を読み取っています…");draw();' +
+  'WBUSY=true;WDONE=[];WMSG="";status("");draw();' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"plan",text:WTEXT})},' +
   'function(r){if(!r||!r.ok||!r.jobs||!r.jobs.length){WBUSY=false;WMSG="";' +
   'status((r&&r.note)||"読み取れませんでした。",true);draw();return;}' +
@@ -4000,7 +3998,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'WMSG="できました。"+jobs.length+"枚を、それぞれの対象の1つ目に入れました。";' +
   'status("");draw();return;}' +
   'var j=jobs[i];' +
-  'WMSG=(i+1)+"枚目 / "+jobs.length+"枚　「"+j.label+"」をAIが作っています…";draw();' +
+  'WMSG=(i+1)+"枚目 / "+jobs.length+"枚　"+j.label;draw();' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:j.kind,days:j.days})},' +
   'function(g){if(g&&g.ok&&g.name){' +
   'WDONE.push({label:j.label,thumb:g.thumb,name:g.name});' +
