@@ -4490,7 +4490,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   ・上の帯（題・練習モードの案内・配信内容の行）は出さない＝文の欄を大きく使う
   //   ・「予約可能時間文を生成」は白字で黒い枠の上に出す
   //   ・文の欄は中身が全部見える高さ（`fitTx`）・字も大きい
-  //   ・下のボタン＝「この内容でOK」→次の区分へ。最後だけ「この内容で配信」
+  //   ・下のボタン＝どの区分でも「この内容でOK」→次へ（まるちゃん指示 2026-09-09）
   // ★中身が全部見える高さにする。1回だと折り返しが変わって足りないことがあるので
   //   落ち着くまで数回はかり直す（実測で1回目346px→本当は401px必要だった）。
   // ★字は「一番長い行が折り返さずに収まる、いちばん大きい大きさ」にする（10〜22px）。
@@ -4533,7 +4533,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();return;}' +
   'if(SIDX>=gs.length)SIDX=gs.length-1;if(SIDX<0)SIDX=0;' +
-  'var g=gs[SIDX],last=(SIDX===gs.length-1);' +
+  'var g=gs[SIDX];' +
   'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span>\'+' +
   '\'<span class="bcsno">\'+(SIDX+1)+\' / \'+gs.length+\'</span></div>\'+' +
   '\'\';' +
@@ -4544,8 +4544,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+SIDX+\'">コピー</button></div>\'+' +
   '\'<textarea class="bcotx" wrap="off" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
-  'h+=last?\'<button type="button" class="bcgo" id="bcsnext">この内容で配信</button>\'' +
-  ':\'<button type="button" class="bcgo" id="bcsnext">この内容でOK</button>\';' +
+  'h+=\'<button type="button" class="bcgo" id="bcsnext">この内容でOK</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();' +
   'fitTx(box.querySelector(".bcotx"));}' +
   'function bindText(){' +
