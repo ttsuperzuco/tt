@@ -4399,10 +4399,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'noEl.textContent=(page==="k")?"":((page==="w")?"画像づくり":((page==="s")?"文づくり":' +
   '((page==="m")?"配信文づくり":' +
   '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認"))));' +
-  // ★1個ずつ見せる画面と、入口の種類えらびでは上の帯を出さない
+  // ★上の行（配信内容／予約可能枠案内／…）はどの画面でも出さない。題も入口だけ
+  //   （まるちゃん指示 2026-09-09＝前の画面と同じにする）。
   'var slim=((page==="k")||(page==="s"))?"none":"";' +
-  'if(topEl)topEl.style.display=slim;' +
-  'if(ttlEl)ttlEl.style.display=(page==="k")?"":slim;' +
+  'if(topEl)topEl.style.display="none";' +
+  'if(ttlEl)ttlEl.style.display=(page==="k")?"":"none";' +
   'banEl.style.display=slim;}' +
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
@@ -4715,7 +4716,10 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 対象1つぶんの設定 ────────────────────────────────
   'function drawOne(){' +
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
-  'var h=\'<div class="bccard"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
+  // ★上の行を消したので、何番目かはここに出す（まるちゃん指示 2026-09-09）
+  'var h=\'<div class="bcstop"><span class="bcsttl">対象</span>\'+' +
+  '\'<span class="bcsno">\'+(step+1)+\' / \'+TPL.length+\'</span></div>\'+' +
+  '\'<div class="bccard"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
   '\'<div class="bcwho">\'+esc(t.who)+\'</div><div class="bchr"></div>\';' +
   'if(n){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
