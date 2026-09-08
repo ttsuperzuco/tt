@@ -4123,6 +4123,13 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bctxt{display:block;width:100%;margin:0 0 14px;padding:15px;font-size:17px;font-weight:800;' +
     'border:0;border-radius:12px;background:#7C3AED;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
     // 予約可能時間文を生成する画面
+    '.bcper{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
+    '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
+    'background:#2563EB;color:#fff;}' +
+    '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
+    '.bcagain{margin:0 0 12px;text-align:left;}' +
+    '.bcagainbtn{font:inherit;font-size:13px;font-weight:800;color:#cbd5e1;background:#131C2E;' +
+    'border:1px solid #26324A;border-radius:999px;padding:9px 15px;}' +
     '.bcsame{background:#0B1220;border:1px solid #7C3AED;color:#E8EEF7;border-radius:10px;' +
     'padding:12px 14px;font-size:15px;font-weight:800;margin:0 0 16px;}' +
     '.bcout{background:#0B1220;border:1px solid #26324A;border-radius:10px;padding:11px 12px;margin:0 0 10px;}' +
@@ -4398,18 +4405,25 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★期間のボタンは4つやめて1つにした（まるちゃん指示 2026-09-08）。
   //   算出するのは「今週」＝今日から今度の土曜日まで。
   //   ★台湾のお客様向けの下書きは画面に出さない（裏では作っていて、配信文づくりで使う）。
+  // ★最初は期間の4つのボタン。算出したあとの画面には4つを出さない（まるちゃん指示 2026-09-08）。
+  //   選び直したい時は「↩ 期間を選び直す」で最初に戻る。
+  //   ★台湾のお客様向けの下書きは画面に出さない（裏では作っていて、配信文づくりで使う）。
   'function drawText(){' +
-  'var h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\'+' +
-  '\'<button type="button" class="bcgo" id="bccalc"\'+(SBUSY?" disabled":"")+\'>\'+' +
-  '(SBUSY?"算出しています…":"空き時間を算出")+\'</button>\';' +
+  'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];' +
-  'if(gs.length){h+=\'<div class="bchr"></div>\';' +
+  'var h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\';' +
+  'if(!gs.length){' +
+  'h+=\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
+  '(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+\'</div>\';' +
+  'if(SRES)h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
+  'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';}' +
+  'else{' +
+  'h+=\'<div class="bcagain"><button type="button" class="bcagainbtn" id="bcagain">\'+' +
+  '\'↩ 期間を選び直す</button></div>\';' +
   'if(SRES.same)h+=\'<div class="bcsame">男性と女性は全く同じ時間帯</div>\';' +
   'h+=gs.map(function(g,i){return \'<div class="bcout"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+i+\'">コピー</button></div>\'+' +
   '\'<textarea class="bcotx" data-ed="\'+i+\'">\'+esc(g.text)+\'</textarea></div>\';}).join("");}' +
-  'else if(SRES){h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
-  'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';}' +
   'h+=\'</div>\';' +
   'if(gs.length)h+=\'<button type="button" class="bctxt" id="bcmkall">この内容で配信文と\'+' +
   '\'予約可能枠の画像を生成する</button>\';' +
@@ -4419,11 +4433,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'document.getElementById("bcsback").onclick=function(){page="t";status("");draw();};' +
   'var mk=document.getElementById("bcmkall");' +
   'if(mk)mk.onclick=function(){page="m";MSTEP=0;MMSG="";status("");draw();};' +
-  'var cl=document.getElementById("bccalc");' +
-  'if(cl)cl.onclick=function(){SPER="今週";SRES=null;SBUSY=true;status("");draw();' +
-  'ask("bc_waku",{fields:JSON.stringify({period:"今週"})},function(r){SBUSY=false;' +
+  'var ag=document.getElementById("bcagain");' +
+  'if(ag)ag.onclick=function(){SRES=null;SPER="";status("");draw();};' +
+  '[].slice.call(box.querySelectorAll("[data-per]")).forEach(function(b){b.onclick=function(){' +
+  'var k=b.getAttribute("data-per");SPER=k;SRES=null;SBUSY=true;' +
+  'status("空き時間を算出しています…");draw();' +
+  'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;' +
   'if(!r||!r.ok){status((r&&r.note)||"算出できませんでした。",true);draw();return;}' +
-  'SRES=r;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};' +
+  'SRES=r;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
   '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
   'var i=a.getAttribute("data-ed")*1;if(!SRES||!SRES.groups[i])return;' +
   'SRES.groups[i].text=a.value;saveNow();};});' +
