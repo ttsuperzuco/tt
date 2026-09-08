@@ -1985,6 +1985,53 @@ function backBar_(base, staff, dev) {
 //     見出しの文字もパソコンと同じ白にする（このボタンの画面だけ・他の画面の橙色はそのまま）。
 //   ★どちらかの見た目を直したら、必ずもう片方も同じに直す（PC版とスマホ版は常に同じ）。
 var ZENJITSUCSS_ =
+  /* ★2026-09-08：スマホの開発版でも、パソコン版と同じことができるようにした画面の見た目。
+     色は台湾トマトの形にそろえる（青緑の地・白い角丸カード・白い丸の戻る）。 */
+  '  .zjbox { position:fixed; inset:0; z-index:90; overflow:auto; background:#2C7A99; padding:14px; }' +
+  '  .zjbox-in { max-width:900px; margin:0 auto; background:#101a2b; border:1px solid #26324a;' +
+  '    border-radius:14px; padding:16px; color:#e8eef7; }' +
+  '  .zjbox h2 { font-size:1.5rem; font-weight:900; margin:10px 0 8px; }' +
+  '  .zjbox h3 { font-size:1.25rem; font-weight:800; margin:16px 0 6px; }' +
+  '  .zjback { font:inherit; font-size:1.05rem; font-weight:800; background:#fff; color:#0f172a;' +
+  '    border:0; border-radius:999px; padding:10px 20px; cursor:pointer; }' +
+  '  .zjnote { font-size:1rem; line-height:1.6; color:#cbd5e1; margin:8px 0; }' +
+  '  .zjnote.prac { background:#3a3410; color:#f6d98f; border-radius:9px; padding:10px 12px; }' +
+  '  .zjnote.real { background:#4a1414; color:#fecaca; border-radius:9px; padding:10px 12px; }' +
+  '  .zjlabel { font-size:1.1rem; font-weight:800; color:#94a3b8; margin:12px 0 6px; }' +
+  '  .zjinput { width:100%; box-sizing:border-box; background:#0b1220; color:#e8eef7; color-scheme:dark;' +
+  '    border:2px solid #2563eb; border-radius:10px; padding:12px; font:inherit; font-size:1.3rem; font-weight:800; }' +
+  '  .zjrow2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }' +
+  '  .zjgo { font:inherit; font-size:1.15rem; font-weight:800; color:#fff; background:#0f766e;' +
+  '    border:0; border-radius:10px; padding:14px 10px; cursor:pointer; margin-top:12px; width:100%; }' +
+  '  .zjnow { font:inherit; font-size:1.15rem; font-weight:800; color:#fff; background:#b91c1c;' +
+  '    border:0; border-radius:10px; padding:14px 10px; cursor:pointer; }' +
+  '  .zjrow2 .zjgo { margin-top:0; }' +
+  '  .zjlist { margin-top:14px; }' +
+  '  .zjli { padding:8px 0; border-bottom:1px solid #26324a; font-size:1rem; }' +
+  '  .zjpick { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin:10px 0; }' +
+  '  .zjpi { font:inherit; background:#0b1220; color:#e8eef7; border:2px solid #26324a; border-radius:12px;' +
+  '    padding:10px 8px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px;' +
+  '    font-size:.95rem; font-weight:700; opacity:.45; }' +
+  '  .zjpi.on { opacity:1; border-color:#22c55e; }' +
+  '  .zjpi img { width:100%; max-width:120px; border-radius:6px; }' +
+  '  .zjkikan { font-size:.85rem; font-weight:700; color:#a7f3d0; }' +
+  '  .zjbigimg { width:100%; border-radius:10px; margin-top:10px; }' +
+  '  .zjcase { border-top:1px solid #26324a; padding-top:10px; margin-top:14px; }' +
+  '  .zjwide { display:block; width:100%; font:inherit; font-size:1.2rem; font-weight:800; color:#fff;' +
+  '    background:#0f766e; border:0; border-radius:10px; padding:15px 10px; margin-top:10px; cursor:pointer; }' +
+  '  .zjwide.plan { background:#7c3aed; }' +
+  '  .zjtabs { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0; }' +
+  '  .zjtab { font:inherit; font-size:1rem; font-weight:800; color:#e8eef7; background:#0b1220;' +
+  '    border:1px solid #26324a; border-radius:999px; padding:10px 18px; cursor:pointer; }' +
+  '  .zjtab.on { background:#7c3aed; border-color:#7c3aed; color:#fff; }' +
+  '  .zjpl { border:1px solid #26324a; border-left:4px solid #7c3aed; border-radius:10px;' +
+  '    padding:12px; margin-top:10px; }' +
+  '  .zjplh { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-weight:800; }' +
+  '  .zjcancel { font:inherit; font-weight:800; background:#fee2e2; color:#991b1b; border:0;' +
+  '    border-radius:8px; padding:8px 16px; cursor:pointer; margin-left:auto; }' +
+  '  .zjcancel:disabled { opacity:.4; cursor:default; }' +
+  '  .zjallcancel { display:block; width:100%; font:inherit; font-size:1.1rem; font-weight:800;' +
+  '    color:#fff; background:#b91c1c; border:0; border-radius:10px; padding:14px 10px; cursor:pointer; }' +
   '  .zjhead .bname { color:#fff; }' +
   '  .zjcard { background:#131c2e; border:1px solid #26324a; border-left:4px solid #2563eb;' +
   '    border-radius:12px; padding:16px 16px 18px; box-shadow:0 1px 3px rgba(0,0,0,.06); margin-top:6px; }' +
@@ -2085,16 +2132,209 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var dbox=document.getElementById("zjdatebox");' +
   'if(dbox){dbox.addEventListener("click",function(){try{dEl.showPicker();}catch(e){dEl.focus();}});}' +
   'btns.forEach(function(b){b.addEventListener("click",function(){run(b.getAttribute("data-mode"));});});' +
+  'var _pb=document.getElementById("zjplanbtn");if(_pb)_pb.onclick=zjPlans;' +
+  'var _ib=document.getElementById("zjimgsetbtn");if(_ib)_ib.onclick=zjImgSet;' +
   /* ★2026-09-07：枠の中の確認画面（開発版はボタン付き）から届く合図を受ける。
      fit＝カードが減って高さが変わった／scrollto＝そのカードの所まで動かしてほしい。
      画像の入れ替えと送る日時は事務所パソコンの窓でしかできないので、枠の中で隠してある。 */
+  /* ★2026-09-08まるちゃん決定：**開発版のスマホを100%パソコン版と同じにする。**
+     用事は事務所パソコンへ丸投げし（zenjitsu_act）、答えをそのまま画面に出す。
+     中身の判断はパソコンの窓の1本が持つ＝スマホ側に写しを作らない。 */
+  'function zjAsk(job,payload,onDone,onFail){' +
+  'jsonp({action:"submit",key:KEY,op:"zenjitsu_act",who:idn.who,role:idn.role,device:idn.device,' +
+  'fields:JSON.stringify({job:job,payload:payload||{}})},function(r){' +
+  'if(!r||!r.ok||!r.id){(onFail||function(){})("依頼を送れませんでした。");return;}' +
+  'var n=0;(function poll(){n++;if(n>LIMITS.tries("zenjitsu_act",700)){(onFail||function(){})("時間がかかりすぎました。");return;}' +
+  'jsonp({action:"status",key:KEY,id:r.id},function(s){if(!s||!s.ok){(onFail||function(){})("通信に失敗しました。");return;}' +
+  'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
+  'if(s.status!=="done"){(onFail||function(){})(String(s.result||"うまくいきませんでした。"));return;}' +
+  'var d=null;try{d=JSON.parse(s.result);}catch(e){d={ok:false,error:String(s.result||"")};}' +
+  'onDone(d);});})();});}' +
+  /* 枠の中（確認画面）から届く合図を受ける。 */
   'window.addEventListener("message",function(ev){var m=ev.data||{};if(!m.zj)return;' +
-  'var f=document.getElementById("zjframe");if(!f)return;' +
-  'if(m.zj==="fit"){setTimeout(function(){fit(f);},60);return;}' +
-  'if(m.zj==="scrollto"){setTimeout(function(){fit(f);' +
+  'var f=document.getElementById("zjframe");' +
+  'if(m.zj==="fit"){if(f)setTimeout(function(){fit(f);},60);return;}' +
+  'if(m.zj==="scrollto"){if(f)setTimeout(function(){fit(f);' +
   'try{var y=f.getBoundingClientRect().top+window.pageYOffset+(m.top||0)-12;' +
   'window.scrollTo({top:y,behavior:"smooth"});}catch(e){}},80);return;}' +
+  'if(m.zj==="sendplan"){zjSendPlan(m.rows||[]);return;}' +
+  'if(m.zj==="preview"){zjBigImage(m.key,m.lang);return;}' +
+  'if(m.zj==="imgfix"){zjPersonImg(m.id,m.info||{});return;}' +
+  'if(m.zj==="imgset"){zjImgSet();return;}' +
   '});' +
+  /* ── 送信を設定する（パソコン版の『送る日時を決める』と同じ流れ） ───────── */
+  'var zjRows=[];' +
+  'function zjBox(html){var b=document.getElementById("zjbox");' +
+  'if(!b){b=document.createElement("div");b.id="zjbox";b.className="zjbox";document.body.appendChild(b);}' +
+  'b.innerHTML=html;b.hidden=false;window.scrollTo(0,0);return b;}' +
+  'function zjBoxClose(){var b=document.getElementById("zjbox");if(b){b.hidden=true;b.innerHTML="";}}' +
+  'function zjTwo(n){return (n<10?"0":"")+n;}' +
+  'function zjSendPlan(rows){zjRows=rows||[];' +
+  'var d=new Date();d.setDate(d.getDate()+0);' +
+  'var 既定="";try{var p=(zjRows[0]&&zjRows[0].date)||"";}catch(e){}' +
+  'var b=zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk\\">← 前に戻る</button>"' +
+  '+"<h2>📤 確認済 "+zjRows.length+" 人のお知らせの送信を設定する</h2>"' +
+  '+"<div id=\\"zjmode\\" class=\\"zjnote\\">読み込んでいます…</div>"' +
+  '+"<div class=\\"zjlabel\\">送る日時</div>"' +
+  '+"<input type=\\"datetime-local\\" id=\\"zjat\\" class=\\"zjinput\\">"' +
+  '+"<div class=\\"zjrow2\\"><button type=\\"button\\" class=\\"zjgo\\" id=\\"zjput\\">この日時で置く</button>"' +
+  '+"<button type=\\"button\\" class=\\"zjnow\\" id=\\"zjnow\\">⚡ 今すぐ送る</button></div>"' +
+  '+"<div id=\\"zjmsg\\" class=\\"zjnote\\"></div>"' +
+  '+"<div id=\\"zjlist\\" class=\\"zjlist\\"></div></div>");' +
+  'document.getElementById("zjbk").onclick=zjBoxClose;' +
+  'var now=new Date();now.setMinutes(now.getMinutes()+5);' +
+  'document.getElementById("zjat").value=now.getFullYear()+"-"+zjTwo(now.getMonth()+1)+"-"+zjTwo(now.getDate())+"T"+zjTwo(now.getHours())+":"+zjTwo(now.getMinutes());' +
+  'document.getElementById("zjlist").innerHTML=zjRows.map(function(r){' +
+  'return "<div class=\\"zjli\\"><b>"+esc(r.time)+"</b> "+esc(r.name)+"　"+esc(r.fnum||"新規")' +
+  '+"／"+esc(r.lang)+"／画像 "+((r.images||[]).length)+"枚"' +
+  '+(((r.chat||"").indexOf("U")===0)?"":"　⛔LINEが分かりません")+"</div>";}).join("");' +
+  'zjAsk("send_status",{},function(d){' +
+  'var el=document.getElementById("zjmode");if(!el)return;' +
+  'el.innerHTML=d.practice?"🧪 <b>練習モードです。</b>誰を選んでも、まるちゃん本人にだけ届きます。"' +
+  ':"⚠️ <b>本番モードです。</b>決めた時刻に、お客様へ本当に届きます。";' +
+  'el.className="zjnote "+(d.practice?"prac":"real");},function(e){});' +
+  'document.getElementById("zjput").onclick=function(){zjPut(false);};' +
+  'document.getElementById("zjnow").onclick=function(){zjPut(true);};}' +
+  'function zjPut(sugu){' +
+  'var msg=document.getElementById("zjmsg");' +
+  'var at=(document.getElementById("zjat").value||"").replace("T"," ");' +
+  'if(sugu){var n=new Date();n.setSeconds(n.getSeconds()-30);' +
+  'at=n.getFullYear()+"-"+zjTwo(n.getMonth()+1)+"-"+zjTwo(n.getDate())+" "+zjTwo(n.getHours())+":"+zjTwo(n.getMinutes());}' +
+  'if(!at){msg.textContent="⛔ 日時を決めてください";return;}' +
+  'var 日=(zjRows[0]&&zjRows[0].date)||(document.getElementById("zjdate")||{}).value||"";' +
+  'msg.textContent="事務所パソコンに伝えています…";' +
+  'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
+  'if(!d.ok){msg.textContent="⛔ "+(d.error||"送れませんでした");return;}' +
+  'var t="✅ "+d.put+"人ぶんを "+at+" に送るよう置きました";' +
+  'if(d.ng&&d.ng.length)t+="（置けなかった人："+d.ng.join("／")+"）";' +
+  'if(d.notes&&d.notes.length)t+="（前の続きから送ります："+d.notes.join("／")+"）";' +
+  'msg.textContent=t;' +
+  'if(sugu&&d.put)zjWatch(d.ids||[],d.put);' +
+  '},function(e){msg.textContent="⛔ "+e;});}' +
+  'function zjWatch(ids,zenbu){var msg=document.getElementById("zjmsg");var t0=Date.now();var n=0;' +
+  '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認ください。";return;}' +
+  'zjAsk("send_progress",{ids:ids},function(s){' +
+  'var 秒=Math.round((Date.now()-t0)/1000);' +
+  'if(!s.ok||s.busy>0){msg.textContent="⏳ 送っています…（"+((s.done||0)+(s.ng||0))+"／"+zenbu+"人・"+秒+"秒）";setTimeout(tick,3000);return;}' +
+  'var t=(s.ng?"⚠️ ":"✅ ")+s.done+"人に送りました";' +
+  'if(s.ng)t+="／"+s.ng+"人は送れませんでした："+(s.msgs||[]).join("／");' +
+  'msg.textContent=t;},function(e){setTimeout(tick,3000);});})();}' +
+  /* ── 画像を大きく見る ─────────────────────────────── */
+  'function zjBigImage(key,lang){' +
+  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk2\\">← 前に戻る</button>"' +
+  '+"<div id=\\"zjbig\\" class=\\"zjnote\\">読み込んでいます…</div></div>");' +
+  'document.getElementById("zjbk2").onclick=zjBoxClose;' +
+  'zjAsk("big_image",{key:key,lang:lang||"日"},function(d){' +
+  'var el=document.getElementById("zjbig");if(!el)return;' +
+  'el.innerHTML=d.ok?("<h2>"+esc(d.name)+"</h2><img class=\\"zjbigimg\\" src=\\""+d.src+"\\" alt=\\"\\">")' +
+  ':("⛔ "+esc(d.error||"出せませんでした"));},function(e){' +
+  'var el=document.getElementById("zjbig");if(el)el.textContent="⛔ "+e;});}' +
+  /* ── その方に付く画像を修正する ─────────────────────── */
+  'function zjPersonImg(eid,info){' +
+  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk3\\">← 前に戻る</button>"' +
+  '+"<h2>🖼 "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
+  '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してください。</div>"' +
+  '+"<div id=\\"zjpick\\" class=\\"zjpick\\">読み込んでいます…</div>"' +
+  '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjpicksave\\">この画像で決定</button></div>");' +
+  'document.getElementById("zjbk3").onclick=zjBoxClose;' +
+  'var 日=(info&&info.date)||"";var いま=(info&&info.keys)||[];' +
+  'zjAsk("image_choices",{date:日,event_id:eid,now_keys:いま},function(d){' +
+  'var el=document.getElementById("zjpick");if(!el)return;' +
+  'if(!d.ok){el.textContent="⛔ "+(d.error||"読み込めませんでした");return;}' +
+  'var 選=(d.now||[]).map(function(x){return x.key;});' +
+  'el.innerHTML=(d.all||[]).map(function(x){' +
+  'var on=選.indexOf(x.key)>=0;' +
+  'return "<button type=\\"button\\" class=\\"zjpi"+(on?" on":"")+"\\" data-key=\\""+esc(x.key)+"\\">"' +
+  '+(x.thumb?("<img src=\\""+x.thumb+"\\" alt=\\"\\">"):"")+"<span>"+esc(x.name)+"</span></button>";}).join("");' +
+  'el.querySelectorAll(".zjpi").forEach(function(b){b.onclick=function(){b.classList.toggle("on");};});' +
+  'document.getElementById("zjpicksave").onclick=function(){' +
+  /* 枠の中のカードが待っている形（setimgs＋絵つき）でそのまま返す。 */
+  'var pics=[];el.querySelectorAll(".zjpi.on").forEach(function(b){' +
+  'var k=b.dataset.key;var src="";var nm=k;' +
+  '(d.all||[]).forEach(function(x){if(x.key===k){src=x.thumb||"";nm=x.name||k;}});' +
+  'pics.push({key:k,name:nm,src:src,lang:(info&&info.lang)||"日"});});' +
+  'var f=document.getElementById("zjframe");' +
+  'if(f&&f.contentWindow)f.contentWindow.postMessage({zj:"setimgs",id:eid,pics:pics},"*");' +
+  'zjBoxClose();};' +
+  '},function(e){var el=document.getElementById("zjpick");if(el)el.textContent="⛔ "+e;});}' +
+  /* ── 画像送信セッティング ───────────────────────────── */
+  'function zjImgSet(){' +
+  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk4\\">← 前に戻る</button>"' +
+  '+"<h2>📷 画像送信セッティング</h2>"' +
+  '+"<div class=\\"zjnote\\">お知らせ文のあとに、この順番で画像を送信します。送信したくない画像は「送る」をオフにしてください。</div>"' +
+  '+"<div id=\\"zjcases\\">読み込んでいます…</div>"' +
+  '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjcasesave\\">この内容で保存</button>"' +
+  '+"<div id=\\"zjcasemsg\\" class=\\"zjnote\\"></div></div>");' +
+  'document.getElementById("zjbk4").onclick=zjBoxClose;' +
+  'zjAsk("image_settings",{},function(d){' +
+  'var el=document.getElementById("zjcases");if(!el)return;' +
+  'if(!d.ok){el.textContent="⛔ "+(d.error||"読み込めませんでした");return;}' +
+  'el.innerHTML=(d.cases||[]).map(function(c){' +
+  'var items=(c.items||[]).map(function(it,i){' +
+  'return "<button type=\\"button\\" class=\\"zjpi"+(it.on!==false?" on":"")+"\\" data-case=\\""+esc(c.key)+"\\" data-key=\\""+esc(it.key)+"\\">"' +
+  '+(it.ja_thumb?("<img src=\\""+it.ja_thumb+"\\" alt=\\"\\">"):"")+"<span>"+(i+1)+". "+esc(it.name)+"</span>"' +
+  '+(it.kikan?("<span class=\\"zjkikan\\">📅 "+esc(it.kikan)+"</span>"):"")+"</button>";}).join("");' +
+  'return "<div class=\\"zjcase\\"><h3>"+esc(c.no+" "+c.name)+"</h3><div class=\\"zjnote\\">"+esc(c.note||"")+"</div>"' +
+  '+"<div class=\\"zjpick\\">"+(items||"（送る画像はありません）")+"</div></div>";}).join("");' +
+  'el.querySelectorAll(".zjpi").forEach(function(b){b.onclick=function(){b.classList.toggle("on");};});' +
+  'document.getElementById("zjcasesave").onclick=function(){' +
+  'var picked={};(d.cases||[]).forEach(function(c){picked[c.key]=[];});' +
+  'el.querySelectorAll(".zjpi.on").forEach(function(b){picked[b.dataset.case].push(b.dataset.key);});' +
+  'var m=document.getElementById("zjcasemsg");m.textContent="保存しています…";' +
+  'zjAsk("save_image_settings",{picked:picked},function(r){' +
+  'm.textContent=r.ok?"✅ 保存しました":("⛔ "+(r.error||"保存できませんでした"));},' +
+  'function(e){m.textContent="⛔ "+e;});};' +
+  '},function(e){var el=document.getElementById("zjcases");if(el)el.textContent="⛔ "+e;});}' +
+  /* ── 予約送信の設定完了したお知らせ一覧（パソコン版と同じ・日付のタブ＋取り消し） ── */
+  'var zjPlanDay="";' +
+  'function zjPlans(){' +
+  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk5\\">← 前に戻る</button>"' +
+  '+"<h2>📨 予約送信の設定完了したお知らせ一覧</h2>"' +
+  '+"<div class=\\"zjnote\\">設定時刻に自動で送信されます。未送信分は取り消せます。</div>"' +
+  '+"<div id=\\"zjplmsg\\" class=\\"zjnote\\"></div>"' +
+  '+"<div id=\\"zjpltabs\\" class=\\"zjtabs\\"></div>"' +
+  '+"<button type=\\"button\\" class=\\"zjallcancel\\" id=\\"zjplall\\" hidden></button>"' +
+  '+"<div id=\\"zjpllist\\">読み込んでいます…</div></div>");' +
+  'document.getElementById("zjbk5").onclick=zjBoxClose;' +
+  'zjPlansDraw();}' +
+  'function zjPlansDraw(){' +
+  'var box=document.getElementById("zjpllist");if(!box)return;' +
+  'zjAsk("sent_plans",{},function(d){' +
+  'if(!d.ok){box.textContent="⛔ 読み込めませんでした";return;}' +
+  'var rows=d.rows||[];' +
+  'if(!rows.length){document.getElementById("zjpltabs").innerHTML="";' +
+  'document.getElementById("zjplall").hidden=true;' +
+  'box.textContent="現在、送信が設定されたお知らせはありません";return;}' +
+  'var 曜=["日","月","火","水","木","金","土"];' +
+  'var days=[];rows.forEach(function(x){if(days.indexOf(x.send_day)<0)days.push(x.send_day);});' +
+  'if(!zjPlanDay||days.indexOf(zjPlanDay)<0)zjPlanDay=days[0];' +
+  'var 名=function(s){var p=s.split("-");return (+p[1])+"/"+(+p[2])+"（"+曜[new Date(+p[0],+p[1]-1,+p[2]).getDay()]+"）送信分";};' +
+  'document.getElementById("zjpltabs").innerHTML=days.map(function(dd){' +
+  'return "<button type=\\"button\\" class=\\"zjtab"+(dd===zjPlanDay?" on":"")+"\\" data-day=\\""+dd+"\\">"' +
+  '+名(dd)+" "+rows.filter(function(x){return x.send_day===dd;}).length+"</button>";}).join("");' +
+  'document.getElementById("zjpltabs").querySelectorAll(".zjtab").forEach(function(b){' +
+  'b.onclick=function(){zjPlanDay=b.dataset.day;zjPlansDraw();};});' +
+  'var 未=rows.filter(function(x){return x.send_day===zjPlanDay&&x.can_cancel;});' +
+  'var ac=document.getElementById("zjplall");' +
+  'ac.hidden=(未.length===0);ac.textContent="🚫 全ての送信予約を取り消す（"+未.length+"件）";' +
+  'ac.onclick=function(){zjCancelMany(未);};' +
+  'box.innerHTML=rows.filter(function(x){return x.send_day===zjPlanDay;}).map(function(x){' +
+  'return "<div class=\\"zjpl\\"><div class=\\"zjplh\\">"+esc(x.send_at)+"　"+esc(x.name)+"　"' +
+  '+esc(x.fnum||"新規")+"　"+esc(x.status_ja)' +
+  '+"<button type=\\"button\\" class=\\"zjcancel\\" data-id=\\""+esc(x.id)+"\\""+(x.can_cancel?"":" disabled")+">取り消す</button></div>"' +
+  '+"<div class=\\"zjnote\\">"+esc(x.date)+" ご来店分／画像 "+x.images+"枚"+(x.note?("　"+esc(x.note)):"")+"</div>"' +
+  '+(x.warn?("<div class=\\"zjnote real\\">⚠️ "+esc(x.warn)+"</div>"):"")+"</div>";}).join("");' +
+  'box.querySelectorAll(".zjcancel").forEach(function(b){if(b.disabled)return;' +
+  'b.onclick=function(){b.disabled=true;b.textContent="取り消しています…";' +
+  'zjAsk("cancel_plan",{id:b.dataset.id},function(r){' +
+  'document.getElementById("zjplmsg").textContent=r.ok?"✅ 取り消しました":("⛔ "+(r.error||""));' +
+  'zjPlansDraw();},function(e){b.disabled=false;b.textContent="取り消す";});};});' +
+  '},function(e){box.textContent="⛔ "+e;});}' +
+  'function zjCancelMany(list){' +
+  'var m=document.getElementById("zjplmsg");var i=0;' +
+  '(function next(){if(i>=list.length){m.textContent="✅ "+list.length+"件を取り消しました";zjPlansDraw();return;}' +
+  'm.textContent="取り消しています…（"+(i+1)+"／"+list.length+"）";' +
+  'zjAsk("cancel_plan",{id:list[i].id},function(){i++;next();},function(){i++;next();});})();}' +
   '})();</script>';
   return '<style>' + HOMECSS_ + ZENJITSUCSS_ + '</style>' +
   '<div class="home">' +
@@ -2116,6 +2356,9 @@ function renderZenjitsuPage_(base, staff, dev) {
       /* ★2026-08-24 まるちゃん指示：「（お客様には送りません＝見るだけ）」の一言は消した
            （パソコン版の窓の同じ一言も一緒に消してある）。 */
       '<div class="zjstatus" id="zjstatus">' + ZJ.optionsShown(dev).hint + '</div>' +
+      /* ★2026-09-08：開発版だけ、パソコン版と同じ2つの長いボタンを出す。 */
+      + (dev ? '<button type="button" class="zjwide plan" id="zjplanbtn">📨 予約送信の設定完了したお知らせ一覧</button>'
+             + '<button type="button" class="zjwide" id="zjimgsetbtn">📷 画像送信セッティング</button>' : '')
     '</div>' +
     '<div id="zjres"></div>' +
   '</div>' + script;
