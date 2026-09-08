@@ -2079,7 +2079,11 @@ var ZENJITSUCSS_ =
   '  .zjstatus.err { background:#fee2e2; color:#991b1b; }' +
   /* できあがったお知らせを入れる枠＝中の紙と同じ黒っぽい色にする（白い縁が見えないように）。 */
   '  .zjframe { width:100%; min-height:60vh; border:0; border-radius:14px; background:#161210;' +
-  '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; margin-top:12px; }';
+  '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; margin-top:12px; }' +
+  /* ★2026-09-08まるちゃん指示：「はい、復元する」を押したあとでも、いつでも機械が作ったままに戻せる。 */
+  '  .zjfreshbar { display:flex; justify-content:flex-end; margin:12px 2px 0; }' +
+  '  .zjfreshbtn { font:inherit; font-size:.95rem; font-weight:800; color:#94a3b8; background:#0b1220;' +
+  '    border:1px solid #26324a; border-radius:9px; padding:9px 16px; cursor:pointer; }';
 
 /** 前日お知らせ（社長確認用・開発URL専用）。PC版と同じ「来店日を選ぶ」入口。
  *  日付を選んで押す→事務所PCへ依頼(op=zenjitsu)→PCが確認画面HTMLを notice_<端末>.json に書き出す
@@ -2103,13 +2107,31 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
   'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
   'function fit(f){try{f.style.height="0";var h=f.contentDocument.documentElement.scrollHeight;if(h)f.style.height=(h+24)+"px";}catch(e){}}' +
+  /* ★2026-09-08まるちゃん指示：「はい、復元する」を押したあとでも、いつでも
+     **機械が作ったままの状態に戻せる**ようにする。作り直し（数十秒）を待たず、
+     さっき作ったお知らせの中身をそのまま入れ直すだけ＝一瞬で戻る。 */
+  'var zjLastBody="";' +
+  'function zjRender(html){' +
+  'resEl.innerHTML="<div class=\\"zjfreshbar\\"><button type=\\"button\\" id=\\"zjfreshbtn\\" class=\\"zjfreshbtn\\">↩ まっさらに戻す</button></div>"' +
+  '+"<iframe id=\\"zjframe\\" class=\\"zjframe\\" srcdoc=\\""+esc(html)+"\\"></iframe>";' +
+  'var fb=document.getElementById("zjfreshbtn");if(fb)fb.onclick=zjFresh;' +
+  'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});' +
+  'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);setTimeout(function(){fit(f);},3200);}' +
+  'function zjFresh(){if(!zjLastBody)return;' +
+  'var b=document.createElement("div");b.className="zjask";' +
+  'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">確認済・直した文をすべて消して、<br>機械が作ったままの状態に戻します。よろしいですか？</div>"' +
+  '+"<div class=\\"zjaskrow\\"><button type=\\"button\\" class=\\"zjaskyes\\">はい、まっさらに戻す</button>"' +
+  '+"<button type=\\"button\\" class=\\"zjaskno\\">やめる</button></div></div>";' +
+  'document.body.appendChild(b);' +
+  'b.querySelector(".zjaskno").onclick=function(){b.remove();};' +
+  'b.querySelector(".zjaskyes").onclick=function(){b.remove();' +
+  'var old=document.getElementById("zjrestask");if(old)old.remove();' +
+  'zjClearLocal(zjCurDate);zjRender(zjLastBody);};}' +
   'function showResult(d){var t=ZJ.resultText(d);' +
   'setSt(t.text,t.kind);' +
-  'if(!t.showBody){resEl.innerHTML="";return;}' +
-  'resEl.innerHTML="<iframe id=\\"zjframe\\" class=\\"zjframe\\" srcdoc=\\""+esc(d.body_html)+"\\"></iframe>";' +
-  'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});' +
-  'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);setTimeout(function(){fit(f);},3200);' +
-  'window.addEventListener("resize",function(){fit(f);});}' +
+  'if(!t.showBody){resEl.innerHTML="";zjLastBody="";return;}' +
+  'zjLastBody=d.body_html;zjRender(zjLastBody);}' +
+  'window.addEventListener("resize",function(){var f=document.getElementById("zjframe");if(f)fit(f);});' +
   // ★2026-09-04：あきらめるまでの回数を**自分で決めない**。事務所パソコンが許している秒数
   //   （受付係のコードから機械で写した op_limits.js）に聞く＝LIMITS.tries("zenjitsu",1300)。
   //   前は「1.3秒×160回＝208秒」と手で書いており、事務所側を伸ばしても画面が先にあきらめる形だった。
@@ -2189,7 +2211,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   /* 作り直したあと、途中までの作業があれば「復元しますか？」と聞く。 */
   'function zjAskRestore(day){zjLoadLocal(day,function(st){if(!st)return;' +
   'var n=(st.done||[]).length+Object.keys(st.text||{}).length;if(!n)return;' +
-  'var b=document.createElement("div");b.className="zjask";' +
+  'var b=document.createElement("div");b.className="zjask";b.id="zjrestask";' +
   'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">既に作業した確認済・修正済を復元しますか？<br>"' +
   '+"<span class=\\"zjasksub\\">（確認済 "+(st.done||[]).length+" 人ぶん・直した文 "+Object.keys(st.text||{}).length+" 人ぶん）</span></div>"' +
   '+"<div class=\\"zjaskrow\\"><button type=\\"button\\" class=\\"zjaskyes\\">はい、復元する</button>"' +
