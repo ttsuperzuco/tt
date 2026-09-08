@@ -4325,9 +4325,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(((s.data[i]||{}).parts||[]).length)k++;return k;}' +
   // ★途中の作業があるか＝対象の中身・予約可能時間文・配信文の本文のどれかがあれば「ある」
   'function wipAny(s){if(!s)return false;' +
+  // ★聞くのは「人が書いた文」か「対象に入れた中身」がある時だけ（まるちゃん指摘 2026-09-08）。
+  //   時刻の一覧はいつでも作り直せるので、それだけのために聞かない。
   'var bs=(s.bodies||[]).join("");' +
-  'return !!(wipCount(s)||((s.waku||{}).groups||[]).length||' +
-  'String(bs).trim()||String(s.body||"").trim()||String(s.text||"").trim());}' +
+  'return !!(wipCount(s)||String(bs).trim()||String(s.body||"").trim());}' +
   // ★覚えていた続きの画面へ飛ぶ
   'function goSaved(s){applySaved(s);FRESH=true;' +
   'var pg=s.page;if(pg!=="s"&&pg!=="m"&&pg!=="w"&&pg!=="t")' +
