@@ -4232,7 +4232,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var f=fields||{};var p={action:"submit",key:KEY,op:op,who:idn.who,role:idn.role,device:idn.device};' +
   'for(var k in f)p[k]=f[k];' +
   'jsonp(p,function(r){if(!r||!r.ok||!r.id){(onFail||function(){})("依頼を送れませんでした。");return;}' +
-  'var n=0;(function poll(){n++;if(n>500){(onFail||function(){})("時間がかかりすぎました。");return;}' +
+  'var lim=(window.LIMITS&&LIMITS.tries)?LIMITS.tries(op,700):500;' +
+  'var n=0;(function poll(){n++;if(n>lim){(onFail||function(){})("時間がかかりすぎました。");return;}' +
   'jsonp({action:"status",key:KEY,id:r.id},function(s){if(!s||!s.ok){(onFail||function(){})("通信に失敗しました。");return;}' +
   'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
   'if(s.status!=="done"){(onFail||function(){})(String(s.result||"うまくいきませんでした。"));return;}' +
