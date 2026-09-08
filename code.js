@@ -4769,7 +4769,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'draw();});},function(){});' +
   'catEl.textContent=CAT;' +
   'if(d.banner){banEl.textContent=d.banner.text;' +
-  'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":((d.banner.kind==="practice")?"#fff3cd":"#d1e7dd");}' +
+  // 帯の色＝止まっている(赤)／練習(黄)／テスト送信(橙)／本番(緑)
+  'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":' +
+  '((d.banner.kind==="practice")?"#fff3cd":((d.banner.kind==="test")?"#ffe0b2":"#d1e7dd"));}' +
   'status("");draw();' +
   '},function(m4){status(m4,true);});' +
   '})();</script>';
