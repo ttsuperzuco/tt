@@ -4716,7 +4716,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '(th?(\'<img src="\'+th+\'" data-big="\'+i+\'" style="cursor:zoom-in">\'):"")+' +
   '\'<span class="bcptx">\'+esc(partLabel(p))+\'</span>\'+' +
   '\'<button type="button" class="bcdel" data-del="\'+i+\'">消す</button></div>\';}).join("");}' +
-  'else{h+=\'<div class="bcempty">まだ何も入っていません。下のボタンで画像か文章を入れてください。</div>\';}' +
+  // ★「まだ何も入っていません…」は出さない（まるちゃん指示 2026-09-08）
+  'else{h+="";}' +
   'if(mode==="img"){' +
   'h+=\'<div class="bchr"></div><div class="bcleft">画像を選ぶ</div><div class="bcgrid">\'+' +
   'picks().map(function(p){return \'<div class="bcpick\'+(p.made?" new":"")+\'">\'+' +
@@ -4733,7 +4734,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" class="bcgo" id="bcaddtxt">この文章を入れる</button>\'+' +
   '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else{' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">あと \'+left+\' つ入れられます（ぜんぶで\'+MAXP+\'つまで）</div>\'+' +
+  // ★「あと ◯ つ入れられます」も出さない（まるちゃん指示 2026-09-08）
+  'h+=\'<div class="bchr"></div>\'+' +
   '\'<div class="bcadd"><button type="button" id="bcimg"\'+(left?"":" disabled")+\'>🖼 画像を入れる</button>\'+' +
   '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div></div>\';' +
   'if(n)h+=\'<button type="button" class="bcgo" id="bcnext">この対象はこれで完了 →</button>\';' +
@@ -4881,7 +4883,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'MADE=((d2&&d2.recent)||[]).map(function(x){return {key:x.key,label:x.label,thumb:x.thumb,made:true};});' +
   'draw();});},function(){});' +
   'catEl.textContent=CAT;' +
-  'if(d.banner){banEl.textContent=d.banner.text;' +
+  // ★本番モードの帯は出さない（まるちゃん指示 2026-09-08）。
+  //   練習・テスト送信・止まっている時は必ず出す＝「届きません」は大事な知らせなので消さない。
+  'if(d.banner&&d.banner.kind==="live"){banEl.style.display="none";}' +
+  'else if(d.banner){banEl.style.display="";banEl.textContent=d.banner.text;' +
   // 帯の色＝止まっている(赤)／練習(黄)／テスト送信(橙)／本番(緑)
   'banEl.style.background=(d.banner.kind==="off")?"#f8d7da":' +
   '((d.banner.kind==="practice")?"#fff3cd":((d.banner.kind==="test")?"#ffe0b2":"#d1e7dd"));}' +
