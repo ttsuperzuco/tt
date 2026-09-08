@@ -2144,6 +2144,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var dbox=document.getElementById("zjdatebox");' +
   'if(dbox){dbox.addEventListener("click",function(){try{dEl.showPicker();}catch(e){dEl.focus();}});}' +
   'btns.forEach(function(b){b.addEventListener("click",function(){run(b.getAttribute("data-mode"));});});' +
+  'zjSweepLocal();' +   /* 開いた時に、ご来店の日が過ぎた分の覚えを捨てる */
   'var _pb=document.getElementById("zjplanbtn");if(_pb)_pb.onclick=zjPlans;' +
   'var _ib=document.getElementById("zjimgsetbtn");if(_ib)_ib.onclick=zjImgSet;' +
   /* ★2026-09-07：枠の中の確認画面（開発版はボタン付き）から届く合図を受ける。
@@ -2185,8 +2186,13 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var n=(st.done||[]).length+Object.keys(st.text||{}).length;' +
   'if(n)all[day]={at:Date.now(),state:st};else delete all[day];' +
   'localStorage.setItem(ZJKEY,JSON.stringify(all));}catch(e){}}' +
-  'function zjLoadLocal(day){var d=zjAllLocal()[day];' +
-  'if(!d||(Date.now()-(d.at||0))>3*24*3600*1000)return null;return d.state||null;}' +
+  'function zjToday(){var k=new Date();return k.getFullYear()+"-"+("0"+(k.getMonth()+1)).slice(-2)+"-"+("0"+k.getDate()).slice(-2);}' +
+  /* ★2026-09-08まるちゃん指示：**ご来店の日が過ぎたら捨てる**（もう送ることはないので）。 */
+  'function zjLoadLocal(day){var d=zjAllLocal()[day];if(!d)return null;' +
+  'if(day<zjToday()){zjClearLocal(day);return null;}return d.state||null;}' +
+  'function zjSweepLocal(){try{var all=zjAllLocal();var t=zjToday();var ch=false;' +
+  'Object.keys(all).forEach(function(d){if(d<t){delete all[d];ch=true;}});' +
+  'if(ch)localStorage.setItem(ZJKEY,JSON.stringify(all));}catch(e){}}' +
   'function zjClearLocal(day){try{var all=zjAllLocal();delete all[day];' +
   'localStorage.setItem(ZJKEY,JSON.stringify(all));}catch(e){}}' +
   /* 作り直したあと、途中までの作業があれば「復元しますか？」と聞く。 */
@@ -2244,6 +2250,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'msg.textContent="事務所パソコンに伝えています…";' +
   'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
   'if(!d.ok){msg.textContent="⛔ "+(d.error||"送れませんでした");return;}' +
+  'if(d.put)zjClearLocal(日);' +   /* ★送信を設定したら、覚えていた途中の作業は消す */
   'var t="✅ "+d.put+"人ぶんを "+at+" に送るよう置きました";' +
   'if(d.ng&&d.ng.length)t+="（置けなかった人："+d.ng.join("／")+"）";' +
   'if(d.notes&&d.notes.length)t+="（前の続きから送ります："+d.notes.join("／")+"）";' +
