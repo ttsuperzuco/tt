@@ -4463,7 +4463,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'while(ps.length>MAXP)ps.pop();}});}' +
   // ── 予約可能時間文を生成（専用の画面・2026-09-08 まるちゃんの決めた形）──────
   //   4つのボタンで期間を選ぶと、空き時間検索と同じ答えを事務所パソコンが出す。
-  //   男性と女性がずっと同じ時刻なら男女に分けず、一番上に「男性と女性は全く同じ時間帯」と出す。
+  //   男性と女性がずっと同じ時刻なら男女に分けず、一番上に「新規と既存の二種類だけ作成」と出す。
   //   ★直せるのは日本語だけ。中国語版は曜日を入れ替えてその場で作る＝直した瞬間に必ずそろう
   //     （曜日の対応表は事務所パソコンがくれる＝共通\予約可能枠.py の1本だけが持つ）。
   'function zhOf(s){var w=(SRES&&SRES.wd)||{};' +
@@ -4478,7 +4478,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   ・上の帯（題・練習モードの案内・配信内容の行）は出さない＝文の欄を大きく使う
   //   ・「予約可能時間文を生成」は白字で黒い枠の上に出す
   //   ・文の欄は中身が全部見える高さ（`fitTx`）・字も大きい
-  //   ・下のボタン＝「この内容で保存する」→次の区分へ。最後だけ「この内容で配信」
+  //   ・下のボタン＝「この内容でOK」→次の区分へ。最後だけ「この内容で配信」
   // ★中身が全部見える高さにする。1回だと折り返しが変わって足りないことがあるので
   //   落ち着くまで数回はかり直す（実測で1回目346px→本当は401px必要だった）。
   // ★字は「一番長い行が折り返さずに収まる、いちばん大きい大きさ」にする（10〜22px）。
@@ -4524,14 +4524,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'var g=gs[SIDX],last=(SIDX===gs.length-1);' +
   'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span>\'+' +
   '\'<span class="bcsno">\'+(SIDX+1)+\' / \'+gs.length+\'</span></div>\'+' +
-  '\'<div class="bcagain"><button type="button" class="bcagainbtn" id="bcagain">\'+' +
-  '\'↩ 期間を選び直す</button></div>\';' +
-  'if(SIDX===0&&SRES.same)h+=\'<div class="bcsame">男性と女性は全く同じ時間帯</div>\';' +
+  '\'\';' +
+  'if(SIDX===0&&SRES.same)h+=\'<div class="bcsame">新規と既存の二種類だけ作成</div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+SIDX+\'">コピー</button></div>\'+' +
   '\'<textarea class="bcotx" wrap="off" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
   'h+=last?\'<button type="button" class="bctxt" id="bcsnext">この内容で配信</button>\'' +
-  ':\'<button type="button" class="bcgo" id="bcsnext">この内容で保存する</button>\';' +
+  ':\'<button type="button" class="bcgo" id="bcsnext">この内容でOK</button>\';' +
   'if(SIDX>0)h+=\'<button type="button" class="bcghost" id="bcsprev">◀ 「\'+' +
   'esc(gs[SIDX-1].label)+\'」にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();' +
@@ -4621,7 +4620,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'</div>\';' +
   'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
   ':(last?\'<button type="button" class="bctxt" id="bcmok">この内容で台湾版を作る</button>\'' +
-  ':\'<button type="button" class="bcgo" id="bcmok">この内容で保存する</button>\');' +
+  ':\'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\');' +
   'if(MIDX>0)h+=\'<button type="button" class="bcghost" id="bcmprev2">◀ 「\'+' +
   'esc(ordLabel(MIDX-1,false))+\'」にもどる</button>\';}}' +
   'else if(MSTEP===2){' +
