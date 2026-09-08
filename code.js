@@ -2082,6 +2082,7 @@ var ZENJITSUCSS_ =
   '    box-shadow:0 6px 18px rgba(0,0,0,.14); display:block; margin-top:12px; }' +
   /* ★2026-09-08まるちゃん指示：「はい、復元する」を押したあとでも、いつでも機械が作ったままに戻せる。 */
   '  .zjfreshbar { display:flex; justify-content:flex-end; margin:12px 2px 0; }' +
+  '  .zjfreshbar[hidden] { display:none; }' +
   '  .zjfreshbtn { font:inherit; font-size:1.05rem; font-weight:800; color:#fca5a5; background:#0b1220;' +
   '    border:2px solid #f87171; border-radius:10px; padding:11px 20px; cursor:pointer; }';
 
@@ -2112,11 +2113,15 @@ function renderZenjitsuPage_(base, staff, dev) {
      さっき作ったお知らせの中身をそのまま入れ直すだけ＝一瞬で戻る。 */
   'var zjLastBody="";' +
   'function zjRender(html){' +
-  'resEl.innerHTML="<div class=\\"zjfreshbar\\"><button type=\\"button\\" id=\\"zjfreshbtn\\" class=\\"zjfreshbtn\\">↩ まっさらに戻す</button></div>"' +
+  'resEl.innerHTML="<div class=\\"zjfreshbar\\" id=\\"zjfreshbar\\" hidden><button type=\\"button\\" id=\\"zjfreshbtn\\" class=\\"zjfreshbtn\\">↩ まっさらに戻す</button></div>"' +
   '+"<iframe id=\\"zjframe\\" class=\\"zjframe\\" srcdoc=\\""+esc(html)+"\\"></iframe>";' +
   'var fb=document.getElementById("zjfreshbtn");if(fb)fb.onclick=zjFresh;' +
   'var f=document.getElementById("zjframe");f.addEventListener("load",function(){fit(f);});' +
   'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1600);setTimeout(function(){fit(f);},3200);}' +
+  /* ★2026-09-08まるちゃん指示：**覚えている作業がある時だけ**出す（無い時は出さない）。
+     数え方は「復元しますか？」と同じ＝確認済にした人と、文を直した人の合計。 */
+  'function zjFreshShow(on){var b=document.getElementById("zjfreshbar");if(b)b.hidden=!on;}' +
+  'function zjWipHas(st){return !!st&&((st.done||[]).length+Object.keys(st.text||{}).length)>0;}' +
   'function zjFresh(){if(!zjLastBody)return;' +
   'var b=document.createElement("div");b.className="zjask";' +
   'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">確認済・直した文をすべて消して、<br>機械が作ったままの状態に戻します。よろしいですか？</div>"' +
@@ -2126,7 +2131,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'b.querySelector(".zjaskno").onclick=function(){b.remove();};' +
   'b.querySelector(".zjaskyes").onclick=function(){b.remove();' +
   'var old=document.getElementById("zjrestask");if(old)old.remove();' +
-  'zjClearLocal(zjCurDate);zjRender(zjLastBody);};}' +
+  'zjClearLocal(zjCurDate);zjRender(zjLastBody);zjFreshShow(false);};}' +
   'function showResult(d){var t=ZJ.resultText(d);' +
   'setSt(t.text,t.kind);' +
   'if(!t.showBody){resEl.innerHTML="";zjLastBody="";return;}' +
@@ -2197,7 +2202,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(m.zj==="imgfix"){zjPersonImg(m.id,m.info||{});return;}' +
   'if(m.zj==="imgset"){zjImgSet();return;}' +
   /* ★2026-09-08まるちゃん決定：途中までの作業を**この端末の中だけ**に覚え、次に作り直した時に戻す。 */
-  'if(m.zj==="state"){zjSaveLocal(zjCurDate,m.state);return;}' +
+  'if(m.zj==="state"){zjSaveLocal(zjCurDate,m.state);zjFreshShow(zjWipHas(m.state));return;}' +
   '});' +
   /* ── 送信を設定する（パソコン版の『送る日時を決める』と同じ流れ） ───────── */
   'var zjRows=[];var zjCurDate="";' +
@@ -2217,8 +2222,8 @@ function renderZenjitsuPage_(base, staff, dev) {
   '+"<div class=\\"zjaskrow\\"><button type=\\"button\\" class=\\"zjaskyes\\">はい、復元する</button>"' +
   '+"<button type=\\"button\\" class=\\"zjaskno\\">いいえ、まっさらから始める</button></div></div>";' +
   'document.body.appendChild(b);' +
-  'b.querySelector(".zjaskno").onclick=function(){b.remove();zjClearLocal(day);};' +
-  'b.querySelector(".zjaskyes").onclick=function(){b.remove();' +
+  'b.querySelector(".zjaskno").onclick=function(){b.remove();zjClearLocal(day);zjFreshShow(false);};' +
+  'b.querySelector(".zjaskyes").onclick=function(){b.remove();zjFreshShow(true);' +
   'var f=document.getElementById("zjframe");' +
   'var go=function(){try{f.contentWindow.postMessage({zj:"restore",state:st},"*");}catch(e){}};' +
   'go();setTimeout(go,700);setTimeout(go,1800);};});}' +
@@ -2263,7 +2268,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'msg.textContent="事務所パソコンに伝えています…";' +
   'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
   'if(!d.ok){msg.textContent="⛔ "+(d.error||"送れませんでした");return;}' +
-  'if(d.put)zjClearLocal(日);' +   /* ★送信を設定したら、覚えていた途中の作業は消す */
+  'if(d.put){zjClearLocal(日);zjFreshShow(false);}' +   /* ★送信を設定したら、覚えていた途中の作業は消す */
   'var t="✅ "+d.put+"人ぶんを "+at+" に送るよう置きました";' +
   'if(d.ng&&d.ng.length)t+="（置けなかった人："+d.ng.join("／")+"）";' +
   'if(d.notes&&d.notes.length)t+="（前の続きから送ります："+d.notes.join("／")+"）";' +
