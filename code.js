@@ -4527,7 +4527,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+SIDX+\'">コピー</button></div>\'+' +
   '\'<textarea class="bcotx" wrap="off" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
-  'h+=last?\'<button type="button" class="bctxt" id="bcsnext">この内容で配信</button>\'' +
+  'h+=last?\'<button type="button" class="bcgo" id="bcsnext">この内容で配信</button>\'' +
   ':\'<button type="button" class="bcgo" id="bcsnext">この内容でOK</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();' +
   'fitTx(box.querySelector(".bcotx"));}' +
@@ -4613,7 +4613,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
   'h+=\'</div>\';' +
   'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
-  ':(last?\'<button type="button" class="bctxt" id="bcmok">この内容で台湾版を作る</button>\'' +
+  ':(last?\'<button type="button" class="bcgo" id="bcmok">この内容で台湾版を作る</button>\'' +
   ':\'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\');' +
   '\'\';}}' +
   'else if(MSTEP===2){' +
@@ -4625,7 +4625,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcnum\'+(ov2?" over":"")+\'">\'+(z.text||"").length+\'文字\'+' +
   '(ov2?("　※"+MAXT+"文字を超えています"):"")+\'</div></div>\';' +
   'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
-  ':(lastz?\'<button type="button" class="bctxt" id="bcmok3">この内容で対象に入れて画像も作る</button>\'' +
+  ':(lastz?\'<button type="button" class="bcgo" id="bcmok3">この内容で対象に入れて画像も作る</button>\'' +
   ':\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\');' +
   '\'\';}}' +
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作る</div><div class="bchr"></div>\'+' +
