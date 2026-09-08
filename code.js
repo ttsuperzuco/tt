@@ -4128,7 +4128,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
     'background:#2563EB;color:#fff;}' +
     '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
-    '.bcwide{margin-left:-22px;margin-right:-22px;padding:14px 10px 16px;}' +
+    '.bccard.bcwide{margin-left:-22px;margin-right:-22px;padding:14px 9px 16px;}' +
     '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
     '.bcsttl{font-size:22px;font-weight:900;color:#fff;}' +
     '.bcsno{margin-left:auto;font-size:13px;font-weight:800;color:#DCE7F2;}' +
@@ -4430,8 +4430,12 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★字は「一番長い行が折り返さずに収まる、いちばん大きい大きさ」にする（10〜22px）。
   //   まるちゃん「文字ももっとおおきく。でも一日の時間は全部一行内で表示」。
   'function fitTx(a){if(!a)return;' +
-  'var lines=String(a.value||"").split("\\n"),lg="",i;' +
-  'for(i=0;i<lines.length;i++)if(lines[i].length>lg.length)lg=lines[i];' +
+  // ★どの区分でも同じ大きさにするため、全部の区分の中で一番長い行に合わせる
+  'var gs=(SRES&&SRES.groups)||[],lg="",i,j,lines;' +
+  'for(j=0;j<gs.length;j++){lines=String(gs[j].text||"").split("\\n");' +
+  'for(i=0;i<lines.length;i++)if(lines[i].length>lg.length)lg=lines[i];}' +
+  'if(!gs.length){lines=String(a.value||"").split("\\n");' +
+  'for(i=0;i<lines.length;i++)if(lines[i].length>lg.length)lg=lines[i];}' +
   'var cs=getComputedStyle(a);' +
   'var w=a.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;' +
   'if(w>0&&lg){var pr=document.createElement("span");' +
