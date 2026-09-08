@@ -4274,6 +4274,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno");' +
   'var ttlEl=document.getElementById("bctitle"),topEl=document.getElementById("bctoprow");' +
   'var SIDX=0;' +
+  // ★まるちゃんが入口から先へ進んだか（進んだあとに、遅れて届いた返事で画面を戻さない）
+  'var MOVED=false;' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function status(t,err){stEl.textContent=t;stEl.className="bcstatus"+(t?(err?" ng":" on"):"");}' +
   'function jsonp(params,onR){var cb="__bc"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
@@ -4384,7 +4386,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'b.onclick=function(){szPopup_("入れた中身を全部消して、まっさらから始めますか？",{cancel:true,' +
   'onYes:function(){wipClear();DATA=TPL.map(function(){return {parts:[]};});' +
   'WTEXT="";MBODY="";SPER="";SRES=null;MJA=[];MZH=[];MSTEP=0;MMSG="";' +
-  'step=0;page="t";mode="";FRESH=false;status("まっさらに戻しました。");draw();}});};}' +
+  'step=0;page="k";mode="";FRESH=false;status("まっさらに戻しました。");draw();}});};}' +
   'function draw(){saveNow();' +
   'if(page==="k"){drawKind();}else if(page==="w"){drawWaku();}' +
   'else if(page==="s"){drawText();}else if(page==="m"){drawMake();}' +
@@ -4498,7 +4500,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function drawKind(){' +
   'var h=\'<button type="button" class="bckind" id="bckind1">予約可能枠案内</button>\';' +
   'box.innerHTML=freshBar()+h;bindFresh();' +
-  'document.getElementById("bckind1").onclick=function(){page="s";status("");draw();};}' +
+  'document.getElementById("bckind1").onclick=function(){MOVED=true;page="s";status("");draw();};}' +
   'function drawText(){' +
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];var h;' +
@@ -4879,19 +4881,21 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(rsT)clearTimeout(rsT);rsT=setTimeout(function(){rsT=null;' +
   'fitTx(box.querySelector(".bcotx"));},200);});' +
 
+  // ★待たずに先に入口を出す（ボタン1つだけなので一瞬で出る）
+  'draw();' +
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
   'CAT=d.category||"";TPL=d.templates;PRE=d.presets||[];MAXP=d.max_parts||3;MAXT=d.max_text||500;' +
     'DATA=TPL.map(function(){return {parts:[]};});' +
   // ★開き直した時に「途中までの作業を復元しますか？」と聞く（前日お知らせと同じ）
-  'askRestore(function(){status("");draw();});' +
+  'if(MOVED){WIPON=true;}else{askRestore(function(){status("");if(!MOVED)draw();});}' +
   // ★最近作った絵は別便で取る（templates の答えに載せると大きすぎて窓口を通らない）
   'var rslot=(idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d";' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"recent",slot:rslot})},function(r){' +
   'if(!r||!r.ok)return;' +
   'jsonp({action:"data",name:"bc_recent_"+(r.slot||rslot)+".json"},function(d2){' +
   'MADE=((d2&&d2.recent)||[]).map(function(x){return {key:x.key,label:x.label,thumb:x.thumb,made:true};});' +
-  'draw();});},function(){});' +
+  'if(page!=="s"&&page!=="m")draw();});},function(){});' +
   'catEl.textContent=CAT;' +
   // ★本番モードの帯は出さない（まるちゃん指示 2026-09-08）。
   //   練習・テスト送信・止まっている時は必ず出す＝「届きません」は大事な知らせなので消さない。
@@ -4908,7 +4912,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '<h2 class="htitle" id="bctitle">LINE一斉配信設定</h2>' +
     '<div class="bc">' +
       '<div class="bcbanner" id="bcbanner"></div>' +
-      '<div class="bctop" id="bctoprow"><span class="lb">配信内容</span><b id="bccatname">…</b>' +
+      '<div class="bctop" id="bctoprow" style="display:none">'+'<span class="lb">配信内容</span><b id="bccatname"></b>' +
         '<span class="no" id="bcno"></span></div>' +
 
       '<div id="bcbody"></div>' +
