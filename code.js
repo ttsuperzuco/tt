@@ -4476,17 +4476,17 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("translate",{fields:JSON.stringify({text:s,gender:"共通",quality:"1"})},' +
   'function(r){var v=(r&&typeof r==="object")?((r.note!==undefined)?r.note:(r.result||"")):r;' +
   'cb(String(v==null?"":v));},onErr);}' +
-  'function makeZh(){var body=String(MBODY||""),k=body.indexOf("【時間】");' +
-  'var pre=(k>=0)?body.slice(0,k):body,post=(k>=0)?body.slice(k+4):"";' +
+  'function makeZh(){var body=String(MBODY||"").replace(/^\\s+|\\s+$/g,"");' +
+  'var has=body.indexOf("【時間】")>=0;' +
   'MBUSY=true;MMSG="台湾のお客様向けに訳しています…（1分ほどかかります）";draw();' +
-  'function ng(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();}' +
-  'transOne(pre.replace(/^\\s+|\\s+$/g,""),function(zpre){' +
-  'transOne(post.replace(/^\\s+|\\s+$/g,""),function(zpost){' +
-  'var a=String(zpre||"").replace(/^\\s+|\\s+$/g,""),b=String(zpost||"").replace(/^\\s+|\\s+$/g,"");' +
+  'transOne(body,function(z){z=String(z||"").replace(/^\\s+|\\s+$/g,"");' +
+  'var keep=z.indexOf("【時間】")>=0;' +
   'MZH=((SRES&&SRES.groups)||[]).map(function(g){var tt=zhOf(g.text);' +
-  'var s=a?(a+"\\n\\n"+tt):tt;if(b)s=s+"\\n\\n"+b;' +
+  'var s=keep?z.replace(/【時間】/g,tt):(z?(z+"\\n\\n"+tt):tt);' +
   'return {label:g.label,atama:g.atama,sei:g.sei,text:s};});' +
-  'MBUSY=false;MMSG="";MSTEP=2;status("");draw();},ng);},ng);}' +
+  'MBUSY=false;MSTEP=2;status("");' +
+  'MMSG=(has&&!keep)?"※訳した文に【時間】の目印が残らなかったので、時間は文の最後に入れました。":"";' +
+  'draw();},function(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();});}' +
   // ★仕上げ＝8つの対象に文を入れ、続けて予約可能枠の画像も作って1つ目に入れる
   'function applyAll(){MBUSY=true;MMSG="対象に文を入れています…";draw();' +
   'MJA.forEach(function(x){putTextInto(tgtNames(x.atama,x.sei,"ja"),x.text);});' +
