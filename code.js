@@ -4534,7 +4534,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'box.innerHTML=freshBar()+h;bindText();bindFresh();return;}' +
   'if(SIDX>=gs.length)SIDX=gs.length-1;if(SIDX<0)SIDX=0;' +
   'var g=gs[SIDX];' +
-  'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span>\'+' +
+  // ★ここから先は出来た文を直す画面なので見出しも「修正」（まるちゃん指示 2026-09-09）
+  'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を修正</span>\'+' +
   '\'<span class="bcsno">\'+(SIDX+1)+\' / \'+gs.length+\'</span></div>\'+' +
   '\'\';' +
   'if(SIDX===0)h+=\'<div class="bcsame"><span>\'+' +
