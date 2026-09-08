@@ -4130,6 +4130,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
     '.bcper button.bcrestore{grid-column:1 / -1;background:#7C3AED;}' +
     '.bccard.bcwide{margin-left:-22px;margin-right:-22px;padding:14px 9px 16px;}' +
+    '.bc textarea.bcmtx{min-height:200px;font-size:16px;line-height:1.8;padding:9px;}' +
     '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
     '.bcsttl{font-size:22px;font-weight:900;color:#fff;}' +
     '.bcsno{margin-left:auto;font-size:13px;font-weight:800;color:#DCE7F2;}' +
@@ -4240,6 +4241,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var WTEXT="",WDONE=[],WBUSY=false,WMSG="";' +
   'var SPER="",SRES=null,SBUSY=false;' +
   'var MSTEP=0,MBODY="",MJA=[],MZH=[],MBUSY=false,MMSG="";' +
+  // ★配信文は区分ごとに違う＝本文も区分ごとに持つ（まるちゃん指示 2026-09-08）
+  'var MBODYS=["","","",""],MIDX=0;' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno"),mkEl=document.getElementById("bcmakebtn");' +
   'var txEl=document.getElementById("bctxtbtn");' +
@@ -4281,7 +4284,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function partsFor(x,withPhoto){return (x.parts||[]).filter(function(p){return withPhoto||!p.b64;})' +
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
-  'per:SPER,waku:SRES,sidx:SIDX,page:page,' +
+  'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,midx:MIDX,mstep:MSTEP,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   'function saveNow(){if(!WIPON)return;' +
   'if(WIPT)clearTimeout(WIPT);' +
@@ -4295,8 +4298,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(((s.data[i]||{}).parts||[]).length)k++;return k;}' +
   // ★途中の作業があるか＝対象の中身・予約可能時間文・配信文の本文のどれかがあれば「ある」
   'function wipAny(s){if(!s)return false;' +
+  'var bs=(s.bodies||[]).join("");' +
   'return !!(wipCount(s)||((s.waku||{}).groups||[]).length||' +
-  'String(s.body||"").trim()||String(s.text||"").trim());}' +
+  'String(bs).trim()||String(s.body||"").trim()||String(s.text||"").trim());}' +
   // ★覚えていた続きの画面へ飛ぶ
   'function goSaved(s){applySaved(s);FRESH=true;' +
   'var pg=s.page;if(pg!=="s"&&pg!=="m"&&pg!=="w"&&pg!=="t")' +
@@ -4307,6 +4311,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'DATA[i].parts=ps.slice(0,MAXP).map(function(p){' +
   'if(p.kind==="image"&&p.b64&&!p.thumb)p.thumb="data:image/jpeg;base64,"+p.b64;return p;});}' +
   'WTEXT=s.text||"";MBODY=s.body||"";SPER=s.per||"";SIDX=s.sidx||0;' +
+  'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
+  'MIDX=s.midx||0;if(s.mstep===0||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups)SRES=s.waku;' +
   'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;}' +
   'function askRestore(after){' +
@@ -4551,67 +4557,93 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 配信文を作る（専用の画面・2026-09-08 まるちゃんの決めた順）──────────
   //   ①日本語の文章を入れる →②時間が入った文を確かめる →③台湾版（自動で訳す）を確かめる
   //   →④8つの対象に文を入れ、続けて予約可能枠の画像も作って1つ目に入れる。
-  'function drawMake(){' +
-  'var h=\'<div class="bccard"><div class="bcname">配信文を作る</div><div class="bchr"></div>\';' +
-  'if(MSTEP===0){h+=' +
-  '\'<textarea id="bcmbody" style="min-height:190px" placeholder="例＝&#10;台湾トマトです&#10;\'+' +
-  '\'今週の空いているお時間をお知らせします。&#10;&#10;【時間】&#10;&#10;ご予約おまちしております！">\'+' +
-  'esc(MBODY)+\'</textarea>\'+' +
-  '\'<div class="bcwho">「【時間】」と書いた所に予約可能時間が入ります。\'+' +
-  '\'書かなければ文の最後に入ります。</div>\';}' +
-  'else if(MSTEP===1){h+=\'<div class="bcleft">この文でよろしいですか？（日本語）</div>\'+cardsOf(MJA);}' +
-  'else if(MSTEP===2){h+=\'<div class="bcleft">台湾のお客様向け（自動で訳しました）</div>\'+cardsOf(MZH);}' +
-  'else{h+=\'<div class="bcouttx">\'+esc(MMSG)+\'</div>\';}' +
+  // ★配信文は**1個ずつ**（まるちゃん指示 2026-09-08「全員違う文章だから1個ずつ入力して画面移動」）。
+  //   並びは 🇯🇵新規男性→既存男性→新規女性→既存女性。入力欄の下に「できあがり」を出す。
+  'function ordLabel(i,zh){var x=BORDER[i];return (zh?"🇹🇼":"🇯🇵")+x[0]+x[1];}' +
+  'function drawMake(){var h,N=BORDER.length;' +
+  'if(MIDX>=N)MIDX=N-1;if(MIDX<0)MIDX=0;' +
+  'if(MSTEP===0){' +
+  'var x=BORDER[MIDX],last=(MIDX===N-1);' +
+  'var body=MBODYS[MIDX]||"",done=joinBody(body,timesOf(x[0],x[1]));' +
+  'var over=done.length>MAXT;' +
+  'h=\'<div class="bcstop"><span class="bcsttl">配信文を作る</span>\'+' +
+  '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
+  'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,false))+\'</b></div>\'+' +
+  '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入れてください。&#10;&#10;\'+' +
+  '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
+  'esc(body)+\'</textarea>\';' +
+  'if(body){h+=\'<div class="bczhl">できあがり</div><div class="bcouttx">\'+esc(done)+\'</div>\'+' +
+  '\'<div class="bcnum\'+(over?" over":"")+\'">\'+done.length+\'文字\'+' +
+  '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';}' +
   'h+=\'</div>\';' +
-  'if(!MBUSY){' +
-  'if(MSTEP===0)h+=\'<button type="button" class="bcgo" id="bcmok">OK（この文で作る）</button>\';' +
-  'else if(MSTEP===1){var ng1=tooLong(MJA);' +
-  'h+=ng1?(\'<div class="bcstatus ng">「\'+esc(ng1)+\'」が長すぎます。文を短くしてください。</div>\')' +
-  ':(\'<button type="button" class="bcgo" id="bcmok2">OK（台湾版を作る）</button>\');' +
-  'h+=\'<button type="button" class="bcghost" id="bcmedit">◀ 文を直す</button>\';}' +
-  'else if(MSTEP===2){var ng2=tooLong(MZH);' +
-  'h+=ng2?(\'<div class="bcstatus ng">「\'+esc(ng2)+\'」が長すぎます。文を短くしてください。</div>\')' +
-  ':(\'<button type="button" class="bcgo" id="bcmok3">OK（対象に入れて画像も作る）</button>\');' +
-  'h+=\'<button type="button" class="bcghost" id="bcmedit">◀ 文を直す</button>\';}' +
-  'else h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
+  'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
+  ':(last?\'<button type="button" class="bctxt" id="bcmok">この内容で台湾版を作る</button>\'' +
+  ':\'<button type="button" class="bcgo" id="bcmok">この内容で保存する</button>\');' +
+  'if(MIDX>0)h+=\'<button type="button" class="bcghost" id="bcmprev2">◀ 「\'+' +
+  'esc(ordLabel(MIDX-1,false))+\'」にもどる</button>\';}}' +
+  'else if(MSTEP===2){' +
+  'var z=MZH[MIDX]||{text:""},lastz=(MIDX===N-1),ov2=(z.text||"").length>MAXT;' +
+  'h=\'<div class="bcstop"><span class="bcsttl">台湾版を確かめる</span>\'+' +
+  '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
+  'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b></div>\'+' +
+  '\'<div class="bcouttx">\'+esc(z.text)+\'</div>\'+' +
+  '\'<div class="bcnum\'+(ov2?" over":"")+\'">\'+(z.text||"").length+\'文字\'+' +
+  '(ov2?("　※"+MAXT+"文字を超えています"):"")+\'</div></div>\';' +
+  'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
+  ':(lastz?\'<button type="button" class="bctxt" id="bcmok3">この内容で対象に入れて画像も作る</button>\'' +
+  ':\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\');' +
+  'if(MIDX>0)h+=\'<button type="button" class="bcghost" id="bcmprev2">◀ 「\'+' +
+  'esc(ordLabel(MIDX-1,true))+\'」にもどる</button>\';' +
+  'h+=\'<button type="button" class="bcghost" id="bcmedit">◀ 日本語の文を直す</button>\';}}' +
+  'else{h=\'<div class="bccard"><div class="bcname">配信文を作る</div><div class="bchr"></div>\'+' +
+  '\'<div class="bcouttx">\'+esc(MMSG)+\'</div></div>\';' +
+  'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
   'if(MMSG&&MSTEP<3)h+=\'<div class="bcstatus on">\'+esc(MMSG)+\'</div>\';' +
   'h+=\'<button type="button" class="bcghost" id="bcmback">◀ 予約可能時間文にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindMake();bindFresh();}' +
   'function bindMake(){' +
   'var ta=document.getElementById("bcmbody");' +
-  'if(ta)ta.oninput=function(){MBODY=ta.value;saveNow();};' +
+  'if(ta)ta.oninput=function(){MBODYS[MIDX]=ta.value;MBODY=ta.value;saveNow();' +
+  'if(!ta.value||!(MBODYS[MIDX]||"").length)draw();};' +
+  'if(ta)ta.onblur=function(){draw();};' +
   'document.getElementById("bcmback").onclick=function(){page="s";MMSG="";status("");draw();};' +
   'var e=document.getElementById("bcmedit");' +
-  'if(e)e.onclick=function(){MSTEP=0;MMSG="";draw();};' +
+  'if(e)e.onclick=function(){MSTEP=0;MIDX=0;MMSG="";status("");draw();};' +
+  'e=document.getElementById("bcmprev2");' +
+  'if(e)e.onclick=function(){MIDX--;status("");draw();};' +
+  'e=document.getElementById("bcmoknext");' +
+  'if(e)e.onclick=function(){MIDX++;status("");draw();};' +
   'e=document.getElementById("bcmdone");' +
   'if(e)e.onclick=function(){page="t";step=0;MMSG="";status("");draw();};' +
   'e=document.getElementById("bcmok");' +
-  'if(e)e.onclick=function(){if(ta)MBODY=ta.value;' +
-  'if(!(MBODY||"").trim()){status("日本語の文章を入れてください。",true);return;}' +
-  'MJA=BORDER.map(function(x){' +
-  'return {label:"🇯🇵"+x[0]+x[1],atama:x[0],sei:x[1],' +
-  'text:joinBody(MBODY,timesOf(x[0],x[1]))};});' +
-  'MSTEP=1;MMSG="";status("");draw();};' +
-  'e=document.getElementById("bcmok2");if(e)e.onclick=function(){makeZh();};' +
+  'if(e)e.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
+  'if(!String(MBODYS[MIDX]||"").trim()){status("この対象の文章を入れてください。",true);return;}' +
+  'if(MIDX<BORDER.length-1){MIDX++;status("");draw();return;}' +
+  'MJA=BORDER.map(function(x,k){return {label:ordLabel(k,false),atama:x[0],sei:x[1],' +
+  'text:joinBody(MBODYS[k]||"",timesOf(x[0],x[1]))};});' +
+  'makeZh();};' +
   'e=document.getElementById("bcmok3");if(e)e.onclick=function(){applyAll();};}' +
-  // ★台湾版＝本文だけを訳し、時間の表は訳さず曜日を入れ替えた物を差し込む
-  //   （時間まで訳すと数字や曜日が崩れるため。訳す回数も多くて2回で済む）。
+  // ★台湾版＝区分ごとに本文を訳し、時間の表は訳さず曜日を入れ替えて差し込む
   'function transOne(s,cb,onErr){if(!String(s||"").trim()){cb("");return;}' +
   'ask("translate",{fields:JSON.stringify({text:s,gender:"共通",quality:"1"})},' +
   'function(r){var v=(r&&typeof r==="object")?((r.note!==undefined)?r.note:(r.result||"")):r;' +
   'cb(String(v==null?"":v));},onErr);}' +
-  'function makeZh(){var body=String(MBODY||"").replace(/^\\s+|\\s+$/g,"");' +
-  'var has=body.indexOf("【時間】")>=0;' +
-  'MBUSY=true;MMSG="台湾のお客様向けに訳しています…（1分ほどかかります）";draw();' +
-  'transOne(body,function(z){z=String(z||"").replace(/^\\s+|\\s+$/g,"");' +
+  'function makeZh(){var N=BORDER.length,zs=[],i=0;' +
+  'MBUSY=true;MMSG="台湾のお客様向けに訳しています…（1つ1分ほど）";draw();' +
+  'function ng(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();}' +
+  '(function next(){' +
+  'if(i>=N){' +
+  'MZH=BORDER.map(function(x,k){var tt=zhOf(timesOf(x[0],x[1])),z=zs[k]||"";' +
   'var keep=z.indexOf("【時間】")>=0;' +
-  'MZH=BORDER.map(function(x){var tt=zhOf(timesOf(x[0],x[1]));' +
   'var s=keep?z.replace(/【時間】/g,tt):(z?(z+"\\n\\n"+tt):tt);' +
-  'return {label:"🇹🇼"+x[0]+x[1],atama:x[0],sei:x[1],text:s};});' +
-  'MBUSY=false;MSTEP=2;status("");' +
-  'MMSG=(has&&!keep)?"※訳した文に【時間】の目印が残らなかったので、時間は文の最後に入れました。":"";' +
-  'draw();},function(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();});}' +
-  // ★仕上げ＝8つの対象に文を入れ、続けて予約可能枠の画像も作って1つ目に入れる
+  'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:s};});' +
+  'MBUSY=false;MMSG="";MSTEP=2;MIDX=0;status("");draw();return;}' +
+  'MMSG=(i+1)+" / "+N+"　「"+ordLabel(i,false)+"」を訳しています…";draw();' +
+  'var b=String(MBODYS[i]||"").replace(/^\\s+|\\s+$/g,"");' +
+  'var same=-1,k;for(k=0;k<i;k++)if(String(MBODYS[k]||"").replace(/^\\s+|\\s+$/g,"")===b)same=k;' +
+  'if(same>=0){zs[i]=zs[same];i++;next();return;}' +
+  'transOne(b,function(z){zs[i]=String(z||"").replace(/^\\s+|\\s+$/g,"");i++;next();},ng);' +
+  '})();}' +
   'function applyAll(){MBUSY=true;MMSG="対象に文を入れています…";draw();' +
   'MJA.forEach(function(x){putTextInto(tgtNames(x.atama,x.sei,"ja"),x.text);});' +
   'MZH.forEach(function(x){putTextInto(tgtNames(x.atama,x.sei,"zh"),x.text);});' +
