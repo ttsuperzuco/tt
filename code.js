@@ -4108,7 +4108,8 @@ function renderBroadcastPage_(base, staff, dev) {
   var css =
     '.uhome{background:#131C2E;border:1px solid #26324A;color:#E8EEF7;border-radius:10px;' +
     'padding:10px 14px;font-size:.9rem;font-weight:700;box-shadow:none;}' +
-    '.bc{max-width:560px;margin:0 auto;padding:0 4px 44px;text-align:left;}' +
+    '.bc{max-width:560px;margin:0 auto;width:100%;box-sizing:border-box;' +
+    'padding:0 4px 44px;text-align:left;}' +
     '.bcbanner{padding:11px 14px;border-radius:12px;font-weight:800;margin:4px 0 12px;' +
     'font-size:14px;color:#0f172a;line-height:1.5;}' +
     '.bctop{display:flex;align-items:center;gap:10px;margin:0 2px 10px;flex-wrap:wrap;}' +
@@ -4127,6 +4128,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
     'background:#2563EB;color:#fff;}' +
     '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
+    '.bcwide{margin-left:-22px;margin-right:-22px;padding:14px 10px 16px;}' +
     '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
     '.bcsttl{font-size:22px;font-weight:900;color:#fff;}' +
     '.bcsno{margin-left:auto;font-size:13px;font-weight:800;color:#DCE7F2;}' +
@@ -4141,8 +4143,8 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bccopy{border:0;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:800;' +
     'background:#2563EB;color:#fff;white-space:nowrap;}' +
     '.bcouttx{white-space:pre-wrap;font-size:14px;line-height:1.75;color:#E8EEF7;}' +
-    '.bc textarea.bcotx{min-height:120px;font-size:17px;line-height:1.85;' +
-    'overflow:hidden;resize:none;}' +
+    '.bc textarea.bcotx{min-height:120px;line-height:1.9;padding:9px;' +
+    'overflow-y:hidden;resize:none;white-space:pre;}' +
     '.bcnum{font-size:12px;font-weight:800;color:#94A3B8;margin-top:7px;}' +
     '.bcnum.over{color:#fca5a5;}' +
     // 途中までの作業を復元しますか？（前日お知らせと同じ見た目）
@@ -4425,7 +4427,20 @@ function renderBroadcastPage_(base, staff, dev) {
   //   ・下のボタン＝「この内容で保存する」→次の区分へ。最後だけ「この内容で配信」
   // ★中身が全部見える高さにする。1回だと折り返しが変わって足りないことがあるので
   //   落ち着くまで数回はかり直す（実測で1回目346px→本当は401px必要だった）。
+  // ★字は「一番長い行が折り返さずに収まる、いちばん大きい大きさ」にする（10〜22px）。
+  //   まるちゃん「文字ももっとおおきく。でも一日の時間は全部一行内で表示」。
   'function fitTx(a){if(!a)return;' +
+  'var lines=String(a.value||"").split("\\n"),lg="",i;' +
+  'for(i=0;i<lines.length;i++)if(lines[i].length>lg.length)lg=lines[i];' +
+  'var cs=getComputedStyle(a);' +
+  'var w=a.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight)-2;' +
+  'if(w>0&&lg){var pr=document.createElement("span");' +
+  'pr.style.cssText="position:absolute;left:-9999px;top:0;white-space:pre;visibility:hidden;";' +
+  'pr.style.fontFamily=cs.fontFamily;pr.style.fontWeight=cs.fontWeight;' +
+  'pr.textContent=lg;document.body.appendChild(pr);' +
+  'var f=22;for(;f>10;f--){pr.style.fontSize=f+"px";' +
+  'if(pr.getBoundingClientRect().width<=w)break;}' +
+  'pr.parentNode.removeChild(pr);a.style.fontSize=f+"px";}' +
   'function go(){a.style.height="0px";a.style.height=(a.scrollHeight+10)+"px";}' +
   'go();setTimeout(go,0);setTimeout(go,150);}' +
   'function drawText(){' +
@@ -4446,9 +4461,9 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcagain"><button type="button" class="bcagainbtn" id="bcagain">\'+' +
   '\'↩ 期間を選び直す</button></div>\';' +
   'if(SIDX===0&&SRES.same)h+=\'<div class="bcsame">男性と女性は全く同じ時間帯</div>\';' +
-  'h+=\'<div class="bccard"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
+  'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+SIDX+\'">コピー</button></div>\'+' +
-  '\'<textarea class="bcotx" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
+  '\'<textarea class="bcotx" wrap="off" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
   'h+=last?\'<button type="button" class="bctxt" id="bcsnext">この内容で配信</button>\'' +
   ':\'<button type="button" class="bcgo" id="bcsnext">この内容で保存する</button>\';' +
   'if(SIDX>0)h+=\'<button type="button" class="bcghost" id="bcsprev">◀ 「\'+' +
