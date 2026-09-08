@@ -4393,7 +4393,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
   'var i=a.getAttribute("data-ed")*1;if(!SRES||!SRES.groups[i])return;' +
   'SRES.groups[i].text=a.value;' +
-  'var z=document.getElementById("bczh"+i);if(z)z.textContent=zhOf(a.value);};});' +
+  'var z=document.getElementById("bczh"+i);if(z)z.textContent=zhOf(a.value);' +
+  'saveNow();};});' +
   '[].slice.call(box.querySelectorAll("[data-cp]")).forEach(function(b){b.onclick=function(){' +
   'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cp")*1];if(g)bcCopy(g.text,b);};});' +
   '[].slice.call(box.querySelectorAll("[data-cz]")).forEach(function(b){b.onclick=function(){' +
@@ -4454,7 +4455,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<button type="button" class="bcghost" id="bcmback">◀ 予約可能時間文にもどる</button>\';' +
   'box.innerHTML=h;bindMake();}' +
   'function bindMake(){' +
-  'var ta=document.getElementById("bcmbody");if(ta)ta.oninput=function(){MBODY=ta.value;};' +
+  'var ta=document.getElementById("bcmbody");' +
+  'if(ta)ta.oninput=function(){MBODY=ta.value;saveNow();};' +
   'document.getElementById("bcmback").onclick=function(){page="s";MMSG="";status("");draw();};' +
   'var e=document.getElementById("bcmedit");' +
   'if(e)e.onclick=function(){MSTEP=0;MMSG="";draw();};' +
