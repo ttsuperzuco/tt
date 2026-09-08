@@ -4119,6 +4119,23 @@ function renderBroadcastPage_(base, staff, dev) {
     // ★配信内容の下に置く「予約可能枠の画像を作る」＝目立つ色（まるちゃん指示）
     '.bcmake{display:block;width:100%;margin:0 0 14px;padding:15px;font-size:17px;font-weight:800;' +
     'border:0;border-radius:12px;background:#D97706;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
+    // ★配信内容の下に置く「予約可能時間文を生成」＝目立つ色（まるちゃん指示 2026-09-08）
+    '.bctxt{display:block;width:100%;margin:0 0 14px;padding:15px;font-size:17px;font-weight:800;' +
+    'border:0;border-radius:12px;background:#7C3AED;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
+    // 予約可能時間文を生成する画面
+    '.bcper{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
+    '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
+    'background:#2563EB;color:#fff;}' +
+    '.bcper button.on{background:#7C3AED;}' +
+    '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
+    '.bcsame{background:#0B1220;border:1px solid #7C3AED;color:#E8EEF7;border-radius:10px;' +
+    'padding:12px 14px;font-size:15px;font-weight:800;margin:0 0 16px;}' +
+    '.bcout{background:#0B1220;border:1px solid #26324A;border-radius:10px;padding:11px 12px;margin:0 0 10px;}' +
+    '.bcouth{display:flex;align-items:center;gap:10px;margin:0 0 8px;}' +
+    '.bcouth b{flex:1;font-size:15px;font-weight:800;color:#E8EEF7;}' +
+    '.bccopy{border:0;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:800;' +
+    'background:#2563EB;color:#fff;white-space:nowrap;}' +
+    '.bcouttx{white-space:pre-wrap;font-size:14px;line-height:1.75;color:#E8EEF7;}' +
     '.bccard{background:#131C2E;border-radius:12px;padding:16px 16px 18px;margin:0 0 12px;' +
     'box-shadow:0 1px 3px rgba(0,0,0,.06);color:#E8EEF7;}' +
     '.bcname{font-size:26px;font-weight:900;line-height:1.25;}' +
@@ -4194,8 +4211,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
   'var TPL=[],PRE=[],MADE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",page="t";' +
   'var WTEXT="",WDONE=[],WBUSY=false,WMSG="";' +
+  'var SPER="",SRES=null,SBUSY=false;' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno"),mkEl=document.getElementById("bcmakebtn");' +
+  'var txEl=document.getElementById("bctxtbtn");' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
   'function status(t,err){stEl.textContent=t;stEl.className="bcstatus"+(t?(err?" ng":" on"):"");}' +
   'function jsonp(params,onR){var cb="__bc"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
@@ -4262,9 +4281,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'jsonp({action:"data",name:"bc_big_"+(r.slot||slot)+".json"},function(d){' +
   'if(d&&d.big&&d.name===name&&document.getElementById("bcbigx"))show(d.big);});},function(){});}' +
   'function draw(){saveNow();' +
-  'if(page==="w"){drawWaku();}else if(step<TPL.length){drawOne();}else{drawLast();}' +
-  'noEl.textContent=(page==="w")?"画像づくり":((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認");' +
-  'mkEl.style.display=(page==="w")?"none":"block";}' +
+  'if(page==="w"){drawWaku();}else if(page==="s"){drawText();}' +
+  'else if(step<TPL.length){drawOne();}else{drawLast();}' +
+  'noEl.textContent=(page==="w")?"画像づくり":((page==="s")?"文づくり":' +
+  '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認"));' +
+  'var top=(page==="t")?"block":"none";mkEl.style.display=top;txEl.style.display=top;}' +
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
   'var h=\'<div class="bccard"><div class="bcname">予約可能枠の画像を作る</div>\'+' +
@@ -4324,6 +4345,40 @@ function renderBroadcastPage_(base, staff, dev) {
   'for(var k=ps.length-1;k>=0;k--){if(ps[k].kind==="image"&&(ps[k].src||"").indexOf("made:")===0)ps.splice(k,1);}' +
   'ps.unshift({kind:"image",src:"made:"+name,thumb:thumb});' +
   'while(ps.length>MAXP)ps.pop();}});}' +
+  // ── 予約可能時間文を生成（専用の画面・2026-09-08 まるちゃんの決めた形）──────
+  //   4つのボタンで期間を選ぶと、空き時間検索と同じ答えを事務所パソコンが出す。
+  //   男性と女性がずっと同じ時刻なら男女に分けず、一番上に「男性と女性は全く同じ時間帯」と出す。
+  'function drawText(){' +
+  'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
+  'var h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\'+' +
+  '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" class="\'+' +
+  '(SPER===x[0]?"on":"")+\'" data-per="\'+x[0]+\'"\'+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';' +
+  '}).join("")+\'</div>\';' +
+  'if(SRES&&SRES.blocks&&SRES.blocks.length){h+=\'<div class="bchr"></div>\';' +
+  'if(SRES.same)h+=\'<div class="bcsame">男性と女性は全く同じ時間帯</div>\';' +
+  'h+=SRES.blocks.map(function(b,i){return \'<div class="bcout"><div class="bcouth"><b>\'+esc(b.label)+\'</b>\'+' +
+  '\'<button type="button" class="bccopy" data-cp="\'+i+\'">コピー</button></div>\'+' +
+  '\'<div class="bcouttx">\'+esc(b.text)+\'</div></div>\';}).join("");}' +
+  'else if(SRES){h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
+  'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';}' +
+  'h+=\'</div><button type="button" class="bcghost" id="bcsback">◀ 対象の設定にもどる</button>\';' +
+  'box.innerHTML=h;bindText();}' +
+  'function bindText(){' +
+  'document.getElementById("bcsback").onclick=function(){page="t";status("");draw();};' +
+  '[].slice.call(box.querySelectorAll("[data-per]")).forEach(function(b){b.onclick=function(){' +
+  'var k=b.getAttribute("data-per");SPER=k;SRES=null;SBUSY=true;status("空き時間を数えています…");draw();' +
+  'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;' +
+  'if(!r||!r.ok){status((r&&r.note)||"出せませんでした。",true);draw();return;}' +
+  'SRES=r;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
+  '[].slice.call(box.querySelectorAll("[data-cp]")).forEach(function(b){b.onclick=function(){' +
+  'var t=((SRES&&SRES.blocks)||[])[b.getAttribute("data-cp")*1];if(!t||!t.text)return;' +
+  'function done(){b.textContent="コピーしました";setTimeout(function(){b.textContent="コピー";},1500);}' +
+  'if(navigator.clipboard&&navigator.clipboard.writeText){' +
+  'navigator.clipboard.writeText(t.text).then(done,function(){bcFallCopy(t.text,done);});}' +
+  'else bcFallCopy(t.text,done);};});}' +
+  'function bcFallCopy(s,cb){var ta=document.createElement("textarea");ta.value=s;' +
+  'ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();' +
+  'try{document.execCommand("copy");cb();}catch(e){}document.body.removeChild(ta);}' +
   // ── 対象1つぶんの設定 ────────────────────────────────
   'function drawOne(){' +
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
@@ -4448,6 +4503,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m3){status(m3,true);});}});};});}' +
   // ── 立ち上がり ────────────────────────────────────────
   'mkEl.onclick=function(){page="w";mode="";status("");draw();};' +
+  'txEl.onclick=function(){page="s";mode="";status("");draw();};' +
   'status("読み込んでいます…");' +
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
@@ -4475,6 +4531,7 @@ function renderBroadcastPage_(base, staff, dev) {
       '<div class="bctop"><span class="lb">配信内容</span><b id="bccatname">…</b>' +
         '<span class="no" id="bcno"></span></div>' +
       '<button type="button" class="bcmake" id="bcmakebtn">📅 予約可能枠の画像を作る</button>' +
+      '<button type="button" class="bctxt" id="bctxtbtn">📝 予約可能時間文を生成</button>' +
       '<div id="bcbody"></div>' +
       '<div class="bcstatus" id="bcstatus"></div>' +
     '</div>' +
