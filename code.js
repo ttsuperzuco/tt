@@ -4419,6 +4419,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'for(var i=0;i<TPL.length;i++){if(TPL[i].name!==nm)continue;var ps=DATA[i].parts;' +
   'for(var k=ps.length-1;k>=0;k--){if(ps[k].kind==="text"&&ps[k].g)ps.splice(k,1);}' +
   'if(ps.length>=MAXP)ps.pop();ps.push({kind:"text",text:txt,g:1});}});}' +
+  // ★配信文は8通り全部わける（時刻が男女同じでも文は8つ作る・まるちゃん指示 2026-09-08）。
+  //   並びは 🇯🇵新規男性→既存男性→新規女性→既存女性 → 🇹🇼同じ順（画像づくりの自動入力と同じ順）。
+  'var BORDER=[["新規","男性"],["既存","男性"],["新規","女性"],["既存","女性"]];' +
+  'function timesOf(atama,sei){var gs=(SRES&&SRES.groups)||[],i;' +
+  'for(i=0;i<gs.length;i++)if(gs[i].atama===atama&&gs[i].sei===sei)return gs[i].text;' +
+  'for(i=0;i<gs.length;i++)if(gs[i].atama===atama&&!gs[i].sei)return gs[i].text;' +
+  'return "";}' +
   'function tooLong(a){for(var i=0;i<a.length;i++)if((a[i].text||"").length>MAXT)return a[i].label;' +
   'return "";}' +
   'function cardsOf(a){return a.map(function(x){var over=(x.text||"").length>MAXT;' +
@@ -4431,7 +4438,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   →④8つの対象に文を入れ、続けて予約可能枠の画像も作って1つ目に入れる。
   'function drawMake(){' +
   'var h=\'<div class="bccard"><div class="bcname">配信文を作る</div><div class="bchr"></div>\';' +
-  'if(MSTEP===0){h+=\'<div class="bcleft">日本語の文章を入れてください</div>\'+' +
+  'if(MSTEP===0){h+=' +
   '\'<textarea id="bcmbody" style="min-height:190px" placeholder="例＝&#10;台湾トマトです&#10;\'+' +
   '\'今週の空いているお時間をお知らせします。&#10;&#10;【時間】&#10;&#10;ご予約おまちしております！">\'+' +
   'esc(MBODY)+\'</textarea>\'+' +
@@ -4466,8 +4473,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'e=document.getElementById("bcmok");' +
   'if(e)e.onclick=function(){if(ta)MBODY=ta.value;' +
   'if(!(MBODY||"").trim()){status("日本語の文章を入れてください。",true);return;}' +
-  'MJA=((SRES&&SRES.groups)||[]).map(function(g){' +
-  'return {label:g.label,atama:g.atama,sei:g.sei,text:joinBody(MBODY,g.text)};});' +
+  'MJA=BORDER.map(function(x){' +
+  'return {label:"🇯🇵"+x[0]+x[1],atama:x[0],sei:x[1],' +
+  'text:joinBody(MBODY,timesOf(x[0],x[1]))};});' +
   'MSTEP=1;MMSG="";status("");draw();};' +
   'e=document.getElementById("bcmok2");if(e)e.onclick=function(){makeZh();};' +
   'e=document.getElementById("bcmok3");if(e)e.onclick=function(){applyAll();};}' +
@@ -4482,9 +4490,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'MBUSY=true;MMSG="台湾のお客様向けに訳しています…（1分ほどかかります）";draw();' +
   'transOne(body,function(z){z=String(z||"").replace(/^\\s+|\\s+$/g,"");' +
   'var keep=z.indexOf("【時間】")>=0;' +
-  'MZH=((SRES&&SRES.groups)||[]).map(function(g){var tt=zhOf(g.text);' +
+  'MZH=BORDER.map(function(x){var tt=zhOf(timesOf(x[0],x[1]));' +
   'var s=keep?z.replace(/【時間】/g,tt):(z?(z+"\\n\\n"+tt):tt);' +
-  'return {label:g.label,atama:g.atama,sei:g.sei,text:s};});' +
+  'return {label:"🇹🇼"+x[0]+x[1],atama:x[0],sei:x[1],text:s};});' +
   'MBUSY=false;MSTEP=2;status("");' +
   'MMSG=(has&&!keep)?"※訳した文に【時間】の目印が残らなかったので、時間は文の最後に入れました。":"";' +
   'draw();},function(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();});}' +
