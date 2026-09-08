@@ -4395,7 +4395,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '((page==="m")?"配信文づくり":' +
   '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認"))));' +
   // ★1個ずつ見せる画面と、入口の種類えらびでは上の帯を出さない
-  'var slim=((page==="k")||(page==="s"&&((SRES&&SRES.groups)||[]).length))?"none":"";' +
+  'var slim=((page==="k")||(page==="s"))?"none":"";' +
   'if(topEl)topEl.style.display=slim;' +
   'if(ttlEl)ttlEl.style.display=(page==="k")?"":slim;' +
   'banEl.style.display=slim;}' +
@@ -4505,18 +4505,19 @@ function renderBroadcastPage_(base, staff, dev) {
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];var h;' +
   'if(!gs.length){' +
-  'h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\'+' +
+  'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span></div>\'+' +
+  '\'<div class="bccard">\'+' +
   '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
   '(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
   '\'<button type="button" class="bcrestore" id="bcrest">\'+' +
   '\'作業中のデータを復元する</button></div>\';' +
   'if(SRES)h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';' +
-  'h+=\'</div><button type="button" class="bcghost" id="bcsback">◀ 配信の種類にもどる</button>\';' +
+  'h+=\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();return;}' +
   'if(SIDX>=gs.length)SIDX=gs.length-1;if(SIDX<0)SIDX=0;' +
   'var g=gs[SIDX],last=(SIDX===gs.length-1);' +
-  'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間文を生成</span>\'+' +
+  'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span>\'+' +
   '\'<span class="bcsno">\'+(SIDX+1)+\' / \'+gs.length+\'</span></div>\'+' +
   '\'<div class="bcagain"><button type="button" class="bcagainbtn" id="bcagain">\'+' +
   '\'↩ 期間を選び直す</button></div>\';' +
@@ -4528,11 +4529,10 @@ function renderBroadcastPage_(base, staff, dev) {
   ':\'<button type="button" class="bcgo" id="bcsnext">この内容で保存する</button>\';' +
   'if(SIDX>0)h+=\'<button type="button" class="bcghost" id="bcsprev">◀ 「\'+' +
   'esc(gs[SIDX-1].label)+\'」にもどる</button>\';' +
-  'h+=\'<button type="button" class="bcghost" id="bcsback">◀ 配信の種類にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();' +
   'fitTx(box.querySelector(".bcotx"));}' +
   'function bindText(){' +
-  'document.getElementById("bcsback").onclick=function(){page="k";status("");draw();};' +
+
   'var e=document.getElementById("bcagain");' +
   'if(e)e.onclick=function(){SRES=null;SPER="";SIDX=0;status("");draw();};' +
   'e=document.getElementById("bcrest");' +
@@ -4881,6 +4881,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(rsT)clearTimeout(rsT);rsT=setTimeout(function(){rsT=null;' +
   'fitTx(box.querySelector(".bcotx"));},200);});' +
 
+  // ★「← 前に戻る」は1つ前の画面へ戻す（まるちゃん指示 2026-09-09）。
+  //   入口（配信の種類）にいる時だけ、いつもどおりホームへ戻る＝パソコンでは窓が閉じる。
+  'var uh=document.querySelector(".uhome");' +
+  'if(uh)uh.onclick=function(ev){if(page==="k")return true;' +
+  'var to="k";' +
+  'if(page==="m"||page==="w"){to="s";}' +
+  'else if(page==="s"&&((SRES&&SRES.groups)||[]).length){SRES=null;SPER="";SIDX=0;to="s";}' +
+  'ev.preventDefault();page=to;status("");draw();return false;};' +
   // ★待たずに先に入口を出す（ボタン1つだけなので一瞬で出る）
   'draw();' +
   'ask("bc_templates",{},function(d){' +
