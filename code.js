@@ -2030,6 +2030,17 @@ var ZENJITSUCSS_ =
   '  .zjcancel { font:inherit; font-weight:800; background:#fee2e2; color:#991b1b; border:0;' +
   '    border-radius:8px; padding:8px 16px; cursor:pointer; margin-left:auto; }' +
   '  .zjcancel:disabled { opacity:.4; cursor:default; }' +
+  '  .zjask { position:fixed; inset:0; z-index:95; display:flex; align-items:center; justify-content:center;' +
+  '    background:rgba(0,0,0,.55); padding:16px; }' +
+  '  .zjask-in { background:#101a2b; border:2px solid #7c3aed; border-radius:14px; padding:22px;' +
+  '    max-width:520px; text-align:center; color:#e8eef7; }' +
+  '  .zjaskmsg { font-size:1.2rem; font-weight:800; line-height:1.6; }' +
+  '  .zjasksub { font-size:.95rem; font-weight:600; color:#cbd5e1; }' +
+  '  .zjaskrow { display:flex; gap:12px; justify-content:center; margin-top:16px; }' +
+  '  .zjaskyes { font:inherit; font-size:1.05rem; font-weight:800; color:#fff; background:#7c3aed;' +
+  '    border:0; border-radius:9px; padding:12px 28px; cursor:pointer; }' +
+  '  .zjaskno { font:inherit; font-size:1.05rem; font-weight:800; color:#e8eef7; background:#0b1220;' +
+  '    border:1px solid #26324a; border-radius:9px; padding:12px 28px; cursor:pointer; }' +
   '  .zjallcancel { display:block; width:100%; font:inherit; font-size:1.1rem; font-weight:800;' +
   '    color:#fff; background:#b91c1c; border:0; border-radius:10px; padding:14px 10px; cursor:pointer; }' +
   '  .zjhead .bname { color:#fff; }' +
@@ -2112,11 +2123,12 @@ function renderZenjitsuPage_(base, staff, dev) {
   'setTimeout(function(){poll(id);},1300);return;}' +
   'lock(false);' +
   'if(r.status!=="done"){setSt("作成に失敗しました："+esc(r.result||r.status),"err");return;}' +
-  'jsonp({action:"data",name:"notice_"+slot+".json"},function(d){showResult(d);});});}' +
+  'jsonp({action:"data",name:"notice_"+slot+".json"},function(d){showResult(d);setTimeout(function(){zjAskRestore(zjCurDate);},900);});});}' +
   /* ★押したボタンの方で作る（mode="all"＝全員分／"unsent"＝まだLINEで送っていない人の分だけ）。
      依頼の中身は必ず fields のひとまとめ箱に入れる＝Google側の窓口は中身を判断せず素通しするだけ。 */
   'var waitMsg="",startedAt=0;' +
   'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選んでください。","err");return;}' +
+  'zjCurDate=date;' +
   'waitMsg=(mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…":"全員分を事務所PCで作成中…";startedAt=Date.now();' +
   'lock(true);setSt(waitMsg+"（通常、数十秒かかります）","wait");' +
   'resEl.innerHTML="";polls=0;' +
@@ -2161,9 +2173,36 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(m.zj==="preview"){zjBigImage(m.key,m.lang);return;}' +
   'if(m.zj==="imgfix"){zjPersonImg(m.id,m.info||{});return;}' +
   'if(m.zj==="imgset"){zjImgSet();return;}' +
+  /* ★2026-09-08まるちゃん決定：途中までの作業を**この端末の中だけ**に覚え、次に作り直した時に戻す。 */
+  'if(m.zj==="state"){zjSaveLocal(zjCurDate,m.state);return;}' +
   '});' +
   /* ── 送信を設定する（パソコン版の『送る日時を決める』と同じ流れ） ───────── */
-  'var zjRows=[];' +
+  'var zjRows=[];var zjCurDate="";' +
+  /* ── 途中までの作業を、この端末に覚える／読む（他の人には影響しない） ── */
+  'var ZJKEY="zenjitsu_wip_v1";' +
+  'function zjAllLocal(){try{return JSON.parse(localStorage.getItem(ZJKEY)||"{}");}catch(e){return {};}}' +
+  'function zjSaveLocal(day,st){if(!day||!st)return;try{var all=zjAllLocal();' +
+  'var n=(st.done||[]).length+Object.keys(st.text||{}).length;' +
+  'if(n)all[day]={at:Date.now(),state:st};else delete all[day];' +
+  'localStorage.setItem(ZJKEY,JSON.stringify(all));}catch(e){}}' +
+  'function zjLoadLocal(day){var d=zjAllLocal()[day];' +
+  'if(!d||(Date.now()-(d.at||0))>3*24*3600*1000)return null;return d.state||null;}' +
+  'function zjClearLocal(day){try{var all=zjAllLocal();delete all[day];' +
+  'localStorage.setItem(ZJKEY,JSON.stringify(all));}catch(e){}}' +
+  /* 作り直したあと、途中までの作業があれば「復元しますか？」と聞く。 */
+  'function zjAskRestore(day){var st=zjLoadLocal(day);if(!st)return;' +
+  'var n=(st.done||[]).length+Object.keys(st.text||{}).length;if(!n)return;' +
+  'var b=document.createElement("div");b.className="zjask";' +
+  'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">既に作業した確認済・修正済を復元しますか？<br>"' +
+  '+"<span class=\\"zjasksub\\">（確認済 "+(st.done||[]).length+" 人ぶん・直した文 "+Object.keys(st.text||{}).length+" 人ぶん）</span></div>"' +
+  '+"<div class=\\"zjaskrow\\"><button type=\\"button\\" class=\\"zjaskyes\\">はい</button>"' +
+  '+"<button type=\\"button\\" class=\\"zjaskno\\">いいえ</button></div></div>";' +
+  'document.body.appendChild(b);' +
+  'b.querySelector(".zjaskno").onclick=function(){b.remove();zjClearLocal(day);};' +
+  'b.querySelector(".zjaskyes").onclick=function(){b.remove();' +
+  'var f=document.getElementById("zjframe");' +
+  'var go=function(){try{f.contentWindow.postMessage({zj:"restore",state:st},"*");}catch(e){}};' +
+  'go();setTimeout(go,700);setTimeout(go,1800);};}' +
   'function zjBox(html){var b=document.getElementById("zjbox");' +
   'if(!b){b=document.createElement("div");b.id="zjbox";b.className="zjbox";document.body.appendChild(b);}' +
   'b.innerHTML=html;b.hidden=false;window.scrollTo(0,0);return b;}' +
