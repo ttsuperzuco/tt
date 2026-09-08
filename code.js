@@ -4576,7 +4576,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入れてください。&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(body)+\'</textarea>\';' +
-  'h+=\'<div class="bczhl">できあがり</div><div class="bcouttx" id="bcmprev">\'+' +
+  'h+=\'<div class="bcouttx" id="bcmprev" style="margin-top:13px">\'+' +
   'esc(body?done:"")+\'</div>\'+' +
   '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?(done.length+"文字"):"")+\'\'+' +
   '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
