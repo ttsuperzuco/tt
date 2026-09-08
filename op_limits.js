@@ -12,6 +12,8 @@
   /* 用事ごとに事務所パソコンが使ってよい秒数（受付係のコードから写した物）。 */
   LIMITS.sec = {
     "availability": 120,
+    "bc_waku": 400,
+    "bc_wakuimg": 400,
     "cost": 180,
     "cust_search": 30,
     "customer_reservations": 120,
@@ -23,6 +25,7 @@
     "instadm_delete": 120,
     "instadm_reply": 120,
     "instadm_reqdetail": 90,
+    "line_broadcast": 600,
     "links_refresh": 120,
     "make_allday": 180,
     "new_availability": 120,
@@ -33,7 +36,8 @@
     "timedsend_cancel": 180,
     "timedsend_list": 60,
     "translate": 120,
-    "zenjitsu": 360
+    "zenjitsu": 360,
+    "zenjitsu_act": 120
   };
   /* 窓口との往復にかかるおよその時間（実測）。 */
   LIMITS.roundTripMs = 1100;
