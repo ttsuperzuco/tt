@@ -4837,8 +4837,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'time:t0,now:(now?1:0),items_from:itemsName,who:idn.who})},' +
   'function(d){if(go)go.disabled=false;szOvHide_();' +
   'status(d.note||(now?"送りました。":"予約しました。"),!d.ok);' +
+  // ★送り終わったら**全部**まっさらにする。前は対象の中身だけ消していたので、
+  //   本文と予約可能時間文が残り、次に開いた時「復元しますか？」が出ていた（実機で発生）。
   'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});' +
-  'MJA=[];MZH=[];MSTEP=0;MMSG="";FRESH=false;LMODE="";wipClear();step=0;draw();}' +
+  'MJA=[];MZH=[];MSTEP=0;MIDX=0;MMSG="";MBODY="";MBODYS=["","","",""];' +
+  'WTEXT="";SRES=null;SPER="";SIDX=0;FRESH=false;LMODE="";' +
+  'wipClear();step=0;page="t";mode="";draw();}' +
   'loadList();},' +
   'function(m2){if(go)go.disabled=false;szOvHide_();status(m2,true);});},1200);});' +
   '}catch(err){var g2=document.getElementById(now?"bcnow":"bcplace");' +
