@@ -4821,7 +4821,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!n){status("文章か画像を入れた対象が1つもありません。",true);return;}' +
   'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいですか？")' +
   ':(d0+" "+t0+" から、"+n+"通りの配信を予約します。よろしいですか？"),{cancel:true,onYes:function(){try{' +
-  'var go=document.getElementById("bcplace");go.disabled=true;' +
+  // ★押したボタンを見る（今すぐ=bcnow／予約=bcplace）。前は予約用だけを探して、
+  //   今すぐを押した時に見つからず止まっていた（2026-09-08 実機で発生）。
+  'var go=document.getElementById(now?"bcnow":"bcplace");if(go)go.disabled=true;' +
   'szOvShow_(szBusyHtml_(now?"配信を送っています":"配信を予約しています"),"#2C7A99");' +
   'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
   'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
@@ -4833,13 +4835,16 @@ function renderBroadcastPage_(base, staff, dev) {
   'Promise.all(jobs).catch(function(){}).then(function(){setTimeout(function(){' +
   'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:d0,' +
   'time:t0,now:(now?1:0),items_from:itemsName,who:idn.who})},' +
-  'function(d){go.disabled=false;szOvHide_();status(d.note||"予約しました。",!d.ok);' +
+  'function(d){if(go)go.disabled=false;szOvHide_();' +
+  'status(d.note||(now?"送りました。":"予約しました。"),!d.ok);' +
   'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});' +
   'MJA=[];MZH=[];MSTEP=0;MMSG="";FRESH=false;LMODE="";wipClear();step=0;draw();}' +
   'loadList();},' +
-  'function(m2){go.disabled=false;szOvHide_();status(m2,true);});},1200);});' +
-  '}catch(err){var g2=document.getElementById("bcplace");if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
-  'status("予約できませんでした："+(err&&err.message?err.message:err),true);}}});}' +
+  'function(m2){if(go)go.disabled=false;szOvHide_();status(m2,true);});},1200);});' +
+  '}catch(err){var g2=document.getElementById(now?"bcnow":"bcplace");' +
+  'if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
+  'status((now?"送れませんでした：":"予約できませんでした：")+' +
+  '(err&&err.message?err.message:err),true);}}});}' +
   // ── 予約した配信の一覧（中身があるときだけ出す）──────────────
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
   'ask("bc_list",{},function(d){drawList(d.posts);},function(){});}' +
