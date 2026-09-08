@@ -2183,7 +2183,9 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjAsk(job,payload,onDone,onFail){' +
   'jsonp({action:"submit",key:KEY,op:"zenjitsu_act",who:idn.who,role:idn.role,device:idn.device,' +
   'fields:JSON.stringify({job:job,payload:payload||{}})},function(r){' +
-  'if(!r||!r.ok||!r.id){(onFail||function(){})("依頼を送れませんでした。");return;}' +
+  /* ★2026-09-08：ここで「送れませんでした」と**言い切らない**。事務所パソコンは受け取って
+     やり終えているのに、返事だけが戻ってこないことがあるため（9/8に実際に発生）。 */
+  'if(!r||!r.ok||!r.id){(onFail||function(){})("うまく通じませんでした（届いているかもしれません）。");return;}' +
   'var n=0;(function poll(){n++;if(n>LIMITS.tries("zenjitsu_act",700)){(onFail||function(){})("時間がかかりすぎました。");return;}' +
   'jsonp({action:"status",key:KEY,id:r.id},function(s){if(!s||!s.ok){(onFail||function(){})("通信に失敗しました。");return;}' +
   'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
@@ -2274,7 +2276,25 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(d.notes&&d.notes.length)t+="（前の続きから送ります："+d.notes.join("／")+"）";' +
   'msg.textContent=t;' +
   'if(sugu&&d.put)zjWatch(d.ids||[],d.put);' +
-  '},function(e){msg.textContent="⛔ "+e;});}' +
+  '},function(e){zjPutTashikame(日,at,e,sugu);});}' +
+  /* ★2026-09-08まるちゃん指示：返事が戻ってこなかった時に「⛔依頼を送れませんでした」と
+     **言い切らない**。事務所パソコンは置けているのに返事だけが消えることがあるため
+     （9/8に実際に発生＝2人ぶん置けていて、お客様にもちゃんと届いていたのに赤字が出た）。
+     → 必ず「本当に置けたか」を聞き直してから出す。置けていたら成功として見せる。
+     ★聞くのは**読むだけ**の用事（put_check）＝依頼をもう一度投げない
+       （お客様に届く操作を二度投げるより安全。二重置きは事務所パソコン側でも止めている）。 */
+  'function zjPutTashikame(日,at,理由,sugu){' +
+  'var msg=document.getElementById("zjmsg");' +
+  'msg.textContent="⏳ 返事が届きませんでした。本当に置けたか確かめています…";' +
+  'var eids=zjRows.map(function(r){return r.id;});' +
+  'zjAsk("put_check",{date:日,event_ids:eids},function(d){' +
+  'if(d&&d.ok&&d.put>0){zjClearLocal(日);zjFreshShow(false);' +
+  'msg.textContent="✅ 置けていました（"+d.put+"人ぶん）："+(d.who||[]).join("／")' +
+  '+"　※返事だけが届きませんでした。押し直さないでください。";' +
+  'if(sugu&&(d.ids||[]).length)zjWatch(d.ids,d.put);return;}' +
+  'msg.textContent="⛔ "+理由+"　確かめましたが、まだ置けていません。もう一度押してください。";' +
+  '},function(e2){msg.textContent="⛔ "+理由+"　置けたかどうかも確かめられませんでした。'
+  + '『予約送信の設定完了』の一覧でご確認ください。";});}' +
   'function zjWatch(ids,zenbu){var msg=document.getElementById("zjmsg");var t0=Date.now();var n=0;' +
   '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認ください。";return;}' +
   'zjAsk("send_progress",{ids:ids},function(s){' +
@@ -4038,6 +4058,8 @@ function renderTimedSendPage_(base, staff, dev) {
   '+"<div style=\\"font-weight:800\\">"+esc(r.st)+"　"+esc(r.at)+"</div>"' +
   '+"<div style=\\"font-size:14px;margin-top:2px\\">"+esc(r.who)+"　"+esc(r.head)+(r.imgs?("　画像"+r.imgs+"枚"):"")+"</div>"' +
   '+(r.note?("<div style=\\"font-size:13px;color:#7f1d1d;margin-top:2px\\">"+esc(r.note)+"</div>"):"")' +
+  /* ★2026-09-08：途中でつまずいた話は、やり直して成功していても出す（後から原因を追えるように） */
+  '+(r.trouble?("<div style=\\"font-size:13px;color:#b45309;margin-top:2px\\">⚠ "+esc(r.trouble)+"</div>"):"")' +
   '+(r.cancelable?("<button type=\\"button\\" class=\\"tscancel\\" data-id=\\""+esc(r.id)+"\\" style=\\"margin-top:8px;font:inherit;font-weight:800;color:#fff;background:#b91c1c;border:0;border-radius:10px;padding:8px 14px;\\">取り消し</button>"):"")' +
   '+"</div>";}' +
   'listEl.innerHTML=h;' +
@@ -4635,8 +4657,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'makeZh();};' +
   'e=document.getElementById("bcmok3");if(e)e.onclick=function(){applyAll();};}' +
   // ★台湾版＝区分ごとに本文を訳し、時間の表は訳さず曜日を入れ替えて差し込む
-  'function transOne(s,cb,onErr){if(!String(s||"").trim()){cb("");return;}' +
-  'ask("translate",{fields:JSON.stringify({text:s,gender:"共通",quality:"1"})},' +
+  // ★男女を渡す＝男性向けは VIO脱毛 が VBO になる（メニューの表に男性だけの言い方がある）
+  'function transOne(s,g,cb,onErr){if(!String(s||"").trim()){cb("");return;}' +
+  'ask("translate",{fields:JSON.stringify({text:s,gender:(g||"共通"),quality:"1"})},' +
   'function(r){var v=(r&&typeof r==="object")?((r.note!==undefined)?r.note:(r.result||"")):r;' +
   'cb(String(v==null?"":v));},onErr);}' +
   // ★訳す側に「【時間】」を見せない（見せると「これは空欄です」と独り言を書くことがある＝実測）。
@@ -4666,9 +4689,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'var k0=b0.indexOf("【時間】"),had=(k0>=0);' +
   'var send=had?(b0.slice(0,k0).replace(/\\s+$/,"")+"\\n\\n"+ZSEP+"\\n\\n"+' +
   'b0.slice(k0+4).replace(/^\\s+/,"")):b0;' +
-  'var same=-1,q;for(q=0;q<i;q++)if(String(MBODYS[q]||"").replace(/^\\s+|\\s+$/g,"")===b0)same=q;' +
+  'var sei=(BORDER[i][1]==="男性")?"男":"女";' +
+  'var same=-1,q;for(q=0;q<i;q++)' +
+  'if(String(MBODYS[q]||"").replace(/^\\s+|\\s+$/g,"")===b0&&BORDER[q][1]===BORDER[i][1])same=q;' +
   'if(same>=0){zs[i]=zs[same];i++;next();return;}' +
-  'transOne(send,function(z){var zz=String(z||"").replace(/^\\s+|\\s+$/g,"");' +
+  'transOne(send,sei,function(z){var zz=String(z||"").replace(/^\\s+|\\s+$/g,"");' +
   'if(had&&!zsplit(zz))lost++;' +
   'zs[i]={z:zz,had:had};i++;next();},ng);' +
   '})();}' +
