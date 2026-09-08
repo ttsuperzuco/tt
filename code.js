@@ -4241,6 +4241,10 @@ function renderBroadcastPage_(base, staff, dev) {
     'border-radius:10px;background:#0B1220;color:#94A3B8;}' +
     '.bcseg button.on{background:#2563EB;color:#fff;border-color:#2563EB;}' +
     '.bcwimg{width:100%;border-radius:12px;display:block;margin:12px 0 0;}' +
+    // ★入力欄の下に出す「【時間】」（なぞってコピーできる・まるちゃん指示 2026-09-09）
+    '.bcins{display:flex;align-items:center;gap:10px;margin-top:10px;}' +
+    '.bcinstx{flex:1;padding:9px 12px;border-radius:9px;background:#0B1220;color:#fff;' +
+    'font-size:16px;font-weight:800;user-select:text;-webkit-user-select:text;}' +
     '.bcgo{display:block;width:100%;margin:0 0 10px;padding:17px;font-size:19px;font-weight:800;' +
     'border:0;border-radius:12px;background:#2563EB;color:#fff;}' +
     '.bcghost{display:block;width:100%;margin:0 0 10px;padding:14px;font-size:15px;font-weight:800;' +
@@ -4453,8 +4457,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'function(m2){onDone(done,"「"+j.label+"」で止まりました："+m2);});})();},' +
   'function(m){onDone(0,m);});}' +
   // できた絵を、その対象の1つ目に入れる（前に入れた予約可能枠の絵は取り替える）
+  // ★空っぽの区分（送らない区分）には絵も入れない（まるちゃん指示 2026-09-09）
+  'var SENDN=null;' +
   'function putIntoTargets(names,name,thumb){' +
   '(names||[]).forEach(function(nm){' +
+  'if(SENDN&&SENDN.indexOf(nm)<0)return;' +
   'for(var i=0;i<TPL.length;i++){if(TPL[i].name!==nm)continue;' +
   'var ps=DATA[i].parts;' +
   'for(var k=ps.length-1;k>=0;k--){if(ps[k].kind==="image"&&(ps[k].src||"").indexOf("made:")===0)ps.splice(k,1);}' +
@@ -4564,7 +4571,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'function bcFallCopy(s,cb){var ta=document.createElement("textarea");ta.value=s;' +
   'ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();' +
   'try{document.execCommand("copy");cb();}catch(e){}document.body.removeChild(ta);}' +
+  // ★空っぽなら何も作らない＝その区分は送らない（まるちゃん指示 2026-09-09）
   'function joinBody(body,times){body=String(body||"");' +
+  'if(!body.replace(/^\\s+|\\s+$/g,""))return "";' +
   'if(body.indexOf("【時間】")>=0)return body.replace(/【時間】/g,times);' +
   'return body.replace(/\\s+$/,"")+"\\n\\n"+times;}' +
   'function tgtNames(atama,sei,lang){var out=[];' +
@@ -4572,9 +4581,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(nm.indexOf(atama)<0)continue;' +
   'if(nm.indexOf(lang==="ja"?"日本":"台湾")<0)continue;' +
   'if(sei&&nm.indexOf(sei)<0)continue;out.push(nm);}return out;}' +
-  'function putTextInto(names,txt){(names||[]).forEach(function(nm){' +
+  'function putTextInto(names,txt){' +
+  'var has=!!String(txt||"").replace(/^\\s+|\\s+$/g,"");' +
+  '(names||[]).forEach(function(nm){' +
   'for(var i=0;i<TPL.length;i++){if(TPL[i].name!==nm)continue;var ps=DATA[i].parts;' +
   'for(var k=ps.length-1;k>=0;k--){if(ps[k].kind==="text"&&ps[k].g)ps.splice(k,1);}' +
+  'if(!has)continue;' +
   'if(ps.length>=MAXP)ps.pop();ps.push({kind:"text",text:txt,g:1});}});}' +
   // ★配信文は8通り全部わける（時刻が男女同じでも文は8つ作る・まるちゃん指示 2026-09-08）。
   //   並びは 🇯🇵新規男性→既存男性→新規女性→既存女性 → 🇹🇼同じ順（画像づくりの自動入力と同じ順）。
@@ -4608,8 +4620,10 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入れてください。&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(body)+\'</textarea>\';' +
+  'h+=\'<div class="bcins"><span class="bcinstx">【時間】</span>\'+' +
+  '\'<button type="button" class="bccopy" id="bcinscp">コピー</button></div>\';' +
   'h+=\'<div class="bcouttx" id="bcmprev" style="margin-top:13px">\'+' +
-  'esc(body?done:"")+\'</div>\'+' +
+  'esc(body.replace(/^\\s+|\\s+$/g,"")?done:"空っぽなので、この区分は送りません。")+\'</div>\'+' +
   '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?(done.length+"文字"):"")+\'\'+' +
   '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
   'h+=\'</div>\';' +
@@ -4622,7 +4636,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h=\'<div class="bcstop"><span class="bcsttl">台湾版を確かめる</span>\'+' +
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b></div>\'+' +
-  '\'<div class="bcouttx">\'+esc(z.text)+\'</div>\'+' +
+  '\'<div class="bcouttx">\'+esc(z.text||"空っぽなので、この区分は送りません。")+\'</div>\'+' +
   '\'<div class="bcnum\'+(ov2?" over":"")+\'">\'+(z.text||"").length+\'文字\'+' +
   '(ov2?("　※"+MAXT+"文字を超えています"):"")+\'</div></div>\';' +
   'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
@@ -4639,7 +4653,8 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★打っている間は画面を描き直さない（描き直すとボタンが作り直されて押せなくなる）
   'if(ta)ta.oninput=function(){MBODYS[MIDX]=ta.value;MBODY=ta.value;' +
   'var x=BORDER[MIDX],done=joinBody(ta.value,timesOf(x[0],x[1]));' +
-  'var pv=document.getElementById("bcmprev");if(pv)pv.textContent=ta.value?done:"";' +
+  'var pv=document.getElementById("bcmprev");' +
+  'if(pv)pv.textContent=ta.value.replace(/^\\s+|\\s+$/g,"")?done:"空っぽなので、この区分は送りません。";' +
   'var nm=document.getElementById("bcmnum");' +
   'if(nm){var ov=done.length>MAXT;nm.textContent=ta.value?(done.length+"文字"+' +
   '(ov?("　※"+MAXT+"文字を超えています。短くしてください"):"")):"";' +
@@ -4653,9 +4668,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(e)e.onclick=function(){MIDX++;status("");draw();};' +
   'e=document.getElementById("bcmdone");' +
   'if(e)e.onclick=function(){page="t";step=0;MMSG="";status("");draw();};' +
+  'e=document.getElementById("bcinscp");' +
+  'if(e)e.onclick=function(){bcCopy("【時間】",e);};' +
   'e=document.getElementById("bcmok");' +
   'if(e)e.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
-  'if(!String(MBODYS[MIDX]||"").trim()){status("この対象の文章を入れてください。",true);return;}' +
   'if(MIDX<BORDER.length-1){MIDX++;status("");draw();return;}' +
   'MJA=BORDER.map(function(x,k){return {label:ordLabel(k,false),atama:x[0],sei:x[1],' +
   'text:joinBody(MBODYS[k]||"",timesOf(x[0],x[1]))};});' +
@@ -4683,7 +4699,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(pair){var a=pair[0].replace(/^\\s+|\\s+$/g,""),b=pair[1].replace(/^\\s+|\\s+$/g,"");' +
   's=(a?(a+"\\n\\n"):"")+tt+(b?("\\n\\n"+b):"");}' +
   'else{z=z.replace(/[＝=]{5,}/g,"").replace(/^\\s+|\\s+$/g,"");' +
-  's=z?(z+"\\n\\n"+tt):tt;}' +
+  's=z?(z+"\\n\\n"+tt):"";}' +
   'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:s};});' +
   'MBUSY=false;MSTEP=2;MIDX=0;status("");' +
   'MMSG=lost?("※"+lost+"つで、時間を入れる場所の目印が訳の中に残らなかったので、"+' +
@@ -4703,8 +4719,18 @@ function renderBroadcastPage_(base, staff, dev) {
   'zs[i]={z:zz,had:had};i++;next();},ng);' +
   '})();}' +
   'function applyAll(){MBUSY=true;MMSG="対象に文を入れています…";draw();' +
+  'SENDN=[];' +
+  'MJA.concat(MZH).forEach(function(x){' +
+  'if(!String(x.text||"").replace(/^\\s+|\\s+$/g,""))return;' +
+  'var lg=(MJA.indexOf(x)>=0)?"ja":"zh";' +
+  'tgtNames(x.atama,x.sei,lg).forEach(function(nm){' +
+  'if(SENDN.indexOf(nm)<0)SENDN.push(nm);});});' +
   'MJA.forEach(function(x){putTextInto(tgtNames(x.atama,x.sei,"ja"),x.text);});' +
   'MZH.forEach(function(x){putTextInto(tgtNames(x.atama,x.sei,"zh"),x.text);});' +
+  'TPL.forEach(function(tp,i){if(SENDN.indexOf(tp.name)>=0)return;' +
+  'var ps=DATA[i].parts;' +
+  'for(var k=ps.length-1;k>=0;k--)' +
+  'if(ps[k].kind==="image"&&(ps[k].src||"").indexOf("made:")===0)ps.splice(k,1);});' +
   'var src=((SRES&&SRES.groups)||[]).map(function(g){return g.label+"\\n"+g.text;}).join("\\n\\n");' +
   'WDONE=[];' +
   'runMake(src,function(i,tot,label){' +
