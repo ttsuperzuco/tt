@@ -147,7 +147,7 @@ function doGet(e) {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
   } else if (view === 'zenjitsu') {
-    title = '前日お知らせ';                             // ★開発URL(?dev=1)専用。日付を選ぶ→PCが作る→枠で表示（対話式・純JS）
+    title = '前日お知らせ';                             // ★2026-09-08からスタッフも全機能。日付を選ぶ→PCが作る→枠で表示
     html = renderZenjitsuPage_(base, staff, dev);
   } else if (view === 'cost') {
     title = '台湾トマト 売上・コスト';                    // ★開発URL(?dev=1)専用。「月間コスト計算」を押すとコスト表を出す（純JS）
@@ -2095,8 +2095,8 @@ function renderZenjitsuPage_(base, staff, dev) {
   var script =
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
-  /* ★2026-09-07まるちゃん指示：開発版だけ「✔確認済／✎要修正」のボタン付きにする。 */
-  'var DEVFLAG="' + (dev ? '1' : '') + '";' +
+  /* ★2026-09-08まるちゃん指示：**スタッフにも前日お知らせの全機能を出す**。
+     ここで開発版かどうかを見分けるのはやめた（誰が開いても同じ物が届く）。 */
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
   'var slot=(idn.device||"d0").toLowerCase().replace(/[^a-z0-9_]/g,"").slice(0,32)||"default";' +
   'var dEl=document.getElementById("zjdate"),stEl=document.getElementById("zjstatus"),resEl=document.getElementById("zjres");' +
@@ -2159,7 +2159,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'waitMsg=(mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…":"全員分を事務所PCで作成中…";startedAt=Date.now();' +
   'lock(true);setSt(waitMsg+"（通常、数十秒かかります）","wait");' +
   'resEl.innerHTML="";polls=0;' +
-  'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode,dev:DEVFLAG})},' +
+  'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode})},' +
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");lock(false);return;}setTimeout(function(){poll(r.id);},1000);});}' +
   /* ★最初から入っている日付＝翌営業日。**決まりは共通の1本に聞く**（2026-08-24 まるちゃん）。
      定休日そのものは 共通\business_day.py（Pythonの正本）から自動で作られる shop_rules.js が持つ。
@@ -2420,9 +2420,11 @@ function renderZenjitsuPage_(base, staff, dev) {
       /* ★2026-08-24 まるちゃん指示：「（お客様には送りません＝見るだけ）」の一言は消した
            （パソコン版の窓の同じ一言も一緒に消してある）。 */
       '<div class="zjstatus" id="zjstatus">' + ZJ.optionsShown(dev).hint + '</div>' +
-      /* ★2026-09-08：開発版だけ、パソコン版と同じ2つの長いボタンを出す。 */
-      + (dev ? '<button type="button" class="zjwide plan" id="zjplanbtn">📨 予約送信の設定完了したお知らせ一覧</button>'
-             + '<button type="button" class="zjwide" id="zjimgsetbtn">📷 画像送信セッティング</button>' : '')
+      /* ★2026-09-08まるちゃん指示：パソコン版と同じ2つの長いボタンを**誰にでも**出す。
+         （前はここのつなぎ方を書き間違えていて、この下の「できたお知らせを出す場所」ごと
+           消えていた＝スマホでボタンを押しても何も出なかった。） */
+      '<button type="button" class="zjwide plan" id="zjplanbtn">📨 予約送信の設定完了したお知らせ一覧</button>' +
+      '<button type="button" class="zjwide" id="zjimgsetbtn">📷 画像送信セッティング</button>' +
     '</div>' +
     '<div id="zjres"></div>' +
   '</div>' + script;
