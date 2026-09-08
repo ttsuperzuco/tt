@@ -162,7 +162,7 @@ function doGet(e) {
     title = '時間指定LINE送信';                          // ★開発URL(?dev=1)専用。決めた時刻に文章＋画像を送る予約（純JS）
     html = renderTimedSendPage_(base, staff, dev);
   } else if (view === 'bcast') {
-    title = 'LINE一斉配信予約';                          // ★開発URL(?dev=1)専用。相手のまとまりごとに文章＋画像を置く（純JS）
+    title = 'LINE一斉配信設定';                          // ★開発URL(?dev=1)専用。相手のまとまりごとに文章＋画像を置く（純JS）
     html = renderBroadcastPage_(base, staff, dev);
   } else if (view === 'yoyaku') {
     title = '予約入力';                                  // ★予約入力のトップ画面（新規／既存／変更の3ボタン・PC版と同じ見た目）
@@ -4907,7 +4907,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '<div class="home">' + backBar_(base, staff, dev) +
     '<h2 class="htitle" id="bctitle">LINE一斉配信設定</h2>' +
     '<div class="bc">' +
-      '<div class="bcbanner" id="bcbanner">読み込み中…</div>' +
+      '<div class="bcbanner" id="bcbanner"></div>' +
       '<div class="bctop" id="bctoprow"><span class="lb">配信内容</span><b id="bccatname">…</b>' +
         '<span class="no" id="bcno"></span></div>' +
 
