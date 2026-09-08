@@ -4177,7 +4177,6 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcask-in{background:#101a2b;border:2px solid #7c3aed;border-radius:14px;padding:22px;' +
     'max-width:520px;text-align:center;color:#E8EEF7;}' +
     '.bcaskmsg{font-size:1.2rem;font-weight:800;line-height:1.6;}' +
-    '.bcasksub{font-size:.95rem;font-weight:600;color:#cbd5e1;}' +
     '.bcaskrow{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap;}' +
     '.bcaskyes{font:inherit;font-size:1.05rem;font-weight:800;color:#fff;background:#7c3aed;' +
     'border:0;border-radius:12px;padding:13px 20px;}' +
@@ -4346,12 +4345,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'function askRestore(after){' +
   'jsonp({action:"data",name:WIPNAME},function(d){' +
   'var s=(d&&d.data&&d.data.length===TPL.length)?d:null;' +
-  'var k=s?wipCount(s):0;' +
   'if(!wipAny(s)||(Date.now()-(s.t||0))>1000*60*60*24*7){WIPON=true;after();return;}' +
   'var b=document.createElement("div");b.className="bcask";' +
   'b.innerHTML=\'<div class="bcask-in"><div class="bcaskmsg">途中までの作業を復元しますか？</div>\'+' +
-  '\'<div class="bcasksub">\'+(k?("（"+TPL.length+"つの対象のうち "+k+" つに中身が入っています）")' +
-  ':"（予約可能時間文や配信文の下書きがあります）")+\'</div>\'+' +
   '\'<div class="bcaskrow"><button type="button" class="bcaskyes">はい、復元する</button>\'+' +
   '\'<button type="button" class="bcaskno">いいえ、まっさらから始める</button></div></div>\';' +
   'document.body.appendChild(b);' +
