@@ -4420,14 +4420,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<button type="button" class="bcgo" id="bcwmake"\'+(WBUSY?" disabled":"")+\'>\'+' +
   '(WBUSY?"画像を生成しています...":"この内容で画像を作る")+\'</button>\';' +
   'if(WMSG)h+=\'<div class="bcstatus on">\'+esc(WMSG)+\'</div>\';' +
-  'h+=\'<button type="button" class="bcghost" id="bcwback">◀ 予約可能時間文にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindWaku();bindFresh();}' +
   'function bindWaku(){' +
   'var ta=document.getElementById("bcwtxt");' +
   'if(ta)ta.oninput=function(){WTEXT=ta.value;};' +
   '[].slice.call(box.querySelectorAll("[data-bigw]")).forEach(function(b){b.onclick=function(){' +
   'bigView(b.getAttribute("src"),b.getAttribute("data-bigw"));};});' +
-  'document.getElementById("bcwback").onclick=function(){page="s";status("");draw();};' +
   'document.getElementById("bcwauto").onclick=function(){' +
   'var b=document.getElementById("bcwauto");b.disabled=true;status("今週の空き枠を数えています…");' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"auto"})},' +
@@ -4531,8 +4529,6 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea class="bcotx" wrap="off" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
   'h+=last?\'<button type="button" class="bctxt" id="bcsnext">この内容で配信</button>\'' +
   ':\'<button type="button" class="bcgo" id="bcsnext">この内容でOK</button>\';' +
-  'if(SIDX>0)h+=\'<button type="button" class="bcghost" id="bcsprev">◀ 「\'+' +
-  'esc(gs[SIDX-1].label)+\'」にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();' +
   'fitTx(box.querySelector(".bcotx"));}' +
   'function bindText(){' +
@@ -4545,8 +4541,6 @@ function renderBroadcastPage_(base, staff, dev) {
   'var s=(d&&d.data&&d.data.length===TPL.length)?d:null;' +
   'if(!wipAny(s)){status("作業中のデータはありません。",true);return;}' +
   'goSaved(s);status("作業中のデータを復元しました。");draw();});};' +
-  'e=document.getElementById("bcsprev");' +
-  'if(e)e.onclick=function(){SIDX--;status("");draw();};' +
   'e=document.getElementById("bcsnext");' +
   'if(e)e.onclick=function(){var gs=(SRES&&SRES.groups)||[];' +
   'if(SIDX>=gs.length-1){page="m";MSTEP=0;MMSG="";status("");draw();return;}' +
@@ -4621,8 +4615,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
   ':(last?\'<button type="button" class="bctxt" id="bcmok">この内容で台湾版を作る</button>\'' +
   ':\'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\');' +
-  'if(MIDX>0)h+=\'<button type="button" class="bcghost" id="bcmprev2">◀ 「\'+' +
-  'esc(ordLabel(MIDX-1,false))+\'」にもどる</button>\';}}' +
+  '\'\';}}' +
   'else if(MSTEP===2){' +
   'var z=MZH[MIDX]||{text:""},lastz=(MIDX===N-1),ov2=(z.text||"").length>MAXT;' +
   'h=\'<div class="bcstop"><span class="bcsttl">台湾版を確かめる</span>\'+' +
@@ -4634,14 +4627,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
   ':(lastz?\'<button type="button" class="bctxt" id="bcmok3">この内容で対象に入れて画像も作る</button>\'' +
   ':\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\');' +
-  'if(MIDX>0)h+=\'<button type="button" class="bcghost" id="bcmprev2">◀ 「\'+' +
-  'esc(ordLabel(MIDX-1,true))+\'」にもどる</button>\';' +
-  'h+=\'<button type="button" class="bcghost" id="bcmedit">◀ 日本語の文を直す</button>\';}}' +
+  '\'\';}}' +
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作る</div><div class="bchr"></div>\'+' +
   '\'<div class="bcouttx">\'+esc(MMSG)+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
   'if(MMSG&&MSTEP<3)h+=\'<div class="bcstatus on">\'+esc(MMSG)+\'</div>\';' +
-  'h+=\'<button type="button" class="bcghost" id="bcmback">◀ 予約可能時間文にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindMake();bindFresh();}' +
   'function bindMake(){' +
   'var ta=document.getElementById("bcmbody");' +
@@ -4654,7 +4644,6 @@ function renderBroadcastPage_(base, staff, dev) {
   '(ov?("　※"+MAXT+"文字を超えています。短くしてください"):"")):"";' +
   'nm.className="bcnum"+(ov?" over":"");}' +
   'saveNow();};' +
-  'document.getElementById("bcmback").onclick=function(){page="s";MMSG="";status("");draw();};' +
   'var e=document.getElementById("bcmedit");' +
   'if(e)e.onclick=function(){MSTEP=0;MIDX=0;MMSG="";status("");draw();};' +
   'e=document.getElementById("bcmprev2");' +
@@ -4757,7 +4746,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div></div>\';' +
   'if(n)h+=\'<button type="button" class="bcgo" id="bcnext">この対象はこれで完了 →</button>\';' +
   'h+=\'<button type="button" class="bcmini" id="bcskip">この対象は送らない（飛ばす）</button>\';' +
-  'if(step>0)h+=\'<button type="button" class="bcmini" id="bcprev">◀ 1つ前の対象を直す</button>\';}' +
+  '\'\';}' +
   'box.innerHTML=freshBar()+h;bindOne();bindFresh();}' +
   'function bindOne(){' +
   'var d=DATA[step];' +
@@ -4804,7 +4793,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '(n?(n+"つ入り"):"送らない")+\'</span></div>\';});' +
   'h+=\'</div>\';' +
   'if(!m)h+=\'<div class="bcstatus on">中身を入れた対象がありません。\'+' +
-  '\'下の「対象の設定を直す」から入れてください。</div>\';' +
+  '\'左上の「← 前に戻る」から入れてください。</div>\';' +
   'else if(LMODE!=="at"){' +
   'h+=\'<button type="button" class="bctxt" id="bcnow">今すぐ送信する</button>\'+' +
   '\'<button type="button" class="bcgo" id="bcplan">送信の予約を設定する</button>\';}' +
@@ -4815,10 +4804,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'two(t.getMonth()+1)+"-"+two(t.getDate())+\'"></div>\'+' +
   '\'<div><input type="time" id="bctime" value="11:00"></div></div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcplace">この内容で \'+m+\'通り 予約する</button>\'+' +
-  '\'<button type="button" class="bcghost" id="bcnoat">◀ 送り方を選び直す</button>\';}' +
-  'h+=\'<button type="button" class="bcghost" id="bcprev2">◀ 対象の設定を直す</button><div id="bclist"></div>\';' +
+  '\'\';}' +
+  'h+=\'<div id="bclist"></div>\';' +
   'box.innerHTML=freshBar()+h;bindFresh();' +
-  'document.getElementById("bcprev2").onclick=function(){step=TPL.length-1;mode="";status("");draw();};' +
   'var e=document.getElementById("bcplan");' +
   'if(e)e.onclick=function(){LMODE="at";status("");draw();};' +
   'e=document.getElementById("bcnoat");' +
@@ -4885,14 +4873,28 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(rsT)clearTimeout(rsT);rsT=setTimeout(function(){rsT=null;' +
   'fitTx(box.querySelector(".bcotx"));},200);});' +
 
-  // ★「← 前に戻る」は1つ前の画面へ戻す（まるちゃん指示 2026-09-09）。
-  //   入口（配信の種類）にいる時だけ、いつもどおりホームへ戻る＝パソコンでは窓が閉じる。
+  // ★「← 前に戻る」だけで、どの画面からも1つ前に戻る（まるちゃん指示 2026-09-09）。
+  //   画面の中に「◀ ○○にもどる」を置かない。入口にいる時だけホームへ（パソコンは窓が閉じる）。
+  'function backOne(){' +
+  'if(page==="k")return false;' +
+  'if(page==="w"){page="s";return true;}' +
+  'if(page==="s"){var gs=(SRES&&SRES.groups)||[];' +
+  'if(!gs.length){page="k";return true;}' +
+  'if(SIDX>0){SIDX--;return true;}' +
+  'SRES=null;SPER="";SIDX=0;return true;}' +
+  'if(page==="m"){MMSG="";' +
+  'if(MSTEP===3){MSTEP=2;MIDX=BORDER.length-1;return true;}' +
+  'if(MSTEP===2){if(MIDX>0){MIDX--;}else{MSTEP=0;MIDX=BORDER.length-1;}return true;}' +
+  'if(MIDX>0){MIDX--;return true;}' +
+  'page="s";return true;}' +
+  'if(step>=TPL.length){if(LMODE==="at"){LMODE="";return true;}' +
+  'step=TPL.length-1;mode="";return true;}' +
+  'if(mode){mode="";return true;}' +
+  'if(step>0){step--;return true;}' +
+  'page="m";MSTEP=2;MIDX=BORDER.length-1;return true;}' +
   'var uh=document.querySelector(".uhome");' +
-  'if(uh)uh.onclick=function(ev){if(page==="k")return true;' +
-  'var to="k";' +
-  'if(page==="m"||page==="w"){to="s";}' +
-  'else if(page==="s"&&((SRES&&SRES.groups)||[]).length){SRES=null;SPER="";SIDX=0;to="s";}' +
-  'ev.preventDefault();page=to;status("");draw();return false;};' +
+  'if(uh)uh.onclick=function(ev){if(!backOne())return true;' +
+  'ev.preventDefault();status("");draw();return false;};' +
   // ★待たずに先に入口を出す（ボタン1つだけなので一瞬で出る）
   'draw();' +
   'ask("bc_templates",{},function(d){' +
