@@ -4123,11 +4123,6 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bctxt{display:block;width:100%;margin:0 0 14px;padding:15px;font-size:17px;font-weight:800;' +
     'border:0;border-radius:12px;background:#7C3AED;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
     // 予約可能時間文を生成する画面
-    '.bcper{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
-    '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
-    'background:#2563EB;color:#fff;}' +
-    '.bcper button.on{background:#7C3AED;}' +
-    '.bcper button:disabled{background:#26324A;color:#94A3B8;}' +
     '.bcsame{background:#0B1220;border:1px solid #7C3AED;color:#E8EEF7;border-radius:10px;' +
     'padding:12px 14px;font-size:15px;font-weight:800;margin:0 0 16px;}' +
     '.bcout{background:#0B1220;border:1px solid #26324A;border-radius:10px;padding:11px 12px;margin:0 0 10px;}' +
@@ -4137,8 +4132,6 @@ function renderBroadcastPage_(base, staff, dev) {
     'background:#2563EB;color:#fff;white-space:nowrap;}' +
     '.bcouttx{white-space:pre-wrap;font-size:14px;line-height:1.75;color:#E8EEF7;}' +
     '.bc textarea.bcotx{min-height:118px;font-size:14px;line-height:1.7;}' +
-    '.bczhl{font-size:12px;color:#94A3B8;font-weight:700;margin:11px 0 6px;}' +
-    '.bccopy.w{display:block;width:100%;margin-top:9px;}' +
     '.bcnum{font-size:12px;font-weight:800;color:#94A3B8;margin-top:7px;}' +
     '.bcnum.over{color:#fca5a5;}' +
     // 途中までの作業を復元しますか？（前日お知らせと同じ見た目）
@@ -4402,21 +4395,19 @@ function renderBroadcastPage_(base, staff, dev) {
   //     （曜日の対応表は事務所パソコンがくれる＝共通\予約可能枠.py の1本だけが持つ）。
   'function zhOf(s){var w=(SRES&&SRES.wd)||{};' +
   'return String(s||"").replace(/（([月火水木金土日])）/g,function(m,d){return "（"+(w[d]||d)+"）";});}' +
+  // ★期間のボタンは4つやめて1つにした（まるちゃん指示 2026-09-08）。
+  //   算出するのは「今週」＝今日から今度の土曜日まで。
+  //   ★台湾のお客様向けの下書きは画面に出さない（裏では作っていて、配信文づくりで使う）。
   'function drawText(){' +
-  'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var h=\'<div class="bccard"><div class="bcname">予約可能時間文を生成</div><div class="bchr"></div>\'+' +
-  '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" class="\'+' +
-  '(SPER===x[0]?"on":"")+\'" data-per="\'+x[0]+\'"\'+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';' +
-  '}).join("")+\'</div>\';' +
+  '\'<button type="button" class="bcgo" id="bccalc"\'+(SBUSY?" disabled":"")+\'>\'+' +
+  '(SBUSY?"算出しています…":"空き時間を算出")+\'</button>\';' +
   'var gs=(SRES&&SRES.groups)||[];' +
   'if(gs.length){h+=\'<div class="bchr"></div>\';' +
   'if(SRES.same)h+=\'<div class="bcsame">男性と女性は全く同じ時間帯</div>\';' +
   'h+=gs.map(function(g,i){return \'<div class="bcout"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+i+\'">コピー</button></div>\'+' +
-  '\'<textarea class="bcotx" data-ed="\'+i+\'">\'+esc(g.text)+\'</textarea>\'+' +
-  '\'<div class="bczhl">台湾のお客様向け（上を直すとここも変わります）</div>\'+' +
-  '\'<div class="bcouttx" id="bczh\'+i+\'">\'+esc(zhOf(g.text))+\'</div>\'+' +
-  '\'<button type="button" class="bccopy w" data-cz="\'+i+\'">中文をコピー</button></div>\';}).join("");}' +
+  '\'<textarea class="bcotx" data-ed="\'+i+\'">\'+esc(g.text)+\'</textarea></div>\';}).join("");}' +
   'else if(SRES){h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';}' +
   'h+=\'</div>\';' +
@@ -4428,20 +4419,16 @@ function renderBroadcastPage_(base, staff, dev) {
   'document.getElementById("bcsback").onclick=function(){page="t";status("");draw();};' +
   'var mk=document.getElementById("bcmkall");' +
   'if(mk)mk.onclick=function(){page="m";MSTEP=0;MMSG="";status("");draw();};' +
-  '[].slice.call(box.querySelectorAll("[data-per]")).forEach(function(b){b.onclick=function(){' +
-  'var k=b.getAttribute("data-per");SPER=k;SRES=null;SBUSY=true;status("空き時間を数えています…");draw();' +
-  'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;' +
-  'if(!r||!r.ok){status((r&&r.note)||"出せませんでした。",true);draw();return;}' +
-  'SRES=r;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
+  'var cl=document.getElementById("bccalc");' +
+  'if(cl)cl.onclick=function(){SPER="今週";SRES=null;SBUSY=true;status("");draw();' +
+  'ask("bc_waku",{fields:JSON.stringify({period:"今週"})},function(r){SBUSY=false;' +
+  'if(!r||!r.ok){status((r&&r.note)||"算出できませんでした。",true);draw();return;}' +
+  'SRES=r;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};' +
   '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
   'var i=a.getAttribute("data-ed")*1;if(!SRES||!SRES.groups[i])return;' +
-  'SRES.groups[i].text=a.value;' +
-  'var z=document.getElementById("bczh"+i);if(z)z.textContent=zhOf(a.value);' +
-  'saveNow();};});' +
+  'SRES.groups[i].text=a.value;saveNow();};});' +
   '[].slice.call(box.querySelectorAll("[data-cp]")).forEach(function(b){b.onclick=function(){' +
-  'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cp")*1];if(g)bcCopy(g.text,b);};});' +
-  '[].slice.call(box.querySelectorAll("[data-cz]")).forEach(function(b){b.onclick=function(){' +
-  'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cz")*1];if(g)bcCopy(zhOf(g.text),b);};});}' +
+  'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cp")*1];if(g)bcCopy(g.text,b);};});}' +
   'function bcCopy(s,b){if(!s)return;var old=b.textContent;' +
   'function done(){b.textContent="コピーしました";setTimeout(function(){b.textContent=old;},1500);}' +
   'if(navigator.clipboard&&navigator.clipboard.writeText){' +
