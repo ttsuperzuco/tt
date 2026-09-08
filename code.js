@@ -4423,7 +4423,11 @@ function renderBroadcastPage_(base, staff, dev) {
   //   ・「予約可能時間文を生成」は白字で黒い枠の上に出す
   //   ・文の欄は中身が全部見える高さ（`fitTx`）・字も大きい
   //   ・下のボタン＝「この内容で保存する」→次の区分へ。最後だけ「この内容で配信」
-  'function fitTx(a){if(!a)return;a.style.height="auto";a.style.height=(a.scrollHeight+8)+"px";}' +
+  // ★中身が全部見える高さにする。1回だと折り返しが変わって足りないことがあるので
+  //   落ち着くまで数回はかり直す（実測で1回目346px→本当は401px必要だった）。
+  'function fitTx(a){if(!a)return;' +
+  'function go(){a.style.height="0px";a.style.height=(a.scrollHeight+10)+"px";}' +
+  'go();setTimeout(go,0);setTimeout(go,150);}' +
   'function drawText(){' +
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];var h;' +
