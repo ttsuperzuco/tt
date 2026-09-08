@@ -4265,6 +4265,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var MSTEP=0,MBODY="",MJA=[],MZH=[],MBUSY=false,MMSG="";' +
   // ★配信文は区分ごとに違う＝本文も区分ごとに持つ（まるちゃん指示 2026-09-08）
   'var MBODYS=["","","",""],MIDX=0;' +
+  // ★最後の確認＝""はボタン2つ／"at"は日時を決める画面（まるちゃん指示 2026-09-08）
+  'var LMODE="";' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno"),mkEl=document.getElementById("bcmakebtn");' +
   'var txEl=document.getElementById("bctxtbtn");' +
@@ -4785,26 +4787,42 @@ function renderBroadcastPage_(base, staff, dev) {
   'TPL.forEach(function(x,i){var n=filled(i);if(n)m++;' +
   'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="\'+(n?"on":"")+\'">\'+' +
   '(n?(n+"つ入り"):"送らない")+\'</span></div>\';});' +
-  'h+=\'</div><div class="bccard"><div class="bcleft">送る日時（1本目。2本目からは少しずつ後ろへずらします）</div>\'+' +
-  '\'<div class="bcdt"><div><input type="date" id="bcdate" value="\'+t.getFullYear()+"-"+two(t.getMonth()+1)+"-"+two(t.getDate())+\'"></div>\'+' +
-  '\'<div><input type="time" id="bctime" value="11:00"></div></div></div>\';' +
-  'if(m)h+=\'<button type="button" class="bcgo" id="bcplace">この内容で \'+m+\'通り 予約する</button>\';' +
-  'else h+=\'<div class="bcstatus on">中身を入れた対象がありません。下の「対象の設定を直す」から入れてください。</div>\';' +
+  'h+=\'</div>\';' +
+  'if(!m)h+=\'<div class="bcstatus on">中身を入れた対象がありません。\'+' +
+  '\'下の「対象の設定を直す」から入れてください。</div>\';' +
+  'else if(LMODE!=="at"){' +
+  'h+=\'<button type="button" class="bctxt" id="bcnow">今すぐ送信する</button>\'+' +
+  '\'<button type="button" class="bcgo" id="bcplan">送信の予約を設定する</button>\';}' +
+  'else{' +
+  'h+=\'<div class="bccard"><div class="bcleft">送る日時\'+' +
+  '((m>1)?"（1本目。2本目からは少しずつ後ろへずらします）":"")+\'</div>\'+' +
+  '\'<div class="bcdt"><div><input type="date" id="bcdate" value="\'+t.getFullYear()+"-"+' +
+  'two(t.getMonth()+1)+"-"+two(t.getDate())+\'"></div>\'+' +
+  '\'<div><input type="time" id="bctime" value="11:00"></div></div></div>\'+' +
+  '\'<button type="button" class="bcgo" id="bcplace">この内容で \'+m+\'通り 予約する</button>\'+' +
+  '\'<button type="button" class="bcghost" id="bcnoat">◀ 送り方を選び直す</button>\';}' +
   'h+=\'<button type="button" class="bcghost" id="bcprev2">◀ 対象の設定を直す</button><div id="bclist"></div>\';' +
   'box.innerHTML=freshBar()+h;bindFresh();' +
   'document.getElementById("bcprev2").onclick=function(){step=TPL.length-1;mode="";status("");draw();};' +
-  'var pl=document.getElementById("bcplace");if(pl)pl.onclick=doPlace;' +
+  'var e=document.getElementById("bcplan");' +
+  'if(e)e.onclick=function(){LMODE="at";status("");draw();};' +
+  'e=document.getElementById("bcnoat");' +
+  'if(e)e.onclick=function(){LMODE="";status("");draw();};' +
+  'e=document.getElementById("bcnow");if(e)e.onclick=function(){doPlace(true);};' +
+  'e=document.getElementById("bcplace");if(e)e.onclick=function(){doPlace(false);};' +
   'loadList();}' +
   // ── 予約する ────────────────────────────────────────
-  'function doPlace(){' +
+  'function doPlace(now){' +
   'var dateEl=document.getElementById("bcdate"),timeEl=document.getElementById("bctime");' +
+  'var d0=now?"":(dateEl?dateEl.value:""),t0=now?"":(timeEl?timeEl.value:"");' +
   'var items=[],n=0;' +
   'TPL.forEach(function(t,i){var ps=DATA[i].parts;if(!ps.length)return;n++;' +
   'items.push({name:t.name,parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
   'if(!n){status("文章か画像を入れた対象が1つもありません。",true);return;}' +
-  'szPopup_(dateEl.value+" "+timeEl.value+" から、"+n+"通りの配信を予約します。よろしいですか？",{cancel:true,onYes:function(){try{' +
+  'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいですか？")' +
+  ':(d0+" "+t0+" から、"+n+"通りの配信を予約します。よろしいですか？"),{cancel:true,onYes:function(){try{' +
   'var go=document.getElementById("bcplace");go.disabled=true;' +
-  'szOvShow_(szBusyHtml_("配信を予約しています"),"#2C7A99");' +
+  'szOvShow_(szBusyHtml_(now?"配信を送っています":"配信を予約しています"),"#2C7A99");' +
   'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
   'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
   'delete p.b64;});});' +
@@ -4813,11 +4831,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'var itemsName="bc_items_"+((idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d")+".json";' +
   'jobs.push(pushImage(itemsName,{items:items}));' +
   'Promise.all(jobs).catch(function(){}).then(function(){setTimeout(function(){' +
-  'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:dateEl.value,' +
-  'time:timeEl.value,items_from:itemsName,who:idn.who})},' +
+  'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:d0,' +
+  'time:t0,now:(now?1:0),items_from:itemsName,who:idn.who})},' +
   'function(d){go.disabled=false;szOvHide_();status(d.note||"予約しました。",!d.ok);' +
   'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});' +
-  'MJA=[];MZH=[];MSTEP=0;MMSG="";FRESH=false;wipClear();step=0;draw();}' +
+  'MJA=[];MZH=[];MSTEP=0;MMSG="";FRESH=false;LMODE="";wipClear();step=0;draw();}' +
   'loadList();},' +
   'function(m2){go.disabled=false;szOvHide_();status(m2,true);});},1200);});' +
   '}catch(err){var g2=document.getElementById("bcplace");if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
