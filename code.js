@@ -4146,6 +4146,9 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bctxt{display:block;width:100%;margin:0 0 14px;padding:15px;font-size:17px;font-weight:800;' +
     'border:0;border-radius:12px;background:#7C3AED;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
     // 予約可能時間文を生成する画面
+    '.bckind{display:block;width:100%;margin:0 0 14px;padding:22px;font-size:19px;' +
+    'font-weight:800;border:0;border-radius:12px;background:#2563EB;color:#fff;' +
+    'box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
     '.bcper{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
     '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
     'background:#2563EB;color:#fff;}' +
@@ -4258,7 +4261,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
   'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-  'var TPL=[],PRE=[],MADE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",page="t";' +
+  // ★はじめは「配信の種類をえらぶ」画面（まるちゃん指示 2026-09-08）
+  'var TPL=[],PRE=[],MADE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",page="k";' +
   'var WTEXT="",WDONE=[],WBUSY=false,WMSG="";' +
   'var SPER="",SRES=null,SBUSY=false;' +
   'var MSTEP=0,MBODY="",MJA=[],MZH=[],MBUSY=false,MMSG="";' +
@@ -4267,8 +4271,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★最後の確認＝""はボタン2つ／"at"は日時を決める画面（まるちゃん指示 2026-09-08）
   'var LMODE="";' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
-  'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno"),mkEl=document.getElementById("bcmakebtn");' +
-  'var txEl=document.getElementById("bctxtbtn");' +
+  'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno");' +
   'var ttlEl=document.getElementById("bctitle"),topEl=document.getElementById("bctoprow");' +
   'var SIDX=0;' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
@@ -4383,14 +4386,16 @@ function renderBroadcastPage_(base, staff, dev) {
   'WTEXT="";MBODY="";SPER="";SRES=null;MJA=[];MZH=[];MSTEP=0;MMSG="";' +
   'step=0;page="t";mode="";FRESH=false;status("まっさらに戻しました。");draw();}});};}' +
   'function draw(){saveNow();' +
-  'if(page==="w"){drawWaku();}else if(page==="s"){drawText();}else if(page==="m"){drawMake();}' +
+  'if(page==="k"){drawKind();}else if(page==="w"){drawWaku();}' +
+  'else if(page==="s"){drawText();}else if(page==="m"){drawMake();}' +
   'else if(step<TPL.length){drawOne();}else{drawLast();}' +
-  'noEl.textContent=(page==="w")?"画像づくり":((page==="s")?"文づくり":((page==="m")?"配信文づくり":' +
-  '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認")));' +
-  'var top=(page==="t")?"block":"none";mkEl.style.display=top;txEl.style.display=top;' +
-  // ★1個ずつ見せる画面では上の帯を出さない（文の欄を大きく使うため・まるちゃん指示）
-  'var slim=(page==="s"&&((SRES&&SRES.groups)||[]).length)?"none":"";' +
-  'if(ttlEl)ttlEl.style.display=slim;if(topEl)topEl.style.display=slim;' +
+  'noEl.textContent=(page==="k")?"":((page==="w")?"画像づくり":((page==="s")?"文づくり":' +
+  '((page==="m")?"配信文づくり":' +
+  '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認"))));' +
+  // ★1個ずつ見せる画面と、入口の種類えらびでは上の帯を出さない
+  'var slim=((page==="k")||(page==="s"&&((SRES&&SRES.groups)||[]).length))?"none":"";' +
+  'if(topEl)topEl.style.display=slim;' +
+  'if(ttlEl)ttlEl.style.display=(page==="k")?"":slim;' +
   'banEl.style.display=slim;}' +
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
@@ -4408,14 +4413,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<button type="button" class="bcgo" id="bcwmake"\'+(WBUSY?" disabled":"")+\'>\'+' +
   '(WBUSY?"画像を生成しています...":"この内容で画像を作る")+\'</button>\';' +
   'if(WMSG)h+=\'<div class="bcstatus on">\'+esc(WMSG)+\'</div>\';' +
-  'h+=\'<button type="button" class="bcghost" id="bcwback">◀ 対象の設定にもどる</button>\';' +
+  'h+=\'<button type="button" class="bcghost" id="bcwback">◀ 予約可能時間文にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindWaku();bindFresh();}' +
   'function bindWaku(){' +
   'var ta=document.getElementById("bcwtxt");' +
   'if(ta)ta.oninput=function(){WTEXT=ta.value;};' +
   '[].slice.call(box.querySelectorAll("[data-bigw]")).forEach(function(b){b.onclick=function(){' +
   'bigView(b.getAttribute("src"),b.getAttribute("data-bigw"));};});' +
-  'document.getElementById("bcwback").onclick=function(){page="t";status("");draw();};' +
+  'document.getElementById("bcwback").onclick=function(){page="s";status("");draw();};' +
   'document.getElementById("bcwauto").onclick=function(){' +
   'var b=document.getElementById("bcwauto");b.disabled=true;status("今週の空き枠を数えています…");' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"auto"})},' +
@@ -4489,6 +4494,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'pr.parentNode.removeChild(pr);a.style.fontSize=f+"px";}' +
   'function go(){a.style.height="0px";a.style.height=(a.scrollHeight+10)+"px";}' +
   'go();setTimeout(go,0);setTimeout(go,150);}' +
+  // ★配信の種類をえらぶ画面（入口）。いまは「予約可能枠案内」の1つだけ。
+  'function drawKind(){' +
+  'var h=\'<button type="button" class="bckind" id="bckind1">予約可能枠案内</button>\';' +
+  'box.innerHTML=freshBar()+h;bindFresh();' +
+  'document.getElementById("bckind1").onclick=function(){page="s";status("");draw();};}' +
   'function drawText(){' +
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];var h;' +
@@ -4500,7 +4510,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'作業中のデータを復元する</button></div>\';' +
   'if(SRES)h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';' +
-  'h+=\'</div><button type="button" class="bcghost" id="bcsback">◀ 対象の設定にもどる</button>\';' +
+  'h+=\'</div><button type="button" class="bcghost" id="bcsback">◀ 配信の種類にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();return;}' +
   'if(SIDX>=gs.length)SIDX=gs.length-1;if(SIDX<0)SIDX=0;' +
   'var g=gs[SIDX],last=(SIDX===gs.length-1);' +
@@ -4516,11 +4526,11 @@ function renderBroadcastPage_(base, staff, dev) {
   ':\'<button type="button" class="bcgo" id="bcsnext">この内容で保存する</button>\';' +
   'if(SIDX>0)h+=\'<button type="button" class="bcghost" id="bcsprev">◀ 「\'+' +
   'esc(gs[SIDX-1].label)+\'」にもどる</button>\';' +
-  'h+=\'<button type="button" class="bcghost" id="bcsback">◀ 対象の設定にもどる</button>\';' +
+  'h+=\'<button type="button" class="bcghost" id="bcsback">◀ 配信の種類にもどる</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();' +
   'fitTx(box.querySelector(".bcotx"));}' +
   'function bindText(){' +
-  'document.getElementById("bcsback").onclick=function(){page="t";status("");draw();};' +
+  'document.getElementById("bcsback").onclick=function(){page="k";status("");draw();};' +
   'var e=document.getElementById("bcagain");' +
   'if(e)e.onclick=function(){SRES=null;SPER="";SIDX=0;status("");draw();};' +
   'e=document.getElementById("bcrest");' +
@@ -4863,13 +4873,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
   'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m3){status(m3,true);});}});};});}' +
   // ── 立ち上がり ────────────────────────────────────────
-  'mkEl.onclick=function(){page="w";mode="";status("");draw();};' +
-  'txEl.onclick=function(){page="s";mode="";status("");draw();};' +
+
   // ★窓の幅を変えたら字の大きさを測り直す（パソコンの窓は大きさを変えられるため）
   'var rsT=null;window.addEventListener("resize",function(){' +
   'if(rsT)clearTimeout(rsT);rsT=setTimeout(function(){rsT=null;' +
   'fitTx(box.querySelector(".bcotx"));},200);});' +
-  'status("読み込んでいます…");' +
+
   'ask("bc_templates",{},function(d){' +
   'if(!d||!d.templates){status("型を読み込めませんでした。",true);return;}' +
   'CAT=d.category||"";TPL=d.templates;PRE=d.presets||[];MAXP=d.max_parts||3;MAXT=d.max_text||500;' +
@@ -4896,13 +4905,12 @@ function renderBroadcastPage_(base, staff, dev) {
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
-    '<h2 class="htitle" id="bctitle">LINE一斉配信予約</h2>' +
+    '<h2 class="htitle" id="bctitle">LINE一斉配信設定</h2>' +
     '<div class="bc">' +
       '<div class="bcbanner" id="bcbanner">読み込み中…</div>' +
       '<div class="bctop" id="bctoprow"><span class="lb">配信内容</span><b id="bccatname">…</b>' +
         '<span class="no" id="bcno"></span></div>' +
-      '<button type="button" class="bcmake" id="bcmakebtn">📅 予約可能枠の画像を作る</button>' +
-      '<button type="button" class="bctxt" id="bctxtbtn">📝 予約可能時間文を生成</button>' +
+
       '<div id="bcbody"></div>' +
       '<div class="bcstatus" id="bcstatus"></div>' +
     '</div>' +
