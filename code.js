@@ -2378,21 +2378,21 @@ function renderZenjitsuPage_(base, staff, dev) {
   '+名(dd)+" "+rows.filter(function(x){return x.send_day===dd;}).length+"</button>";}).join("");' +
   'document.getElementById("zjpltabs").querySelectorAll(".zjtab").forEach(function(b){' +
   'b.onclick=function(){zjPlanDay=b.dataset.day;zjPlansDraw();};});' +
-  'var 未=rows.filter(function(x){return x.send_day===zjPlanDay&&x.can_cancel;});' +
+  'var 未=rows.filter(function(x){return x.send_day===zjPlanDay&&x.status==="pending";});' +
   'var ac=document.getElementById("zjplall");' +
   'ac.hidden=(未.length===0);ac.textContent="🚫 全ての送信予約を取り消す（"+未.length+"件）";' +
   'ac.onclick=function(){zjCancelMany(未);};' +
   'box.innerHTML=rows.filter(function(x){return x.send_day===zjPlanDay;}).map(function(x){' +
   'return "<div class=\\"zjpl\\"><div class=\\"zjplh\\">"+esc(x.send_at)+"　"+esc(x.name)+"　"' +
   '+esc(x.fnum||"新規")+"　"+esc(x.status_ja)' +
-  '+"<button type=\\"button\\" class=\\"zjcancel\\" data-id=\\""+esc(x.id)+"\\""+(x.can_cancel?"":" disabled")+">取り消す</button></div>"' +
+  '+"<button type=\\"button\\" class=\\"zjcancel\\" data-id=\\""+esc(x.id)+"\\""+(x.can_cancel?"":" disabled")+">"+esc(x.cancel_label||"取り消す")+"</button></div>"' +
   '+"<div class=\\"zjnote\\">"+esc(x.date)+" ご来店分／画像 "+x.images+"枚"+(x.note?("　"+esc(x.note)):"")+"</div>"' +
   '+(x.warn?("<div class=\\"zjnote real\\">⚠️ "+esc(x.warn)+"</div>"):"")+"</div>";}).join("");' +
   'box.querySelectorAll(".zjcancel").forEach(function(b){if(b.disabled)return;' +
-  'b.onclick=function(){b.disabled=true;b.textContent="取り消しています…";' +
+  'b.onclick=function(){var もとの文字=b.textContent;b.disabled=true;b.textContent="消しています…";' +
   'zjAsk("cancel_plan",{id:b.dataset.id},function(r){' +
-  'document.getElementById("zjplmsg").textContent=r.ok?"✅ 取り消しました":("⛔ "+(r.error||""));' +
-  'zjPlansDraw();},function(e){b.disabled=false;b.textContent="取り消す";});};});' +
+  'document.getElementById("zjplmsg").textContent=r.ok?"✅ 消しました":("⛔ "+(r.error||""));' +
+  'zjPlansDraw();},function(e){b.disabled=false;b.textContent=もとの文字;});};});' +
   '},function(e){box.textContent="⛔ "+e;});}' +
   'function zjCancelMany(list){' +
   'var m=document.getElementById("zjplmsg");var i=0;' +
