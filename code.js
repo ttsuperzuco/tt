@@ -4576,9 +4576,10 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入れてください。&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(body)+\'</textarea>\';' +
-  'if(body){h+=\'<div class="bczhl">できあがり</div><div class="bcouttx">\'+esc(done)+\'</div>\'+' +
-  '\'<div class="bcnum\'+(over?" over":"")+\'">\'+done.length+\'文字\'+' +
-  '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';}' +
+  'h+=\'<div class="bczhl">できあがり</div><div class="bcouttx" id="bcmprev">\'+' +
+  'esc(body?done:"")+\'</div>\'+' +
+  '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?(done.length+"文字"):"")+\'\'+' +
+  '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
   'h+=\'</div>\';' +
   'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
   ':(last?\'<button type="button" class="bctxt" id="bcmok">この内容で台湾版を作る</button>\'' +
@@ -4607,9 +4608,15 @@ function renderBroadcastPage_(base, staff, dev) {
   'box.innerHTML=freshBar()+h;bindMake();bindFresh();}' +
   'function bindMake(){' +
   'var ta=document.getElementById("bcmbody");' +
-  'if(ta)ta.oninput=function(){MBODYS[MIDX]=ta.value;MBODY=ta.value;saveNow();' +
-  'if(!ta.value||!(MBODYS[MIDX]||"").length)draw();};' +
-  'if(ta)ta.onblur=function(){draw();};' +
+  // ★打っている間は画面を描き直さない（描き直すとボタンが作り直されて押せなくなる）
+  'if(ta)ta.oninput=function(){MBODYS[MIDX]=ta.value;MBODY=ta.value;' +
+  'var x=BORDER[MIDX],done=joinBody(ta.value,timesOf(x[0],x[1]));' +
+  'var pv=document.getElementById("bcmprev");if(pv)pv.textContent=ta.value?done:"";' +
+  'var nm=document.getElementById("bcmnum");' +
+  'if(nm){var ov=done.length>MAXT;nm.textContent=ta.value?(done.length+"文字"+' +
+  '(ov?("　※"+MAXT+"文字を超えています。短くしてください"):"")):"";' +
+  'nm.className="bcnum"+(ov?" over":"");}' +
+  'saveNow();};' +
   'document.getElementById("bcmback").onclick=function(){page="s";MMSG="";status("");draw();};' +
   'var e=document.getElementById("bcmedit");' +
   'if(e)e.onclick=function(){MSTEP=0;MIDX=0;MMSG="";status("");draw();};' +
