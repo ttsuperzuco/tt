@@ -4249,9 +4249,9 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcseg button.on{background:#2563EB;color:#fff;border-color:#2563EB;}' +
     '.bcwimg{width:100%;border-radius:12px;display:block;margin:12px 0 0;}' +
     // ★入力欄の下に出す「【時間】」（なぞってコピーできる・まるちゃん指示 2026-09-09）
-    '.bcins{display:flex;align-items:center;gap:10px;margin-top:10px;}' +
-    '.bcinstx{flex:1;padding:9px 12px;border-radius:9px;background:#0B1220;color:#fff;' +
-    'font-size:16px;font-weight:800;user-select:text;-webkit-user-select:text;}' +
+    '.bcinstx{margin-left:auto;padding:7px 11px;border:0;border-radius:9px;' +
+    'background:#0B1220;color:#fff;font-size:15px;font-weight:800;cursor:pointer;' +
+    'user-select:text;-webkit-user-select:text;white-space:nowrap;}' +
     '.bcgo{display:block;width:100%;margin:0 0 10px;padding:17px;font-size:19px;font-weight:800;' +
     'border:0;border-radius:12px;background:#2563EB;color:#fff;}' +
     '.bcghost{display:block;width:100%;margin:0 0 10px;padding:14px;font-size:15px;font-weight:800;' +
@@ -4655,16 +4655,17 @@ function renderBroadcastPage_(base, staff, dev) {
   'var x=BORDER[MIDX],last=(MIDX===N-1);' +
   'var body=MBODYS[MIDX]||"",done=joinBody(body,timesOf(x[0],x[1]));' +
   'var over=done.length>MAXT;' +
-  'h=\'<div class="bcstop"><span class="bcsttl">配信文を作る</span>\'+' +
+  'h=\'<div class="bcstop"><span class="bcsttl">配信文を作成</span>\'+' +
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
-  'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,false))+\'</b></div>\'+' +
+  // ★「【時間】」は区分の名前の右はし（まるちゃん指示 2026-09-09）。押すとそのまま写せる。
+  'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,false))+\'</b>\'+' +
+  '\'<button type="button" class="bcinstx" id="bcinscp">【時間】</button></div>\'+' +
   '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入れてください。&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(body)+\'</textarea>\';' +
-  'h+=\'<div class="bcins"><span class="bcinstx">【時間】</span>\'+' +
-  '\'<button type="button" class="bccopy" id="bcinscp">コピー</button></div>\';' +
   'h+=\'<div class="bcouttx" id="bcmprev" style="margin-top:13px">\'+' +
-  'esc(body.replace(/^\\s+|\\s+$/g,"")?done:"空っぽなので、この区分は送りません。")+\'</div>\'+' +
+  'esc(body.replace(/^\\s+|\\s+$/g,"")?done:' +
+  '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません"))+\'</div>\'+' +
   '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?(done.length+"文字"):"")+\'\'+' +
   '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
   'h+=\'</div>\';' +
@@ -4677,14 +4678,15 @@ function renderBroadcastPage_(base, staff, dev) {
   'h=\'<div class="bcstop"><span class="bcsttl">台湾版を確かめる</span>\'+' +
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b></div>\'+' +
-  '\'<div class="bcouttx">\'+esc(z.text||"空っぽなので、この区分は送りません。")+\'</div>\'+' +
+  '\'<div class="bcouttx">\'+esc(z.text||' +
+  '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません"))+\'</div>\'+' +
   '\'<div class="bcnum\'+(ov2?" over":"")+\'">\'+(z.text||"").length+\'文字\'+' +
   '(ov2?("　※"+MAXT+"文字を超えています"):"")+\'</div></div>\';' +
   'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
   ':(lastz?\'<button type="button" class="bcgo" id="bcmok3">この内容で対象に入れて画像も作る</button>\'' +
   ':\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\');' +
   '\'\';}}' +
-  'else{h=\'<div class="bccard"><div class="bcname">配信文を作る</div><div class="bchr"></div>\'+' +
+  'else{h=\'<div class="bccard"><div class="bcname">配信文を作成</div><div class="bchr"></div>\'+' +
   '\'<div class="bcouttx">\'+esc(MMSG)+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
   'if(MMSG&&MSTEP<3)h+=\'<div class="bcstatus on">\'+esc(MMSG)+\'</div>\';' +
@@ -4695,7 +4697,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(ta)ta.oninput=function(){MBODYS[MIDX]=ta.value;MBODY=ta.value;' +
   'var x=BORDER[MIDX],done=joinBody(ta.value,timesOf(x[0],x[1]));' +
   'var pv=document.getElementById("bcmprev");' +
-  'if(pv)pv.textContent=ta.value.replace(/^\\s+|\\s+$/g,"")?done:"空っぽなので、この区分は送りません。";' +
+  'if(pv)pv.textContent=ta.value.replace(/^\\s+|\\s+$/g,"")?done:' +
+  '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません");' +
   'var nm=document.getElementById("bcmnum");' +
   'if(nm){var ov=done.length>MAXT;nm.textContent=ta.value?(done.length+"文字"+' +
   '(ov?("　※"+MAXT+"文字を超えています。短くしてください"):"")):"";' +
@@ -4709,8 +4712,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(e)e.onclick=function(){MIDX++;status("");draw();};' +
   'e=document.getElementById("bcmdone");' +
   'if(e)e.onclick=function(){page="t";step=0;MMSG="";status("");draw();};' +
-  'e=document.getElementById("bcinscp");' +
-  'if(e)e.onclick=function(){bcCopy("【時間】",e);};' +
+  // ★専用の入れ物にする（e は下で別の部品に入れ替わるため）
+  'var ins=document.getElementById("bcinscp");' +
+  'if(ins)ins.onclick=function(){bcCopy("【時間】",ins);};' +
   'e=document.getElementById("bcmok");' +
   'if(e)e.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
   'if(MIDX<BORDER.length-1){MIDX++;status("");draw();return;}' +
