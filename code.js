@@ -4480,9 +4480,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'var pre=(k>=0)?body.slice(0,k):body,post=(k>=0)?body.slice(k+4):"";' +
   'MBUSY=true;MMSG="台湾のお客様向けに訳しています…（1分ほどかかります）";draw();' +
   'function ng(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();}' +
-  'transOne(pre,function(zpre){transOne(post,function(zpost){' +
+  'transOne(pre.replace(/^\\s+|\\s+$/g,""),function(zpre){' +
+  'transOne(post.replace(/^\\s+|\\s+$/g,""),function(zpost){' +
+  'var a=String(zpre||"").replace(/^\\s+|\\s+$/g,""),b=String(zpost||"").replace(/^\\s+|\\s+$/g,"");' +
   'MZH=((SRES&&SRES.groups)||[]).map(function(g){var tt=zhOf(g.text);' +
-  'var s=(k>=0)?(zpre+tt+zpost):(String(zpre).replace(/\\s+$/,"")+"\\n\\n"+tt);' +
+  'var s=a?(a+"\\n\\n"+tt):tt;if(b)s=s+"\\n\\n"+b;' +
   'return {label:g.label,atama:g.atama,sei:g.sei,text:s};});' +
   'MBUSY=false;MMSG="";MSTEP=2;status("");draw();},ng);},ng);}' +
   // ★仕上げ＝8つの対象に文を入れ、続けて予約可能枠の画像も作って1つ目に入れる
