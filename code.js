@@ -4149,6 +4149,10 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bckind{display:block;width:100%;margin:0 0 14px;padding:22px;font-size:19px;' +
     'font-weight:800;border:0;border-radius:12px;background:#2563EB;color:#fff;' +
     'box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
+    // ★帯の右はし＝「男女版も作成」の入切（まるちゃん指示 2026-09-09）
+    '.bcsplit{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;' +
+    'color:#E8EEF7;white-space:nowrap;cursor:pointer;}' +
+    '.bcsplit input{width:19px;height:19px;accent-color:#2563EB;cursor:pointer;}' +
     '.bcper{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
     '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
     'background:#2563EB;color:#fff;}' +
@@ -4169,7 +4173,8 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcagainbtn{font:inherit;font-size:13px;font-weight:800;color:#cbd5e1;background:#131C2E;' +
     'border:1px solid #26324A;border-radius:999px;padding:9px 15px;}' +
     '.bcsame{background:#0B1220;border:1px solid #7C3AED;color:#E8EEF7;border-radius:10px;' +
-    'padding:12px 14px;font-size:15px;font-weight:800;margin:0 0 16px;}' +
+    'padding:12px 14px;font-size:15px;font-weight:800;margin:0 0 16px;' +
+    'display:flex;align-items:center;justify-content:space-between;gap:12px;}' +
     '.bcout{background:#0B1220;border:1px solid #26324A;border-radius:10px;padding:11px 12px;margin:0 0 10px;}' +
     '.bcouth{display:flex;align-items:center;gap:10px;margin:0 0 8px;}' +
     '.bcouth b{flex:1;font-size:15px;font-weight:800;color:#E8EEF7;}' +
@@ -4356,7 +4361,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'WTEXT=s.text||"";MBODY=s.body||"";SPER=s.per||"";SIDX=s.sidx||0;' +
   'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
   'MIDX=s.midx||0;if(s.mstep===0||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
-  'if(s.waku&&s.waku.groups)SRES=s.waku;' +
+  'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();}' +
   'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;}' +
   'function askRestore(after){' +
   'jsonp({action:"data",name:WIPNAME},function(d){' +
@@ -4532,7 +4537,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span>\'+' +
   '\'<span class="bcsno">\'+(SIDX+1)+\' / \'+gs.length+\'</span></div>\'+' +
   '\'\';' +
-  'if(SIDX===0&&SRES.same)h+=\'<div class="bcsame">新規と既存の二種類だけ作成</div>\';' +
+  'if(SIDX===0)h+=\'<div class="bcsame"><span>\'+' +
+  '(SRES.split?"新規・既存を男女に分けて作成":"新規と既存の二種類だけ作成")+\'</span>\'+' +
+  '\'<label class="bcsplit"><input type="checkbox" id="bcsplitcb"\'+' +
+  '(SRES.split?" checked":"")+\'>男女版も作成</label></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+SIDX+\'">コピー</button></div>\'+' +
   '\'<textarea class="bcotx" wrap="off" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
@@ -4550,6 +4558,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var s=(d&&d.data&&d.data.length===TPL.length)?d:null;' +
   'if(!wipAny(s)){status("作業中のデータはありません。",true);return;}' +
   'goSaved(s);status("作業中のデータを復元しました。");draw();});};' +
+  'e=document.getElementById("bcsplitcb");' +
+  'if(e)e.onchange=function(){splitOn(e.checked);};' +
   'e=document.getElementById("bcsnext");' +
   'if(e)e.onclick=function(){var gs=(SRES&&SRES.groups)||[];' +
   'if(SIDX>=gs.length-1){page="m";MSTEP=0;MMSG="";status("");draw();return;}' +
@@ -4559,10 +4569,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'status("空き時間を算出しています…");draw();' +
   'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;' +
   'if(!r||!r.ok){status((r&&r.note)||"算出できませんでした。",true);draw();return;}' +
-  'SRES=r;SIDX=0;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
+  'setWaku(r);SIDX=0;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
   '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
   'var i=a.getAttribute("data-ed")*1;if(!SRES||!SRES.groups[i])return;' +
-  'SRES.groups[i].text=a.value;fitTx(a);saveNow();};});' +
+  'SRES.groups[i].text=a.value;' +
+  'var kk=SRES.groups[i].k;if(SRES.all&&SRES.all[kk])SRES.all[kk].text=a.value;' +
+  'fitTx(a);saveNow();};});' +
   '[].slice.call(box.querySelectorAll("[data-cp]")).forEach(function(b){b.onclick=function(){' +
   'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cp")*1];if(g)bcCopy(g.text,b);};});}' +
   'function bcCopy(s,b){if(!s)return;var old=b.textContent;' +
@@ -4592,6 +4604,28 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★配信文は8通り全部わける（時刻が男女同じでも文は8つ作る・まるちゃん指示 2026-09-08）。
   //   並びは 🇯🇵新規男性→既存男性→新規女性→既存女性 → 🇹🇼同じ順（画像づくりの自動入力と同じ順）。
   'var BORDER=[["新規","男性"],["既存","男性"],["新規","女性"],["既存","女性"]];' +
+  // ★事務所パソコンからは いつも男女に分けた4つ が来る（2026-09-09）。
+  //   「男女版も作成」を切っている時は、男性のものだけを 新規／既存 として見せる。
+  'function setWaku(r){SRES=r;' +
+  'SRES.all=(r.groups||[]).slice();' +
+  'SRES.split=!r.same;buildG();}' +
+  'function buildG(){var a=(SRES&&SRES.all)||[];' +
+  'if(SRES.split){SRES.groups=a.map(function(g,k){' +
+  'return {atama:g.atama,sei:g.sei,label:g.label,text:g.text,k:k};});return;}' +
+  'SRES.groups=[];' +
+  'for(var k=0;k<a.length;k++){if(a[k].sei!=="男性")continue;' +
+  'SRES.groups.push({atama:a[k].atama,sei:"",label:a[k].atama,text:a[k].text,k:k});}}' +
+  // 古い保存（男女に分ける前の形）から戻した時も動くようにする
+  'function fixWaku(){if(!SRES||!SRES.groups||SRES.all)return;' +
+  'var g=SRES.groups;SRES.split=!!(g.length&&g[0].sei);' +
+  'SRES.all=g.map(function(x){return {atama:x.atama,sei:x.sei||"男性",' +
+  'label:x.label,text:x.text};});buildG();}' +
+  // 男女が同じ時に「分ける」へ切り替えたら、女性側へ男性側の中身をそのまま写す
+  'function splitOn(on){if(!SRES)return;' +
+  'if(on&&!SRES.split&&SRES.same){var a=SRES.all,i,j;' +
+  'for(i=0;i<a.length;i++){if(a[i].sei!=="女性")continue;' +
+  'for(j=0;j<a.length;j++)if(a[j].sei==="男性"&&a[j].atama===a[i].atama)a[i].text=a[j].text;}}' +
+  'SRES.split=!!on;SIDX=0;buildG();saveNow();status("");draw();}' +
   'function timesOf(atama,sei){var gs=(SRES&&SRES.groups)||[],i;' +
   'for(i=0;i<gs.length;i++)if(gs[i].atama===atama&&gs[i].sei===sei)return gs[i].text;' +
   'for(i=0;i<gs.length;i++)if(gs[i].atama===atama&&!gs[i].sei)return gs[i].text;' +
