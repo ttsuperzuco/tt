@@ -4340,6 +4340,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'function partThumb(p){if(p.kind==="text")return "";' +
   'var pr=preOf((p.src||"").replace(/^(preset|made):/,""));return pr?pr.thumb:(p.thumb||"");}' +
   'function filled(i){return (DATA[i]&&DATA[i].parts||[]).length;}' +
+  // ★中身が入っている対象だけを並べる（まるちゃん指示 2026-09-09＝
+  //   本文を作らなかった対象は送らないので、確認の画面にも出さない）
+  'function tLive(){var a=[],i;for(i=0;i<TPL.length;i++)if(filled(i))a.push(i);return a;}' +
+  'function nextLive(from){var a=tLive(),i;' +
+  'for(i=0;i<a.length;i++)if(a[i]>from)return a[i];return TPL.length;}' +
+  'function prevLive(from){var a=tLive(),i;' +
+  'for(i=a.length-1;i>=0;i--)if(a[i]<from)return a[i];return -1;}' +
   // ── 画面を描く ────────────────────────────────────────
   // ★途中までの作業は「置き場」に覚える（端末の記憶はパソコンの窓では使えないため）。
   // ★★名前に端末を入れてはいけない（2026-09-08 実際に作業が消えた）＝パソコンの窓は
@@ -4433,7 +4440,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function draw(){saveNow();' +
   'if(page==="k"){drawKind();}else if(page==="w"){drawWaku();}' +
   'else if(page==="s"){drawText();}else if(page==="m"){drawMake();}' +
-  'else if(step<TPL.length){drawOne();}else{drawLast();}' +
+  'else{if(step<TPL.length&&!filled(step))step=nextLive(step-1);' +
+  'if(step<TPL.length){drawOne();}else{drawLast();}}' +
   'noEl.textContent=(page==="k")?"":((page==="w")?"画像づくり":((page==="s")?"文づくり":' +
   '((page==="m")?"配信文づくり":' +
   '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認"))));' +
@@ -4929,8 +4937,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
   // ★上の行を消したので、何番目かはここに出す（まるちゃん指示 2026-09-09）
   // ★「対象」の字は出さない（まるちゃん指示 2026-09-09）。番号だけ残す。
+  //   数えるのは「送る対象」だけ（本文を作らなかった対象は出さない）。
+  'var lv=tLive(),pos=lv.indexOf(step);' +
   'var h=\'<div class="bcstop"><span class="bcsttl"></span>\'+' +
-  '\'<span class="bcsno">\'+(step+1)+\' / \'+TPL.length+\'</span></div>\'+' +
+  '\'<span class="bcsno">\'+(pos+1)+\' / \'+lv.length+\'</span></div>\'+' +
   // ★送り先を選び直せる（まるちゃん指示 2026-09-09）。選んでいなければ元の決まりのまま。
   '\'<div class="bccard"><div class="bcnamerow"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
   '\'<button type="button" class="bcmv" id="bctag">タグを変更</button></div>\'+' +
@@ -5020,8 +5030,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];mode="";' +
   'saveNow();status("もとの決まりにもどしました。");draw();};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){EDI=-1;mode="";draw();};' +
-  'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";status("");draw();};' +
-  'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";status("");draw();};' +
+  'if(e=document.getElementById("bcnext"))e.onclick=function(){' +
+  'step=nextLive(step);mode="";status("");draw();};' +
+  'if(e=document.getElementById("bcskip"))e.onclick=function(){' +
+  'var q=nextLive(step);d.parts=[];step=q;mode="";status("");saveNow();draw();};' +
   'if(e=document.getElementById("bcprev"))e.onclick=function(){step--;mode="";status("");draw();};' +
   '[].slice.call(box.querySelectorAll("[data-pre]")).forEach(function(b){b.onclick=function(){' +
   'var k=b.getAttribute("data-pre");var pr=preOf(k);' +
@@ -5049,9 +5061,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'function two(n){return ("0"+n).slice(-2);}' +
   'var t=new Date();t.setDate(t.getDate()+1);var m=0;' +
   'var h=\'<div class="bccard"><div class="bcname">最後の確認</div><div class="bchr"></div>\';' +
-  'TPL.forEach(function(x,i){var n=filled(i);if(n)m++;' +
-  'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="\'+(n?"on":"")+\'">\'+' +
-  '(n?(n+"つ入り"):"送らない")+\'</span></div>\';});' +
+  // ★送る対象だけを出す（まるちゃん指示 2026-09-09）
+  'TPL.forEach(function(x,i){var n=filled(i);if(!n)return;m++;' +
+  'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="on">\'+' +
+  '(n+"つ入り")+\'</span></div>\';});' +
   'h+=\'</div>\';' +
   'if(!m)h+=\'<div class="bcstatus on">中身を入れた対象がありません。\'+' +
   '\'左上の「← 前に戻る」から入れてください。</div>\';' +
@@ -5152,9 +5165,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(MIDX>0){MIDX--;return true;}' +
   'page="s";return true;}' +
   'if(step>=TPL.length){if(LMODE==="at"){LMODE="";return true;}' +
-  'step=TPL.length-1;mode="";return true;}' +
+  'var lv0=tLive();step=lv0.length?lv0[lv0.length-1]:TPL.length;mode="";return true;}' +
   'if(mode){mode="";return true;}' +
-  'if(step>0){step--;return true;}' +
+  'var pq=prevLive(step);if(pq>=0){step=pq;return true;}' +
   'page="m";MSTEP=2;MIDX=BORDER.length-1;return true;}' +
   'var uh=document.querySelector(".uhome");' +
   'if(uh)uh.onclick=function(ev){if(!backOne())return true;' +
