@@ -2259,7 +2259,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   '+"<div id=\\"zjmode\\" class=\\"zjnote\\">読み込んでいます…</div>"' +
   '+"<div class=\\"zjlabel\\">送る日時</div>"' +
   '+"<input type=\\"datetime-local\\" id=\\"zjat\\" class=\\"zjinput\\">"' +
-  '+"<div class=\\"zjrow2\\"><button type=\\"button\\" class=\\"zjgo\\" id=\\"zjput\\">この日時で置く</button>"' +
+  '+"<div class=\\"zjrow2\\"><button type=\\"button\\" class=\\"zjgo\\" id=\\"zjput\\">この日時で送信の予約をする</button>"' +
   '+"<button type=\\"button\\" class=\\"zjnow\\" id=\\"zjnow\\">⚡ 今すぐ送る</button></div>"' +
   '+"<div id=\\"zjmsg\\" class=\\"zjnote\\"></div>"' +
   '+"<div id=\\"zjlist\\" class=\\"zjlist\\"></div></div>");' +
@@ -2287,14 +2287,14 @@ function renderZenjitsuPage_(base, staff, dev) {
   'at=n.getFullYear()+"-"+zjTwo(n.getMonth()+1)+"-"+zjTwo(n.getDate())+" "+zjTwo(n.getHours())+":"+zjTwo(n.getMinutes());}' +
   'if(!at){msg.textContent="⛔ 日時を決めてください";return;}' +
   'var 日=(zjRows[0]&&zjRows[0].date)||(document.getElementById("zjdate")||{}).value||"";' +
-  'msg.textContent=sugu?"⏳ 送っています…":"⏳ 送信を予約しています…";' +
+  'msg.textContent=sugu?"⏳ 送信しています…":"⏳ 送信の予約をしています…";' +
   'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
   'if(!d.ok){msg.textContent="⛔ "+(d.error||"送れませんでした");return;}' +
   'if(d.put){zjClearLocal(日);zjFreshShow(false);}' +   /* ★送信を設定したら、覚えていた途中の作業は消す */
   /* ★2026-09-09まるちゃん指示：**「予約できた」のか「送った」のかを、はっきり書き分ける。**
      押したボタンで意味がまるで違うのに、前は同じ曖昧な文だった。 */
-  'var t=sugu?("✅ "+d.put+"人に今から送ります。")' +
-  ':("✅ "+d.put+"人ぶんを予約しました。まだ送っていません。"+at+" になったら自動で送ります。");' +
+  'var t=sugu?("✅ "+d.put+"人に今から送信します。")' +
+  ':("✅ "+d.put+"人ぶんの送信の予約を設定しました。まだ送信していません。"+at+" になったら自動で送ります。");' +
   'if(d.ng&&d.ng.length)t+="／できなかった人："+d.ng.join("／");' +
   'if(d.notes&&d.notes.length)t+="／前の続きから送ります："+d.notes.join("／");' +
   'msg.textContent=t;' +
@@ -2319,15 +2319,15 @@ function renderZenjitsuPage_(base, staff, dev) {
   '(function next(){' +
   'if(i>=束.length){' +
   'if(put){zjClearLocal(日);zjFreshShow(false);}' +
-  'var t=put?(sugu?("✅ "+put+"人に今から送ります。")' +
-  ':("✅ "+put+"人ぶんを予約しました。まだ送っていません。"+at+" になったら自動で送ります。"))' +
-  ':"⛔ 1人もできませんでした。";' +
+  'var t=put?(sugu?("✅ "+put+"人に今から送信します。")' +
+  ':("✅ "+put+"人ぶんの送信の予約を設定しました。まだ送信していません。"+at+" になったら自動で送ります。"))' +
+  ':(sugu?"⛔ 全員の送信が失敗しました。":"⛔ 全員の送信の予約が失敗しました。");' +
   'if(ng.length)t+="／できなかった人："+ng.join("／");' +
   'if(notes.length)t+="／前の続きから送ります："+notes.join("／");' +
   'msg.textContent=t;' +
   'if(sugu&&put)zjWatch(ids,put);return;}' +
   'var 最後=(i===束.length-1);' +
-  'msg.textContent=(sugu?"⏳ 送っています…（":"⏳ 送信を予約しています…（")+(i+1)+"／"+束.length+"）";' +
+  'msg.textContent=(sugu?"⏳ 送信しています…（":"⏳ 送信の予約をしています…（")+(i+1)+"／"+束.length+"）";' +
   'zjAsk("put_sends",{date:日,at:at,rows:束[i],now:(最後&&!!sugu)},function(d){' +
   'if(d&&d.ok){put+=(d.put||0);ng=ng.concat(d.ng||[]);notes=notes.concat(d.notes||[]);ids=ids.concat(d.ids||[]);}' +
   'else{ng.push("この分は置けませんでした（"+((d&&d.error)||"不明")+"）");}' +
@@ -2350,22 +2350,23 @@ function renderZenjitsuPage_(base, staff, dev) {
        ③押すボタンの名前をそのまま書く ④どこで何を見るかを名前で書く。 */
   'function zjPutTashikame(日,at,理由,sugu){' +
   'var msg=document.getElementById("zjmsg");' +
-  'var ボタン=sugu?"⚡ 今すぐ送る":"この日時で置く";' +
-  'msg.textContent=sugu?"⏳ 送れたか確かめています…":"⏳ 予約できたか確かめています…";' +
+  'var ボタン=sugu?"⚡ 今すぐ送る":"この日時で送信の予約をする";' +
+  'msg.textContent=sugu?"⏳ 送信できたか確かめています…":"⏳ 送信の予約ができたか確かめています…";' +
   'var eids=zjRows.map(function(r){return r.id;});' +
   'zjAsk("put_check",{date:日,event_ids:eids},function(d){' +
   'if(d&&d.ok&&d.put>0){zjClearLocal(日);zjFreshShow(false);' +
-  'msg.textContent=(sugu?("✅ "+d.put+"人に今から送ります。")' +
-  ':("✅ "+d.put+"人ぶんを予約できています。まだ送っていません。"+at+" になったら自動で送ります。"))' +
+  'msg.textContent=(sugu?("✅ "+d.put+"人に今から送信します。")' +
+  ':("✅ "+d.put+"人ぶんの送信の予約を設定しました。まだ送信していません。"+at+" になったら自動で送ります。"))' +
   '+"「"+ボタン+"」をもう一度押さないでください。";' +
   'if(sugu&&(d.ids||[]).length)zjWatch(d.ids,d.put);return;}' +
-  'msg.textContent=(sugu?"⛔ 1人も送っていません。":"⛔ 1人も予約できていません。")' +
-  '+"二重になる心配はありません。「"+ボタン+"」をもう一度押してください。";' +
-  '},function(e2){msg.textContent=(sugu?"⛔ 送れたかどうか分かりませんでした。"' +
-  ':"⛔ 予約できたかどうか分かりませんでした。")' +
+  'msg.textContent=(sugu?"⛔ 全員の送信が失敗しました。":"⛔ 全員の送信の予約が失敗しました。")' +
+  '+"「"+ボタン+"」をもう一度押してください。";' +
+  '},function(e2){msg.textContent=(sugu?"⛔ 送信が完了したか分かりません。"' +
+  ':"⛔ 送信の予約の設定が完了したか分かりません。")' +
   '+"「← 前に戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてください。'
-  + 'この'+'"+zjRows.length+"人が並んでいれば大丈夫です。並んでいなければ、'
-  + 'ここへ戻って「"+ボタン+"」をもう一度押してください。";});}' +
+  + 'この"+zjRows.length+"人が全員、一覧に並んでいれば"' +
+  '+(sugu?"送信されています。":"送信の予約が完了しています。")' +
+  '+"リストになければ、ここへ戻って「"+ボタン+"」をもう一度押してください。";});}' +
   'function zjWatch(ids,zenbu){var msg=document.getElementById("zjmsg");var t0=Date.now();var n=0;' +
   '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認ください。";return;}' +
   'zjAsk("send_progress",{ids:ids},function(s){' +
