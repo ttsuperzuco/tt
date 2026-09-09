@@ -991,7 +991,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'timedsend', 'bcast', 'yoyaku', 'procell', 'pcstatus'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1656,10 +1656,10 @@ var TILE_DEFS_ = [
   //   訳すのは事務所パソコン（受付係の op=translate に quality を付けて頼む）＝パソコン版と同じ訳し方。
   { id: 'honyaku', cls: 'honyaku', view: 'honyaku',
     icon: '<span class="ticon">🀄</span>', label: '翻訳\n日→台湾中国語' },
-  // ★時間指定LINE送信＝決めた時刻に文章＋画像を公式LINEから送る予約画面。開発URL(?dev=1)専用
-  //   （kanshi/zenjitsu/costと同じ＝tile_settings.pyに入れないので開発者だけに出る）。PC版と並びをそろえる。
-  { id: 'timedsend', cls: 'timedsend', view: 'timedsend',
-    icon: '<span class="ticon">⏰</span>', label: '時間指定\nLINE送信' },
+  // ★2026-09-09 まるちゃん決定：「時間指定LINE送信」のボタンは画面から外した（PC版とそろえる）。
+  //   仕組みは今までどおり動いている＝前日お知らせは今もこれに乗せて送っており、1分ごとの見張りもON。
+  //   人が手で登録することが無くなったので、裏で動けばよい＝ボタンだけ消した。
+  //   画面そのもの（view=timedsend）は消していないので、住所を直に開けば今までどおり見られる。
   // ★LINE一斉配信予約＝相手のまとまり（新規/既存×日本/台湾×男女の8通り）ごとに文章と画像を決めて、
   //   公式LINEの一斉配信として置く。送るのはLINEのサーバー＝パソコンが止まっていても届く。
   //   開発URL(?dev=1)専用（tile_settings.py に入れないので開発者だけに出る・共通ルール16）。
@@ -1691,7 +1691,7 @@ var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   uriage: 'kanri', procell: 'kanri',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', timedsend: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'kanri', icon: '🛠️', title: '管理者用' },
