@@ -2206,7 +2206,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var d=null;try{d=JSON.parse(s.result);}catch(e){d={ok:false,error:String(s.result||"")};}' +
   'onDone(d);});})();});};' +
   'if(typeof BIG==="undefined"){go(JSON.stringify(F));return;}' +
-  'BIG.prepare({exec:EXEC,key:KEY,slot:slot,op:"zenjitsu_act",' +
+  'BIG.prepare({exec:EXEC,key:KEY,slot:slot,op:"zenjitsu_act",tag:job,' +
   'who:idn.who,role:idn.role,device:idn.device,fields:F},go,' +
   'function(e){(onFail||function(){})(e);});}' +
   /* 枠の中（確認画面）から届く合図を受ける。 */
