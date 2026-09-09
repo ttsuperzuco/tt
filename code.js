@@ -4284,6 +4284,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var MSTEP=0,MBODY="",MJA=[],MZH=[],MBUSY=false,MMSG="";' +
   // ★配信文は区分ごとに違う＝本文も区分ごとに持つ（まるちゃん指示 2026-09-08）
   'var MBODYS=["","","",""],MIDX=0;' +
+  // ★自分で入れる中国語の文（まるちゃん指示 2026-09-09）
+  'var MZBODYS=["","","",""];' +
   // ★最後の確認＝""はボタン2つ／"at"は日時を決める画面（まるちゃん指示 2026-09-08）
   'var LMODE="";' +
   'var box=document.getElementById("bcbody"),stEl=document.getElementById("bcstatus"),banEl=document.getElementById("bcbanner");' +
@@ -4332,7 +4334,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function partsFor(x,withPhoto){return (x.parts||[]).filter(function(p){return withPhoto||!p.b64;})' +
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
-  'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,midx:MIDX,mstep:MSTEP,' +
+  'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,zbodies:MZBODYS,' +
+  'midx:MIDX,mstep:MSTEP,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   'function saveNow(){if(!WIPON)return;' +
   'if(WIPT)clearTimeout(WIPT);' +
@@ -4361,7 +4364,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(p.kind==="image"&&p.b64&&!p.thumb)p.thumb="data:image/jpeg;base64,"+p.b64;return p;});}' +
   'WTEXT=s.text||"";MBODY=s.body||"";SPER=s.per||"";SIDX=s.sidx||0;' +
   'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
-  'MIDX=s.midx||0;if(s.mstep===0||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
+  'if(s.zbodies&&s.zbodies.length)MZBODYS=s.zbodies;' +
+  'MIDX=s.midx||0;' +
+  'if(s.mstep===0||s.mstep===1||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();}' +
   'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;}' +
   'function askRestore(after){' +
@@ -4669,9 +4674,37 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?(done.length+"文字"):"")+\'\'+' +
   '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
   'h+=\'</div>\';' +
+  // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）
   'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
-  ':(last?\'<button type="button" class="bcgo" id="bcmok">この内容で台湾版を作る</button>\'' +
+  ':(last?(\'<button type="button" class="bcgo" id="bcmok">\'+' +
+  '\'以上の内容を翻訳し自動で中国語版を作成する</button>\'+' +
+  '\'<button type="button" class="bcgo" id="bcmman">\'+' +
+  '\'翻訳せずに手動で中国語版を作成する</button>\'+' +
+  '\'<button type="button" class="bcgo" id="bcmnozh">\'+' +
+  '\'中国語版は配信しない</button>\')' +
   ':\'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\');' +
+  '\'\';}}' +
+  // ★自分で中国語を入れる画面（まるちゃん指示 2026-09-09）。日本語の画面と同じ作り。
+  'else if(MSTEP===1){' +
+  'var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
+  'var zb=MZBODYS[MIDX]||"",zdone=joinBody(zb,zhOf(timesOf(zx[0],zx[1])));' +
+  'var zov=zdone.length>MAXT;' +
+  'h=\'<div class="bcstop"><span class="bcsttl">中国語版を作成</span>\'+' +
+  '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
+  'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b>\'+' +
+  '\'<button type="button" class="bcinstx" id="bcinscp">【時間】</button></div>\'+' +
+  '\'<textarea id="bcmzbody" class="bcmtx" placeholder="ここに、この対象へ送る中国語の文章を入れてください。&#10;&#10;\'+' +
+  '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
+  'esc(zb)+\'</textarea>\';' +
+  'h+=\'<div class="bcouttx" id="bcmzprev" style="margin-top:13px">\'+' +
+  'esc(zb.replace(/^\\s+|\\s+$/g,"")?zdone:' +
+  '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません"))+\'</div>\'+' +
+  '\'<div class="bcnum\'+(zov?" over":"")+\'" id="bcmznum">\'+(zb?(zdone.length+"文字"):"")+\'\'+' +
+  '(zov?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
+  'h+=\'</div>\';' +
+  'if(!MBUSY){h+=zov?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
+  ':(zlast?\'<button type="button" class="bcgo" id="bcmzok3">この内容で対象に入れて画像も作る</button>\'' +
+  ':\'<button type="button" class="bcgo" id="bcmzok">この内容でOK</button>\');' +
   '\'\';}}' +
   'else if(MSTEP===2){' +
   'var z=MZH[MIDX]||{text:""},lastz=(MIDX===N-1),ov2=(z.text||"").length>MAXT;' +
@@ -4715,13 +4748,45 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★専用の入れ物にする（e は下で別の部品に入れ替わるため）
   'var ins=document.getElementById("bcinscp");' +
   'if(ins)ins.onclick=function(){bcCopy("【時間】",ins);};' +
-  'e=document.getElementById("bcmok");' +
-  'if(e)e.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
+  // 日本語の4つを、時間を入れた文にまとめる
+  'function bldJa(){MJA=BORDER.map(function(x,k){' +
+  'return {label:ordLabel(k,false),atama:x[0],sei:x[1],' +
+  'text:joinBody(MBODYS[k]||"",timesOf(x[0],x[1]))};});}' +
+  'var ok1=document.getElementById("bcmok");' +
+  'if(ok1)ok1.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
   'if(MIDX<BORDER.length-1){MIDX++;status("");draw();return;}' +
-  'MJA=BORDER.map(function(x,k){return {label:ordLabel(k,false),atama:x[0],sei:x[1],' +
-  'text:joinBody(MBODYS[k]||"",timesOf(x[0],x[1]))};});' +
-  'makeZh();};' +
-  'e=document.getElementById("bcmok3");if(e)e.onclick=function(){applyAll();};}' +
+  'bldJa();makeZh();};' +
+  // ②自分で中国語を入れる
+  'var ok2=document.getElementById("bcmman");' +
+  'if(ok2)ok2.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
+  'bldJa();MSTEP=1;MIDX=0;MMSG="";status("");draw();};' +
+  // ③中国語版は配信しない＝中国語の4区分は空っぽにする
+  'var ok3=document.getElementById("bcmnozh");' +
+  'if(ok3)ok3.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
+  'bldJa();MZH=BORDER.map(function(x,k){' +
+  'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:""};});' +
+  'applyAll();};' +
+  // 自分で入れる中国語の欄
+  'var zta=document.getElementById("bcmzbody");' +
+  'if(zta)zta.oninput=function(){MZBODYS[MIDX]=zta.value;' +
+  'var zx=BORDER[MIDX],zdone=joinBody(zta.value,zhOf(timesOf(zx[0],zx[1])));' +
+  'var zpv=document.getElementById("bcmzprev");' +
+  'if(zpv)zpv.textContent=zta.value.replace(/^\\s+|\\s+$/g,"")?zdone:' +
+  '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません");' +
+  'var znm=document.getElementById("bcmznum");' +
+  'if(znm){var zov=zdone.length>MAXT;znm.textContent=zta.value?(zdone.length+"文字"+' +
+  '(zov?("　※"+MAXT+"文字を超えています。短くしてください"):"")):"";' +
+  'znm.className="bcnum"+(zov?" over":"");}' +
+  'saveNow();};' +
+  'var zok=document.getElementById("bcmzok");' +
+  'if(zok)zok.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
+  'MIDX++;status("");draw();};' +
+  'var zok3=document.getElementById("bcmzok3");' +
+  'if(zok3)zok3.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
+  'MZH=BORDER.map(function(x,k){return {label:ordLabel(k,true),atama:x[0],sei:x[1],' +
+  'text:joinBody(MZBODYS[k]||"",zhOf(timesOf(x[0],x[1])))};});' +
+  'applyAll();};' +
+  'var ok4=document.getElementById("bcmok3");if(ok4)ok4.onclick=function(){applyAll();};}' +
   // ★台湾版＝区分ごとに本文を訳し、時間の表は訳さず曜日を入れ替えて差し込む
   // ★男女を渡す＝男性向けは VIO脱毛 が VBO になる（メニューの表に男性だけの言い方がある）
   'function transOne(s,g,cb,onErr){if(!String(s||"").trim()){cb("");return;}' +
@@ -4919,6 +4984,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   本文と予約可能時間文が残り、次に開いた時「復元しますか？」が出ていた（実機で発生）。
   'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});' +
   'MJA=[];MZH=[];MSTEP=0;MIDX=0;MMSG="";MBODY="";MBODYS=["","","",""];' +
+  'MZBODYS=["","","",""];' +
   'WTEXT="";SRES=null;SPER="";SIDX=0;FRESH=false;LMODE="";' +
   'wipClear();step=0;page="t";mode="";draw();}' +
   'loadList();},' +
@@ -4959,6 +5025,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'SRES=null;SPER="";SIDX=0;return true;}' +
   'if(page==="m"){MMSG="";' +
   'if(MSTEP===3){MSTEP=2;MIDX=BORDER.length-1;return true;}' +
+  'if(MSTEP===1){if(MIDX>0){MIDX--;}else{MSTEP=0;MIDX=BORDER.length-1;}return true;}' +
   'if(MSTEP===2){if(MIDX>0){MIDX--;}else{MSTEP=0;MIDX=BORDER.length-1;}return true;}' +
   'if(MIDX>0){MIDX--;return true;}' +
   'page="s";return true;}' +
