@@ -4676,7 +4676,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'</div>\';' +
   // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）
   'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
-  ':(last?(\'<button type="button" class="bcgo" id="bcmok">\'+' +
+  // ★自動で訳す1つ目だけ紫（まるちゃん指示 2026-09-09）
+  ':(last?(\'<button type="button" class="bctxt" id="bcmok">\'+' +
   '\'以上の内容を翻訳し自動で中国語版を作成する</button>\'+' +
   '\'<button type="button" class="bcgo" id="bcmman">\'+' +
   '\'翻訳せずに手動で中国語版を作成する</button>\'+' +
