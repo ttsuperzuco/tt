@@ -2287,13 +2287,16 @@ function renderZenjitsuPage_(base, staff, dev) {
   'at=n.getFullYear()+"-"+zjTwo(n.getMonth()+1)+"-"+zjTwo(n.getDate())+" "+zjTwo(n.getHours())+":"+zjTwo(n.getMinutes());}' +
   'if(!at){msg.textContent="⛔ 日時を決めてください";return;}' +
   'var 日=(zjRows[0]&&zjRows[0].date)||(document.getElementById("zjdate")||{}).value||"";' +
-  'msg.textContent="⏳ 事務所のパソコンに設定しています…";' +
+  'msg.textContent=sugu?"⏳ 送っています…":"⏳ 送信を予約しています…";' +
   'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
   'if(!d.ok){msg.textContent="⛔ "+(d.error||"送れませんでした");return;}' +
   'if(d.put){zjClearLocal(日);zjFreshShow(false);}' +   /* ★送信を設定したら、覚えていた途中の作業は消す */
-  'var t="✅ "+d.put+"人ぶんを "+at+" に送るよう設定しました";' +
-  'if(d.ng&&d.ng.length)t+="（置けなかった人："+d.ng.join("／")+"）";' +
-  'if(d.notes&&d.notes.length)t+="（前の続きから送ります："+d.notes.join("／")+"）";' +
+  /* ★2026-09-09まるちゃん指示：**「予約できた」のか「送った」のかを、はっきり書き分ける。**
+     押したボタンで意味がまるで違うのに、前は同じ曖昧な文だった。 */
+  'var t=sugu?("✅ "+d.put+"人に今から送ります。")' +
+  ':("✅ "+d.put+"人ぶんを予約しました。まだ送っていません。"+at+" になったら自動で送ります。");' +
+  'if(d.ng&&d.ng.length)t+="／できなかった人："+d.ng.join("／");' +
+  'if(d.notes&&d.notes.length)t+="／前の続きから送ります："+d.notes.join("／");' +
   'msg.textContent=t;' +
   'if(sugu&&d.put)zjWatch(d.ids||[],d.put);' +
   /* ★2026-09-09：別の入口へ預けられなかった端末では、今までの道に自動で戻り、
@@ -2316,13 +2319,15 @@ function renderZenjitsuPage_(base, staff, dev) {
   '(function next(){' +
   'if(i>=束.length){' +
   'if(put){zjClearLocal(日);zjFreshShow(false);}' +
-  'var t=(put?"✅ ":"⛔ ")+put+"人ぶんを "+at+" に送るよう設定しました";' +
-  'if(ng.length)t+="（置けなかった人："+ng.join("／")+"）";' +
-  'if(notes.length)t+="（前の続きから送ります："+notes.join("／")+"）";' +
+  'var t=put?(sugu?("✅ "+put+"人に今から送ります。")' +
+  ':("✅ "+put+"人ぶんを予約しました。まだ送っていません。"+at+" になったら自動で送ります。"))' +
+  ':"⛔ 1人もできませんでした。";' +
+  'if(ng.length)t+="／できなかった人："+ng.join("／");' +
+  'if(notes.length)t+="／前の続きから送ります："+notes.join("／");' +
   'msg.textContent=t;' +
   'if(sugu&&put)zjWatch(ids,put);return;}' +
   'var 最後=(i===束.length-1);' +
-  'msg.textContent="⏳ 分けて設定しています…（"+(i+1)+"／"+束.length+"）";' +
+  'msg.textContent=(sugu?"⏳ 送っています…（":"⏳ 送信を予約しています…（")+(i+1)+"／"+束.length+"）";' +
   'zjAsk("put_sends",{date:日,at:at,rows:束[i],now:(最後&&!!sugu)},function(d){' +
   'if(d&&d.ok){put+=(d.put||0);ng=ng.concat(d.ng||[]);notes=notes.concat(d.notes||[]);ids=ids.concat(d.ids||[]);}' +
   'else{ng.push("この分は置けませんでした（"+((d&&d.error)||"不明")+"）");}' +
@@ -2338,19 +2343,29 @@ function renderZenjitsuPage_(base, staff, dev) {
      届いたのか届いていないのか読んでも分からない（言っていることが逆に見える）。
      → **今どうなっているのか**と**次に何をすればよいか**だけを、はっきり1つずつ書く。
      つないでいた理由の文（機械の言い分）は出さない＝スタッフには意味が無いため。 */
+  /* ★2026-09-09まるちゃん指示で全部書き直した。前の文は
+     「予約できたのか送ったのかどっち？」「画面に返事が…とは？」「事務所のパソコンはスタッフに関係ない」
+     「もう一度何を押すの？」「載っていなければ、とは何が？」と、どれも意味が伝わらなかった。
+     → ①予約か送信かをはっきり書く ②裏の話はいっさい書かない
+       ③押すボタンの名前をそのまま書く ④どこで何を見るかを名前で書く。 */
   'function zjPutTashikame(日,at,理由,sugu){' +
   'var msg=document.getElementById("zjmsg");' +
-  'msg.textContent="⏳ 事務所のパソコンから返事がありません。設定できたか確かめています…";' +
+  'var ボタン=sugu?"⚡ 今すぐ送る":"この日時で置く";' +
+  'msg.textContent=sugu?"⏳ 送れたか確かめています…":"⏳ 予約できたか確かめています…";' +
   'var eids=zjRows.map(function(r){return r.id;});' +
   'zjAsk("put_check",{date:日,event_ids:eids},function(d){' +
   'if(d&&d.ok&&d.put>0){zjClearLocal(日);zjFreshShow(false);' +
-  'msg.textContent="✅ 設定できていました（"+d.put+"人ぶん）："+(d.who||[]).join("／")' +
-  '+"　画面に返事が返ってこなかっただけです。もう一度押さないでください。";' +
+  'msg.textContent=(sugu?("✅ "+d.put+"人に今から送ります。")' +
+  ':("✅ "+d.put+"人ぶんを予約できています。まだ送っていません。"+at+" になったら自動で送ります。"))' +
+  '+"「"+ボタン+"」をもう一度押さないでください。";' +
   'if(sugu&&(d.ids||[]).length)zjWatch(d.ids,d.put);return;}' +
-  'msg.textContent="⛔ 設定できませんでした。事務所のパソコンに確かめたところ、"' +
-  '+"1人も設定されていません。二重に届く心配はないので、もう一度押してください。";' +
-  '},function(e2){msg.textContent="⛔ 設定できたかどうか分かりませんでした。'
-  + '『予約送信の設定完了』を開いて、載っていなければもう一度押してください。";});}' +
+  'msg.textContent=(sugu?"⛔ 1人も送っていません。":"⛔ 1人も予約できていません。")' +
+  '+"二重になる心配はありません。「"+ボタン+"」をもう一度押してください。";' +
+  '},function(e2){msg.textContent=(sugu?"⛔ 送れたかどうか分かりませんでした。"' +
+  ':"⛔ 予約できたかどうか分かりませんでした。")' +
+  '+"「← 前に戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてください。'
+  + 'この'+'"+zjRows.length+"人が並んでいれば大丈夫です。並んでいなければ、'
+  + 'ここへ戻って「"+ボタン+"」をもう一度押してください。";});}' +
   'function zjWatch(ids,zenbu){var msg=document.getElementById("zjmsg");var t0=Date.now();var n=0;' +
   '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認ください。";return;}' +
   'zjAsk("send_progress",{ids:ids},function(s){' +
