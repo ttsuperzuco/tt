@@ -4309,6 +4309,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'var SIDX=0;' +
   // ★直している中身の番号（-1＝新しく入れる・まるちゃん指示 2026-09-09）
   'var EDI=-1;' +
+  // ★対象の画面へ、どの画面から来たか（0＝日本語の入力／1＝自分で中国語／2＝中国語版の確認）
+  //   「← 前に戻る」でここへ戻す（まるちゃん指摘 2026-09-09）
+  'var MBACK=0;' +
   // ★対象ごとに選び直した送り先（空＝もとの決まりのまま）と、選べる送り先の一覧
   'var TAGS=[],TAGLIST=[],TAGBUSY=false;' +
   // ★まるちゃんが入口から先へ進んだか（進んだあとに、遅れて届いた返事で画面を戻さない）
@@ -4361,7 +4364,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
   'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,zbodies:MZBODYS,' +
-  'ja:MJA,zh:MZH,tags:TAGS,' +
+  'ja:MJA,zh:MZH,tags:TAGS,mback:MBACK,' +
   'midx:MIDX,mstep:MSTEP,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   'function saveNow(){if(!WIPON)return;' +
@@ -4397,6 +4400,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.zbodies&&s.zbodies.length)MZBODYS=s.zbodies;' +
   'if(s.ja&&s.ja.length)MJA=s.ja;if(s.zh&&s.zh.length)MZH=s.zh;' +
   'if(s.tags&&s.tags.length)TAGS=s.tags;' +
+  'if(s.mback===0||s.mback===1||s.mback===2)MBACK=s.mback;' +
   'MIDX=s.midx||0;' +
   'if(s.mstep===0||s.mstep===1||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();}' +
@@ -4823,7 +4827,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'bldJa();MZH=BORDER.map(function(x,k){' +
   'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:""};});' +
   // ★勝手に絵づくりを始めない（まるちゃん指示 2026-09-09）。中身の確認へ進む。
-  'applyAll(false);};' +
+  'MBACK=0;applyAll(false);};' +
   // 自分で入れる中国語の欄
   'var zta=document.getElementById("bcmzbody");' +
   'if(zta)zta.oninput=function(){MZBODYS[MIDX]=zta.value;' +
@@ -4844,14 +4848,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'text:joinBody(MZBODYS[k]||"",zhOf(timesOf(x[0],x[1])))};});}' +
   'var zok3=document.getElementById("bcmzok3");' +
   'if(zok3)zok3.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
-  'bldZhMan();applyAll(true);};' +
+  'MBACK=1;bldZhMan();applyAll(true);};' +
   'var zok3n=document.getElementById("bcmzok3n");' +
   'if(zok3n)zok3n.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
-  'bldZhMan();applyAll(false);};' +
+  'MBACK=1;bldZhMan();applyAll(false);};' +
   'var ok4=document.getElementById("bcmok3");' +
-  'if(ok4)ok4.onclick=function(){applyAll(true);};' +
+  'if(ok4)ok4.onclick=function(){MBACK=2;applyAll(true);};' +
   'var ok4n=document.getElementById("bcmok3n");' +
-  'if(ok4n)ok4n.onclick=function(){applyAll(false);};}' +
+  'if(ok4n)ok4n.onclick=function(){MBACK=2;applyAll(false);};}' +
   // ★台湾版＝区分ごとに本文を訳し、時間の表は訳さず曜日を入れ替えて差し込む
   // ★男女を渡す＝男性向けは VIO脱毛 が VBO になる（メニューの表に男性だけの言い方がある）
   'function transOne(s,g,cb,onErr){if(!String(s||"").trim()){cb("");return;}' +
@@ -5158,7 +5162,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'var lv0=tLive();step=lv0.length?lv0[lv0.length-1]:TPL.length;mode="";return true;}' +
   'if(mode){mode="";return true;}' +
   'var pq=prevLive(step);if(pq>=0){step=pq;return true;}' +
-  'page="m";MSTEP=2;MIDX=BORDER.length-1;return true;}' +
+  // ★来た画面へ戻す（いつも中国語版の確認へ戻していたのを直した）
+  'page="m";MSTEP=MBACK;' +
+  'if(MBACK===2){var zl=zLive();MIDX=zl.length?zl[zl.length-1]:0;}' +
+  'else{MIDX=BORDER.length-1;}return true;}' +
   'var uh=document.querySelector(".uhome");' +
   'if(uh)uh.onclick=function(ev){if(!backOne())return true;' +
   'ev.preventDefault();status("");draw();return false;};' +
