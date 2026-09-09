@@ -2478,7 +2478,8 @@ function renderZenjitsuPage_(base, staff, dev) {
   'return "<div class=\\"zjpl\\"><div class=\\"zjplh\\">"+esc(x.send_at)+"　"+esc(x.name)+"　"' +
   '+esc(x.fnum||"新規")+"　"+esc(x.status_ja)' +
   '+"<button type=\\"button\\" class=\\"zjcancel\\" data-id=\\""+esc(x.id)+"\\""+(x.can_cancel?"":" disabled")+">"+esc(x.cancel_label||"取り消す")+"</button></div>"' +
-  '+"<div class=\\"zjnote\\">"+esc(x.date)+" ご来店分／画像 "+x.images+"枚"+(x.note?("　"+esc(x.note)):"")+"</div>"' +
+  /* ★2026-09-09まるちゃん指示：「画像3枚」だけでは何を送ったか分からないので、呼び名も出す。 */
+  '+"<div class=\\"zjnote\\">"+esc(x.date)+" ご来店分／画像 "+x.images+"枚"+((x.img_names&&x.img_names.length)?("："+esc(x.img_names.join("／"))):"")+(x.note?("　"+esc(x.note)):"")+"</div>"' +
   '+(x.warn?("<div class=\\"zjnote real\\">⚠️ "+esc(x.warn)+"</div>"):"")+"</div>";}).join("");' +
   'box.querySelectorAll(".zjcancel").forEach(function(b){if(b.disabled)return;' +
   'b.onclick=function(){var もとの文字=b.textContent;b.disabled=true;b.textContent="消しています…";' +
