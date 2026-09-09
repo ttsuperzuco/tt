@@ -2183,9 +2183,17 @@ function renderZenjitsuPage_(base, staff, dev) {
   /* ★2026-09-08まるちゃん決定：**開発版のスマホを100%パソコン版と同じにする。**
      用事は事務所パソコンへ丸投げし（zenjitsu_act）、答えをそのまま画面に出す。
      中身の判断はパソコンの窓の1本が持つ＝スマホ側に写しを作らない。 */
+  /* ★★2026-09-09まるちゃん決定：**大きい依頼は住所（URL）に詰めず、別の入口へ丸ごと預ける。**
+     なぜ＝依頼の中身を全部住所に詰めていたので、確認済が3人ほどになると長すぎて
+     **事務所パソコンに一件も届かなかった**（9/9に8人ぶん＝住所が51,282文字で門前払い）。
+     実測の限り＝住所は12,093文字まで／窓口が受け取る中身は8,000文字まで。
+     判断は共通の1本（共通\画面\大きい依頼_別送.js＝bigsend.js）だけが持つ＝ここでは数えない。
+     短い依頼は今までと1文字も変わらない形で飛ぶ。 */
   'function zjAsk(job,payload,onDone,onFail){' +
+  'var F={job:job,payload:payload||{}};' +
+  'var go=function(ft){' +
   'jsonp({action:"submit",key:KEY,op:"zenjitsu_act",who:idn.who,role:idn.role,device:idn.device,' +
-  'fields:JSON.stringify({job:job,payload:payload||{}})},function(r){' +
+  'fields:ft},function(r){' +
   /* ★2026-09-08：ここで「送れませんでした」と**言い切らない**。事務所パソコンは受け取って
      やり終えているのに、返事だけが戻ってこないことがあるため（9/8に実際に発生）。 */
   'if(!r||!r.ok||!r.id){(onFail||function(){})("うまく通じませんでした（届いているかもしれません）。");return;}' +
@@ -2194,7 +2202,11 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
   'if(s.status!=="done"){(onFail||function(){})(String(s.result||"うまくいきませんでした。"));return;}' +
   'var d=null;try{d=JSON.parse(s.result);}catch(e){d={ok:false,error:String(s.result||"")};}' +
-  'onDone(d);});})();});}' +
+  'onDone(d);});})();});};' +
+  'if(typeof BIG==="undefined"){go(JSON.stringify(F));return;}' +
+  'BIG.prepare({exec:EXEC,key:KEY,slot:slot,op:"zenjitsu_act",' +
+  'who:idn.who,role:idn.role,device:idn.device,fields:F},go,' +
+  'function(e){(onFail||function(){})(e);});}' +
   /* 枠の中（確認画面）から届く合図を受ける。 */
   'window.addEventListener("message",function(ev){var m=ev.data||{};if(!m.zj)return;' +
   'var f=document.getElementById("zjframe");' +
@@ -2279,7 +2291,37 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(d.notes&&d.notes.length)t+="（前の続きから送ります："+d.notes.join("／")+"）";' +
   'msg.textContent=t;' +
   'if(sugu&&d.put)zjWatch(d.ids||[],d.put);' +
-  '},function(e){zjPutTashikame(日,at,e,sugu);});}' +
+  /* ★2026-09-09：別の入口へ預けられなかった端末では、今までの道に自動で戻り、
+     住所に入る人数ずつに分けて置く（黙って落とさない＝最後に必ず結果を出す）。 */
+  '},function(e){if(String(e).indexOf("大きい依頼を預けられませんでした")===0){zjPutWakete(日,at,sugu);return;}' +
+  'zjPutTashikame(日,at,e,sugu);});}' +
+  /* 住所に入る大きさで、何人ずつの束にするかを決める（数え方は共通の1本に聞く）。 */
+  'function zjTaba(rows){var out=[],cur=[];' +
+  'var d={exec:EXEC,key:KEY,op:"zenjitsu_act",who:idn.who,role:idn.role,device:idn.device};' +
+  'for(var i=0;i<rows.length;i++){' +
+  'var t=cur.concat([rows[i]]);' +
+  'var f=JSON.stringify({job:"put_sends",payload:{date:"0000-00-00",at:"0000-00-00 00:00",rows:t,now:false}});' +
+  'if(cur.length&&typeof BIG!=="undefined"&&!BIG.fits(d,f)){out.push(cur);cur=[rows[i]];}' +
+  'else{cur.push(rows[i]);}}' +
+  'if(cur.length)out.push(cur);return out;}' +
+  /* 最後の束だけ「今すぐ」の合図を付ける＝全員置き終わってから見張りが動く（取り残さない）。 */
+  'function zjPutWakete(日,at,sugu){' +
+  'var msg=document.getElementById("zjmsg");' +
+  'var 束=zjTaba(zjRows);var i=0,put=0,ng=[],notes=[],ids=[];' +
+  '(function next(){' +
+  'if(i>=束.length){' +
+  'if(put){zjClearLocal(日);zjFreshShow(false);}' +
+  'var t=(put?"✅ ":"⛔ ")+put+"人ぶんを "+at+" に送るよう置きました";' +
+  'if(ng.length)t+="（置けなかった人："+ng.join("／")+"）";' +
+  'if(notes.length)t+="（前の続きから送ります："+notes.join("／")+"）";' +
+  'msg.textContent=t;' +
+  'if(sugu&&put)zjWatch(ids,put);return;}' +
+  'var 最後=(i===束.length-1);' +
+  'msg.textContent="⏳ 分けて置いています…（"+(i+1)+"／"+束.length+"）";' +
+  'zjAsk("put_sends",{date:日,at:at,rows:束[i],now:(最後&&!!sugu)},function(d){' +
+  'if(d&&d.ok){put+=(d.put||0);ng=ng.concat(d.ng||[]);notes=notes.concat(d.notes||[]);ids=ids.concat(d.ids||[]);}' +
+  'else{ng.push("この分は置けませんでした（"+((d&&d.error)||"不明")+"）");}' +
+  'i++;next();},function(e2){ng.push("この分は届きませんでした（"+e2+"）");i++;next();});})();}' +
   /* ★2026-09-08まるちゃん指示：返事が戻ってこなかった時に「⛔依頼を送れませんでした」と
      **言い切らない**。事務所パソコンは置けているのに返事だけが消えることがあるため
      （9/8に実際に発生＝2人ぶん置けていて、お客様にもちゃんと届いていたのに赤字が出た）。
