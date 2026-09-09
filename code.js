@@ -4506,7 +4506,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'WTEXT="";MBODY="";SPER="";SRES=null;MJA=[];MZH=[];MSTEP=0;MMSG="";' +
   'step=0;page="k";mode="";FRESH=false;status("まっさらに戻しました。");draw();}});};}' +
   'function draw(){saveNow();' +
-  'if(page==="k"){drawKind();}else if(page==="w"){drawWaku();}' +
+  'if(page==="k"){drawKind();}else if(page==="l"){drawSent();}' +
+  'else if(page==="w"){drawWaku();}' +
   'else if(page==="s"){drawText();}else if(page==="m"){drawMake();}' +
   'else{if(step<TPL.length&&!filled(step))step=nextLive(step-1);' +
   'if(step<TPL.length){drawOne();}else{drawLast();}}' +
@@ -4618,10 +4619,19 @@ function renderBroadcastPage_(base, staff, dev) {
   'function go(){a.style.height="0px";a.style.height=(a.scrollHeight+10)+"px";}' +
   'go();setTimeout(go,0);setTimeout(go,150);}' +
   // ★配信の種類をえらぶ画面（入口）。いまは「予約可能枠案内」の1つだけ。
+  //   下に「設定した配信の予約を確認する」も置く（まるちゃん指示 2026-09-09）。
   'function drawKind(){' +
-  'var h=\'<button type="button" class="bckind" id="bckind1">予約可能枠案内</button>\';' +
+  'var h=\'<button type="button" class="bckind" id="bckind1">予約可能枠案内</button>\'+' +
+  '\'<button type="button" class="bcgo" id="bcseelist">設定した配信の予約を確認する</button>\';' +
   'box.innerHTML=freshBar()+h;bindFresh();' +
-  'document.getElementById("bckind1").onclick=function(){MOVED=true;page="s";status("");draw();};}' +
+  'document.getElementById("bckind1").onclick=function(){MOVED=true;page="s";status("");draw();};' +
+  'var sl=document.getElementById("bcseelist");' +
+  'if(sl)sl.onclick=function(){MOVED=true;page="l";status("");draw();};}' +
+  // ★設定した配信の予約を確かめる画面（まるちゃん指示 2026-09-09）
+  'function drawSent(){' +
+  'box.innerHTML=\'<div class="bcstop"><span class="bcsttl">設定した配信の予約</span></div>\'+' +
+  '\'<div id="bclist"><div class="bcouttx">読んでいます…</div></div>\';' +
+  'loadList();}' +
   'function drawText(){' +
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];var h;' +
@@ -5139,8 +5149,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!m)h+=\'<div class="bcstatus on">中身を入れた対象がありません。\'+' +
   '\'左上の「← 前に戻る」から入れてください。</div>\';' +
   'else if(LMODE!=="at"){' +
-  'h+=\'<button type="button" class="bctxt" id="bcnow">今すぐ送信する</button>\'+' +
-  '\'<button type="button" class="bcgo" id="bcplan">送信の予約を設定する</button>\';}' +
+  // ★「今すぐ送信する」は下（上だとすぐ押してしまって危ない・まるちゃん指示 2026-09-09）
+  'h+=\'<button type="button" class="bcgo" id="bcplan">送信の予約を設定する</button>\'+' +
+  '\'<button type="button" class="bctxt" id="bcnow">今すぐ送信する</button>\';}' +
   'else{' +
   'h+=\'<div class="bccard"><div class="bcleft">送る日時\'+' +
   '((m>1)?"（1本目。2本目からは少しずつ後ろへずらします）":"")+\'</div>\'+' +
@@ -5190,7 +5201,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'MJA=[];MZH=[];MSTEP=0;MIDX=0;MMSG="";MBODY="";MBODYS=["","","",""];' +
   'MZBODYS=["","","",""];TAGS=[];' +
   'WTEXT="";SRES=null;SPER="";SIDX=0;FRESH=false;LMODE="";' +
-  'wipClear();step=0;page="t";mode="";draw();}},' +
+  // ★送ったあとは空っぽの最終確認に戻さず、予約の一覧を見せる（まるちゃん指示 2026-09-09）
+  'wipClear();step=0;page="l";mode="";draw();}},' +
   'function(m2){if(go)go.disabled=false;szOvHide_();status(m2,true);});},1200);});' +
   '}catch(err){var g2=document.getElementById(now?"bcnow":"bcplace");' +
   'if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
@@ -5200,7 +5212,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
   'ask("bc_list",{},function(d){drawList(d.posts);},function(){});}' +
   'function drawList(posts){var el=document.getElementById("bclist");if(!el)return;' +
-  'if(!posts||!posts.length){el.innerHTML="";return;}' +
+  'if(!posts||!posts.length){el.innerHTML=(page==="l")?' +
+  '\'<div class="bcouttx">設定した配信の予約はありません。</div>\':"";return;}' +
   'el.innerHTML=\'<div class="bclbl">予約した配信（新しい順）</div>\'+posts.map(function(r){' +
   'return \'<div class="bcitem"><div class="bcit1">\'+esc(r.st)+"　"+esc(r.at)+"　"+esc(r.template_name)+\'</div>\'+' +
   '\'<div class="bcit2">画像\'+r.imgs+\'枚　「\'+esc(r.head)+\'」\'+(r.note?("　"+esc(r.note)):"")+\'</div>\'+' +
@@ -5225,6 +5238,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'else{MIDX=BORDER.length-1;}}' +
   'function backOne(){' +
   'if(page==="k")return false;' +
+  'if(page==="l"){page="k";return true;}' +
   'if(page==="w"){page="s";return true;}' +
   'if(page==="s"){var gs=(SRES&&SRES.groups)||[];' +
   'if(!gs.length){page="k";return true;}' +
