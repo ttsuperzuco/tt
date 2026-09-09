@@ -1683,11 +1683,15 @@ var TILE_DEFS_ = [
 //   3つの大ボタンを出し、押すとその仲間だけを見せる（上の「← 戻る」で3ボタンに戻る）。普通のスタッフ版・
 //   社長版は今まで通り一覧のまま。どのボタンがどの部屋か（ここに無いidは実務者用）＝PC版 super_pc.py の
 //   GROUP_OF と一致させる（片方直したら必ず両方）。
-// ★2026-08-19 まるちゃん決定：売上転記(uriage)は実務者用へ移した（ここに書かない＝実務者用になる）。
+// ★2026-08-19 まるちゃん決定：売上転記(uriage)は実務者用へ移した。
+// ★2026-09-09 まるちゃん決定：売上転記(uriage)とプロセル残り本数(procell)は管理者用へ戻し、
+//   LINE一斉配信(bcast)は実務者用へ移した（ここに書かない＝実務者用）。bcastが見えるのは
+//   開発者だけのまま＝部屋(管理/実務/開発)と「誰に見せるか」は別の話（人ごとの表示で決まる）。
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', timedsend: 'kaihatsu', bcast: 'kaihatsu'
+  uriage: 'kanri', procell: 'kanri',
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', timedsend: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'kanri', icon: '🛠️', title: '管理者用' },
