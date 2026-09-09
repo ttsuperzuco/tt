@@ -4285,6 +4285,11 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcpno{background:#26324A;color:#E8EEF7;border-radius:999px;padding:5px 10px;' +
     'font-size:12px;font-weight:800;white-space:nowrap;flex:0 0 auto;}' +
     '.bcptx{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    // ★配信待ち／配信済みのタブ（まるちゃん指示 2026-09-09）
+    '.bctab{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;}' +
+    '.bctab button{border:1px solid #26324A;background:#131C2E;color:#9FB3C8;' +
+    'border-radius:12px;padding:13px;font-size:16px;font-weight:800;cursor:pointer;}' +
+    '.bctab button.on{background:#2563EB;color:#fff;border-color:#2563EB;}' +
     // ★名前の行＝右はしに「タグを変更」（まるちゃん指示 2026-09-09）
     '.bcnamerow{display:flex;align-items:center;gap:10px;}' +
     '.bcnamerow .bcname{flex:1;min-width:0;}' +
@@ -4383,6 +4388,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var SIDX=0;' +
   // ★直している中身の番号（-1＝新しく入れる・まるちゃん指示 2026-09-09）
   'var EDI=-1;' +
+  // ★予約の一覧＝どちらのタブか／読んだ一覧／戻せる分があるか
+  'var LTAB="wait",LPOSTS=null,LBATCH=0;' +
   // ★対象の画面へ、どの画面から来たか（0＝日本語の入力／1＝自分で中国語／2＝中国語版の確認）
   //   「← 前に戻る」でここへ戻す（まるちゃん指摘 2026-09-09）
   'var MBACK=0;' +
@@ -4622,16 +4629,24 @@ function renderBroadcastPage_(base, staff, dev) {
   //   下に「設定した配信の予約を確認する」も置く（まるちゃん指示 2026-09-09）。
   'function drawKind(){' +
   'var h=\'<button type="button" class="bckind" id="bckind1">予約可能枠案内</button>\'+' +
-  '\'<button type="button" class="bcgo" id="bcseelist">設定した配信の予約を確認する</button>\';' +
+  '\'<button type="button" class="bctxt" id="bcseelist">設定した配信の予約を確認する</button>\';' +
   'box.innerHTML=freshBar()+h;bindFresh();' +
   'document.getElementById("bckind1").onclick=function(){MOVED=true;page="s";status("");draw();};' +
   'var sl=document.getElementById("bcseelist");' +
   'if(sl)sl.onclick=function(){MOVED=true;page="l";status("");draw();};}' +
-  // ★設定した配信の予約を確かめる画面（まるちゃん指示 2026-09-09）
+  // ★設定した配信の予約を確かめる画面（まるちゃん指示 2026-09-09）。
+  //   「配信待ち」と「配信済み」に分ける。配信済みは昨日までの分だけ。
   'function drawSent(){' +
-  'box.innerHTML=\'<div class="bcstop"><span class="bcsttl">設定した配信の予約</span></div>\'+' +
+  'var h=\'<div class="bcstop"><span class="bcsttl">設定した配信の予約</span></div>\'+' +
+  '\'<div class="bctab"><button type="button" id="bctab1" class="\'+' +
+  '((LTAB==="wait")?"on":"")+\'">配信待ち</button>\'+' +
+  '\'<button type="button" id="bctab2" class="\'+' +
+  '((LTAB==="done")?"on":"")+\'">配信済み</button></div>\'+' +
   '\'<div id="bclist"><div class="bcouttx">読んでいます…</div></div>\';' +
-  'loadList();}' +
+  'box.innerHTML=h;' +
+  'document.getElementById("bctab1").onclick=function(){LTAB="wait";status("");draw();};' +
+  'document.getElementById("bctab2").onclick=function(){LTAB="done";status("");draw();};' +
+  'if(LPOSTS){drawList(LPOSTS);}else{loadList();}}' +
   'function drawText(){' +
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];var h;' +
@@ -5210,11 +5225,31 @@ function renderBroadcastPage_(base, staff, dev) {
   '(err&&err.message?err.message:err),true);}}});}' +
   // ── 予約した配信の一覧（中身があるときだけ出す）──────────────
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
-  'ask("bc_list",{},function(d){drawList(d.posts);},function(){});}' +
+  'ask("bc_list",{},function(d){LPOSTS=d.posts||[];' +
+  'LBATCH=((d.batch&&d.batch.n)||0);drawList(LPOSTS);},' +
+  'function(m){el.innerHTML=\'<div class="bcouttx">読めませんでした。</div>\';status(m,true);});}' +
+  // ★昨日までかどうか（配信済みは昨日までの分だけ出す・まるちゃん指示 2026-09-09）
+  'function isYest(at){var s=String(at||"").slice(0,10);if(!s)return false;' +
+  'var d=new Date();var y=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+' +
+  '("0"+d.getDate()).slice(-2);return s<y;}' +
   'function drawList(posts){var el=document.getElementById("bclist");if(!el)return;' +
-  'if(!posts||!posts.length){el.innerHTML=(page==="l")?' +
-  '\'<div class="bcouttx">設定した配信の予約はありません。</div>\':"";return;}' +
-  'el.innerHTML=\'<div class="bclbl">予約した配信（新しい順）</div>\'+posts.map(function(r){' +
+  'LPOSTS=posts||LPOSTS;' +
+  // ★タブで仕分ける。配信待ち＝まだ送っていない分。配信済み＝昨日までの送った分。
+  'var wait=(posts||[]).filter(function(r){' +
+  'return r.state==="placed"||r.state==="draft";});' +
+  'var done=(posts||[]).filter(function(r){' +
+  'return r.state==="sent"&&isYest(r.at);});' +
+  'var use=(LTAB==="done")?done:wait;' +
+  'var top="";' +
+  'if(LTAB==="wait"){' +
+  'if(wait.length)top+=\'<button type="button" class="bcgo" id="bcallcx">\'+' +
+  '\'全部配信をキャンセルする（\'+wait.length+\'本）</button>\';' +
+  'if(LBATCH)top+=\'<button type="button" class="bctxt" id="bcundo">\'+' +
+  '\'予約キャンセルした配信を戻す（\'+LBATCH+\'本）</button>\';}' +
+  'if(!use.length){el.innerHTML=top+\'<div class="bcouttx">\'+' +
+  '((LTAB==="done")?"昨日までに送った配信はありません。":"配信待ちはありません。")+' +
+  '\'</div>\';bindList();return;}' +
+  'el.innerHTML=top+use.map(function(r){' +
   'return \'<div class="bcitem"><div class="bcit1">\'+esc(r.st)+"　"+esc(r.at)+"　"+esc(r.template_name)+\'</div>\'+' +
   '\'<div class="bcit2">画像\'+r.imgs+\'枚　「\'+esc(r.head)+\'」\'+(r.note?("　"+esc(r.note)):"")+\'</div>\'+' +
   '(r.cancelable?(\'<button type="button" class="bccx" data-cx="\'+r.broadcast_id+\'">取り消し</button>\'):"")+' +
@@ -5222,7 +5257,24 @@ function renderBroadcastPage_(base, staff, dev) {
   '[].slice.call(el.querySelectorAll("[data-cx]")).forEach(function(b){b.onclick=function(){' +
   'szPopup_("この配信を取り消しますか？",{cancel:true,onYes:function(){status("取り消しています…");' +
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
-  'status(d.note||"取り消しました。",!d.ok);drawList(d.posts);},function(m3){status(m3,true);});}});};});}' +
+  'status(d.note||"取り消しました。",!d.ok);LBATCH=((d.batch&&d.batch.n)||LBATCH);' +
+  'drawList(d.posts);},function(m3){status(m3,true);});}});};});' +
+  'bindList();}' +
+  // ★全部取り消す／戻す（まるちゃん指示 2026-09-09）
+  'function bindList(){' +
+  'var a=document.getElementById("bcallcx");' +
+  'if(a)a.onclick=function(){szPopup_("配信待ちを全部取り消しますか？\\n"+' +
+  '"（中身は控えに残るので、あとで戻せます）",{cancel:true,onYes:function(){' +
+  'a.disabled=true;status("取り消しています…");' +
+  'ask("bc_cancel_all",{},function(d){status(d.note||"取り消しました。",!d.ok);' +
+  'LBATCH=((d.batch&&d.batch.n)||0);drawList(d.posts);},' +
+  'function(m){a.disabled=false;status(m,true);});}});};' +
+  'var u=document.getElementById("bcundo");' +
+  'if(u)u.onclick=function(){szPopup_("取り消した配信を元に戻しますか？",{cancel:true,' +
+  'onYes:function(){u.disabled=true;status("戻しています…");' +
+  'ask("bc_restore",{},function(d){status(d.note||"戻しました。",!d.ok);' +
+  'LBATCH=((d.batch&&d.batch.n)||0);drawList(d.posts);},' +
+  'function(m){u.disabled=false;status(m,true);});}});};}' +
   // ── 立ち上がり ────────────────────────────────────────
 
   // ★窓の幅を変えたら字の大きさを測り直す（パソコンの窓は大きさを変えられるため）
