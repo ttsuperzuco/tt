@@ -4211,6 +4211,14 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcpno{background:#26324A;color:#E8EEF7;border-radius:999px;padding:5px 10px;' +
     'font-size:12px;font-weight:800;white-space:nowrap;flex:0 0 auto;}' +
     '.bcptx{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    // ★名前の行＝右はしに「タグを変更」（まるちゃん指示 2026-09-09）
+    '.bcnamerow{display:flex;align-items:center;gap:10px;}' +
+    '.bcnamerow .bcname{flex:1;min-width:0;}' +
+    // ★送り先をえらぶ並び
+    '.bctaglist{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px;}' +
+    '.bctaglist button{border:1px solid #26324A;background:#131C2E;color:#E8EEF7;' +
+    'border-radius:999px;padding:9px 13px;font-size:14px;font-weight:800;cursor:pointer;}' +
+    '.bctaglist button.on{background:#16A34A;color:#fff;border-color:#16A34A;}' +
     // ★並べ替え・直しの小さなボタン（まるちゃん指示 2026-09-09）
     '.bcmv{border:1px solid #26324A;background:#131C2E;color:#E8EEF7;border-radius:9px;' +
     'padding:6px 9px;font-size:13px;font-weight:800;flex:0 0 auto;cursor:pointer;}' +
@@ -4301,6 +4309,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var SIDX=0;' +
   // ★直している中身の番号（-1＝新しく入れる・まるちゃん指示 2026-09-09）
   'var EDI=-1;' +
+  // ★対象ごとに選び直した送り先（空＝もとの決まりのまま）と、選べる送り先の一覧
+  'var TAGS=[],TAGLIST=[],TAGBUSY=false;' +
   // ★まるちゃんが入口から先へ進んだか（進んだあとに、遅れて届いた返事で画面を戻さない）
   'var MOVED=false;' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
@@ -4344,7 +4354,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
   'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,zbodies:MZBODYS,' +
-  'ja:MJA,zh:MZH,' +
+  'ja:MJA,zh:MZH,tags:TAGS,' +
   'midx:MIDX,mstep:MSTEP,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   'function saveNow(){if(!WIPON)return;' +
@@ -4376,6 +4386,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
   'if(s.zbodies&&s.zbodies.length)MZBODYS=s.zbodies;' +
   'if(s.ja&&s.ja.length)MJA=s.ja;if(s.zh&&s.zh.length)MZH=s.zh;' +
+  'if(s.tags&&s.tags.length)TAGS=s.tags;' +
   'MIDX=s.midx||0;' +
   'if(s.mstep===0||s.mstep===1||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();}' +
@@ -4917,10 +4928,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'function drawOne(){' +
   'var t=TPL[step],d=DATA[step],n=d.parts.length,left=MAXP-n;' +
   // ★上の行を消したので、何番目かはここに出す（まるちゃん指示 2026-09-09）
-  'var h=\'<div class="bcstop"><span class="bcsttl">対象</span>\'+' +
+  // ★「対象」の字は出さない（まるちゃん指示 2026-09-09）。番号だけ残す。
+  'var h=\'<div class="bcstop"><span class="bcsttl"></span>\'+' +
   '\'<span class="bcsno">\'+(step+1)+\' / \'+TPL.length+\'</span></div>\'+' +
-  '\'<div class="bccard"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
-  '\'<div class="bcwho">\'+esc(t.who)+\'</div><div class="bchr"></div>\';' +
+  // ★送り先を選び直せる（まるちゃん指示 2026-09-09）。選んでいなければ元の決まりのまま。
+  '\'<div class="bccard"><div class="bcnamerow"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
+  '\'<button type="button" class="bcmv" id="bctag">タグを変更</button></div>\'+' +
+  '\'<div class="bcwho">\'+esc((TAGS[step]&&TAGS[step].length)?' +
+  '("送り先："+TAGS[step].join("＋")):t.who)+\'</div><div class="bchr"></div>\';' +
   // ★並べ替えと、文の直し（まるちゃん指示 2026-09-09）
   'if(n){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
@@ -4941,6 +4956,18 @@ function renderBroadcastPage_(base, staff, dev) {
   '}).join("")+\'</div>\'+' +
   '\'<div class="bcleft" style="margin-top:14px">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
   '\'</div><button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
+  'else if(mode==="tag"){' +
+  'var cur=TAGS[step]||[];' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">送り先をえらぶ（いくつでも）</div>\';' +
+  'if(TAGBUSY){h+=\'<div class="bcouttx">送り先の一覧を読んでいます…</div>\';}' +
+  'else if(!TAGLIST.length){h+=\'<div class="bcouttx">送り先の一覧を読めませんでした。</div>\';}' +
+  'else{h+=\'<div class="bctaglist">\'+TAGLIST.map(function(x){' +
+  'return \'<button type="button" data-tag="\'+esc(x)+\'" class="\'+' +
+  '((cur.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';}' +
+  'h+=\'</div>\';' +
+  'h+=\'<button type="button" class="bcgo" id="bctagok">この送り先にする</button>\'+' +
+  '\'<button type="button" class="bcmini" id="bctagdef">もとの決まりにもどす</button>\'+' +
+  '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="txt"){' +
   'var old=(EDI>=0&&d.parts[EDI])?(d.parts[EDI].text||""):"";' +
   'h+=\'<div class="bchr"></div><div class="bcleft">\'+((EDI>=0)?"文章を直す":"文章を入れる")+' +
@@ -4955,7 +4982,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<div class="bchr"></div>\'+' +
   '\'<div class="bcadd"><button type="button" id="bcimg"\'+(left?"":" disabled")+\'>🖼 画像を入れる</button>\'+' +
   '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div></div>\';' +
-  'if(n)h+=\'<button type="button" class="bcgo" id="bcnext">この対象はこれで完了 →</button>\';' +
+  'if(n)h+=\'<button type="button" class="bcgo" id="bcnext">この内容でOK</button>\';' +
   'h+=\'<button type="button" class="bcmini" id="bcskip">この対象は送らない（飛ばす）</button>\';' +
   '\'\';}' +
   'box.innerHTML=freshBar()+h;bindOne();bindFresh();}' +
@@ -4978,6 +5005,20 @@ function renderBroadcastPage_(base, staff, dev) {
   'var e;' +
   'if(e=document.getElementById("bcimg"))e.onclick=function(){mode="img";draw();};' +
   'if(e=document.getElementById("bctx"))e.onclick=function(){EDI=-1;mode="txt";draw();};' +
+  // ★送り先を選び直す（一覧は初めて開いた時に1回だけ事務所パソコンから取る）
+  'if(e=document.getElementById("bctag"))e.onclick=function(){mode="tag";' +
+  'if(!TAGLIST.length&&!TAGBUSY){TAGBUSY=true;draw();' +
+  'ask("bc_tags",{},function(r){TAGBUSY=false;' +
+  'TAGLIST=((r&&r.tags)||[]);if(!TAGLIST.length&&r&&r.note)status(r.note,true);draw();},' +
+  'function(m){TAGBUSY=false;status(m,true);draw();});return;}' +
+  'draw();};' +
+  '[].slice.call(box.querySelectorAll("[data-tag]")).forEach(function(b){b.onclick=function(){' +
+  'var x=b.getAttribute("data-tag"),a=(TAGS[step]||[]).slice(),k=a.indexOf(x);' +
+  'if(k>=0)a.splice(k,1);else a.push(x);TAGS[step]=a;saveNow();draw();};});' +
+  'if(e=document.getElementById("bctagok"))e.onclick=function(){mode="";saveNow();' +
+  'status((TAGS[step]&&TAGS[step].length)?"送り先を変えました。":"");draw();};' +
+  'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];mode="";' +
+  'saveNow();status("もとの決まりにもどしました。");draw();};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){EDI=-1;mode="";draw();};' +
   'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";status("");draw();};' +
   'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";status("");draw();};' +
@@ -5040,7 +5081,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var d0=now?"":(dateEl?dateEl.value:""),t0=now?"":(timeEl?timeEl.value:"");' +
   'var items=[],n=0;' +
   'TPL.forEach(function(t,i){var ps=DATA[i].parts;if(!ps.length)return;n++;' +
-  'items.push({name:t.name,parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
+  'items.push({name:t.name,tags:(TAGS[i]||[]),' +
+  'parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
   'if(!n){status("文章か画像を入れた対象が1つもありません。",true);return;}' +
   'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいですか？")' +
   ':(d0+" "+t0+" から、"+n+"通りの配信を予約します。よろしいですか？"),{cancel:true,onYes:function(){try{' +
@@ -5064,7 +5106,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   本文と予約可能時間文が残り、次に開いた時「復元しますか？」が出ていた（実機で発生）。
   'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});' +
   'MJA=[];MZH=[];MSTEP=0;MIDX=0;MMSG="";MBODY="";MBODYS=["","","",""];' +
-  'MZBODYS=["","","",""];' +
+  'MZBODYS=["","","",""];TAGS=[];' +
   'WTEXT="";SRES=null;SPER="";SIDX=0;FRESH=false;LMODE="";' +
   'wipClear();step=0;page="t";mode="";draw();}' +
   'loadList();},' +
