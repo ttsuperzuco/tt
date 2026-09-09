@@ -23,10 +23,11 @@
  *     はっきり「預けられなかった」と伝える（黙って落とさない）。
  *
  * ■使い方（画面側）
- *   BIG.prepare({exec:EXEC, key:KEY, slot:"dev", op:"zenjitsu_act",
+ *   BIG.prepare({exec:EXEC, key:KEY, slot:"dev", op:"zenjitsu_act", tag:"put_sends",
  *                who:.., role:.., device:.., fields:{...}},
  *               function (fieldsText) { ...jsonp で submit する... },
  *               function (理由) { ...預けられなかった時... });
+ *   ★tag＝用事の名前。同じ端末で別々の用事が同時に走っても置き場が混ざらないように分ける。
  *   短い依頼はそのまま（今までと1文字も変わらない形）で渡ってくる＝軽い依頼は今までどおり。
  */
 (function (root) {
@@ -38,11 +39,15 @@
   /* 窓口が受け取る中身の上限。窓口の決まりは8,000文字。余裕をみて手前で切り替える。 */
   BIG.FIELDS_MAX = 7000;
 
-  /* 荷物の置き場の名前。窓口が許す形は「小文字と数字と＿だけ ＋ .json」。 */
-  BIG.parcelName = function (slot) {
+  /* 荷物の置き場の名前。窓口が許す形は「小文字と数字と＿だけ ＋ .json」。
+     ★2026-09-09：**用事ごとに置き場を分ける**。同じ端末で「途中までの作業を覚える」と
+     「送信を設定する」が続けて起きると、同じ置き場を取り合って先の荷物が上書きされてしまう
+     （引換券が合わずに断られるので事故にはならないが、押し直しになる）。 */
+  BIG.parcelName = function (slot, tag) {
     var s = String(slot || 'x').toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (!s) s = 'x';
-    return 'bigsend_' + s.slice(0, 40) + '.json';
+    var t = String(tag || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+    return 'bigsend_' + s.slice(0, 30) + (t ? '_' + t.slice(0, 24) : '') + '.json';
   };
 
   /* この依頼を、今までどおり住所に詰めて送れるか。 */
@@ -70,7 +75,7 @@
     if (BIG.fits(o, fieldsText)) { onReady(fieldsText); return; }
 
     var ticket = 'b' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-    var name = BIG.parcelName(o.slot || o.device);
+    var name = BIG.parcelName(o.slot || o.device, o.tag);
     var url = String(o.exec) + '?action=push&key=' + encodeURIComponent(o.key || '')
       + '&name=' + encodeURIComponent(name);
     var body;
