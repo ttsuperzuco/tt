@@ -4398,19 +4398,6 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.mstep===0||s.mstep===1||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();}' +
   'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;}' +
-  'function askRestore(after){' +
-  'jsonp({action:"data",name:WIPNAME},function(d){' +
-  'var s=(d&&d.data&&d.data.length===TPL.length)?d:null;' +
-  'if(!wipAny(s)||(Date.now()-(s.t||0))>1000*60*60*24*7){WIPON=true;after();return;}' +
-  'var b=document.createElement("div");b.className="bcask";' +
-  'b.innerHTML=\'<div class="bcask-in"><div class="bcaskmsg">途中までの作業を復元しますか？</div>\'+' +
-  '\'<div class="bcaskrow"><button type="button" class="bcaskyes">はい、復元する</button>\'+' +
-  '\'<button type="button" class="bcaskno">いいえ、まっさらから始める</button></div></div>\';' +
-  'document.body.appendChild(b);' +
-  'b.querySelector(".bcaskno").onclick=function(){b.remove();wipClear();WIPON=true;after();};' +
-  'b.querySelector(".bcaskyes").onclick=function(){b.remove();goSaved(s);WIPON=true;' +
-  'after();status("前回の続きから開きました。");};' +
-  '},function(){WIPON=true;after();});}' +
   // ★大きく見る（押した1枚だけ、事務所パソコンから大きい見本をもらう）
   'function bigView(src,name){' +
   'function show(u){szOvShow_(\'<div style="padding:14px;text-align:center">\'+' +
@@ -5057,6 +5044,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(EDI>=0&&d.parts[EDI]){d.parts[EDI].text=v;}else{d.parts.push({kind:"text",text:v});}' +
   'EDI=-1;mode="";status("");saveNow();draw();};}}' +
   // ── 最後（確認＋日時）────────────────────────────────
+  // ★この画面には「まっさらに戻す」を出さない（送信の直前で押し間違えると全部消えるため・
+  //   まるちゃん指示 2026-09-09）。ほかの画面では今までどおり出す。
   'function drawLast(){' +
   'function two(n){return ("0"+n).slice(-2);}' +
   'var t=new Date();t.setDate(t.getDate()+1);var m=0;' +
@@ -5079,8 +5068,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div><input type="time" id="bctime" value="11:00"></div></div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcplace">この内容で \'+m+\'通り 予約する</button>\'+' +
   '\'\';}' +
-  // ★予約した配信の一覧はこの画面に出さない（まるちゃん指示 2026-09-09）
-  'box.innerHTML=freshBar()+h;bindFresh();' +
+  // ★予約した配信の一覧も「まっさらに戻す」も、この画面には出さない（まるちゃん指示 2026-09-09）
+  'box.innerHTML=h;' +
   'var e=document.getElementById("bcplan");' +
   'if(e)e.onclick=function(){LMODE="at";status("");draw();};' +
   'e=document.getElementById("bcnoat");' +
@@ -5177,7 +5166,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'CAT=d.category||"";TPL=d.templates;PRE=d.presets||[];MAXP=d.max_parts||3;MAXT=d.max_text||500;' +
     'DATA=TPL.map(function(){return {parts:[]};});' +
   // ★開き直した時に「途中までの作業を復元しますか？」と聞く（前日お知らせと同じ）
-  'if(MOVED){WIPON=true;}else{askRestore(function(){status("");if(!MOVED)draw();});}' +
+  // ★開いたら必ず最初の画面から（まるちゃん指示 2026-09-09）。
+  //   続きから始めたい時は「作業中のデータを復元する」を押してもらう。
+  'WIPON=true;' +
   // ★最近作った絵は別便で取る（templates の答えに載せると大きすぎて窓口を通らない）
   'var rslot=(idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d";' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"recent",slot:rslot})},function(r){' +
