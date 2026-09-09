@@ -4101,7 +4101,8 @@ function renderTimedSendPage_(base, staff, dev) {
   'if(d&&d.groups){var o="";for(var i=0;i<d.groups.length;i++){GROUPS[d.groups[i].id]=d.groups[i];o+="<option value=\\""+esc(d.groups[i].id)+"\\">"+esc(d.groups[i].name)+"（"+d.groups[i].count+"人）</option>";}groupEl.innerHTML=o;}' +
   'if(d&&d.enabled===false){banEl.style.background="#f8d7da";banEl.textContent="いま送信はOFFです。事務所PCの自動監視でONにするまで、予約しても送られません。";}' +
   'else if(d&&d.practice){banEl.style.background="#fff3cd";banEl.textContent="いまは練習モードです。誰を選んでも、実際にはオーナー本人にしか送りません。";}' +
-  'else if(d){banEl.style.background="#d1e7dd";banEl.textContent="いまは本番モードです。選んだ相手に実際に送られます。";}});' +
+  /* ★2026-09-09まるちゃん決定：本番の時は帯を出さない（当たり前のことを毎回出さない）。 */
+  'else if(d){banEl.style.display="none";banEl.textContent="";}});' +
   // ★2026-08-24：あきらめるまでを 18秒 → 210秒（0.6秒×350回）。18秒では、送信の予約が出来ているのに
   //   「失敗しました」と出て、押し直すと二重に予約してしまう危険があった。
   'var polls=0;function poll(id){polls++;if(polls>350){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
