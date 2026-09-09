@@ -4438,7 +4438,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(step<TPL.length){drawOne();}else{drawLast();}}' +
   'noEl.textContent=(page==="k")?"":((page==="w")?"画像づくり":((page==="s")?"文づくり":' +
   '((page==="m")?"配信文づくり":' +
-  '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最後の確認"))));' +
+  '((step<TPL.length)?("対象 "+(step+1)+" / "+TPL.length):"最終確認"))));' +
   // ★上の行（配信内容／予約可能枠案内／…）はどの画面でも出さない。題も入口だけ
   //   （まるちゃん指示 2026-09-09＝前の画面と同じにする）。
   'var slim=((page==="k")||(page==="s"))?"none":"";' +
@@ -5056,7 +5056,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function drawLast(){' +
   'function two(n){return ("0"+n).slice(-2);}' +
   'var t=new Date();t.setDate(t.getDate()+1);var m=0;' +
-  'var h=\'<div class="bccard"><div class="bcname">最後の確認</div><div class="bchr"></div>\';' +
+  'var h=\'<div class="bccard"><div class="bcname">最終確認</div><div class="bchr"></div>\';' +
   // ★送る対象だけを出す（まるちゃん指示 2026-09-09）
   'TPL.forEach(function(x,i){var n=filled(i);if(!n)return;m++;' +
   'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="on">\'+' +
@@ -5145,6 +5145,10 @@ function renderBroadcastPage_(base, staff, dev) {
 
   // ★「← 前に戻る」だけで、どの画面からも1つ前に戻る（まるちゃん指示 2026-09-09）。
   //   画面の中に「◀ ○○にもどる」を置かない。入口にいる時だけホームへ（パソコンは窓が閉じる）。
+  // ★対象・最終確認から、来た画面（日本語の入力／自分で中国語／中国語版の確認）へ戻す
+  'function goBackFromT(){page="m";mode="";MSTEP=MBACK;' +
+  'if(MBACK===2){var zl=zLive();MIDX=zl.length?zl[zl.length-1]:0;}' +
+  'else{MIDX=BORDER.length-1;}}' +
   'function backOne(){' +
   'if(page==="k")return false;' +
   'if(page==="w"){page="s";return true;}' +
@@ -5152,20 +5156,24 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!gs.length){page="k";return true;}' +
   'if(SIDX>0){SIDX--;return true;}' +
   'SRES=null;SPER="";SIDX=0;return true;}' +
+  // ★配信文づくりの中＝1つずつ前へ。一番前まで来たら予約可能時間の画面へ。
   'if(page==="m"){MMSG="";' +
-  'if(MSTEP===3){MSTEP=2;MIDX=BORDER.length-1;return true;}' +
+  'if(MSTEP===3){goBackFromT();return true;}' +
   'if(MSTEP===1){if(MIDX>0){MIDX--;}else{MSTEP=0;MIDX=BORDER.length-1;}return true;}' +
-  'if(MSTEP===2){if(MIDX>0){MIDX--;}else{MSTEP=0;MIDX=BORDER.length-1;}return true;}' +
+  'if(MSTEP===2){var zl2=zLive(),zp=zl2.indexOf(MIDX);' +
+  'if(zp>0){MIDX=zl2[zp-1];return true;}' +
+  'MSTEP=0;MIDX=BORDER.length-1;return true;}' +
   'if(MIDX>0){MIDX--;return true;}' +
   'page="s";return true;}' +
+  // ★最終確認＝送る対象があれば最後の対象へ。1つも無ければ配信文づくりへ戻す
+  //   （前は同じ画面に戻っていて、押しても動かなかった＝まるちゃん指摘 2026-09-09）
   'if(step>=TPL.length){if(LMODE==="at"){LMODE="";return true;}' +
-  'var lv0=tLive();step=lv0.length?lv0[lv0.length-1]:TPL.length;mode="";return true;}' +
+  'var lv0=tLive();' +
+  'if(!lv0.length){goBackFromT();return true;}' +
+  'step=lv0[lv0.length-1];mode="";return true;}' +
   'if(mode){mode="";return true;}' +
   'var pq=prevLive(step);if(pq>=0){step=pq;return true;}' +
-  // ★来た画面へ戻す（いつも中国語版の確認へ戻していたのを直した）
-  'page="m";MSTEP=MBACK;' +
-  'if(MBACK===2){var zl=zLive();MIDX=zl.length?zl[zl.length-1]:0;}' +
-  'else{MIDX=BORDER.length-1;}return true;}' +
+  'goBackFromT();return true;}' +
   'var uh=document.querySelector(".uhome");' +
   'if(uh)uh.onclick=function(ev){if(!backOne())return true;' +
   'ev.preventDefault();status("");draw();return false;};' +
