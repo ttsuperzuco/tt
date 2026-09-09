@@ -4211,6 +4211,9 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcpno{background:#26324A;color:#E8EEF7;border-radius:999px;padding:5px 10px;' +
     'font-size:12px;font-weight:800;white-space:nowrap;flex:0 0 auto;}' +
     '.bcptx{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    // ★並べ替え・直しの小さなボタン（まるちゃん指示 2026-09-09）
+    '.bcmv{border:1px solid #26324A;background:#131C2E;color:#E8EEF7;border-radius:9px;' +
+    'padding:6px 9px;font-size:13px;font-weight:800;flex:0 0 auto;cursor:pointer;}' +
     '.bcdel{border:1px solid #7f1d1d;background:#2a1214;color:#fca5a5;border-radius:9px;' +
     'padding:7px 11px;font-size:12.5px;font-weight:800;flex:0 0 auto;}' +
     '.bcempty{font-size:14px;color:#94A3B8;padding:2px 0 4px;}' +
@@ -4296,6 +4299,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var catEl=document.getElementById("bccatname"),noEl=document.getElementById("bcno");' +
   'var ttlEl=document.getElementById("bctitle"),topEl=document.getElementById("bctoprow");' +
   'var SIDX=0;' +
+  // ★直している中身の番号（-1＝新しく入れる・まるちゃん指示 2026-09-09）
+  'var EDI=-1;' +
   // ★まるちゃんが入口から先へ進んだか（進んだあとに、遅れて届いた返事で画面を戻さない）
   'var MOVED=false;' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
@@ -4672,7 +4677,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!a.length)return \'<div class="bcstatus ng">送る区分がありません。\'+' +
   '\'「← 前に戻る」で文を入れてください。</div>\';' +
   'return \'<button type="button" class="bctxt" id="\'+id+\'">以上の内容で、\'+' +
-  'a.length+\'種類（\'+esc(a.join("・"))+\'）の予約可能枠画像を生成する</button>\';}' +
+  'a.length+\'種類（\'+esc(a.join("・"))+\'）の予約可能枠画像を生成する</button>\'+' +
+  // ★絵を作らずに中身の確認へ進む道（まるちゃん指示 2026-09-09）
+  '\'<button type="button" class="bcgo" id="\'+id+\'n">\'+' +
+  '\'画像は生成せず配信内容の最終確認をする</button>\';}' +
   // ★中身のある区分の番号だけを並べる（空欄は数にも入れない・まるちゃん指示 2026-09-09）
   'function zLive(){var a=[],i;for(i=0;i<BORDER.length;i++)' +
   'if(String((MZH[i]||{}).text||"").replace(/^\\s+|\\s+$/g,""))a.push(i);return a;}' +
@@ -4805,7 +4813,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(ok3)ok3.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
   'bldJa();MZH=BORDER.map(function(x,k){' +
   'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:""};});' +
-  'applyAll();};' +
+  // ★勝手に絵づくりを始めない（まるちゃん指示 2026-09-09）。中身の確認へ進む。
+  'applyAll(false);};' +
   // 自分で入れる中国語の欄
   'var zta=document.getElementById("bcmzbody");' +
   'if(zta)zta.oninput=function(){MZBODYS[MIDX]=zta.value;' +
@@ -4821,12 +4830,19 @@ function renderBroadcastPage_(base, staff, dev) {
   'var zok=document.getElementById("bcmzok");' +
   'if(zok)zok.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
   'MIDX++;status("");draw();};' +
+  'function bldZhMan(){MZH=BORDER.map(function(x,k){' +
+  'return {label:ordLabel(k,true),atama:x[0],sei:x[1],' +
+  'text:joinBody(MZBODYS[k]||"",zhOf(timesOf(x[0],x[1])))};});}' +
   'var zok3=document.getElementById("bcmzok3");' +
   'if(zok3)zok3.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
-  'MZH=BORDER.map(function(x,k){return {label:ordLabel(k,true),atama:x[0],sei:x[1],' +
-  'text:joinBody(MZBODYS[k]||"",zhOf(timesOf(x[0],x[1])))};});' +
-  'applyAll();};' +
-  'var ok4=document.getElementById("bcmok3");if(ok4)ok4.onclick=function(){applyAll();};}' +
+  'bldZhMan();applyAll(true);};' +
+  'var zok3n=document.getElementById("bcmzok3n");' +
+  'if(zok3n)zok3n.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
+  'bldZhMan();applyAll(false);};' +
+  'var ok4=document.getElementById("bcmok3");' +
+  'if(ok4)ok4.onclick=function(){applyAll(true);};' +
+  'var ok4n=document.getElementById("bcmok3n");' +
+  'if(ok4n)ok4n.onclick=function(){applyAll(false);};}' +
   // ★台湾版＝区分ごとに本文を訳し、時間の表は訳さず曜日を入れ替えて差し込む
   // ★男女を渡す＝男性向けは VIO脱毛 が VBO になる（メニューの表に男性だけの言い方がある）
   'function transOne(s,g,cb,onErr){if(!String(s||"").trim()){cb("");return;}' +
@@ -4873,7 +4889,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(had&&!zsplit(zz))lost++;' +
   'zs[i]={z:zz,had:had};i++;next();},ng);' +
   '})();}' +
-  'function applyAll(){MBUSY=true;MMSG="対象に文を入れています…";draw();' +
+  // ★mkimg＝絵も作るか（まるちゃん指示 2026-09-09。作らない道を足した）
+  'function applyAll(mkimg){MBUSY=true;MMSG="対象に文を入れています…";draw();' +
   'SENDN=[];' +
   'MJA.concat(MZH).forEach(function(x){' +
   'if(!String(x.text||"").replace(/^\\s+|\\s+$/g,""))return;' +
@@ -4886,6 +4903,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ps=DATA[i].parts;' +
   'for(var k=ps.length-1;k>=0;k--)' +
   'if(ps[k].kind==="image"&&(ps[k].src||"").indexOf("made:")===0)ps.splice(k,1);});' +
+  'if(!mkimg){MBUSY=false;MMSG="";page="t";step=0;mode="";' +
+  'status("文を入れました。中身を確かめてください。");draw();return;}' +
   'var src=((SRES&&SRES.groups)||[]).map(function(g){return g.label+"\\n"+g.text;}).join("\\n\\n");' +
   'WDONE=[];' +
   'runMake(src,function(i,tot,label){' +
@@ -4902,10 +4921,14 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<span class="bcsno">\'+(step+1)+\' / \'+TPL.length+\'</span></div>\'+' +
   '\'<div class="bccard"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
   '\'<div class="bcwho">\'+esc(t.who)+\'</div><div class="bchr"></div>\';' +
+  // ★並べ替えと、文の直し（まるちゃん指示 2026-09-09）
   'if(n){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
   '(th?(\'<img src="\'+th+\'" data-big="\'+i+\'" style="cursor:zoom-in">\'):"")+' +
   '\'<span class="bcptx">\'+esc(partLabel(p))+\'</span>\'+' +
+  '(i>0?(\'<button type="button" class="bcmv" data-up="\'+i+\'">▲</button>\'):"")+' +
+  '((i<n-1)?(\'<button type="button" class="bcmv" data-dn="\'+i+\'">▼</button>\'):"")+' +
+  '((p.kind==="text")?(\'<button type="button" class="bcmv" data-edit="\'+i+\'">直す</button>\'):"")+' +
   '\'<button type="button" class="bcdel" data-del="\'+i+\'">消す</button></div>\';}).join("");}' +
   // ★「まだ何も入っていません…」は出さない（まるちゃん指示 2026-09-08）
   'else{h+="";}' +
@@ -4919,10 +4942,13 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcleft" style="margin-top:14px">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
   '\'</div><button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="txt"){' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">文章を入れる（\'+MAXT+\'文字まで）</div>\'+' +
-  '\'<textarea id="bctxt" placeholder="この対象へ送る文章"></textarea>\'+' +
-  '\'<div class="bccount" id="bccnt">0 / \'+MAXT+\' 文字</div></div>\'+' +
-  '\'<button type="button" class="bcgo" id="bcaddtxt">この文章を入れる</button>\'+' +
+  'var old=(EDI>=0&&d.parts[EDI])?(d.parts[EDI].text||""):"";' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">\'+((EDI>=0)?"文章を直す":"文章を入れる")+' +
+  '\'（\'+MAXT+\'文字まで）</div>\'+' +
+  '\'<textarea id="bctxt" placeholder="この対象へ送る文章">\'+esc(old)+\'</textarea>\'+' +
+  '\'<div class="bccount" id="bccnt">\'+old.length+\' / \'+MAXT+\' 文字</div></div>\'+' +
+  '\'<button type="button" class="bcgo" id="bcaddtxt">\'+' +
+  '((EDI>=0)?"この文章に直す":"この文章を入れる")+\'</button>\'+' +
   '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else{' +
   // ★「あと ◯ つ入れられます」も出さない（まるちゃん指示 2026-09-08）
@@ -4937,14 +4963,22 @@ function renderBroadcastPage_(base, staff, dev) {
   'var d=DATA[step];' +
   '[].slice.call(box.querySelectorAll("[data-del]")).forEach(function(b){b.onclick=function(){' +
   'd.parts.splice(+b.getAttribute("data-del"),1);draw();};});' +
+  '[].slice.call(box.querySelectorAll("[data-up]")).forEach(function(b){b.onclick=function(){' +
+  'var i=+b.getAttribute("data-up");if(i<1)return;' +
+  'var v=d.parts[i];d.parts[i]=d.parts[i-1];d.parts[i-1]=v;saveNow();draw();};});' +
+  '[].slice.call(box.querySelectorAll("[data-dn]")).forEach(function(b){b.onclick=function(){' +
+  'var i=+b.getAttribute("data-dn");if(i>=d.parts.length-1)return;' +
+  'var v=d.parts[i];d.parts[i]=d.parts[i+1];d.parts[i+1]=v;saveNow();draw();};});' +
+  '[].slice.call(box.querySelectorAll("[data-edit]")).forEach(function(b){b.onclick=function(){' +
+  'EDI=+b.getAttribute("data-edit");mode="txt";draw();};});' +
   '[].slice.call(box.querySelectorAll("[data-big]")).forEach(function(b){b.onclick=function(){' +
   'var p=d.parts[+b.getAttribute("data-big")];if(!p)return;' +
   'var nm=((p.src||"").indexOf("made:")===0)?p.src.slice(5):"";' +
   'bigView(partThumb(p),nm);};});' +
   'var e;' +
   'if(e=document.getElementById("bcimg"))e.onclick=function(){mode="img";draw();};' +
-  'if(e=document.getElementById("bctx"))e.onclick=function(){mode="txt";draw();};' +
-  'if(e=document.getElementById("bccancel"))e.onclick=function(){mode="";draw();};' +
+  'if(e=document.getElementById("bctx"))e.onclick=function(){EDI=-1;mode="txt";draw();};' +
+  'if(e=document.getElementById("bccancel"))e.onclick=function(){EDI=-1;mode="";draw();};' +
   'if(e=document.getElementById("bcnext"))e.onclick=function(){step++;mode="";status("");draw();};' +
   'if(e=document.getElementById("bcskip"))e.onclick=function(){d.parts=[];step++;mode="";status("");draw();};' +
   'if(e=document.getElementById("bcprev"))e.onclick=function(){step--;mode="";status("");draw();};' +
@@ -4967,7 +5001,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'ad.onclick=function(){var v=(ta.value||"").trim();' +
   'if(!v){status("文章が空です。",true);return;}' +
   'if(v.length>MAXT){status("文章は"+MAXT+"文字までです（いまは"+v.length+"文字）。",true);return;}' +
-  'd.parts.push({kind:"text",text:v});mode="";status("");draw();};}}' +
+  'if(EDI>=0&&d.parts[EDI]){d.parts[EDI].text=v;}else{d.parts.push({kind:"text",text:v});}' +
+  'EDI=-1;mode="";status("");saveNow();draw();};}}' +
   // ── 最後（確認＋日時）────────────────────────────────
   'function drawLast(){' +
   'function two(n){return ("0"+n).slice(-2);}' +
