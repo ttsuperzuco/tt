@@ -5242,9 +5242,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'var use=(LTAB==="done")?done:wait;' +
   'var top="";' +
   'if(LTAB==="wait"){' +
-  'if(wait.length)top+=\'<button type="button" class="bcgo" id="bcallcx">\'+' +
+  'if(wait.length)top+=\'<button type="button" class="bctxt" id="bcallcx">\'+' +
   '\'全部配信をキャンセルする（\'+wait.length+\'本）</button>\';' +
-  'if(LBATCH)top+=\'<button type="button" class="bctxt" id="bcundo">\'+' +
+  'if(LBATCH)top+=\'<button type="button" class="bcgo" id="bcundo">\'+' +
   '\'予約キャンセルした配信を戻す（\'+LBATCH+\'本）</button>\';}' +
   'if(!use.length){el.innerHTML=top+\'<div class="bcouttx">\'+' +
   '((LTAB==="done")?"昨日までに送った配信はありません。":"配信待ちはありません。")+' +
