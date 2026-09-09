@@ -2198,7 +2198,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'fields:ft},function(r){' +
   /* ★2026-09-08：ここで「送れませんでした」と**言い切らない**。事務所パソコンは受け取って
      やり終えているのに、返事だけが戻ってこないことがあるため（9/8に実際に発生）。 */
-  'if(!r||!r.ok||!r.id){(onFail||function(){})("うまく通じませんでした（届いているかもしれません）。");return;}' +
+  'if(!r||!r.ok||!r.id){(onFail||function(){})("事務所のパソコンとつながりませんでした。");return;}' +
   'var n=0;(function poll(){n++;if(n>LIMITS.tries("zenjitsu_act",700)){(onFail||function(){})("時間がかかりすぎました。");return;}' +
   'jsonp({action:"status",key:KEY,id:r.id},function(s){if(!s||!s.ok){(onFail||function(){})("通信に失敗しました。");return;}' +
   'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
@@ -2270,11 +2270,14 @@ function renderZenjitsuPage_(base, staff, dev) {
   'return "<div class=\\"zjli\\"><b>"+esc(r.time)+"</b> "+esc(r.name)+"　"+esc(r.fnum||"新規")' +
   '+"／"+esc(r.lang)+"／画像 "+((r.images||[]).length)+"枚"' +
   '+(((r.chat||"").indexOf("U")===0)?"":"　⛔LINEが分かりません")+"</div>";}).join("");' +
+  /* ★2026-09-09まるちゃん指示：**本番の時は何も出さない**（当たり前のことを毎回出さない）。
+     練習中の時だけ出す＝そこは知らないと困るから。 */
   'zjAsk("send_status",{},function(d){' +
   'var el=document.getElementById("zjmode");if(!el)return;' +
-  'el.innerHTML=d.practice?"🧪 <b>練習モードです。</b>誰を選んでも、まるちゃん本人にだけ届きます。"' +
-  ':"⚠️ <b>本番モードです。</b>決めた時刻に、お客様へ本当に届きます。";' +
-  'el.className="zjnote "+(d.practice?"prac":"real");},function(e){});' +
+  'if(!d.practice){el.style.display="none";el.innerHTML="";return;}' +
+  'el.style.display="";' +
+  'el.innerHTML="🧪 <b>練習モードです。</b>誰を選んでも、まるちゃん本人にだけ届きます。";' +
+  'el.className="zjnote prac";},function(e){});' +
   'document.getElementById("zjput").onclick=function(){zjPut(false);};' +
   'document.getElementById("zjnow").onclick=function(){zjPut(true);};}' +
   'function zjPut(sugu){' +
@@ -2284,11 +2287,11 @@ function renderZenjitsuPage_(base, staff, dev) {
   'at=n.getFullYear()+"-"+zjTwo(n.getMonth()+1)+"-"+zjTwo(n.getDate())+" "+zjTwo(n.getHours())+":"+zjTwo(n.getMinutes());}' +
   'if(!at){msg.textContent="⛔ 日時を決めてください";return;}' +
   'var 日=(zjRows[0]&&zjRows[0].date)||(document.getElementById("zjdate")||{}).value||"";' +
-  'msg.textContent="事務所パソコンに伝えています…";' +
+  'msg.textContent="⏳ 事務所のパソコンに設定しています…";' +
   'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
   'if(!d.ok){msg.textContent="⛔ "+(d.error||"送れませんでした");return;}' +
   'if(d.put){zjClearLocal(日);zjFreshShow(false);}' +   /* ★送信を設定したら、覚えていた途中の作業は消す */
-  'var t="✅ "+d.put+"人ぶんを "+at+" に送るよう置きました";' +
+  'var t="✅ "+d.put+"人ぶんを "+at+" に送るよう設定しました";' +
   'if(d.ng&&d.ng.length)t+="（置けなかった人："+d.ng.join("／")+"）";' +
   'if(d.notes&&d.notes.length)t+="（前の続きから送ります："+d.notes.join("／")+"）";' +
   'msg.textContent=t;' +
@@ -2313,13 +2316,13 @@ function renderZenjitsuPage_(base, staff, dev) {
   '(function next(){' +
   'if(i>=束.length){' +
   'if(put){zjClearLocal(日);zjFreshShow(false);}' +
-  'var t=(put?"✅ ":"⛔ ")+put+"人ぶんを "+at+" に送るよう置きました";' +
+  'var t=(put?"✅ ":"⛔ ")+put+"人ぶんを "+at+" に送るよう設定しました";' +
   'if(ng.length)t+="（置けなかった人："+ng.join("／")+"）";' +
   'if(notes.length)t+="（前の続きから送ります："+notes.join("／")+"）";' +
   'msg.textContent=t;' +
   'if(sugu&&put)zjWatch(ids,put);return;}' +
   'var 最後=(i===束.length-1);' +
-  'msg.textContent="⏳ 分けて置いています…（"+(i+1)+"／"+束.length+"）";' +
+  'msg.textContent="⏳ 分けて設定しています…（"+(i+1)+"／"+束.length+"）";' +
   'zjAsk("put_sends",{date:日,at:at,rows:束[i],now:(最後&&!!sugu)},function(d){' +
   'if(d&&d.ok){put+=(d.put||0);ng=ng.concat(d.ng||[]);notes=notes.concat(d.notes||[]);ids=ids.concat(d.ids||[]);}' +
   'else{ng.push("この分は置けませんでした（"+((d&&d.error)||"不明")+"）");}' +
@@ -2330,18 +2333,24 @@ function renderZenjitsuPage_(base, staff, dev) {
      → 必ず「本当に置けたか」を聞き直してから出す。置けていたら成功として見せる。
      ★聞くのは**読むだけ**の用事（put_check）＝依頼をもう一度投げない
        （お客様に届く操作を二度投げるより安全。二重置きは事務所パソコン側でも止めている）。 */
+  /* ★2026-09-09まるちゃん指示：**この3つの文が意味不明だった**ので書き直した。
+     「うまく通じませんでした（届いているかもしれません）。確かめましたが、まだ置けていません」は、
+     届いたのか届いていないのか読んでも分からない（言っていることが逆に見える）。
+     → **今どうなっているのか**と**次に何をすればよいか**だけを、はっきり1つずつ書く。
+     つないでいた理由の文（機械の言い分）は出さない＝スタッフには意味が無いため。 */
   'function zjPutTashikame(日,at,理由,sugu){' +
   'var msg=document.getElementById("zjmsg");' +
-  'msg.textContent="⏳ 返事が届きませんでした。本当に置けたか確かめています…";' +
+  'msg.textContent="⏳ 事務所のパソコンから返事がありません。設定できたか確かめています…";' +
   'var eids=zjRows.map(function(r){return r.id;});' +
   'zjAsk("put_check",{date:日,event_ids:eids},function(d){' +
   'if(d&&d.ok&&d.put>0){zjClearLocal(日);zjFreshShow(false);' +
-  'msg.textContent="✅ 置けていました（"+d.put+"人ぶん）："+(d.who||[]).join("／")' +
-  '+"　※返事だけが届きませんでした。押し直さないでください。";' +
+  'msg.textContent="✅ 設定できていました（"+d.put+"人ぶん）："+(d.who||[]).join("／")' +
+  '+"　画面に返事が返ってこなかっただけです。もう一度押さないでください。";' +
   'if(sugu&&(d.ids||[]).length)zjWatch(d.ids,d.put);return;}' +
-  'msg.textContent="⛔ "+理由+"　確かめましたが、まだ置けていません。もう一度押してください。";' +
-  '},function(e2){msg.textContent="⛔ "+理由+"　置けたかどうかも確かめられませんでした。'
-  + '『予約送信の設定完了』の一覧でご確認ください。";});}' +
+  'msg.textContent="⛔ 設定できませんでした。事務所のパソコンに確かめたところ、"' +
+  '+"1人も設定されていません。二重に届く心配はないので、もう一度押してください。";' +
+  '},function(e2){msg.textContent="⛔ 設定できたかどうか分かりませんでした。'
+  + '『予約送信の設定完了』を開いて、載っていなければもう一度押してください。";});}' +
   'function zjWatch(ids,zenbu){var msg=document.getElementById("zjmsg");var t0=Date.now();var n=0;' +
   '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認ください。";return;}' +
   'zjAsk("send_progress",{ids:ids},function(s){' +
