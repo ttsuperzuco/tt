@@ -4249,6 +4249,10 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcseg button.on{background:#2563EB;color:#fff;border-color:#2563EB;}' +
     '.bcwimg{width:100%;border-radius:12px;display:block;margin:12px 0 0;}' +
     // ★入力欄の下に出す「【時間】」（なぞってコピーできる・まるちゃん指示 2026-09-09）
+    // ★配信する文そのものを見せる白い枠（まるちゃん指示 2026-09-09）
+    '.bcotxv{background:#fff;color:#111;border-radius:10px;padding:12px 13px;' +
+    'font-size:16px;line-height:1.7;white-space:pre-wrap;word-break:break-word;' +
+    'user-select:text;-webkit-user-select:text;}' +
     '.bcinstx{margin-left:auto;padding:7px 11px;border:0;border-radius:9px;' +
     'background:#0B1220;color:#fff;font-size:15px;font-weight:800;cursor:pointer;' +
     'user-select:text;-webkit-user-select:text;white-space:nowrap;}' +
@@ -4654,6 +4658,9 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★配信文は**1個ずつ**（まるちゃん指示 2026-09-08「全員違う文章だから1個ずつ入力して画面移動」）。
   //   並びは 🇯🇵新規男性→既存男性→新規女性→既存女性。入力欄の下に「できあがり」を出す。
   'function ordLabel(i,zh){var x=BORDER[i];return (zh?"🇹🇼":"🇯🇵")+x[0]+x[1];}' +
+  // ★中身のある区分の番号だけを並べる（空欄は数にも入れない・まるちゃん指示 2026-09-09）
+  'function zLive(){var a=[],i;for(i=0;i<BORDER.length;i++)' +
+  'if(String((MZH[i]||{}).text||"").replace(/^\\s+|\\s+$/g,""))a.push(i);return a;}' +
   'function drawMake(){var h,N=BORDER.length;' +
   'if(MIDX>=N)MIDX=N-1;if(MIDX<0)MIDX=0;' +
   'if(MSTEP===0){' +
@@ -4708,11 +4715,15 @@ function renderBroadcastPage_(base, staff, dev) {
   ':\'<button type="button" class="bcgo" id="bcmzok">この内容でOK</button>\');' +
   '\'\';}}' +
   'else if(MSTEP===2){' +
-  'var z=MZH[MIDX]||{text:""},lastz=(MIDX===N-1),ov2=(z.text||"").length>MAXT;' +
-  'h=\'<div class="bcstop"><span class="bcsttl">台湾版を確かめる</span>\'+' +
-  '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
+  // ★中身のある区分だけを順に見せる。数え方もその数だけ（まるちゃん指示 2026-09-09）
+  'var lv=zLive(),pos=lv.indexOf(MIDX);' +
+  'if(pos<0&&lv.length){MIDX=lv[0];pos=0;}' +
+  'var z=MZH[MIDX]||{text:""},lastz=(pos<0||pos===lv.length-1),ov2=(z.text||"").length>MAXT;' +
+  'h=\'<div class="bcstop"><span class="bcsttl">中国語版の配信分の確認</span>\'+' +
+  '\'<span class="bcsno">\'+(lv.length?((pos+1)+\' / \'+lv.length):\'0 / 0\')+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b></div>\'+' +
-  '\'<div class="bcouttx">\'+esc(z.text||' +
+  // ★配信する文そのものは白い枠に入れて、ほかと見分けられるようにする
+  '\'<div class="bcotxv">\'+esc(z.text||' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません"))+\'</div>\'+' +
   '\'<div class="bcnum\'+(ov2?" over":"")+\'">\'+(z.text||"").length+\'文字\'+' +
   '(ov2?("　※"+MAXT+"文字を超えています"):"")+\'</div></div>\';' +
@@ -4743,7 +4754,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'e=document.getElementById("bcmprev2");' +
   'if(e)e.onclick=function(){MIDX--;status("");draw();};' +
   'e=document.getElementById("bcmoknext");' +
-  'if(e)e.onclick=function(){MIDX++;status("");draw();};' +
+  'if(e)e.onclick=function(){var lv=zLive(),q=lv.indexOf(MIDX);' +
+  'MIDX=(q>=0&&q+1<lv.length)?lv[q+1]:MIDX;status("");draw();};' +
   'e=document.getElementById("bcmdone");' +
   'if(e)e.onclick=function(){page="t";step=0;MMSG="";status("");draw();};' +
   // ★専用の入れ物にする（e は下で別の部品に入れ替わるため）
@@ -4799,7 +4811,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ZSEP="＝＝＝＝＝＝＝＝";' +
   'function zsplit(s){var m=String(s||"").split(/[＝=]{5,}/);' +
   'return (m.length>=2)?[m[0],m.slice(1).join("")]:null;}' +
+  // ★訳すのは中身のある区分だけ。数え方もその数（まるちゃん指示 2026-09-09）
   'function makeZh(){var N=BORDER.length,zs=[],i=0,lost=0;' +
+  'var need=[],w;for(w=0;w<N;w++)' +
+  'if(String(MBODYS[w]||"").replace(/^\\s+|\\s+$/g,""))need.push(w);' +
+  'var nn=need.length,dn=0;' +
   'MBUSY=true;MMSG="台湾のお客様向けに訳しています…（1つ1分ほど）";draw();' +
   'function ng(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();}' +
   '(function next(){' +
@@ -4812,12 +4828,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'else{z=z.replace(/[＝=]{5,}/g,"").replace(/^\\s+|\\s+$/g,"");' +
   's=z?(z+"\\n\\n"+tt):"";}' +
   'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:s};});' +
-  'MBUSY=false;MSTEP=2;MIDX=0;status("");' +
+  'MBUSY=false;MSTEP=2;MIDX=(zLive()[0]===undefined)?0:zLive()[0];status("");' +
   'MMSG=lost?("※"+lost+"つで、時間を入れる場所の目印が訳の中に残らなかったので、"+' +
   '"時間は文の最後に入れました。"):"";' +
   'draw();return;}' +
-  'MMSG=(i+1)+" / "+N+"　「"+ordLabel(i,false)+"」を訳しています…";draw();' +
   'var b0=String(MBODYS[i]||"").replace(/^\\s+|\\s+$/g,"");' +
+  'if(!b0){zs[i]={z:"",had:false};i++;next();return;}' +
+  'dn++;MMSG=dn+" / "+nn+"　「"+ordLabel(i,false)+"」を訳しています…";draw();' +
   'var k0=b0.indexOf("【時間】"),had=(k0>=0);' +
   'var send=had?(b0.slice(0,k0).replace(/\\s+$/,"")+"\\n\\n"+ZSEP+"\\n\\n"+' +
   'b0.slice(k0+4).replace(/^\\s+/,"")):b0;' +
