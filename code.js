@@ -4660,6 +4660,19 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★配信文は**1個ずつ**（まるちゃん指示 2026-09-08「全員違う文章だから1個ずつ入力して画面移動」）。
   //   並びは 🇯🇵新規男性→既存男性→新規女性→既存女性。入力欄の下に「できあがり」を出す。
   'function ordLabel(i,zh){var x=BORDER[i];return (zh?"🇹🇼":"🇯🇵")+x[0]+x[1];}' +
+  // ★これから送る区分の名前を並べる（空欄は入れない・まるちゃん指示 2026-09-09）
+  'function sendNames(){var a=[],i;' +
+  'for(i=0;i<BORDER.length;i++)' +
+  'if(String((MJA[i]||{}).text||"").replace(/^\\s+|\\s+$/g,""))a.push(ordLabel(i,false));' +
+  'for(i=0;i<BORDER.length;i++)' +
+  'if(String((MZH[i]||{}).text||"").replace(/^\\s+|\\s+$/g,""))a.push(ordLabel(i,true));' +
+  'return a;}' +
+  // ★最後のボタンの文＝何種類のどれを作るかを書く
+  'function makeBtn(id){var a=sendNames();' +
+  'if(!a.length)return \'<div class="bcstatus ng">送る区分がありません。\'+' +
+  '\'「← 前に戻る」で文を入れてください。</div>\';' +
+  'return \'<button type="button" class="bctxt" id="\'+id+\'">以上の内容で、\'+' +
+  'a.length+\'種類（\'+esc(a.join("・"))+\'）の予約可能枠画像を生成する</button>\';}' +
   // ★中身のある区分の番号だけを並べる（空欄は数にも入れない・まるちゃん指示 2026-09-09）
   'function zLive(){var a=[],i;for(i=0;i<BORDER.length;i++)' +
   'if(String((MZH[i]||{}).text||"").replace(/^\\s+|\\s+$/g,""))a.push(i);return a;}' +
@@ -4713,7 +4726,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '(zov?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
   'h+=\'</div>\';' +
   'if(!MBUSY){h+=zov?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
-  ':(zlast?\'<button type="button" class="bcgo" id="bcmzok3">この内容で対象に入れて画像も作る</button>\'' +
+  ':(zlast?makeBtn("bcmzok3")' +
   ':\'<button type="button" class="bcgo" id="bcmzok">この内容でOK</button>\');' +
   '\'\';}}' +
   'else if(MSTEP===2){' +
@@ -4731,7 +4744,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+(z.text||"").length+\'文字\'+' +
   '(ov2?("　※"+MAXT+"文字を超えています"):"")+\'</div></div>\';' +
   'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
-  ':(lastz?\'<button type="button" class="bcgo" id="bcmok3">この内容で対象に入れて画像も作る</button>\'' +
+  ':(lastz?makeBtn("bcmok3")' +
   ':\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\');' +
   '\'\';}}' +
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作成</div><div class="bchr"></div>\'+' +
