@@ -5079,15 +5079,14 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div><input type="time" id="bctime" value="11:00"></div></div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcplace">この内容で \'+m+\'通り 予約する</button>\'+' +
   '\'\';}' +
-  'h+=\'<div id="bclist"></div>\';' +
+  // ★予約した配信の一覧はこの画面に出さない（まるちゃん指示 2026-09-09）
   'box.innerHTML=freshBar()+h;bindFresh();' +
   'var e=document.getElementById("bcplan");' +
   'if(e)e.onclick=function(){LMODE="at";status("");draw();};' +
   'e=document.getElementById("bcnoat");' +
   'if(e)e.onclick=function(){LMODE="";status("");draw();};' +
   'e=document.getElementById("bcnow");if(e)e.onclick=function(){doPlace(true);};' +
-  'e=document.getElementById("bcplace");if(e)e.onclick=function(){doPlace(false);};' +
-  'loadList();}' +
+  'e=document.getElementById("bcplace");if(e)e.onclick=function(){doPlace(false);};}' +
   // ── 予約する ────────────────────────────────────────
   'function doPlace(now){' +
   'var dateEl=document.getElementById("bcdate"),timeEl=document.getElementById("bctime");' +
@@ -5121,8 +5120,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'MJA=[];MZH=[];MSTEP=0;MIDX=0;MMSG="";MBODY="";MBODYS=["","","",""];' +
   'MZBODYS=["","","",""];TAGS=[];' +
   'WTEXT="";SRES=null;SPER="";SIDX=0;FRESH=false;LMODE="";' +
-  'wipClear();step=0;page="t";mode="";draw();}' +
-  'loadList();},' +
+  'wipClear();step=0;page="t";mode="";draw();}},' +
   'function(m2){if(go)go.disabled=false;szOvHide_();status(m2,true);});},1200);});' +
   '}catch(err){var g2=document.getElementById(now?"bcnow":"bcplace");' +
   'if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
