@@ -4368,6 +4368,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(WIPT)clearTimeout(WIPT);' +
   'WIPT=setTimeout(function(){WIPT=null;' +
   'var o=packNow(true);' +
+  // ★★空っぽの状態を、覚えてある作業の上に書かない（2026-09-09 これで実際に消えた）。
+  //   まっさらに戻す時は wipClear が別に空っぽを書くので、そちらは今までどおり効く。
+  'if(!wipAny(o))return;' +
   'try{if(JSON.stringify(o).length>WIPMAX)o=packNow(false);}catch(e){}' +
   'try{pushImage(WIPNAME,o);}catch(e2){}},1200);}' +
   'function wipClear(){if(WIPT){clearTimeout(WIPT);WIPT=null;}' +
