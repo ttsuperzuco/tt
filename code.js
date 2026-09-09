@@ -4923,7 +4923,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'for(var k=ps.length-1;k>=0;k--)' +
   'if(ps[k].kind==="image"&&(ps[k].src||"").indexOf("made:")===0)ps.splice(k,1);});' +
   'if(!mkimg){MBUSY=false;MMSG="";page="t";step=0;mode="";' +
-  'status("文を入れました。中身を確かめてください。");draw();return;}' +
+  'status("");draw();return;}' +
   'var src=((SRES&&SRES.groups)||[]).map(function(g){return g.label+"\\n"+g.text;}).join("\\n\\n");' +
   'WDONE=[];' +
   'runMake(src,function(i,tot,label){' +
