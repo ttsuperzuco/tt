@@ -4339,6 +4339,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
   'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,zbodies:MZBODYS,' +
+  'ja:MJA,zh:MZH,' +
   'midx:MIDX,mstep:MSTEP,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   'function saveNow(){if(!WIPON)return;' +
@@ -4369,6 +4370,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'WTEXT=s.text||"";MBODY=s.body||"";SPER=s.per||"";SIDX=s.sidx||0;' +
   'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
   'if(s.zbodies&&s.zbodies.length)MZBODYS=s.zbodies;' +
+  'if(s.ja&&s.ja.length)MJA=s.ja;if(s.zh&&s.zh.length)MZH=s.zh;' +
   'MIDX=s.midx||0;' +
   'if(s.mstep===0||s.mstep===1||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();}' +
@@ -4722,10 +4724,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'h=\'<div class="bcstop"><span class="bcsttl">中国語版の配信分の確認</span>\'+' +
   '\'<span class="bcsno">\'+(lv.length?((pos+1)+\' / \'+lv.length):\'0 / 0\')+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b></div>\'+' +
-  // ★配信する文そのものは白い枠に入れて、ほかと見分けられるようにする
-  '\'<div class="bcotxv">\'+esc(z.text||' +
-  '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません"))+\'</div>\'+' +
-  '\'<div class="bcnum\'+(ov2?" over":"")+\'">\'+(z.text||"").length+\'文字\'+' +
+  // ★配信する文は白い欄に入れて、ここで直せるようにする（まるちゃん指示 2026-09-09）
+  '\'<textarea id="bcmzedit" class="bcmtx" placeholder="\'+' +
+  'esc("空欄のため、"+ordLabel(MIDX,true)+"には配信しません")+\'">\'+' +
+  'esc(z.text||"")+\'</textarea>\'+' +
+  '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+(z.text||"").length+\'文字\'+' +
   '(ov2?("　※"+MAXT+"文字を超えています"):"")+\'</div></div>\';' +
   'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
   ':(lastz?\'<button type="button" class="bcgo" id="bcmok3">この内容で対象に入れて画像も作る</button>\'' +
@@ -4753,6 +4756,17 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(e)e.onclick=function(){MSTEP=0;MIDX=0;MMSG="";status("");draw();};' +
   'e=document.getElementById("bcmprev2");' +
   'if(e)e.onclick=function(){MIDX--;status("");draw();};' +
+  // ★中国語版の確認の画面で直した中身を、その場で覚える
+  'var zed=document.getElementById("bcmzedit");' +
+  'if(zed)zed.oninput=function(){' +
+  'if(!MZH[MIDX])MZH[MIDX]={label:ordLabel(MIDX,true),' +
+  'atama:BORDER[MIDX][0],sei:BORDER[MIDX][1],text:""};' +
+  'MZH[MIDX].text=zed.value;' +
+  'var zn=document.getElementById("bcmznum2");' +
+  'if(zn){var zo=zed.value.length>MAXT;' +
+  'zn.textContent=zed.value.length+"文字"+(zo?("　※"+MAXT+"文字を超えています"):"");' +
+  'zn.className="bcnum"+(zo?" over":"");}' +
+  'saveNow();};' +
   'e=document.getElementById("bcmoknext");' +
   'if(e)e.onclick=function(){var lv=zLive(),q=lv.indexOf(MIDX);' +
   'MIDX=(q>=0&&q+1<lv.length)?lv[q+1]:MIDX;status("");draw();};' +
