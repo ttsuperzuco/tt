@@ -1005,12 +1005,15 @@ function getTileSettings_() {
 }
 
 // ========== 人ごとの権限（誰にどのボタンを見せるか）＝ tile_settings.py と一致 ==========
-// 人ID（tile_settings.py の PEOPLE と順番・IDを一致させること）。kanbu=社長, reception=お店受付。
-var PEOPLE_ = ['kanbu', 'ringo', 'mikan', 'olive', 'marron', 'mango', 'coconut', 'reception'];
+// 人ID（tile_settings.py の PEOPLE と順番・IDを一致させること）。kanbu=社長, reception=お店受付PC。
+// ★2026-09-09 まるちゃん決定：🌰マロンを削除／「お店受付」→「お店受付PC」に改名（IDは reception の
+//   ままにする＝すでにその名前を選んでいる端末が選び直しにならないため）／「お店スマホ」(reception_sp)
+//   を追加（権限はお店受付PCと同じ）。
+var PEOPLE_ = ['kanbu', 'ringo', 'mikan', 'olive', 'mango', 'coconut', 'reception', 'reception_sp'];
 // 表示名（アプリの名前選択・ログで使う。絵文字つき）。
 var PERSON_LABEL_ = {
   kanbu: '🍅トマト', ringo: '🍎りんご', mikan: '🍊みかん', olive: '🫒オリーブ',
-  marron: '🌰マロン', mango: '🥭マンゴー', coconut: '🥥ココナッツ', reception: 'お店受付'
+  mango: '🥭マンゴー', coconut: '🥥ココナッツ', reception: 'お店受付PC', reception_sp: 'お店スマホ'
 };
 // 初期権限＝全員「施術室被り(conflict)」だけON（tile_settings.py DEFAULT と一致）。
 // peopleを省略した時は base8(PEOPLE_)のみ＝壊れた時の最終フォールバック用。
