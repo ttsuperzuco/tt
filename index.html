@@ -135,7 +135,7 @@
 <script src="nr_rules.js?v=2539f81b75"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
 <script src="bigsend.js?v=0371a3ad72"></script>
-<script src="code.js?v=ff94f42f50"></script>
+<script src="code.js?v=cac9e33ee1"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -685,6 +685,7 @@
 
   // ★予約入力＝開発URL専用。貼って選ぶ→事務所PC(edit_worker op=new_reservation)が新規予約を作る（renderNewReservationPage_ 内スクリプトが窓口へ依頼）。
   function showYoyaku() { mount(renderReservationHomePage_(base, staff, dev)); }        // トップ画面（新規/既存/変更）
+  function showYoyakuSejutsugo() { mount(renderAfterTreatmentPage_(base, staff, dev)); } // 「施術後の予約」＝施術者が次回を入れる（準備中）
   function showYoyakuNew() { mount(renderNewReservationPage_(base, staff, dev)); }       // 「新規の予約」の入力画面
   function showYoyakuKizon() { mount(renderExistingPage_(base, staff, dev, '予約')); }   // 「既存の予約」＝番号→日付
   function showYoyakuHenkou() { mount(renderExistingPage_(base, staff, dev, '変更')); }  // 「既存の変更」＝番号→日付
@@ -851,6 +852,7 @@
     else if (v === 'bcast') showBroadcast();
     else if (v === 'honyaku') showHonyaku();
     else if (v === 'yoyaku') showYoyaku();
+    else if (v === 'yoyaku_sejutsugo') showYoyakuSejutsugo();
     else if (v === 'yoyaku_new') showYoyakuNew();
     else if (v === 'yoyaku_kizon') showYoyakuKizon();
     else if (v === 'yoyaku_henkou') showYoyakuHenkou();

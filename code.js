@@ -167,6 +167,9 @@ function doGet(e) {
   } else if (view === 'yoyaku') {
     title = '予約入力';                                  // ★予約入力のトップ画面（新規／既存／変更の3ボタン・PC版と同じ見た目）
     html = renderReservationHomePage_(base, staff, dev);
+  } else if (view === 'yoyaku_sejutsugo') {
+    title = '施術後の予約';                              // ★施術者がその場で次回の予約を入れる入口（中身はこれから）
+    html = renderAfterTreatmentPage_(base, staff, dev);
   } else if (view === 'yoyaku_new') {
     title = '新規予約入力';                              // ★「新規の予約」を押した先＝貼って選ぶ→事務所PCが新規予約を作る（純JS）
     html = renderNewReservationPage_(base, staff, dev);
@@ -5379,14 +5382,37 @@ function renderReservationHomePage_(base, staff, dev) {
         '<span class="ricon">📖</span><span class="rname">既存の予約</span></a>' +
       '<a class="rolebtn kanri" href="' + base + '?view=yoyaku_henkou' + sfx + '" target="_top">' +
         '<span class="ricon">✏️</span><span class="rname">既存の変更</span></a>') : '';
+  // ★2026-09-11 まるちゃん指示：一番上に「施術後の予約」＝施術者がその場でそのお客様の次回を入れる入口。
+  //   中身はこれから作る（今は準備中の画面）。新しいボタンなので既定は開発者(?dev=1)だけに出す。
+  var sg = dev ?
+      ('<a class="rolebtn sejutsugo" href="' + base + '?view=yoyaku_sejutsugo' + sfx + '" target="_top">' +
+        '<span class="ricon">💆</span><span class="rname">施術後の予約</span></a>') : '';
   var menu =
     '<div class="rolemenu">' +
+      sg +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
         '<span class="ricon">📝</span><span class="rname">新規の予約</span></a>' +
       ex +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) + head + menu + '</div>';
+}
+
+/** 「施術後の予約」＝施術者が施術のあと、その場でそのお客様の次回の予約を入れる入口。
+ *  ★2026-09-11 まるちゃん指示でボタンだけ先に作った。中身はこれから決める（今は準備中の案内）。 */
+function renderAfterTreatmentPage_(base, staff, dev) {
+  var head = '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>' +
+             '<div class="hsub">TaiwanTomato</div>';
+  var body =
+    '<div class="rolemenu">' +
+      '<div class="rolebtn sejutsugo" style="cursor:default">' +
+        '<span class="ricon">🛠️</span>' +
+        '<span class="rname" style="font-size:1.15rem;line-height:1.6">準備中です<br>' +
+        '<span style="font-weight:700;font-size:.95rem">施術者が、その場でお客様の次回の予約を入れる画面です。</span></span>' +
+      '</div>' +
+    '</div>';
+  return '<style>' + HOMECSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) + head + body + '</div>';
 }
 
 function renderNewReservationPage_(base, staff, dev) {
@@ -8821,12 +8847,14 @@ var HOMECSS_ =
 '  .rolebtn.kanri::before { background:#f59e0b; }' +
 '  .rolebtn.jitsumu::before { background:#16a34a; }' +
 '  .rolebtn.kaihatsu::before { background:#6366f1; }' +
+'  .rolebtn.sejutsugo::before { background:#0ea5e9; }' +
 '  .rolebtn:active { transform:translateY(2px); }' +
 '  @media (hover:hover){ .rolebtn:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.14); } }' +
 '  .ricon { flex:none; width:52px; height:52px; border-radius:13px; font-size:30px; display:grid; place-items:center; }' +
 '  .rolebtn.kanri .ricon { background:rgba(245,158,11,.16); }' +
 '  .rolebtn.jitsumu .ricon { background:rgba(22,163,74,.15); }' +
 '  .rolebtn.kaihatsu .ricon { background:rgba(99,102,241,.15); }' +
+'  .rolebtn.sejutsugo .ricon { background:rgba(14,165,233,.16); }' +
 '  .rname { flex:1; min-width:0; font-size:1.6rem; font-weight:900; }' +
 '  .rcount { flex:none; color:var(--sub); font-size:.95rem; font-weight:700; }' +
 '  .backbar { margin:0 0 16px; }' +
