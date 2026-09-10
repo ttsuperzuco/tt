@@ -169,7 +169,7 @@ function doGet(e) {
     html = renderReservationHomePage_(base, staff, dev);
   } else if (view === 'yoyaku_sejutsugo') {
     title = '施術後の予約';                              // ★施術者がその場で次回の予約を入れる入口（中身はこれから）
-    html = renderAfterTreatmentPage_(base, staff, dev);
+    html = renderAfterTreatmentPage_(base, staff, dev, who);
   } else if (view === 'yoyaku_new') {
     title = '新規予約入力';                              // ★「新規の予約」を押した先＝貼って選ぶ→事務所PCが新規予約を作る（純JS）
     html = renderNewReservationPage_(base, staff, dev);
@@ -5399,20 +5399,123 @@ function renderReservationHomePage_(base, staff, dev) {
 }
 
 /** 「施術後の予約」＝施術者が施術のあと、その場でそのお客様の次回の予約を入れる入口。
- *  ★2026-09-11 まるちゃん指示でボタンだけ先に作った。中身はこれから決める（今は準備中の案内）。 */
-function renderAfterTreatmentPage_(base, staff, dev) {
+ *  ★2026-09-11 まるちゃん指示の2枚目＝担当を選ぶ画面。
+ *    「担当を選ぶのは、その担当の予約（お客様）をしぼりこむため」（まるちゃん）。
+ *    ・ボタンは「マーク＋呼び方」／施術時間順に並ぶ／いまの施術がはじめから選ばれている
+ *    ・自分のスマホ（施術者本人）なら、その施術者がいちばん上ではじめから選ばれている
+ *    ・いちばん下は「全施術者」
+ *  ★並び・はじめの選択の判断は書き写さない＝共通の1本 `SG`（sg_rules.js）に聞く。 */
+function renderAfterTreatmentPage_(base, staff, dev, who) {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var head = '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>' +
              '<div class="hsub">TaiwanTomato</div>';
+  var css =
+    '.sg{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+    '.sgstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:15px;margin:2px 4px 10px;}' +
+    '.sgstaff{display:flex;flex-direction:column;gap:12px;margin:0 0 22px;}' +
+    '.sgbtn{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;text-align:left;' +
+      'background:#fff;color:#0f172a;border:0;border-radius:18px;padding:18px 18px;cursor:pointer;' +
+      'box-shadow:0 6px 18px rgba(0,0,0,.12);position:relative;overflow:hidden;}' +
+    '.sgbtn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:#0ea5e9;}' +
+    '.sgbtn.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
+    '.sgbtn .sgmk{flex:none;width:52px;height:52px;border-radius:13px;font-size:30px;display:grid;' +
+      'place-items:center;background:rgba(14,165,233,.16);}' +
+    '.sgbtn .sgnm{flex:1;min-width:0;font-size:1.5rem;font-weight:900;}' +
+    '.sgbtn .sgsub{flex:none;color:#475569;font-weight:800;font-size:.95rem;}' +
+    '.sgbtn.all::before{background:#64748b;}' +
+    '.sgbtn.all .sgmk{background:rgba(100,116,139,.16);}' +
+    '.sglist{display:flex;flex-direction:column;gap:12px;margin:6px 0 8px;}' +
+    '.sgrow{display:block;width:100%;box-sizing:border-box;text-align:left;background:#fff;color:#0f172a;' +
+      'border:0;border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
+    '.sgrow .sgtm{display:block;font-weight:900;font-size:28px;}' +
+    '.sgrow .sgcd{display:block;font-weight:900;font-size:25px;margin-top:4px;}' +
+    '.sgrow .sgnote{display:block;color:#475569;font-weight:800;font-size:20px;margin-top:6px;line-height:1.45;}' +
+    '.sgroom{display:inline-block;color:#fff;border-radius:10px;padding:2px 12px;font-weight:900;font-size:20px;margin-right:8px;}' +
+    '.sgnow{display:inline-block;background:#16a34a;color:#fff;border-radius:10px;padding:2px 12px;' +
+      'font-weight:900;font-size:18px;margin-left:8px;vertical-align:middle;}' +
+    '.sgstatus{color:#fff;font-weight:800;font-size:18px;margin:10px 4px;min-height:24px;line-height:1.6;}';
   var body =
-    '<div class="rolemenu">' +
-      '<div class="rolebtn sejutsugo" style="cursor:default">' +
-        '<span class="ricon">🛠️</span>' +
-        '<span class="rname" style="font-size:1.15rem;line-height:1.6">準備中です<br>' +
-        '<span style="font-weight:700;font-size:.95rem">施術者が、その場でお客様の次回の予約を入れる画面です。</span></span>' +
-      '</div>' +
+    '<div class="sg">' +
+      '<div class="sgstep">担当を選んでください</div>' +
+      '<div class="sgstaff" id="sgstaff"></div>' +
+      '<div class="sgstep" id="sglisthead" style="display:none"></div>' +
+      '<div class="sglist" id="sglist"></div>' +
+      '<div class="sgstatus" id="sgstatus">今日の予約を読んでいます...</div>' +
     '</div>';
-  return '<style>' + HOMECSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) + head + body + '</div>';
+  var script =
+    '<script>(function(){' +
+    'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
+    'var pick=null,BK=[],ALLEV=[];' +
+    'function $(i){return document.getElementById(i);}' +
+    'function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){' +
+      'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
+    /* 今日の予約を受け取る（先読みがあればそれ、無ければ自分で取りに行く） */
+    'function need(cb){' +
+      'var e=window.__PF_&&window.__PF_["yoyaku_sejutsugo"];' +
+      'if(e){' +
+        'if(e.cached){cb(e.cached);}' +
+        'if(e.payload!==undefined){cb(e.payload);return;}' +
+        'e.waiter=function(p){cb(p);};return;}' +
+      'var nm="__sgGot_"+Date.now();window[nm]=function(p){cb(p);};' +
+      'var s=document.createElement("script");' +
+      's.src=EXEC+"?action=data&name=events.json&callback="+nm+"&cb="+Date.now();' +
+      's.onerror=function(){cb({error:"net"});};document.body.appendChild(s);}' +
+    /* 受け取った予定から「今日・うちの施術者の分」だけ取り出す */
+    'function build(p){' +
+      'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読めませんでした。通信環境をご確認ください。";return;}' +
+      'var today=p.date_from||"";ALLEV=[];BK=[];' +
+      'for(var i=0;i<p.events.length;i++){var e=p.events[i];if(e.date!==today)continue;' +
+        'var mk=(typeof staffOf==="function")?staffOf(e.title||""):"";' +
+        'if(!SG.nameOfMark(mk))continue;' +
+        'ALLEV.push({mark:mk,start:e.start_at_ms,end:e.end_at_ms,title:e.title||"",note:e.note||"",' +
+          'room:e.calendar_name||"",st:e.start_time||"",et:e.end_time||""});' +
+        'BK.push({mark:mk,start:e.start_at_ms,end:e.end_at_ms});}' +
+      'draw();}' +
+    'function draw(){' +
+      'var r=SG.staffOrder(BK,WHO,Date.now());' +
+      'if(pick===null)pick=r.selected;' +
+      'var h="";' +
+      'for(var i=0;i<r.list.length;i++){var x=r.list[i];' +
+        'var sub=x.bucket===0?"いま施術中":(x.bucket===1?"このあと":"本日終了");' +
+        'h+="<button type=\\"button\\" class=\\"sgbtn"+(pick===x.mark?" sel":"")+"\\" data-mk=\\""+esc(x.mark)+"\\">"+' +
+          '"<span class=\\"sgmk\\">"+esc(x.mark)+"</span>"+' +
+          '"<span class=\\"sgnm\\">"+esc(x.name)+"</span>"+' +
+          '"<span class=\\"sgsub\\">"+sub+"・"+x.count+"件</span></button>";}' +
+      'h+="<button type=\\"button\\" class=\\"sgbtn all"+(pick===SG.ALL?" sel":"")+"\\" data-mk=\\""+SG.ALL+"\\">"+' +
+        '"<span class=\\"sgmk\\">👥</span><span class=\\"sgnm\\">全施術者</span></button>";' +
+      '$("sgstaff").innerHTML=h;' +
+      'var bs=$("sgstaff").getElementsByClassName("sgbtn");' +
+      'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){pick=this.getAttribute("data-mk");draw();};}' +
+      'rows();}' +
+    /* 選んだ担当の、今日の予約（＝お客様）を時間順に出す */
+    'function rows(){' +
+      'var now=Date.now();' +
+      'var list=ALLEV.filter(function(e){return pick===SG.ALL||e.mark===pick;});' +
+      'list.sort(function(a,b){return a.start-b.start;});' +
+      'var hd=$("sglisthead");' +
+      'hd.style.display="";hd.textContent=(pick===SG.ALL?"全施術者":SG.labelOfMark(pick))+"の今日の予約";' +
+      'if(!list.length){$("sglist").innerHTML="";' +
+        '$("sgstatus").textContent="この担当の今日の予約はありません。";return;}' +
+      '$("sgstatus").textContent="";' +
+      'var h="";' +
+      'for(var i=0;i<list.length;i++){var e=list[i];' +
+        'var cd=(typeof codeOf==="function")?codeOf(e.title):"";' +
+        'var nm=(typeof customerLine==="function")?(customerLine(e.note).name||""):"";' +
+        'var col=(typeof roomColor_==="function")?roomColor_(e.room):"#64748b";' +
+        'var live=(e.start<=now&&now<e.end)?"<span class=\\"sgnow\\">いま施術中</span>":"";' +
+        'h+="<button type=\\"button\\" class=\\"sgrow\\" data-id=\\""+i+"\\">"+' +
+          '"<span class=\\"sgtm\\">"+esc(e.st)+"〜"+esc(e.et)+live+"</span>"+' +
+          '"<span class=\\"sgcd\\">"+esc(e.mark)+" "+esc(cd||"番号なし")+"</span>"+' +
+          '"<span class=\\"sgnote\\"><span class=\\"sgroom\\" style=\\"background:"+col+"\\">"+esc(e.room)+"</span>"+esc(nm)+"</span>"+' +
+          '"</button>";}' +
+      '$("sglist").innerHTML=h;' +
+      'var rs=$("sglist").getElementsByClassName("sgrow");' +
+      'for(var k=0;k<rs.length;k++){rs[k].onclick=function(){' +
+        'szPopup_("このお客様の次回の予約を入れる画面は、これから作ります。",{icon:""});};}}' +
+    'need(build);' +
+    '})();<' + '/script>';
+  return '<style>' + HOMECSS_ + css + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) + head + body + '</div>' + script;
 }
 
 function renderNewReservationPage_(base, staff, dev) {
