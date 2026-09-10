@@ -989,12 +989,15 @@ var DEFAULT_TILE_SETTINGS_ = {
   pcstatus:   { exec: false, staff: false },
   // ★LINE一斉配信予約＝オーナー(開発者)専用。timedsend/cost と同じく開発URL(?dev=1)専用
   //   （tile_settings.py の TILES にも入れない＝誰もONにできない・共通ルール16）。2026-09-05。
-  bcast:      { exec: false, staff: false }
+  bcast:      { exec: false, staff: false },
+  // ★施術後の予約＝作りかけ。bcast/cost と同じく開発URL(?dev=1)専用
+  //   （tile_settings.py の TILES にも入れない＝誰もONにできない・共通ルール16）。2026-09-11。
+  sejutsugo:  { exec: false, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1679,7 +1682,13 @@ var TILE_DEFS_ = [
   { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
     icon: '<span class="ticon">🖥️</span>', label: '自宅\nPC' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
-    icon: '<span class="ticon">📝</span>', label: '予約\n入力' }
+    icon: '<span class="ticon">📝</span>', label: '予約\n入力' },
+  // ★施術後の予約＝施術者が施術のあと、その場でそのお客様の次回の予約を入れる入口（作りかけ）。
+  //   まるちゃん依頼 2026-09-11「開発中の機能は、ここにもいれて。すぐに呼び出せるように」。
+  //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発URL(?dev=1)専用
+  //   （tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
+  { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
+    icon: '<span class="ticon">💆</span>', label: '施術後の\n予約' }
 ];
 
 // ★2026-08-02 まるちゃん決定：開発版(?dev=1)とPC版のホームは、まず「管理者用／実務者用／開発者用」の
@@ -1694,7 +1703,7 @@ var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   uriage: 'kanri', procell: 'kanri',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'kanri', icon: '🛠️', title: '管理者用' },
@@ -5464,12 +5473,17 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'function build(p){' +
       'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読めませんでした。通信環境をご確認ください。";return;}' +
       'var today=p.date_from||"";ALLEV=[];BK=[];' +
+      'var day=[];' +
       'for(var i=0;i<p.events.length;i++){var e=p.events[i];if(e.date!==today)continue;' +
         'var mk=(typeof staffOf==="function")?staffOf(e.title||""):"";' +
-        'if(!SG.nameOfMark(mk))continue;' +
-        'ALLEV.push({mark:mk,start:e.start_at_ms,end:e.end_at_ms,title:e.title||"",note:e.note||"",' +
-          'room:e.calendar_name||"",st:e.start_time||"",et:e.end_time||""});' +
-        'BK.push({mark:mk,start:e.start_at_ms,end:e.end_at_ms});}' +
+        'day.push({mark:mk,start:e.start_at_ms,end:e.end_at_ms,title:e.title||"",note:e.note||"",' +
+          'room:e.calendar_name||"",st:e.start_time||"",et:e.end_time||""});}' +
+      /* ★カウンセリングの枠を出すかどうかは共通の1本にきく（同じ日に施術もある人の相談は出さない）。
+         ★相手を探すには「うちの施術者でない枠」も要るので、間引いてから施術者で絞る。 */
+      'var vis=SG.visibleBookings(day);' +
+      'for(var v=0;v<vis.length;v++){var x=vis[v];' +
+        'if(!SG.nameOfMark(x.mark))continue;' +
+        'ALLEV.push(x);BK.push({mark:x.mark,start:x.start,end:x.end});}' +
       'draw();}' +
     'function draw(){' +
       'var r=SG.staffOrder(BK,WHO,Date.now());' +
@@ -8991,6 +9005,7 @@ var HOMECSS_ =
 '  .tile.igdm::before { background:#c13584; }' +
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
+'  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -9009,6 +9024,7 @@ var HOMECSS_ =
 '  .tile.instadm .ticon { background:rgba(225,48,108,.16); }' +
 '  .tile.igdm .ticon { background:rgba(193,53,132,.16); }' +
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
+'  .tile.sejutsugo .ticon { background:rgba(14,165,233,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +

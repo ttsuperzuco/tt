@@ -66,6 +66,79 @@
     return n ? (mark + n) : mark;
   };
 
+  /* ── ★カウンセリングの枠を出すか出さないか（まるちゃん 2026-09-11）──────────
+     「予約する」＝**前の予約メモをコピーして、予約日のタイムツリーに入れる**こと。
+     ・新規の予約で**カウンセリングと施術の両方**がある日
+         → カウンセリングの予約メモはコピーしないので、**カウンセリングの枠は出さない**。
+     ・**カウンセリングしかない**日（その日は施術をしない）
+         → カウンセリングのをコピーするので、**カウンセリングの枠を出す**。
+
+     見分け方（実データ2026-06-01〜09-11で確かめた）：
+     ・カウンセリングの部屋は**コスモス**（`共通\config.py` の COSMOS／新規の予約を作る所も
+       `COUNSELING_ROOM_KEY="COSMOS"`）。
+     ・ただし**コスモスで施術をする回もある**（パリジェンヌ80分・プロセル90分の実例2件）。
+       施術の印（🇫🇷🍯🌿👑福:）が付いている枠は施術なので、カウンセリング扱いにしない。
+     ・同じお客様かどうかは**通し番号が同じ**（どちらかに番号があればそれで見る）。
+       番号がまだ無い新規の方は、印と担当の絵文字を外した**題名の残りが同じ**かで見る
+       （題名の後ろの書き足し「サマカ」「※〜と来店」で外れないよう、番号を先に見る）。
+     ・結果＝コスモスの74枠のうち、印なしの72枠を判定して「出さない65／出す7」。
+       出す7つは全部ほんとうに相談だけの日（うち3つは題名にも「カウンセリングのみ」と書いてある）。 */
+  SG.COUNSEL_ROOM = 'Cosmos';                       /* タイムツリーの入れ物の名前 */
+  SG.TREAT_MARKS = ['🇫🇷', '🍯', '🌿', '👑', '福:'];  /* 施術の印（付いていたら施術） */
+
+  function hasTreatMark(title) {
+    var t = title || '';
+    for (var i = 0; i < SG.TREAT_MARKS.length; i++) {
+      if (t.indexOf(SG.TREAT_MARKS[i]) >= 0) return true;
+    }
+    return false;
+  }
+  /* コスモスで、施術の印が付いていない枠＝カウンセリング。 */
+  SG.isCounseling = function (ev) {
+    if (!ev) return false;
+    if ((ev.room || '') !== SG.COUNSEL_ROOM) return false;
+    return !hasTreatMark(ev.title);
+  };
+
+  var CODE_RE = /([MF])0*(\d{1,3})/;
+  var HEAD_RE = /^\s*([☀-➿\u{1F300}-\u{1FAFF}]️?)/u;
+  SG.codeOfTitle = function (title) {
+    var m = (title || '').match(CODE_RE);
+    return m ? (m[1] + String(parseInt(m[2], 10))) : '';
+  };
+  /* 印と担当の絵文字を外した題名（番号が無い新規の方を見分けるため）。 */
+  SG.bareTitle = function (title) {
+    var s = (title || '').replace(HEAD_RE, '').replace(HEAD_RE, '');
+    for (var i = 0; i < SG.TREAT_MARKS.length; i++) s = s.split(SG.TREAT_MARKS[i]).join('');
+    s = s.split('🪒').join('');
+    return s.replace(/\s/g, '');
+  };
+  SG.samePerson = function (a, b) {
+    var ca = SG.codeOfTitle(a), cb = SG.codeOfTitle(b);
+    if (ca || cb) return !!ca && ca === cb;
+    return SG.bareTitle(a) === SG.bareTitle(b);
+  };
+
+  /* ★本体：その日の予約から「画面に出す分」だけ返す。
+     ev … { mark, start, end, title, room, ... }（同じ1日ぶん）。 */
+  SG.visibleBookings = function (dayEvents) {
+    var all = dayEvents || [];
+    var out = [];
+    for (var i = 0; i < all.length; i++) {
+      var e = all[i];
+      if (!SG.isCounseling(e)) { out.push(e); continue; }
+      var hasTreat = false;
+      for (var j = 0; j < all.length; j++) {
+        var o = all[j];
+        if (o === e) continue;
+        if ((o.room || '') === SG.COUNSEL_ROOM) continue;   /* 相手は施術の枠だけ */
+        if (SG.samePerson(e.title, o.title)) { hasTreat = true; break; }
+      }
+      if (!hasTreat) out.push(e);      /* 相談だけの日＝出す */
+    }
+    return out;
+  };
+
   /* ── 担当ごとの「代表の予約」がどの段階か ──────────────────
      0＝いま施術中／1＝これから／2＝今日はもう終わった。
      この段階の順、同じ段階なら施術の時間が早い順に並べる。 */
