@@ -8336,7 +8336,9 @@ var AKICSS_ =
 '  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
-'  .akfull{ overflow:hidden; }' +
+// ★下の端の時刻（18:00など）は目盛りの線の真横に出すため半分はみ出す。
+//   はみ出した分の逃げ場を下に作らないと切れる（まるちゃん指摘 2026-09-11）。
+'  .akfull{ overflow:hidden; padding-bottom:12px; }' +
 '  .akfhead{ display:flex; padding:2px 0 6px; }' +
 '  .akfx{ width:40px; flex:none; }' +
 '  .akfhc{ flex:1; min-width:0; text-align:center; padding:0 1px; }' +
