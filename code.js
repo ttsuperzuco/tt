@@ -6002,7 +6002,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'else{var needC=(window.__nrNeedCounsel&&sel.needc!=="no");' +
     'if(needC)rows.push({name:"カウンセリング",locked:false,staffOk:nrAnySel("counsel"),roomNeeded:false,roomOk:true});' +
     'rows.push({name:"施術",locked:false,staffOk:nrAnySel("staff"),roomNeeded:!window.__nrMayu,roomOk:nrAnySel("room")});}' +
-    'var r=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""));window.__nrCanReg=r;btn.disabled=!r.ok;' +
+    'var r=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:!sel.gender,tw:!sel.tw});window.__nrCanReg=r;btn.disabled=!r.ok;' +
     'if(ngbox){ngbox.textContent=r.msg;ngbox.style.display=r.ok?"none":"";}' +
     // ★担当か部屋が決まらない＝中身が確定しないので、タイトルは出さない（判断は共通の1本に聞く）。
     'var tv=NR.titleView(r),tsec=document.getElementById("secTitle");' +
@@ -6153,7 +6153,7 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★万一タイトルの返事が返ってこなくても、20秒たったら他の欄だけは出す（画面が出ないままにしない）。
     'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";nrGoCheck();});' +
-    'window.__nrApplyCouns=function(v){var box=document.getElementById("nrCounsAsk");if(!box)return;box.style.display=v.shown?"":"none";var lb=document.getElementById("nrCounsLabel");if(lb)lb.textContent=v.label;var wy=document.getElementById("nrCounsWhy"),why=(window.__nrCouns&&window.__nrCouns.why)||"";if(wy){wy.textContent=why?("AIが読んだ理由："+why):"";wy.style.display=why?"":"none";}var bs=document.querySelectorAll("[data-couns]");for(var i=0;i<bs.length;i++){if(bs[i].getAttribute("data-couns")===String(v.sel))bs[i].classList.add("sel");else bs[i].classList.remove("sel");}};' +
+    'window.__nrApplyCouns=function(v){var box=document.getElementById("nrCounsAsk");if(!box)return;box.style.display=v.shown?"":"none";var lb=document.getElementById("nrCounsLabel");if(lb)lb.textContent=v.label;var wy=document.getElementById("nrCounsWhy"),why=(window.__nrCouns&&window.__nrCouns.why)||"";var _wt=NR.counselingWhy(why);if(wy){wy.textContent=_wt;wy.style.display=_wt?"":"none";}var bs=document.querySelectorAll("[data-couns]");for(var i=0;i<bs.length;i++){if(bs[i].getAttribute("data-couns")===String(v.sel))bs[i].classList.add("sel");else bs[i].classList.remove("sel");}};' +
     // ★①②③に合わせて枠を作り直す（判断は共通の1本 NR.counselingSlots・2026-09-11 まるちゃん決定）。
     //   ②相談してから決める＝相談の枠のあとに施術の枠も押さえる／①相談だけ＝施術の枠は作らない。
     'window.__nrCounsSlots=function(kind){if(!window.__nrSlotsBase)return;var B=[];for(var _i2=0;_i2<window.__nrSlotsBase.length;_i2++){var _o2={},_s2=window.__nrSlotsBase[_i2];for(var _k2 in _s2){_o2[_k2]=_s2[_k2];}B.push(_o2);}buildSlotUI(NR.counselingSlots(B,kind));nrApplyNeedC();nrSlotAvail();};' +
@@ -6221,9 +6221,9 @@ function renderNewReservationPage_(base, staff, dev) {
           '<div id="nrCounsLabel" style="background:#1e3a8a;color:#dbeafe;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0"></div>' +
           '<div id="nrCounsWhy" style="display:none;color:#cbd5e1;font-size:14px;line-height:1.5;margin:0 2px 6px"></div>' +
           '<div class="nrpills">' +
-            '<button type="button" class="nrpill" data-couns="1">①相談だけ（施術なし）</button>' +
-            '<button type="button" class="nrpill" data-couns="2">②相談してから決める</button>' +
-            '<button type="button" class="nrpill" data-couns="3">③ふつうの施術</button>' +
+            '<button type="button" class="nrpill" data-couns="1">①カウンセリングのみ（施術なし）</button>' +
+            '<button type="button" class="nrpill" data-couns="2">②カウンセリング後に決める</button>' +
+            '<button type="button" class="nrpill" data-couns="3">③施術もやる</button>' +
           '</div>' +
         '</div>' +
       '</div>' +
