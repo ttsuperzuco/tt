@@ -5439,6 +5439,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '.sgbtn.all::before{background:#64748b;}' +
     '.sgbtn.all .sgmk{background:rgba(100,116,139,.16);}' +
     '.sgwho{color:#fff;font-weight:900;font-size:30px;line-height:1.25;margin:4px 4px 14px;}' +
+    /* ★2026-09-11 まるちゃん：一覧は「いま施術中のお客様」が一番上に来た形で開く＝下へずれて開く。
+       それでも戻るがいつも見えるように、戻るの帯だけ画面の上に貼り付ける。 */
+    '#sgbackbar{position:sticky;top:0;z-index:5;background:#2C7A99;padding:8px 0 10px;margin:0;}' +
     '.sglist{display:flex;flex-direction:column;gap:12px;margin:6px 0 8px;}' +
     '.sgrow{display:block;width:100%;box-sizing:border-box;text-align:left;background:#fff;color:#0f172a;' +
       'border:0;border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
@@ -5472,7 +5475,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
   var script =
     '<script>(function(){' +
     'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
-    'var pick=null,dflt=null,BK=[],ALLEV=[],onList=false;' +
+    'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],onList=false;' +
     'function $(i){return document.getElementById(i);}' +
     'function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){' +
       'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
@@ -5530,7 +5533,30 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){' +
         'pick=this.getAttribute("data-mk");goList();};}}' +
     /* ── 2枚目：えらんだ担当の今日の予約（別の画面に移る＝同じ画面に出さない） ── */
-    'function goList(){onList=true;show();drawList();window.scrollTo(0,0);}' +
+    'function goList(){onList=true;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
+    /* ★いま施術しているお客様が画面の一番上に来るように開く（まるちゃん 2026-09-11）。
+       ・いまの時間に入っている予約があれば、それ。
+       ・無ければ、いまより前で一番あとに終わった予約（＝1つ前。施術がのびていて、まだその方を
+         施術していることがあるため）。
+       ・どちらも無ければ動かさない（これから始まる分が先頭に出ている）。
+       戻るの帯は画面の上に貼り付いているので、その高さぶん下げて隠れないようにする。 */
+    'function scrollToNow(){' +
+      'var now=Date.now(),rows=$("sglist").getElementsByClassName("sgrow");' +
+      'if(!rows.length)return;' +
+      'var idx=-1;' +
+      'for(var i=0;i<LIST.length;i++){if(LIST[i].start<=now&&now<LIST[i].end){idx=i;break;}}' +
+      'if(idx<0){var best=-1;' +
+        'for(var j=0;j<LIST.length;j++){if(LIST[j].end<=now&&(best<0||LIST[j].end>LIST[best].end))best=j;}' +
+        'idx=best;}' +
+      'if(idx<0||!rows[idx])return;' +
+      'var bar=$("sgbackbar");var off=bar?bar.offsetHeight:0;' +
+      'var el=$("sglist");el.style.paddingBottom="0px";' +
+      'var y=Math.max(0,rows[idx].getBoundingClientRect().top+window.pageYOffset-off-6);' +
+      /* ★下の予約が少ないと、そこまでスクロールできず一番上に来ない。
+         足りないぶんだけ下に余白を足して、どの予約でも一番上に来られるようにする。 */
+      'var mx=document.documentElement.scrollHeight-window.innerHeight;' +
+      'if(y>mx)el.style.paddingBottom=(y-mx)+"px";' +
+      'window.scrollTo(0,y);}' +
     'function goPick(){onList=false;show();drawPick();window.scrollTo(0,0);}' +
     'function show(){' +
       '$("sgPick").style.display=onList?"none":"";' +
@@ -5542,7 +5568,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var now=Date.now();' +
       'var list=ALLEV.filter(function(e){return pick===SG.ALL||e.mark===pick;});' +
       'list.sort(function(a,b){return a.start-b.start;});' +
-      '$("sglisthead").textContent=(pick===SG.ALL?"全施術者":SG.labelOfMark(pick))+"の今日の予約";' +
+      'LIST=list;' +
+      /* ★見出しは「お客様の選択」（まるちゃん 2026-09-11。施術者の名前は出さない）。 */
+      '$("sglisthead").textContent="お客様の選択";' +
       'if(!list.length){$("sglist").innerHTML="";' +
         '$("sgstatus2").textContent="この施術者の今日の予約はありません。";return;}' +
       '$("sgstatus2").textContent="";' +
