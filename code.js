@@ -8119,10 +8119,10 @@ function akiDayCard_(day) {
   }
   return '<div class="akiday"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
-    '<div class="akisec akisec-full akihidden" data-sec="full">' +
+    '<div class="akisec akisec-full" data-sec="full">' +
       akiFullCard_(day) +
     '</div>' +
-    '<div class="akisec akisec-time" data-sec="time">' +
+    '<div class="akisec akisec-time akihidden" data-sec="time">' +
       akiTimeRows_(day.time_slots) +
     '</div>' +
     '<div class="akisec akisec-staff akihidden" data-sec="staff">' +
@@ -8137,7 +8137,7 @@ function akiDayCard_(day) {
 /** 空き時間検索ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの
  *  両方から呼ばれる（他view同様「取得と描画を分離」の作法）。
  *  表示は3つ（各時間帯別／スタッフ別／施術室別）をチップで独立にON/OFF（PC版GUIと同じ操作感・
- *  既定は各時間帯別だけON）。データは全部JSONに入っているので、切替に読み直しは不要。 */
+ *  既定は完全版だけON＝まるちゃん指示 2026-09-11）。データは全部JSONに入っているので、切替に読み直しは不要。 */
 function renderAkijikanPage_(d, base, staff, dev) {
   var days = d.days || [];
   var cards = days.length
@@ -8192,8 +8192,8 @@ function renderAkijikanPage_(d, base, staff, dev) {
   '</div>' +
   '<div class="akichips">' +
     // ★完全版＝その日1日の時間割（まるちゃん指示 2026-09-11）。各時間帯別の左に置く。
-    '<button type="button" class="akichip" data-sec="full">完全版</button>' +
-    '<button type="button" class="akichip on" data-sec="time">各時間帯別</button>' +
+    '<button type="button" class="akichip on" data-sec="full">完全版</button>' +
+    '<button type="button" class="akichip" data-sec="time">各時間帯別</button>' +
     '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
     '<button type="button" class="akichip" data-sec="rooms">施術室別</button>' +
     (wakuOn ? '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約可能枠出力</button>' : '') +
