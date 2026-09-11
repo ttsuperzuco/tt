@@ -140,7 +140,7 @@
 <script src="sg_rules.js?v=be079c72c5"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
 <script src="bigsend.js?v=0371a3ad72"></script>
-<script src="code.js?v=ee756e8993"></script>
+<script src="code.js?v=64e3b6d2ad"></script>
 <script>
 (function () {
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
@@ -793,25 +793,32 @@
   //   切り替わった時（＝新しいページの早期スクリプト）がこれを消費して即描画する。
   function prefetchForHome_(allow) {
     var VIEWS = window.__SZ_VIEWS_ || {};
-    var taken = {};   // 同じファイルを2度取りに行かない（往復が1回増えるだけで中身は同じ）
+    // ★同じファイルを見る画面が複数ある時は、取りに行くのは1回だけ。
+    //   ただし**取れた中身は、そのファイルを見る画面すべてに配る**（2026-09-11）。
+    //   ＝前は2つ目の画面を素通りしていたので、その画面だけ待ち0秒にならなかった。
+    var byAction = {};
     for (var v in VIEWS) {
       if (allow && allow[v] !== true) continue;   // devは allow===null＝全部先取りしてよい
-      if (taken[VIEWS[v]]) continue;
-      taken[VIEWS[v]] = true;
-      (function (view, action) {
-        var cb = '__ttHomePre_' + view;
+      (byAction[VIEWS[v]] = byAction[VIEWS[v]] || []).push(v);
+    }
+    for (var action in byAction) {
+      (function (views, action) {
+        var cb = '__ttHomePre_' + views[0];
         window[cb] = function (payload) {
           if (payload && !payload.error) {
-            try {
-              sessionStorage.setItem('sz_prefetch_' + view, JSON.stringify({ at: Date.now(), payload: payload }));
-            } catch (e) {}
+            for (var i = 0; i < views.length; i++) {
+              try {
+                sessionStorage.setItem('sz_prefetch_' + views[i],
+                                       JSON.stringify({ at: Date.now(), payload: payload }));
+              } catch (e) {}
+            }
           }
         };
         var s = document.createElement('script');
         s.src = EXEC + '?action=data&name=' + action + '&callback=' + cb + '&cb=' + Date.now();
         s.onerror = function () {};
         document.head.appendChild(s);
-      })(v, VIEWS[v]);
+      })(byAction[action], action);
     }
   }
 
