@@ -5418,8 +5418,8 @@ function renderReservationHomePage_(base, staff, dev) {
  *  ★並び・はじめの選択・カウンセリングの出し分けは書き写さない＝共通の1本 `SG`（sg_rules.js）に聞く。 */
 function renderAfterTreatmentPage_(base, staff, dev, who) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
-  var head = '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>' +
-             '<div class="hsub">TaiwanTomato</div>';
+  /* ★2026-09-11 まるちゃん「ここのたいわんとまとの文字いらない」＝見出しの下の店名は出さない。 */
+  var head = '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>';
   var css =
     '.sg{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.sgstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:15px;margin:2px 4px 10px;}' +
@@ -5429,6 +5429,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'box-shadow:0 6px 18px rgba(0,0,0,.12);position:relative;overflow:hidden;}' +
     '.sgbtn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:#0ea5e9;}' +
     '.sgbtn.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
+    /* ★はじめから選ばれている施術者の下は、ボタン1個ぶん空ける
+       （＝これがはじめの選び先だと目で分かるように。まるちゃん 2026-09-11）。 */
+    '.sgbtn.dflt{margin-bottom:88px;}' +
     '.sgbtn .sgmk{flex:none;width:52px;height:52px;border-radius:13px;font-size:30px;display:grid;' +
       'place-items:center;background:rgba(14,165,233,.16);}' +
     '.sgbtn .sgnm{flex:1;min-width:0;font-size:1.5rem;font-weight:900;}' +
@@ -5454,7 +5457,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
   /* 1枚目＝担当をえらぶ／2枚目＝その担当の今日の予約。どちらか片方だけを出す。 */
   var body =
     '<div class="sg" id="sgPick">' +
-      '<div class="sgstep">担当を選んでください</div>' +
+      '<div class="sgstep">施術者を選んでください</div>' +
       '<div class="sgstaff" id="sgstaff"></div>' +
       '<div class="sgstatus" id="sgstatus">今日の予約を読んでいます...</div>' +
     '</div>' +
@@ -5469,7 +5472,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
   var script =
     '<script>(function(){' +
     'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
-    'var pick=null,BK=[],ALLEV=[],onList=false;' +
+    'var pick=null,dflt=null,BK=[],ALLEV=[],onList=false;' +
     'function $(i){return document.getElementById(i);}' +
     'function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){' +
       'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
@@ -5506,18 +5509,20 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'if(!SG.nameOfMark(x.mark))continue;' +
         'ALLEV.push(x);BK.push({mark:x.mark,start:x.start,end:x.end});}' +
       'drawPick();}' +
-    /* ── 1枚目：担当をえらぶ ── */
+    /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,Date.now());' +
       'if(pick===null)pick=r.selected;' +
+      /* はじめから選ばれている施術者を覚えておく（その下だけボタン1個ぶん空ける） */
+      'if(dflt===null)dflt=r.selected;' +
       'var h="";' +
       'for(var i=0;i<r.list.length;i++){var x=r.list[i];' +
-        'var sub=x.bucket===0?"いま施術中":(x.bucket===1?"このあと":"本日終了");' +
-        'h+="<button type=\\"button\\" class=\\"sgbtn"+(pick===x.mark?" sel":"")+"\\" data-mk=\\""+esc(x.mark)+"\\">"+' +
+        /* ★件数は「その施術者の今日1日ぶん」。「このあと」等の言葉は出さない（まるちゃん 2026-09-11）。 */
+        'h+="<button type=\\"button\\" class=\\"sgbtn"+(pick===x.mark?" sel":"")+(dflt===x.mark?" dflt":"")+"\\" data-mk=\\""+esc(x.mark)+"\\">"+' +
           '"<span class=\\"sgmk\\">"+esc(x.mark)+"</span>"+' +
           '"<span class=\\"sgnm\\">"+esc(x.name)+"</span>"+' +
-          '"<span class=\\"sgsub\\">"+sub+"・"+x.count+"件</span></button>";}' +
-      'h+="<button type=\\"button\\" class=\\"sgbtn all"+(pick===SG.ALL?" sel":"")+"\\" data-mk=\\""+SG.ALL+"\\">"+' +
+          '"<span class=\\"sgsub\\">"+x.count+"件</span></button>";}' +
+      'h+="<button type=\\"button\\" class=\\"sgbtn all"+(pick===SG.ALL?" sel":"")+(dflt===SG.ALL?" dflt":"")+"\\" data-mk=\\""+SG.ALL+"\\">"+' +
         '"<span class=\\"sgmk\\">👥</span><span class=\\"sgnm\\">全施術者</span></button>";' +
       '$("sgstaff").innerHTML=h;' +
       '$("sgstatus").textContent=r.list.length?"":"今日は予約がありません。";' +
@@ -5539,7 +5544,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'list.sort(function(a,b){return a.start-b.start;});' +
       '$("sglisthead").textContent=(pick===SG.ALL?"全施術者":SG.labelOfMark(pick))+"の今日の予約";' +
       'if(!list.length){$("sglist").innerHTML="";' +
-        '$("sgstatus2").textContent="この担当の今日の予約はありません。";return;}' +
+        '$("sgstatus2").textContent="この施術者の今日の予約はありません。";return;}' +
       '$("sgstatus2").textContent="";' +
       'var h="";' +
       'for(var i=0;i<list.length;i++){var e=list[i];' +
