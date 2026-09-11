@@ -5456,7 +5456,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '.sgmk2{flex:none;font-size:26px;}' +
     '.sgnm2{flex:1;min-width:0;font-weight:900;font-size:34px;line-height:1.25;word-break:break-word;}' +
     '.sgcd2{flex:none;color:#475569;font-weight:900;font-size:22px;}' +
-    '.sgstatus{color:#fff;font-weight:800;font-size:18px;margin:10px 4px;min-height:24px;line-height:1.6;}';
+    '.sgstatus{color:#fff;font-weight:800;font-size:18px;margin:10px 4px;min-height:24px;line-height:1.6;}' +
+    /* お試し中の知らせ（開発URLで時刻や人を仮に決めた時だけ出す） */
+    '.sgtest{display:none;background:#fde68a;color:#78350f;font-weight:900;font-size:14px;' +
+      'border-radius:12px;padding:8px 12px;margin:0 4px 10px;line-height:1.5;}';
   /* 1枚目＝担当をえらぶ／2枚目＝その担当の今日の予約。どちらか片方だけを出す。 */
   var body =
     '<div class="sg" id="sgPick">' +
@@ -5476,6 +5479,29 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '<script>(function(){' +
     'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
     'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],onList=false;' +
+    /* ★お試し用（開発URL ?dev=1 のときだけ効く・まるちゃん 2026-09-11）。
+       住所に &time=13:00 を付けると「いまは13時」として動かす。
+       住所に &as=olive を付けると「オリーブのスマホ」として動かす。
+       スタッフ用・社長用の住所では一切効かない（本番の時刻・本人のまま）。 */
+    'var DEVMODE=' + (dev ? 'true' : 'false') + ',TESTMS=0,TESTWHO="";' +
+    'if(DEVMODE){try{var qs=new URLSearchParams(location.search);' +
+      'var tt=qs.get("time")||"";' +
+      'if(/^\\d{1,2}:\\d{2}$/.test(tt)){var pp=tt.split(":");var dd=new Date();' +
+        'dd.setHours(parseInt(pp[0],10),parseInt(pp[1],10),0,0);TESTMS=dd.getTime();}' +
+      'TESTWHO=qs.get("as")||"";if(TESTWHO)WHO=TESTWHO;}catch(e){}}' +
+    'function NOW(){return TESTMS||Date.now();}' +
+    /* お試し中だと分かるように、画面の上に知らせを出す（本物と間違えないため）。 */
+    'function showTestNote(){' +
+      'if(!TESTMS&&!TESTWHO)return;' +
+      'var d=new Date(NOW());' +
+      'var hm=("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);' +
+      'var nm=(typeof SG!=="undefined"&&SG.markOfWho(TESTWHO))?' +
+        '(SG.markOfWho(TESTWHO)+SG.nameOfMark(SG.markOfWho(TESTWHO))):TESTWHO;' +
+      'var t="お試し中：";' +
+      'if(TESTMS)t+="いまは "+(d.getMonth()+1)+"月"+d.getDate()+"日 "+hm+" として動かしています";' +
+      'if(TESTMS&&TESTWHO)t+="／";' +
+      'if(TESTWHO)t+=nm+"のスマホとして動かしています";' +
+      'var el=$("sgtest");el.textContent=t;el.style.display="block";}' +
     'function $(i){return document.getElementById(i);}' +
     'function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){' +
       'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
@@ -5514,7 +5540,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'drawPick();}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
-      'var r=SG.staffOrder(BK,WHO,Date.now());' +
+      'var r=SG.staffOrder(BK,WHO,NOW());' +
       'if(pick===null)pick=r.selected;' +
       /* はじめから選ばれている施術者を覚えておく（その下だけボタン1個ぶん空ける） */
       'if(dflt===null)dflt=r.selected;' +
@@ -5541,7 +5567,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
        ・どちらも無ければ動かさない（これから始まる分が先頭に出ている）。
        戻るの帯は画面の上に貼り付いているので、その高さぶん下げて隠れないようにする。 */
     'function scrollToNow(){' +
-      'var now=Date.now(),rows=$("sglist").getElementsByClassName("sgrow");' +
+      'var now=NOW(),rows=$("sglist").getElementsByClassName("sgrow");' +
       'if(!rows.length)return;' +
       'var idx=-1;' +
       'for(var i=0;i<LIST.length;i++){if(LIST[i].start<=now&&now<LIST[i].end){idx=i;break;}}' +
@@ -5565,7 +5591,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var tb=$("sgtopbar");if(tb)tb.style.display=onList?"none":"";' +
       'var hd=$("sghead");if(hd)hd.style.display=onList?"none":"";}' +
     'function drawList(){' +
-      'var now=Date.now();' +
+      'var now=NOW();' +
       'var list=ALLEV.filter(function(e){return pick===SG.ALL||e.mark===pick;});' +
       'list.sort(function(a,b){return a.start-b.start;});' +
       'LIST=list;' +
@@ -5593,11 +5619,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'for(var k=0;k<rs.length;k++){rs[k].onclick=function(){' +
         'szPopup_("このお客様の次回の予約を入れる画面は、これから作ります。",{icon:""});};}}' +
     '$("sgback").onclick=goPick;' +
+    'showTestNote();' +
     'need(build);' +
     '})();<' + '/script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' +
       '<span id="sgtopbar">' + backTop + '</span>' + backList +
+      '<div class="sgtest" id="sgtest"></div>' +
       '<span id="sghead">' + head + '</span>' + body +
     '</div>' + script;
 }
