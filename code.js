@@ -5458,11 +5458,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     /* ── 6枚目：予約時間設定（まるちゃん指示 2026-09-11） ── */
     '.sgtimebox{background:rgba(255,255,255,.14);border-radius:16px;padding:14px 16px;margin:0 2px 14px;}' +
     '.sgtlab{color:#eaf6fb;font-weight:800;font-size:15px;margin-bottom:6px;}' +
-    '.sgtrow{display:flex;align-items:center;gap:10px;}' +
-    '.sgtval{flex:1;min-width:0;background:#fff;color:#0f172a;border-radius:14px;text-align:center;' +
+    /* ★左右に「1時間」「5分」を縦2つずつ（まるちゃん 2026-09-11）。
+       1行に4つ並べると時刻の字が小さくなり、下に段を足すと画面が縦に伸びるので、この形にした。 */
+    '.sgtrow{display:flex;align-items:stretch;gap:10px;}' +
+    '.sgtcol{flex:none;width:78px;display:flex;flex-direction:column;gap:8px;}' +
+    '.sgtval{flex:1;min-width:0;background:#fff;color:#0f172a;border-radius:14px;' +
+      'display:flex;align-items:center;justify-content:center;' +
       'font-size:40px;font-weight:900;padding:10px 4px;letter-spacing:.04em;}' +
-    '.sgtpm{flex:none;width:74px;height:62px;border:0;border-radius:14px;background:#fff;color:#0f172a;' +
-      'font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+    '.sgtpm{flex:1;width:100%;min-height:46px;border:0;border-radius:14px;background:#fff;color:#0f172a;' +
+      'font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
     '.sgtpm:active{transform:translateY(2px);}' +
     '.sgdur{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 2px 14px;}' +
     '.sgdurb{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:18px 4px;' +
@@ -5528,17 +5532,29 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '<div class="sgtimebox">' +
         '<div class="sgtlab">開始時間</div>' +
         '<div class="sgtrow">' +
-          '<button type="button" class="sgtpm" data-t="s" data-d="-5">− 5分</button>' +
+          '<span class="sgtcol">' +
+            '<button type="button" class="sgtpm" data-t="s" data-d="-60">− 1時間</button>' +
+            '<button type="button" class="sgtpm" data-t="s" data-d="-5">− 5分</button>' +
+          '</span>' +
           '<span class="sgtval" id="sgtS">—</span>' +
-          '<button type="button" class="sgtpm" data-t="s" data-d="5">＋ 5分</button>' +
+          '<span class="sgtcol">' +
+            '<button type="button" class="sgtpm" data-t="s" data-d="60">＋ 1時間</button>' +
+            '<button type="button" class="sgtpm" data-t="s" data-d="5">＋ 5分</button>' +
+          '</span>' +
         '</div>' +
       '</div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">終了時間</div>' +
         '<div class="sgtrow">' +
-          '<button type="button" class="sgtpm" data-t="e" data-d="-5">− 5分</button>' +
+          '<span class="sgtcol">' +
+            '<button type="button" class="sgtpm" data-t="e" data-d="-60">− 1時間</button>' +
+            '<button type="button" class="sgtpm" data-t="e" data-d="-5">− 5分</button>' +
+          '</span>' +
           '<span class="sgtval" id="sgtE">—</span>' +
-          '<button type="button" class="sgtpm" data-t="e" data-d="5">＋ 5分</button>' +
+          '<span class="sgtcol">' +
+            '<button type="button" class="sgtpm" data-t="e" data-d="60">＋ 1時間</button>' +
+            '<button type="button" class="sgtpm" data-t="e" data-d="5">＋ 5分</button>' +
+          '</span>' +
         '</div>' +
       '</div>' +
       '<div class="sgstep">施術の長さ（押すと終了時間が決まります）</div>' +
