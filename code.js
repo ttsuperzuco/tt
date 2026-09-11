@@ -7825,6 +7825,21 @@ function akiWakuColor_(kind) {
  *  ・施術者の並びはオリーブ→みかん→トマト→マンゴー。**パインは出さない**（まるちゃん指示）。
  *    マンゴーはその日出勤していれば出る（出勤していない人はデータに入らない）。
  *  材料は akijikan.json にすでに入っている物だけ（事務所PC側は変えていない）。 */
+/** ★2026-09-11 まるちゃん指示：狭い列の見出しは**決まった位置で折り返す**（自動まかせにしない）。
+ *  施術者＝「マーク＋名前の1文字目」で折り返す（🍊み／かん・🍅ト／マト）。
+ *  施術室＝FREE／DOM・COS／MOS・STAR／/福。HAPPY・LUCKYはそのまま1行。 */
+var AKI_ROOM_WRAP_ = { 'FREEDOM': ['FREE', 'DOM'], 'COSMOS': ['COS', 'MOS'], 'STAR/福': ['STAR', '/福'] };
+function akiStaffTag_(emoji, name) {
+  var cs = Array.from(String(name || ''));
+  if (cs.length <= 1) return esc_(emoji) + esc_(name);
+  return esc_(emoji) + esc_(cs[0]) + '<br>' + esc_(cs.slice(1).join(''));
+}
+function akiRoomTag_(room) {
+  var nm = (typeof shortRoomName_ === 'function') ? shortRoomName_(room) : room;
+  var w = AKI_ROOM_WRAP_[nm];
+  return w ? (esc_(w[0]) + '<br>' + esc_(w[1])) : esc_(nm);
+}
+
 var AKI_STAFF_ORDER_ = ['🫒', '🍊', '🍅', '🥭'];   // パイン🍍は出さない
 var AKI_PX_ = 1.7;                                  // 1分あたりの高さ
 
@@ -7893,12 +7908,12 @@ function akiFullCard_(day) {
   var head = '<div class="akfhead"><div class="akfx"></div>';
   for (i = 0; i < st.length; i++) {
     head += '<div class="akfhc"><span class="akftag" style="background:' + staffColor_(st[i].emoji) +
-      '">' + esc_(st[i].emoji) + esc_(st[i].name) + '</span></div>';
+      '">' + akiStaffTag_(st[i].emoji, st[i].name) + '</span></div>';
   }
   head += '<div class="akfsep"></div>';
   for (i = 0; i < rm.length; i++) {
     head += '<div class="akfhc"><span class="akftag" style="background:' + roomColor_(rm[i].room) +
-      '">' + esc_(shortRoomName_(rm[i].room)) + '</span></div>';
+      '">' + akiRoomTag_(rm[i].room) + '</span></div>';
   }
   head += '</div>';
 
@@ -8342,7 +8357,8 @@ var AKICSS_ =
 '  .akfhead{ display:flex; padding:2px 0 6px; }' +
 '  .akfx{ width:40px; flex:none; }' +
 '  .akfhc{ flex:1; min-width:0; text-align:center; padding:0 1px; }' +
-'  .akftag{ display:inline-block; width:100%; color:#fff; border-radius:8px; padding:3px 2px;' +
+'  .akftag{ display:block; width:100%; box-sizing:border-box; color:#fff; border-radius:8px;' +
+'    padding:3px 1px; text-align:center;' +
 '    font-size:10px; font-weight:900; line-height:1.15; overflow-wrap:anywhere;' +
 '    text-shadow:0 1px 2px rgba(0,0,0,.35); }' +
 '  .akfsep{ flex:none; width:10px; }' +
