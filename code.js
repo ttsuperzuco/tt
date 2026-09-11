@@ -5491,8 +5491,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var day=[];' +
       'for(var i=0;i<p.events.length;i++){var e=p.events[i];if(e.date!==today)continue;' +
         'var mk=(typeof staffOf==="function")?staffOf(e.title||""):"";' +
+        /* ★部屋は「入れ物（カレンダー）の名前」ではなく**色（ラベル）**で決まる。
+           被り検出と同じ共通のやり方（roomLabelOf＋ALL_ROOM_LABELS）に聞く。
+           色から部屋が出ない物（デザイン眉など）だけ、入れ物の名前をそのまま出す。 */
+        'var rm=(typeof roomLabelOf==="function")?' +
+          'roomLabelOf(e.calendar_id,e.label_id,e.title||"",ALL_ROOM_LABELS):null;' +
+        'var rn=(rm!=null&&typeof ALL_ROOM_LABELS!=="undefined")?ALL_ROOM_LABELS[rm]:(e.calendar_name||"");' +
         'day.push({mark:mk,start:e.start_at_ms,end:e.end_at_ms,title:e.title||"",note:e.note||"",' +
-          'room:e.calendar_name||"",st:e.start_time||"",et:e.end_time||""});}' +
+          'room:rn,st:e.start_time||"",et:e.end_time||""});}' +
       /* ★カウンセリングの枠を出すかどうかは共通の1本にきく（同じ日に施術もある人の相談は出さない）。
          ★相手を探すには「うちの施術者でない枠」も要るので、間引いてから施術者で絞る。 */
       'var vis=SG.visibleBookings(day);' +
@@ -5540,10 +5546,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'var cd=(typeof codeOf==="function")?codeOf(e.title):"";' +
         'var nm=(typeof customerLine==="function")?(customerLine(e.note).name||""):"";' +
         'var col=(typeof roomColor_==="function")?roomColor_(e.room):"#64748b";' +
+        'var rnm=(typeof shortRoomName_==="function")?shortRoomName_(e.room):e.room;' +
         'var live=(e.start<=now&&now<e.end)?"<span class=\\"sgnow\\">いま施術中</span>":"";' +
         'h+="<button type=\\"button\\" class=\\"sgrow\\" data-id=\\""+i+"\\">"+' +
           '"<span class=\\"sgl1\\"><span class=\\"sgtm\\">"+esc(e.st)+"〜"+esc(e.et)+"</span>"+' +
-            '"<span class=\\"sgroom\\" style=\\"background:"+col+"\\">"+esc(e.room)+"</span>"+live+"</span>"+' +
+            '"<span class=\\"sgroom\\" style=\\"background:"+col+"\\">"+esc(rnm)+"</span>"+live+"</span>"+' +
           '"<span class=\\"sgl2\\"><span class=\\"sgmk2\\">"+esc(e.mark)+"</span>"+' +
             '"<span class=\\"sgnm2\\">"+esc(nm||"お名前なし")+"</span>"+' +
             '"<span class=\\"sgcd2\\">"+esc(cd)+"</span></span>"+' +
