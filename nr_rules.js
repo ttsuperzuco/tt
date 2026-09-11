@@ -301,9 +301,13 @@
      kind＝AIの答え（"1"／"2"／"3"／"要確認"）。hint＝お客様の文かLINEに相談の話が出ていたか。
      返り：{ shown:欄を出すか, sel:最初に選ばれている物（"1"/"2"/"3"／要確認なら""）,
              ask:人に選ばせるか（要確認）, label:見出しの文 } */
-  NR.counselingView = function (kind, hint) {
+  NR.counselingView = function (kind, hint, hasHair) {
     var k = String(kind || "3");
     var shown = !!hint || (k === "1" || k === "2" || k === "要確認");
+    // ★相談（カウンセリング）の①②は脱毛の話だけ。脱毛が無い予約では欄そのものを出さない
+    //   （2026-09-11 まるちゃん「カウンセリングだけなのは脱毛だけ。あとは影響させないで」）。
+    //   ★渡されなかった時は今までどおり出す（古い呼び方でも動く）。
+    if (hasHair === false) shown = false;
     return {
       shown: shown,
       sel: (k === "要確認" ? "" : k),
@@ -336,17 +340,20 @@
   NR.counselingSlots = function (base, kind) {
     var S = (base || []).slice(), k = String(kind || "3");
     if (k !== "1" && k !== "2") return S;
-    var c = null, t = null, i;
+    var out = [], hairUsed = false, hair = null, i, s;
     for (i = 0; i < S.length; i++) {
-      if (!S[i]) continue;
-      if (S[i].kind === "counsel") { if (!c) c = S[i]; }
-      else if (!t) t = S[i];
+      s = S[i];
+      if (!s) continue;
+      if (s.kind === "counsel") { out.push(s); continue; }
+      // ★印の付く施術（ハイドラ・プロセル・マツヤニ・パリジェンヌ等）は相談と関係ないので必ず残す
+      //   （2026-09-11 まるちゃん「カウンセリングだけなのは脱毛だけ。あとは影響させないで」）。
+      if (s.mark) { out.push(s); continue; }
+      if (!hair) hair = s;                       // 印の無い枠＝脱毛
+      if (k === "2" && !hairUsed) { out.push(s); hairUsed = true; }
     }
-    var out = [];
-    if (c) out.push(c);
-    if (k === "2" && t) out.push(t);
-    // 相談の枠が無い方（＝既にご利用のお客様）は、相談もその部屋で行うので施術の枠を1つ残す
-    if (!out.length) out = t ? [t] : S;
+    // 相談の枠が無い方（＝既にご利用のお客様）で、残る枠が1つも無い時は脱毛の枠を1つ残す
+    //   ＝相談もその部屋で行うため（予約が1件も作られないのを防ぐ）。
+    if (!out.length) out = hair ? [hair] : S;
     return out;
   };
 
