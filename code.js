@@ -8428,7 +8428,10 @@ var AKISCRIPT_ =
 var AKFCSS_ =
 // ★下の端の時刻（18:00など）は目盛りの線の真横に出すため半分はみ出す。
 //   はみ出した分の逃げ場を下に作らないと切れる（まるちゃん指摘 2026-09-11）。
-'  .akfull{ overflow:hidden; padding-bottom:12px; }' +
+// ★時間割の箱だけ黒い地にする（まるちゃん指示 2026-09-11）。色の帯がはっきり浮く。
+//   まわり（各時間帯別・スタッフ別・施術室別）は今までどおり。
+'  .akfull{ overflow:hidden; background:#0d0d0d; color:#fff; border-radius:12px;' +
+'    padding:10px 8px 14px; }' +
 '  .akfhead{ display:flex; padding:2px 0 6px; }' +
 '  .akfx{ width:40px; flex:none; }' +
 '  .akfhc{ flex:1; min-width:0; text-align:center; padding:0 1px; }' +
@@ -8439,7 +8442,7 @@ var AKFCSS_ =
 '  .akfsep{ flex:none; width:10px; }' +
 '  .akfboard{ display:flex; }' +
 '  .akfaxis{ width:40px; flex:none; position:relative; }' +
-'  .akft{ position:absolute; right:3px; font-size:11px; font-weight:800; color:var(--akiink,#fff);' +
+'  .akft{ position:absolute; right:3px; font-size:11px; font-weight:800; color:#fff;' +
 '    transform:translateY(-50%); }' +
 '  .akfcols{ flex:1; min-width:0; display:flex; position:relative;' +
 '    background:rgba(127,127,127,.10); border-radius:10px; }' +
