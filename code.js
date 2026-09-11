@@ -5421,7 +5421,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
   /* ★2026-09-11 まるちゃん「ここのたいわんとまとの文字いらない」＝見出しの下の店名は出さない。 */
   var head = '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>';
   var css =
-    '.sg{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+    /* ★min-width:0／max-width:100% は「中の字が長い時に、箱ごと横に広がるのを防ぐ」ためのもの。
+       お名前を折り返さない形にしたので、これが無いとカードが画面より横に広がる（2026-09-11）。 */
+    '.sg{max-width:560px;width:100%;min-width:0;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.sgstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:15px;margin:2px 4px 10px;}' +
     '.sgstaff{display:flex;flex-direction:column;gap:12px;margin:0 0 22px;}' +
     '.sgbtn{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;text-align:left;' +
@@ -5442,8 +5444,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     /* ★2026-09-11 まるちゃん：一覧は「いま施術中のお客様」が一番上に来た形で開く＝下へずれて開く。
        それでも戻るがいつも見えるように、戻るの帯だけ画面の上に貼り付ける。 */
     '#sgbackbar{position:sticky;top:0;z-index:5;background:#2C7A99;padding:8px 0 10px;margin:0;}' +
-    '.sglist{display:flex;flex-direction:column;gap:12px;margin:6px 0 8px;}' +
-    '.sgrow{display:block;width:100%;box-sizing:border-box;text-align:left;background:#fff;color:#0f172a;' +
+    '.sglist{display:flex;flex-direction:column;gap:12px;margin:6px 0 8px;min-width:0;max-width:100%;}' +
+    '.sgrow{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;text-align:left;background:#fff;color:#0f172a;' +
       'border:0;border-radius:16px;padding:16px 18px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
     /* 1行目＝時間のうしろに部屋名（まるちゃん指定 2026-09-11） */
     '.sgl1{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}' +
@@ -5452,9 +5454,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '.sgnow{display:inline-block;background:#16a34a;color:#fff;border-radius:10px;padding:2px 12px;' +
       'font-weight:900;font-size:17px;}' +
     /* 2行目＝マークのあとにお名前（かなり大きい字）、その右に通し番号 */
-    '.sgl2{display:flex;align-items:baseline;gap:10px;margin-top:8px;}' +
+    '.sgl2{display:flex;align-items:baseline;gap:10px;margin-top:8px;min-width:0;max-width:100%;}' +
     '.sgmk2{flex:none;font-size:26px;}' +
-    '.sgnm2{flex:1;min-width:0;font-weight:900;font-size:34px;line-height:1.25;word-break:break-word;}' +
+    /* ★お名前は2行にしない（まるちゃん 2026-09-11）＝折り返さず、長い方だけ字を小さくして1行に収める。
+       小さくできる下限は16px。それでも入らない極端に長い書き方（お名前＋補足つき・実データの約1%）だけ
+       末尾を「…」にする。 */
+    '.sgnm2{flex:1;min-width:0;font-weight:900;font-size:34px;line-height:1.25;' +
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
     '.sgcd2{flex:none;color:#475569;font-weight:900;font-size:22px;}' +
     '.sgstatus{color:#fff;font-weight:800;font-size:18px;margin:10px 4px;min-height:24px;line-height:1.6;}' +
     /* お試し中の知らせ（開発URLで時刻や人を仮に決めた時だけ出す） */
@@ -5615,10 +5621,27 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
             '"<span class=\\"sgcd2\\">"+esc(cd)+"</span></span>"+' +
           '"</button>";}' +
       '$("sglist").innerHTML=h;' +
+      'fitNames();' +
       'var rs=$("sglist").getElementsByClassName("sgrow");' +
       'for(var k=0;k<rs.length;k++){rs[k].onclick=function(){' +
         'szPopup_("このお客様の次回の予約を入れる画面は、これから作ります。",{icon:""});};}}' +
+    /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする（まるちゃん 2026-09-11）。
+       ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。入らない分だけ縮める（下限16px）。 */
+    'function fitNames(){' +
+      'var BIG=34,MIN=16;' +
+      'var ns=$("sglist").getElementsByClassName("sgnm2");' +
+      'for(var i=0;i<ns.length;i++){var el=ns[i];' +
+        'el.style.fontSize=BIG+"px";' +
+        'var have=el.clientWidth,need=el.scrollWidth;' +
+        'if(!have||need<=have)continue;' +
+        'var fs=Math.floor(BIG*(have-2)/need);' +
+        'if(fs<MIN)fs=MIN;if(fs>BIG)fs=BIG;' +
+        'el.style.fontSize=fs+"px";' +
+        /* 端数で1pxはみ出すことがあるので、あと3回だけ細かく詰める */
+        'for(var t=0;t<4&&fs>MIN&&el.scrollWidth>el.clientWidth;t++){fs--;el.style.fontSize=fs+"px";}}}' +
     '$("sgback").onclick=goPick;' +
+    /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
+    'window.addEventListener("resize",function(){if(onList)fitNames();});' +
     'showTestNote();' +
     'need(build);' +
     '})();<' + '/script>';
