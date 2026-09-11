@@ -92,8 +92,8 @@
     uriage:     'uriage.json',
     unanswered: 'unanswered.json',
     akijikan:   'akijikan.json',
-    // ★2026-09-11：「施術後の予約」も今日の予約(events.json)を使う。ホームでの裏取りは
-    //   被り検出が同じファイルを取るので、下の prefetchForHome_ が重なりを外す。
+    // ★2026-09-11：「施術後の予約」も今日の予約(events.json)を使う。被り検出と同じファイルなので、
+    //   ホームでの裏取りは1回だけ行い、取れた中身を両方の画面に配る（下の prefetchForHome_）。
     yoyaku_sejutsugo: 'events.json'
     // ★links(各種LINKのURL一覧)は速い置き場(GitHub Pages)から直接取るのでここには入れない（グーグル窓口を使わない）。
     // ★kanshi(自動監視)は対象外＝開発URL専用でスタッフの目には触れず、装置の見分け(device)も
