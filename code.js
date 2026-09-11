@@ -7841,6 +7841,8 @@ function akiRoomTag_(room) {
 }
 
 var AKI_STAFF_ORDER_ = ['🫒', '🍊', '🍅', '🥭'];   // パイン🍍は出さない
+// ★施術室の並び（まるちゃん指示 2026-09-11）＝コスモスはフリーダムの左。
+var AKI_ROOM_ORDER_ = ['COSMOS', 'FREEDOM', 'HAPPY', 'LUCKY', 'STAR/福/🇫🇷'];
 var AKI_PX_ = 1.7;                                  // 1分あたりの高さ
 
 function akiHm_(m) { return Math.floor(m / 60) + ':' + ('0' + (m % 60)).slice(-2); }
@@ -7866,7 +7868,12 @@ function akiFullCard_(day) {
   }).sort(function (a, b) {
     return AKI_STAFF_ORDER_.indexOf(a.emoji) - AKI_STAFF_ORDER_.indexOf(b.emoji);
   });
-  var rm = day.rooms_free || [];
+  // 部屋は決まった順に並べる（データの入っている順に左右されない）。知らない部屋はうしろ。
+  var rm = (day.rooms_free || []).slice().sort(function (a, b) {
+    var ia = AKI_ROOM_ORDER_.indexOf(a.room), ib = AKI_ROOM_ORDER_.indexOf(b.room);
+    if (ia < 0) ia = 99; if (ib < 0) ib = 99;
+    return ia - ib;
+  });
   if (!st.length && !rm.length) return '<div class="akinone">（この日は出せる予定がありません）</div>';
 
   // 画面に出す時間の幅＝その日の出勤と部屋の空きが収まる範囲
