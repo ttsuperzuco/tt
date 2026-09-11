@@ -6136,7 +6136,9 @@ function renderNewReservationPage_(base, staff, dev) {
     //   選ぶので重複」。原因＝出す/隠すの判断(nrApplyNeedC)を、枠を組み立てる前にやっていたので
     //   「カウンセリングの枠がある」ことをまだ知らず、外の⑤を出してしまっていた。
     //   → パソコン版と同じ「枠を作ってから判断する」順番にそろえる。
-    'selVal("needc","yes");nrShowStart();buildSlotUI(d.slots);nrApplyNeedC();applyAvail(d);' +   // 開始時間を出す／埋まっている部屋・担当を消す／コスモスの注意書き
+    // ★読み取ったままの枠を覚えておく（①②③を押し直すたびに、ここから作り直す・2026-09-11 まるちゃん）。
+    'window.__nrSlotsBase=[];for(var _b=0;_b<((d.slots||[]).length);_b++){var _o={},_s0=d.slots[_b];for(var _k0 in _s0){_o[_k0]=_s0[_k0];}window.__nrSlotsBase.push(_o);}' +
+    'selVal("needc","yes");nrShowStart();buildSlotUI(d.slots);window.__nrCounsSlots(window.__nrCouns.kind);nrApplyNeedC();applyAvail(d);' +   // 開始時間を出す／埋まっている部屋・担当を消す／コスモスの注意書き
 
     // ★タイトルまで作り終えてから、まとめて1回だけ画面に出す（2026-08-24 まるちゃん）。
     //   タイトルが作れなかった時も必ずここへ来る＝画面が出ないままにはならない。
@@ -6152,7 +6154,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";nrGoCheck();});' +
     'window.__nrApplyCouns=function(v){var box=document.getElementById("nrCounsAsk");if(!box)return;box.style.display=v.shown?"":"none";var lb=document.getElementById("nrCounsLabel");if(lb)lb.textContent=v.label;var wy=document.getElementById("nrCounsWhy"),why=(window.__nrCouns&&window.__nrCouns.why)||"";if(wy){wy.textContent=why?("AIが読んだ理由："+why):"";wy.style.display=why?"":"none";}var bs=document.querySelectorAll("[data-couns]");for(var i=0;i<bs.length;i++){if(bs[i].getAttribute("data-couns")===String(v.sel))bs[i].classList.add("sel");else bs[i].classList.remove("sel");}};' +
-    'var _cab=document.querySelectorAll("[data-couns]");for(var _j=0;_j<_cab.length;_j++){_cab[_j].addEventListener("click",function(){var k=this.getAttribute("data-couns"),c=window.__nrCouns||{memos:{}};prevEl.value=NR.counselingMemo(c.memos,k,prevEl.value);prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";c.kind=k;window.__nrApplyCouns(NR.counselingView(k,true));nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
+    // ★①②③に合わせて枠を作り直す（判断は共通の1本 NR.counselingSlots・2026-09-11 まるちゃん決定）。
+    //   ②相談してから決める＝相談の枠のあとに施術の枠も押さえる／①相談だけ＝施術の枠は作らない。
+    'window.__nrCounsSlots=function(kind){if(!window.__nrSlotsBase)return;var B=[];for(var _i2=0;_i2<window.__nrSlotsBase.length;_i2++){var _o2={},_s2=window.__nrSlotsBase[_i2];for(var _k2 in _s2){_o2[_k2]=_s2[_k2];}B.push(_o2);}buildSlotUI(NR.counselingSlots(B,kind));nrApplyNeedC();nrSlotAvail();};' +
+    'var _cab=document.querySelectorAll("[data-couns]");for(var _j=0;_j<_cab.length;_j++){_cab[_j].addEventListener("click",function(){var k=this.getAttribute("data-couns"),c=window.__nrCouns||{memos:{}};prevEl.value=NR.counselingMemo(c.memos,k,prevEl.value);prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";c.kind=k;window.__nrApplyCouns(NR.counselingView(k,true));window.__nrCounsSlots(k);nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var base=this.getAttribute("data-procell");var tw=(base==="頭皮プロセル")?"トライアル":(window.__procellWord||"トライアル");var sh=(base==="頭皮プロセル")?"プロ頭":(base==="顔プロセルPro"?"プロ肌Pro":"プロ肌MD");var full=sh+" "+tw.replace("キャンペーン","キャ").replace("トライアル","トラ");var lines=prevEl.value.split("\\n");for(var k=0;k<lines.length;k++){lines[k]=lines[k].replace(/(?:(?:顔|頭皮)?プロセル(?:セラピーズ)?|procell|プロ肌|プロ頭|プロ(?!グラム))(?:[ \\u3000]*(?:キャンペーントライアル|トライアル|キャトラ|トラ))?/gi,full);}prevEl.value=lines.join("\\n");prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display="none";nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
     'readEl.disabled=true;prevT0=Date.now();status("変換中です。通常は10秒以内に終わります。",false);' +
@@ -6165,7 +6170,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(S&&S.length>=2){sl=[];for(var q=0;q<S.length;q++){if(S[q].kind==="counsel"&&sel.needc==="no")continue;' +
     'sl.push({kind:(S[q].kind||"treat"),mark:(S[q].mark||""),label:(S[q].label||""),dur:sel["dur#"+q],staff:sel["staff#"+q],room:sel["room#"+q]});}if(sl.length<2)sl=null;}' +
     'var t0=null;if(sl){for(var w=0;w<sl.length;w++){if(sl[w].kind!=="counsel"){t0=sl[w];break;}}if(!t0)t0=sl[0];}' +
-    'var f={text:(txtEl.value||"").trim(),memo:(prevEl.value||""),dur:(t0?t0.dur:sel.dur),staff:(t0?t0.staff:sel.staff),counsel:(sel.needc==="no"?"":sel.counsel),room:(t0?t0.room:sel.room),gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)};' +
+    // ★①相談だけ＝カウンセリングの枠が1つだけ残る。この時の担当は枠の中で選んだ人を渡す（2026-09-11）。
+    'var _cs=(sel.needc==="no")?"":(NR.onlyCounselSlot(S)?(sel["staff#0"]||sel.counsel):sel.counsel);' +
+    'var f={text:(txtEl.value||"").trim(),memo:(prevEl.value||""),dur:(t0?t0.dur:sel.dur),staff:(t0?t0.staff:sel.staff),counsel:_cs,room:(t0?t0.room:sel.room),gender:sel.gender,tw:sel.tw,rvdt:(window.__rvdt||null)};' +
     'if(sl)f.slots=JSON.stringify(sl);' +
     'if(extra){for(var k in extra){f[k]=extra[k];}}return f;}' +
     // 画面のタイトル欄に、いま登録されるタイトルを出す（人が手で直したら自動で上書きしない）。
