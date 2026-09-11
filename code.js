@@ -5455,6 +5455,25 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
     '.sgcd2{flex:none;color:#475569;font-weight:900;font-size:22px;}' +
     '.sgstatus{color:#fff;font-weight:800;font-size:18px;margin:10px 4px;min-height:24px;line-height:1.6;}' +
+    /* ── 6枚目：予約時間設定（まるちゃん指示 2026-09-11） ── */
+    '.sgtimebox{background:rgba(255,255,255,.14);border-radius:16px;padding:14px 16px;margin:0 2px 14px;}' +
+    '.sgtlab{color:#eaf6fb;font-weight:800;font-size:15px;margin-bottom:6px;}' +
+    '.sgtrow{display:flex;align-items:center;gap:10px;}' +
+    '.sgtval{flex:1;min-width:0;background:#fff;color:#0f172a;border-radius:14px;text-align:center;' +
+      'font-size:40px;font-weight:900;padding:10px 4px;letter-spacing:.04em;}' +
+    '.sgtpm{flex:none;width:74px;height:62px;border:0;border-radius:14px;background:#fff;color:#0f172a;' +
+      'font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+    '.sgtpm:active{transform:translateY(2px);}' +
+    '.sgdur{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 2px 14px;}' +
+    '.sgdurb{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:18px 4px;' +
+      'font-size:22px;font-weight:900;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}' +
+    '.sgdurb.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
+    '.sgerr{background:#fee2e2;color:#991b1b;border-radius:14px;padding:12px 14px;margin:0 2px 14px;' +
+      'font-weight:900;font-size:17px;line-height:1.6;display:none;}' +
+    '.sggo{display:block;width:100%;margin:6px 2px 0;padding:20px;font-size:21px;font-weight:900;' +
+      'border:0;border-radius:16px;background:#16a34a;color:#fff;cursor:pointer;' +
+      'box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
+    '.sggo:disabled{opacity:.45;}' +
     '.sgtest{display:none;background:#fde68a;color:#78350f;font-weight:900;font-size:14px;' +
       'border-radius:12px;padding:8px 12px;margin:0 4px 10px;line-height:1.5;}' +
     /* ── 3枚目：月えらび ── */
@@ -5500,6 +5519,32 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '<div class="sgct" id="sgfct"></div>' +
       '<div id="sgfree"></div>' +
       '<div class="sgstatus" id="sgstatus3"></div>' +
+    '</div>' +
+    /* 6枚目＝予約時間設定。空きの帯を押すとここへ来る（まるちゃん 2026-09-11）。 */
+    '<div class="sg" id="sgTime" style="display:none">' +
+      '<div class="sgwho">予約時間設定</div>' +
+      '<div class="sgct" id="sgtday"></div>' +
+      '<div class="sgstep" id="sgtwho"></div>' +
+      '<div class="sgtimebox">' +
+        '<div class="sgtlab">開始時間</div>' +
+        '<div class="sgtrow">' +
+          '<button type="button" class="sgtpm" data-t="s" data-d="-5">− 5分</button>' +
+          '<span class="sgtval" id="sgtS">—</span>' +
+          '<button type="button" class="sgtpm" data-t="s" data-d="5">＋ 5分</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sgtimebox">' +
+        '<div class="sgtlab">終了時間</div>' +
+        '<div class="sgtrow">' +
+          '<button type="button" class="sgtpm" data-t="e" data-d="-5">− 5分</button>' +
+          '<span class="sgtval" id="sgtE">—</span>' +
+          '<button type="button" class="sgtpm" data-t="e" data-d="5">＋ 5分</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sgstep">施術の長さ（押すと終了時間が決まります）</div>' +
+      '<div class="sgdur" id="sgdur"></div>' +
+      '<div class="sgerr" id="sgterr"></div>' +
+      '<button type="button" class="sggo" id="sgtgo">この時間で決定</button>' +
     '</div>';
   var backTop = backBar_(base, staff, dev);          /* 1枚目の戻る＝ホームへ */
   var backList = '<div class="backbar" id="sgbackbar" style="display:none">' +
@@ -5509,7 +5554,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
     'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],step=1,CUST=null,MY=null;' +
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
-    'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null;' +
+    'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0;' +
     'function $(i){return document.getElementById(i);}' +
     'function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){' +
       'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
@@ -5570,6 +5615,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgMonth").style.display=step===3?"":"none";' +
       '$("sgDay").style.display=step===4?"":"none";' +
       '$("sgFree").style.display=step===5?"":"none";' +
+      '$("sgTime").style.display=step===6?"":"none";' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
       'var hd=$("sghead");if(hd)hd.style.display=step===1?"":"none";}' +
@@ -5577,8 +5623,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     'function goMonth(){step=3;show();drawMonths();window.scrollTo(0,0);}' +
     'function goDay(){step=4;show();drawCal();window.scrollTo(0,0);}' +
-    'function back(){if(step===5){goDay();}else if(step===4){goMonth();}' +
-      'else if(step===3){goList();}else{goPick();}}' +
+    'function back(){if(step===6){goFree();}else if(step===5){goDay();}' +
+      'else if(step===4){goMonth();}else if(step===3){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,NOW());' +
@@ -5709,7 +5755,45 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'if(day.kind==="closed"){$("sgstatus3").textContent=day.label||"この日はお休みです。";' +
         '$("sgfree").innerHTML="";return;}' +
       '$("sgstatus3").textContent="";' +
-      '$("sgfree").innerHTML=akiFullCard_(day);}' +
+      '$("sgfree").innerHTML=akiFullCard_(day);' +
+      /* 空きの帯を押すと「予約時間設定」へ */
+      'var fs=$("sgfree").getElementsByClassName("akffree");' +
+      'for(var f=0;f<fs.length;f++){fs[f].style.cursor="pointer";fs[f].onclick=function(){' +
+        'SLOT={s:hm2m(this.getAttribute("data-s")),e:hm2m(this.getAttribute("data-e")),' +
+          'kind:this.getAttribute("data-kind"),who:this.getAttribute("data-who")};' +
+        'goTime();};}}' +
+    /* ── 6枚目：予約時間設定 ── */
+    'function hm2m(t){var p=String(t||"").split(":");' +
+      'return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0);}' +
+    'function m2hm(m){return Math.floor(m/60)+":"+("0"+(m%60)).slice(-2);}' +
+    'var DURS=[15,30,40,60,90,120];' +
+    'function goTime(){step=6;show();' +
+      'var wd=["日","月","火","水","木","金","土"];' +
+      'var d=new Date(PICKDATE+"T00:00:00");' +
+      '$("sgtday").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）";' +
+      '$("sgtwho").textContent=(SLOT.kind==="staff"?"施術者 ":"施術室 ")+SLOT.who+"　空き "+' +
+        'm2hm(SLOT.s)+"〜"+m2hm(SLOT.e);' +
+      'TS=SLOT.s;' +
+      /* はじめの終了時間＝30分。入りきらなければ空きの終わりまで。 */
+      'TE=Math.min(SLOT.s+30,SLOT.e);' +
+      'drawTime();window.scrollTo(0,0);}' +
+    'function drawTime(){' +
+      '$("sgtS").textContent=m2hm(TS);$("sgtE").textContent=m2hm(TE);' +
+      'var h="";' +
+      'for(var i=0;i<DURS.length;i++){' +
+        'h+="<button type=\\"button\\" class=\\"sgdurb"+((TE-TS)===DURS[i]?" sel":"")+"\\" data-m=\\""+DURS[i]+"\\">"+DURS[i]+"分</button>";}' +
+      '$("sgdur").innerHTML=h;' +
+      'var bs=$("sgdur").getElementsByClassName("sgdurb");' +
+      'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){' +
+        'TE=TS+parseInt(this.getAttribute("data-m"),10);drawTime();};}' +
+      /* 空きをはみ出していないか見る（まるちゃん指定の文をそのまま出す） */
+      'var ng=(TE<=TS)||(TS<SLOT.s)||(TE>SLOT.e);' +
+      'var er=$("sgterr");' +
+      'if(ng){er.style.display="block";' +
+        'er.innerHTML=(TE<=TS)?"終了時間が開始時間より後になっていません。<br>入力し直してください。"' +
+          ':"その時間は空いていません。<br>入力し直してください。";}' +
+      'else{er.style.display="none";er.textContent="";}' +
+      '$("sgtgo").disabled=ng;}' +
     /* 空き状況の材料を取りに行く（この画面用に1回だけ） */
     '(function(){var nm="__sgAki_"+Date.now();' +
       'window[nm]=function(p){AKI=(p&&p.days)?p:null;AKIERR=!AKI;' +
@@ -5719,6 +5803,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       's.onerror=function(){AKIERR=true;var w=AKIWAIT;AKIWAIT=null;if(w)w();};' +
       'document.body.appendChild(s);})();' +
     '$("sgback").onclick=back;' +
+    '(function(){var ps=document.getElementsByClassName("sgtpm");' +
+      'for(var i=0;i<ps.length;i++){ps[i].onclick=function(){' +
+        'var d=parseInt(this.getAttribute("data-d"),10);' +
+        'if(this.getAttribute("data-t")==="s"){TS+=d;}else{TE+=d;}' +
+        'drawTime();};}' +
+      '$("sgtgo").onclick=function(){' +
+        'szPopup_("この時間で予約を入れる先の画面は、これから作ります。",{icon:""});};})();' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
     'window.addEventListener("resize",function(){if(step===2)fitNames();});' +
     'showTestNote();' +
@@ -7932,10 +8023,14 @@ function akiFullCard_(day) {
   lo = Math.floor(lo / 60) * 60; hi = Math.ceil(hi / 60) * 60;
   var H = Math.round((hi - lo) * AKI_PX_);
 
-  function blk(cls, a, b, color, withTime) {
+  // ★空きの帯には「いつからいつまで・誰の列か」を持たせる（押せるようにするため・2026-09-11）。
+  //   空き時間検索では押しても何も起きない（押す仕掛けを付けるのは施術後の予約の側）。
+  function blk(cls, a, b, color, withTime, kind, who) {
     var top = Math.round((a - lo) * AKI_PX_), h = Math.round((b - a) * AKI_PX_);
+    var dat = kind ? (' data-s="' + akiHm_(a) + '" data-e="' + akiHm_(b) + '"' +
+                      ' data-kind="' + kind + '" data-who="' + esc_(who || '') + '"') : '';
     return '<div class="akfblk ' + cls + '" style="top:' + top + 'px;height:' + h + 'px' +
-      (color ? ';background:' + color : '') + '">' +
+      (color ? ';background:' + color : '') + '"' + dat + '>' +
       (withTime ? '<span class="akfa">' + akiHm_(a) + '</span>' +
                   '<span class="akfb">' + akiHm_(b) + '</span>' : '') + '</div>';
   }
@@ -7977,7 +8072,7 @@ function akiFullCard_(day) {
     for (k = 0; k < bs.length; k++) col += blk('akfbusy', bs[k][0], bs[k][1], '', false);
     for (k = 0; k < (st[i].slots || []).length; k++) {
       col += blk('akffree', akiMin_(st[i].slots[k].s), akiMin_(st[i].slots[k].e),
-                 staffColor_(st[i].emoji), true);
+                 staffColor_(st[i].emoji), true, 'staff', st[i].emoji + st[i].name);
     }
     body += col + '</div>';
   }
@@ -7988,7 +8083,7 @@ function akiFullCard_(day) {
     for (k = 0; k < bs2.length; k++) col2 += blk('akfbusy', bs2[k][0], bs2[k][1], '', false);
     for (k = 0; k < (rm[i].slots || []).length; k++) {
       col2 += blk('akffree', akiMin_(rm[i].slots[k].s), akiMin_(rm[i].slots[k].e),
-                  roomColor_(rm[i].room), true);
+                  roomColor_(rm[i].room), true, 'room', shortRoomName_(rm[i].room));
     }
     body += col2 + '</div>';
   }
