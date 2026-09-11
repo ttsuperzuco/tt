@@ -8881,8 +8881,9 @@ var LTCSS_ =
 '    font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; line-height:1.5; }' +
 '  .lwrap{ max-width:640px; margin:0 auto; padding:12px 12px 40px; }' +
 '  .lbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; }' +
-'  .lhome{ flex:0 0 auto; color:var(--ink); text-decoration:none; font-weight:700; font-size:14px;' +
-'    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 14px; }' +
+// ★2026-09-11：暗い色の設定だと濃い紺になって青緑の地に沈むので、白地＋濃い字に固定（戻るは全部同じ）。
+'  .lhome{ flex:0 0 auto; color:#0f172a; text-decoration:none; font-weight:700; font-size:14px;' +
+'    background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:9px 14px; }' +
 '  .lgen{ color:rgba(255,255,255,.85); font-size:12px; }' +
 '  h1{ color:#fff; font-size:1.7rem; font-weight:900; margin:6px 0 14px; }' +
 '  .lcnt{ color:#ff8fb3; font-size:1.4em; font-weight:900; }' +
@@ -8990,8 +8991,10 @@ var HOMECSS_ =
 // ★戻るボタン（← 前に戻る）＝スーパーズコ全画面共通。HOMECSS_ に置いて、予約入力など
 //   HOMECSS_ だけを読む画面でも必ずボタンとして見えるようにする（2026-08-01）。
 '  .ubar { display:flex; align-items:center; gap:12px; margin:6px 0 10px; }' +
-'  .uhome { flex:0 0 auto; font-size:1rem; font-weight:800; color:var(--ink); text-decoration:none;' +
-'    background:#fff; border:1px solid var(--line); border-radius:999px; padding:11px 20px;' +
+// ★同じ理由（2026-09-11）＝こちらは白地なのに字の色だけ端末まかせだったので、
+//   暗い色の設定だと**白地に白い字**になって読めなかった。字も濃い色に固定する。
+'  .uhome { flex:0 0 auto; font-size:1rem; font-weight:800; color:#0f172a; text-decoration:none;' +
+'    background:#fff; border:1px solid #e2e8f0; border-radius:999px; padding:11px 20px;' +
 '    box-shadow:0 4px 12px rgba(0,0,0,.10); }' +
 '  .uhome:active { transform:translateY(1px); }' +
 // タイルは2列グリッドのまま、各タイル内を左アイコン／右文字の横並びに変更（2026-07-16）。
@@ -9017,8 +9020,12 @@ var HOMECSS_ =
 '  .rname { flex:1; min-width:0; font-size:1.6rem; font-weight:900; }' +
 '  .rcount { flex:none; color:var(--sub); font-size:.95rem; font-weight:700; }' +
 '  .backbar { margin:0 0 16px; }' +
-'  .backbtn { display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:var(--card);' +
-'    color:var(--ink); border:1px solid var(--line); border-radius:999px; padding:9px 18px;' +
+// ★2026-09-11 まるちゃん「もどるがみえない」＝端末が暗い色の設定だと、戻るボタンが
+//   濃い紺（--card）になって青緑の地に沈み、ほとんど見えなかった（パソコンの窓で発生）。
+//   台湾トマトフォーマットの決まりは「白い丸ボタン」なので、端末の明暗に関係なく
+//   **白地＋濃い字**に固定する（色を端末まかせにしない）。
+'  .backbtn { display:inline-flex; align-items:center; gap:6px; cursor:pointer; background:#fff;' +
+'    color:#0f172a; border:1px solid #e2e8f0; border-radius:999px; padding:9px 18px;' +
 '    font-size:1rem; font-weight:800; box-shadow:0 4px 12px rgba(0,0,0,.08); }' +
 '  .backbtn:active { transform:translateY(1px); }' +
 '  .grouptitle { font-size:1.15rem; font-weight:900; color:#fff; margin:2px 0 14px; letter-spacing:.02em; }' +
@@ -9102,8 +9109,9 @@ var CSS_ =
 '  .fetched { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:2px;' +
 '    font-size:.74rem; color:rgba(255,255,255,.82); }' +
 '  .fetched b { font-weight:700; color:#fff; margin-right:4px; }' +
-'  .homelink { flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--ink); text-decoration:none;' +
-'    background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 14px; }' +
+// ★2026-09-11：暗い色の設定だと濃い紺になって青緑の地に沈むので、白地＋濃い字に固定（戻るは全部同じ）。
+'  .homelink { flex:0 0 auto; font-size:.9rem; font-weight:700; color:#0f172a; text-decoration:none;' +
+'    background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; }' +
 '  .homelink:active { transform:translateY(1px); }' +
 '  h1 { font-size:2.1rem; line-height:1.1; margin:0 0 8px; color:#fff; }' +   // 大きい文字の余白分も詰める
 '  h1 .cnt { color:#ff8fb3; font-size:1.6em; font-weight:900; }' +
