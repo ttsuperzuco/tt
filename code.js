@@ -1029,9 +1029,9 @@ function defaultPerms_(people) {
   var list = people || PEOPLE_;
   var perms = {};
   for (var i = 0; i < list.length; i++) {
-    // ★yoyaku(予約入力)＝幹部(🍅トマト=kanbu)だけ既定ON・他スタッフは非表示（2026-08-11 まるちゃん決定）。中は新規のみ(viewAllowed_)。
+    // ★yoyaku(予約入力)＝2026-09-11 まるちゃん決定で**全スタッフ**に開放（前は幹部だけ）。中は新規の予約だけ(viewAllowed_)。
     // ★zenjitsu(前日お知らせ)＝2026-08-24 まるちゃん決定で全員ON（スタッフにも見せる）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: (list[i] === 'kanbu') };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true };
   }
   return perms;
 }
@@ -1129,7 +1129,8 @@ function personPerms_(perms, staff, dev, who) {
 function viewAllowed_(view, allow) {
   if (view === 'home' || view === 'notice') return true;
   if (!allow) return true;   // dev
-  // ★予約入力：親の 'yoyaku' 権限があれば、トップ画面と「新規」だけ許可（既存/変更は開発者専用・2026-08-11 まるちゃん）。
+  // ★予約入力：'yoyaku' が付いている人は、トップ画面と「新規の予約」だけ許可（既存/変更は開発者専用）。
+  //   2026-09-11 まるちゃん決定で全スタッフに開放したので、ここを通るのはスタッフ全員になる。
   if (view === 'yoyaku' || view === 'yoyaku_new') return allow['yoyaku'] === true;
   return allow[view] === true;
 }
@@ -5385,7 +5386,8 @@ function renderReservationHomePage_(base, staff, dev) {
   var sfx = roleSfx_(staff, dev);
   var head = '<div class="hhead"><span class="bmark">📅</span><span class="bname">予約入力</span></div>' +
              '<div class="hsub">TaiwanTomato</div>';
-  // ★2026-08-11 まるちゃん決定：幹部(🍅トマト)は「新規の予約」だけ表示。既存の予約・既存の変更は開発者(?dev=1)だけに出す。
+  // ★スタッフ・幹部は「新規の予約」だけ表示。既存の予約・既存の変更は開発者(?dev=1)だけに出す
+  //   （2026-08-11 まるちゃん決定。2026-09-11 に予約入力そのものを全スタッフへ開放したが、中は新規だけのまま）。
   var ex = dev ?
       ('<a class="rolebtn kaihatsu" href="' + base + '?view=yoyaku_kizon' + sfx + '" target="_top">' +
         '<span class="ricon">📖</span><span class="rname">既存の予約</span></a>' +
