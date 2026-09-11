@@ -7817,6 +7817,125 @@ function akiWakuColor_(kind) {
 }
 
 // 1日ぶんのカード。data-date（ISO日付）を持たせて日にち検索の絞り込みに使う。
+/** ★2026-09-11 まるちゃん指示「完全版」＝その日1日の時間割。
+ *  縦が時間、横が「施術者」と「施術室」の列（間は太い線で分ける）。
+ *  ・空きの帯には**始まりと終わりの時刻を直接書く**（左の目盛りと見比べなくてよい）。
+ *  ・1時間ごとに横線（30分は点線）。
+ *  ・色は必ず共通の正本（部屋＝roomColor_／担当＝staffColor_）。自作の配色は作らない。
+ *  ・施術者の並びはオリーブ→みかん→トマト→マンゴー。**パインは出さない**（まるちゃん指示）。
+ *    マンゴーはその日出勤していれば出る（出勤していない人はデータに入らない）。
+ *  材料は akijikan.json にすでに入っている物だけ（事務所PC側は変えていない）。 */
+var AKI_STAFF_ORDER_ = ['🫒', '🍊', '🍅', '🥭'];   // パイン🍍は出さない
+var AKI_PX_ = 1.7;                                  // 1分あたりの高さ
+
+function akiHm_(m) { return Math.floor(m / 60) + ':' + ('0' + (m % 60)).slice(-2); }
+function akiMin_(hm) {
+  var p = String(hm || '').split(':');
+  return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+}
+/** 枠（空き）の外側＝埋まっている所を出す。 */
+function akiBusy_(ws, we, slots) {
+  var out = [], cur = ws, i;
+  var ss = (slots || []).slice().sort(function (a, b) { return akiMin_(a.s) - akiMin_(b.s); });
+  for (i = 0; i < ss.length; i++) {
+    var a = akiMin_(ss[i].s), b = akiMin_(ss[i].e);
+    if (a > cur) out.push([cur, a]);
+    cur = Math.max(cur, b);
+  }
+  if (cur < we) out.push([cur, we]);
+  return out;
+}
+function akiFullCard_(day) {
+  var st = (day.staff || []).filter(function (x) {
+    return AKI_STAFF_ORDER_.indexOf(x.emoji) >= 0;     // パインを外す
+  }).sort(function (a, b) {
+    return AKI_STAFF_ORDER_.indexOf(a.emoji) - AKI_STAFF_ORDER_.indexOf(b.emoji);
+  });
+  var rm = day.rooms_free || [];
+  if (!st.length && !rm.length) return '<div class="akinone">（この日は出せる予定がありません）</div>';
+
+  // 画面に出す時間の幅＝その日の出勤と部屋の空きが収まる範囲
+  var lo = 24 * 60, hi = 0, i, j, k;
+  for (i = 0; i < st.length; i++) {
+    var sh = String(st[i].shift || '').split('-');
+    if (sh.length === 2) { lo = Math.min(lo, akiMin_(sh[0])); hi = Math.max(hi, akiMin_(sh[1])); }
+    for (j = 0; j < (st[i].slots || []).length; j++) {
+      lo = Math.min(lo, akiMin_(st[i].slots[j].s)); hi = Math.max(hi, akiMin_(st[i].slots[j].e));
+    }
+  }
+  for (i = 0; i < rm.length; i++) {
+    for (j = 0; j < (rm[i].slots || []).length; j++) {
+      lo = Math.min(lo, akiMin_(rm[i].slots[j].s)); hi = Math.max(hi, akiMin_(rm[i].slots[j].e));
+    }
+  }
+  if (hi <= lo) return '<div class="akinone">（この日は出せる予定がありません）</div>';
+  lo = Math.floor(lo / 60) * 60; hi = Math.ceil(hi / 60) * 60;
+  var H = Math.round((hi - lo) * AKI_PX_);
+
+  function blk(cls, a, b, color, withTime) {
+    var top = Math.round((a - lo) * AKI_PX_), h = Math.round((b - a) * AKI_PX_);
+    return '<div class="akfblk ' + cls + '" style="top:' + top + 'px;height:' + h + 'px' +
+      (color ? ';background:' + color : '') + '">' +
+      (withTime ? '<span class="akfa">' + akiHm_(a) + '</span>' +
+                  '<span class="akfb">' + akiHm_(b) + '</span>' : '') + '</div>';
+  }
+  function lines() {
+    var o = '', t = lo;
+    while (t <= hi) {
+      o += '<div class="akfline" style="top:' + Math.round((t - lo) * AKI_PX_) + 'px"></div>';
+      if (t + 30 <= hi) o += '<div class="akfline half" style="top:' +
+        Math.round((t + 30 - lo) * AKI_PX_) + 'px"></div>';
+      t += 60;
+    }
+    return o;
+  }
+
+  var head = '<div class="akfhead"><div class="akfx"></div>';
+  for (i = 0; i < st.length; i++) {
+    head += '<div class="akfhc"><span class="akftag" style="background:' + staffColor_(st[i].emoji) +
+      '">' + esc_(st[i].emoji) + esc_(st[i].name) + '</span></div>';
+  }
+  head += '<div class="akfsep"></div>';
+  for (i = 0; i < rm.length; i++) {
+    head += '<div class="akfhc"><span class="akftag" style="background:' + roomColor_(rm[i].room) +
+      '">' + esc_(shortRoomName_(rm[i].room)) + '</span></div>';
+  }
+  head += '</div>';
+
+  var body = '<div class="akfboard"><div class="akfaxis" style="height:' + H + 'px">';
+  for (var t = lo; t <= hi; t += 60) {
+    body += '<div class="akft" style="top:' + Math.round((t - lo) * AKI_PX_) + 'px">' + akiHm_(t) + '</div>';
+  }
+  body += '</div><div class="akfcols" style="height:' + H + 'px">';
+  for (i = 0; i < st.length; i++) {
+    var sh2 = String(st[i].shift || '').split('-');
+    var ws = sh2.length === 2 ? akiMin_(sh2[0]) : lo, we = sh2.length === 2 ? akiMin_(sh2[1]) : hi;
+    var col = '<div class="akfcol">' + lines();
+    if (ws > lo) col += blk('akfoff', lo, ws, '', false);
+    if (we < hi) col += blk('akfoff', we, hi, '', false);
+    var bs = akiBusy_(ws, we, st[i].slots);
+    for (k = 0; k < bs.length; k++) col += blk('akfbusy', bs[k][0], bs[k][1], '', false);
+    for (k = 0; k < (st[i].slots || []).length; k++) {
+      col += blk('akffree', akiMin_(st[i].slots[k].s), akiMin_(st[i].slots[k].e),
+                 staffColor_(st[i].emoji), true);
+    }
+    body += col + '</div>';
+  }
+  body += '<div class="akfsep2"></div>';
+  for (i = 0; i < rm.length; i++) {
+    var col2 = '<div class="akfcol">' + lines();
+    var bs2 = akiBusy_(lo, hi, rm[i].slots);
+    for (k = 0; k < bs2.length; k++) col2 += blk('akfbusy', bs2[k][0], bs2[k][1], '', false);
+    for (k = 0; k < (rm[i].slots || []).length; k++) {
+      col2 += blk('akffree', akiMin_(rm[i].slots[k].s), akiMin_(rm[i].slots[k].e),
+                  roomColor_(rm[i].room), true);
+    }
+    body += col2 + '</div>';
+  }
+  body += '</div></div>';
+  return '<div class="akfull">' + head + body + '</div>';
+}
+
 function akiDayCard_(day) {
   var dattr = ' data-date="' + esc_(day.date || '') + '"';
   if (day.kind === 'closed') {
@@ -7829,6 +7948,9 @@ function akiDayCard_(day) {
   }
   return '<div class="akiday"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    '<div class="akisec akisec-full akihidden" data-sec="full">' +
+      akiFullCard_(day) +
+    '</div>' +
     '<div class="akisec akisec-time" data-sec="time">' +
       akiTimeRows_(day.time_slots) +
     '</div>' +
@@ -7898,6 +8020,8 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '</div>' +
   '</div>' +
   '<div class="akichips">' +
+    // ★完全版＝その日1日の時間割（まるちゃん指示 2026-09-11）。各時間帯別の左に置く。
+    '<button type="button" class="akichip" data-sec="full">完全版</button>' +
     '<button type="button" class="akichip on" data-sec="time">各時間帯別</button>' +
     '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
     '<button type="button" class="akichip" data-sec="rooms">施術室別</button>' +
@@ -7982,7 +8106,7 @@ var AKISCRIPT_ =
 '  if(daysBox) daysBox.classList.toggle("akihidden", isWaku);' +
 '  if(wakuBox) wakuBox.classList.toggle("akihidden", !isWaku);' +
 '  if(isWaku){ drawWaku_(); return; }' +
-'  ["time","staff","rooms"].forEach(function(s){' +
+'  ["full","time","staff","rooms"].forEach(function(s){' +
 '    [].slice.call(document.querySelectorAll(".akisec-"+s)).forEach(function(el){' +
 '      el.classList.toggle("akihidden", s!==sec);' +
 '    });' +
@@ -8212,6 +8336,32 @@ var AKICSS_ =
 '  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
+'  .akfull{ overflow:hidden; }' +
+'  .akfhead{ display:flex; padding:2px 0 6px; }' +
+'  .akfx{ width:40px; flex:none; }' +
+'  .akfhc{ flex:1; min-width:0; text-align:center; padding:0 1px; }' +
+'  .akftag{ display:inline-block; width:100%; color:#fff; border-radius:8px; padding:3px 2px;' +
+'    font-size:10px; font-weight:900; line-height:1.15; overflow-wrap:anywhere;' +
+'    text-shadow:0 1px 2px rgba(0,0,0,.35); }' +
+'  .akfsep{ flex:none; width:10px; }' +
+'  .akfboard{ display:flex; }' +
+'  .akfaxis{ width:40px; flex:none; position:relative; }' +
+'  .akft{ position:absolute; right:3px; font-size:11px; font-weight:800; color:var(--akiink);' +
+'    transform:translateY(-50%); }' +
+'  .akfcols{ flex:1; min-width:0; display:flex; position:relative;' +
+'    background:rgba(127,127,127,.10); border-radius:10px; }' +
+'  .akfcol{ flex:1; min-width:0; position:relative; border-right:1px solid rgba(127,127,127,.22); }' +
+'  .akfcol:last-child{ border-right:0; }' +
+'  .akfsep2{ flex:none; width:10px; }' +
+'  .akfline{ position:absolute; left:0; right:0; border-top:1px solid rgba(127,127,127,.35); }' +
+'  .akfline.half{ border-top:1px dotted rgba(127,127,127,.20); }' +
+'  .akfblk{ position:absolute; left:2px; right:2px; border-radius:7px; overflow:hidden; }' +
+'  .akfbusy{ background:rgba(127,127,127,.32); }' +
+'  .akfoff{ background:repeating-linear-gradient(45deg,rgba(127,127,127,.30) 0 6px,transparent 6px 12px); }' +
+'  .akffree{ box-shadow:0 2px 6px rgba(0,0,0,.20); }' +
+'  .akfa,.akfb{ position:absolute; left:3px; font-size:10px; font-weight:900; color:#fff;' +
+'    text-shadow:0 1px 2px rgba(0,0,0,.55); }' +
+'  .akfa{ top:2px; } .akfb{ bottom:2px; }' +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
 '  .akichip{ font-family:inherit; font-size:clamp(13px,4.5vw,17px); font-weight:700; color:var(--akisub);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
