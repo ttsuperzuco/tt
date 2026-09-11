@@ -5545,6 +5545,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
           '</span>' +
         '</div>' +
       '</div>' +
+      '<div class="sgstep">施術の長さ（押すと終了時間が決まります）</div>' +
+      '<div class="sgdur" id="sgdur"></div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">終了時間</div>' +
         '<div class="sgtrow">' +
@@ -5559,8 +5561,6 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
           '</span>' +
         '</div>' +
       '</div>' +
-      '<div class="sgstep">施術の長さ（押すと終了時間が決まります）</div>' +
-      '<div class="sgdur" id="sgdur"></div>' +
       '<div class="sgerr" id="sgterr"></div>' +
       '<button type="button" class="sggo" id="sgtgo">この時間で決定</button>' +
     '</div>';
