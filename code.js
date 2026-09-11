@@ -5412,7 +5412,7 @@ function renderReservationHomePage_(base, staff, dev) {
  *    1枚目＝施術者をえらぶ。マーク＋呼び方／施術時間順／いまの施術がはじめから選ばれている／
  *           自分のスマホなら自分がいちばん上／いちばん下は「全施術者」／はじめの選び先の下は1個ぶん空ける。
  *    2枚目＝「お客様の選択」＝その施術者の今日の予約。いま施術中の方が一番上に来た形で開く。
- *    3枚目＝「次の予約希望の日時を選択」＝今月から4か月ぶんの月のボタン（縦）。
+ *    3枚目＝「次の予約希望の日時を選択」＝今月から3か月ぶんの月のボタン（縦）。
  *    4枚目＝その月のカレンダー（曜日つき）。日にちを押すと空き状況の画面へ（**まだ作っていない**）。
  *    ★空き状況で時間と部屋が決まったら、2枚目（お客様の選択）へ戻す（これから作る）。
  *  ★並び・はじめの選択・カウンセリングの出し分けは書き写さない＝共通の1本 `SG`（sg_rules.js）に聞く。 */
@@ -5656,11 +5656,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var mx=document.documentElement.scrollHeight-window.innerHeight;' +
       'if(y>mx)el.style.paddingBottom=(y-mx)+"px";' +
       'window.scrollTo(0,y);}' +
-    /* ── 3枚目：月をえらぶ（今月から4か月ぶん・縦に並べる） ── */
+    /* ── 3枚目：月をえらぶ（今月から3か月ぶん・縦に並べる／まるちゃん 2026-09-11） ── */
     'function drawMonths(){' +
       'var base=new Date(NOW());base.setDate(1);' +
       'var h="";' +
-      'for(var i=0;i<4;i++){' +
+      'for(var i=0;i<3;i++){' +
         'var d=new Date(base.getFullYear(),base.getMonth()+i,1);' +
         'h+="<button type=\\"button\\" class=\\"sgmon\\" data-y=\\""+d.getFullYear()+"\\" data-m=\\""+d.getMonth()+"\\">"+' +
           '(d.getMonth()+1)+"月</button>";}' +
