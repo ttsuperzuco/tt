@@ -5493,6 +5493,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '<div class="sg" id="sgDay" style="display:none">' +
       '<div class="sgct" id="sgct"></div>' +
       '<div class="sggrid" id="sggrid"></div>' +
+    '</div>' +
+    /* 5枚目＝その日の空き状況。空き時間検索の「完全版」とまったく同じ物を出す
+       （書き写さず akiFullCard_ をそのまま呼ぶ・まるちゃん 2026-09-11）。 */
+    '<div class="sg" id="sgFree" style="display:none">' +
+      '<div class="sgct" id="sgfct"></div>' +
+      '<div id="sgfree"></div>' +
+      '<div class="sgstatus" id="sgstatus3"></div>' +
     '</div>';
   var backTop = backBar_(base, staff, dev);          /* 1枚目の戻る＝ホームへ */
   var backList = '<div class="backbar" id="sgbackbar" style="display:none">' +
@@ -5501,6 +5508,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '<script>(function(){' +
     'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
     'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],step=1,CUST=null,MY=null;' +
+    /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
+    'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null;' +
     'function $(i){return document.getElementById(i);}' +
     'function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){' +
       'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
@@ -5560,6 +5569,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgList").style.display=step===2?"":"none";' +
       '$("sgMonth").style.display=step===3?"":"none";' +
       '$("sgDay").style.display=step===4?"":"none";' +
+      '$("sgFree").style.display=step===5?"":"none";' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
       'var hd=$("sghead");if(hd)hd.style.display=step===1?"":"none";}' +
@@ -5567,7 +5577,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     'function goMonth(){step=3;show();drawMonths();window.scrollTo(0,0);}' +
     'function goDay(){step=4;show();drawCal();window.scrollTo(0,0);}' +
-    'function back(){if(step===4){goMonth();}else if(step===3){goList();}else{goPick();}}' +
+    'function back(){if(step===5){goDay();}else if(step===4){goMonth();}' +
+      'else if(step===3){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,NOW());' +
@@ -5679,14 +5690,41 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sggrid").innerHTML=h;' +
       'var ds=$("sggrid").getElementsByClassName("sgday");' +
       'for(var k=0;k<ds.length;k++){if(ds[k].getAttribute("data-d")){ds[k].onclick=function(){' +
-        'szPopup_("この日の空き状況の画面は、これから作ります。",{icon:""});};}}}' +
+        'PICKDATE=MY.y+"-"+("0"+(MY.m+1)).slice(-2)+"-"+("0"+this.getAttribute("data-d")).slice(-2);' +
+        'goFree();};}}}' +
+    /* ── 5枚目：その日の空き状況（空き時間検索の「完全版」と同じ物） ── */
+    'function goFree(){step=5;show();drawFree();window.scrollTo(0,0);}' +
+    'function drawFree(){' +
+      'var wd=["日","月","火","水","木","金","土"];' +
+      'var d=new Date(PICKDATE+"T00:00:00");' +
+      '$("sgfct").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）の空き状況";' +
+      'if(!AKI&&!AKIERR){$("sgstatus3").textContent="空き状況を読んでいます...";' +
+        '$("sgfree").innerHTML="";AKIWAIT=function(){if(step===5)drawFree();};return;}' +
+      'if(AKIERR){$("sgstatus3").textContent="空き状況を読めませんでした。通信環境をご確認ください。";' +
+        '$("sgfree").innerHTML="";return;}' +
+      'var day=null;' +
+      'for(var i=0;i<AKI.days.length;i++){if(AKI.days[i].date===PICKDATE){day=AKI.days[i];break;}}' +
+      'if(!day){$("sgstatus3").textContent="この日の空き状況はまだ出せません（先の日は近づくと出ます）。";' +
+        '$("sgfree").innerHTML="";return;}' +
+      'if(day.kind==="closed"){$("sgstatus3").textContent=day.label||"この日はお休みです。";' +
+        '$("sgfree").innerHTML="";return;}' +
+      '$("sgstatus3").textContent="";' +
+      '$("sgfree").innerHTML=akiFullCard_(day);}' +
+    /* 空き状況の材料を取りに行く（この画面用に1回だけ） */
+    '(function(){var nm="__sgAki_"+Date.now();' +
+      'window[nm]=function(p){AKI=(p&&p.days)?p:null;AKIERR=!AKI;' +
+        'var w=AKIWAIT;AKIWAIT=null;if(w)w();};' +
+      'var s=document.createElement("script");' +
+      's.src=EXEC+"?action=data&name=akijikan.json&callback="+nm+"&cb="+Date.now();' +
+      's.onerror=function(){AKIERR=true;var w=AKIWAIT;AKIWAIT=null;if(w)w();};' +
+      'document.body.appendChild(s);})();' +
     '$("sgback").onclick=back;' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
     'window.addEventListener("resize",function(){if(step===2)fitNames();});' +
     'showTestNote();' +
     'need(build);' +
     '})();<' + '/script>';
-  return '<style>' + HOMECSS_ + css + '</style>' +
+  return '<style>' + HOMECSS_ + css + AKFCSS_ + '</style>' +
     '<div class="home">' +
       '<span id="sgtopbar">' + backTop + '</span>' + backList +
       '<div class="sgtest" id="sgtest"></div>' +
@@ -8289,6 +8327,41 @@ var AKISCRIPT_ =
 '}' +
 '})();</scr' + 'ipt>';
 
+// ★時間割（完全版）の見た目。空き時間検索と「施術後の予約」の**両方が使う**ので1本にまとめた
+//   （書き写さない・2026-09-11）。時刻の字の色は、置かれた画面に合わせて外から決められる
+//   （空き時間検索は --akiink／施術後の予約は青緑の地なので白に落ちる）。
+var AKFCSS_ =
+// ★下の端の時刻（18:00など）は目盛りの線の真横に出すため半分はみ出す。
+//   はみ出した分の逃げ場を下に作らないと切れる（まるちゃん指摘 2026-09-11）。
+'  .akfull{ overflow:hidden; padding-bottom:12px; }' +
+'  .akfhead{ display:flex; padding:2px 0 6px; }' +
+'  .akfx{ width:40px; flex:none; }' +
+'  .akfhc{ flex:1; min-width:0; text-align:center; padding:0 1px; }' +
+'  .akftag{ display:block; width:100%; box-sizing:border-box; color:#fff; border-radius:8px;' +
+'    padding:3px 1px; text-align:center;' +
+'    font-size:10px; font-weight:900; line-height:1.15; overflow-wrap:anywhere;' +
+'    text-shadow:0 1px 2px rgba(0,0,0,.35); }' +
+'  .akfsep{ flex:none; width:10px; }' +
+'  .akfboard{ display:flex; }' +
+'  .akfaxis{ width:40px; flex:none; position:relative; }' +
+'  .akft{ position:absolute; right:3px; font-size:11px; font-weight:800; color:var(--akiink,#fff);' +
+'    transform:translateY(-50%); }' +
+'  .akfcols{ flex:1; min-width:0; display:flex; position:relative;' +
+'    background:rgba(127,127,127,.10); border-radius:10px; }' +
+'  .akfcol{ flex:1; min-width:0; position:relative; border-right:1px solid rgba(127,127,127,.22); }' +
+'  .akfcol:last-child{ border-right:0; }' +
+'  .akfsep2{ flex:none; width:10px; }' +
+'  .akfline{ position:absolute; left:0; right:0; border-top:1px solid rgba(127,127,127,.35); }' +
+'  .akfline.half{ border-top:1px dotted rgba(127,127,127,.20); }' +
+'  .akfblk{ position:absolute; left:2px; right:2px; border-radius:7px; overflow:hidden; }' +
+'  .akfbusy{ background:rgba(127,127,127,.32); }' +
+'  .akfoff{ background:repeating-linear-gradient(45deg,rgba(127,127,127,.30) 0 6px,transparent 6px 12px); }' +
+'  .akffree{ box-shadow:0 2px 6px rgba(0,0,0,.20); }' +
+'  .akfa,.akfb{ position:absolute; left:3px; font-size:10px; font-weight:900; color:#fff;' +
+'    text-shadow:0 1px 2px rgba(0,0,0,.55); }' +
+'  .akfa{ top:2px; } .akfb{ bottom:2px; }' +
+'';
+
 var AKICSS_ =
 '  :root{ --akibg:#16141e; --akicard:#211f2c; --akiink:#f1eef8; --akisub:#9a95a9; --akiline:#34313f;' +
 '    --akiprimary:#a79fff; }' +
@@ -8358,35 +8431,7 @@ var AKICSS_ =
 '  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
-// ★下の端の時刻（18:00など）は目盛りの線の真横に出すため半分はみ出す。
-//   はみ出した分の逃げ場を下に作らないと切れる（まるちゃん指摘 2026-09-11）。
-'  .akfull{ overflow:hidden; padding-bottom:12px; }' +
-'  .akfhead{ display:flex; padding:2px 0 6px; }' +
-'  .akfx{ width:40px; flex:none; }' +
-'  .akfhc{ flex:1; min-width:0; text-align:center; padding:0 1px; }' +
-'  .akftag{ display:block; width:100%; box-sizing:border-box; color:#fff; border-radius:8px;' +
-'    padding:3px 1px; text-align:center;' +
-'    font-size:10px; font-weight:900; line-height:1.15; overflow-wrap:anywhere;' +
-'    text-shadow:0 1px 2px rgba(0,0,0,.35); }' +
-'  .akfsep{ flex:none; width:10px; }' +
-'  .akfboard{ display:flex; }' +
-'  .akfaxis{ width:40px; flex:none; position:relative; }' +
-'  .akft{ position:absolute; right:3px; font-size:11px; font-weight:800; color:var(--akiink);' +
-'    transform:translateY(-50%); }' +
-'  .akfcols{ flex:1; min-width:0; display:flex; position:relative;' +
-'    background:rgba(127,127,127,.10); border-radius:10px; }' +
-'  .akfcol{ flex:1; min-width:0; position:relative; border-right:1px solid rgba(127,127,127,.22); }' +
-'  .akfcol:last-child{ border-right:0; }' +
-'  .akfsep2{ flex:none; width:10px; }' +
-'  .akfline{ position:absolute; left:0; right:0; border-top:1px solid rgba(127,127,127,.35); }' +
-'  .akfline.half{ border-top:1px dotted rgba(127,127,127,.20); }' +
-'  .akfblk{ position:absolute; left:2px; right:2px; border-radius:7px; overflow:hidden; }' +
-'  .akfbusy{ background:rgba(127,127,127,.32); }' +
-'  .akfoff{ background:repeating-linear-gradient(45deg,rgba(127,127,127,.30) 0 6px,transparent 6px 12px); }' +
-'  .akffree{ box-shadow:0 2px 6px rgba(0,0,0,.20); }' +
-'  .akfa,.akfb{ position:absolute; left:3px; font-size:10px; font-weight:900; color:#fff;' +
-'    text-shadow:0 1px 2px rgba(0,0,0,.55); }' +
-'  .akfa{ top:2px; } .akfb{ bottom:2px; }' +
+AKFCSS_ +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
 '  .akichip{ font-family:inherit; font-size:clamp(13px,4.5vw,17px); font-weight:700; color:var(--akisub);' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
