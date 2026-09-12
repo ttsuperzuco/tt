@@ -5615,7 +5615,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '</div>' +
       /* ★次の回のぶんを先に払っていただいたか（まるちゃん 2026-09-12）。
          答えは予約メモのお支払いの欄に「◉10/10分: 未払い／支払い済み」の形で入る。 */
-      '<div class="sgtimebox">' +
+      '<div class="sgtimebox" id="sgpaidbox" style="display:none">' +
         '<div class="sgtlab">次回の費用は支払済みですか？</div>' +
         '<div class="sgyesno">' +
           '<button type="button" class="sgyn" id="sgpaid1">はい</button>' +
@@ -5660,10 +5660,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();' +
       'sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
     'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],step=1,CUST=null,MY=null;' +
+    /* 今日の日付（事務所パソコンが今日の予約の払い方を見るために使う）。 */
+    'var TODAY="";' +
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
     'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0,ROOM=null,DAYROOMS=[];' +
     /* 次回用に回数を1つ進めた予約メモ（事務所パソコンが作る）。お客様を選んだ時に先に頼んでおく。 */
     'var NEXTMEMO=null,NEXTCHG=null,NEXTFOR=null,MEMOTOUCHED=false,PAYLINE="";' +
+    /* ASK＝「次回の費用は支払済みですか？」を出すか。事務所パソコンが決める（毎回払いの方だけ）。 */
+    'var ASK=false;' +
     /* 次回の費用を先に払っていただいたか。null＝まだ選んでいない。 */
     'var PAID=null;' +
     /* ★画面が切り替わった時刻。切り替わった直後の押しは受け付けない（下の tapOK）。 */
@@ -5709,7 +5713,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     /* 受け取った予定から「今日・うちの施術者の分」だけ取り出す */
     'function build(p){' +
       'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読めませんでした。通信環境をご確認ください。";return;}' +
-      'var today=p.date_from||"";ALLEV=[];BK=[];' +
+      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];' +
       'var day=[];' +
       'for(var i=0;i<p.events.length;i++){var e=p.events[i];if(e.date!==today)continue;' +
         'var mk=(typeof staffOf==="function")?staffOf(e.title||""):"";' +
@@ -5797,7 +5801,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'for(var k=0;k<rs.length;k++){rs[k].onclick=function(){' +
         'if(!tapOK())return;' +
         'CUST=LIST[parseInt(this.getAttribute("data-id"),10)];' +
-        'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;goMonth();};}}' +
+        'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;' +
+        'askNextMemo();goMonth();};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -5987,9 +5992,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'er.innerHTML="その時間は空いていません。<br>入力し直してください。";}' +
       'else{er.style.display="none";er.textContent="";}' +
       /* ★はい／いいえの見た目。答えていないと決定は押せない（メモに書く物だから）。 */
+      '$("sgpaidbox").style.display=ASK?"":"none";' +
       '$("sgpaid1").className="sgyn"+(PAID===1?" sel":"");' +
       '$("sgpaid0").className="sgyn"+(PAID===0?" sel":"");' +
-      '$("sgtgo").disabled=over||!fr.length||!ROOM||PAID===null;}' +
+      '$("sgtgo").disabled=over||!fr.length||!ROOM||(ASK&&PAID===null);}' +
     /* ── 7枚目：予約メモの修正 ──
        今日の予約メモ（タイトルと本文）をそのまま出す＝予約するとは、前の予約メモを写して
        次の予約日のタイムツリーに入れること（まるちゃん 2026-09-11）。 */
@@ -6005,11 +6011,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'NEXTMEMO=null;NEXTCHG=null;PAYLINE="";NEXTFOR=key;MEMOTOUCHED=false;' +
       'if(!note)return;' +
       'if(MEMOCACHE[key]){NEXTMEMO=MEMOCACHE[key].memo;NEXTCHG=MEMOCACHE[key].changed;' +
-        'PAYLINE=MEMOCACHE[key].payline||"";return;}' +
+        'PAYLINE=MEMOCACHE[key].payline||"";ASK=!!MEMOCACHE[key].ask;return;}' +
       'var mine=key;' +
+      'var cd=(typeof codeOf==="function"&&CUST)?(codeOf(CUST.title)||""):"";' +
       'jsonp({action:"submit",key:KEY,op:"sejutsugo_next_memo",who:idn.who,role:idn.role,' +
         'device:idn.device,fields:JSON.stringify({memo:note,date:PICKDATE||"",' +
-          'paid:(PAID===1?"1":(PAID===0?"0":""))})},' +
+          'paid:(PAID===1?"1":(PAID===0?"0":"")),fnum:cd,today:TODAY})},' +
       'function(r){if(!r||!r.ok||!r.id)return;setTimeout(function(){pollNextMemo(r.id,mine,0);},900);});}' +
     'function pollNextMemo(id,mine,n){' +
       'if(n>200||NEXTFOR!==mine)return;' +
@@ -6020,8 +6027,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'if(r.status!=="done")return;' +
         'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
         'if(!d||!d.ok||!d.memo)return;' +
-        'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];PAYLINE=d.payline||"";' +
-        'MEMOCACHE[mine]={memo:d.memo,changed:NEXTCHG,payline:PAYLINE};' +
+        'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];PAYLINE=d.payline||"";ASK=!!d.ask;' +
+        'MEMOCACHE[mine]={memo:d.memo,changed:NEXTCHG,payline:PAYLINE,ask:ASK};' +
+        'if(step===6)drawTime();' +
         /* まだ画面に出ていない／人がまだ触っていなければ、出来上がった物に差し替える。 */
         'if(step===7&&!MEMOTOUCHED){$("sgmtext").value=NEXTMEMO;growMemo();}' +
         'memoReady();});}' +
