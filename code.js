@@ -5499,6 +5499,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '.sgroomb.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
     '.sgroomnone{background:#fee2e2;color:#991b1b;border-radius:14px;padding:12px 14px;margin:0;' +
       'font-weight:900;font-size:17px;line-height:1.6;}' +
+    /* 次回の費用を先に払ったか＝はい／いいえ */
+    '.sgyesno{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0;}' +
+    '.sgyn{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:18px 4px;' +
+      'font-size:22px;font-weight:900;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}' +
+    '.sgyn.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
     '.sgerr{background:#fee2e2;color:#991b1b;border-radius:14px;padding:12px 14px;margin:0 2px 14px;' +
       'font-weight:900;font-size:17px;line-height:1.6;display:none;}' +
     '.sggo{display:block;width:100%;margin:6px 2px 0;padding:20px;font-size:21px;font-weight:900;' +
@@ -5608,6 +5613,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         '<div class="sgrooms" id="sgrooms"></div>' +
         '<div class="sgroomnone" id="sgroomnone" style="display:none"></div>' +
       '</div>' +
+      /* ★次の回のぶんを先に払っていただいたか（まるちゃん 2026-09-12）。
+         答えは予約メモのお支払いの欄に「◉10/10分: 未払い／支払い済み」の形で入る。 */
+      '<div class="sgtimebox">' +
+        '<div class="sgtlab">次回の費用は支払済みですか？</div>' +
+        '<div class="sgyesno">' +
+          '<button type="button" class="sgyn" id="sgpaid1">はい</button>' +
+          '<button type="button" class="sgyn" id="sgpaid0">いいえ</button>' +
+        '</div>' +
+      '</div>' +
       '<div class="sgerr" id="sgterr"></div>' +
       '<button type="button" class="sggo" id="sgtgo">この時間と部屋で決定</button>' +
     '</div>' +
@@ -5649,7 +5663,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
     'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0,ROOM=null,DAYROOMS=[];' +
     /* 次回用に回数を1つ進めた予約メモ（事務所パソコンが作る）。お客様を選んだ時に先に頼んでおく。 */
-    'var NEXTMEMO=null,NEXTCHG=null,NEXTFOR=null,MEMOTOUCHED=false;' +
+    'var NEXTMEMO=null,NEXTCHG=null,NEXTFOR=null,MEMOTOUCHED=false,PAYLINE="";' +
+    /* 次回の費用を先に払っていただいたか。null＝まだ選んでいない。 */
+    'var PAID=null;' +
     /* ★画面が切り替わった時刻。切り替わった直後の押しは受け付けない（下の tapOK）。 */
     'var SWAP=0;' +
     /* ★★画面を切り替えた直後、指がまだ同じ場所にあると、新しい画面のボタンが続けて押される。
@@ -5781,7 +5797,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'for(var k=0;k<rs.length;k++){rs[k].onclick=function(){' +
         'if(!tapOK())return;' +
         'CUST=LIST[parseInt(this.getAttribute("data-id"),10)];' +
-        'askNextMemo();goMonth();};}}' +
+        'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;goMonth();};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -5970,7 +5986,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'if(over){er.style.display="block";' +
         'er.innerHTML="その時間は空いていません。<br>入力し直してください。";}' +
       'else{er.style.display="none";er.textContent="";}' +
-      '$("sgtgo").disabled=over||!fr.length||!ROOM;}' +
+      /* ★はい／いいえの見た目。答えていないと決定は押せない（メモに書く物だから）。 */
+      '$("sgpaid1").className="sgyn"+(PAID===1?" sel":"");' +
+      '$("sgpaid0").className="sgyn"+(PAID===0?" sel":"");' +
+      '$("sgtgo").disabled=over||!fr.length||!ROOM||PAID===null;}' +
     /* ── 7枚目：予約メモの修正 ──
        今日の予約メモ（タイトルと本文）をそのまま出す＝予約するとは、前の予約メモを写して
        次の予約日のタイムツリーに入れること（まるちゃん 2026-09-11）。 */
@@ -5981,15 +6000,16 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'var MEMOCACHE={};' +
     'function askNextMemo(){' +
       'var note=(CUST&&CUST.note)||"";' +
-      'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=note;MEMOTOUCHED=false;' +
+      /* 覚える合い言葉＝メモ＋次の予約日＋支払いの答え。どれか変われば頼み直す。 */
+      'var key=note+"\u0001"+(PICKDATE||"")+"\u0001"+String(PAID);' +
+      'NEXTMEMO=null;NEXTCHG=null;PAYLINE="";NEXTFOR=key;MEMOTOUCHED=false;' +
       'if(!note)return;' +
-      /* 一度聞いた分は覚えておく＝同じお客様を選び直しても、もう頼まない。 */
-      'if(MEMOCACHE[note]){NEXTMEMO=MEMOCACHE[note].memo;NEXTCHG=MEMOCACHE[note].changed;return;}' +
-      /* ★回数がどこにも書いていないメモは、進める所が無い＝頼まずにそのまま使う（待ち時間ゼロ）。 */
-      'if(note.indexOf("回目")<0){NEXTMEMO=note;NEXTCHG=[];MEMOCACHE[note]={memo:note,changed:[]};return;}' +
-      'var mine=note;' +
+      'if(MEMOCACHE[key]){NEXTMEMO=MEMOCACHE[key].memo;NEXTCHG=MEMOCACHE[key].changed;' +
+        'PAYLINE=MEMOCACHE[key].payline||"";return;}' +
+      'var mine=key;' +
       'jsonp({action:"submit",key:KEY,op:"sejutsugo_next_memo",who:idn.who,role:idn.role,' +
-        'device:idn.device,fields:JSON.stringify({memo:note})},' +
+        'device:idn.device,fields:JSON.stringify({memo:note,date:PICKDATE||"",' +
+          'paid:(PAID===1?"1":(PAID===0?"0":""))})},' +
       'function(r){if(!r||!r.ok||!r.id)return;setTimeout(function(){pollNextMemo(r.id,mine,0);},900);});}' +
     'function pollNextMemo(id,mine,n){' +
       'if(n>200||NEXTFOR!==mine)return;' +
@@ -6000,18 +6020,20 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'if(r.status!=="done")return;' +
         'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
         'if(!d||!d.ok||!d.memo)return;' +
-        'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];MEMOCACHE[mine]={memo:d.memo,changed:NEXTCHG};' +
+        'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];PAYLINE=d.payline||"";' +
+        'MEMOCACHE[mine]={memo:d.memo,changed:NEXTCHG,payline:PAYLINE};' +
         /* まだ画面に出ていない／人がまだ触っていなければ、出来上がった物に差し替える。 */
         'if(step===7&&!MEMOTOUCHED){$("sgmtext").value=NEXTMEMO;growMemo();}' +
         'memoReady();});}' +
     /* ★回数を進めた時だけ、欄の下に「何回目を何回目にしたか」を出す（まるちゃん 2026-09-12）。
        進めていない時（最終回・前回なし・回数の無いメモ）は何も出さない。 */
     'function drawMemoDone(){var el=$("sgmdone");' +
-      'if(!NEXTCHG||!NEXTCHG.length){el.style.display="none";el.innerHTML="";return;}' +
       'var h="";' +
-      'for(var i=0;i<NEXTCHG.length;i++){var c=NEXTCHG[i];' +
+      'if(NEXTCHG){for(var i=0;i<NEXTCHG.length;i++){var c=NEXTCHG[i];' +
         'h+="<div>今日の予約メモ <b>"+esc(c["前"])+"回目</b>を、次回用に、<b>"+' +
-          'esc(c["後"])+"回目</b>に変更済みです</div>";}' +
+          'esc(c["後"])+"回目</b>に変更済みです</div>";}}' +
+      'if(PAYLINE){h+="<div>お支払い状況に <b>"+esc(PAYLINE)+"</b> を入れました</div>";}' +
+      'if(!h){el.style.display="none";el.innerHTML="";return;}' +
       'el.innerHTML=h;el.style.display="block";}' +
     /* ★下書きが出来るまでは「確定」を押せなくする＝1つ前の回数のまま保存してしまうのを防ぐ。
        お客様を選んだ時点で頼んであるので、ふつうはここへ来た時にはもう出来ている。 */
@@ -6019,11 +6041,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'if(step===7){$("sgmgo").disabled=false;drawMemoDone();}}' +
     'function memoWait(){var w=$("sgmwait");drawMemoDone();' +
       'if(NEXTMEMO||!((CUST&&CUST.note)||"")){memoReady();return;}' +
-      'w.style.display="block";w.textContent="回数を1つ進めた下書きを作っています…";' +
+      'w.style.display="block";w.textContent="次回用の予約メモを作っています…";' +
       '$("sgmgo").disabled=true;' +
       /* いつまでも待たせない＝25秒で今日のメモのまま進めるようにする（回数は手で直せる）。 */
       'setTimeout(function(){if(step===7&&!NEXTMEMO){' +
-        'w.textContent="回数を進められませんでした。回数は手で直してください。";' +
+        'w.textContent="次回用の下書きを作れませんでした。回数とお支払いは手で直してください。";' +
         '$("sgmgo").disabled=false;}},25000);}' +
     'function goMemo(){step=7;show();' +
       '$("sgmtitle").value=(CUST&&CUST.title)||"";' +
@@ -6086,7 +6108,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         /* ★開始を動かしたら終了も同じだけ動く＝長さはそのまま（まるちゃん 2026-09-12）。 */
         'if(this.getAttribute("data-t")==="s"){TS+=d;TE+=d;}else{TE+=d;}' +
         'drawTime();};}' +
-      '$("sgtgo").onclick=function(){if(!tapOK())return;goMemo();};' +
+      '$("sgtgo").onclick=function(){if(!tapOK())return;askNextMemo();goMemo();};' +
+      '$("sgpaid1").onclick=function(){if(!tapOK())return;PAID=1;drawTime();};' +
+      '$("sgpaid0").onclick=function(){if(!tapOK())return;PAID=0;drawTime();};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;sendMemo();};' +
       '$("sgmtext").addEventListener("input",function(){MEMOTOUCHED=true;growMemo();});})();' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
