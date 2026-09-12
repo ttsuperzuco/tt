@@ -5453,6 +5453,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     /* 長い見出し（次の予約希望の日時を選択）は1行に収まる大きさにする（横375pxで実測）。 */
     '.sgwho.long{font-size:25px;}' +
     '#sgbackbar{position:sticky;top:0;z-index:5;background:#2C7A99;padding:8px 0 10px;margin:0;}' +
+    /* ★「お客様の選択」は画面を下にずらしても消えない＝戻るの下にくっついたまま残す
+       （まるちゃん 2026-09-12。いまのお客様を一番上に出すと見出しが上に押し出されていた）。 */
+    '#sglisthead{position:sticky;z-index:4;background:#2C7A99;padding:2px 4px 10px;margin:0 0 4px;}' +
     '.sglist{display:flex;flex-direction:column;gap:12px;margin:6px 0 8px;min-width:0;max-width:100%;}' +
     '.sgrow{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;text-align:left;' +
       'background:#fff;color:#0f172a;border:0;border-radius:16px;padding:16px 18px;cursor:pointer;' +
@@ -5803,7 +5806,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'for(var j=0;j<LIST.length;j++){if(LIST[j].end<=now&&(best<0||LIST[j].end>LIST[best].end))best=j;}' +
         'idx=best;}' +
       'if(idx<0||!rows[idx])return;' +
-      'var bar=$("sgbackbar");var off=bar?bar.offsetHeight:0;' +
+      /* ★上に残る物＝「← 前に戻る」と「お客様の選択」の2つ。その下にお客様を出す。
+         見出しがくっつく高さは、戻るの高さに合わせてその場で決める（字の大きさで変わるため）。 */
+      'var bar=$("sgbackbar");var barH=bar?bar.offsetHeight:0;' +
+      'var hd=$("sglisthead");hd.style.top=barH+"px";' +
+      'var off=barH+(hd?hd.offsetHeight:0);' +
       'var el=$("sglist");el.style.paddingBottom="0px";' +
       'var y=Math.max(0,rows[idx].getBoundingClientRect().top+window.pageYOffset-off-6);' +
       'var mx=document.documentElement.scrollHeight-window.innerHeight;' +
