@@ -5776,7 +5776,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
             '"<span class=\\"sgcd2\\">"+esc(cd)+"</span></span>"+' +
           '"</button>";}' +
       '$("sglist").innerHTML=h;' +
-      'fitNames();' +
+      'fitNames();gapAfterNow();' +
       'var rs=$("sglist").getElementsByClassName("sgrow");' +
       'for(var k=0;k<rs.length;k++){rs[k].onclick=function(){' +
         'if(!tapOK())return;' +
@@ -5797,14 +5797,28 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'for(var t=0;t<4&&fs>MIN&&el.scrollWidth>el.clientWidth;t++){fs--;el.style.fontSize=fs+"px";}}}' +
     /* ★いま施術しているお客様が画面の一番上に来るように開く。
        無ければ、いまより前で一番あとに終わった予約（＝1つ前。施術がのびていることがあるため）。 */
-    'function scrollToNow(){' +
-      'var now=NOW(),rows=$("sglist").getElementsByClassName("sgrow");' +
-      'if(!rows.length)return;' +
-      'var idx=-1;' +
+    /* ★「いまのお客様」は何番目か。いま施術中の方。いなければ、いちばん最近終わった方。
+       ★一番上に出す時も、下に空きを作る時も、この1つの決め方だけを使う（2か所に書き写さない）。 */
+    'function nowIndex(){' +
+      'var now=NOW(),idx=-1;' +
       'for(var i=0;i<LIST.length;i++){if(LIST[i].start<=now&&now<LIST[i].end){idx=i;break;}}' +
       'if(idx<0){var best=-1;' +
         'for(var j=0;j<LIST.length;j++){if(LIST[j].end<=now&&(best<0||LIST[j].end>LIST[best].end))best=j;}' +
         'idx=best;}' +
+      'return idx;}' +
+    /* ★いまのお客様の下に、カード1枚ぶんの空きを作る＝いまの予約が目立つ
+       （まるちゃん 2026-09-12。施術者の画面ではじめの選び先の下を空けるのと同じ考え）。
+       下にもう予約が無い時は空けない。 */
+    'function gapAfterNow(){' +
+      'var rows=$("sglist").getElementsByClassName("sgrow");' +
+      'for(var i=0;i<rows.length;i++)rows[i].style.marginBottom="";' +
+      'var idx=nowIndex();' +
+      'if(idx<0||idx>=rows.length-1)return;' +
+      'rows[idx].style.marginBottom=rows[idx].offsetHeight+"px";}' +
+    'function scrollToNow(){' +
+      'var rows=$("sglist").getElementsByClassName("sgrow");' +
+      'if(!rows.length)return;' +
+      'var idx=nowIndex();' +
       'if(idx<0||!rows[idx])return;' +
       /* ★上に残る物＝「← 前に戻る」と「お客様の選択」の2つ。その下にお客様を出す。
          見出しがくっつく高さは、戻るの高さに合わせてその場で決める（字の大きさで変わるため）。 */
@@ -6076,7 +6090,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgmgo").onclick=function(){if(!tapOK())return;sendMemo();};' +
       '$("sgmtext").addEventListener("input",function(){MEMOTOUCHED=true;growMemo();});})();' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
-    'window.addEventListener("resize",function(){if(step===2)fitNames();' +
+    'window.addEventListener("resize",function(){if(step===2){fitNames();gapAfterNow();}' +
       'if(step===6)fitLine($("sgtwho"),26,13);if(step===7)growMemo();});' +
     'showTestNote();' +
     'need(build);' +
