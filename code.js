@@ -5474,6 +5474,17 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '.sgdurb{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:18px 4px;' +
       'font-size:22px;font-weight:900;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}' +
     '.sgdurb.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
+    /* ★上の1行（施術者と空きの時間）は1行に収まる最大の大きさにする（まるちゃん 2026-09-12）。
+       大きさは画面の幅に合わせてその場で測って決める（fitLine）。 */
+    '.sgtwho1{color:#fff;font-weight:900;font-size:22px;line-height:1.3;margin:0 4px 14px;' +
+      'white-space:nowrap;overflow:hidden;}' +
+    /* 施術室のボタン（空いている部屋だけ出す） */
+    '.sgrooms{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 2px 14px;}' +
+    '.sgroomb{color:#fff;border:0;border-radius:14px;padding:16px 4px;font-size:17px;font-weight:900;' +
+      'cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.16);text-shadow:0 1px 2px rgba(0,0,0,.35);}' +
+    '.sgroomb.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
+    '.sgroomnone{background:#fee2e2;color:#991b1b;border-radius:14px;padding:12px 14px;margin:0 2px 14px;' +
+      'font-weight:900;font-size:17px;line-height:1.6;}' +
     '.sgerr{background:#fee2e2;color:#991b1b;border-radius:14px;padding:12px 14px;margin:0 2px 14px;' +
       'font-weight:900;font-size:17px;line-height:1.6;display:none;}' +
     '.sggo{display:block;width:100%;margin:6px 2px 0;padding:20px;font-size:21px;font-weight:900;' +
@@ -5530,7 +5541,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '<div class="sg" id="sgTime" style="display:none">' +
       '<div class="sgwho">予約時間設定</div>' +
       '<div class="sgct" id="sgtday"></div>' +
-      '<div class="sgstep" id="sgtwho"></div>' +
+      '<div class="sgtwho1" id="sgtwho"></div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">開始時間</div>' +
         '<div class="sgtrow">' +
@@ -5561,6 +5572,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
           '</span>' +
         '</div>' +
       '</div>' +
+      '<div class="sgstep">施術室（この時間に空いている部屋だけ出ます）</div>' +
+      '<div class="sgrooms" id="sgrooms"></div>' +
+      '<div class="sgroomnone" id="sgroomnone" style="display:none"></div>' +
       '<div class="sgerr" id="sgterr"></div>' +
       '<button type="button" class="sggo" id="sgtgo">この時間で決定</button>' +
     '</div>';
@@ -5572,7 +5586,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
     'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],step=1,CUST=null,MY=null;' +
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
-    'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0;' +
+    'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0,ROOM=null,DAYROOMS=[];' +
     'function $(i){return document.getElementById(i);}' +
     'function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){' +
       'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
@@ -5773,6 +5787,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'if(day.kind==="closed"){$("sgstatus3").textContent=day.label||"この日はお休みです。";' +
         '$("sgfree").innerHTML="";return;}' +
       '$("sgstatus3").textContent="";' +
+      'DAYROOMS=day.rooms_free||[];' +
       '$("sgfree").innerHTML=akiFullCard_(day);' +
       /* 空きの帯を押すと「予約時間設定」へ */
       'var fs=$("sgfree").getElementsByClassName("akffree");' +
@@ -5789,14 +5804,43 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
       '$("sgtday").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）";' +
-      '$("sgtwho").textContent=(SLOT.kind==="staff"?"施術者 ":"施術室 ")+SLOT.who+"　空き "+' +
-        'm2hm(SLOT.s)+"〜"+m2hm(SLOT.e);' +
       'TS=SLOT.s;' +
       /* はじめの終了時間＝30分。入りきらなければ空きの終わりまで。 */
       'TE=Math.min(SLOT.s+30,SLOT.e);' +
+      /* 施術室の帯を押した時は、その部屋がはじめから選ばれている。 */
+      'ROOM=(SLOT.kind==="room")?SLOT.who:null;' +
       'drawTime();window.scrollTo(0,0);}' +
+    /* ★上の1行は1行に収まる最大の大きさにする（まるちゃん 2026-09-12）。 */
+    'function fitLine(el,big,min){' +
+      'el.style.fontSize=big+"px";' +
+      'var have=el.clientWidth,need=el.scrollWidth;' +
+      'if(!have||need<=have)return;' +
+      'var fs=Math.floor(big*(have-2)/need);' +
+      'if(fs<min)fs=min;if(fs>big)fs=big;' +
+      'el.style.fontSize=fs+"px";' +
+      'for(var t=0;t<4&&fs>min&&el.scrollWidth>el.clientWidth;t++){fs--;el.style.fontSize=fs+"px";}}' +
+    /* ★その時間にまるごと空いている施術室だけ返す（事務所PCが出した空きの区間から見る）。 */
+    'function freeRooms(a,b){' +
+      'var out=[];' +
+      'for(var i=0;i<DAYROOMS.length;i++){' +
+        'var r=DAYROOMS[i],ok=false;' +
+        'for(var j=0;j<(r.slots||[]).length;j++){' +
+          'if(hm2m(r.slots[j].s)<=a&&b<=hm2m(r.slots[j].e)){ok=true;break;}}' +
+        'if(ok)out.push(r.room);}' +
+      /* 並びは時間割と同じ（コスモスがフリーダムの左） */
+      'out.sort(function(x,y){var ix=AKI_ROOM_ORDER_.indexOf(x),iy=AKI_ROOM_ORDER_.indexOf(y);' +
+        'if(ix<0)ix=99;if(iy<0)iy=99;return ix-iy;});' +
+      'return out;}' +
     'function drawTime(){' +
+      /* ★開始を動かしたら終了も同じだけ動く（長さは変えない・まるちゃん 2026-09-12）。
+         そのぶん「終了が開始より前」は起きないので、その知らせは出さない。 */
+      'if(TS<SLOT.s)TS=SLOT.s;' +
+      'if(TS>SLOT.e-5)TS=SLOT.e-5;' +
+      'if(TE<TS+5)TE=TS+5;' +
       '$("sgtS").textContent=m2hm(TS);$("sgtE").textContent=m2hm(TE);' +
+      '$("sgtwho").textContent=(SLOT.kind==="staff"?"施術者 ":"施術室 ")+SLOT.who+"　空き "+' +
+        'm2hm(SLOT.s)+"〜"+m2hm(SLOT.e);' +
+      'fitLine($("sgtwho"),26,13);' +
       'var h="";' +
       'for(var i=0;i<DURS.length;i++){' +
         'h+="<button type=\\"button\\" class=\\"sgdurb"+((TE-TS)===DURS[i]?" sel":"")+"\\" data-m=\\""+DURS[i]+"\\">"+DURS[i]+"分</button>";}' +
@@ -5804,14 +5848,28 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var bs=$("sgdur").getElementsByClassName("sgdurb");' +
       'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){' +
         'TE=TS+parseInt(this.getAttribute("data-m"),10);drawTime();};}' +
+      /* ★施術室＝この時間に空いている部屋だけ。時間を変えるとその場で作り直す。 */
+      'var fr=freeRooms(TS,TE);' +
+      'if(ROOM&&fr.indexOf(ROOM)<0&&fr.indexOf(shortRoomName_(ROOM))<0)ROOM=null;' +
+      'var rh="";' +
+      'for(var k=0;k<fr.length;k++){' +
+        'var nm=shortRoomName_(fr[k]);' +
+        'rh+="<button type=\\"button\\" class=\\"sgroomb"+((ROOM===fr[k]||ROOM===nm)?" sel":"")+"\\"" +' +
+          '" data-r=\\""+esc(fr[k])+"\\" style=\\"background:"+roomColor_(fr[k])+"\\">"+esc(nm)+"</button>";}' +
+      '$("sgrooms").innerHTML=rh;' +
+      'var rs=$("sgrooms").getElementsByClassName("sgroomb");' +
+      'for(var m=0;m<rs.length;m++){rs[m].onclick=function(){' +
+        'ROOM=this.getAttribute("data-r");drawTime();};}' +
+      'var none=$("sgroomnone");' +
+      'if(fr.length){none.style.display="none";none.textContent="";}' +
+      'else{none.style.display="block";none.textContent="この時間に空いている施術室がありません。";}' +
       /* 空きをはみ出していないか見る（まるちゃん指定の文をそのまま出す） */
-      'var ng=(TE<=TS)||(TS<SLOT.s)||(TE>SLOT.e);' +
+      'var over=(TE>SLOT.e);' +
       'var er=$("sgterr");' +
-      'if(ng){er.style.display="block";' +
-        'er.innerHTML=(TE<=TS)?"終了時間が開始時間より後になっていません。<br>入力し直してください。"' +
-          ':"その時間は空いていません。<br>入力し直してください。";}' +
+      'if(over){er.style.display="block";' +
+        'er.innerHTML="その時間は空いていません。<br>入力し直してください。";}' +
       'else{er.style.display="none";er.textContent="";}' +
-      '$("sgtgo").disabled=ng;}' +
+      '$("sgtgo").disabled=over||!fr.length||!ROOM;}' +
     /* 空き状況の材料を取りに行く（この画面用に1回だけ） */
     '(function(){var nm="__sgAki_"+Date.now();' +
       'window[nm]=function(p){AKI=(p&&p.days)?p:null;AKIERR=!AKI;' +
@@ -5824,12 +5882,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '(function(){var ps=document.getElementsByClassName("sgtpm");' +
       'for(var i=0;i<ps.length;i++){ps[i].onclick=function(){' +
         'var d=parseInt(this.getAttribute("data-d"),10);' +
-        'if(this.getAttribute("data-t")==="s"){TS+=d;}else{TE+=d;}' +
+        /* ★開始を動かしたら終了も同じだけ動く＝長さはそのまま（まるちゃん 2026-09-12）。 */
+        'if(this.getAttribute("data-t")==="s"){TS+=d;TE+=d;}else{TE+=d;}' +
         'drawTime();};}' +
       '$("sgtgo").onclick=function(){' +
         'szPopup_("この時間で予約を入れる先の画面は、これから作ります。",{icon:""});};})();' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
-    'window.addEventListener("resize",function(){if(step===2)fitNames();});' +
+    'window.addEventListener("resize",function(){if(step===2)fitNames();' +
+      'if(step===6)fitLine($("sgtwho"),26,13);});' +
     'showTestNote();' +
     'need(build);' +
     '})();<' + '/script>';
