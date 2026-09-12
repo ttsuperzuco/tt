@@ -5537,7 +5537,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
   /* 4枚の画面。出すのは1枚だけ。 */
   var body =
     '<div class="sg" id="sgPick">' +
-      '<div class="sgstep">施術者を選んでください</div>' +
+      /* ★読み込み中は「施術者を選んでください」を出さない（まだ選べないので・まるちゃん 2026-09-12）。
+         今日の予約を読み終えてボタンが並んだ時にはじめて出す（drawPick）。 */
+      '<div class="sgstep" id="sgpickhead" style="display:none">施術者を選んでください</div>' +
       '<div class="sgstaff" id="sgstaff"></div>' +
       '<div class="sgstatus" id="sgstatus">今日の予約を読んでいます...</div>' +
     '</div>' +
@@ -5739,6 +5741,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'h+="<button type=\\"button\\" class=\\"sgbtn all"+(pick===SG.ALL?" sel":"")+(dflt===SG.ALL?" dflt":"")+"\\" data-mk=\\""+SG.ALL+"\\">"+' +
         '"<span class=\\"sgmk\\">👥</span><span class=\\"sgnm\\">全施術者</span></button>";' +
       '$("sgstaff").innerHTML=h;' +
+      /* ここまで来た＝今日の予約を読み終えてボタンが並んだ。ここで見出しを出す。 */
+      '$("sgpickhead").style.display="";' +
       '$("sgstatus").textContent=r.list.length?"":"今日は予約がありません。";' +
       'var bs=$("sgstaff").getElementsByClassName("sgbtn");' +
       'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){' +
