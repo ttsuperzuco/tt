@@ -5634,6 +5634,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],step=1,CUST=null,MY=null;' +
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
     'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0,ROOM=null,DAYROOMS=[];' +
+    /* 次回用に回数を1つ進めた予約メモ（事務所パソコンが作る）。お客様を選んだ時に先に頼んでおく。 */
+    'var NEXTMEMO=null,NEXTFOR=null,MEMOTOUCHED=false;' +
+    /* ★画面が切り替わった時刻。切り替わった直後の押しは受け付けない（下の tapOK）。 */
+    'var SWAP=0;' +
+    /* ★★画面を切り替えた直後、指がまだ同じ場所にあると、新しい画面のボタンが続けて押される。
+       まるちゃん 2026-09-12「前に戻るを押すとこの二つの画面をループする」の正体がこれ。
+       ＝画面が変わってすぐの押しは捨てる（人が押し直せばよい）。全部のボタンがこれを通る。 */
+    'function tapOK(){return (Date.now()-SWAP)>450;}' +
     'function $(i){return document.getElementById(i);}' +
     'function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){' +
       'return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
@@ -5689,6 +5697,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'drawPick();}' +
     /* ── 画面の出し入れ（1枚だけ出す） ── */
     'function show(){' +
+      'SWAP=Date.now();' +
       '$("sgPick").style.display=step===1?"":"none";' +
       '$("sgList").style.display=step===2?"":"none";' +
       '$("sgMonth").style.display=step===3?"":"none";' +
@@ -5724,6 +5733,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgstatus").textContent=r.list.length?"":"今日は予約がありません。";' +
       'var bs=$("sgstaff").getElementsByClassName("sgbtn");' +
       'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){' +
+        'if(!tapOK())return;' +
         'pick=this.getAttribute("data-mk");goList();};}}' +
     /* ── 2枚目：お客様の選択 ── */
     'function drawList(){' +
@@ -5753,7 +5763,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'fitNames();' +
       'var rs=$("sglist").getElementsByClassName("sgrow");' +
       'for(var k=0;k<rs.length;k++){rs[k].onclick=function(){' +
-        'CUST=LIST[parseInt(this.getAttribute("data-id"),10)];goMonth();};}}' +
+        'if(!tapOK())return;' +
+        'CUST=LIST[parseInt(this.getAttribute("data-id"),10)];' +
+        'askNextMemo();goMonth();};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -5795,6 +5807,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgmonths").innerHTML=h;' +
       'var bs=$("sgmonths").getElementsByClassName("sgmon");' +
       'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){' +
+        'if(!tapOK())return;' +
         'MY={y:parseInt(this.getAttribute("data-y"),10),m:parseInt(this.getAttribute("data-m"),10)};' +
         'goDay();};}}' +
     /* ── 4枚目：日にちをえらぶ（曜日つきの暦・既存の予約と同じ見た目） ── */
@@ -5818,6 +5831,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sggrid").innerHTML=h;' +
       'var ds=$("sggrid").getElementsByClassName("sgday");' +
       'for(var k=0;k<ds.length;k++){if(ds[k].getAttribute("data-d")){ds[k].onclick=function(){' +
+        'if(!tapOK())return;' +
         'PICKDATE=MY.y+"-"+("0"+(MY.m+1)).slice(-2)+"-"+("0"+this.getAttribute("data-d")).slice(-2);' +
         'goFree();};}}}' +
     /* ── 5枚目：その日の空き状況（空き時間検索の「完全版」と同じ物） ── */
@@ -5842,6 +5856,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       /* 空きの帯を押すと「予約時間設定」へ */
       'var fs=$("sgfree").getElementsByClassName("akffree");' +
       'for(var f=0;f<fs.length;f++){fs[f].style.cursor="pointer";fs[f].onclick=function(){' +
+        'if(!tapOK())return;' +
         'SLOT={s:hm2m(this.getAttribute("data-s")),e:hm2m(this.getAttribute("data-e")),' +
           'kind:this.getAttribute("data-kind"),who:this.getAttribute("data-who")};' +
         'goTime();};}}' +
@@ -5897,6 +5912,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgdur").innerHTML=h;' +
       'var bs=$("sgdur").getElementsByClassName("sgdurb");' +
       'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){' +
+        'if(!tapOK())return;' +
         'TE=TS+parseInt(this.getAttribute("data-m"),10);drawTime();};}' +
       /* ★施術室＝この時間に空いている部屋だけ。時間を変えるとその場で作り直す。 */
       'var fr=freeRooms(TS,TE);' +
@@ -5909,6 +5925,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgrooms").innerHTML=rh;' +
       'var rs=$("sgrooms").getElementsByClassName("sgroomb");' +
       'for(var m=0;m<rs.length;m++){rs[m].onclick=function(){' +
+        'if(!tapOK())return;' +
         'ROOM=this.getAttribute("data-r");drawTime();};}' +
       'var none=$("sgroomnone");' +
       'if(fr.length){none.style.display="none";none.textContent="";}' +
@@ -5923,9 +5940,34 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     /* ── 7枚目：予約メモの修正 ──
        今日の予約メモ（タイトルと本文）をそのまま出す＝予約するとは、前の予約メモを写して
        次の予約日のタイムツリーに入れること（まるちゃん 2026-09-11）。 */
+    /* ★お客様を選んだ時点で、事務所パソコンに「次回用のメモ」を作ってもらっておく。
+       日にちや時間を選んでいる間に出来上がるので、メモの画面では待ち時間が出ない。
+       ★回数の数え方は共通の1本（事務所パソコンの treatment_memo）だけが知っている＝
+       画面では数えない（書き写すと必ずずれる・CLAUDE.mdの決まり）。 */
+    'function askNextMemo(){' +
+      'var note=(CUST&&CUST.note)||"";' +
+      'NEXTMEMO=null;NEXTFOR=note;MEMOTOUCHED=false;' +
+      'if(!note)return;' +
+      'var mine=note;' +
+      'jsonp({action:"submit",key:KEY,op:"sejutsugo_next_memo",who:idn.who,role:idn.role,' +
+        'device:idn.device,fields:JSON.stringify({memo:note})},' +
+      'function(r){if(!r||!r.ok||!r.id)return;setTimeout(function(){pollNextMemo(r.id,mine,0);},900);});}' +
+    'function pollNextMemo(id,mine,n){' +
+      'if(n>200||NEXTFOR!==mine)return;' +
+      'jsonp({action:"status",key:KEY,id:id},function(r){' +
+        'if(!r||!r.ok||NEXTFOR!==mine)return;' +
+        'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){' +
+          'setTimeout(function(){pollNextMemo(id,mine,n+1);},600);return;}' +
+        'if(r.status!=="done")return;' +
+        'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
+        'if(!d||!d.ok||!d.memo)return;' +
+        'NEXTMEMO=d.memo;' +
+        /* まだ画面に出ていない／人がまだ触っていなければ、出来上がった物に差し替える。 */
+        'if(step===7&&!MEMOTOUCHED){$("sgmtext").value=NEXTMEMO;growMemo();}});}' +
     'function goMemo(){step=7;show();' +
       '$("sgmtitle").value=(CUST&&CUST.title)||"";' +
-      '$("sgmtext").value=(CUST&&CUST.note)||"";' +
+      'MEMOTOUCHED=false;' +
+      '$("sgmtext").value=NEXTMEMO||((CUST&&CUST.note)||"");' +
       /* ★字の形が届くまでの間に測ると横幅が出ず、とんでもなく縦長になる。少し置いて測り直す。 */
       'growMemo();setTimeout(growMemo,0);setTimeout(growMemo,300);' +
       'window.scrollTo(0,0);}' +
@@ -5975,16 +6017,17 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       's.src=EXEC+"?action=data&name=akijikan.json&callback="+nm+"&cb="+Date.now();' +
       's.onerror=function(){AKIERR=true;var w=AKIWAIT;AKIWAIT=null;if(w)w();};' +
       'document.body.appendChild(s);})();' +
-    '$("sgback").onclick=back;' +
+    '$("sgback").onclick=function(){if(!tapOK())return;back();};' +
     '(function(){var ps=document.getElementsByClassName("sgtpm");' +
       'for(var i=0;i<ps.length;i++){ps[i].onclick=function(){' +
+        'if(!tapOK())return;' +
         'var d=parseInt(this.getAttribute("data-d"),10);' +
         /* ★開始を動かしたら終了も同じだけ動く＝長さはそのまま（まるちゃん 2026-09-12）。 */
         'if(this.getAttribute("data-t")==="s"){TS+=d;TE+=d;}else{TE+=d;}' +
         'drawTime();};}' +
-      '$("sgtgo").onclick=goMemo;' +
-      '$("sgmgo").onclick=sendMemo;' +
-      '$("sgmtext").addEventListener("input",growMemo);})();' +
+      '$("sgtgo").onclick=function(){if(!tapOK())return;goMemo();};' +
+      '$("sgmgo").onclick=function(){if(!tapOK())return;sendMemo();};' +
+      '$("sgmtext").addEventListener("input",function(){MEMOTOUCHED=true;growMemo();});})();' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
     'window.addEventListener("resize",function(){if(step===2)fitNames();' +
       'if(step===6)fitLine($("sgtwho"),26,13);if(step===7)growMemo();});' +
