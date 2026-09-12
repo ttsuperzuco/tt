@@ -5509,6 +5509,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     /* ★予約メモは全部見えるように、中身の長さに合わせて縦に伸ばす（中で別にスクロールさせない）。 */
     '.sgmtx{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:17px;line-height:1.8;' +
       'color:#0f172a;background:#fff;border:0;border-radius:12px;padding:14px;overflow:hidden;resize:none;}' +
+    '.sgmwait{color:#fff;background:rgba(255,255,255,.18);border-radius:14px;padding:12px 14px;' +
+      'margin:0 2px 10px;font-weight:800;font-size:16px;line-height:1.6;}' +
     '.sgtest{display:none;background:#fde68a;color:#78350f;font-weight:900;font-size:14px;' +
       'border-radius:12px;padding:8px 12px;margin:0 4px 10px;line-height:1.5;}' +
     /* ── 3枚目：月えらび ── */
@@ -5614,6 +5616,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         '<div class="sgtlab">予約メモ</div>' +
         '<textarea class="sgmtx" id="sgmtext" rows="8"></textarea>' +
       '</div>' +
+      '<div class="sgmwait" id="sgmwait" style="display:none"></div>' +
       '<button type="button" class="sggo" id="sgmgo">この予約メモの内容で確定</button>' +
     '</div>';
   var backTop = backBar_(base, staff, dev);          /* 1枚目の戻る＝ホームへ */
@@ -5963,14 +5966,27 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'if(!d||!d.ok||!d.memo)return;' +
         'NEXTMEMO=d.memo;' +
         /* まだ画面に出ていない／人がまだ触っていなければ、出来上がった物に差し替える。 */
-        'if(step===7&&!MEMOTOUCHED){$("sgmtext").value=NEXTMEMO;growMemo();}});}' +
+        'if(step===7&&!MEMOTOUCHED){$("sgmtext").value=NEXTMEMO;growMemo();}' +
+        'memoReady();});}' +
+    /* ★下書きが出来るまでは「確定」を押せなくする＝1つ前の回数のまま保存してしまうのを防ぐ。
+       お客様を選んだ時点で頼んであるので、ふつうはここへ来た時にはもう出来ている。 */
+    'function memoReady(){var w=$("sgmwait");if(w){w.style.display="none";w.textContent="";}' +
+      'if(step===7)$("sgmgo").disabled=false;}' +
+    'function memoWait(){var w=$("sgmwait");' +
+      'if(NEXTMEMO||!((CUST&&CUST.note)||"")){memoReady();return;}' +
+      'w.style.display="block";w.textContent="回数を1つ進めた下書きを作っています…";' +
+      '$("sgmgo").disabled=true;' +
+      /* いつまでも待たせない＝25秒で今日のメモのまま進めるようにする（回数は手で直せる）。 */
+      'setTimeout(function(){if(step===7&&!NEXTMEMO){' +
+        'w.textContent="回数を進められませんでした。回数は手で直してください。";' +
+        '$("sgmgo").disabled=false;}},25000);}' +
     'function goMemo(){step=7;show();' +
       '$("sgmtitle").value=(CUST&&CUST.title)||"";' +
       'MEMOTOUCHED=false;' +
       '$("sgmtext").value=NEXTMEMO||((CUST&&CUST.note)||"");' +
       /* ★字の形が届くまでの間に測ると横幅が出ず、とんでもなく縦長になる。少し置いて測り直す。 */
       'growMemo();setTimeout(growMemo,0);setTimeout(growMemo,300);' +
-      'window.scrollTo(0,0);}' +
+      'memoWait();window.scrollTo(0,0);}' +
     /* 予約メモが全部見えるように、中身の高さに合わせて伸ばす。 */
     'function growMemo(){var t=$("sgmtext");' +
       'if(!t.clientWidth)return;' +            /* まだ出ていない＝測っても意味がない */
