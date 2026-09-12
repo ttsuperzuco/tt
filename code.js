@@ -1032,7 +1032,9 @@ function defaultPerms_(people) {
   for (var i = 0; i < list.length; i++) {
     // ★yoyaku(予約入力)＝2026-09-11 まるちゃん決定で**全スタッフ**に開放（前は幹部だけ）。中は新規の予約だけ(viewAllowed_)。
     // ★zenjitsu(前日お知らせ)＝2026-08-24 まるちゃん決定で全員ON（スタッフにも見せる）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true };
+    // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
+    //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: (list[i] === 'kanbu') };
   }
   return perms;
 }
@@ -1133,6 +1135,9 @@ function viewAllowed_(view, allow) {
   // ★予約入力：'yoyaku' が付いている人は、トップ画面と「新規の予約」だけ許可（既存/変更は開発者専用）。
   //   2026-09-11 まるちゃん決定で全スタッフに開放したので、ここを通るのはスタッフ全員になる。
   if (view === 'yoyaku' || view === 'yoyaku_new') return allow['yoyaku'] === true;
+  // ★施術後の予約：ボタンのidは 'sejutsugo'、画面のviewは 'yoyaku_sejutsugo'。
+  //   ボタンが出る人は画面も開ける、で合わせる（ここを書かないとボタンから飛んでも弾かれる）。
+  if (view === 'yoyaku_sejutsugo') return allow['sejutsugo'] === true;
   return allow[view] === true;
 }
 
