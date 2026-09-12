@@ -5421,11 +5421,16 @@ function renderReservationHomePage_(base, staff, dev) {
  *           自分のスマホなら自分がいちばん上／いちばん下は「全施術者」／はじめの選び先の下は1個ぶん空ける。
  *    2枚目＝「お客様の選択」＝その施術者の今日の予約。いま施術中の方が一番上に来た形で開く。
  *    3枚目＝「次の予約希望の日時を選択」＝今月から3か月ぶんの月のボタン（縦）。
- *    4枚目＝その月のカレンダー（曜日つき）。日にちを押すと空き状況の画面へ（**まだ作っていない**）。
- *    ★空き状況で時間と部屋が決まったら、2枚目（お客様の選択）へ戻す（これから作る）。
+ *    4枚目＝その月のカレンダー（曜日つき）。日にちを押すとその日の空き状況へ。
+ *    5枚目＝その日の空き状況（空き時間検索の「完全版」と同じ物）。空きの帯を押すと次へ。
+ *    6枚目＝予約時間設定（開始・長さ・終了・施術室）。「この時間と部屋で決定」で次へ。
+ *    7枚目＝予約メモの修正。今日の予約メモをそのまま出して直してもらい、
+ *           「この予約メモの内容で確定」で次の予約日のタイムツリーに1件作る
+ *           （作るのは事務所パソコンの受付係＝op=sejutsugo_reservation）。
  *  ★並び・はじめの選択・カウンセリングの出し分けは書き写さない＝共通の1本 `SG`（sg_rules.js）に聞く。 */
 function renderAfterTreatmentPage_(base, staff, dev, who) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  var KEY = 'kx7Q2p9mVt4Zr8';
   /* ★2026-09-11 まるちゃん「ここのたいわんとまとの文字いらない」＝見出しの下の店名は出さない。 */
   var head = '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>';
   var css =
@@ -5497,6 +5502,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'border:0;border-radius:16px;background:#16a34a;color:#fff;cursor:pointer;' +
       'box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
     '.sggo:disabled{opacity:.45;}' +
+    /* ── 7枚目：予約メモの修正（まるちゃん指示 2026-09-12） ── */
+    '.sgmnote{color:#eaf6fb;font-weight:700;font-size:15px;line-height:1.8;margin:-8px 4px 16px;}' +
+    '.sgmin{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:20px;font-weight:800;' +
+      'color:#0f172a;background:#fff;border:0;border-radius:12px;padding:14px;}' +
+    /* ★予約メモは全部見えるように、中身の長さに合わせて縦に伸ばす（中で別にスクロールさせない）。 */
+    '.sgmtx{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:17px;line-height:1.8;' +
+      'color:#0f172a;background:#fff;border:0;border-radius:12px;padding:14px;overflow:hidden;resize:none;}' +
     '.sgtest{display:none;background:#fde68a;color:#78350f;font-weight:900;font-size:14px;' +
       'border-radius:12px;padding:8px 12px;margin:0 4px 10px;line-height:1.5;}' +
     /* ── 3枚目：月えらび ── */
@@ -5586,7 +5598,23 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         '<div class="sgroomnone" id="sgroomnone" style="display:none"></div>' +
       '</div>' +
       '<div class="sgerr" id="sgterr"></div>' +
-      '<button type="button" class="sggo" id="sgtgo">この時間で決定</button>' +
+      '<button type="button" class="sggo" id="sgtgo">この時間と部屋で決定</button>' +
+    '</div>' +
+    /* 7枚目＝予約メモの修正。今日の予約メモをそのまま出し、次回用に直してもらう
+       （そのままタイムツリーの次回の予約メモになる・まるちゃん 2026-09-12）。 */
+    '<div class="sg" id="sgMemo" style="display:none">' +
+      '<div class="sgwho">予約メモの修正</div>' +
+      '<div class="sgmnote">下に本日の予約メモを表示しています。次回の予約用にメモを修正してください。' +
+        '次回の予約日の予約メモとしてタイムツリーに保存されます。</div>' +
+      '<div class="sgtimebox">' +
+        '<div class="sgtlab">予約メモのタイトル</div>' +
+        '<input type="text" class="sgmin" id="sgmtitle">' +
+      '</div>' +
+      '<div class="sgtimebox">' +
+        '<div class="sgtlab">予約メモ</div>' +
+        '<textarea class="sgmtx" id="sgmtext" rows="8"></textarea>' +
+      '</div>' +
+      '<button type="button" class="sggo" id="sgmgo">この予約メモの内容で確定</button>' +
     '</div>';
   var backTop = backBar_(base, staff, dev);          /* 1枚目の戻る＝ホームへ */
   var backList = '<div class="backbar" id="sgbackbar" style="display:none">' +
@@ -5594,6 +5622,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
   var script =
     '<script>(function(){' +
     'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
+    'var KEY=' + JSON.stringify(KEY) + ';' +
+    /* 誰が・どの端末から頼んだか（操作の記録用。他の画面とまったく同じ形）。 */
+    'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",' +
+      'device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
+    'function jsonp(params,onR){var cb="__sg"+Date.now()+Math.floor(Math.random()*1000);' +
+      'window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
+      'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
+      'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();' +
+      'sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
     'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],step=1,CUST=null,MY=null;' +
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
     'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0,ROOM=null,DAYROOMS=[];' +
@@ -5658,6 +5695,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgDay").style.display=step===4?"":"none";' +
       '$("sgFree").style.display=step===5?"":"none";' +
       '$("sgTime").style.display=step===6?"":"none";' +
+      '$("sgMemo").style.display=step===7?"":"none";' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
       'var hd=$("sghead");if(hd)hd.style.display=step===1?"":"none";}' +
@@ -5665,7 +5703,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     'function goMonth(){step=3;show();drawMonths();window.scrollTo(0,0);}' +
     'function goDay(){step=4;show();drawCal();window.scrollTo(0,0);}' +
-    'function back(){if(step===6){goFree();}else if(step===5){goDay();}' +
+    /* ★7枚目から戻る時は、せっかく決めた時間と部屋をそのまま残す（goTimeだと選び直しになる）。 */
+    'function back(){if(step===7){step=6;show();drawTime();window.scrollTo(0,0);}' +
+      'else if(step===6){goFree();}else if(step===5){goDay();}' +
       'else if(step===4){goMonth();}else if(step===3){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
@@ -5880,6 +5920,49 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'er.innerHTML="その時間は空いていません。<br>入力し直してください。";}' +
       'else{er.style.display="none";er.textContent="";}' +
       '$("sgtgo").disabled=over||!fr.length||!ROOM;}' +
+    /* ── 7枚目：予約メモの修正 ──
+       今日の予約メモ（タイトルと本文）をそのまま出す＝予約するとは、前の予約メモを写して
+       次の予約日のタイムツリーに入れること（まるちゃん 2026-09-11）。 */
+    'function goMemo(){step=7;show();' +
+      '$("sgmtitle").value=(CUST&&CUST.title)||"";' +
+      '$("sgmtext").value=(CUST&&CUST.note)||"";' +
+      'growMemo();window.scrollTo(0,0);}' +
+    /* 予約メモが全部見えるように、中身の高さに合わせて伸ばす。 */
+    'function growMemo(){var t=$("sgmtext");t.style.height="auto";t.style.height=(t.scrollHeight+4)+"px";}' +
+    /* ── タイムツリーへ書き込む（事務所パソコンの受付係にお願いする） ── */
+    'var sending=false,mpolls=0;' +
+    'function memoFail(msg){szOvHide_();sending=false;$("sgmgo").disabled=false;' +
+      'szPopup_(msg||"エラーが発生しました。通信に失敗しました。もう一度お試しください。");}' +
+    'function sendMemo(){' +
+      'if(sending)return;' +
+      'var ti=($("sgmtitle").value||"").trim();' +
+      'if(!ti){szPopup_("予約メモのタイトルを入れてください。");return;}' +
+      'if(!PICKDATE||!ROOM){szPopup_("予約の日時と施術室が決まっていません。前に戻ってやり直してください。");return;}' +
+      'var f={date:PICKDATE,start:m2hm(TS),end:m2hm(TE),room:ROOM,title:ti,memo:$("sgmtext").value||""};' +
+      'sending=true;mpolls=0;$("sgmgo").disabled=true;' +
+      'szOvShow_(szBusyHtml_("次回の予約を登録中です"),"#2C7A99");' +
+      /* ★予約メモは長いことがあるので、住所に入りきらない時は別の入口へ預ける（共通のBIG）。 */
+      'var req={exec:EXEC,key:KEY,slot:idn.device,tag:"sejutsugo",op:"sejutsugo_reservation",' +
+        'who:idn.who,role:idn.role,device:idn.device,fields:f};' +
+      'var send=function(ft){' +
+        'jsonp({action:"submit",key:KEY,op:"sejutsugo_reservation",who:idn.who,role:idn.role,' +
+          'device:idn.device,fields:ft},' +
+        'function(r){if(!r||!r.ok||!r.id){memoFail();return;}' +
+          'setTimeout(function(){pollMemo(r.id);},1200);});};' +
+      'if(typeof BIG==="undefined"){send(JSON.stringify(f));return;}' +
+      'BIG.prepare(req,send,function(){memoFail();});}' +
+    /* 事務所パソコンが書き終えるまで待つ（新規の予約と同じ＝0.6秒おきに350回＝210秒）。 */
+    'function pollMemo(id){mpolls++;if(mpolls>350){memoFail();return;}' +
+      'jsonp({action:"status",key:KEY,id:id},function(r){' +
+        'if(!r||!r.ok){memoFail();return;}' +
+        'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){' +
+          'setTimeout(function(){pollMemo(id);},600);return;}' +
+        'if(r.status!=="done"){memoFail(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}' +
+        'var u=(String(r.result||"").match(/https?:\\/\\/\\S+/)||[""])[0];' +
+        'sending=false;$("sgmgo").disabled=false;' +
+        'szOvShow_(szDoneHtml_("次回の予約を登録しました","お客様の選択に戻る",u),"#16a34a");' +
+        'var bb=document.getElementById("szDoneBack");' +
+        'if(bb)bb.addEventListener("click",function(){szOvHide_();goList();});});}' +
     /* 空き状況の材料を取りに行く（この画面用に1回だけ） */
     '(function(){var nm="__sgAki_"+Date.now();' +
       'window[nm]=function(p){AKI=(p&&p.days)?p:null;AKIERR=!AKI;' +
@@ -5895,8 +5978,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         /* ★開始を動かしたら終了も同じだけ動く＝長さはそのまま（まるちゃん 2026-09-12）。 */
         'if(this.getAttribute("data-t")==="s"){TS+=d;TE+=d;}else{TE+=d;}' +
         'drawTime();};}' +
-      '$("sgtgo").onclick=function(){' +
-        'szPopup_("この時間で予約を入れる先の画面は、これから作ります。",{icon:""});};})();' +
+      '$("sgtgo").onclick=goMemo;' +
+      '$("sgmgo").onclick=sendMemo;' +
+      '$("sgmtext").addEventListener("input",growMemo);})();' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
     'window.addEventListener("resize",function(){if(step===2)fitNames();' +
       'if(step===6)fitLine($("sgtwho"),26,13);});' +
