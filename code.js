@@ -5926,9 +5926,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'function goMemo(){step=7;show();' +
       '$("sgmtitle").value=(CUST&&CUST.title)||"";' +
       '$("sgmtext").value=(CUST&&CUST.note)||"";' +
-      'growMemo();window.scrollTo(0,0);}' +
+      /* ★字の形が届くまでの間に測ると横幅が出ず、とんでもなく縦長になる。少し置いて測り直す。 */
+      'growMemo();setTimeout(growMemo,0);setTimeout(growMemo,300);' +
+      'window.scrollTo(0,0);}' +
     /* 予約メモが全部見えるように、中身の高さに合わせて伸ばす。 */
-    'function growMemo(){var t=$("sgmtext");t.style.height="auto";t.style.height=(t.scrollHeight+4)+"px";}' +
+    'function growMemo(){var t=$("sgmtext");' +
+      'if(!t.clientWidth)return;' +            /* まだ出ていない＝測っても意味がない */
+      't.style.height="auto";t.style.height=(t.scrollHeight+4)+"px";}' +
     /* ── タイムツリーへ書き込む（事務所パソコンの受付係にお願いする） ── */
     'var sending=false,mpolls=0;' +
     'function memoFail(msg){szOvHide_();sending=false;$("sgmgo").disabled=false;' +
@@ -5983,7 +5987,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgmtext").addEventListener("input",growMemo);})();' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
     'window.addEventListener("resize",function(){if(step===2)fitNames();' +
-      'if(step===6)fitLine($("sgtwho"),26,13);});' +
+      'if(step===6)fitLine($("sgtwho"),26,13);if(step===7)growMemo();});' +
     'showTestNote();' +
     'need(build);' +
     '})();<' + '/script>';
