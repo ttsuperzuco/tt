@@ -990,9 +990,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★LINE一斉配信予約＝オーナー(開発者)専用。timedsend/cost と同じく開発URL(?dev=1)専用
   //   （tile_settings.py の TILES にも入れない＝誰もONにできない・共通ルール16）。2026-09-05。
   bcast:      { exec: false, staff: false },
-  // ★施術後の予約＝作りかけ。bcast/cost と同じく開発URL(?dev=1)専用
-  //   （tile_settings.py の TILES にも入れない＝誰もONにできない・共通ルール16）。2026-09-11。
-  sejutsugo:  { exec: false, staff: false }
+  // ★施術後の予約＝作りかけ。**まるちゃんの画面（社長版・開発版）には出す**が、スタッフには出さない
+  //   （まるちゃん指示 2026-09-12「開発者のスマホにも出そう」＝どちらの住所で開いても出るように）。
+  //   tile_settings.py の TILES には入れない＝スタッフの人ごとの表示でONにはできない。
+  sejutsugo:  { exec: true, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
@@ -5470,7 +5471,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '.sgtpm{flex:1;width:100%;min-height:46px;border:0;border-radius:14px;background:#fff;color:#0f172a;' +
       'font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
     '.sgtpm:active{transform:translateY(2px);}' +
-    '.sgdur{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 2px 14px;}' +
+    '.sgdur{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0;}' +
     '.sgdurb{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:18px 4px;' +
       'font-size:22px;font-weight:900;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}' +
     '.sgdurb.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
@@ -5479,11 +5480,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '.sgtwho1{color:#fff;font-weight:900;font-size:22px;line-height:1.3;margin:0 4px 14px;' +
       'white-space:nowrap;overflow:hidden;}' +
     /* 施術室のボタン（空いている部屋だけ出す） */
-    '.sgrooms{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 2px 14px;}' +
+    '.sgrooms{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0;}' +
     '.sgroomb{color:#fff;border:0;border-radius:14px;padding:16px 4px;font-size:17px;font-weight:900;' +
       'cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.16);text-shadow:0 1px 2px rgba(0,0,0,.35);}' +
     '.sgroomb.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
-    '.sgroomnone{background:#fee2e2;color:#991b1b;border-radius:14px;padding:12px 14px;margin:0 2px 14px;' +
+    '.sgroomnone{background:#fee2e2;color:#991b1b;border-radius:14px;padding:12px 14px;margin:0;' +
       'font-weight:900;font-size:17px;line-height:1.6;}' +
     '.sgerr{background:#fee2e2;color:#991b1b;border-radius:14px;padding:12px 14px;margin:0 2px 14px;' +
       'font-weight:900;font-size:17px;line-height:1.6;display:none;}' +
@@ -5556,8 +5557,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
           '</span>' +
         '</div>' +
       '</div>' +
-      '<div class="sgstep">施術の長さ（押すと終了時間が決まります）</div>' +
-      '<div class="sgdur" id="sgdur"></div>' +
+      '<div class="sgtimebox">' +
+        '<div class="sgtlab">施術の長さ（押すと終了時間が決まります）</div>' +
+        '<div class="sgdur" id="sgdur"></div>' +
+      '</div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">終了時間</div>' +
         '<div class="sgtrow">' +
@@ -5572,9 +5575,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
           '</span>' +
         '</div>' +
       '</div>' +
-      '<div class="sgstep">施術室（この時間に空いている部屋だけ出ます）</div>' +
-      '<div class="sgrooms" id="sgrooms"></div>' +
-      '<div class="sgroomnone" id="sgroomnone" style="display:none"></div>' +
+      '<div class="sgtimebox">' +
+        '<div class="sgtlab">施術室（この時間に空いている部屋だけ出ます）</div>' +
+        '<div class="sgrooms" id="sgrooms"></div>' +
+        '<div class="sgroomnone" id="sgroomnone" style="display:none"></div>' +
+      '</div>' +
       '<div class="sgerr" id="sgterr"></div>' +
       '<button type="button" class="sggo" id="sgtgo">この時間で決定</button>' +
     '</div>';
