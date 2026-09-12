@@ -5511,6 +5511,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'color:#0f172a;background:#fff;border:0;border-radius:12px;padding:14px;overflow:hidden;resize:none;}' +
     '.sgmwait{color:#fff;background:rgba(255,255,255,.18);border-radius:14px;padding:12px 14px;' +
       'margin:0 2px 10px;font-weight:800;font-size:16px;line-height:1.6;}' +
+    /* 回数を進めたお知らせ＝白い欄のすぐ下。数字だけ目立たせる。 */
+    '.sgmdone{margin:10px 0 0;color:#eaf6fb;font-weight:800;font-size:15px;line-height:1.7;}' +
+    '.sgmdone div{margin-top:4px;}' +
+    '.sgmdone b{color:#ffd27a;font-size:17px;}' +
     '.sgtest{display:none;background:#fde68a;color:#78350f;font-weight:900;font-size:14px;' +
       'border-radius:12px;padding:8px 12px;margin:0 4px 10px;line-height:1.5;}' +
     /* ── 3枚目：月えらび ── */
@@ -5615,6 +5619,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '<div class="sgtimebox">' +
         '<div class="sgtlab">予約メモ</div>' +
         '<textarea class="sgmtx" id="sgmtext" rows="8"></textarea>' +
+        /* ★回数を進めた時は、欄のすぐ下に「何回目を何回目にしたか」を出す（まるちゃん 2026-09-12）。 */
+        '<div class="sgmdone" id="sgmdone" style="display:none"></div>' +
       '</div>' +
       '<div class="sgmwait" id="sgmwait" style="display:none"></div>' +
       '<button type="button" class="sggo" id="sgmgo">この予約メモの内容で確定</button>' +
@@ -5638,7 +5644,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
     'var AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0,ROOM=null,DAYROOMS=[];' +
     /* 次回用に回数を1つ進めた予約メモ（事務所パソコンが作る）。お客様を選んだ時に先に頼んでおく。 */
-    'var NEXTMEMO=null,NEXTFOR=null,MEMOTOUCHED=false;' +
+    'var NEXTMEMO=null,NEXTCHG=null,NEXTFOR=null,MEMOTOUCHED=false;' +
     /* ★画面が切り替わった時刻。切り替わった直後の押しは受け付けない（下の tapOK）。 */
     'var SWAP=0;' +
     /* ★★画面を切り替えた直後、指がまだ同じ場所にあると、新しい画面のボタンが続けて押される。
@@ -5949,7 +5955,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
        画面では数えない（書き写すと必ずずれる・CLAUDE.mdの決まり）。 */
     'function askNextMemo(){' +
       'var note=(CUST&&CUST.note)||"";' +
-      'NEXTMEMO=null;NEXTFOR=note;MEMOTOUCHED=false;' +
+      'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=note;MEMOTOUCHED=false;' +
       'if(!note)return;' +
       'var mine=note;' +
       'jsonp({action:"submit",key:KEY,op:"sejutsugo_next_memo",who:idn.who,role:idn.role,' +
@@ -5964,15 +5970,24 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'if(r.status!=="done")return;' +
         'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
         'if(!d||!d.ok||!d.memo)return;' +
-        'NEXTMEMO=d.memo;' +
+        'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];' +
         /* まだ画面に出ていない／人がまだ触っていなければ、出来上がった物に差し替える。 */
         'if(step===7&&!MEMOTOUCHED){$("sgmtext").value=NEXTMEMO;growMemo();}' +
         'memoReady();});}' +
+    /* ★回数を進めた時だけ、欄の下に「何回目を何回目にしたか」を出す（まるちゃん 2026-09-12）。
+       進めていない時（最終回・前回なし・回数の無いメモ）は何も出さない。 */
+    'function drawMemoDone(){var el=$("sgmdone");' +
+      'if(!NEXTCHG||!NEXTCHG.length){el.style.display="none";el.innerHTML="";return;}' +
+      'var h="";' +
+      'for(var i=0;i<NEXTCHG.length;i++){var c=NEXTCHG[i];' +
+        'h+="<div>今日の予約メモ <b>"+esc(c["前"])+"回目</b>を、次回用に、<b>"+' +
+          'esc(c["後"])+"回目</b>に変更済みです</div>";}' +
+      'el.innerHTML=h;el.style.display="block";}' +
     /* ★下書きが出来るまでは「確定」を押せなくする＝1つ前の回数のまま保存してしまうのを防ぐ。
        お客様を選んだ時点で頼んであるので、ふつうはここへ来た時にはもう出来ている。 */
     'function memoReady(){var w=$("sgmwait");if(w){w.style.display="none";w.textContent="";}' +
-      'if(step===7)$("sgmgo").disabled=false;}' +
-    'function memoWait(){var w=$("sgmwait");' +
+      'if(step===7){$("sgmgo").disabled=false;drawMemoDone();}}' +
+    'function memoWait(){var w=$("sgmwait");drawMemoDone();' +
       'if(NEXTMEMO||!((CUST&&CUST.note)||"")){memoReady();return;}' +
       'w.style.display="block";w.textContent="回数を1つ進めた下書きを作っています…";' +
       '$("sgmgo").disabled=true;' +
