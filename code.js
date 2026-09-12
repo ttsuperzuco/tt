@@ -5953,10 +5953,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
        日にちや時間を選んでいる間に出来上がるので、メモの画面では待ち時間が出ない。
        ★回数の数え方は共通の1本（事務所パソコンの treatment_memo）だけが知っている＝
        画面では数えない（書き写すと必ずずれる・CLAUDE.mdの決まり）。 */
+    'var MEMOCACHE={};' +
     'function askNextMemo(){' +
       'var note=(CUST&&CUST.note)||"";' +
       'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=note;MEMOTOUCHED=false;' +
       'if(!note)return;' +
+      /* 一度聞いた分は覚えておく＝同じお客様を選び直しても、もう頼まない。 */
+      'if(MEMOCACHE[note]){NEXTMEMO=MEMOCACHE[note].memo;NEXTCHG=MEMOCACHE[note].changed;return;}' +
+      /* ★回数がどこにも書いていないメモは、進める所が無い＝頼まずにそのまま使う（待ち時間ゼロ）。 */
+      'if(note.indexOf("回目")<0){NEXTMEMO=note;NEXTCHG=[];MEMOCACHE[note]={memo:note,changed:[]};return;}' +
       'var mine=note;' +
       'jsonp({action:"submit",key:KEY,op:"sejutsugo_next_memo",who:idn.who,role:idn.role,' +
         'device:idn.device,fields:JSON.stringify({memo:note})},' +
@@ -5970,7 +5975,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'if(r.status!=="done")return;' +
         'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
         'if(!d||!d.ok||!d.memo)return;' +
-        'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];' +
+        'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];MEMOCACHE[mine]={memo:d.memo,changed:NEXTCHG};' +
         /* まだ画面に出ていない／人がまだ触っていなければ、出来上がった物に差し替える。 */
         'if(step===7&&!MEMOTOUCHED){$("sgmtext").value=NEXTMEMO;growMemo();}' +
         'memoReady();});}' +
