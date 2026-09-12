@@ -202,11 +202,14 @@
     }
 
     /* 並び＝①自分のスマホなら自分がいちばん上 ②いま施術中→これから→終わった
-             ③同じ段階なら施術の時間が早い順 */
+             ③同じ段階なら施術の時間が早い順。
+       ★ただし「終わった」だけは**遅い順**＝いちばん最近終わった施術者がいちばん上
+         （まるちゃん 2026-09-12。お客様の一覧が「時間が過ぎていたら1個前を出す」のと同じ考え。
+          夕方に開いた時、朝いちばんに終わった施術者が先頭に来るのはおかしい）。 */
     rows.sort(function (a, b2) {
       if (a.mine !== b2.mine) return a.mine ? -1 : 1;
       if (a.bucket !== b2.bucket) return a.bucket - b2.bucket;
-      if (a.start !== b2.start) return a.start - b2.start;
+      if (a.start !== b2.start) return (a.bucket === 2) ? (b2.start - a.start) : (a.start - b2.start);
       return a.mark < b2.mark ? -1 : 1;
     });
 
