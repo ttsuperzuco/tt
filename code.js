@@ -8540,8 +8540,17 @@ var AKISCRIPT_ =
 '  if(!wakuBox) return;' +
 '  var html="";' +
 '  WGROUPS.forEach(function(g){' +
-'    html += WKINDS.map(function(k){' +
-'      var txt=wakuText_(k,g.zh);' +
+// ★中身がまったく同じ区分は1つにまとめ、見出しを横に並べる（2026-09-14 まるちゃん「重複してるのをだしたくない」）。
+//   日付の絞り込みを変えるたびに組み直すので、その期間で同じかどうかで決まる。
+'    var packs=[];' +
+'    WKINDS.forEach(function(k){' +
+'      var t=wakuText_(k,g.zh);' +
+'      var hit=null; packs.forEach(function(p){ if(p.txt===t) hit=p; });' +
+'      if(hit) hit.kinds.push(k); else packs.push({txt:t,kinds:[k]});' +
+'    });' +
+'    html += packs.map(function(p){' +
+'      var k=p.kinds[0];' +
+'      var txt=p.txt;' +
 '      var lines=txt? txt.split("\\n") : [];' +
 '      var body="";' +
 '      for(var i=0;i<lines.length;i+=2){' +
@@ -8550,8 +8559,9 @@ var AKISCRIPT_ =
 '      if(!body) body=\'<div class="akinone">この期間に案内できる時間はありません</div>\';' +
 '      var za=\' data-zh="\'+(g.zh?"1":"0")+\'"\';' +
 '      return \'<div class="akiwsec" data-kind="\'+k+\'"\'+za+\'>\'+' +
-'        \'<div class="akiwhead"><span class="akiwk" style="background:\'+WCOL[k]+\'">\'+' +
-'          \'<span class="akiwflag">\'+g.flag+\'</span>\'+k+\'</span>\'+' +
+'        \'<div class="akiwhead"><span class="akiwks">\'+p.kinds.map(function(kk){' +
+'          return \'<span class="akiwk" style="background:\'+WCOL[kk]+\'"><span class="akiwflag">\'+g.flag+\'</span>\'+kk+\'</span>\';' +
+'        }).join("")+\'</span>\'+' +
 '        \'<button type="button" class="akiwcopy" data-kind="\'+k+\'"\'+za+\'>コピー</button></div>\'+body+\'</div>\';' +
 '    }).join("");' +
 '  });' +
@@ -8873,6 +8883,8 @@ AKFCSS_ +
 '  .akiwk{ display:inline-flex; align-items:center; gap:7px; color:#fff; font-weight:800;' +
 '    font-size:clamp(15px,5vw,19px); padding:7px 14px; border-radius:11px; }' +
 '  .akiwflag{ font-size:clamp(17px,5.6vw,21px); line-height:1; }' +
+'  .akiwks{ display:flex; flex-wrap:wrap; gap:6px; min-width:0; }' +
+'  .akiwcopy{ flex-shrink:0; }' +
 '  .akiwcopy{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:800; color:#fff;' +
 '    background:var(--akiprimary); border:1px solid var(--akiprimary); border-radius:10px;' +
 '    padding:9px clamp(10px,4vw,16px); cursor:pointer; white-space:nowrap; }' +
