@@ -8567,7 +8567,7 @@ var AKISCRIPT_ =
 '    p.mem.forEach(function(m){ if(!m.zh&&!ja) ja=m; if(m.zh&&!zh) zh=m; });' +
 '    var first=ja||zh;' +
 '    var txt=wakuText_(first.k,first.zh);' +
-'    var lines=txt? txt.split("\n") : [];' +
+'    var lines=txt? txt.split("\\n") : [];' +
 '    var body="";' +
 '    for(var i=0;i<lines.length;i+=2){' +
 '      body+= \'<div class="akiwdh">\'+lines[i]+\'</div><div class="akiwtimes">\'+lines[i+1]+\'</div>\';' +
