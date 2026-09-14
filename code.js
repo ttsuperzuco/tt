@@ -8536,45 +8536,60 @@ var AKISCRIPT_ =
 '  });' +
 '  return out.join("\\n");' +
 '}' +
+'function wakuKey_(kind,zh){' +
+'  var out=[];' +
+'  (window.AKIWAKU_||[]).forEach(function(w){' +
+'    if(!dateVisible_(w.date)) return;' +
+'    var src=zh ? (w["枠_zh"]||w["枠"]) : w["枠"];' +
+'    var list=(src||{})[kind]||[];' +
+'    if(list.length) out.push(w.date+"="+list.join(","));' +
+'  });' +
+'  return out.join("|");' +
+'}' +
 'function drawWaku_(){' +
 '  if(!wakuBox) return;' +
 '  var html="";' +
-'  WGROUPS.forEach(function(g){' +
-// ★中身がまったく同じ区分は1つにまとめ、見出しを横に並べる（2026-09-14 まるちゃん「重複してるのをだしたくない」）。
+// ★時刻がまったく同じ区分は1つにまとめ、見出しを横に並べる（2026-09-14 まるちゃん「重複してるのをだしたくない」）。
+//   日本向けと台湾向けも、時刻が同じならまとめる（曜日の書き方だけ違う＝比べる時は日付と時刻だけを見る）。
+//   その時はコピーを「日本語でコピー」「中文でコピー」の2つにする（コピーした文の曜日を言葉ごとに正しくするため）。
 //   日付の絞り込みを変えるたびに組み直すので、その期間で同じかどうかで決まる。
-'    var packs=[];' +
+'  var packs=[];' +
+'  WGROUPS.forEach(function(g){' +
 '    WKINDS.forEach(function(k){' +
-'      var t=wakuText_(k,g.zh);' +
-'      var hit=null; packs.forEach(function(p){ if(p.txt===t) hit=p; });' +
-'      if(hit) hit.kinds.push(k); else packs.push({txt:t,kinds:[k]});' +
+'      var key=wakuKey_(k,g.zh);' +
+'      var hit=null; packs.forEach(function(p){ if(p.key===key) hit=p; });' +
+'      var m={k:k,zh:g.zh,flag:g.flag};' +
+'      if(hit) hit.mem.push(m); else packs.push({key:key,mem:[m]});' +
 '    });' +
-'    html += packs.map(function(p){' +
-'      var k=p.kinds[0];' +
-'      var txt=p.txt;' +
-'      var lines=txt? txt.split("\\n") : [];' +
-'      var body="";' +
-'      for(var i=0;i<lines.length;i+=2){' +
-'        body+= \'<div class="akiwdh">\'+lines[i]+\'</div><div class="akiwtimes">\'+lines[i+1]+\'</div>\';' +
-'      }' +
-'      if(!body) body=\'<div class="akinone">この期間に案内できる時間はありません</div>\';' +
-'      var za=\' data-zh="\'+(g.zh?"1":"0")+\'"\';' +
-'      return \'<div class="akiwsec" data-kind="\'+k+\'"\'+za+\'>\'+' +
-'        \'<div class="akiwhead"><span class="akiwks">\'+p.kinds.map(function(kk){' +
-'          return \'<span class="akiwk" style="background:\'+WCOL[kk]+\'"><span class="akiwflag">\'+g.flag+\'</span>\'+kk+\'</span>\';' +
-'        }).join("")+\'</span>\'+' +
-'        \'<button type="button" class="akiwcopy" data-kind="\'+k+\'"\'+za+\'>コピー</button></div>\'+body+\'</div>\';' +
-'    }).join("");' +
 '  });' +
+'  html = packs.map(function(p){' +
+'    var ja=null, zh=null;' +
+'    p.mem.forEach(function(m){ if(!m.zh&&!ja) ja=m; if(m.zh&&!zh) zh=m; });' +
+'    var first=ja||zh;' +
+'    var txt=wakuText_(first.k,first.zh);' +
+'    var lines=txt? txt.split("\n") : [];' +
+'    var body="";' +
+'    for(var i=0;i<lines.length;i+=2){' +
+'      body+= \'<div class="akiwdh">\'+lines[i]+\'</div><div class="akiwtimes">\'+lines[i+1]+\'</div>\';' +
+'    }' +
+'    if(!body) body=\'<div class="akinone">この期間に案内できる時間はありません</div>\';' +
+'    function cbtn(m,label){ return \'<button type="button" class="akiwcopy" data-kind="\'+m.k+\'" data-zh="\'+(m.zh?"1":"0")+\'">\'+label+\'</button>\'; }' +
+'    var btns=(ja&&zh) ? cbtn(ja,"日本語でコピー")+cbtn(zh,"中文でコピー") : cbtn(first,"コピー");' +
+'    return \'<div class="akiwsec">\'+' +
+'      \'<div class="akiwhead"><span class="akiwks">\'+p.mem.map(function(m){' +
+'        return \'<span class="akiwk" style="background:\'+WCOL[m.k]+\'"><span class="akiwflag">\'+m.flag+\'</span>\'+m.k+\'</span>\';' +
+'      }).join("")+\'</span><span class="akiwbtns">\'+btns+\'</span></div>\'+body+\'</div>\';' +
+'  }).join("");' +
 '  wakuBox.innerHTML = html;' +
 '  [].slice.call(wakuBox.querySelectorAll(".akiwcopy")).forEach(function(b){' +
 '    b.addEventListener("click",function(){ copyWaku_(b); });' +
 '  });' +
 '}' +
 'function copyWaku_(btn){' +
-'  var txt=wakuText_(btn.getAttribute("data-kind"), btn.getAttribute("data-zh")==="1");' +
-'  if(!txt){ btn.textContent="なし"; setTimeout(function(){ btn.textContent="コピー"; },1200); return; }' +
+'  var txt=wakuText_(btn.getAttribute("data-kind"), btn.getAttribute("data-zh")==="1"); var lab=btn.getAttribute("data-lab")||btn.textContent; btn.setAttribute("data-lab",lab);' +
+'  if(!txt){ btn.textContent="なし"; setTimeout(function(){ btn.textContent=lab; },1200); return; }' +
 '  function done(){ btn.textContent="コピーしました"; btn.classList.add("done");' +
-'    setTimeout(function(){ btn.textContent="コピー"; btn.classList.remove("done"); },1500); }' +
+'    setTimeout(function(){ btn.textContent=lab; btn.classList.remove("done"); },1500); }' +
 '  if(navigator.clipboard&&navigator.clipboard.writeText){' +
 '    navigator.clipboard.writeText(txt).then(done,function(){ fallbackCopy_(txt,done); });' +
 '  } else { fallbackCopy_(txt,done); }' +
@@ -8884,7 +8899,7 @@ AKFCSS_ +
 '    font-size:clamp(15px,5vw,19px); padding:7px 14px; border-radius:11px; }' +
 '  .akiwflag{ font-size:clamp(17px,5.6vw,21px); line-height:1; }' +
 '  .akiwks{ display:flex; flex-wrap:wrap; gap:6px; min-width:0; }' +
-'  .akiwcopy{ flex-shrink:0; }' +
+'  .akiwbtns{ display:flex; flex-direction:column; gap:6px; flex-shrink:0; }' +
 '  .akiwcopy{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:800; color:#fff;' +
 '    background:var(--akiprimary); border:1px solid var(--akiprimary); border-radius:10px;' +
 '    padding:9px clamp(10px,4vw,16px); cursor:pointer; white-space:nowrap; }' +
