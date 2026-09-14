@@ -8528,7 +8528,9 @@ var AKISCRIPT_ =
 '  var out=[];' +
 '  (window.AKIWAKU_||[]).forEach(function(w){' +
 '    if(!dateVisible_(w.date)) return;' +
-'    var list=(w["枠"]||{})[kind]||[];' +
+// ★台湾のお客様向けは「枠_zh」を読む（新規のカウンセリングはトマトだけ。日本向けはみかんも入る・2026-09-14）。
+'    var src=zh ? (w["枠_zh"]||w["枠"]) : w["枠"];' +
+'    var list=(src||{})[kind]||[];' +
 '    if(!list.length) return;' +
 '    out.push(zh ? (w.dh_zh||w.dh) : w.dh); out.push(list.join(" / "));' +
 '  });' +
