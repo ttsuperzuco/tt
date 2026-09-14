@@ -5333,17 +5333,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("bc_list",{},function(d){' +
   'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,function(p){LPOSTS=p;drawList(LPOSTS);});},' +
   'function(m){el.innerHTML=\'<div class="bcouttx">読めませんでした。</div>\';status(m,true);});}' +
-  // ★昨日までかどうか（配信済みは昨日までの分だけ出す・まるちゃん指示 2026-09-09）
-  'function isYest(at){var s=String(at||"").slice(0,10);if(!s)return false;' +
-  'var d=new Date();var y=d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+' +
-  '("0"+d.getDate()).slice(-2);return s<y;}' +
+  // ★配信済みは今日送った分も出す（まるちゃん指示 2026-09-14。前は昨日までの分だけ＝9/9の決まり）
   'function drawList(posts){var el=document.getElementById("bclist");if(!el)return;' +
   'LPOSTS=posts||LPOSTS;' +
   // ★タブで仕分ける。配信待ち＝まだ送っていない分。配信済み＝昨日までの送った分。
   'var wait=(posts||[]).filter(function(r){' +
   'return r.state==="placed"||r.state==="draft";});' +
   'var done=(posts||[]).filter(function(r){' +
-  'return r.state==="sent"&&isYest(r.at);});' +
+  'return r.state==="sent";});' +
   'var use=(LTAB==="done")?done:wait;' +
   'var top="";' +
   'if(LTAB==="wait"){' +
@@ -5352,7 +5349,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(LBATCH)top+=\'<button type="button" class="bcgo" id="bcundo">\'+' +
   '\'予約キャンセルした配信を戻す（\'+LBATCH+\'本）</button>\';}' +
   'if(!use.length){el.innerHTML=top+\'<div class="bcouttx">\'+' +
-  '((LTAB==="done")?"昨日までに送った配信はありません。":"配信待ちはありません。")+' +
+  '((LTAB==="done")?"送った配信はありません。":"配信待ちはありません。")+' +
   '\'</div>\';bindList();return;}' +
   'el.innerHTML=top+use.map(function(r){' +
   'return \'<div class="bcitem"><div class="bcit1">\'+esc(r.st)+"　"+esc(r.at)+"　"+esc(r.template_name)+\'</div>\'+' +
