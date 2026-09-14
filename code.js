@@ -4518,7 +4518,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function show(u){szOvShow_(\'<div style="padding:14px;text-align:center">\'+' +
   '\'<img src="\'+u+\'" style="max-width:92vw;max-height:74vh;border-radius:12px;display:block;margin:0 auto">\'+' +
   '\'<div style="color:#E8EEF7;font-size:13px;margin-top:10px">\'+' +
-  '(u===src?"はっきりした絵を出しています…（15秒ほど）":"")+\'</div>\'+' +
+  '(u===src?"はっきりした絵を出しています…":"")+\'</div>\'+' +
   '\'<button type="button" id="bcbigx" style="margin:16px auto 0;display:block;border:0;border-radius:12px;\'+' +
   '\'padding:14px 34px;font-size:17px;font-weight:800;background:#2563EB;color:#fff">閉じる</button></div>\',"#2C7A99");' +
   'setTimeout(function(){var b=document.getElementById("bcbigx");if(b)b.onclick=function(){szOvHide_();};},80);}' +
@@ -4526,11 +4526,16 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!name)return;' +
   // ★大きい絵は答えに載せられない（窓口を通らない）ので、事務所パソコンが置き場へ置き、
   //   こちらは置き場から読む（前日お知らせ・コストと同じやり方）。
+  // ★作った時に事務所パソコンが大きい絵を先に置いてある（bc_big_n_<名前>.json）。まずそれを直接読む＝約2秒。
+  //   無ければ（昔作った絵など）今までどおり事務所パソコンに頼む＝約15秒（2026-09-14 まるちゃん「時間かかりすぎ」）。
+  'var stem=String(name).replace(/\\.[a-z]+$/i,"").replace(/[^A-Za-z0-9_]/g,"");' +
+  'jsonp({action:"data",name:"bc_big_n_"+stem+".json"},function(d0){' +
+  'if(d0&&d0.big&&d0.name===name){if(document.getElementById("bcbigx"))show(d0.big);return;}' +
   'var slot=(idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d";' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"big",name:name,slot:slot})},' +
   'function(r){if(!r||!r.ok||!document.getElementById("bcbigx"))return;' +
   'jsonp({action:"data",name:"bc_big_"+(r.slot||slot)+".json"},function(d){' +
-  'if(d&&d.big&&d.name===name&&document.getElementById("bcbigx"))show(d.big);});},function(){});}' +
+  'if(d&&d.big&&d.name===name&&document.getElementById("bcbigx"))show(d.big);});},function(){});});}' +
   'function freshBar(){return FRESH?' +
   '\'<div class="bcfreshbar"><button type="button" class="bcfreshbtn" id="bcfresh">\'+' +
   '\'↩ まっさらに戻す</button></div>\':"";}' +
