@@ -4749,10 +4749,23 @@ function renderBroadcastPage_(base, staff, dev) {
   'ta.style.position="fixed";ta.style.left="-9999px";document.body.appendChild(ta);ta.select();' +
   'try{document.execCommand("copy");cb();}catch(e){}document.body.removeChild(ta);}' +
   // ★空っぽなら何も作らない＝その区分は送らない（まるちゃん指示 2026-09-09）
+  // ★文の中に前の時間（「9/15（火）」の行＋時刻の行）が残っていたら、そこを今の時間に入れ替える
+  //   （まるちゃん指摘 2026-09-14「本文のあとにさらに時間はいっちゃってる」＝前の配信文を貼ると時間が二重になった）。
+  'var BDRE=/^\\s*\\d{1,2}\\/\\d{1,2}\\s*[（(][^）)]{1,2}[）)]\\s*$/,BTRE=/^[\\s\\d:：\\/／,、]*\\d{1,2}[:：]\\d{2}[\\s\\d:：\\/／,、]*$/;' +
+  'function oldTimes(body){var L=String(body||"").split("\\n"),out=[],at=-1,n=0,i=0;' +
+  'while(i<L.length){if(BDRE.test(L[i])&&i+1<L.length&&BTRE.test(L[i+1])){' +
+  'if(at<0)at=out.length;n++;i++;while(i<L.length&&BTRE.test(L[i]))i++;' +
+  'while(i<L.length&&!L[i].replace(/\\s+/g,"")&&i+1<L.length&&BDRE.test(L[i+1]))i++;continue;}' +
+  'out.push(L[i]);i++;}return {lines:out,at:at,n:n};}' +
   'function joinBody(body,times){body=String(body||"");' +
   'if(!body.replace(/^\\s+|\\s+$/g,""))return "";' +
-  'if(body.indexOf("【時間】")>=0)return body.replace(/【時間】/g,times);' +
+  'var o=oldTimes(body);' +
+  'if(body.indexOf("【時間】")>=0)return o.lines.join("\\n").replace(/【時間】/g,times);' +
+  'if(o.at>=0){o.lines.splice(o.at,0,times);return o.lines.join("\\n");}' +
   'return body.replace(/\\s+$/,"")+"\\n\\n"+times;}' +
+  // ★文字数の知らせ（まるちゃん指示 2026-09-14「今何文字なのかだせよ」）
+  'function numMsg(n){if(!n)return "";' +
+  'return (n>MAXT)?("今"+n+"文字です。"+MAXT+"文字までなので、あと"+(n-MAXT)+"文字減らしてください"):("今"+n+"文字です（"+MAXT+"文字まで）");}' +
   'function tgtNames(atama,sei,lang){var out=[];' +
   'for(var i=0;i<TPL.length;i++){var nm=TPL[i].name;' +
   'if(nm.indexOf(atama)<0)continue;' +
@@ -4813,8 +4826,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function cardsOf(a){return a.map(function(x){var over=(x.text||"").length>MAXT;' +
   'return \'<div class="bcout"><div class="bcouth"><b>\'+esc(x.label)+\'</b></div>\'+' +
   '\'<div class="bcouttx">\'+esc(x.text)+\'</div>\'+' +
-  '\'<div class="bcnum\'+(over?" over":"")+\'">\'+(x.text||"").length+\'文字\'+' +
-  '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div></div>\';}).join("");}' +
+  '\'<div class="bcnum\'+(over?" over":"")+\'">\'+esc(numMsg((x.text||"").length))+' +
+  '\'</div></div>\';}).join("");}' +
   // ── 配信文を作る（専用の画面・2026-09-08 まるちゃんの決めた順）──────────
   //   ①日本語の文章を入れる →②時間が入った文を確かめる →③台湾版（自動で訳す）を確かめる
   //   →④8つの対象に文を入れ、続けて予約可能枠の画像も作って1つ目に入れる。
@@ -4857,8 +4870,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<div class="bcouttx" id="bcmprev" style="margin-top:13px">\'+' +
   'esc(body.replace(/^\\s+|\\s+$/g,"")?done:' +
   '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません"))+\'</div>\'+' +
-  '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?(done.length+"文字"):"")+\'\'+' +
-  '(over?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
+  '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?numMsg(done.length):"")+' +
+  '\'</div>\';' +
   'h+=\'</div>\';' +
   // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）
   'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
@@ -4886,8 +4899,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<div class="bcouttx" id="bcmzprev" style="margin-top:13px">\'+' +
   'esc(zb.replace(/^\\s+|\\s+$/g,"")?zdone:' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません"))+\'</div>\'+' +
-  '\'<div class="bcnum\'+(zov?" over":"")+\'" id="bcmznum">\'+(zb?(zdone.length+"文字"):"")+\'\'+' +
-  '(zov?("　※"+MAXT+"文字を超えています。短くしてください"):"")+\'</div>\';' +
+  '\'<div class="bcnum\'+(zov?" over":"")+\'" id="bcmznum">\'+(zb?numMsg(zdone.length):"")+' +
+  '\'</div>\';' +
   'h+=\'</div>\';' +
   'if(!MBUSY){h+=zov?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
   ':(zlast?makeBtn("bcmzok3")' +
@@ -4905,8 +4918,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmzedit" class="bcmtx" placeholder="\'+' +
   'esc("空欄のため、"+ordLabel(MIDX,true)+"には配信しません")+\'">\'+' +
   'esc(z.text||"")+\'</textarea>\'+' +
-  '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+(z.text||"").length+\'文字\'+' +
-  '(ov2?("　※"+MAXT+"文字を超えています"):"")+\'</div></div>\';' +
+  '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+numMsg((z.text||"").length)+' +
+  '\'</div></div>\';' +
   'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
   ':(lastz?makeBtn("bcmok3")' +
   ':\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\');' +
@@ -4925,8 +4938,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(pv)pv.textContent=ta.value.replace(/^\\s+|\\s+$/g,"")?done:' +
   '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません");' +
   'var nm=document.getElementById("bcmnum");' +
-  'if(nm){var ov=done.length>MAXT;nm.textContent=ta.value?(done.length+"文字"+' +
-  '(ov?("　※"+MAXT+"文字を超えています。短くしてください"):"")):"";' +
+  'if(nm){var ov=done.length>MAXT;nm.textContent=ta.value?numMsg(done.length):"";' +
   'nm.className="bcnum"+(ov?" over":"");}' +
   'saveNow();};' +
   'var e=document.getElementById("bcmedit");' +
@@ -4941,7 +4953,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'MZH[MIDX].text=zed.value;' +
   'var zn=document.getElementById("bcmznum2");' +
   'if(zn){var zo=zed.value.length>MAXT;' +
-  'zn.textContent=zed.value.length+"文字"+(zo?("　※"+MAXT+"文字を超えています"):"");' +
+  'zn.textContent=numMsg(zed.value.length);' +
   'zn.className="bcnum"+(zo?" over":"");}' +
   'saveNow();};' +
   'e=document.getElementById("bcmoknext");' +
@@ -4979,8 +4991,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(zpv)zpv.textContent=zta.value.replace(/^\\s+|\\s+$/g,"")?zdone:' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません");' +
   'var znm=document.getElementById("bcmznum");' +
-  'if(znm){var zov=zdone.length>MAXT;znm.textContent=zta.value?(zdone.length+"文字"+' +
-  '(zov?("　※"+MAXT+"文字を超えています。短くしてください"):"")):"";' +
+  'if(znm){var zov=zdone.length>MAXT;znm.textContent=zta.value?numMsg(zdone.length):"";' +
   'znm.className="bcnum"+(zov?" over":"");}' +
   'saveNow();};' +
   'var zok=document.getElementById("bcmzok");' +
