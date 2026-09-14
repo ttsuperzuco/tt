@@ -4730,7 +4730,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
   'var i=a.getAttribute("data-ed")*1;if(!SRES||!SRES.groups[i])return;' +
   'SRES.groups[i].text=a.value;' +
-  'var kk=SRES.groups[i].k;if(SRES.all&&SRES.all[kk])SRES.all[kk].text=a.value;' +
+  'var kk=SRES.groups[i].k,src=SRES.groups[i].z?SRES.zall:SRES.all;if(src&&src[kk])src[kk].text=a.value;' +
   'fitTx(a);saveNow();};});' +
   '[].slice.call(box.querySelectorAll("[data-cp]")).forEach(function(b){b.onclick=function(){' +
   'var g=((SRES&&SRES.groups)||[])[b.getAttribute("data-cp")*1];if(g)bcCopy(g.text,b);};});}' +
@@ -4763,15 +4763,24 @@ function renderBroadcastPage_(base, staff, dev) {
   'var BORDER=[["新規","男性"],["既存","男性"],["新規","女性"],["既存","女性"]];' +
   // ★事務所パソコンからは いつも男女に分けた4つ が来る（2026-09-09）。
   //   「男女版も作成」を切っている時は、男性のものだけを 新規／既存 として見せる。
+  // ★台湾のお客様向けの時刻（zall）も来る（2026-09-14）。新規はカウンセリングがトマトだけなので
+  //   日本向けと時刻が違うことがある。**日本向けと違う区分だけ**別の欄として見せ、台湾向けの文はその欄から作る。
+  //   同じ区分は今までどおり日本語の欄から曜日を入れ替えて作る（日本語を直せば中国語もそろう）。
   'function setWaku(r){SRES=r;' +
   'SRES.all=(r.groups||[]).slice();' +
+  'SRES.zall=(r.zgroups||[]).map(function(z){var d=true;' +
+  'for(var i=0;i<SRES.all.length;i++)if(SRES.all[i].atama===z.atama&&SRES.all[i].sei===z.sei)d=(SRES.all[i].text!==z.text);' +
+  'return {atama:z.atama,sei:z.sei,label:z.label,text:z.text,diff:d};});' +
   'SRES.split=!r.same;buildG();}' +
+  'function zOf(atama,sei){var z=(SRES&&SRES.zall)||[];' +
+  'for(var i=0;i<z.length;i++)if(z[i].diff&&z[i].atama===atama&&z[i].sei===sei)return i;return -1;}' +
   'function buildG(){var a=(SRES&&SRES.all)||[];' +
-  'if(SRES.split){SRES.groups=a.map(function(g,k){' +
-  'return {atama:g.atama,sei:g.sei,label:g.label,text:g.text,k:k};});return;}' +
   'SRES.groups=[];' +
-  'for(var k=0;k<a.length;k++){if(a[k].sei!=="男性")continue;' +
-  'SRES.groups.push({atama:a[k].atama,sei:"",label:a[k].atama,text:a[k].text,k:k});}}' +
+  'for(var k=0;k<a.length;k++){if(!SRES.split&&a[k].sei!=="男性")continue;' +
+  'var sei=SRES.split?a[k].sei:"",lab=SRES.split?a[k].label:a[k].atama;' +
+  'SRES.groups.push({atama:a[k].atama,sei:sei,label:lab,text:a[k].text,k:k});' +
+  'var zi=zOf(a[k].atama,a[k].sei);' +
+  'if(zi>=0)SRES.groups.push({atama:a[k].atama,sei:sei,label:lab+"（台湾のお客様）",text:SRES.zall[zi].text,k:zi,z:1});}}' +
   // 古い保存（男女に分ける前の形）から戻した時も動くようにする
   'function fixWaku(){if(!SRES||!SRES.groups||SRES.all)return;' +
   'var g=SRES.groups;SRES.split=!!(g.length&&g[0].sei);' +
@@ -4781,11 +4790,16 @@ function renderBroadcastPage_(base, staff, dev) {
   'function splitOn(on){if(!SRES)return;' +
   'if(on&&!SRES.split&&SRES.same){var a=SRES.all,i,j;' +
   'for(i=0;i<a.length;i++){if(a[i].sei!=="女性")continue;' +
-  'for(j=0;j<a.length;j++)if(a[j].sei==="男性"&&a[j].atama===a[i].atama)a[i].text=a[j].text;}}' +
+  'for(j=0;j<a.length;j++)if(a[j].sei==="男性"&&a[j].atama===a[i].atama)a[i].text=a[j].text;}' +
+  'a=SRES.zall||[];' +
+  'for(i=0;i<a.length;i++){if(a[i].sei!=="女性")continue;' +
+  'for(j=0;j<a.length;j++)if(a[j].sei==="男性"&&a[j].atama===a[i].atama){a[i].text=a[j].text;a[i].diff=a[j].diff;}}}' +
   'SRES.split=!!on;SIDX=0;buildG();saveNow();status("");draw();}' +
-  'function timesOf(atama,sei){var gs=(SRES&&SRES.groups)||[],i;' +
-  'for(i=0;i<gs.length;i++)if(gs[i].atama===atama&&gs[i].sei===sei)return gs[i].text;' +
-  'for(i=0;i<gs.length;i++)if(gs[i].atama===atama&&!gs[i].sei)return gs[i].text;' +
+  // zh＝台湾のお客様向け。台湾向けの欄があればそれ、無ければ日本向けの欄（呼ぶ側が曜日を入れ替える）。
+  'function timesOf(atama,sei,zh){var gs=(SRES&&SRES.groups)||[],i,pass,want;' +
+  'for(pass=0;pass<2;pass++){want=(zh&&pass===0)?1:0;' +
+  'for(i=0;i<gs.length;i++)if(!!gs[i].z===!!want&&gs[i].atama===atama&&gs[i].sei===sei)return gs[i].text;' +
+  'for(i=0;i<gs.length;i++)if(!!gs[i].z===!!want&&gs[i].atama===atama&&!gs[i].sei)return gs[i].text;}' +
   'return "";}' +
   'function tooLong(a){for(var i=0;i<a.length;i++)if((a[i].text||"").length>MAXT)return a[i].label;' +
   'return "";}' +
@@ -4853,7 +4867,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★自分で中国語を入れる画面（まるちゃん指示 2026-09-09）。日本語の画面と同じ作り。
   'else if(MSTEP===1){' +
   'var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
-  'var zb=MZBODYS[MIDX]||"",zdone=joinBody(zb,zhOf(timesOf(zx[0],zx[1])));' +
+  'var zb=MZBODYS[MIDX]||"",zdone=joinBody(zb,zhOf(timesOf(zx[0],zx[1],true)));' +
   'var zov=zdone.length>MAXT;' +
   'h=\'<div class="bcstop"><span class="bcsttl">中国語版を作成</span>\'+' +
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
@@ -4953,7 +4967,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // 自分で入れる中国語の欄
   'var zta=document.getElementById("bcmzbody");' +
   'if(zta)zta.oninput=function(){MZBODYS[MIDX]=zta.value;' +
-  'var zx=BORDER[MIDX],zdone=joinBody(zta.value,zhOf(timesOf(zx[0],zx[1])));' +
+  'var zx=BORDER[MIDX],zdone=joinBody(zta.value,zhOf(timesOf(zx[0],zx[1],true)));' +
   'var zpv=document.getElementById("bcmzprev");' +
   'if(zpv)zpv.textContent=zta.value.replace(/^\\s+|\\s+$/g,"")?zdone:' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません");' +
@@ -4967,7 +4981,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'MIDX++;status("");draw();};' +
   'function bldZhMan(){MZH=BORDER.map(function(x,k){' +
   'return {label:ordLabel(k,true),atama:x[0],sei:x[1],' +
-  'text:joinBody(MZBODYS[k]||"",zhOf(timesOf(x[0],x[1])))};});}' +
+  'text:joinBody(MZBODYS[k]||"",zhOf(timesOf(x[0],x[1],true)))};});}' +
   'var zok3=document.getElementById("bcmzok3");' +
   'if(zok3)zok3.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
   'MBACK=1;bldZhMan();applyAll(true);};' +
@@ -4998,7 +5012,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function ng(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();}' +
   '(function next(){' +
   'if(i>=N){' +
-  'MZH=BORDER.map(function(x,k){var tt=zhOf(timesOf(x[0],x[1])),g=zs[k]||{z:"",had:false};' +
+  'MZH=BORDER.map(function(x,k){var tt=zhOf(timesOf(x[0],x[1],true)),g=zs[k]||{z:"",had:false};' +
   'var z=String(g.z||"").replace(/^\\s+|\\s+$/g,""),s;' +
   'var pair=g.had?zsplit(z):null;' +
   'if(pair){var a=pair[0].replace(/^\\s+|\\s+$/g,""),b=pair[1].replace(/^\\s+|\\s+$/g,"");' +
@@ -5040,7 +5054,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(ps[k].kind==="image"&&(ps[k].src||"").indexOf("made:")===0)ps.splice(k,1);});' +
   'if(!mkimg){MBUSY=false;MMSG="";page="t";step=0;mode="";' +
   'status("");draw();return;}' +
-  'var src=((SRES&&SRES.groups)||[]).map(function(g){return g.label+"\\n"+g.text;}).join("\\n\\n");' +
+  // ★台湾向けの欄がある区分は、日本向けに🇯🇵・台湾向けに🇹🇼を付けて渡す（絵を別々の時刻で作るため・2026-09-14）
+  'var gsA=(SRES&&SRES.groups)||[];' +
+  'var src=gsA.map(function(g){var twin=false;' +
+  'gsA.forEach(function(o){if(o.z&&!g.z&&o.atama===g.atama&&o.sei===g.sei)twin=true;});' +
+  'var head=g.atama+(g.sei||"");' +
+  'return (g.z?"🇹🇼\\n":(twin?"🇯🇵\\n":""))+head+"\\n"+g.text;}).join("\\n\\n");' +
   'WDONE=[];' +
   'runMake(src,function(i,tot,label){' +
   'MMSG="画像を生成しています… "+(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
