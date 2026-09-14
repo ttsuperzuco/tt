@@ -4266,6 +4266,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
     '.bcsttl{font-size:22px;font-weight:900;color:#fff;}' +
     '.bcsno{margin-left:auto;font-size:13px;font-weight:800;color:#DCE7F2;}' +
+    '#bcreload{margin-left:auto;align-self:center;padding:9px 18px;font-size:14px;font-weight:800;}' +
     '.bcagain{margin:0 0 12px;text-align:left;}' +
     '.bcagainbtn{font:inherit;font-size:13px;font-weight:800;color:#cbd5e1;background:#131C2E;' +
     'border:1px solid #26324A;border-radius:999px;padding:9px 15px;}' +
@@ -4665,11 +4666,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'box.innerHTML=freshBar()+h;bindFresh();' +
   'document.getElementById("bckind1").onclick=function(){MOVED=true;page="s";status("");draw();};' +
   'var sl=document.getElementById("bcseelist");' +
-  'if(sl)sl.onclick=function(){MOVED=true;page="l";status("");draw();};}' +
+  'if(sl)sl.onclick=function(){MOVED=true;page="l";LPOSTS=null;status("");draw();};}' +
   // ★設定した配信の予約を確かめる画面（まるちゃん指示 2026-09-09）。
   //   「配信待ち」と「配信済み」に分ける。配信済みは昨日までの分だけ。
   'function drawSent(){' +
-  'var h=\'<div class="bcstop"><span class="bcsttl">設定した配信の予約</span></div>\'+' +
+  // ★更新ボタン（まるちゃん指示 2026-09-14）＝押すと事務所パソコンから一覧を読み直す
+  'var h=\'<div class="bcstop"><span class="bcsttl">設定した配信の予約</span>\'+' +
+  '\'<button type="button" class="bcmv" id="bcreload">更新</button></div>\'+' +
   '\'<div class="bctab"><button type="button" id="bctab1" class="\'+' +
   '((LTAB==="wait")?"on":"")+\'">配信待ち</button>\'+' +
   '\'<button type="button" id="bctab2" class="\'+' +
@@ -4678,6 +4681,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'box.innerHTML=h;' +
   'document.getElementById("bctab1").onclick=function(){LTAB="wait";status("");draw();};' +
   'document.getElementById("bctab2").onclick=function(){LTAB="done";status("");draw();};' +
+  'document.getElementById("bcreload").onclick=function(){LPOSTS=null;status("");draw();};' +
   'if(LPOSTS){drawList(LPOSTS);}else{loadList();}}' +
   'function drawText(){' +
   'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
