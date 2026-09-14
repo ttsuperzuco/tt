@@ -4307,7 +4307,10 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcpart img{width:42px;height:42px;object-fit:cover;border-radius:8px;flex:0 0 auto;}' +
     '.bcpno{background:#26324A;color:#E8EEF7;border-radius:999px;padding:5px 10px;' +
     'font-size:12px;font-weight:800;white-space:nowrap;flex:0 0 auto;}' +
-    '.bcptx{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    '.bcptx{flex:1 1 110px;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    '.bcpart{flex-wrap:wrap;}' +
+    '.bcpbtns{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}' +
+    '.bcseetx{background:#0B1220;border-radius:10px;padding:12px 14px;margin-top:6px;}' +
     // ★配信待ち／配信済みのタブ（まるちゃん指示 2026-09-09）
     '.bctab{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;}' +
     '.bctab button{border:1px solid #26324A;background:#131C2E;color:#9FB3C8;' +
@@ -5104,10 +5107,15 @@ function renderBroadcastPage_(base, staff, dev) {
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
   '(th?(\'<img src="\'+th+\'" data-big="\'+i+\'" style="cursor:zoom-in">\'):"")+' +
   '\'<span class="bcptx">\'+esc(partLabel(p))+\'</span>\'+' +
+  // ★確認／修正／消去の3つ（まるちゃん指示 2026-09-14）。
+  //   確認＝画像は大きく見る・文章は全文を見る。修正＝画像はファイルを開いて選び直す・文章は全文を1画面で直す。
+  '\'<span class="bcpbtns">\'+' +
   '(i>0?(\'<button type="button" class="bcmv" data-up="\'+i+\'">▲</button>\'):"")+' +
   '((i<n-1)?(\'<button type="button" class="bcmv" data-dn="\'+i+\'">▼</button>\'):"")+' +
-  '((p.kind==="text")?(\'<button type="button" class="bcmv" data-edit="\'+i+\'">直す</button>\'):"")+' +
-  '\'<button type="button" class="bcdel" data-del="\'+i+\'">消す</button></div>\';}).join("");}' +
+  '\'<button type="button" class="bcmv" data-see="\'+i+\'">確認</button>\'+' +
+  '\'<button type="button" class="bcmv" data-edit="\'+i+\'">修正</button>\'+' +
+  '\'<button type="button" class="bcdel" data-del="\'+i+\'">消去</button></span></div>\';}).join("");' +
+  'h+=\'<input type="file" accept="image/*" id="bcrepfile" style="display:none">\';}' +
   // ★「まだ何も入っていません…」は出さない（まるちゃん指示 2026-09-08）
   'else{h+="";}' +
   'if(mode==="img"){' +
@@ -5131,6 +5139,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<button type="button" class="bcgo" id="bctagok">この送り先にする</button>\'+' +
   '\'<button type="button" class="bcmini" id="bctagdef">もとの決まりにもどす</button>\'+' +
   '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
+  'else if(mode==="see"){' +
+  'var sp=d.parts[EDI]||{text:""};' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">\'+(EDI+1)+\'つ目の文章（\'+(sp.text||"").length+\'文字）</div>\'+' +
+  '\'<div class="bcouttx bcseetx">\'+esc(sp.text||"")+\'</div></div>\'+' +
+  '\'<button type="button" class="bcgo" id="bcseeedit">この文章を修正する</button>\'+' +
+  '\'<button type="button" class="bcghost" id="bccancel">閉じる</button>\';}' +
   'else if(mode==="txt"){' +
   'var old=(EDI>=0&&d.parts[EDI])?(d.parts[EDI].text||""):"";' +
   'h+=\'<div class="bchr"></div><div class="bcleft">\'+((EDI>=0)?"文章を直す":"文章を入れる")+' +
@@ -5149,6 +5163,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<button type="button" class="bcmini" id="bcskip">この対象は送らない（飛ばす）</button>\';' +
   '\'\';}' +
   'box.innerHTML=freshBar()+h;bindOne();bindFresh();}' +
+  // 画像ファイルを読み、大きすぎれば縮めて、入れる形にして返す（新しく入れる時も入れ替える時も同じ）
+  'function readImg(f,cb){if(!f||!/^image\\//.test(f.type)){cb(null);return;}' +
+  'var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){' +
+  'var mx=1280,w=im.width,h=im.height;if(w>mx||h>mx){if(w>=h){h=Math.round(h*mx/w);w=mx;}else{w=Math.round(w*mx/h);h=mx;}}' +
+  'var cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);' +
+  'var durl=cv.toDataURL("image/jpeg",0.82);' +
+  'cb({kind:"image",src:"",b64:durl.split(",")[1],thumb:durl});};im.src=fr.result;};fr.readAsDataURL(f);}' +
   'function bindOne(){' +
   'var d=DATA[step];' +
   '[].slice.call(box.querySelectorAll("[data-del]")).forEach(function(b){b.onclick=function(){' +
@@ -5159,8 +5180,21 @@ function renderBroadcastPage_(base, staff, dev) {
   '[].slice.call(box.querySelectorAll("[data-dn]")).forEach(function(b){b.onclick=function(){' +
   'var i=+b.getAttribute("data-dn");if(i>=d.parts.length-1)return;' +
   'var v=d.parts[i];d.parts[i]=d.parts[i+1];d.parts[i+1]=v;saveNow();draw();};});' +
+  // 修正：文章は全文の欄へ、画像はファイルを開く（選んだ画像を同じ場所に入れ替える）
+  'var rep=document.getElementById("bcrepfile"),REPI=-1;' +
   '[].slice.call(box.querySelectorAll("[data-edit]")).forEach(function(b){b.onclick=function(){' +
-  'EDI=+b.getAttribute("data-edit");mode="txt";draw();};});' +
+  'var i=+b.getAttribute("data-edit"),p=d.parts[i];if(!p)return;' +
+  'if(p.kind==="text"){EDI=i;mode="txt";draw();return;}' +
+  'if(rep){REPI=i;rep.value="";rep.click();}};});' +
+  'if(rep)rep.onchange=function(){var f=rep.files&&rep.files[0];if(!f||REPI<0)return;' +
+  'readImg(f,function(obj){if(!obj)return;d.parts[REPI]=obj;REPI=-1;saveNow();status("画像を入れ替えました。");draw();});};' +
+  // 確認：画像は大きく見る・文章は全文
+  '[].slice.call(box.querySelectorAll("[data-see]")).forEach(function(b){b.onclick=function(){' +
+  'var i=+b.getAttribute("data-see"),p=d.parts[i];if(!p)return;' +
+  'if(p.kind==="text"){EDI=i;mode="see";draw();return;}' +
+  'var nm=((p.src||"").indexOf("made:")===0)?p.src.slice(5):"";bigView(partThumb(p),nm);};});' +
+  'var se=document.getElementById("bcseeedit");' +
+  'if(se)se.onclick=function(){mode="txt";draw();};' +
   '[].slice.call(box.querySelectorAll("[data-big]")).forEach(function(b){b.onclick=function(){' +
   'var p=d.parts[+b.getAttribute("data-big")];if(!p)return;' +
   'var nm=((p.src||"").indexOf("made:")===0)?p.src.slice(5):"";' +
@@ -5195,15 +5229,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'ev.stopPropagation();var k=b.getAttribute("data-zoom");var pr=preOf(k);if(!pr)return;' +
   'bigView(pr.thumb, pr.made?k:"");};});' +
   'var fe=document.getElementById("bcfile");' +
-  'if(fe)fe.onchange=function(){var f=fe.files&&fe.files[0];if(!f||!/^image\\//.test(f.type))return;' +
-  'var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){' +
-  'var mx=1280,w=im.width,h=im.height;if(w>mx||h>mx){if(w>=h){h=Math.round(h*mx/w);w=mx;}else{w=Math.round(w*mx/h);h=mx;}}' +
-  'var cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);' +
-  'var durl=cv.toDataURL("image/jpeg",0.82);' +
-  'd.parts.push({kind:"image",src:"",b64:durl.split(",")[1],thumb:durl});mode="";draw();};im.src=fr.result;};fr.readAsDataURL(f);};' +
+  'if(fe)fe.onchange=function(){var f=fe.files&&fe.files[0];if(!f)return;' +
+  'readImg(f,function(obj){if(!obj)return;d.parts.push(obj);mode="";draw();});};' +
+  // ★文章の欄は全文が見える高さにする（まるちゃん指示 2026-09-14「全文を一画面に表示」）
   'var ta=document.getElementById("bctxt"),cnt=document.getElementById("bccnt"),ad=document.getElementById("bcaddtxt");' +
-  'if(ta){ta.focus();ta.oninput=function(){var L=ta.value.length;cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?"（長すぎます）":"");' +
-  'cnt.className="bccount"+(L>MAXT?" over":"");};' +
+  'function growTa(){if(!ta)return;ta.style.height="0px";ta.style.height=(ta.scrollHeight+12)+"px";}' +
+  'if(ta){ta.focus();growTa();setTimeout(growTa,0);setTimeout(growTa,200);' +
+  'ta.oninput=function(){var L=ta.value.length;cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください）"):"");' +
+  'cnt.className="bccount"+(L>MAXT?" over":"");growTa();};' +
   'ad.onclick=function(){var v=(ta.value||"").trim();' +
   'if(!v){status("文章が空です。",true);return;}' +
   'if(v.length>MAXT){status("文章は"+MAXT+"文字までです（いまは"+v.length+"文字）。",true);return;}' +
