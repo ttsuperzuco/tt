@@ -38,6 +38,15 @@ self.addEventListener('activate', function (e) {
       return Promise.all(names.map(function (n) {
         return (n === CACHE) ? null : caches.delete(n);   // 古い名前の保管は捨てる
       }));
+    }).then(function () {
+      // ★2026-09-14：今までにたまった「使い捨ての飾り(?cb=)付き」の保管を片付ける（下の fetch の説明）。
+      return caches.open(CACHE).then(function (c) {
+        return c.keys().then(function (reqs) {
+          return Promise.all(reqs.map(function (r) {
+            try { return new URL(r.url).searchParams.has('cb') ? c['delete'](r) : null; } catch (e) { return null; }
+          }));
+        });
+      })['catch'](function () {});
     }).then(function () { return self.clients.claim(); })
   );
 });
@@ -48,6 +57,12 @@ self.addEventListener('fetch', function (e) {
   var url;
   try { url = new URL(req.url); } catch (err) { return; }
   if (url.origin !== self.location.origin) return;   // ★GAS等の外部＝素通り（常に最新）
+
+  // ★2026-09-14 まるちゃん決定（たまる物には上限）：住所に使い捨ての飾り(?cb=時刻)が付いた物は
+  //   「毎回最新を取りに行く」印なので保管しない。前は各種LINKのリンク一覧・画像リンクの一覧・
+  //   スタンプの一覧を開くたびに別物として1つずつ保管し、捨てずにたまり続けていた（量は数十KB）。
+  //   ※入口(index.html?cb=…)は下で住所の飾りを外して1つにまとめて保管するので、ここから外す。
+  try { if (req.mode !== 'navigate' && url.searchParams.has('cb')) return; } catch (e) {}
 
   var isNav = (req.mode === 'navigate');   // ?view=... が付くので、保存する時は付けずに1つにまとめる
   var key = isNav ? new Request(url.origin + url.pathname) : req;
