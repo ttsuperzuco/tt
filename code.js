@@ -5326,9 +5326,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'status((now?"送れませんでした：":"予約できませんでした：")+' +
   '(err&&err.message?err.message:err),true);}}});}' +
   // ── 予約した配信の一覧（中身があるときだけ出す）──────────────
+  // ★一覧が大きい時は、事務所パソコンが置き場へ置いて名前だけ返してくる（窓口を通らないため・2026-09-14）
+  'function postsOf(d,cb){if(d&&d.posts_file){jsonp({action:"data",name:d.posts_file},function(x){' +
+  'cb((x&&x.posts)||[]);});return;}cb((d&&d.posts)||[]);}' +
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
-  'ask("bc_list",{},function(d){LPOSTS=d.posts||[];' +
-  'LBATCH=((d.batch&&d.batch.n)||0);drawList(LPOSTS);},' +
+  'ask("bc_list",{},function(d){' +
+  'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,function(p){LPOSTS=p;drawList(LPOSTS);});},' +
   'function(m){el.innerHTML=\'<div class="bcouttx">読めませんでした。</div>\';status(m,true);});}' +
   // ★昨日までかどうか（配信済みは昨日までの分だけ出す・まるちゃん指示 2026-09-09）
   'function isYest(at){var s=String(at||"").slice(0,10);if(!s)return false;' +
@@ -5360,7 +5363,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'szPopup_("この配信を取り消しますか？",{cancel:true,onYes:function(){status("取り消しています…");' +
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
   'status(d.note||"取り消しました。",!d.ok);LBATCH=((d.batch&&d.batch.n)||LBATCH);' +
-  'drawList(d.posts);},function(m3){status(m3,true);});}});};});' +
+  'postsOf(d,drawList);},function(m3){status(m3,true);});}});};});' +
   'bindList();}' +
   // ★全部取り消す／戻す（まるちゃん指示 2026-09-09）
   'function bindList(){' +
@@ -5369,13 +5372,13 @@ function renderBroadcastPage_(base, staff, dev) {
   '"（中身は控えに残るので、あとで戻せます）",{cancel:true,onYes:function(){' +
   'a.disabled=true;status("取り消しています…");' +
   'ask("bc_cancel_all",{},function(d){status(d.note||"取り消しました。",!d.ok);' +
-  'LBATCH=((d.batch&&d.batch.n)||0);drawList(d.posts);},' +
+  'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,drawList);},' +
   'function(m){a.disabled=false;status(m,true);});}});};' +
   'var u=document.getElementById("bcundo");' +
   'if(u)u.onclick=function(){szPopup_("取り消した配信を元に戻しますか？",{cancel:true,' +
   'onYes:function(){u.disabled=true;status("戻しています…");' +
   'ask("bc_restore",{},function(d){status(d.note||"戻しました。",!d.ok);' +
-  'LBATCH=((d.batch&&d.batch.n)||0);drawList(d.posts);},' +
+  'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,drawList);},' +
   'function(m){u.disabled=false;status(m,true);});}});};}' +
   // ── 立ち上がり ────────────────────────────────────────
 
