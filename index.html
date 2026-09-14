@@ -53,6 +53,13 @@
   } else {
     root.innerHTML = '<div class="boot"><div class="bootText">ズコがお散歩中...</div><img src="icons/zuko-boot.png" alt="" class="bootIcon" onload="this.className+=\' ok\'"></div>';
   }
+  // ★2026-09-14 まるちゃん「ながいまちのときはズコを遠出にするんじゃなかったっけ？でなかったよ」。
+  //   「遠出」は8/12に外した"8秒でホームへ戻す保険"とセットで出ていたので、保険と一緒に出なくなっていた。
+  //   → 画面は奪わず、8秒たってもまだ待ち画面なら文言だけ「少し遠出かも...」に変える（全ボタン共通）。
+  setTimeout(function () {
+    var t = root.querySelector('.boot .bootText');
+    if (t) t.textContent = 'ズコは少し遠出かも...';
+  }, 8000);
 })();
 </script>
 
@@ -315,14 +322,41 @@
   function showPrefetchable_(view, onPayload) {
     var entry = window.__PF_ && window.__PF_[view];
 
+    // ★2026-09-14：グーグル窓口が混むと返事が30〜50秒来ず、待ち画面のまま止まって見えた（まるちゃん指摘）。
+    //   → 1回あたり10秒で見切って頼み直す（3回まで）。遅れて届いた返事も使う（先に届いた1つだけ描く）。
+    //   3回とも駄目な時だけ、今までどおりエラーを出す（その後に遅れて届いた返事があれば、それで描き直す）。
+    var TRY_MS = 10000, TRIES = 3;
     function runFresh_() {
       var action = (window.__SZ_VIEWS_ || {})[view];
-      var cb = '__ttNow_' + view;
-      window[cb] = function (payload) { onPayload(payload); };
-      var s = document.createElement('script');
-      s.src = EXEC + '?action=data&name=' + action + '&callback=' + cb + '&cb=' + Date.now();
-      s.onerror = function () { onPayload({ error: '通信エラーです。通信環境をご確認ください。' }); };
-      document.body.appendChild(s);
+      var got = false, gaveUp = false, n = 0, timer = null, lastErr = null;
+      function deliver(payload) {
+        if (got) return;
+        if (payload && !payload.error) { got = true; clearTimeout(timer); onPayload(payload); return; }
+        lastErr = payload;
+      }
+      function attempt() {
+        clearTimeout(timer);
+        if (got || gaveUp) return;
+        if (n >= TRIES) {
+          gaveUp = true;
+          onPayload(lastErr && lastErr.error ? lastErr : { error: '通信エラーです。通信環境をご確認ください。' });
+          return;
+        }
+        n++;
+        var me = n;
+        var cb = '__ttNow_' + view + '_' + me;
+        window[cb] = function (payload) {
+          deliver(payload);
+          if (!got && !gaveUp && me === n) attempt();   // 中身がエラーだった＝すぐ次を頼む
+        };
+        var s = document.createElement('script');
+        s.src = EXEC + '?action=data&name=' + action + '&callback=' + cb + '&cb=' + Date.now();
+        s.onerror = function () { if (me === n) attempt(); };
+        document.body.appendChild(s);
+        timer = setTimeout(function () { if (me === n) attempt(); }, TRY_MS);
+      }
+      attempt();
+      return deliver;
     }
 
     if (!entry || entry.done) { runFresh_(); return; }   // 先読みの仕組みが無い/既に使い切り→常に新規取得
@@ -346,11 +380,22 @@
       if (usedCache) return;   // キャッシュを既に表示中＝この失敗は無視してそのまま
       runFresh_();
     } else {
+      var waitTimer = null;
       entry.waiter = function (p) {
+        clearTimeout(waitTimer);
         entry.done = true;
         if (p && !p.error) { renderIfDifferent(p); }
         else if (!usedCache) { runFresh_(); }
       };
+      // ★先読みの返事が10秒来ない時は、待つのをやめて頼み直す（遅れて届いた先読みの返事も使う）。
+      if (!usedCache) {
+        waitTimer = setTimeout(function () {
+          if (entry.done) return;
+          entry.done = true;
+          var deliver = runFresh_();
+          entry.waiter = function (p) { if (p && !p.error) deliver(p); };
+        }, TRY_MS);
+      }
     }
   }
 
