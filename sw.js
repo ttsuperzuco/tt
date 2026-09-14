@@ -106,6 +106,43 @@ self.addEventListener('fetch', function (e) {
   //   アイコン等の重い置物は今まで通り「手元優先＋裏で更新」（開く速さを保つ）。
   var isShell = isNav || /\.(html|js)$/.test(url.pathname);
 
+  // ★2026-09-14 まるちゃん決定：入口(画面を開いた時のページ)は「ネットを1.5秒だけ待つ」。
+  //   きっかけ＝TOMATOさんのiPhoneで「ズコは少し遠出かも...」が長い。iPhoneは裏に回したアプリをすぐ閉じるので
+  //   戻るたびに一から読み込み直し、しかも入口を必ずネットから取るので、電波が弱い（切れてはいない）と
+  //   ずっと待っていた（保管分を使うのはネットが完全につながらない時だけだった）。
+  //   → 1.5秒以内に届けば今までどおり最新（電波が普通なら反映の遅れは起きない）。
+  //     届かなければ保管してある入口ですぐ始め、取りに行った新しい入口は裏で保管して次に使う。
+  //   ※保管の入口は、それが指す本体(?v=…)も保管済みなので、古い版どうしでちぐはぐにならない。
+  if (isNav) {
+    e.respondWith(caches.open(CACHE).then(function (c) {
+      var net = fetch(req.url, { cache: 'no-store' }).then(function (res) {
+        if (res && res.ok && res.type === 'basic') {
+          var copy = res.clone();
+          return c.put(key, copy).then(function () { return res; }, function () { return res; });
+        }
+        return res;
+      });
+      // 保管の入口で先に始めても、新しい入口を最後まで受け取って保管し終えるまで保管係を止めさせない
+      try { e.waitUntil(net.then(function () {}, function () {})); } catch (e4) {}
+      return c.match(key).then(function (hit) {
+        if (!hit) return net;   // 保管が無い（初めて）＝待つしかない
+        return new Promise(function (resolve) {
+          var done = false;
+          var timer = setTimeout(function () { if (!done) { done = true; resolve(hit); } }, 1500);
+          net.then(function (res) {
+            if (done) return;
+            done = true; clearTimeout(timer);
+            resolve(res && res.ok ? res : hit);
+          })['catch'](function () {
+            if (done) return;
+            done = true; clearTimeout(timer); resolve(hit);
+          });
+        });
+      });
+    }));
+    return;
+  }
+
   if (isShell) {
     // ★2026-07-26：入口(index.html)や本体(*.js)を、端末やブラウザの一時保存(HTTPキャッシュ)を
     //   一切通さず必ずネットの最新から取り直す(no-store)。以前は普通のfetchだったため、
