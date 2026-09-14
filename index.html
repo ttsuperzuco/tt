@@ -42,6 +42,68 @@
 <body>
 <div id="root"></div>
 <script>
+// ★2026-09-14 まるちゃん依頼：「開いてから画面が出るまで何秒・どこで待ったか」を人ごとに記録する。
+//   きっかけ＝TOMATOさんのiPhoneだけ「ズコは少し遠出かも...」が長く出る（開発者のAndroidは速い）。
+//   ここで開き始めを控え、段階ごとに端末へ書き足す。画面が出たら1件の記録にして貯め、
+//   数分に1回まとめて事務所PCへ送る（下の btSend_）。途中で閉じた回は、次に開いた時に
+//   「どこまで進んでいたか」付きで送る＝原因が追える。画面の見た目は一切変えない。
+(function () {
+  var LS_OPEN = 'sz_bt_open', LS_Q = 'sz_bt_q';
+  function g(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function s(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  var ua = navigator.userAgent || '';
+  var kind = /iPhone|iPad|iPod/.test(ua) ? 'iPhone' : (/Android/.test(ua) ? 'Android' : 'PC');
+  var app = (navigator.standalone === true ||
+             (window.matchMedia && matchMedia('(display-mode: standalone)').matches)) ? 'アイコン' : 'ブラウザ';
+  var view = (new URLSearchParams(location.search)).get('view') || 'home';
+  // 前回、画面が出る前に閉じられていたら「途中で閉じた」として貯める。
+  try {
+    var prev = g(LS_OPEN);
+    if (prev) {
+      var p = JSON.parse(prev); p.r = '途中で閉じた';
+      var q0 = JSON.parse(g(LS_Q) || '[]'); q0.push(p); s(LS_Q, JSON.stringify(q0.slice(-40)));
+    }
+  } catch (e) {}
+  var bt = window.__BT = { at: new Date().toISOString(), v: view, k: kind, a: app, st: '入口', h: 0,
+                           sw: (navigator.serviceWorker && navigator.serviceWorker.controller) ? '有' : '無' };
+  try {
+    var nav = performance.getEntriesByType('navigation')[0];
+    if (nav) {
+      bt.e = Math.round(nav.responseEnd);
+      bt.w = nav.workerStart ? Math.round(Math.max(0, nav.fetchStart - nav.workerStart)) : 0;
+      bt.nt = nav.type;
+    }
+  } catch (e) {}
+  var hidAt = document.visibilityState === 'hidden' ? performance.now() : null;
+  document.addEventListener('visibilitychange', function () {
+    if (bt.done) return;
+    if (document.visibilityState === 'hidden') hidAt = performance.now();
+    else if (hidAt !== null) { bt.h += Math.round(performance.now() - hidAt); hidAt = null; }
+  });
+  window.__btMark = function (stage, key) {
+    if (bt.done) return;
+    bt.st = stage;
+    if (key) bt[key] = Math.round(performance.now());
+    s(LS_OPEN, JSON.stringify(bt));
+  };
+  window.__btDone = function (result) {
+    if (bt.done) return;
+    if (hidAt !== null) { bt.h += Math.round(performance.now() - hidAt); hidAt = null; }
+    bt.sh = Math.round(performance.now()); bt.r = result; bt.st = '表示';
+    try {
+      var ce = performance.getEntriesByType('resource').filter(function (x) { return /\/code\.js/.test(x.name); })[0];
+      if (ce) bt.c = Math.round(ce.responseEnd - ce.startTime);
+    } catch (e) {}
+    var rec = {}; for (var k in bt) if (k !== 'done') rec[k] = bt[k];
+    bt.done = true;
+    try { var q = JSON.parse(g(LS_Q) || '[]'); q.push(rec); s(LS_Q, JSON.stringify(q.slice(-40))); } catch (e) {}
+    try { localStorage.removeItem(LS_OPEN); } catch (e) {}
+    if (window.__btSend) setTimeout(window.__btSend, 4000);   // 画面の読み込みと取り合わないよう少し後で
+  };
+  s(LS_OPEN, JSON.stringify(bt));
+})();
+</script>
+<script>
 (function () {
   // 待ち画面はどちらも金魚（ズコ）にそろえる（まるちゃん指示 2026-08-12）。
   //   ホーム(view無し)＝「ズコは少し遠出かも...」／ボタン後の画面(?view=… 付き)＝「ズコがお散歩中...」。
@@ -79,6 +141,7 @@
   // tilesettings（権限・名前選択に必要＝全画面で使う）
   window.__tsResult = undefined; window.__tsWaiter = null;
   window.__ttTileSettingsPre = function (payload) {
+    try { if (window.__BT && window.__BT.cm === undefined) window.__BT.cm = Math.round(performance.now()); } catch (e) {}
     window.__tsResult = payload || {};
     var w = window.__tsWaiter; window.__tsWaiter = null; if (w) w(window.__tsResult);
   };
@@ -150,6 +213,7 @@
 <script src="code.js?v=eb09ba8060"></script>
 <script>
 (function () {
+  try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
   // 施術室被りデータは公開リポジトリに置かず、GASからJSONPで取得する
   // （このページはGASを表示しないので、Googleの「別ユーザー作成」警告バーは出ない）。
   var EXEC = "https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";
@@ -209,6 +273,7 @@
       navigator.serviceWorker.addEventListener('controllerchange', function () {
         if (szReloaded) return;
         szReloaded = true;
+        try { window.__btMark && window.__btMark('保管係の交代で読み直し'); } catch (e) {}
         location.reload();
       });
     }
@@ -260,12 +325,51 @@
     root.innerHTML = html;
     runScripts(root);
     window.scrollTo(0, 0);
+    try { window.__btDone && window.__btDone('表示できた'); } catch (e) {}
   }
 
   function fail(msg) {
     document.getElementById('root').innerHTML =
       '<div class="boot" style="text-align:center;padding:1.5em;">' + msg + '</div>';
+    try { window.__btDone && window.__btDone('エラー'); } catch (e) {}
   }
+
+  // ★2026-09-14：貯めた「開いてから画面が出るまで」の記録を、数分に1回だけまとめて事務所PCへ送る。
+  //   依頼の置き場は1分12件までなので、開くたびには送らない（予約などの本当の依頼の邪魔をしない）。
+  //   送れたら送った分だけ消す。送れなければ次に開いた時にまた送る。
+  window.__btSend = function () {
+    var LS_Q = 'sz_bt_q', LS_SENT = 'sz_bt_sent';
+    try {
+      var last = parseInt(lsGet(LS_SENT) || '0', 10) || 0;
+      if (Date.now() - last < 3 * 60 * 1000) return;
+      if (typeof EDIT_KEY === 'undefined') return;
+      var q = JSON.parse(lsGet(LS_Q) || '[]');
+      if (!q.length) return;
+      var take = [];
+      for (var i = 0; i < q.length && take.length < 15; i++) {
+        take.push(q[i]);
+        if (JSON.stringify(take).length > 3500) { take.pop(); break; }
+      }
+      if (!take.length) { lsSet(LS_Q, JSON.stringify(q.slice(1))); return; }
+      lsSet(LS_SENT, String(Date.now()));
+      var cb = '__btSent' + Date.now();
+      window[cb] = function (r) {
+        try { delete window[cb]; } catch (e) {}
+        if (!r || !r.ok) return;
+        try {
+          var now = JSON.parse(lsGet(LS_Q) || '[]');
+          lsSet(LS_Q, JSON.stringify(now.slice(take.length)));
+        } catch (e) {}
+      };
+      var sc = document.createElement('script');
+      sc.src = EXEC + '?action=submit&key=' + encodeURIComponent(EDIT_KEY) +
+        '&op=boot_timing&fields=' + encodeURIComponent(JSON.stringify({ recs: take })) +
+        '&who=' + encodeURIComponent(who) + '&role=' + encodeURIComponent(role) +
+        '&device=' + encodeURIComponent(device) + '&callback=' + cb + '&cb=' + Date.now();
+      sc.onerror = function () {};
+      document.head.appendChild(sc);
+    } catch (e) {}
+  };
 
   // ===== アクセスログ（画面表示ごとにGASへ。GASが一旦貯め、事務所PCがDBへ回収）=====
   var hitDone_ = false;
@@ -751,6 +855,7 @@
   //   見た目の親切だけ＝本当の防止はconfirmPickのaction=claim(サーバー側の早い者勝ちロック)。
   function showPicker(people, labels, claimed) {
     var root = document.getElementById('root');
+    try { window.__btDone && window.__btDone('名前選択'); } catch (e) {}
     var pick = (people || []).filter(function (p) { return p !== 'kanbu' && !(claimed && claimed[p]); });
     var btns = pick.map(function (pid) {
       return '<button type="button" class="pk" data-who="' + esc(pid) + '">' + esc(labels[pid] || pid) + '</button>';
@@ -805,6 +910,7 @@
   //   （名前選択のリセット合図とは別物＝合言葉を変えても既存端末の記憶は自動では消えない）。
   function showPwGate(cfg) {
     var root = document.getElementById('root');
+    try { window.__btDone && window.__btDone('合言葉'); } catch (e) {}
     root.innerHTML = '<div class="pkwrap"><div class="pktitle">合言葉を<br>入力してください</div>' +
       '<input type="text" id="pwIn" class="pwinput2" autocomplete="off" autocapitalize="off">' +
       '<button type="button" class="pwgo" id="pwGoBtn">すすむ</button>' +
@@ -946,6 +1052,7 @@
     // 通信に失敗した時の空っぽの答えで、せっかく描いた画面を壊さない
     if (!fromCache && (!cfg || !cfg.people) && bootedFrom_ !== null) return;
     bootedFrom_ = str;
+    try { if (window.__BT && !window.__BT.cf) window.__BT.cf = fromCache ? '覚えていた' : '待った'; } catch (e) {}
     if (!fromCache && cfg && cfg.people) lsSet(LS_CFG, str);
     bootOrGate(cfg || {});
   }
