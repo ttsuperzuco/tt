@@ -4389,7 +4389,8 @@ function renderBroadcastPage_(base, staff, dev) {
     'border:1px solid #7f1d1d;background:#2a1214;color:#fca5a5;font-weight:800;}' +
     '.bcstatus{font-weight:800;margin:10px 2px;font-size:14.5px;border-radius:11px;padding:0;}' +
     '.bcstatus.on{background:#131C2E;color:#E8EEF7;padding:11px 14px;}' +
-    '.bcstatus.ng{background:#2a1214;color:#fca5a5;padding:11px 14px;}';
+    '.bcstatus.ng{background:#2a1214;color:#fca5a5;padding:11px 14px;}' +
+    '.bcwaitmsg{text-align:center;font-weight:800;font-size:17px;color:#E8EEF7;padding:14px 6px 6px;}';
   var script =
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
@@ -4397,7 +4398,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★はじめは「配信の種類をえらぶ」画面（まるちゃん指示 2026-09-08）
   'var TPL=[],PRE=[],MADE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",page="k";' +
   'var WTEXT="",WDONE=[],WBUSY=false,WMSG="";' +
-  'var SPER="",SRES=null,SBUSY=false;' +
+  'var SPER="",SRES=null,SBUSY=false,SBUSYAT=0;' +
   'var MSTEP=0,MBODY="",MJA=[],MZH=[],MBUSY=false,MMSG="";' +
   // ★配信文は区分ごとに違う＝本文も区分ごとに持つ（まるちゃん指示 2026-09-08）
   'var MBODYS=["","","",""],MIDX=0;' +
@@ -4680,6 +4681,9 @@ function renderBroadcastPage_(base, staff, dev) {
   '((x[0]===SPER)?\' class="bcon"\':"")+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
   '\'<button type="button" class="bcrestore" id="bcrest"\'+(SBUSY?" disabled":"")+\'>\'+' +
   '\'作業中のデータを復元する</button></div>\';' +
+  // ★待っている間は、ボタンのすぐ下に「データ読み込み中です（◯秒）」を出す（まるちゃん指示 2026-09-14）。
+  //   下の小さな知らせだけだと画面の外で見えず、押したのに何も起きていないように見えたため。
+  'if(SBUSY)h+=\'<div class="bchr"></div><div class="bcwaitmsg" id="bcwaitmsg">データ読み込み中です（\'+Math.round((Date.now()-SBUSYAT)/1000)+\'秒）</div>\';' +
   'if(SRES)h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';' +
   'h+=\'</div>\';' +
@@ -4722,9 +4726,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(SIDX>=gs.length-1){page="m";MSTEP=0;MMSG="";status("");draw();return;}' +
   'SIDX++;status("");draw();};' +
   '[].slice.call(box.querySelectorAll("[data-per]")).forEach(function(b){b.onclick=function(){' +
-  'var k=b.getAttribute("data-per");SPER=k;SRES=null;SIDX=0;SBUSY=true;' +
-  'status("空き時間を算出しています…");draw();' +
-  'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;' +
+  'var k=b.getAttribute("data-per");SPER=k;SRES=null;SIDX=0;SBUSY=true;SBUSYAT=Date.now();' +
+  'status("");draw();' +
+  'var wt=setInterval(function(){var el=document.getElementById("bcwaitmsg");' +
+  'if(!SBUSY){clearInterval(wt);return;}' +
+  'if(el)el.textContent="データ読み込み中です（"+Math.round((Date.now()-SBUSYAT)/1000)+"秒）";},1000);' +
+  'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;clearInterval(wt);' +
   'if(!r||!r.ok){status((r&&r.note)||"算出できませんでした。",true);draw();return;}' +
   'setWaku(r);SIDX=0;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
   '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
