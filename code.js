@@ -9126,8 +9126,8 @@ function renderLinksPage_(d, base, staff, dev) {
   '<div class="lkhead"><h1>🔗 各種LINK</h1></div>' +
   // 入口＝URLリンク／画像リンクの2択。押すと下の各セクションに切り替わる（同じページ内・再取得なし）。
   '<div id="lkhub" class="lkhub">' +
-    '<button type="button" class="lkhubbtn" id="lkGoUrl"><span class="lkhubico">🔗</span><span>URLリンク</span></button>' +
-    '<button type="button" class="lkhubbtn" id="lkGoImg"><span class="lkhubico">🖼️</span><span>画像リンク</span></button>' +
+    '<button type="button" class="lkhubbtn" id="lkGoUrl"><span class="lkhubico">🔗</span><span>キャンペーン＆商品</span></button>' +
+    '<button type="button" class="lkhubbtn" id="lkGoImg"><span class="lkhubico">🖼️</span><span>施術前＆後の画像</span></button>' +
   '</div>' +
   // ── URLリンク（元の各種LINK） ──
   '<div id="lkurlsec" class="lksec" hidden>' +
@@ -9395,7 +9395,7 @@ var LKCSS_ =
 var LKIMGCSS_ =
 '  .lkhub{ display:flex; gap:14px; flex-wrap:wrap; margin:6px 0 20px; }' +
 '  .lkhubbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; cursor:pointer;' +
-'    flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;' +
+'    flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;' +
 '    padding:26px 14px; font-size:24px; font-weight:800; color:#fff; background:#2C7A99;' +
 '    border:1px solid #256781; border-radius:18px; box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkhubbtn:active{ transform:translateY(2px); }' +
