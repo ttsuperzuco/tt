@@ -9808,7 +9808,7 @@ function ttviewStart_(exec, base, staff, dev) {
     h += '<div class="tvmeta">' +
       (e.cr ? '作った日：' + esc(msText(e.cr)) + (e.au ? '　' + esc(e.au) : '') + '<br>' : (e.au ? '作った人：' + esc(e.au) + '<br>' : '')) +
       (e.up ? '直した日：' + esc(msText(e.up)) : '') + '</div>';
-    if (e.tt) h += '<a class="tvopen" href="' + esc(openHref(e)) + '" target="_blank" rel="noopener">タイムツリーで開く</a>';
+    if (e.tt) h += '<a class="tvopen" href="' + esc(openHref(e)) + '" target="_blank" rel="noopener">実際のタイムツリーでこの予約メモを開く</a>';
     body.innerHTML = h;
     var eb = document.getElementById('tvedit');
     if (eb) eb.onclick = function () { go({ step: 'memo', k: st.k, date: st.date, ev: e, base: e.n || '' }); };
