@@ -9572,7 +9572,7 @@ function ttviewStart_(exec, base, staff, dev) {
   function segHtml() {
     return '<div class="tvseg">' +
       '<button class="tvsegb' + (roomOnly ? '' : ' sel') + '" data-r="0">全部</button>' +
-      '<button class="tvsegb' + (roomOnly ? ' sel' : '') + '" data-r="1">部屋だけ</button></div>';
+      '<button class="tvsegb' + (roomOnly ? ' sel' : '') + '" data-r="1">予約一覧のみ</button></div>';
   }
   function bindSeg() {
     var bs = body.querySelectorAll('.tvsegb');
@@ -9637,13 +9637,12 @@ function ttviewStart_(exec, base, staff, dev) {
     var nav = '<div class="tvnav"><button class="tvarw" id="tvprev"' + (inRange(k - 1) ? '' : ' disabled') + '>◀</button>' +
       '<button class="tvt tvpick" id="tvpick">' + m.getFullYear() + '年' + (m.getMonth() + 1) + '月 ▾</button>' +
       '<button class="tvarw" id="tvnext"' + (inRange(k + 1) ? '' : ' disabled') + '>▶</button></div>';
-    body.innerHTML = nav + segHtml() + (k !== 0 ? '<button class="tvtoday" id="tvtoday">今月にもどる</button>' : '') +
+    body.innerHTML = nav + (k !== 0 ? '<button class="tvtoday" id="tvtoday">今月にもどる</button>' : '') +
       '<div id="tvcal"><div class="tvstatus">予定を読んでいます...</div></div>';
     document.getElementById('tvprev').onclick = function () { if (inRange(st.k - 1)) go({ step: 'month', k: st.k - 1 }, false); };
     document.getElementById('tvnext').onclick = function () { if (inRange(st.k + 1)) go({ step: 'month', k: st.k + 1 }, false); };
     document.getElementById('tvpick').onclick = openPicker;
     var tb = document.getElementById('tvtoday'); if (tb) tb.onclick = function () { go({ step: 'month', k: 0 }, false); };
-    bindSeg();
     load(k, function (p) {
       if (st.step !== 'month' || st.k !== k) return;
       // 今月のファイルで見られる端が分かったら、◀▶の押せる／押せないを付け直す
@@ -9652,7 +9651,7 @@ function ttviewStart_(exec, base, staff, dev) {
       if (nx) nx.disabled = !inRange(k + 1);
       var box = document.getElementById('tvcal');
       if (!p || p.error) { box.innerHTML = '<div class="tvstatus">' + esc(failText(p)) + '</div>'; return; }
-      var evs = visible(p.events);
+      var evs = p.events;       /* 月のカレンダーは切り替えなしで全部を数える */
       var h = '<div class="tvgrid">';
       for (var i = 0; i < 7; i++) h += '<div class="tvwd' + (i === 5 ? ' sat' : i === 6 ? ' sun' : '') + '">' + WD[i] + '</div>';
       var first = new Date(m.getFullYear(), m.getMonth(), 1);
