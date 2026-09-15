@@ -9486,6 +9486,27 @@ function renderTimeTreePage_(base, staff, dev) {
       'margin-left:6px;text-shadow:0 1px 2px rgba(0,0,0,.3);vertical-align:1px;}' +
     '.tvmemo{white-space:pre-wrap;word-break:break-all;font-size:16px;line-height:1.75;margin:0;font:inherit;}' +
     '.tvmeta{color:#64748b;font-size:13px;font-weight:700;line-height:1.7;margin:0 6px 14px;color:#eaf6fb;}' +
+    '.tvpick{background:transparent;border:0;cursor:pointer;font-family:inherit;padding:6px 0;}' +
+    '.tvtoday{display:block;margin:-4px auto 10px;border:0;border-radius:999px;background:#fb8c44;color:#fff;' +
+      'font:inherit;font-weight:900;font-size:15px;padding:7px 18px;cursor:pointer;}' +
+    '.tvpmask{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);display:flex;align-items:center;' +
+      'justify-content:center;padding:20px;}' +
+    '.tvpbox{background:#2C7A99;border-radius:18px;padding:16px;width:100%;max-width:420px;box-shadow:0 14px 44px rgba(0,0,0,.45);}' +
+    '.tvpgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 14px;}' +
+    '.tvpm{border:0;border-radius:12px;background:#fff;color:#0f172a;font:inherit;font-weight:900;font-size:18px;' +
+      'padding:14px 0;cursor:pointer;}' +
+    '.tvpm.now{box-shadow:inset 0 0 0 3px #fb8c44;}' +
+    '.tvpm.sel{background:#fb8c44;color:#fff;}' +
+    '.tvpm:disabled{opacity:.3;}' +
+    '.tvpclose{display:block;width:100%;border:0;border-radius:12px;background:rgba(255,255,255,.2);color:#fff;' +
+      'font:inherit;font-weight:900;font-size:17px;padding:12px;cursor:pointer;}' +
+    '.tvnomemo{color:#64748b;font-weight:700;margin-left:4px;}' +
+    '.tvedit{display:block;width:calc(100% - 4px);margin:0 2px 12px;border:0;border-radius:16px;background:#fff;' +
+      'color:#0f172a;font:inherit;font-size:19px;font-weight:900;padding:15px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}' +
+    '.tvmemotx{display:block;width:calc(100% - 4px);margin:0 2px 12px;box-sizing:border-box;font:inherit;font-size:17px;' +
+      'line-height:1.75;color:#0f172a;background:#fff;border:0;border-radius:14px;padding:14px;overflow:hidden;resize:none;min-height:200px;}' +
+    '.tvsave{display:block;width:calc(100% - 4px);margin:0 2px 12px;border:0;border-radius:16px;background:#16a34a;color:#fff;' +
+      'font:inherit;font-size:21px;font-weight:900;padding:18px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
     '.tvopen{display:block;text-align:center;text-decoration:none;background:#2bad6f;color:#fff;border-radius:16px;' +
       'padding:16px;font-size:19px;font-weight:900;margin:0 2px 12px;box-shadow:0 4px 10px rgba(0,0,0,.18);}';
   var head = '<div class="hhead"><span class="bmark">' + TT_LOGO_ + '</span><span class="bname">TimeTree</span></div>';
@@ -9499,27 +9520,36 @@ function renderTimeTreePage_(base, staff, dev) {
     '</div>';
 }
 
-/** TimeTree画面の動き。exec＝グーグル窓口の住所（index.html の EXEC）。 */
+/** TimeTree画面の動き。exec＝グーグル窓口の住所（index.html の EXEC）。
+ *  ★2026-09-15 まるちゃん決定：全期間（2018年6月〜5か月先）を月ごとに見られる（ttview_<年月>.json）。
+ *    見られる端（最初と最後の月）は今月のファイルに入っている first／last で決める。
+ *  ★予約メモを直す：今の「予約変更」と同じ書き込みの道（op=change_reservation の note）を使う。
+ *    開いた時のメモ（expect_note）も一緒に送り、事務所パソコンが本物を読み直して、
+ *    その間に誰かが直していたら上書きせずに止める（スタッフの書き込みを消さない）。 */
 function ttviewStart_(exec, base, staff, dev) {
+  var KEY = 'kx7Q2p9mVt4Zr8';
   var WD = ['月', '火', '水', '木', '金', '土', '日'];     // ズコの他の暦と同じく月曜はじまり
   var JWD = ['日', '月', '火', '水', '木', '金', '土'];
-  var cache = {};          // 位置名 → 受け取った中身
+  var cache = {};          // 年月 → 受け取った中身
   var waiting = {};
   var today = new Date(); today.setHours(0, 0, 0, 0);
   var st = { step: 'month', k: 0, date: '', ev: null };
+  var range = null;        // {lo:k, hi:k}（今月のファイルが届くまでは先月〜5か月先として動く）
   var roomOnly = false;
   try { roomOnly = localStorage.getItem('sz_tv_roomonly') === '1'; } catch (e) {}
   var body = document.getElementById('tvbody');
   var bar = document.getElementById('tvbar');
   var head = document.getElementById('tvhead');
   var homeBar = bar.innerHTML;
+  var idn = (window.__SZ_WHO_ !== undefined) ? { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' } : { who: '', role: '', device: '' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function pad(n) { return ('0' + n).slice(-2); }
   function iso(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function parseIso(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
   function monthOf(k) { return new Date(today.getFullYear(), today.getMonth() + k, 1); }
-  function slot(k) { return k < 0 ? 'b' + (-k) : String(k); }
+  function ym(k) { var m = monthOf(k); return m.getFullYear() + pad(m.getMonth() + 1); }
+  function kOfYm(s) { var p = String(s).split('-'); return (+p[0] - today.getFullYear()) * 12 + (+p[1] - 1) - today.getMonth(); }
   function kOfDate(s) { var d = parseIso(s); return (d.getFullYear() - today.getFullYear()) * 12 + d.getMonth() - today.getMonth(); }
   function jpDay(s) { var d = parseIso(s); return (d.getMonth() + 1) + '月' + d.getDate() + '日(' + JWD[d.getDay()] + ')'; }
   function jpFull(s) { var d = parseIso(s); return d.getFullYear() + '年' + jpDay(s); }
@@ -9528,35 +9558,41 @@ function ttviewStart_(exec, base, staff, dev) {
     var d = new Date(+ms);
     return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
-  function inRange(k) { return k >= -1 && k <= 5; }
+  function inRange(k) { return range ? (k >= range.lo && k <= range.hi) : (k >= -1 && k <= 5); }
+  function jsonp(params, onR) {
+    var cb = '__tvj' + Date.now() + Math.floor(Math.random() * 1000);
+    window[cb] = function (r) { try { delete window[cb]; } catch (e) {} onR(r || {}); };
+    var q = []; for (var k in params) q.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
+    var s = document.createElement('script');
+    s.src = exec + '?' + q.join('&') + '&callback=' + cb + '&cb=' + Date.now();
+    s.onerror = function () { onR({}); };
+    document.body.appendChild(s);
+  }
 
   /* 月の中身を受け取る（1度受け取った月は覚えておく） */
   function load(k, cb) {
-    var name = slot(k);
+    var name = ym(k);
     if (cache[name]) { cb(cache[name]); return; }
     if (waiting[name]) { waiting[name].push(cb); return; }
     waiting[name] = [cb];
-    var fn = '__tvGot_' + name + '_' + Date.now();
     var done = false;
     function finish(p) {
       if (done) return; done = true;
       var m = monthOf(k);
       var want = m.getFullYear() + '-' + pad(m.getMonth() + 1);
-      if (p && !p.error && p.events && p.month === want) cache[name] = p;
-      else if (p && !p.error && p.events) p = { error: 'month' };   // 月が変わった直後で、まだ作り直し前
+      if (p && !p.error && p.events && p.month === want) {
+        cache[name] = p;
+        if (p.first && p.last) range = { lo: kOfYm(p.first), hi: kOfYm(p.last) };
+      } else if (p && !p.error && p.events) p = { error: 'month' };
       var ws = waiting[name]; delete waiting[name];
       for (var i = 0; i < ws.length; i++) ws[i](cache[name] || p || { error: 'net' });
     }
-    window[fn] = finish;
-    var s = document.createElement('script');
-    s.src = exec + '?action=data&name=ttview_' + name + '.json&callback=' + fn + '&cb=' + Date.now();
-    s.onerror = function () { finish({ error: 'net' }); };
-    document.body.appendChild(s);
+    jsonp({ action: 'data', name: 'ttview_' + name + '.json' }, function (p) { finish(p && p.events ? p : (p && p.month ? p : { error: 'net' })); });
     setTimeout(function () { finish({ error: 'net' }); }, 20000);
   }
   function failText(p) {
     if (p && p.error === 'month') return '月が変わったばかりで、予定の作り直しを待っています。少ししてから開き直してください。';
-    return '予定を読めませんでした。通信環境をご確認のうえ、開き直してください。';
+    return 'この月の予定を読めませんでした。通信環境をご確認のうえ、開き直してください。';
   }
   function visible(evs) {
     if (!roomOnly) return evs;
@@ -9566,8 +9602,8 @@ function ttviewStart_(exec, base, staff, dev) {
     return visible(evs).filter(function (e) { return e.d <= ds && e.e >= ds; });
   }
 
-  /* 画面の上：戻るの形（月＝ホームへ／日＝月へ／中身＝日へ） */
-  function setBack(label, fn) {
+  /* 画面の上：戻るの形（月＝ホームへ／それ以外＝ひとつ前へ） */
+  function setBack(fn) {
     if (!fn) { bar.innerHTML = homeBar; return; }
     bar.innerHTML = '<div class="ubar"><button class="uhome tvback" id="tvbackbtn">← 前に戻る</button></div>';
     document.getElementById('tvbackbtn').onclick = fn;
@@ -9594,7 +9630,42 @@ function ttviewStart_(exec, base, staff, dev) {
   function redraw() {
     if (st.step === 'month') drawMonth();
     else if (st.step === 'day') drawDay();
+    else if (st.step === 'memo') drawMemo();
     else drawEvent();
+  }
+  function preload(k) {
+    setTimeout(function () {
+      if (inRange(k + 1)) load(k + 1, function () {});
+      if (inRange(k - 1)) load(k - 1, function () {});
+    }, 600);
+  }
+
+  /* ── 年月をえらぶ小窓（見出しの「2026年9月」を押すと出る） ── */
+  function openPicker() {
+    var cur = monthOf(st.k), year = cur.getFullYear();
+    var lo = range ? monthOf(range.lo) : monthOf(-1), hi = range ? monthOf(range.hi) : monthOf(5);
+    var mask = document.createElement('div');
+    mask.className = 'tvpmask';
+    function draw() {
+      var h = '<div class="tvpbox"><div class="tvnav"><button class="tvarw" data-y="-1"' + (year <= lo.getFullYear() ? ' disabled' : '') + '>◀</button>' +
+        '<div class="tvt">' + year + '年</div><button class="tvarw" data-y="1"' + (year >= hi.getFullYear() ? ' disabled' : '') + '>▶</button></div><div class="tvpgrid">';
+      for (var m = 0; m < 12; m++) {
+        var k = (year - today.getFullYear()) * 12 + m - today.getMonth();
+        var sel = (k === st.k), now = (k === 0);
+        h += '<button class="tvpm' + (sel ? ' sel' : '') + (now ? ' now' : '') + '" data-k="' + k + '"' + (inRange(k) ? '' : ' disabled') + '>' + (m + 1) + '月</button>';
+      }
+      h += '</div><button class="tvpclose">閉じる</button></div>';
+      mask.innerHTML = h;
+      var ys = mask.querySelectorAll('[data-y]');
+      for (var i = 0; i < ys.length; i++) ys[i].onclick = function () { year += parseInt(this.getAttribute('data-y'), 10); draw(); };
+      var ms = mask.querySelectorAll('[data-k]');
+      for (i = 0; i < ms.length; i++) ms[i].onclick = function () { close(); go({ step: 'month', k: parseInt(this.getAttribute('data-k'), 10) }, false); };
+      mask.querySelector('.tvpclose').onclick = close;
+    }
+    function close() { if (mask.parentNode) mask.parentNode.removeChild(mask); }
+    mask.onclick = function (ev) { if (ev.target === mask) close(); };
+    draw();
+    document.body.appendChild(mask);
   }
 
   /* ── 月のカレンダー ── */
@@ -9603,14 +9674,21 @@ function ttviewStart_(exec, base, staff, dev) {
     head.style.display = '';
     var k = st.k, m = monthOf(k);
     var nav = '<div class="tvnav"><button class="tvarw" id="tvprev"' + (inRange(k - 1) ? '' : ' disabled') + '>◀</button>' +
-      '<div class="tvt">' + m.getFullYear() + '年' + (m.getMonth() + 1) + '月</div>' +
+      '<button class="tvt tvpick" id="tvpick">' + m.getFullYear() + '年' + (m.getMonth() + 1) + '月 ▾</button>' +
       '<button class="tvarw" id="tvnext"' + (inRange(k + 1) ? '' : ' disabled') + '>▶</button></div>';
-    body.innerHTML = nav + segHtml() + '<div id="tvcal"><div class="tvstatus">予定を読んでいます...</div></div>';
+    body.innerHTML = nav + segHtml() + (k !== 0 ? '<button class="tvtoday" id="tvtoday">今月にもどる</button>' : '') +
+      '<div id="tvcal"><div class="tvstatus">予定を読んでいます...</div></div>';
     document.getElementById('tvprev').onclick = function () { if (inRange(st.k - 1)) go({ step: 'month', k: st.k - 1 }, false); };
     document.getElementById('tvnext').onclick = function () { if (inRange(st.k + 1)) go({ step: 'month', k: st.k + 1 }, false); };
+    document.getElementById('tvpick').onclick = openPicker;
+    var tb = document.getElementById('tvtoday'); if (tb) tb.onclick = function () { go({ step: 'month', k: 0 }, false); };
     bindSeg();
     load(k, function (p) {
       if (st.step !== 'month' || st.k !== k) return;
+      // 今月のファイルで見られる端が分かったら、◀▶の押せる／押せないを付け直す
+      var pv = document.getElementById('tvprev'), nx = document.getElementById('tvnext');
+      if (pv) pv.disabled = !inRange(k - 1);
+      if (nx) nx.disabled = !inRange(k + 1);
       var box = document.getElementById('tvcal');
       if (!p || p.error) { box.innerHTML = '<div class="tvstatus">' + esc(failText(p)) + '</div>'; return; }
       var evs = visible(p.events);
@@ -9636,6 +9714,7 @@ function ttviewStart_(exec, base, staff, dev) {
       box.innerHTML = h;
       var ds2 = box.querySelectorAll('.tvday[data-d]');
       for (i = 0; i < ds2.length; i++) ds2[i].onclick = function () { go({ step: 'day', k: st.k, date: this.getAttribute('data-d') }); };
+      preload(k);
     });
   }
 
@@ -9653,7 +9732,7 @@ function ttviewStart_(exec, base, staff, dev) {
   }
   function drawDay() {
     var ds = st.date;
-    setBack('月', function () { history.back(); });
+    setBack(function () { history.back(); });
     head.style.display = 'none';
     var d = parseIso(ds);
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
@@ -9662,8 +9741,8 @@ function ttviewStart_(exec, base, staff, dev) {
       '<div class="tvt">' + esc(jpDay(ds)) + '</div>' +
       '<button class="tvarw" id="tvnext"' + (inRange(nk) ? '' : ' disabled') + '>▶</button></div>' +
       segHtml() + '<div id="tvdaybox"><div class="tvstatus">予定を読んでいます...</div></div>';
-    document.getElementById('tvprev').onclick = function () { if (inRange(pk)) { st = { step: 'day', k: pk, date: iso(prev) }; try { history.replaceState({ tv: st }, ''); } catch (e) {} redraw(); } };
-    document.getElementById('tvnext').onclick = function () { if (inRange(nk)) { st = { step: 'day', k: nk, date: iso(next) }; try { history.replaceState({ tv: st }, ''); } catch (e) {} redraw(); } };
+    document.getElementById('tvprev').onclick = function () { if (inRange(pk)) go({ step: 'day', k: pk, date: iso(prev) }, false); };
+    document.getElementById('tvnext').onclick = function () { if (inRange(nk)) go({ step: 'day', k: nk, date: iso(next) }, false); };
     bindSeg();
     load(st.k, function (p) {
       if (st.step !== 'day' || st.date !== ds) return;
@@ -9706,7 +9785,7 @@ function ttviewStart_(exec, base, staff, dev) {
   function drawEvent() {
     var e = st.ev;
     if (!e) { st = { step: 'month', k: 0 }; redraw(); return; }
-    setBack('日', function () { history.back(); });
+    setBack(function () { history.back(); });
     head.style.display = 'none';
     var when;
     if (e.a) when = (e.d === e.e ? jpFull(e.d) : jpFull(e.d) + ' 〜 ' + jpDay(e.e)) + ' 終日';
@@ -9722,24 +9801,95 @@ function ttviewStart_(exec, base, staff, dev) {
       (e.loc ? '<div class="tvline"><span class="k">📍</span><span class="v">' + esc(e.loc) + '</span></div>' : '') +
       (e.url ? '<div class="tvline"><span class="k">🔗</span><span class="v"><a href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.url) + '</a></span></div>' : '') +
       '</div>';
-    if (e.n) h += '<div class="tvcard"><span class="bar" style="background:' + esc(e.col) + '"></span><pre class="tvmemo">' + esc(e.n) + '</pre></div>';
+    h += '<div class="tvcard"><span class="bar" style="background:' + esc(e.col) + '"></span>' +
+      (e.n ? '<pre class="tvmemo">' + esc(e.n) + '</pre>' : '<div class="tvnomemo">予約メモはありません</div>') + '</div>';
+    /* くり返しの予定は、メモを直すと全部の回が変わるので、ここからは直させない */
+    if (!e.r) h += '<button class="tvedit" id="tvedit">✏️ 予約メモを直す</button>';
     h += '<div class="tvmeta">' +
       (e.cr ? '作った日：' + esc(msText(e.cr)) + (e.au ? '　' + esc(e.au) : '') + '<br>' : (e.au ? '作った人：' + esc(e.au) + '<br>' : '')) +
       (e.up ? '直した日：' + esc(msText(e.up)) : '') + '</div>';
     if (e.tt) h += '<a class="tvopen" href="' + esc(openHref(e)) + '" target="_blank" rel="noopener">タイムツリーで開く</a>';
     body.innerHTML = h;
+    var eb = document.getElementById('tvedit');
+    if (eb) eb.onclick = function () { go({ step: 'memo', k: st.k, date: st.date, ev: e, base: e.n || '' }); };
+  }
+
+  /* ── 予約メモを直す ── */
+  function growMemo() {
+    var t = document.getElementById('tvmemotx');
+    if (!t) return;
+    t.style.height = 'auto';
+    t.style.height = (t.scrollHeight + 4) + 'px';
+  }
+  function drawMemo() {
+    var e = st.ev;
+    if (!e) { st = { step: 'month', k: 0 }; redraw(); return; }
+    setBack(function () { history.back(); });
+    head.style.display = 'none';
+    var cur = (st.draft != null) ? st.draft : (st.base || '');
+    body.innerHTML =
+      '<div class="tvcard"><span class="bar" style="background:' + esc(e.col) + '"></span>' +
+        '<div class="tvdt" style="font-size:19px;margin-bottom:4px">' + esc(e.t || '(タイトルなし)') + '</div>' +
+        '<div class="tvline" style="margin-top:0"><span class="k">🕒</span><span class="v">' + esc(e.a ? jpFull(e.d) + ' 終日' : jpFull(e.d) + ' ' + e.s + '〜' + e.f) + '</span></div></div>' +
+      '<div class="tvsec">予約メモ</div>' +
+      '<textarea class="tvmemotx" id="tvmemotx" spellcheck="false"></textarea>' +
+      '<button class="tvsave" id="tvsave">この内容で保存する</button>';
+    var t = document.getElementById('tvmemotx');
+    t.value = cur;
+    t.addEventListener('input', function () { st.draft = t.value; growMemo(); });
+    growMemo();
+    document.getElementById('tvsave').onclick = function () { saveMemo(t.value); };
+  }
+  function saveMemo(text) {
+    var e = st.ev, base = st.base || '';
+    if (text === base) { szPopup_('予約メモは変わっていません。', { icon: '' }); return; }
+    szOvShow_(szBusyHtml_('予約メモを保存中です'), '#2C7A99');
+    var fields = { cal: e.c, event: e.i, note: text, expect_note: base };
+    jsonp({ action: 'submit', key: KEY, op: 'change_reservation', who: idn.who, role: idn.role, device: idn.device, fields: JSON.stringify(fields) }, function (r) {
+      if (!r || !r.ok || !r.id) { szOvHide_(); szPopup_('エラーが発生しました。通信に失敗しました。もう一度お試しください。'); return; }
+      poll(r.id, (typeof LIMITS !== 'undefined') ? LIMITS.tries('change_reservation', 700) : 300, text);
+    });
+  }
+  function poll(id, left, text) {
+    jsonp({ action: 'status', key: KEY, id: id }, function (r) {
+      if (!r || !r.ok) {
+        if (left > 0) { setTimeout(function () { poll(id, left - 1, text); }, 700); return; }
+        szOvHide_(); szPopup_('エラーが発生しました。りゅうさんに連絡しました。'); return;
+      }
+      if (r.status === 'pending' || r.status === 'running' || r.status === 'queued' || r.status === '') {
+        if (left > 0) { setTimeout(function () { poll(id, left - 1, text); }, 700); return; }
+        szOvHide_(); szPopup_('時間がかかっています。少ししてからタイムツリーで確かめてください。'); return;
+      }
+      if (r.status !== 'done') { szOvHide_(); szPopup_('エラーが発生しました。りゅうさんに連絡しました。'); return; }
+      var d = {}; try { d = JSON.parse(r.result || '{}'); } catch (x) {}
+      if (d && d.conflict) {
+        /* 開いた後に誰かがメモを直していた＝上書きしない。今のメモを出し直して、もう一度直してもらう */
+        szOvHide_();
+        st.base = d.note || '';
+        st.draft = null;
+        st.ev.n = st.base;
+        drawMemo();
+        szPopup_('先に予約メモを直した人がいます。\nいまの予約メモを出し直しました。\nもう一度直してから保存してください。');
+        return;
+      }
+      /* 保存できた＝この画面で持っているメモも新しくする（写しに戻ってくるのは約15秒後） */
+      st.ev.n = text;
+      st.ev.up = Date.now();
+      szOvShow_(szDoneHtml_('予約メモを保存しました', '戻る'), '#16a34a');
+      var bb = document.getElementById('szDoneBack');
+      if (bb) bb.onclick = function () { szOvHide_(); history.back(); };
+    });
   }
 
   window.addEventListener('popstate', function (ev) {
     var s = ev.state && ev.state.tv;
-    st = s || { step: 'month', k: st.k || 0 };
-    if (st.step === 'month' && s == null) st = { step: 'month', k: st.k || 0 };
+    st = s || { step: 'month', k: 0 };
     redraw();
   });
   try { history.replaceState({ tv: st }, ''); } catch (e) {}
   redraw();
-  // 前後の月も裏で先に受け取っておく（押した時に待たない）
-  setTimeout(function () { load(1, function () {}); load(-1, function () {}); }, 800);
+  // 今月は必ず先に受け取る（見られる端＝最初と最後の月が中に入っているため）
+  load(0, function () {});
 }
 
 // Androidは intent:// でTimeTreeアプリを直接起動（LINE内ブラウザからでも開く）。
