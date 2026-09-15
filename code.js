@@ -9100,10 +9100,8 @@ function renderClaudeToolsPage_(base, staff, dev) {
  *  export_links_super.py。GASは計算しない＝描くだけ）。
  *  ★2026-07-21：画面を1枚にした。以前は「案内名を押す→言語を選ぶ」の2段階だったが、案内名の
  *  すぐ下に言語ボタンを並べて、1画面で押せば即コピーできるようにした（ユーザー指示）。 */
-// ★元データのGoogleシート「ズコLINK」タブ（オーナーが直接編集する表）。開発者ボタンの飛び先。
-var LK_SHEET_URL_ = 'https://docs.google.com/spreadsheets/d/16ta_ciEX_uPUxfy7eXq5aqrlKQyTmskB57pGxXyiXNY/edit?gid=2000945592';
-// ★画像リンクの元データ「ズコ画像」タブ（オーナーが直接編集）。開発者ボタンの飛び先。
-var LK_IMG_SHEET_URL_ = 'https://docs.google.com/spreadsheets/d/16ta_ciEX_uPUxfy7eXq5aqrlKQyTmskB57pGxXyiXNY/edit?gid=961471682';
+// ★元データ＝Googleシート「問合せ回答集」の「ズコLINK」タブ（案内リンク）／「ズコ画像」タブ（画像）。
+//   2026-09-15 まるちゃん指示で、開発者用の「リンクを編集」「今すぐ反映」ボタンは削除した。
 
 // ★2026-08-12（まるちゃん）：各種LINKの入口を「URLリンク／画像リンク」の2択にした。
 //   URLリンク＝今まで通りの案内リンク集（ズコLINKタブ）。画像リンク＝イーライト後などの
@@ -9111,8 +9109,15 @@ var LK_IMG_SHEET_URL_ = 'https://docs.google.com/spreadsheets/d/16ta_ciEX_uPUxfy
 //   見た目はスーパーズコのまま。d=links.json、imgs=images.json。
 function renderLinksPage_(d, base, staff, dev) {
   var topics = (d && d.topics) || [];
+  // ★2026-09-15（まるちゃん）：画像側と同じ2段にした。まず案内名のボタンだけ並べ、押すと次の画面で
+  //   「言語を選ぶとURLがコピーされます」＋言語ボタンを出す。各案内の中身は最初から描いて隠しておく。
   var list = topics.length
-    ? topics.map(lkTopicBlock_).join('')
+    ? '<div id="lktopics"><div class="lkimgcats">' +
+        topics.map(function (t, i) {
+          return '<button type="button" class="lkcatbtn lktopicbtn" data-t="' + i + '">' + esc_(t.name || '') + '</button>';
+        }).join('') +
+      '</div></div>' +
+      topics.map(lkTopicBlock_).join('')
     : '<div class="lknone">まだ案内リンクが登録されていません。</div>';
   var homeHref = (base || '') + '?view=home' + roleSfx_(staff, dev);
 
@@ -9132,12 +9137,6 @@ function renderLinksPage_(d, base, staff, dev) {
   // ── URLリンク（元の各種LINK） ──
   '<div id="lkurlsec" class="lksec" hidden>' +
     '<button type="button" class="lkback2" id="lkUrlBack">← 前に戻る</button>' +
-    '<div class="lkhead2"><span class="lkhint">言語を選ぶとURLがコピーされます</span></div>' +
-    // ★開発者(?dev=1)だけに出る「リンクを編集」「今すぐ反映」（共通ルール16）。ズコLINKタブが開く。
-    (dev ? '<div class="lkdevbar">' +
-      '<a class="lkedit" href="' + LK_SHEET_URL_ + '" target="_blank" rel="noopener">🔧 リンクを編集（追加・削除）</a>' +
-      '<button type="button" class="lkrefresh" id="lkRefreshBtn">🔄 今すぐ反映</button>' +
-    '</div>' : '') +
     '<div id="lklist">' + list + '</div>' +
   '</div>' +
   // ── 画像リンク（イーライト後などの画像案内） ──
@@ -9147,7 +9146,6 @@ function renderLinksPage_(d, base, staff, dev) {
   '</div>' +
 '</div>' +
 LKSCRIPT_ +
-(dev ? lkDevScript_() : '') +
 lkImgScript_(base || '');
 }
 
@@ -9182,11 +9180,16 @@ function lkImgScript_(base) {
     // 画像リンクを押した時：もう手元にあれば即出す。取得中なら「読み込み中」、まだなら取りに行く。
     'function openImg(){showImg();if(CATS){renderCats();return;}' +
       'body.innerHTML="<div class=\\"lkimgmsg\\">読み込み中…</div>";if(!imgLoading)loadImages();}' +
-    'if(goUrl)goUrl.addEventListener("click",function(){showUrl();});' +
+    // ★案内名の一覧⇔1つの案内（言語ボタン）の行き来。curTopic＝いま開いている案内の番号（一覧なら-1）。
+    'var tlist=document.getElementById("lktopics"),tblocks=urlsec?urlsec.querySelectorAll(".lktopic"):[],curTopic=-1;' +
+    'function showTopics(){curTopic=-1;if(tlist)tlist.hidden=false;for(var i=0;i<tblocks.length;i++)tblocks[i].hidden=true;}' +
+    'function openTopic(i){curTopic=i;if(tlist)tlist.hidden=true;for(var j=0;j<tblocks.length;j++)tblocks[j].hidden=(j!==i);window.scrollTo(0,0);}' +
+    '[].slice.call(document.querySelectorAll(".lktopicbtn")).forEach(function(b){b.addEventListener("click",function(){openTopic(+b.getAttribute("data-t"));});});' +
+    'if(goUrl)goUrl.addEventListener("click",function(){showUrl();showTopics();});' +
     'if(goImg)goImg.addEventListener("click",openImg);' +
     'loadImages();' +   // ★各種LINKを開いた瞬間に裏で先読み（押した時にはもう手元にある＝速い・失敗しにくい）
 
-    'if(urlBack)urlBack.addEventListener("click",function(){showHub();});' +
+    'if(urlBack)urlBack.addEventListener("click",function(){if(curTopic>=0){showTopics();}else{showHub();}});' +
     'if(imgBack)imgBack.addEventListener("click",function(){' +
       'if(level==="image"){renderItems(curCat);}else if(level==="items"){if(curCat&&curCat.group){renderGroup(curCat.group);}else{renderCats();}}' +
       'else if(level==="group"){renderCats();}else{showHub();}' +
@@ -9237,46 +9240,12 @@ function lkImgScript_(base) {
   '})();</scr' + 'ipt>';
 }
 
-// ★開発者だけの「今すぐ反映」ボタンの中身（2026-08-06）。押すと事務所PCへ命令(op=links_refresh)を送り、
-//   Googleシートを読み直して各種LINKを最新にする。処理中・成功・失敗の見せ方は他の書き込みボタンと同じ
-//   共通の全画面表示(szOvShow_/szBusyHtml_/szDoneHtml_)・小窓(szPopup_)にそろえる（共通ルール）。
-function lkDevScript_() {
-  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
-  var KEY = 'kx7Q2p9mVt4Zr8';
-  return '<script>(function(){' +
-    'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
-    'var DEV="";try{DEV=localStorage.getItem("sz_device")||"";}catch(e){}' +
-    'function jsonp(params,onR){var cb="__lk"+Date.now()+Math.floor(Math.random()*1000);' +
-      'window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
-      'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
-      'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();' +
-      'sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
-    'function poll(id,n){n=n||0;if(n>40){szOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
-      'jsonp({action:"status",key:KEY,id:id},function(r){' +
-        'if(!r||!r.ok){szOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}' +
-        'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id,n+1);},700);return;}' +
-        'if(r.status!=="done"){szOvHide_();szPopup_((r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}' +
-        'szOvShow_(szDoneHtml_("最新のリンクに反映しました","更新する"),"#16a34a");' +
-        'var b=document.getElementById("szDoneBack");if(b){b.addEventListener("click",function(){location.reload();});}' +
-      '});}' +
-    'var btn=document.getElementById("lkRefreshBtn");' +
-    'if(btn){btn.addEventListener("click",function(){' +
-      'szOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>' +
-        '<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">最新のリンクを反映しています</div>' +
-        '<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">お店の一覧表を読み直しています。少しお待ちください。</div>","#2C7A99");' +
-      'jsonp({action:"submit",key:KEY,op:"links_refresh",who:"",role:"",device:DEV,fields:JSON.stringify({})},function(r){' +
-        'if(!r||!r.ok||!r.id){szOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
-        'poll(r.id,0);' +
-      '});' +
-    '});}' +
-  '})();</scr' + 'ipt>';
-}
-
 // 案内1件＝白い見出し（案内名）＋その下に言語ボタンを横並び（押すとURLをコピー）。
 function lkTopicBlock_(topic) {
   var btns = (topic.links || []).map(lkLinkBtn_).join('');
-  return '<div class="lktopic">' +
+  return '<div class="lktopic" hidden>' +
     '<div class="lktitle">' + esc_(topic.name || '') + '</div>' +
+    '<div class="lkhead2"><span class="lkhint">言語を選ぶとURLがコピーされます</span></div>' +
     '<div class="lklangbtns">' + btns + '</div>' +
   '</div>';
 }
@@ -9358,14 +9327,6 @@ var LKCSS_ =
 '  .lkhead{ display:flex; align-items:baseline; flex-wrap:wrap; gap:12px; margin-bottom:14px; }' +
 '  .lkwrap h1{ font-size:24px; margin:2px 0; font-weight:800; }' +
 '  .lkhint{ color:#ffb3d9; font-size:16px; font-weight:800; }' +
-// ★開発者だけに出る操作ボタン（編集＝緑・今すぐ反映＝青緑）。目立つ固定色（テーマ変数に頼らない）。
-'  .lkdevbar{ display:flex; flex-wrap:wrap; gap:10px; margin:0 0 20px; }' +
-'  .lkedit,.lkrefresh{ flex:1 1 160px; text-align:center; font-size:18px; font-weight:800; color:#fff;' +
-'    text-decoration:none; border-radius:14px; padding:12px 14px; box-shadow:0 4px 14px rgba(0,0,0,.18);' +
-'    font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none; }' +
-'  .lkedit{ background:#16a34a; border:1px solid #15803d; }' +
-'  .lkrefresh{ background:#2C7A99; border:1px solid #256781; }' +
-'  .lkedit:active,.lkrefresh:active{ transform:translateY(2px); }' +
 // 案内1件のまとまり＝白い見出し＋言語ボタン（1画面に並ぶので間隔をあけて区切る）。
 '  .lktopic{ margin-bottom:28px; }' +
 '  .lkcell{ display:flex; flex-direction:column; gap:8px; flex:1 1 140px; min-width:140px; }' +
