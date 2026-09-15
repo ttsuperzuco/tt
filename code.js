@@ -9805,9 +9805,21 @@ function ttviewStart_(exec, base, staff, dev) {
       (e.n ? '<pre class="tvmemo">' + esc(e.n) + '</pre>' : '<div class="tvnomemo">予約メモはありません</div>') + '</div>';
     /* くり返しの予定は、メモを直すと全部の回が変わるので、ここからは直させない */
     if (!e.r) h += '<button class="tvedit" id="tvedit">✏️ 予約メモを直す</button>';
-    h += '<div class="tvmeta">' +
-      (e.cr ? '作った日：' + esc(msText(e.cr)) + (e.au ? '　' + esc(e.au) : '') + '<br>' : (e.au ? '作った人：' + esc(e.au) + '<br>' : '')) +
-      (e.up ? '直した日：' + esc(msText(e.up)) : '') + '</div>';
+    /* ★作った・直した人の履歴（2026-09-15 まるちゃん「直した人を並べる」）。
+       タイムツリーの予約ごとの履歴を事務所パソコンが貯めた物（h＝[[1作った/2直した, 名前, 時刻], ...]）。
+       ズコで直した回は押した人の名前、自動の仕組みで直した回は Ryu。履歴がまだ無い予約は今までどおり。 */
+    if (e.h && e.h.length) {
+      h += '<div class="tvmeta">';
+      for (var hi = 0; hi < e.h.length; hi++) {
+        var a = e.h[hi];
+        h += (a[0] === 1 ? '作った日：' : '直した日：') + esc(msText(a[2])) + (a[1] ? '　' + esc(a[1]) : '') + '<br>';
+      }
+      h += '</div>';
+    } else {
+      h += '<div class="tvmeta">' +
+        (e.cr ? '作った日：' + esc(msText(e.cr)) + (e.au ? '　' + esc(e.au) : '') + '<br>' : (e.au ? '作った人：' + esc(e.au) + '<br>' : '')) +
+        (e.up ? '直した日：' + esc(msText(e.up)) : '') + '</div>';
+    }
     if (e.tt) h += '<a class="tvopen" href="' + esc(openHref(e)) + '" target="_blank" rel="noopener">実際のタイムツリーでこの予約メモを開く</a>';
     body.innerHTML = h;
     var eb = document.getElementById('tvedit');
@@ -9875,6 +9887,7 @@ function ttviewStart_(exec, base, staff, dev) {
       /* 保存できた＝この画面で持っているメモも新しくする（写しに戻ってくるのは約15秒後） */
       st.ev.n = text;
       st.ev.up = Date.now();
+      if (st.ev.h) st.ev.h.push([2, (PERSON_LABEL_[window.__SZ_WHO_] || 'Ryu'), Date.now()]);
       szOvShow_(szDoneHtml_('予約メモを保存しました', '戻る'), '#16a34a');
       var bb = document.getElementById('szDoneBack');
       if (bb) bb.onclick = function () { szOvHide_(); history.back(); };
