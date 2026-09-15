@@ -9453,7 +9453,9 @@ function renderTimeTreePage_(base, staff, dev) {
       'box-shadow:0 2px 6px rgba(0,0,0,.12);font:inherit;}' +
     '.tvday .dn{font-size:18px;font-weight:900;line-height:1;}' +
     '.tvday.sat .dn{color:#1d6fb8;}.tvday.sun .dn{color:#c0392b;}' +
-    '.tvday.today{outline:3px solid #fb8c44;outline-offset:-3px;}' +
+    '.tvday.today{background:#fb8c44;box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.25);}' +
+    '.tvday.today .dn,.tvday.today .cnt{color:#fff;}' +
+    '.tvday.today .tvdots i{box-shadow:0 0 0 1.5px #fff;}' +
     '.tvday.blank{visibility:hidden;box-shadow:none;}' +
     '.tvday .cnt{font-size:12px;font-weight:800;color:#475569;line-height:1;}' +
     '.tvdots{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:100%;}' +
@@ -9722,8 +9724,7 @@ function ttviewStart_(exec, base, staff, dev) {
       '</div>';
     if (e.n) h += '<div class="tvcard"><span class="bar" style="background:' + esc(e.col) + '"></span><pre class="tvmemo">' + esc(e.n) + '</pre></div>';
     h += '<div class="tvmeta">' +
-      (e.au ? '作った人：' + esc(e.au) + '<br>' : '') +
-      (e.cr ? '作った日：' + esc(msText(e.cr)) + '<br>' : '') +
+      (e.cr ? '作った日：' + esc(msText(e.cr)) + (e.au ? '　' + esc(e.au) : '') + '<br>' : (e.au ? '作った人：' + esc(e.au) + '<br>' : '')) +
       (e.up ? '直した日：' + esc(msText(e.up)) : '') + '</div>';
     if (e.tt) h += '<a class="tvopen" href="' + esc(openHref(e)) + '" target="_blank" rel="noopener">タイムツリーで開く</a>';
     body.innerHTML = h;
