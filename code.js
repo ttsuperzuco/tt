@@ -9260,12 +9260,17 @@ function lkTopicBlock_(topic) {
 // ★2026-08-18：1つの枠に案内が2つ（URL2本）入る運用になったのに、プレビューが最初の1本しか
 //   開けず「画像しか出ない」と指摘を受けた。枠の中のURLを全部拾い、1本ごとにプレビューを出す。
 //   2本以上ある時だけ「プレビュー①②…」と番号を付ける（順番＝枠の中に出てくる順）。
+// ★2026-09-16まるちゃん：URLだけの枠は今まで通りプレビューでURLを開く。文章も入っている枠は
+//   プレビュー1つにして、押すと中身の全文を小窓で見せる（文の中のURLはそのまま押して開ける）。
 function lkLinkBtn_(lk) {
   var raw = String(lk.url == null ? '' : lk.url);
   var data = esc_(raw).replace(/\r\n|\r|\n/g, '&#10;');
   var urls = raw.match(/https?:\/\/[^\s"'<>]+/g) || [];
+  var hasText = raw.replace(/https?:\/\/[^\s"'<>]+/g, '').replace(/\s+/g, '') !== '';
   var marks = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
-  var prevs = urls.map(function (u, i) {
+  var prevs = hasText
+    ? '<button type="button" class="lkprev lkprevfull" data-full="' + data + '">プレビュー</button>'
+    : urls.map(function (u, i) {
     var label = urls.length > 1 ? 'プレビュー' + (marks[i] || (i + 1)) : 'プレビュー';
     return '<a class="lkprev" href="' + esc_(u) + '" target="_blank" rel="noopener">' + label + '</a>';
   }).join('');
@@ -9306,6 +9311,15 @@ var LKSCRIPT_ =
 '    });' +
 '  });' +
 '}); ' +
+// ★文章入りの枠のプレビュー＝全文を共通の小窓で見せる（左寄せ・読みやすい大きさ・URLは押せる）。
+'function escH_(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }' +
+'[].slice.call(document.querySelectorAll(".lkprevfull")).forEach(function(b){' +
+'  b.addEventListener("click", function(){' +
+'    var t=b.getAttribute("data-full")||"";' +
+'    var h=escH_(t).replace(/https?:\\/\\/[^\\s"<>]+/g, function(u){ return "<a href=\\""+u+"\\" target=\\"_blank\\" rel=\\"noopener\\" style=\\"color:#7dd3fc;word-break:break-all;\\">"+u+"</a>"; });' +
+'    szPopup_("<div style=\\"text-align:left;font-size:1.05rem;font-weight:600;line-height:1.75;\\">"+h+"</div>", {isHtml:true, icon:"", yesLabel:"閉じる"});' +
+'  });' +
+'}); ' +
 '})();</scr' + 'ipt>';
 
 // ★見やすさ最優先（2026-07-18ユーザー指摘で全面拡大）：一覧ボタン・言語ボタンとも大きな文字・
@@ -9333,6 +9347,7 @@ var LKCSS_ =
 '  .lkprev{ display:block; text-align:center; font-size:15px; font-weight:800; color:#1d4ed8;' +
 '    text-decoration:none; background:#ffffff; border:1px solid #d7dee8; border-radius:12px;' +
 '    padding:6px 10px; }' +
+'  button.lkprev{ appearance:none; -webkit-appearance:none; font-family:inherit; width:100%; cursor:pointer; }' +
 '  .lkprev:active{ transform:translateY(1px); }' +
 '  .lktitle{ font-size:28px; font-weight:800; margin-bottom:4px; line-height:1.3; color:#fff; }' +
 '  .lklangbtns{ display:flex; flex-direction:row; flex-wrap:wrap; gap:14px; margin-top:10px; }' +
