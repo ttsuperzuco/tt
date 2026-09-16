@@ -1232,10 +1232,11 @@ function szPopup_(msg, opts) {
   var icon = ('icon' in opts) ? opts.icon : '⚠️';
   var yesLabel = opts.yesLabel || 'OK';
   mask.innerHTML =
-    "<div style='background:#12303c;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:26px 24px;max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 14px 44px rgba(0,0,0,.45);text-align:center;'>" +
-      (icon ? "<div style='font-size:56px;line-height:1;margin-bottom:14px;'>" + icon + "</div>" : "") +
-      "<div class='szpopmsg' style='color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:22px;'></div>" +
-      "<div style='display:flex;gap:12px;'>" +
+    "<div style='background:#12303c;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:26px 24px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-sizing:border-box;box-shadow:0 14px 44px rgba(0,0,0,.45);text-align:center;'>" +
+      // ★2026-09-16まるちゃん：長い文でも「OK／閉じる」は下に止めておく（文の部分だけが動く）。
+      (icon ? "<div style='flex:0 0 auto;font-size:56px;line-height:1;margin-bottom:14px;'>" + icon + "</div>" : "") +
+      "<div class='szpopmsg' style='flex:1 1 auto;min-height:0;overflow:auto;color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:22px;'></div>" +
+      "<div style='flex:0 0 auto;display:flex;gap:12px;'>" +
         (opts.cancel ? "<button type='button' class='szpopno' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#eaf3f7;cursor:pointer;'>" + (opts.noLabel || 'キャンセル') + "</button>" : "") +
         "<button type='button' class='szpopyes' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:0;background:#2C7A99;color:#fff;cursor:pointer;'>" + yesLabel + "</button>" +
       "</div>" +
