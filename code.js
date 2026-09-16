@@ -9242,10 +9242,16 @@ function lkImgScript_(base) {
 
 // 案内1件＝白い見出し（案内名）＋その下に言語ボタンを横並び（押すとURLをコピー）。
 function lkTopicBlock_(topic) {
-  var btns = (topic.links || []).map(lkLinkBtn_).join('');
+  var links = topic.links || [];
+  var btns = links.map(lkLinkBtn_).join('');
+  // ★2026-09-16まるちゃん：中身がURLだけの案内と、文章＋URLの案内とで説明を変える。
+  var nText = links.filter(function (l) { return lkHasText_(l.url); }).length;
+  var hint = nText === 0 ? '言語を選ぶとURLがコピーされます'
+    : nText === links.length ? '言語を選ぶと文章とURLがまとめてコピーされます'
+    : '言語を選ぶとURL（または文章とURL）がコピーされます';
   return '<div class="lktopic" hidden>' +
     '<div class="lktitle">' + esc_(topic.name || '') + '</div>' +
-    '<div class="lkhead2"><span class="lkhint">言語を選ぶとURLがコピーされます</span></div>' +
+    '<div class="lkhead2"><span class="lkhint">' + hint + '</span></div>' +
     '<div class="lklangbtns">' + btns + '</div>' +
   '</div>';
 }
@@ -9262,11 +9268,15 @@ function lkTopicBlock_(topic) {
 //   2本以上ある時だけ「プレビュー①②…」と番号を付ける（順番＝枠の中に出てくる順）。
 // ★2026-09-16まるちゃん：URLだけの枠は今まで通りプレビューでURLを開く。文章も入っている枠は
 //   プレビュー1つにして、押すと中身の全文を小窓で見せる（文の中のURLはそのまま押して開ける）。
+// 枠の中身にURL以外の文章があるか（URLと空白を取り除いて何か残るか）。
+function lkHasText_(v) {
+  return String(v == null ? '' : v).replace(/https?:\/\/[^\s"'<>]+/g, '').replace(/\s+/g, '') !== '';
+}
 function lkLinkBtn_(lk) {
   var raw = String(lk.url == null ? '' : lk.url);
   var data = esc_(raw).replace(/\r\n|\r|\n/g, '&#10;');
   var urls = raw.match(/https?:\/\/[^\s"'<>]+/g) || [];
-  var hasText = raw.replace(/https?:\/\/[^\s"'<>]+/g, '').replace(/\s+/g, '') !== '';
+  var hasText = lkHasText_(raw);
   var marks = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨'];
   var prevs = hasText
     ? '<button type="button" class="lkprev lkprevfull" data-full="' + data + '">プレビュー</button>'
