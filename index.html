@@ -1130,7 +1130,7 @@
       else if (t.getAttribute('data-szhid')) { t.removeAttribute('data-szhid'); t.style.display = ''; }
     });
   }
-  new MutationObserver(function () { if (!queued) { queued = true; requestAnimationFrame(sync); } })
+  new MutationObserver(function () { if (!queued) { queued = true; setTimeout(sync, 0); } })
     .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden', 'class'] });
 })();
 </script>
