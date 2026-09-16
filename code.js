@@ -9111,14 +9111,19 @@ function renderLinksPage_(d, base, staff, dev) {
   var topics = (d && d.topics) || [];
   // ★2026-09-15（まるちゃん）：画像側と同じ2段にした。まず案内名のボタンだけ並べ、押すと次の画面で
   //   「言語を選ぶとURLがコピーされます」＋言語ボタンを出す。各案内の中身は最初から描いて隠しておく。
-  var list = topics.length
-    ? '<div id="lktopics"><div class="lkimgcats">' +
+  // ★2026-09-16（まるちゃん）：入口を「キャンペーン／施術前＆後の画像／商品」の3つにした。
+  //   案内の種類は表のD列（「商品」と書いた案内だけ商品・空はキャンペーン）。一覧は押した種類の分だけ出す。
+  var list = '<div id="lktopics">' +
+      '<div class="lkimgtitle" id="lktopicshead"></div>' +
+      '<div class="lkimgcats">' +
         topics.map(function (t, i) {
-          return '<button type="button" class="lkcatbtn lktopicbtn" data-t="' + i + '">' + esc_(t.name || '') + '</button>';
+          var k = t.kind === '商品' ? '商品' : 'キャンペーン';
+          return '<button type="button" class="lkcatbtn lktopicbtn" data-t="' + i + '" data-k="' + k + '">' + esc_(t.name || '') + '</button>';
         }).join('') +
-      '</div></div>' +
-      topics.map(lkTopicBlock_).join('')
-    : '<div class="lknone">まだ案内リンクが登録されていません。</div>';
+      '</div>' +
+      '<div class="lknone" id="lktopicsnone" hidden>まだ案内リンクが登録されていません。</div>' +
+    '</div>' +
+    topics.map(lkTopicBlock_).join('');
   var homeHref = (base || '') + '?view=home' + roleSfx_(staff, dev);
 
   return '' +
@@ -9131,8 +9136,9 @@ function renderLinksPage_(d, base, staff, dev) {
   '<div class="lkhead"><h1>🔗 各種LINK</h1></div>' +
   // 入口＝URLリンク／画像リンクの2択。押すと下の各セクションに切り替わる（同じページ内・再取得なし）。
   '<div id="lkhub" class="lkhub">' +
-    '<button type="button" class="lkhubbtn" id="lkGoUrl"><span class="lkhubico">🛍️</span><span>キャンペーン＆商品</span></button>' +
+    '<button type="button" class="lkhubbtn lkgotopics" data-k="キャンペーン"><span class="lkhubico">🎁</span><span>キャンペーン</span></button>' +
     '<button type="button" class="lkhubbtn" id="lkGoImg"><span class="lkhubico">🖼️</span><span>施術前＆後の画像</span></button>' +
+    '<button type="button" class="lkhubbtn lkgotopics" data-k="商品"><span class="lkhubico">🛍️</span><span>商品</span></button>' +
   '</div>' +
   // ── URLリンク（元の各種LINK） ──
   '<div id="lkurlsec" class="lksec" hidden>' +
@@ -9181,11 +9187,15 @@ function lkImgScript_(base) {
     'function openImg(){showImg();if(CATS){renderCats();return;}' +
       'body.innerHTML="<div class=\\"lkimgmsg\\">読み込み中…</div>";if(!imgLoading)loadImages();}' +
     // ★案内名の一覧⇔1つの案内（言語ボタン）の行き来。curTopic＝いま開いている案内の番号（一覧なら-1）。
-    'var tlist=document.getElementById("lktopics"),tblocks=urlsec?urlsec.querySelectorAll(".lktopic"):[],curTopic=-1;' +
-    'function showTopics(){curTopic=-1;if(tlist)tlist.hidden=false;for(var i=0;i<tblocks.length;i++)tblocks[i].hidden=true;}' +
+    'var tlist=document.getElementById("lktopics"),tblocks=urlsec?urlsec.querySelectorAll(".lktopic"):[],curTopic=-1,curKind="キャンペーン";' +
+    'var tbtns=[].slice.call(document.querySelectorAll(".lktopicbtn")),thead=document.getElementById("lktopicshead"),tnone=document.getElementById("lktopicsnone");' +
+    // 一覧＝押した種類（キャンペーン／商品）の案内だけ出す。
+    'function showTopics(k){if(k)curKind=k;curTopic=-1;if(tlist)tlist.hidden=false;for(var i=0;i<tblocks.length;i++)tblocks[i].hidden=true;' +
+      'var n=0;tbtns.forEach(function(b){var on=b.getAttribute("data-k")===curKind;b.hidden=!on;if(on)n++;});' +
+      'if(thead)thead.textContent=curKind;if(tnone)tnone.hidden=n>0;window.scrollTo(0,0);}' +
     'function openTopic(i){curTopic=i;if(tlist)tlist.hidden=true;for(var j=0;j<tblocks.length;j++)tblocks[j].hidden=(j!==i);window.scrollTo(0,0);}' +
-    '[].slice.call(document.querySelectorAll(".lktopicbtn")).forEach(function(b){b.addEventListener("click",function(){openTopic(+b.getAttribute("data-t"));});});' +
-    'if(goUrl)goUrl.addEventListener("click",function(){showUrl();showTopics();});' +
+    'tbtns.forEach(function(b){b.addEventListener("click",function(){openTopic(+b.getAttribute("data-t"));});});' +
+    '[].slice.call(document.querySelectorAll(".lkgotopics")).forEach(function(b){b.addEventListener("click",function(){showUrl();showTopics(b.getAttribute("data-k"));});});' +
     'if(goImg)goImg.addEventListener("click",openImg);' +
     'loadImages();' +   // ★各種LINKを開いた瞬間に裏で先読み（押した時にはもう手元にある＝速い・失敗しにくい）
 
@@ -9379,9 +9389,11 @@ var LKCSS_ =
 
 // 画像リンク（URLリンク／画像リンクの入口＋画像の分類・ラベル・画像の見た目）。スーパーズコの見た目に合わせる。
 var LKIMGCSS_ =
-'  .lkhub{ display:flex; gap:14px; flex-wrap:wrap; margin:6px 0 20px; }' +
+// ★隠す印(hidden)が見た目の指定(display)に負けて、入口のボタンが次の画面にも出ていた（2026-09-16）。
+'  .lkwrap [hidden]{ display:none !important; }' +
+'  .lkhub{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:6px 0 20px; }' +
 '  .lkhubbtn{ appearance:none; -webkit-appearance:none; font-family:inherit; cursor:pointer;' +
-'    flex:1 1 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;' +
+'    min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center;' +
 '    padding:26px 14px; font-size:24px; font-weight:800; color:#fff; background:#2C7A99;' +
 '    border:1px solid #256781; border-radius:18px; box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkhubbtn:active{ transform:translateY(2px); }' +
