@@ -156,6 +156,9 @@
   //   ★実測：どのデータも取得はGoogleの処理時間だけで常に2〜2.9秒かかる（中身を軽くしても
   //   縮まらない）。だから「押してから取りに行く」のをやめ、前の画面（主にホーム）に
   //   居る間に裏で済ませておく方式に統一した（被り検出で先に実装・検証済みの型を横展開）。
+  // ★2026-09-16まるちゃん：パソコンの窓（事務所PC）は同じデータを手元に持っているので、グーグルを待たずに
+  //   渡してもらう入口。画面の準備ができる前に届いた分はここに預かり、準備ができた所で使う（下の showPrefetchable_）。
+  window.__szPushLocal_ = function (v, p) { window.__szLocalPending_ = { v: v, p: p }; };
   var VIEWS = window.__SZ_VIEWS_ = {
     conflict:   'events.json',
     lt:         'lt_match.json',
@@ -426,10 +429,23 @@
   function showPrefetchable_(view, onPayload) {
     var entry = window.__PF_ && window.__PF_[view];
 
+    // ★2026-09-16：パソコンの窓が手元のデータを渡してくれたら、それを出して、あとから来るグーグルの返事は使わない
+    //   （手元の方が新しい・グーグルの失敗でエラー画面に変わらない）。スマホは渡されないので今までどおり。
+    var gotLocal = false, drawRaw = onPayload;
+    onPayload = function (p) { if (gotLocal) return; drawRaw(p); };
+    window.__szPushLocal_ = function (v, p) {
+      if (v !== view || gotLocal || !p || p.error) return;
+      gotLocal = true; drawRaw(p);
+    };
+    var pend = window.__szLocalPending_; window.__szLocalPending_ = null;
+    if (pend) window.__szPushLocal_(pend.v, pend.p);
+
     // ★2026-09-14：グーグル窓口が混むと返事が30〜50秒来ず、待ち画面のまま止まって見えた（まるちゃん指摘）。
-    //   → 1回あたり10秒で見切って頼み直す（3回まで）。遅れて届いた返事も使う（先に届いた1つだけ描く）。
-    //   3回とも駄目な時だけ、今までどおりエラーを出す（その後に遅れて届いた返事があれば、それで描き直す）。
-    var TRY_MS = 10000, TRIES = 3;
+    //   → 1回あたり見切って頼み直す。遅れて届いた返事も使う（先に届いた1つだけ描く）。
+    //   全部駄目な時だけ、今までどおりエラーを出す（その後に遅れて届いた返事があれば、それで描き直す）。
+    // ★2026-09-16：見切りを10秒→4秒に（ふつうの返事は2.5〜3.6秒。止まった時に長く待たせない）。
+    //   回数は3→5にして、あきらめるまでの長さ（約20秒）は今までとほぼ同じにした。
+    var TRY_MS = 4000, TRIES = 5;
     function runFresh_() {
       var action = (window.__SZ_VIEWS_ || {})[view];
       var got = false, gaveUp = false, n = 0, timer = null, lastErr = null;
