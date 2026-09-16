@@ -138,6 +138,16 @@
   var EXEC = "https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";
   var view = (new URLSearchParams(location.search)).get('view') || 'home';
 
+  // ★2026-09-16：事務所パソコンの窓（中身はこのページ）は、ページの読み込みが「全部終わってから」でないと
+  //   手元のデータを渡してこられない。グーグルへの問い合わせを読み込み中に出すと、返事が来るまで（3〜11秒）
+  //   読み込みが終わらず、手元のデータも渡せなかった。→ パソコンの窓の中だけ、問い合わせを読み込み後に出す。
+  //   （見分け＝パソコンの窓にだけある印。スマホ・普通のブラウザは今までどおりすぐ出す）
+  var PC_WINDOW = !!(window.chrome && window.chrome.webview);
+  function sendLater_(el) {
+    if (!PC_WINDOW || document.readyState === 'complete') { document.head.appendChild(el); return; }
+    window.addEventListener('load', function () { setTimeout(function () { document.head.appendChild(el); }, 0); });
+  }
+
   // tilesettings（権限・名前選択に必要＝全画面で使う）
   window.__tsResult = undefined; window.__tsWaiter = null;
   window.__ttTileSettingsPre = function (payload) {
@@ -148,7 +158,7 @@
   var s0 = document.createElement('script');
   s0.src = EXEC + '?action=data&name=tile_settings.json&callback=__ttTileSettingsPre&cb=' + Date.now();
   s0.onerror = function () { window.__ttTileSettingsPre({}); };
-  document.head.appendChild(s0);
+  sendLater_(s0);
 
   // ★★2026-07-17：全ボタン共通「押してから表示までを速くする」仕組み（1本化）。
   //   新しいボタンを足す時は、下の VIEWS 表に1行足すだけで、①このページ自身の先読み
@@ -195,7 +205,7 @@
     var sp = document.createElement('script');
     sp.src = EXEC + '?action=data&name=' + action + '&callback=' + cb + '&cb=' + Date.now();
     sp.onerror = function () { window[cb]({ error: 'net' }); };
-    document.head.appendChild(sp);
+    sendLater_(sp);
   }
 })();
 </script>
