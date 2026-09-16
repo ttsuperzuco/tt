@@ -5790,7 +5790,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'if(TESTWHO)t+=nm+"のスマホとして動かしています";' +
       'var el=$("sgtest");el.textContent=t;el.style.display="block";}' +
     /* 今日の予約を受け取る（先読みがあればそれ、無ければ自分で取りに行く） */
+    /* ★2026-09-16まるちゃん「今日の予約を読む時間を短縮したい」：他の画面と同じ共通の取り方を使う
+       （パソコンは手元のデータを即受け取り／グーグルが止まったら4秒で頼み直す）。共通が無い古い入口の時だけ下の自前の取り方。 */
     'function need(cb){' +
+      'if(typeof window.__szShowPrefetchable_==="function"){window.__szShowPrefetchable_("yoyaku_sejutsugo",cb);return;}' +
       'var e=window.__PF_&&window.__PF_["yoyaku_sejutsugo"];' +
       'if(e){' +
         'if(e.cached){cb(e.cached);}' +

@@ -223,7 +223,7 @@
 <script src="sg_rules.js?v=9a96c6cc35"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
 <script src="bigsend.js?v=0371a3ad72"></script>
-<script src="code.js?v=a503221fc5"></script>
+<script src="code.js?v=2cfa4b8ce4"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -436,6 +436,8 @@
   //   ページ冒頭の早期スクリプト（window.__PF_・window.__SZ_VIEWS_）と対になっている。
   //   新しいボタンを足す時は、早期スクリプトのVIEWS表に1行足し、この関数でshowXxx()を
   //   3行で書けば、先読み・裏取り・ちらつき防止（同じ中身なら描き直さない）が全部乗る。
+  // ★2026-09-16：画面の中の埋め込みの仕掛け（施術後の予約など）からも同じ取り方を使えるようにする。
+  window.__szShowPrefetchable_ = showPrefetchable_;
   function showPrefetchable_(view, onPayload) {
     var entry = window.__PF_ && window.__PF_[view];
 
