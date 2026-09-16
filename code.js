@@ -3445,7 +3445,7 @@ function igdmDoDelete() {
 }
 function igdmDoDeleteGo_(t) {
   var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
-  szOvShow_(szBusyHtml_('削除しています'), '#2C7A99');   // 部屋かぶりと同じ全画面表示（共通ルール）
+  szOvShow_(szBusyHtml_('削除しています', 'インスタでの削除が終わったら自動で切り替わりますので、しばらくお待ちください。'), '#2C7A99');   // 部屋かぶりと同じ全画面表示（共通ルール）
   if (window.igdmDelete) window.igdmDelete(acc, t.title, t.last_text, t.occ || 0, function (m) {
     var ms = '' + (m || '');
     if (ms.indexOf('エラー') >= 0 || ms.indexOf('失敗') >= 0 || ms.indexOf('できません') >= 0 || ms.indexOf('つながり') >= 0 || ms.indexOf('時間がかかって') >= 0) {
@@ -4151,7 +4151,7 @@ function renderTimedSendPage_(base, staff, dev) {
   'if(mode==="person"){var codes=(codesEl.value||"").split(/[\\s,\\u3001\\uFF0C]+/).filter(Boolean);if(!codes.length){status("番号を入れてください（例 M123）。",true);return;}target={type:"person",codes:codes};}' +
   'else if(mode==="group"){var val=groupEl.value;if(!val){status("グループを選んでください。",true);return;}var g=GROUPS[val];target={type:"tag",tag_id:val,tag_name:g?g.name:""};}' +
   'else if(mode==="all"){target={type:"all"};}else{target={type:"owner"};}' +
-  'goEl.disabled=true;szOvShow_(szBusyHtml_("送信を予約中です"),"#2C7A99");' +
+  'goEl.disabled=true;szOvShow_(szBusyHtml_("送信を予約中です","送信の予約が終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
   'var names=[],ups=imgs.map(function(o){var n=rnd();names.push(n);return pushImage(n,o);});' +
   'Promise.all(ups).then(function(){' +
   'jsonp({action:"submit",key:KEY,op:"timed_line_send",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({message:msg,send_at:send_at,target:target,images:names})},' +
@@ -5310,7 +5310,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★押したボタンを見る（今すぐ=bcnow／予約=bcplace）。前は予約用だけを探して、
   //   今すぐを押した時に見つからず止まっていた（2026-09-08 実機で発生）。
   'var go=document.getElementById(now?"bcnow":"bcplace");if(go)go.disabled=true;' +
-  'szOvShow_(szBusyHtml_(now?"配信を送っています":"配信を予約しています"),"#2C7A99");' +
+  'szOvShow_(szBusyHtml_(now?"配信を送っています":"配信を予約しています","LINEへの登録が終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
   'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
   'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
   'delete p.b64;});});' +
@@ -6957,7 +6957,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){szPopup_("時刻を4ケタで入れてください（例 1230）");return;}if(ISCHANGE){startPickFlow();}else{startExistingReserve();}});' +
     // ── 既存の予約（新規登録＝前回コピー）：材料を取り込み→内容を選んで→登録 ──
     'var rvctx=null,rvitems=[],rvsel={staff:"",room:"",dur:""};' +
-    'function startExistingReserve(){var nd=picked;var ymd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var tm=tdig.slice(0,2)+":"+tdig.slice(2);exOvShow_(szBusyHtml_("前回の予約を読み込み中です"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_build_ctx",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp(),date:ymd,time:tm})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollBuildCtx(r.id,ymd,tm);});}' +
+    'function startExistingReserve(){var nd=picked;var ymd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var tm=tdig.slice(0,2)+":"+tdig.slice(2);exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_build_ctx",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp(),date:ymd,time:tm})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollBuildCtx(r.id,ymd,tm);});}' +
     'function pollBuildCtx(id,ymd,tm){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollBuildCtx(id,ymd,tm);},700);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}var p={};try{p=JSON.parse(r.result||"{}");}catch(e){}if(!p.ctx_name){exOvHide_();szPopup_("材料を受け取れませんでした。もう一度お試しください。");return;}jsonp({action:"data",name:p.ctx_name},function(ctx){exOvHide_();if(!ctx||!ctx.found){szPopup_("「"+disp()+"」の前回の予約が見つかりません。");return;}rvctx=ctx;rvctx._ymd=ymd;rvctx._tm=tm;showResvEdit();});});}' +
     'var rvMarkOv={},rvEyeOv=null,rvDochi=false,rvNewItems=[],rvTitleOv=null,rvMemoOv=null;' +
     'var _rvcat="",_rvsub="";' +
