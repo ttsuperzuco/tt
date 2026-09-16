@@ -1569,7 +1569,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
 '<style>' + CSS_ + '</style>' +
 '<div class="wrap">' +
   '<div class="bar">' +
-    '<a class="homelink" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a>' +
+    '<a class="homelink" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
     '<div class="fetched">' +
       '<span class="fline"><b>LINE取得</b> ' + esc_(payload.line_fetched_at || '—') + '</span>' +
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
@@ -1707,7 +1707,7 @@ var TILE_DEFS_ = [
 ];
 
 // ★2026-08-02 まるちゃん決定：開発版(?dev=1)とPC版のホームは、まず「管理者用／実務者用／開発者用」の
-//   3つの大ボタンを出し、押すとその仲間だけを見せる（上の「← 一つ前に戻る」で3ボタンに戻る）。普通のスタッフ版・
+//   3つの大ボタンを出し、押すとその仲間だけを見せる（上の「← 戻る」で3ボタンに戻る）。普通のスタッフ版・
 //   社長版は今まで通り一覧のまま。どのボタンがどの部屋か（ここに無いidは実務者用）＝PC版 super_pc.py の
 //   GROUP_OF と一致させる（片方直したら必ず両方）。
 // ★2026-08-19 まるちゃん決定：売上転記(uriage)は実務者用へ移した。
@@ -1731,7 +1731,7 @@ function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
 var ROLEMENU_SCRIPT_ =
 '<script>(function(){' +
 'var menu=document.getElementById("rolemenu");if(!menu)return;' +
-// ★2026-09-16：開いている部屋を覚えておく＝ボタンの先から「← 一つ前に戻る」で戻った時、3つの大ボタンでなくその部屋に戻る。
+// ★2026-09-16：開いている部屋を覚えておく＝ボタンの先から「← 戻る」で戻った時、3つの大ボタンでなくその部屋に戻る。
 'function remember(id){try{if(id)sessionStorage.setItem("sz_home_group",id);else sessionStorage.removeItem("sz_home_group");}catch(e){}}' +
 'function showMenu(){remember("");menu.style.display="";var g=document.querySelectorAll(".group");for(var i=0;i<g.length;i++)g[i].style.display="none";window.scrollTo(0,0);}' +
 'function showGroup(id){remember(id);menu.style.display="none";var g=document.querySelectorAll(".group");for(var i=0;i<g.length;i++)g[i].style.display=(g[i].id==="group-"+id)?"":"none";window.scrollTo(0,0);}' +
@@ -1824,7 +1824,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
         '<span class="rcount">' + list.length + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
-        '<div class="backbar"><button type="button" class="backbtn">← 一つ前に戻る</button></div>' +
+        '<div class="backbar"><button type="button" class="backbtn">← 戻る</button></div>' +
         '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
         '<div class="tiles">' + list.map(tileA_).join('') + '</div></div>';
     }
@@ -1987,7 +1987,7 @@ function renderLtPage_(d, base, staff, dev) {
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +
   '<div class="lbar">' +
-    '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a>' +
+    '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
     '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>' +
   '</div>' +
   cards +
@@ -2011,10 +2011,10 @@ function renderUriage_(base, staff, dev) {
 }
 
 // 「前に戻る」共通の土台（★ルール：戻るリンクは全画面この方式に統一＝施術室被り(.homelink)と
-// 同じ「← 一つ前に戻る」の上部バー。新しいviewを足す時もこれを使う。共通\スーパーズコApp_必読.md参照）。
+// 同じ「← 戻る」の上部バー。新しいviewを足す時もこれを使う。共通\スーパーズコApp_必読.md参照）。
 function backBar_(base, staff, dev) {
   return '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +
-    roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a></div>';
+    roleSfx_(staff, dev) + '" target="_top">← 戻る</a></div>';
 }
 
 // 前日お知らせ画面のCSS。カードの中に「日付を選ぶ」＋作るボタン＋知らせの帯、その下に確認画面の枠。
@@ -2288,7 +2288,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjSendPlan(rows){zjRows=rows||[];' +
   'var d=new Date();d.setDate(d.getDate()+0);' +
   'var 既定="";try{var p=(zjRows[0]&&zjRows[0].date)||"";}catch(e){}' +
-  'var b=zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk\\">← 一つ前に戻る</button>"' +
+  'var b=zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk\\">← 戻る</button>"' +
   '+"<h2>📤 確認済 "+zjRows.length+" 人のお知らせの送信を設定する</h2>"' +
   '+"<div id=\\"zjmode\\" class=\\"zjnote\\">読み込んでいます…</div>"' +
   '+"<div class=\\"zjlabel\\">送る日時</div>"' +
@@ -2397,7 +2397,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   '+"「"+ボタン+"」をもう一度押してください。";' +
   '},function(e2){msg.textContent=(sugu?"⛔ 送信が完了したか分かりません。"' +
   ':"⛔ 送信の予約の設定が完了したか分かりません。")' +
-  '+"「← 一つ前に戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてください。'
+  '+"「← 戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてください。'
   + 'この"+zjRows.length+"人が全員、一覧に並んでいれば"' +
   '+(sugu?"送信されています。":"送信の予約が完了しています。")' +
   '+"リストになければ、ここへ戻って「"+ボタン+"」をもう一度押してください。";});}' +
@@ -2411,7 +2411,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'msg.textContent=t;},function(e){setTimeout(tick,3000);});})();}' +
   /* ── 画像を大きく見る ─────────────────────────────── */
   'function zjBigImage(key,lang){' +
-  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk2\\">← 一つ前に戻る</button>"' +
+  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk2\\">← 戻る</button>"' +
   '+"<div id=\\"zjbig\\" class=\\"zjnote\\">読み込んでいます…</div></div>");' +
   'document.getElementById("zjbk2").onclick=zjBoxClose;' +
   'zjAsk("big_image",{key:key,lang:lang||"日"},function(d){' +
@@ -2421,7 +2421,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var el=document.getElementById("zjbig");if(el)el.textContent="⛔ "+e;});}' +
   /* ── その方に付く画像を修正する ─────────────────────── */
   'function zjPersonImg(eid,info){' +
-  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk3\\">← 一つ前に戻る</button>"' +
+  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk3\\">← 戻る</button>"' +
   '+"<h2>🖼 "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
   '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してください。</div>"' +
   '+"<div id=\\"zjpick\\" class=\\"zjpick\\">読み込んでいます…</div>"' +
@@ -2449,7 +2449,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   '},function(e){var el=document.getElementById("zjpick");if(el)el.textContent="⛔ "+e;});}' +
   /* ── 画像送信セッティング ───────────────────────────── */
   'function zjImgSet(){' +
-  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk4\\">← 一つ前に戻る</button>"' +
+  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk4\\">← 戻る</button>"' +
   '+"<h2>📷 画像送信セッティング</h2>"' +
   '+"<div class=\\"zjnote\\">お知らせ文のあとに、この順番で画像を送信します。送信したくない画像は「送る」をオフにしてください。</div>"' +
   '+"<div id=\\"zjcases\\">読み込んでいます…</div>"' +
@@ -2478,7 +2478,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   /* ── 予約送信の設定完了したお知らせ一覧（パソコン版と同じ・日付のタブ＋取り消し） ── */
   'var zjPlanDay="";' +
   'function zjPlans(){' +
-  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk5\\">← 一つ前に戻る</button>"' +
+  'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk5\\">← 戻る</button>"' +
   '+"<h2>📨 予約送信の設定完了したお知らせ一覧</h2>"' +
   '+"<div class=\\"zjnote\\">設定時刻に自動で送信されます。未送信分は取り消せます。</div>"' +
   '+"<div id=\\"zjplmsg\\" class=\\"zjnote\\"></div>"' +
@@ -4430,7 +4430,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★予約の一覧＝どちらのタブか／読んだ一覧／戻せる分があるか
   'var LTAB="wait",LPOSTS=null,LBATCH=0;' +
   // ★対象の画面へ、どの画面から来たか（0＝日本語の入力／1＝自分で中国語／2＝中国語版の確認）
-  //   「← 一つ前に戻る」でここへ戻す（まるちゃん指摘 2026-09-09）
+  //   「← 戻る」でここへ戻す（まるちゃん指摘 2026-09-09）
   'var MBACK=0;' +
   // ★対象ごとに選び直した送り先（空＝もとの決まりのまま）と、選べる送り先の一覧
   'var TAGS=[],TAGLIST=[],TAGBUSY=false;' +
@@ -4867,7 +4867,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★最後のボタンの文＝何種類のどれを作るかを書く
   'function makeBtn(id){var a=sendNames();' +
   'if(!a.length)return \'<div class="bcstatus ng">送る区分がありません。\'+' +
-  '\'「← 一つ前に戻る」で文を入れてください。</div>\';' +
+  '\'「← 戻る」で文を入れてください。</div>\';' +
   'return \'<button type="button" class="bctxt" id="\'+id+\'">以上の内容で、\'+' +
   'a.length+\'種類（\'+esc(a.join("・"))+\'）の予約可能枠画像を生成する</button>\'+' +
   // ★絵を作らずに中身の確認へ進む道（まるちゃん指示 2026-09-09）
@@ -5275,7 +5275,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '(n+"つ入り")+\'</span></div>\';});' +
   'h+=\'</div>\';' +
   'if(!m)h+=\'<div class="bcstatus on">中身を入れた対象がありません。\'+' +
-  '\'左上の「← 一つ前に戻る」から入れてください。</div>\';' +
+  '\'左上の「← 戻る」から入れてください。</div>\';' +
   'else if(LMODE!=="at"){' +
   // ★「今すぐ送信する」は下（上だとすぐ押してしまって危ない・まるちゃん指示 2026-09-09）
   'h+=\'<button type="button" class="bcgo" id="bcplan">送信の予約を設定する</button>\'+' +
@@ -5395,7 +5395,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(rsT)clearTimeout(rsT);rsT=setTimeout(function(){rsT=null;' +
   'fitTx(box.querySelector(".bcotx"));},200);});' +
 
-  // ★「← 一つ前に戻る」だけで、どの画面からも1つ前に戻る（まるちゃん指示 2026-09-09）。
+  // ★「← 戻る」だけで、どの画面からも1つ前に戻る（まるちゃん指示 2026-09-09）。
   //   画面の中に「◀ ○○にもどる」を置かない。入口にいる時だけホームへ（パソコンは窓が閉じる）。
   // ★対象・最終確認から、来た画面（日本語の入力／自分で中国語／中国語版の確認）へ戻す
   'function goBackFromT(){page="m";mode="";MSTEP=MBACK;' +
@@ -5736,7 +5736,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     '</div>';
   var backTop = backBar_(base, staff, dev);          /* 1枚目の戻る＝ホームへ */
   var backList = '<div class="backbar" id="sgbackbar" style="display:none">' +
-    '<a class="backbtn" id="sgback" href="javascript:void(0)">← 一つ前に戻る</a></div>';
+    '<a class="backbtn" id="sgback" href="javascript:void(0)">← 戻る</a></div>';
   var script =
     '<script>(function(){' +
     'var EXEC=' + JSON.stringify(EXEC) + ',WHO=' + JSON.stringify(who || '') + ';' +
@@ -5931,7 +5931,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'if(!rows.length)return;' +
       'var idx=nowIndex();' +
       'if(idx<0||!rows[idx])return;' +
-      /* ★上に残る物＝「← 一つ前に戻る」と「お客様の選択」の2つ。その下にお客様を出す。
+      /* ★上に残る物＝「← 戻る」と「お客様の選択」の2つ。その下にお客様を出す。
          見出しがくっつく高さは、戻るの高さに合わせてその場で決める（字の大きさで変わるため）。 */
       'var bar=$("sgbackbar");var barH=bar?bar.offsetHeight:0;' +
       'var hd=$("sglisthead");hd.style.top=barH+"px";' +
@@ -6584,7 +6584,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' +
-    '<div class="ubar"><a class="uhome" href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a></div>' +
+    '<div class="ubar"><a class="uhome" href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a></div>' +
     '<div class="hhead"><span class="bmark">📝</span><span class="bname">新規予約入力</span></div>' +
     '<div class="nr">' +
       '<div class="nrnote">お客様から送られた"お客様情報"を、下の欄にそのまま貼って完了ボタンを押すと、自動で予約メモの形式に変換されます</div>' +
@@ -6773,7 +6773,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.rvwhy{display:block;color:#475569;font-size:13px;font-weight:700;margin-top:4px;}';
   var numSec =
     '<div id="exNum">' +
-      '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 戻る</a></div>' +
       '<div class="hhead"><span class="bmark">📝</span><span class="bname">' + head + '</span></div>' +
       '<textarea class="exbox" id="exdisp" rows="2" placeholder="ここにお客様番号を貼り付けるか、下の英語・番号ボタンで入力する"></textarea>' +
       '<div class="exseg" id="exseg"><span class="thumb"></span>' +
@@ -6791,7 +6791,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '</div>';
   var pickSec =
     '<div id="exPick" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackPick" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackPick" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="hhead"><span class="bmark">📖</span><span class="bname">変更する予約を選択</span></div>' +
       '<div id="expickwho"></div>' +
       '<div class="exstatus" id="expickst"></div>' +
@@ -6799,7 +6799,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '</div>';
   var dateSec =
     '<div id="exDate" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackDate" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackDate" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="extop"></div>' +
       '<div class="hhead"><span class="bmark">📅</span><span class="bname">日付入力</span></div>' +
       '<div class="exstep" id="exwho">' + title + '</div>' +
@@ -6814,7 +6814,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>';
   var timeSec =
     '<div id="exTime" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackTime" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackTime" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="extop"></div>' +
       '<div class="hhead"><span class="bmark">🕐</span><span class="bname">時刻入力</span></div>' +
       '<div class="exstep" id="exwhen"></div>' +
@@ -6826,7 +6826,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '</div>';
   var editSec =
     '<div id="exEdit" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackEdit" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackEdit" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="extop"></div>' +
       '<div class="hhead"><span class="bmark">✏️</span><span class="bname">変更内容</span></div>' +
       '<div class="exwho1" id="exeditwho"></div>' +
@@ -6839,7 +6839,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '</div>';
   var menuSec =
     '<div id="exMenu" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackMenu" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackMenu" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="extop"></div>' +
       '<div class="exsum" id="exmsum"></div>' +
       '<div class="exmh">変更する内容を選択</div>' +
@@ -6855,7 +6855,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '</div>';
   var memoSec =
     '<div id="exMemo" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackMemo" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackMemo" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="extop"></div>' +
       '<div class="hhead"><span class="bmark">📝</span><span class="bname">予約メモを変更</span></div>' +
       '<div class="exwho1" id="exmemowho"></div>' +
@@ -6866,14 +6866,14 @@ function renderExistingPage_(base, staff, dev, mode) {
   // 日付・時刻を移す時だけ出す「担当を変更しますか？」「部屋を変更しますか？」画面（押したらすぐ次へ進む）。
   var staffPickSec =
     '<div id="exStaffPick" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackStaffPick" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackStaffPick" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="extop"></div>' +
       '<div class="exwho1" id="exspwho"></div>' +
       '<div id="exsplist"></div>' +
     '</div>';
   var roomPickSec =
     '<div id="exRoomPick" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackRoomPick" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackRoomPick" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="extop"></div>' +
       '<div class="exwho1" id="exrpwho"></div>' +
       '<div id="exrplist"></div>' +
@@ -6881,7 +6881,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   // 既存の予約（既存客の次回予約＝前回コピー）の入力画面。
   var resvSec =
     '<div id="exResv" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exbackResv" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exbackResv" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="exwho1" id="exrvwho"></div>' +
       '<div id="exrvprev"></div>' +
       '<div class="exmh">今回の施術内容</div>' +
@@ -6908,7 +6908,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   // 「別の施術を足す」で開く、決まったメニュー一覧から選ぶ画面。
   var resvMenuSec =
     '<div id="exrvMenu" style="display:none">' +
-      '<div class="ubar"><a class="uhome" id="exrvMenuBack" href="javascript:void(0)">← 一つ前に戻る</a></div>' +
+      '<div class="ubar"><a class="uhome" id="exrvMenuBack" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="hhead"><span class="bmark">➕</span><span class="bname">足す施術を選ぶ</span></div>' +
       '<input class="exbox" id="exrvMenuSearch" style="font-size:20px;text-align:left;letter-spacing:normal" placeholder="さがす（例：ハイドラ）">' +
       '<div id="exrvMenuList"></div>' +
@@ -6973,12 +6973,12 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function rvAutoHint(a){if(a==="parisienne")return rvDidPart("lash")?"リペア":"初回";if(a==="hydra")return rvDidPart("hydra")?"通常":"トライアル";return "";}' +
     'function rvItemBtnH(nm){return "<button type=\\"button\\" class=\\"pickrow\\" data-mn=\\""+esc(nm)+"\\" style=\\"text-align:left;font-size:19px\\">"+esc(nm)+"</button>";}' +
     'function drawRvMenuList(q){q=(q||"").toLowerCase();var bk=document.getElementById("exrvMenuBack");var cats=(rvctx.menu_cats||[]);var el=document.getElementById("exrvMenuList");var h="";' +
-      'if(q){var ms=(rvctx.menus||[]);for(var i=0;i<ms.length;i++){var nm=ms[i].name;if(nm.toLowerCase().indexOf(q)<0)continue;h+=rvItemBtnH(nm);}if(bk)bk.textContent="← 一つ前に戻る";el.innerHTML=h||"<div class=\\"exhint\\">見つかりません</div>";return;}' +
-      'if(!_rvcat){for(var c=0;c<cats.length;c++){h+="<button type=\\"button\\" class=\\"pickrow\\" data-rvcat=\\""+esc(cats[c].key)+"\\" style=\\"text-align:left;font-size:21px;font-weight:700\\">"+esc(cats[c].label)+"</button>";}if(bk)bk.textContent="← 一つ前に戻る";el.innerHTML=h;return;}' +
+      'if(q){var ms=(rvctx.menus||[]);for(var i=0;i<ms.length;i++){var nm=ms[i].name;if(nm.toLowerCase().indexOf(q)<0)continue;h+=rvItemBtnH(nm);}if(bk)bk.textContent="← 戻る";el.innerHTML=h||"<div class=\\"exhint\\">見つかりません</div>";return;}' +
+      'if(!_rvcat){for(var c=0;c<cats.length;c++){h+="<button type=\\"button\\" class=\\"pickrow\\" data-rvcat=\\""+esc(cats[c].key)+"\\" style=\\"text-align:left;font-size:21px;font-weight:700\\">"+esc(cats[c].label)+"</button>";}if(bk)bk.textContent="← 戻る";el.innerHTML=h;return;}' +
       'var cc=null;for(var c2=0;c2<cats.length;c2++){if(cats[c2].key===_rvcat){cc=cats[c2];break;}}if(!cc){_rvcat="";drawRvMenuList("");return;}' +
-      'if(cc.groups){if(!_rvsub){for(var g=0;g<cc.groups.length;g++){var gg=cc.groups[g];h+="<button type=\\"button\\" class=\\"pickrow\\" data-rvsub=\\""+esc(gg.label)+"\\" style=\\"text-align:left;font-size:20px;font-weight:700\\">"+esc(gg.label)+"<span style=\\"color:#94a3b8;font-size:14px;margin-left:8px\\">"+gg.items.length+"件</span></button>";}if(bk)bk.textContent="← 一つ前に戻る";el.innerHTML=h;return;}var gsel=null;for(var g2=0;g2<cc.groups.length;g2++){if(cc.groups[g2].label===_rvsub){gsel=cc.groups[g2];break;}}if(!gsel){_rvsub="";drawRvMenuList("");return;}for(var it=0;it<gsel.items.length;it++){h+=rvItemBtnH(gsel.items[it]);}if(bk)bk.textContent="← "+cc.label;el.innerHTML=h;return;}' +
-      'if(cc.auto){var nm2=rvAutoName(cc.auto);var hint=rvAutoHint(cc.auto);h="<button type=\\"button\\" class=\\"pickrow\\" data-mn=\\""+esc(nm2)+"\\" style=\\"text-align:left;font-size:20px\\">"+esc(cc.label)+"<span style=\\"color:#22c55e;font-size:15px;margin-left:10px\\">（"+esc(hint)+"）</span></button>";if(bk)bk.textContent="← 一つ前に戻る";el.innerHTML=h;return;}' +
-      'var items=(cc.items||[]);for(var i2=0;i2<items.length;i2++){h+=rvItemBtnH(items[i2]);}if(bk)bk.textContent="← 一つ前に戻る";el.innerHTML=h;}' +
+      'if(cc.groups){if(!_rvsub){for(var g=0;g<cc.groups.length;g++){var gg=cc.groups[g];h+="<button type=\\"button\\" class=\\"pickrow\\" data-rvsub=\\""+esc(gg.label)+"\\" style=\\"text-align:left;font-size:20px;font-weight:700\\">"+esc(gg.label)+"<span style=\\"color:#94a3b8;font-size:14px;margin-left:8px\\">"+gg.items.length+"件</span></button>";}if(bk)bk.textContent="← 戻る";el.innerHTML=h;return;}var gsel=null;for(var g2=0;g2<cc.groups.length;g2++){if(cc.groups[g2].label===_rvsub){gsel=cc.groups[g2];break;}}if(!gsel){_rvsub="";drawRvMenuList("");return;}for(var it=0;it<gsel.items.length;it++){h+=rvItemBtnH(gsel.items[it]);}if(bk)bk.textContent="← "+cc.label;el.innerHTML=h;return;}' +
+      'if(cc.auto){var nm2=rvAutoName(cc.auto);var hint=rvAutoHint(cc.auto);h="<button type=\\"button\\" class=\\"pickrow\\" data-mn=\\""+esc(nm2)+"\\" style=\\"text-align:left;font-size:20px\\">"+esc(cc.label)+"<span style=\\"color:#22c55e;font-size:15px;margin-left:10px\\">（"+esc(hint)+"）</span></button>";if(bk)bk.textContent="← 戻る";el.innerHTML=h;return;}' +
+      'var items=(cc.items||[]);for(var i2=0;i2<items.length;i2++){h+=rvItemBtnH(items[i2]);}if(bk)bk.textContent="← 戻る";el.innerHTML=h;}' +
     'document.getElementById("exrvMenuSearch").addEventListener("input",function(){drawRvMenuList(this.value);});' +
     'document.getElementById("exrvMenuList").addEventListener("click",function(e){var cb=e.target.closest("[data-rvcat]");if(cb){_rvcat=cb.getAttribute("data-rvcat");_rvsub="";drawRvMenuList("");return;}var sb=e.target.closest("[data-rvsub]");if(sb){_rvsub=sb.getAttribute("data-rvsub");drawRvMenuList("");return;}var b=e.target.closest("[data-mn]");if(!b)return;rvAddItem(b.getAttribute("data-mn"));_rvcat="";_rvsub="";hideSteps();document.getElementById("exResv").style.display="";window.scrollTo(0,document.body.scrollHeight);});' +
     'document.getElementById("exrvMenuBack").addEventListener("click",function(){var sq=document.getElementById("exrvMenuSearch");if(sq&&sq.value){sq.value="";drawRvMenuList("");return;}if(_rvsub){_rvsub="";drawRvMenuList("");return;}if(_rvcat){_rvcat="";drawRvMenuList("");return;}hideSteps();document.getElementById("exResv").style.display="";window.scrollTo(0,0);});' +
@@ -7087,7 +7087,7 @@ function renderExistingPage_(base, staff, dev, mode) {
 function renderUriagePage_(d, base, staff, dev) {
   return '<style>' + HOMECSS_ + URIAGECSS_ + '</style>' +
   '<div class="home">' +
-    '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a>' +
+    '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
       '<span class="ugen2">最終計算: ' + esc_(d.generated_at || '—') + '</span>' +
     '</div>' +
     '<div class="hhead uttight"><span class="bmark">💰</span><span class="bname">売上転記TimeTree</span></div>' +
@@ -7318,7 +7318,7 @@ function renderUnansweredError_(err, base, staff, dev) {
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' +
     '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +
-      roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a></div>' +
+      roleSfx_(staff, dev) + '" target="_top">← 戻る</a></div>' +
     '<div class="hhead"><span class="bmark">💬</span><span class="bname">LINE未回答＆返信待ち</span></div>' +
     '<div class="soon">' +
       '<div class="soonic">📄</div>' +
@@ -7431,7 +7431,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
 '<style>' + UNACSS_ + '</style>' +
 '<div class="unawrap">' +
   '<div class="unabar">' +
-    '<a class="unahome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a>' +
+    '<a class="unahome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
     '<span class="unagen">' + esc_(d.fresh || '—') + ' 時点</span>' +
   '</div>' +
   '<h1>💬 LINE未回答＆返信待ち</h1>' +
@@ -8548,7 +8548,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
 '<style>' + AKICSS_ + '</style>' +
 '<div class="akiwrap">' +
   '<div class="akibar">' +
-    '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a>' +
+    '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
     '<span class="akigen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
   '</div>' +
   '<h1>🕑 空き時間検索</h1>' +
@@ -8909,7 +8909,7 @@ var AKICSS_ =
 '  body{ background:var(--akibg); overflow-x:hidden; }' +
 '  .akiwrap{ max-width:760px; margin:0 auto; padding:14px clamp(8px,3.6vw,14px) 40px; font-family:"Yu Gothic UI","Hiragino Sans",sans-serif; color:var(--akiink); overflow-x:hidden; }' +
 '  .akibar{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap; }' +
-// 施術室被り検出画面の「← 一つ前に戻る」(.homelink)と同じ見た目に統一（2026-07-17ユーザー指示）。
+// 施術室被り検出画面の「← 戻る」(.homelink)と同じ見た目に統一（2026-07-17ユーザー指示）。
 '  .akihome{ flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--akiink); text-decoration:none;' +
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px; padding:10px 14px; }' +
 '  .akihome:active{ transform:translateY(1px); }' +
@@ -9136,7 +9136,7 @@ function renderLinksPage_(d, base, staff, dev) {
 '<style>' + LKCSS_ + LKIMGCSS_ + '</style>' +
 '<div class="lkwrap">' +
   '<div class="lkbar">' +
-    '<a class="lkhome" href="' + homeHref + '" target="_top">← 一つ前に戻る</a>' +
+    '<a class="lkhome" href="' + homeHref + '" target="_top">← 戻る</a>' +
     '<span class="lkgen">生成: ' + esc_((d && d.generated_at) || '—') + '</span>' +
   '</div>' +
   '<div class="lkhead"><h1>🔗 各種LINK</h1></div>' +
@@ -9148,12 +9148,12 @@ function renderLinksPage_(d, base, staff, dev) {
   '</div>' +
   // ── URLリンク（元の各種LINK） ──
   '<div id="lkurlsec" class="lksec" hidden>' +
-    '<button type="button" class="lkback2" id="lkUrlBack">← 一つ前に戻る</button>' +
+    '<button type="button" class="lkback2" id="lkUrlBack">← 戻る</button>' +
     '<div id="lklist">' + list + '</div>' +
   '</div>' +
   // ── 画像リンク（イーライト後などの画像案内） ──
   '<div id="lkimgsec" class="lksec" hidden>' +
-    '<button type="button" class="lkback2" id="lkImgBack">← 一つ前に戻る</button>' +
+    '<button type="button" class="lkback2" id="lkImgBack">← 戻る</button>' +
     '<div id="lkimgbody"></div>' +
   '</div>' +
 '</div>' +
@@ -9609,7 +9609,7 @@ function ttviewStart_(exec, base, staff, dev) {
   /* 画面の上：戻るの形（月＝ホームへ／それ以外＝ひとつ前へ） */
   function setBack(fn) {
     if (!fn) { bar.innerHTML = homeBar; return; }
-    bar.innerHTML = '<div class="ubar"><button class="uhome tvback" id="tvbackbtn">← 一つ前に戻る</button></div>';
+    bar.innerHTML = '<div class="ubar"><button class="uhome tvback" id="tvbackbtn">← 戻る</button></div>';
     document.getElementById('tvbackbtn').onclick = fn;
   }
   function segHtml() {
@@ -10346,7 +10346,7 @@ var HOMECSS_ =
 '  .bname { font-size:2.05rem; font-weight:900; letter-spacing:.01em; color:#fb8c44; }' +
 '  .hsub { text-align:center; color:#fff; font-weight:800; font-size:1.02rem;' +
 '    letter-spacing:.06em; opacity:.92; margin:0 0 28px; }' +
-// ★戻るボタン（← 一つ前に戻る）＝スーパーズコ全画面共通。HOMECSS_ に置いて、予約入力など
+// ★戻るボタン（← 戻る）＝スーパーズコ全画面共通。HOMECSS_ に置いて、予約入力など
 //   HOMECSS_ だけを読む画面でも必ずボタンとして見えるようにする（2026-08-01）。
 '  .ubar { display:flex; align-items:center; gap:12px; margin:6px 0 10px; }' +
 // ★同じ理由（2026-09-11）＝こちらは白地なのに字の色だけ端末まかせだったので、
@@ -10461,7 +10461,7 @@ var CSS_ =
 '    font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; }' +
 '  .wrap { max-width:820px; margin:0 auto; padding:12px 12px 22px; }' +
 '  .bar { display:flex; align-items:center; gap:10px; flex-wrap:nowrap;' +
-'    background:#2C7A99; padding:4px 0 0; margin-bottom:0; }' +   // 「← 一つ前に戻る」とタイトルの間を詰める（2026-07-17ユーザー指示・さらに詰めた）
+'    background:#2C7A99; padding:4px 0 0; margin-bottom:0; }' +   // 「← 戻る」とタイトルの間を詰める（2026-07-17ユーザー指示・さらに詰めた）
 '  .reload { font-size:1rem; font-weight:700; color:#fff; background:#2563eb; border:0;' +
 '    border-radius:10px; padding:12px 18px; cursor:pointer; }' +
 '  .reload:active { transform:translateY(1px); }' +
@@ -10694,7 +10694,7 @@ function renderKanshiPage_(d, base, staff, dev) {
   return '<style>' + KANSHICSS_ + '</style>' +
   '<div class="kwrap">' +
     '<div class="kbar">' +
-      '<a class="khome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 一つ前に戻る</a>' +
+      '<a class="khome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
       '<button type="button" class="kref" id="kRef">今すぐ更新</button>' +
     '</div>' +
     '<h1>📟 自動監視</h1>' +
@@ -10702,7 +10702,7 @@ function renderKanshiPage_(d, base, staff, dev) {
     '<div id="kList"></div>' +
     '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
       'カードの「⚙ 設定」で中身の一覧へ、さらに各行の「詳細」でその項目の画面へ進みます' +
-      '（上の「← 一つ前に戻る」で戻れます）。入切や実行はいちばん奥の画面にあります（事務所PCと同じ場所）。' +
+      '（上の「← 戻る」で戻れます）。入切や実行はいちばん奥の画面にあります（事務所PCと同じ場所）。' +
       'この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
       'この画面は事務所PCが1分ごとに送ってきた状態を見ています。</div>' +
   '</div>' +
@@ -10930,19 +10930,19 @@ var KANSHISCRIPT_ =
 '  var list=document.getElementById("kList"); if(!list) return;' +
 '  var gs=data_.groups||[];' +
 '  if(!gs.length){ list.innerHTML="<div class=\\"kcard\\">状態が空です。事務所PCをご確認ください。</div>"; return; }' +
-/* いま1つの枠の中を見ている＝その中身だけの画面（上に「← 一つ前に戻る」） */
+/* いま1つの枠の中を見ている＝その中身だけの画面（上に「← 戻る」） */
 '  if(cur_!==null && gs[cur_]){' +
 '    var g=gs[cur_];' +
 '    if(item_!==null){' +
 '      var im=itemAt_(item_);' +
 '      if(im){' +
-'        list.innerHTML="<div class=\\"kback\\"><button type=\\"button\\" class=\\"kbtn\\" id=\\"kBackItem\\">← 一つ前に戻る</button></div>"+itemHtml_(im, item_);' +
+'        list.innerHTML="<div class=\\"kback\\"><button type=\\"button\\" class=\\"kbtn\\" id=\\"kBackItem\\">← 戻る</button></div>"+itemHtml_(im, item_);' +
 '        return;' +
 '      }' +
 '      item_=null;' +
 '    }' +
 '    var body=(g.members&&g.members.length)?g.members.map(function(m,j){ return rowHtml_(m, cur_+"."+j); }).join(""):"<div class=\\"kdetail\\">中身はありません。</div>";' +
-'    list.innerHTML="<div class=\\"kback\\"><button type=\\"button\\" class=\\"kbtn\\" id=\\"kBack\\">← 一つ前に戻る</button></div>"+' +
+'    list.innerHTML="<div class=\\"kback\\"><button type=\\"button\\" class=\\"kbtn\\" id=\\"kBack\\">← 戻る</button></div>"+' +
 '      "<div class=\\"kcard"+(g.watch_only?" kwatch":"")+"\\"><div class=\\"khead nohit\\">"+' +
 '      "<span class=\\"kmark\\">"+mark_(g.status)+"</span>"+' +
 '      "<span class=\\"klabel\\">"+esc(g.label)+' +
