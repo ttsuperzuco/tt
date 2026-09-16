@@ -223,7 +223,7 @@
 <script src="sg_rules.js?v=9a96c6cc35"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
 <script src="bigsend.js?v=0371a3ad72"></script>
-<script src="code.js?v=8ccd15b4af"></script>
+<script src="code.js?v=486d98cb38"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -1094,6 +1094,44 @@
   //   あったが、各種LINK等(?view付き)の読み込みが少し長引いた時に誤発動して目的の画面を奪い、
   //   ホーム(TOMATOさん版など)を開いてしまう害があった。元の詰まり原因(各種LINKが画像を待って固まる)は
   //   既に直した(URLは即表示・画像は押した時に取得)ので、この保険は撤去した。
+})();
+</script>
+<script>
+// ★★2026-09-16 まるちゃん決定：戻るボタンは全部「← 一つ前に戻る」にそろえ、押したら本当に1つ前の画面に戻る。
+//   ①画面の上の戻る（別の画面へ移る住所付きの物）＝アプリの中から来ていれば、来た画面へ戻る（履歴を1つ戻す）。
+//     アプリの外から直接開いた時（履歴が無い時）だけ、住所どおりホームへ行く。
+//   ②同じ画面の中に、もっと手前へ戻る戻るボタン（一覧→中身 等）が出ている時は、上の戻るは隠して1つだけにする。
+//     押す場所が2つあると、片方だけ一気にホームまで戻ってしまうため。
+(function () {
+  var LABEL = '← 一つ前に戻る';
+  function isBack(el) { return el && (el.textContent || '').trim() === LABEL; }
+  function isTopLink(el) {
+    return el.tagName === 'A' && /[?&]view=/.test(el.getAttribute('href') || '');
+  }
+  function shown(el) { return el.offsetParent !== null || getComputedStyle(el).position === 'fixed'; }
+  function cameFromApp() {
+    var dir = location.origin + location.pathname.replace(/[^/]*$/, '');
+    return (document.referrer || '').indexOf(dir) === 0 && history.length > 1;
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if (!a || !isBack(a) || !isTopLink(a)) return;
+    if (cameFromApp()) { e.preventDefault(); history.back(); }
+  }, true);
+
+  var queued = false;
+  function sync() {
+    queued = false;
+    var all = [].slice.call(document.querySelectorAll('a,button')).filter(isBack);
+    var tops = all.filter(isTopLink);
+    var inner = all.filter(function (el) { return tops.indexOf(el) < 0 && shown(el); });
+    tops.forEach(function (t) {
+      if (inner.length) { if (t.style.display !== 'none') { t.setAttribute('data-szhid', '1'); t.style.display = 'none'; } }
+      else if (t.getAttribute('data-szhid')) { t.removeAttribute('data-szhid'); t.style.display = ''; }
+    });
+  }
+  new MutationObserver(function () { if (!queued) { queued = true; requestAnimationFrame(sync); } })
+    .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden', 'class'] });
 })();
 </script>
 </body>
