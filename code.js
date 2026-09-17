@@ -4403,7 +4403,8 @@ function renderBroadcastPage_(base, staff, dev) {
     'border:0;background:transparent;color:#B9CCDA;text-decoration:underline;}' +
     '.bcsum{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;' +
     'border-bottom:1px solid #26324A;font-size:15px;}' +
-    '.bcsum:last-child{border-bottom:0;}.bcsum b{font-weight:800;}' +
+    '.bcsum:last-child{border-bottom:0;}.bcsum b{font-weight:800;flex:1;min-width:0;}' +
+    '.bcsum{flex-wrap:wrap;}.bcseeall{white-space:nowrap;}' +
     '.bcsum span{color:#94A3B8;white-space:nowrap;font-size:13.5px;}' +
     '.bcsum span.on{color:#7dd3a0;font-weight:800;}' +
     '.bcdt{display:flex;gap:10px;margin:0 0 12px;}.bcdt>div{flex:1;}' +
@@ -5296,9 +5297,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'var t=new Date();t.setDate(t.getDate()+1);var m=0;' +
   'var h=\'<div class="bccard"><div class="bcname">最終確認</div><div class="bchr"></div>\';' +
   // ★送る対象だけを出す（まるちゃん指示 2026-09-09）
+  // ★「1つ入り」では分からない（まるちゃん 2026-09-17）＝「画像1枚、文章1つ」と書き、右に「内容を確認」
   'TPL.forEach(function(x,i){var n=filled(i);if(!n)return;m++;' +
-  'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="on">\'+' +
-  '(n+"つ入り")+\'</span></div>\';});' +
+  'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="on">\'+esc(bcSumOf(i))+\'</span>\'+' +
+  '\'<button type="button" class="bcmv bcseeall" data-seeall="\'+i+\'">内容を確認</button></div>\';});' +
   'h+=\'</div>\';' +
   'if(!m)h+=\'<div class="bcstatus on">中身を入れた対象がありません。\'+' +
   '\'左上の「← 戻る」から入れてください。</div>\';' +
@@ -5316,6 +5318,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'\';}' +
   // ★予約した配信の一覧も「まっさらに戻す」も、この画面には出さない（まるちゃん指示 2026-09-09）
   'box.innerHTML=h;' +
+  '[].slice.call(box.querySelectorAll("[data-seeall]")).forEach(function(b){b.onclick=function(){bcSeeAll(+b.getAttribute("data-seeall"));};});' +
   'var e=document.getElementById("bcplan");' +
   'if(e)e.onclick=function(){LMODE="at";status("");draw();};' +
   'e=document.getElementById("bcnoat");' +
@@ -11732,12 +11735,17 @@ function bcCampCode_() {
   var CTPLBUSY = false, CWAITLAST = false;
 
   function campName(gi, tab) { return CGROUPS[gi][0] + ' ' + (tab ? '来店済' : '未来店'); }
+  // ★2026-09-17 まるちゃん「画像はデフォルトで選択された状態にしろ」＝まだ画像を触っていないタブは、
+  //   各種LINKのその案内の画像（言語・男女が合う物）を最初から選んだ状態にする。押して外せば外れたまま覚える（imgsSet）。
+  //   ★画像が最初から入るので、配信するのは「文章を入れたタブ」だけ（画像だけで勝手に送らない）。
   function campCell(gi, tab) {
     var k = campName(gi, tab);
-    if (!CDATA[k]) CDATA[k] = { text: '', imgs: [] };
-    return CDATA[k];
+    if (!CDATA[k]) CDATA[k] = { text: '', imgs: [], imgsSet: false };
+    var c = CDATA[k];
+    if (!c.imgsSet && CLINKS) c.imgs = campImages(CGROUPS[gi][2], CGROUPS[gi][1]).slice(0, MAXP - 1);
+    return c;
   }
-  function campFilled(c) { return !!(c && (String(c.text || '').replace(/^\s+|\s+$/g, '') || (c.imgs || []).length)); }
+  function campFilled(c) { return !!(c && String(c.text || '').replace(/^\s+|\s+$/g, '')); }
   function campAny() { for (var k in CDATA) if (campFilled(CDATA[k])) return true; return false; }
   function campTopic() {
     var ts = (CLINKS && CLINKS.topics) || [];
@@ -11883,7 +11891,7 @@ function bcCampCode_() {
           '<button type="button" class="bczoom" data-cz="' + i + '">🔍 大きく見る</button></div>';
       }).join('') + '</div>';
     }
-    h += '<div class="bcempty" style="margin-top:12px">文章も画像も入れなかったタブには配信しません。</div></div>';
+    h += '<div class="bcempty" style="margin-top:12px">文章を入れたタブだけ配信します（画像はその前に送ります）。</div></div>';
     h += '<button type="button" class="bcgo" id="bccnext">' + (last ? '配信内容の最終確認をする' : 'この内容でOK') + '</button>';
     box.innerHTML = h;
 
@@ -11918,7 +11926,7 @@ function bcCampCode_() {
           if (a.length >= room) { status('1回の配信に入れられるのは、文章と画像を合わせて' + MAXP + 'つまでです。', true); return; }
           a.push(u);
         }
-        c.imgs = a; status(''); saveNow(); draw();
+        c.imgs = a; c.imgsSet = true; status(''); saveNow(); draw();
       };
     });
     [].slice.call(box.querySelectorAll('[data-cz]')).forEach(function (b) {
@@ -11939,15 +11947,19 @@ function bcCampCode_() {
 
   // ── ③いつもの最終確認へ（送り先と中身を入れ替えて渡す）──
   function campToLast() {
-    if (!campAny()) { status('文章か画像を入れたタブがありません。', true); return; }
+    if (!campAny()) { status('文章を入れたタブがありません。', true); return; }
     if (!CTPL.length) { CWAITLAST = true; status('送り先の決まりを読み込んでいます。終わったら自動で最終確認に進みます…'); campLoadTpl(); return; }
     if (!CORIG) CORIG = { tpl: TPL, data: DATA, cat: CAT, tags: TAGS };
     TPL = CTPL; CAT = CAMPCAT; TAGS = [];
     DATA = CTPL.map(function (t) {
-      var x = CDATA[t.name] || { text: '', imgs: [] }, ps = [];
-      (x.imgs || []).forEach(function (u) { ps.push({ kind: 'image', src: 'link:' + u, thumb: u }); });
+      var gi = -1, tab = 0;
+      for (var q = 0; q < CGROUPS.length; q++) for (var r = 0; r < 2; r++) if (campName(q, r) === t.name) { gi = q; tab = r; }
+      var x = (gi >= 0) ? campCell(gi, tab) : (CDATA[t.name] || { text: '', imgs: [] }), ps = [];
       var tx = String(x.text || '').replace(/^\s+|\s+$/g, '');
-      if (tx) ps.push({ kind: 'text', text: tx });
+      if (!tx) return { parts: [] };          // 文章の無いタブは送らない
+      // ★送る順は 画像 → 文章（まるちゃん指示 2026-09-17）
+      (x.imgs || []).forEach(function (u) { ps.push({ kind: 'image', src: 'link:' + u, thumb: u }); });
+      ps.push({ kind: 'text', text: tx });
       return { parts: ps };
     });
     step = TPL.length; LMODE = ''; mode = ''; page = 't'; status(''); draw();
@@ -11956,6 +11968,37 @@ function bcCampCode_() {
   function campDone() {
     CDATA = {}; CKIND = ''; CGI = 0; CTAB = 0; LMODE = '';
     campWipClear(); campLeave();
+  }
+  // 最終確認の1行ぶん＝「画像1枚、文章1つ」（中身の並びそのまま数える）
+  function bcSumOf(i) {
+    var ps = (DATA[i] && DATA[i].parts) || [], ni = 0, nt = 0;
+    ps.forEach(function (p) { if (p.kind === 'text') nt++; else ni++; });
+    var a = [];
+    if (ni) a.push('画像' + ni + '枚');
+    if (nt) a.push('文章' + nt + 'つ');
+    return a.join('、');
+  }
+  // 「内容を確認」＝その相手に届く順（上から）で、画像と文章をそのまま見せる
+  function bcSeeAll(i) {
+    var t = TPL[i], ps = (DATA[i] && DATA[i].parts) || [];
+    var h = '<div style="padding:16px;max-width:560px;margin:0 auto;text-align:left">' +
+      '<div style="color:#fff;font-size:20px;font-weight:900;margin:0 0 12px">' + esc(t ? t.name : '') + '</div>';
+    ps.forEach(function (p, k) {
+      h += '<div style="color:#DCE7F2;font-size:13px;font-weight:800;margin:10px 0 6px">' + (k + 1) + 'つ目（' + (p.kind === 'text' ? '文章' : '画像') + '）</div>';
+      if (p.kind === 'text') {
+        h += '<div class="bcotxv">' + esc(p.text || '') + '</div>';
+      } else {
+        var th = partThumb(p);
+        h += th ? '<img src="' + esc(th) + '" style="width:100%;max-width:420px;display:block;border-radius:12px">'
+                : '<div style="color:#fff">（画像）</div>';
+      }
+    });
+    h += '<button type="button" id="bcseeallx" style="margin:18px auto 6px;display:block;border:0;border-radius:12px;' +
+      'padding:14px 34px;font-size:17px;font-weight:800;background:#2563EB;color:#fff">閉じる</button></div>';
+    // 文章が長いので、上から読めて下まで動かせるようにする（共通の全画面は真ん中寄せ・動かない作りのため）
+    var ov = szOvShow_(h, '#2C7A99');
+    ov.style.overflowY = 'auto'; ov.style.justifyContent = 'flex-start'; ov.style.alignItems = 'stretch'; ov.style.padding = '0';
+    setTimeout(function () { var b = document.getElementById('bcseeallx'); if (b) b.onclick = function () { szOvHide_(); }; }, 80);
   }
   // 画面の上の「← 戻る」＝1つ前へ。戻せる所が無ければ false。
   function campBack() {
