@@ -8141,6 +8141,7 @@ function renderProcell_(base, staff, dev) {
 // (procamp_choice.json)は事務所PCが置き場に出す（プロセル頭キャ案内\programs\procamp.py）。
 // 送信は受付係(op=procamp_save)が共有DBへ残すだけ（タイムツリーにもLINEにも触らない）。
 var PROCAMPCSS_ =
+  '.home{max-width:1100px;}' +   /* 表が4列あるので、この画面だけホームより広く使う */
   '.pcamp{background:#fff;border-radius:14px;padding:8px;color:#1a2429;text-align:left;}' +
   '.pcampscroll{overflow-x:auto;}' +
   '.pcamp table{border-collapse:collapse;width:100%;min-width:720px;font-size:13px;line-height:1.35;}' +
