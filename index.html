@@ -670,6 +670,33 @@
     document.head.appendChild(s);
   }
 
+  // ★プロセル頭キャリスト（2026-09-17・社長版と開発版）。一覧と前回の選択を窓口(action=data)から
+  //   同時に取り、両方そろったら描く（前回の選択が無い・取れない時は空で描く＝一覧さえあれば出す）。
+  function showProcamp() {
+    var got = { list: undefined, choice: undefined };
+    function load(name, key) {
+      var cb = '__pcamp_' + key + Date.now();
+      window[cb] = function (payload) {
+        try { delete window[cb]; } catch (e) {}
+        got[key] = payload || {};
+        draw();
+      };
+      var s = document.createElement('script');
+      s.src = EXEC + '?action=data&name=' + name + '&callback=' + cb + '&cb=' + Date.now();
+      s.onerror = function () { got[key] = (key === 'list') ? { error: '通信エラーです。通信環境をご確認ください。' } : {}; draw(); };
+      document.head.appendChild(s);
+    }
+    function draw() {
+      if (got.list === undefined || got.choice === undefined) return;
+      try {
+        var ch = (got.choice && !got.choice.error && got.choice.picks) ? got.choice : {};
+        mount(renderProcampPage_(got.list, ch, base, staff, dev));
+      } catch (e) { fail('描画エラー：' + e); }
+    }
+    load('procamp_list.json', 'list');
+    load('procamp_choice.json', 'choice');
+  }
+
   // IGのDM（開発URL専用）。事務所PCが read_dms.py で書き出した insta_dm.json（既読を付けずに
   //   読んだDM一覧）を窓口(action=data)で取ってきて、renderInstaDmPage_ で並べる。
   // 合言葉から「秘密の置き場所の名前」を作る（事務所PCの read_dms.py と同じ計算）。
@@ -1041,6 +1068,7 @@
     else if (v === 'cost') showCost();
     else if (v === 'koukoku') showKoukoku();
     else if (v === 'pcstatus') showPcStatus();
+    else if (v === 'procamp') showProcamp();
     else if (v === 'instadm') showInstaDm();
     else if (v === 'igdm') showIgdm();
     else if (v === 'claudetools') showClaudeTools();
