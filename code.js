@@ -8139,6 +8139,17 @@ function renderProcell_(base, staff, dev) {
   }
 }
 
+// ★2026-09-17：スマホ版の入口(index.html)には、この画面へ進む道が作られていなかった（押してもズコのトップが出るだけ）。
+//   入口に道を足し、データが取れなかった時はこの画面を出す（上の renderProcell_ と同じ見た目・中身を判断しない）。
+function renderProcellError_(msg, base, staff, dev) {
+  return '<style>' + HOMECSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🧴</span><span class="bname">プロセル 残り本数</span></div>' +
+    '<div class="soon"><div class="soonic">📄</div>' +
+    '<div class="soontitle" style="font-size:1.4rem">まだ作られていません</div>' +
+    '<div class="soondesc">' + esc_(msg) + '</div></div></div>';
+}
+
 // ========== プロセル頭キャリスト（2026-09-17 まるちゃん依頼・社長版と開発版） ==========
 // プロセル頭をやったことがあり今もLINEがつながっている人を1行ずつ並べ、「キャ案内する？」を
 // しない／する／旅人タグにする の3つのボタンで選んで送る。一覧(procamp_list.json)と前回の選択

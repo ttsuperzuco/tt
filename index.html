@@ -177,7 +177,9 @@
     akijikan:   'akijikan.json',
     // ★2026-09-11：「施術後の予約」も今日の予約(events.json)を使う。被り検出と同じファイルなので、
     //   ホームでの裏取りは1回だけ行い、取れた中身を両方の画面に配る（下の prefetchForHome_）。
-    yoyaku_sejutsugo: 'events.json'
+    yoyaku_sejutsugo: 'events.json',
+    // ★2026-09-17：プロセル残り本数（事務所PCが毎晩書き出す）。前はこの画面へ進む道自体が無かった。
+    procell:    'procell.json'
     // ★links(各種LINKのURL一覧)は速い置き場(GitHub Pages)から直接取るのでここには入れない（グーグル窓口を使わない）。
     // ★kanshi(自動監視)は対象外＝開発URL専用でスタッフの目には触れず、装置の見分け(device)も
     //   要るため。頻度も低く先取りの旨味が薄い（詳細は共通\スーパーズコApp_必読.md）。
@@ -223,7 +225,7 @@
 <script src="sg_rules.js?v=e4734e8ffb"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
 <script src="bigsend.js?v=0371a3ad72"></script>
-<script src="code.js?v=e62906424a"></script>
+<script src="code.js?v=69977bff9b"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -600,6 +602,16 @@
         });
     }
     attempt(4);
+  }
+
+  // ★プロセル残り本数（2026-09-17・前は道が無く、押してもトップが出るだけだった）。
+  function showProcell() {
+    showPrefetchable_('procell', function (payload) {
+      try {
+        if (!payload || payload.error) { mount(renderProcellError_((payload && payload.error) || '不明', base, staff, dev)); return; }
+        mount(renderProcellPage_(payload, base, staff, dev));
+      } catch (e) { fail('描画エラー：' + e); }
+    });
   }
 
   // ★元祖TTアプリ（定型文・2026-09-17）。事務所PCが書き出した teikei.json を、各種LINKと同じ速い置き場から取る。
@@ -1087,6 +1099,7 @@
     else if (v === 'akijikan') showAkijikan();
     else if (v === 'links') showLinks();
     else if (v === 'ttapp') showTeikei();
+    else if (v === 'procell') showProcell();
     else if (v === 'kanshi') showKanshi();
     else if (v === 'zenjitsu') showZenjitsu();
     else if (v === 'cost') showCost();
@@ -1167,9 +1180,20 @@
     var dir = location.origin + location.pathname.replace(/[^/]*$/, '');
     return (document.referrer || '').indexOf(dir) === 0 && history.length > 1;
   }
+  // ★2026-09-17 まるちゃん「パソコン版で戻るを押すと、1つ前に戻らず、一回何か出て別の所へ移動する」。
+  //   パソコン版スーパーズコのホームの窓の中では、ズコのトップへ移動せず（トップの待ち画面が一瞬出ていた）、
+  //   ホームの窓に直接「押す前の部屋へ戻して」と頼む。窓にその口が無い所（スマホ・別の窓）は今までどおり。
+  function toTop(a) {
+    var m = /[?&]view=([^&#]*)/.exec(a.getAttribute('href') || '');
+    return !m || m[1] === 'home';
+  }
+  function pcHome() {
+    return window.pywebview && window.pywebview.api && typeof window.pywebview.api.back_home === 'function';
+  }
   document.addEventListener('click', function (e) {
     var a = e.target && e.target.closest ? e.target.closest('a') : null;
     if (!a || !isBack(a) || !isTopLink(a)) return;
+    if (toTop(a) && pcHome()) { e.preventDefault(); window.pywebview.api.back_home(); return; }
     if (cameFromApp()) { e.preventDefault(); history.back(); }
   }, true);
 
