@@ -11740,15 +11740,29 @@ function bcCampCode_() {
   var CMODE = false, CTPL = [], CDATA = {}, CLINKS = null, CLINKERR = '', CKIND = '', CGI = 0, CTAB = 0, CORIG = null, CWIPT = null;
   var CTPLBUSY = false, CWAITLAST = false;
 
-  function campName(gi, tab) { return CGROUPS[gi][0] + ' ' + (tab ? '来店済' : '未来店'); }
+  // ★2026-09-17 まるちゃん「四種類にするって言っただろ、共用だよ」＝中身は日本男性・日本女性・台湾男性・台湾女性の4種類。
+  //   1種類の1通を「未来店」「来店済」の2つのタグの両方へ送る（送り先は事務所パソコンの型が持つ）。
+  //   ※同じ日に一度「未来店／来店済を別々のタブ」と読み違えて作った（まるちゃんの「二つのタブ」は「二つのタグ」だった）。
+  function campName(gi) { return CGROUPS[gi][0]; }
   // ★中身の持ち方（2026-09-17 まるちゃん「3つ入れられるんだから、上下に入れ替え・文章も足せる・欄を1つ追加するボタン」）
   //   タブ1つ＝欄の並び parts（上から送る順・最大3つ）。欄は {k:'img',url} ／ {k:'txt',text} ／ {k:'new'}（まだ画像か文章か決めていない）。
   //   ★最初（まだ欄を触っていない＝set が無い）は「1つ目 画像（各種LINKのその案内の、言語・男女が合う画像を選んだ状態）→ 2つ目 文章」。
   //   ★配信するのは文章を入れたタブだけ（画像が最初から入るので、画像だけで勝手に送らない）。
   function campDefImgs(gi) { return CLINKS ? campImages(CGROUPS[gi][2], CGROUPS[gi][1]).slice(0, MAXP - 1) : []; }
-  function campCell(gi, tab) {
-    var k = campName(gi, tab);
-    if (!CDATA[k]) CDATA[k] = { parts: null, set: false };
+  function campCell(gi) {
+    var k = campName(gi);
+    if (!CDATA[k]) {
+      // 読み違えていた時の持ち方（「日本男性 未来店」「日本男性 来店済」）から引っ越す＝文章が入っている方を使う
+      var o1 = CDATA[k + ' 未来店'], o2 = CDATA[k + ' 来店済'];
+      function hasTx(o) {
+        if (!o) return false;
+        if (String(o.text || '').replace(/^\s+|\s+$/g, '')) return true;
+        return (o.parts || []).some(function (x) { return x.k === 'txt' && String(x.text || '').replace(/^\s+|\s+$/g, ''); });
+      }
+      var src = hasTx(o1) ? o1 : (hasTx(o2) ? o2 : (o1 || o2));
+      CDATA[k] = src ? JSON.parse(JSON.stringify(src)) : { parts: null, set: false };
+      delete CDATA[k + ' 未来店']; delete CDATA[k + ' 来店済'];
+    }
     var c = CDATA[k];
     if (!c.parts) {                       // 前の持ち方（文章1つ＋画像の並び）から引っ越す
       var ps = [];
@@ -11889,16 +11903,15 @@ function bcCampCode_() {
 
   // ── ②中身を入れる（日本男性／日本女性／台湾男性／台湾女性 × 未来店・来店済のタブ）──
   function drawCampEdit() {
-    var g = CGROUPS[CGI], c = campCell(CGI, CTAB), imgs = campImages(g[2], g[1]);
+    var g = CGROUPS[CGI], c = campCell(CGI), imgs = campImages(g[2], g[1]);
+    var tp = null;
+    for (var ti = 0; ti < CTPL.length; ti++) if (CTPL[ti].name === g[0]) tp = CTPL[ti];
     var last = (CGI === CGROUPS.length - 1), n = c.parts.length;
     var h = '<div class="bcstop"><span class="bcsttl">' + esc(CKIND) + '</span>' +
       '<span class="bcsno">' + (CGI + 1) + ' / ' + CGROUPS.length + '</span></div>';
     h += '<div class="bccard"><div class="bcname">' + esc(g[0]) + '</div>' +
-      '<div class="bctab bccamptab">' + [0, 1].map(function (tb) {
-        var lab = (tb ? '来店済' : '未来店') + g[1];
-        return '<button type="button" data-ct="' + tb + '" class="' + (tb === CTAB ? 'on' : '') + '">' +
-          esc(lab) + (campFilled(campCell(CGI, tb)) ? ' ✓' : '') + '</button>';
-      }).join('') + '</div>';
+      '<div class="bcwho">送り先：' + esc(tp ? tp.who : ('未来店 ' + g[0] + '＋' + g[0] + ' 来店済')) + '（同じ内容を送ります）</div>' +
+      '<div class="bchr"></div>';
     h += '<div class="bcleft">上から順に送ります（' + MAXP + 'つまで）</div>';
     c.parts.forEach(function (x, i) {
       var kind = x.k === 'img' ? '画像' : (x.k === 'txt' ? '文章' : '画像か文章を選ぶ');
@@ -11920,7 +11933,7 @@ function bcCampCode_() {
           }).join('') + '</div>';
         }
       } else if (x.k === 'txt') {
-        h += '<textarea data-st="' + i + '" placeholder="' + esc(campName(CGI, CTAB)) + 'のお客様へ送る文章">' + esc(x.text || '') + '</textarea>' +
+        h += '<textarea data-st="' + i + '" placeholder="' + esc(g[0]) + 'のお客様へ送る文章">' + esc(x.text || '') + '</textarea>' +
           '<div class="bccount" data-sc="' + i + '"></div>';
       } else {
         h += '<div class="bcadd"><button type="button" data-sk="' + i + ':img">🖼 画像にする</button>' +
@@ -11929,15 +11942,12 @@ function bcCampCode_() {
       h += '</div>';
     });
     if (n < MAXP) h += '<button type="button" class="bcghost" id="bccadd">＋ 欄を追加（あと' + (MAXP - n) + 'つ）</button>';
-    h += '<div class="bcempty" style="margin-top:12px">文章を入れたタブだけ配信します。</div></div>';
+    h += '<div class="bcempty" style="margin-top:12px">文章を入れた種類だけ配信します。</div></div>';
     h += '<button type="button" class="bcgo" id="bccnext">' + (last ? '配信内容の最終確認をする' : 'この内容でOK') + '</button>';
     box.innerHTML = h;
 
     function trimLen(t) { return ulen(String(t || '').replace(/^\s+|\s+$/g, '')); }
-    function markTab() {
-      var tb = box.querySelector('[data-ct="' + CTAB + '"]');
-      if (tb) tb.textContent = (CTAB ? '来店済' : '未来店') + g[1] + (campFilled(c) ? ' ✓' : '');
-    }
+    function markTab() {}
     function changed() { c.set = true; status(''); saveNow(); draw(); }
     [].slice.call(box.querySelectorAll('[data-st]')).forEach(function (ta) {
       var i = +ta.getAttribute('data-st'), cnt = box.querySelector('[data-sc="' + i + '"]');
@@ -11985,12 +11995,9 @@ function bcCampCode_() {
     var ad = document.getElementById('bccadd');
     if (ad) ad.onclick = function () { if (c.parts.length >= MAXP) return; c.parts.push({ k: 'new' }); changed(); };
     document.getElementById('bccnext').onclick = function () {
-      for (var tb = 0; tb < 2; tb++) {
-        var x = campCell(CGI, tb);
-        for (var i = 0; i < x.parts.length; i++) {
-          if (x.parts[i].k === 'txt' && trimLen(x.parts[i].text) > MAXT) {
-            CTAB = tb; status((i + 1) + 'つ目の文章は' + MAXT + '文字までです。', true); draw(); return;
-          }
+      for (var i = 0; i < c.parts.length; i++) {
+        if (c.parts[i].k === 'txt' && trimLen(c.parts[i].text) > MAXT) {
+          status((i + 1) + 'つ目の文章は' + MAXT + '文字までです。', true); return;
         }
       }
       saveNow();
@@ -12006,10 +12013,10 @@ function bcCampCode_() {
     if (!CORIG) CORIG = { tpl: TPL, data: DATA, cat: CAT, tags: TAGS };
     TPL = CTPL; CAT = CAMPCAT; TAGS = [];
     DATA = CTPL.map(function (t) {
-      var gi = -1, tab = 0;
-      for (var q = 0; q < CGROUPS.length; q++) for (var r = 0; r < 2; r++) if (campName(q, r) === t.name) { gi = q; tab = r; }
+      var gi = -1;
+      for (var q = 0; q < CGROUPS.length; q++) if (campName(q) === t.name) gi = q;
       if (gi < 0) return { parts: [] };
-      var x = campCell(gi, tab), ps = [];
+      var x = campCell(gi), ps = [];
       if (!campFilled(x)) return { parts: [] };          // 文章の無いタブは送らない
       // ★送る順＝画面の欄の上から順（まるちゃんが▲▼で決める）
       x.parts.forEach(function (sl) {
