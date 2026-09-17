@@ -5824,7 +5824,8 @@ var SG_STEPS_JS_ =
     'function hm2m(t){var p=String(t||"").split(":");' +
       'return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0);}' +
     'function m2hm(m){return Math.floor(m/60)+":"+("0"+(m%60)).slice(-2);}' +
-    'var DURS=[15,30,40,60,90,120];' +
+    /* ★2026-09-17 まるちゃん「15分のボタンを20分にしたい」＝15→20。 */
+    'var DURS=[20,30,40,60,90,120];' +
     'function goTime(){step=6;show();' +
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
