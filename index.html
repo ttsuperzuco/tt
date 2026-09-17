@@ -225,7 +225,7 @@
 <script src="sg_rules.js?v=e4734e8ffb"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
 <script src="bigsend.js?v=0371a3ad72"></script>
-<script src="code.js?v=3e1179f026"></script>
+<script src="code.js?v=51f58332a7"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -1190,12 +1190,16 @@
   function pcHome() {
     return window.pywebview && window.pywebview.api && typeof window.pywebview.api.back_home === 'function';
   }
+  // ★2026-09-17：画面が自分で戻るを受け取る時（LINE一斉配信のように画面の中で1つずつ戻す）はそちらを優先する。
+  //   前は先回りして受け取っていたので、途中の画面から押すとホーム（パソコンは押す前の部屋）まで戻ってしまった。
+  //   → 画面の処理のあとに見て、画面が自分で止めていたら何もしない。
   document.addEventListener('click', function (e) {
+    if (e.defaultPrevented) return;
     var a = e.target && e.target.closest ? e.target.closest('a') : null;
     if (!a || !isBack(a) || !isTopLink(a)) return;
     if (toTop(a) && pcHome()) { e.preventDefault(); window.pywebview.api.back_home(); return; }
     if (cameFromApp()) { e.preventDefault(); history.back(); }
-  }, true);
+  }, false);
 
   var queued = false;
   function sync() {

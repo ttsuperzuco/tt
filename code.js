@@ -4416,7 +4416,17 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcstatus{font-weight:800;margin:10px 2px;font-size:14.5px;border-radius:11px;padding:0;}' +
     '.bcstatus.on{background:#131C2E;color:#E8EEF7;padding:11px 14px;}' +
     '.bcstatus.ng{background:#2a1214;color:#fca5a5;padding:11px 14px;}' +
-    '.bcwaitmsg{text-align:center;font-weight:800;font-size:17px;color:#E8EEF7;padding:14px 6px 6px;}';
+    '.bcwaitmsg{text-align:center;font-weight:800;font-size:17px;color:#E8EEF7;padding:14px 6px 6px;}' +
+    // ★キャンペーン・商品の紹介（2026-09-17）＝種類のボタン・見出し・タブ・選んだ画像
+    '.bccamph{font-size:17px;font-weight:900;color:#fff;margin:14px 2px 10px;}' +
+    '.bccampkinds{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 6px;}' +
+    '.bccampkind{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
+    'background:#2563EB;color:#fff;line-height:1.35;word-break:break-all;box-shadow:0 3px 10px rgba(0,0,0,.22);cursor:pointer;}' +
+    '.bccampkind.on{background:#16A34A;box-shadow:0 0 0 3px #fff inset;}' +
+    '.bccampkind.on::before{content:"✓ ";}' +
+    '.bccamptab{margin:12px 0 14px;}' +
+    '.bcpick.bccampon{border-color:#16A34A;box-shadow:0 0 0 2px #16A34A inset;}' +
+    '.bcpick.bccampon span{color:#7dd3a0;}';
   var script =
   '<script>(function(){' +
   'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
@@ -4498,7 +4508,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'ja:MJA,zh:MZH,tags:TAGS,mback:MBACK,' +
   'midx:MIDX,mstep:MSTEP,' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
-  'function saveNow(){if(!WIPON)return;' +
+  // ★キャンペーン・商品の紹介の間は、予約可能枠案内の途中の作業に書かず別の置き場へ（2026-09-17）
+  'function saveNow(){if(CMODE){campSave();return;}if(!WIPON)return;' +
   'if(WIPT)clearTimeout(WIPT);' +
   'WIPT=setTimeout(function(){WIPT=null;' +
   'var o=packNow(true);' +
@@ -4569,6 +4580,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'step=0;page="k";mode="";FRESH=false;status("まっさらに戻しました。");draw();}});};}' +
   'function draw(){saveNow();' +
   'if(page==="k"){drawKind();}else if(page==="l"){drawSent();}' +
+  'else if(page==="c"){drawCampKind();}else if(page==="ce"){drawCampEdit();}' +
   'else if(page==="w"){drawWaku();}' +
   'else if(page==="s"){drawText();}else if(page==="m"){drawMake();}' +
   'else{if(step<TPL.length&&!filled(step))step=nextLive(step-1);' +
@@ -4683,10 +4695,13 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★配信の種類をえらぶ画面（入口）。いまは「予約可能枠案内」の1つだけ。
   //   下に「設定した配信の予約を確認する」も置く（まるちゃん指示 2026-09-09）。
   'function drawKind(){' +
+  // ★2026-09-17 まるちゃん依頼で「キャンペーン・商品の紹介」を足した。
   'var h=\'<button type="button" class="bckind" id="bckind1">予約可能枠案内</button>\'+' +
+  '\'<button type="button" class="bckind" id="bckind2">キャンペーン・商品の紹介</button>\'+' +
   '\'<button type="button" class="bctxt" id="bcseelist">設定した配信の予約を確認する</button>\';' +
   'box.innerHTML=freshBar()+h;bindFresh();' +
   'document.getElementById("bckind1").onclick=function(){MOVED=true;page="s";status("");draw();};' +
+  'document.getElementById("bckind2").onclick=function(){MOVED=true;campEnter();};' +
   'var sl=document.getElementById("bcseelist");' +
   'if(sl)sl.onclick=function(){MOVED=true;page="l";LPOSTS=null;status("");draw();};}' +
   // ★設定した配信の予約を確かめる画面（まるちゃん指示 2026-09-09）。
@@ -5336,7 +5351,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'status(d.note||(now?"送りました。":"予約しました。"),!d.ok);' +
   // ★送り終わったら**全部**まっさらにする。前は対象の中身だけ消していたので、
   //   本文と予約可能時間文が残り、次に開いた時「復元しますか？」が出ていた（実機で発生）。
-  'if(d.ok){DATA=TPL.map(function(){return {parts:[]};});' +
+  'if(d.ok&&CMODE){campDone();step=0;page="l";mode="";LPOSTS=null;draw();}' +
+  'else if(d.ok){DATA=TPL.map(function(){return {parts:[]};});' +
   'MJA=[];MZH=[];MSTEP=0;MIDX=0;MMSG="";MBODY="";MBODYS=["","","",""];' +
   'MZBODYS=["","","",""];TAGS=[];' +
   'WTEXT="";SRES=null;SPER="";SIDX=0;FRESH=false;LMODE="";' +
@@ -5399,6 +5415,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("bc_restore",{},function(d){status(d.note||"戻しました。",!d.ok);' +
   'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,drawList);},' +
   'function(m){u.disabled=false;status(m,true);});}});};}' +
+  // ★キャンペーン・商品の紹介（2026-09-17）。中身は下の bcCampCode_ にふつうの書き方で書いてある。
+  bcCampSrc_() +
   // ── 立ち上がり ────────────────────────────────────────
 
   // ★窓の幅を変えたら字の大きさを測り直す（パソコンの窓は大きさを変えられるため）
@@ -5414,6 +5432,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'else{MIDX=BORDER.length-1;}}' +
   'function backOne(){' +
   'if(page==="k")return false;' +
+  'if(CMODE&&page!=="l")return campBack();' +
   'if(page==="l"){page="k";return true;}' +
   'if(page==="w"){page="s";return true;}' +
   'if(page==="s"){var gs=(SRES&&SRES.groups)||[];' +
@@ -11681,4 +11700,246 @@ function teikeiStart_(rows) {
     }
   }
   render();
+}
+
+/**
+ * ★LINE一斉配信「キャンペーン・商品の紹介」（2026-09-17 まるちゃん依頼）。
+ *   ①各種LINKの「キャンペーン／商品」から種類を選ぶ →②日本男性・日本女性・台湾男性・台湾女性の4画面で、
+ *   それぞれ「未来店」「来店済」の2つのタブに文章（自分で入れる）と画像（各種LINKの画像から選ぶ）を入れる
+ *   →③いつもの最終確認で日時を決めて予約（送り先は事務所パソコンの型「キャンペーン・商品の紹介」）。
+ *   ★この関数は呼ばない。中身の文だけを renderBroadcastPage_ の画面の仕掛けの中へ差し込む（bcCampSrc_）。
+ *     画面の仕掛けと同じ入れ物（TPL・DATA・draw など）をそのまま使うため。
+ *     文字の中に命令を書く形にしなかったのは、引用符を1つ間違えると画面全体が止まるため（2026-09-17）。
+ */
+function bcCampCode_() {
+  var CAMPCAT = 'キャンペーン・商品の紹介', CAMPWIP = 'bc_wip_camp.json';
+  var CGROUPS = [['日本男性', '男', '日本語'], ['日本女性', '女', '日本語'], ['台湾男性', '男', '中文'], ['台湾女性', '女', '中文']];
+  var CMODE = false, CTPL = [], CDATA = {}, CLINKS = null, CLINKERR = '', CKIND = '', CGI = 0, CTAB = 0, CORIG = null, CWIPT = null;
+
+  function campName(gi, tab) { return CGROUPS[gi][0] + ' ' + (tab ? '来店済' : '未来店'); }
+  function campCell(gi, tab) {
+    var k = campName(gi, tab);
+    if (!CDATA[k]) CDATA[k] = { text: '', imgs: [] };
+    return CDATA[k];
+  }
+  function campFilled(c) { return !!(c && (String(c.text || '').replace(/^\s+|\s+$/g, '') || (c.imgs || []).length)); }
+  function campAny() { for (var k in CDATA) if (campFilled(CDATA[k])) return true; return false; }
+  function campTopic() {
+    var ts = (CLINKS && CLINKS.topics) || [];
+    for (var i = 0; i < ts.length; i++) if (ts[i].name === CKIND) return ts[i];
+    return null;
+  }
+  // その案内の画像（各種LINK）。日本のお客様＝日本語の行、台湾のお客様＝中文の行。
+  function campImages(lang) {
+    var t = campTopic(), out = [];
+    ((t && t.links) || []).forEach(function (l) {
+      if (l.lang !== lang) return;
+      (l.images || []).forEach(function (u) { if (out.indexOf(u) < 0) out.push(u); });
+    });
+    return out;
+  }
+
+  function campLoadLinks() {
+    var base = location.origin + location.pathname.replace(/[^/]*$/, '');
+    CLINKERR = '';
+    fetch(base + 'links.json?cb=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (d) { CLINKS = d || { topics: [] }; if (CMODE) draw(); })
+      .catch(function () { CLINKERR = '各種LINKを読めませんでした。通信環境を確かめて、もう一度開いてください。'; if (CMODE) draw(); });
+  }
+  function campLoadTpl() {
+    ask('bc_templates', { fields: JSON.stringify({ category: CAMPCAT }) }, function (d) {
+      if (!d || d.category !== CAMPCAT || !d.templates) { status('送り先の決まりを読み込めませんでした。', true); return; }
+      CTPL = d.templates;
+      if (CMODE) draw();
+    }, function (m) { status(m, true); });
+  }
+  function campEnter() {
+    CMODE = true; page = 'c'; mode = ''; status('');
+    if (!CLINKS) campLoadLinks();
+    if (!CTPL.length) campLoadTpl();
+    draw();
+  }
+  // 最終確認のために入れ替えた送り先・中身を、予約可能枠案内の物へ戻す
+  function campUnswap() {
+    if (!CORIG) return;
+    TPL = CORIG.tpl; DATA = CORIG.data; CAT = CORIG.cat; TAGS = CORIG.tags; CORIG = null;
+  }
+  function campLeave() { campUnswap(); CMODE = false; }
+
+  // ── 途中の作業を覚える（予約可能枠案内とは別の置き場）──
+  function campSave() {
+    if (!WIPON) return;
+    if (CWIPT) clearTimeout(CWIPT);
+    CWIPT = setTimeout(function () {
+      CWIPT = null;
+      if (!campAny()) return;
+      try { pushImage(CAMPWIP, { t: Date.now(), kind: CKIND, gi: CGI, tab: CTAB, page: page, data: CDATA }); } catch (e) {}
+    }, 1200);
+  }
+  function campWipClear() {
+    if (CWIPT) { clearTimeout(CWIPT); CWIPT = null; }
+    try { pushImage(CAMPWIP, { t: Date.now(), data: {} }); } catch (e) {}
+  }
+
+  // ── ①種類をえらぶ ──
+  function drawCampKind() {
+    var h = '<div class="bcstop"><span class="bcsttl">キャンペーン・商品の紹介</span></div>';
+    if (CLINKERR) {
+      h += '<div class="bcstatus ng">' + esc(CLINKERR) + '</div>';
+    } else if (!CLINKS) {
+      h += '<div class="bccard"><div class="bcouttx">各種LINKを読んでいます…</div></div>';
+    } else {
+      var ts = CLINKS.topics || [];
+      ['キャンペーン', '商品'].forEach(function (k) {
+        var list = ts.filter(function (t) { return (t.kind === '商品' ? '商品' : 'キャンペーン') === k; });
+        h += '<div class="bccamph">' + (k === '商品' ? '🛍️ 商品' : '🎁 キャンペーン') + '</div>';
+        if (!list.length) { h += '<div class="bccard"><div class="bcempty">各種LINKに登録がありません。</div></div>'; return; }
+        h += '<div class="bccampkinds">' + list.map(function (t) {
+          return '<button type="button" class="bccampkind' + (t.name === CKIND ? ' on' : '') + '" data-ck="' + esc(t.name) + '">' +
+            esc(t.name) + '</button>';
+        }).join('') + '</div>';
+      });
+    }
+    h += '<button type="button" class="bctxt" id="bccrest" style="margin-top:6px">作業中のデータを復元する</button>';
+    box.innerHTML = h;
+    [].slice.call(box.querySelectorAll('[data-ck]')).forEach(function (b) {
+      b.onclick = function () {
+        var nm = b.getAttribute('data-ck');
+        function go() { if (nm !== CKIND) { CDATA = {}; } CKIND = nm; CGI = 0; CTAB = 0; page = 'ce'; status(''); draw(); }
+        if (CKIND && nm !== CKIND && campAny()) {
+          szPopup_('入れた中身を消して「' + nm + '」に切り替えますか？', { cancel: true, onYes: go });
+          return;
+        }
+        go();
+      };
+    });
+    var rs = document.getElementById('bccrest');
+    if (rs) rs.onclick = function () {
+      status('作業中のデータを探しています…');
+      jsonp({ action: 'data', name: CAMPWIP }, function (d) {
+        var s = (d && d.data && typeof d.data === 'object') ? d : null;
+        var any = false;
+        if (s) for (var k in s.data) if (campFilled(s.data[k])) any = true;
+        if (!any || !s.kind) { status('作業中のデータはありません。', true); return; }
+        CDATA = s.data; CKIND = s.kind;
+        CGI = (s.gi >= 0 && s.gi < CGROUPS.length) ? s.gi : 0; CTAB = s.tab ? 1 : 0;
+        page = 'ce'; status('作業中のデータを復元しました。'); draw();
+      });
+    };
+  }
+
+  // ── ②中身を入れる（日本男性／日本女性／台湾男性／台湾女性 × 未来店・来店済のタブ）──
+  function drawCampEdit() {
+    var g = CGROUPS[CGI], c = campCell(CGI, CTAB), imgs = campImages(g[2]);
+    var last = (CGI === CGROUPS.length - 1);
+    var h = '<div class="bcstop"><span class="bcsttl">' + esc(CKIND) + '</span>' +
+      '<span class="bcsno">' + (CGI + 1) + ' / ' + CGROUPS.length + '</span></div>';
+    h += '<div class="bccard"><div class="bcname">' + esc(g[0]) + '</div>' +
+      '<div class="bctab bccamptab">' + [0, 1].map(function (tb) {
+        var lab = (tb ? '来店済' : '未来店') + g[1];
+        return '<button type="button" data-ct="' + tb + '" class="' + (tb === CTAB ? 'on' : '') + '">' +
+          esc(lab) + (campFilled(campCell(CGI, tb)) ? ' ✓' : '') + '</button>';
+      }).join('') + '</div>';
+    h += '<div class="bcleft">文章（' + MAXT + '文字まで）</div>' +
+      '<textarea id="bcctx" placeholder="' + esc(campName(CGI, CTAB)) + 'のお客様へ送る文章">' + esc(c.text || '') + '</textarea>' +
+      '<div class="bccount" id="bcccnt"></div>';
+    h += '<div class="bchr"></div><div class="bcleft">画像（各種LINKの「' + esc(CKIND) + '」' + esc(g[2]) + 'から選ぶ）</div>';
+    if (!imgs.length) {
+      h += '<div class="bcempty">この案内の' + esc(g[2]) + 'には、各種LINKに画像がありません。</div>';
+    } else {
+      h += '<div class="bcgrid">' + imgs.map(function (u, i) {
+        var on = (c.imgs || []).indexOf(u) >= 0;
+        return '<div class="bcpick' + (on ? ' bccampon' : '') + '">' +
+          '<button type="button" class="sel" data-ci="' + i + '"><img src="' + esc(u) + '">' +
+          '<span>' + (on ? '✓ 入れる' : '入れない') + '</span></button>' +
+          '<button type="button" class="bczoom" data-cz="' + i + '">🔍 大きく見る</button></div>';
+      }).join('') + '</div>';
+    }
+    h += '<div class="bcempty" style="margin-top:12px">文章も画像も入れなかったタブには配信しません。</div></div>';
+    h += '<button type="button" class="bcgo" id="bccnext">' + (last ? '配信内容の最終確認をする' : 'この内容でOK') + '</button>';
+    box.innerHTML = h;
+
+    var ta = document.getElementById('bcctx'), cnt = document.getElementById('bcccnt');
+    function count() {
+      var L = (ta.value || '').length, over = L > MAXT;
+      cnt.textContent = L ? (L + ' / ' + MAXT + ' 文字' + (over ? '（あと' + (L - MAXT) + '文字減らしてください）' : '')) : '';
+      cnt.className = 'bccount' + (over ? ' over' : '');
+    }
+    function grow() { ta.style.height = '0px'; ta.style.height = (ta.scrollHeight + 12) + 'px'; }
+    count(); grow(); setTimeout(grow, 0);
+    // ★打っている間は画面を描き直さない（描き直すと欄が作り直されて打てなくなる）
+    ta.oninput = function () {
+      var was = campFilled(c);
+      c.text = ta.value; count(); grow(); saveNow();
+      if (was !== campFilled(c)) {   // タブの✓だけ付け替える
+        var tb = box.querySelector('[data-ct="' + CTAB + '"]');
+        if (tb) tb.textContent = (CTAB ? '来店済' : '未来店') + g[1] + (campFilled(c) ? ' ✓' : '');
+      }
+    };
+    [].slice.call(box.querySelectorAll('[data-ct]')).forEach(function (b) {
+      b.onclick = function () { c.text = ta.value; CTAB = +b.getAttribute('data-ct'); status(''); saveNow(); draw(); };
+    });
+    [].slice.call(box.querySelectorAll('[data-ci]')).forEach(function (b) {
+      b.onclick = function () {
+        c.text = ta.value;
+        var u = imgs[+b.getAttribute('data-ci')], a = (c.imgs || []).slice(), k = a.indexOf(u);
+        if (k >= 0) { a.splice(k, 1); }
+        else {
+          var room = MAXP - (String(c.text || '').replace(/^\s+|\s+$/g, '') ? 1 : 0);
+          if (a.length >= room) { status('1回の配信に入れられるのは、文章と画像を合わせて' + MAXP + 'つまでです。', true); return; }
+          a.push(u);
+        }
+        c.imgs = a; status(''); saveNow(); draw();
+      };
+    });
+    [].slice.call(box.querySelectorAll('[data-cz]')).forEach(function (b) {
+      b.onclick = function () { bigView(imgs[+b.getAttribute('data-cz')], ''); };
+    });
+    document.getElementById('bccnext').onclick = function () {
+      c.text = ta.value;
+      for (var tb = 0; tb < 2; tb++) {
+        var x = campCell(CGI, tb), n = (x.imgs || []).length + (String(x.text || '').replace(/^\s+|\s+$/g, '') ? 1 : 0);
+        if (String(x.text || '').length > MAXT) { CTAB = tb; status('文章は' + MAXT + '文字までです。', true); draw(); return; }
+        if (n > MAXP) { CTAB = tb; status('文章と画像を合わせて' + MAXP + 'つまでにしてください。', true); draw(); return; }
+      }
+      saveNow();
+      if (!last) { CGI++; CTAB = 0; status(''); draw(); return; }
+      campToLast();
+    };
+  }
+
+  // ── ③いつもの最終確認へ（送り先と中身を入れ替えて渡す）──
+  function campToLast() {
+    if (!CTPL.length) { status('送り先の決まりを読み込めていません。少し待ってからもう一度押してください。', true); if (!CTPL.length) campLoadTpl(); return; }
+    if (!campAny()) { status('文章か画像を入れたタブがありません。', true); return; }
+    if (!CORIG) CORIG = { tpl: TPL, data: DATA, cat: CAT, tags: TAGS };
+    TPL = CTPL; CAT = CAMPCAT; TAGS = [];
+    DATA = CTPL.map(function (t) {
+      var x = CDATA[t.name] || { text: '', imgs: [] }, ps = [];
+      (x.imgs || []).forEach(function (u) { ps.push({ kind: 'image', src: 'link:' + u, thumb: u }); });
+      var tx = String(x.text || '').replace(/^\s+|\s+$/g, '');
+      if (tx) ps.push({ kind: 'text', text: tx });
+      return { parts: ps };
+    });
+    step = TPL.length; LMODE = ''; mode = ''; page = 't'; status(''); draw();
+  }
+  // 予約できたあと＝入れた中身と覚えていた途中の作業を消し、予約可能枠案内の物へ戻す
+  function campDone() {
+    CDATA = {}; CKIND = ''; CGI = 0; CTAB = 0; LMODE = '';
+    campWipClear(); campLeave();
+  }
+  // 画面の上の「← 戻る」＝1つ前へ。戻せる所が無ければ false。
+  function campBack() {
+    if (page === 'c') { campLeave(); page = 'k'; return true; }
+    if (page === 'ce') { if (CGI > 0) { CGI--; CTAB = 0; } else { page = 'c'; } return true; }
+    if (LMODE === 'at') { LMODE = ''; return true; }
+    campUnswap(); page = 'ce'; CGI = CGROUPS.length - 1; step = 0; return true;
+  }
+}
+
+// 上の関数の中身の文だけを取り出す（renderBroadcastPage_ の仕掛けに差し込む用）
+function bcCampSrc_() {
+  var s = String(bcCampCode_);
+  return s.slice(s.indexOf('{') + 1, s.lastIndexOf('}'));
 }
