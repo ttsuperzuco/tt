@@ -996,7 +996,8 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★施術後の予約＝作りかけ。**まるちゃんの画面（社長版・開発版）には出す**が、スタッフには出さない
   //   （まるちゃん指示 2026-09-12「開発者のスマホにも出そう」＝どちらの住所で開いても出るように）。
   //   tile_settings.py の TILES には入れない＝スタッフの人ごとの表示でONにはできない。
-  sejutsugo:  { exec: true, staff: false },
+  // ★2026-09-17 まるちゃん決定：作りかけなので社長版(トマトさんの画面)にも出さない＝開発版だけ。
+  sejutsugo:  { exec: false, staff: false },
   // ★TimeTree＝ズコの中でタイムツリーの予定を見る（月→日→予定の中身・読むだけ）。2026-09-15。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
   timetree:   { exec: false, staff: false },
@@ -1044,7 +1045,7 @@ function defaultPerms_(people) {
     // ★zenjitsu(前日お知らせ)＝2026-08-24 まるちゃん決定で全員ON（スタッフにも見せる）。
     // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
     //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: (list[i] === 'kanbu'), procamp: (list[i] === 'kanbu') };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: false, procamp: (list[i] === 'kanbu') };
   }
   return perms;
 }
