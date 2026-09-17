@@ -1000,16 +1000,15 @@ var DEFAULT_TILE_SETTINGS_ = {
   sejutsugo:  { exec: false, staff: false },
   // ★TimeTree＝ズコの中でタイムツリーの予定を見る（月→日→予定の中身・読むだけ）。2026-09-15。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
-  timetree:   { exec: false, staff: false },
-  // ★プロセル頭キャ案内リスト＝社長(🍅トマト)がキャンペーンを案内するかを1人ずつ選んで送る（2026-09-17 まるちゃん依頼）。
-  //   社長版(無印)と開発版に出す・スタッフには出さない（施術後の予約と同じ出し方）。
-  //   tile_settings.py の STAFF_ASSIGNABLE には入れない＝スタッフの人ごとの表示ではONにできない。
-  procamp:    { exec: true, staff: false }
+  timetree:   { exec: false, staff: false }
+  // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
+  //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
+  //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'timetree', 'procamp'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'timetree'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1045,7 +1044,7 @@ function defaultPerms_(people) {
     // ★zenjitsu(前日お知らせ)＝2026-08-24 まるちゃん決定で全員ON（スタッフにも見せる）。
     // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
     //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: false, procamp: (list[i] === 'kanbu') };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: false };
   }
   return perms;
 }
@@ -1714,10 +1713,8 @@ var TILE_DEFS_ = [
   // ★TimeTree＝タイムツリーを開かずに、月のカレンダー→日付→その日の予定→中身を見る（2026-09-15）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'timetree', cls: 'timetree', view: 'timetree',
-    icon: '<span class="ticon">' + TT_LOGO_ + '</span>', label: 'Time\nTree' },
-  // ★プロセル頭キャ案内リスト（2026-09-17）＝社長版と開発版に出す。選んで送信→事務所PCの共有データに残る。
-  { id: 'procamp', cls: 'procamp', view: 'procamp',
-    icon: '<span class="ticon">💈</span>', label: 'プロセル頭\nキャリスト' }
+    icon: '<span class="ticon">' + TT_LOGO_ + '</span>', label: 'Time\nTree' }
+  // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
 // ★2026-08-02 まるちゃん決定：開発版(?dev=1)とPC版のホームは、まず「管理者用／実務者用／開発者用」の
@@ -1731,7 +1728,7 @@ var TILE_DEFS_ = [
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
-  uriage: 'kanri', procell: 'kanri', procamp: 'kanri',
+  uriage: 'kanri', procell: 'kanri',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
