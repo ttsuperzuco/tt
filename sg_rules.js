@@ -129,8 +129,20 @@
 
   /* ★本体：その日の予約から「画面に出す分」だけ返す。
      ev … { mark, start, end, title, room, ... }（同じ1日ぶん）。 */
+  /* ★お客様の予約か（2026-09-17 まるちゃん「お名前なし？」）。
+     題名に「預約」か「予約」がある物だけがお客様の予約（お店の決まり＝部屋の空き判定・被り検出と同じ字の見方）。
+     講座・会議・部屋を借りた「使用」などは出さない（13:00〜15:00「🍅シミ取りメニュー導入講座zoom」が
+     お客様として「お名前なし」で出ていた）。 */
+  SG.isBooking = function (title) {
+    var t = String(title || '');
+    return t.indexOf('預約') !== -1 || t.indexOf('予約') !== -1;
+  };
+
   SG.visibleBookings = function (dayEvents) {
-    var all = dayEvents || [];
+    var all = [];
+    for (var a = 0; a < (dayEvents || []).length; a++) {
+      if (SG.isBooking(dayEvents[a].title)) all.push(dayEvents[a]);
+    }
     var out = [];
     for (var i = 0; i < all.length; i++) {
       var e = all[i];
