@@ -997,7 +997,9 @@ var DEFAULT_TILE_SETTINGS_ = {
   //   （まるちゃん指示 2026-09-12「開発者のスマホにも出そう」＝どちらの住所で開いても出るように）。
   //   tile_settings.py の TILES には入れない＝スタッフの人ごとの表示でONにはできない。
   // ★2026-09-17 まるちゃん決定：作りかけなので社長版(トマトさんの画面)にも出さない＝開発版だけ。
-  sejutsugo:  { exec: false, staff: false },
+  // ★★2026-09-17（同日・後から）まるちゃん決定「施術後の予約ボタンをスタッフにもだす」＝全員ON。
+  //   tile_settings.py の STAFF_ASSIGNABLE に入れた＝自動監視の人ごとの表示で入切できる。
+  sejutsugo:  { exec: true, staff: true },
   // ★TimeTree＝ズコの中でタイムツリーの予定を見る（月→日→予定の中身・読むだけ）。2026-09-15。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
   timetree:   { exec: false, staff: false }
@@ -1044,7 +1046,8 @@ function defaultPerms_(people) {
     // ★zenjitsu(前日お知らせ)＝2026-08-24 まるちゃん決定で全員ON（スタッフにも見せる）。
     // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
     //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: false };
+    // ★★2026-09-17 まるちゃん決定「施術後の予約ボタンをスタッフにもだす」＝全員ON（tile_settings.py と一致）。
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true };
   }
   return perms;
 }
@@ -5527,7 +5530,10 @@ function renderReservationHomePage_(base, staff, dev) {
         '<span class="ricon">✏️</span><span class="rname">既存の変更</span></a>') : '';
   // ★2026-09-11 まるちゃん指示：一番上に「施術後の予約」＝施術者がその場でそのお客様の次回を入れる入口。
   //   中身はこれから作る（今は準備中の画面）。新しいボタンなので既定は開発者(?dev=1)だけに出す。
-  var sg = dev ?
+  // ★★2026-09-17 まるちゃん決定「スタッフにもだす」＝ホームのボタンを見せてよい人には、ここにも出す
+  //   （誰に見せるかは人ごとの表示の1か所だけで決める＝index.html が起動時に置く __SZ_ALLOW_）。
+  var _sgAllow = (typeof window !== 'undefined') && window.__SZ_ALLOW_;
+  var sg = (dev || !!(_sgAllow && _sgAllow.sejutsugo === true)) ?
       ('<a class="rolebtn sejutsugo" href="' + base + '?view=yoyaku_sejutsugo' + sfx + '" target="_top">' +
         '<span class="ricon">💆</span><span class="rname">施術後の予約</span></a>') : '';
   var menu =
