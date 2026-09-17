@@ -9414,7 +9414,13 @@ function lkImgScript_(base) {
     'function showTopics(k){if(k)curKind=k;curTopic=-1;if(tlist)tlist.hidden=false;for(var i=0;i<tblocks.length;i++)tblocks[i].hidden=true;' +
       'var n=0;tbtns.forEach(function(b){var on=b.getAttribute("data-k")===curKind;b.hidden=!on;if(on)n++;});' +
       'if(thead)thead.textContent=curKind;if(tnone)tnone.hidden=n>0;window.scrollTo(0,0);}' +
-    'function openTopic(i){curTopic=i;if(tlist)tlist.hidden=true;for(var j=0;j<tblocks.length;j++)tblocks[j].hidden=(j!==i);window.scrollTo(0,0);}' +
+    'function openTopic(i){curTopic=i;if(tlist)tlist.hidden=true;for(var j=0;j<tblocks.length;j++)tblocks[j].hidden=(j!==i);window.scrollTo(0,0);fitSubs(tblocks[i]);}' +
+    // ★ボタンの2行目（（ブログ記事）など）を1行に収める。同じ案内の中は一番小さい大きさにそろえる（2026-09-17）
+    'function fitSubs(bl){if(!bl)return;var a=bl.querySelectorAll(".lklangsub"),k,mn=99;' +
+    'for(k=0;k<a.length;k++){var el=a[k],f=22;el.style.fontSize=f+"px";' +
+    'while(el.clientWidth&&el.scrollWidth>el.clientWidth&&f>10){f--;el.style.fontSize=f+"px";}if(el.clientWidth&&f<mn)mn=f;}' +
+    'if(mn<99)for(k=0;k<a.length;k++)a[k].style.fontSize=mn+"px";}' +
+    'window.addEventListener("resize",function(){if(curTopic>=0&&tblocks[curTopic]&&!tblocks[curTopic].hidden)fitSubs(tblocks[curTopic]);});' +
     'tbtns.forEach(function(b){b.addEventListener("click",function(){openTopic(+b.getAttribute("data-t"));});});' +
     '[].slice.call(document.querySelectorAll(".lkgotopics")).forEach(function(b){b.addEventListener("click",function(){showUrl();showTopics(b.getAttribute("data-k"));});});' +
     'if(goImg)goImg.addEventListener("click",openImg);' +
@@ -9515,9 +9521,15 @@ function lkLinkBtn_(lk) {
     var label = urls.length > 1 ? 'プレビュー' + (marks[i] || (i + 1)) : 'プレビュー';
     return '<a class="lkprev" href="' + esc_(u) + '" target="_blank" rel="noopener">' + label + '</a>';
   }).join('');
+  // ★2026-09-17 まるちゃん「日本語 二行目が（ブログ記事）で、二行目は一行で表示」＝名前の（）から後ろを2行目にして、
+  //   折り返さず1行に収まる大きさまで縮める（縮めるのは lkImgScript_ の fitSubs）。
+  var lm = /^([^（(]+)([（(].*)$/.exec(String(lk.lang || ''));
+  var langHtml = lm
+    ? '<span class="lklang">' + esc_(lm[1].replace(/\s+$/, '')) + '</span><span class="lklangsub">' + esc_(lm[2]) + '</span>'
+    : '<span class="lklang">' + esc_(lk.lang || '') + '</span>';
   return '<div class="lkcell">' +
     '<button type="button" class="lkbtn" data-url="' + data + '">' +
-      '<span class="lklang">' + esc_(lk.lang || '') + '</span>' +
+      langHtml +
       '<span class="lkcopy"></span>' +
     '</button>' +
     prevs +
@@ -9602,6 +9614,8 @@ var LKCSS_ =
 '    box-shadow:0 4px 14px rgba(0,0,0,.18); }' +
 '  .lkbtn:active{ transform:translateY(2px); }' +
 '  .lklang{ font-size:30px; font-weight:800; }' +
+'  .lklangsub{ display:block; align-self:stretch; text-align:center; white-space:nowrap; overflow:hidden;' +
+'    font-size:22px; font-weight:800; line-height:1.3; }' +
 '  .lkcopy{ font-size:15px; font-weight:800; color:#6b7280; text-align:center; line-height:1.3; white-space:nowrap; }' +
 '  .lkcopy:empty{ display:none; }' +
 '  .lkbtn.lkok{ background:#eafff1; border-color:#16a34a; }' +
