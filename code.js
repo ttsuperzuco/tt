@@ -11715,6 +11715,7 @@ function bcCampCode_() {
   var CAMPCAT = 'キャンペーン・商品の紹介', CAMPWIP = 'bc_wip_camp.json';
   var CGROUPS = [['日本男性', '男', '日本語'], ['日本女性', '女', '日本語'], ['台湾男性', '男', '中文'], ['台湾女性', '女', '中文']];
   var CMODE = false, CTPL = [], CDATA = {}, CLINKS = null, CLINKERR = '', CKIND = '', CGI = 0, CTAB = 0, CORIG = null, CWIPT = null;
+  var CTPLBUSY = false, CWAITLAST = false;
 
   function campName(gi, tab) { return CGROUPS[gi][0] + ' ' + (tab ? '来店済' : '未来店'); }
   function campCell(gi, tab) {
@@ -11730,10 +11731,15 @@ function bcCampCode_() {
     return null;
   }
   // その案内の画像（各種LINK）。日本のお客様＝日本語の行、台湾のお客様＝中文の行。
-  function campImages(lang) {
+  // ★2026-09-17：各種LINKのボタン名は「日本語（ブログ記事）」「日本語（画像・女性）」のように分かれることがある
+  //   ＝頭が日本語／中文の行を見る。名前に「女性」「男性」とある行は、その性別の画面にだけ出す。
+  function campImages(lang, sei) {
     var t = campTopic(), out = [];
     ((t && t.links) || []).forEach(function (l) {
-      if (l.lang !== lang) return;
+      var nm = String(l.lang || '');
+      if (nm.indexOf(lang) !== 0) return;
+      if (sei === '男' && nm.indexOf('女性') >= 0) return;
+      if (sei === '女' && nm.indexOf('男性') >= 0) return;
       (l.images || []).forEach(function (u) { if (out.indexOf(u) < 0) out.push(u); });
     });
     return out;
@@ -11747,12 +11753,19 @@ function bcCampCode_() {
       .then(function (d) { CLINKS = d || { topics: [] }; if (CMODE) draw(); })
       .catch(function () { CLINKERR = '各種LINKを読めませんでした。通信環境を確かめて、もう一度開いてください。'; if (CMODE) draw(); });
   }
+  // ★送り先の決まりは事務所パソコンに聞くので10秒以上かかることがある（2026-09-17 実機）。
+  //   ・届いても、文章を打っている画面は描き直さない（描き直すと入力欄が作り直されて打てなくなる）
+  //   ・最終確認を押した時にまだなら「読み込んでいます」と出し、届いたらそのまま最終確認へ進む
   function campLoadTpl() {
+    if (CTPLBUSY) return;
+    CTPLBUSY = true;
     ask('bc_templates', { fields: JSON.stringify({ category: CAMPCAT }) }, function (d) {
-      if (!d || d.category !== CAMPCAT || !d.templates) { status('送り先の決まりを読み込めませんでした。', true); return; }
+      CTPLBUSY = false;
+      if (!d || d.category !== CAMPCAT || !d.templates) { CWAITLAST = false; status('送り先の決まりを読み込めませんでした。', true); return; }
       CTPL = d.templates;
-      if (CMODE) draw();
-    }, function (m) { status(m, true); });
+      if (CWAITLAST && CMODE && page === 'ce') { CWAITLAST = false; campToLast(); return; }
+      if (CMODE && page === 'c') draw();
+    }, function (m) { CTPLBUSY = false; CWAITLAST = false; status(m, true); });
   }
   function campEnter() {
     CMODE = true; page = 'c'; mode = ''; status('');
@@ -11831,7 +11844,7 @@ function bcCampCode_() {
 
   // ── ②中身を入れる（日本男性／日本女性／台湾男性／台湾女性 × 未来店・来店済のタブ）──
   function drawCampEdit() {
-    var g = CGROUPS[CGI], c = campCell(CGI, CTAB), imgs = campImages(g[2]);
+    var g = CGROUPS[CGI], c = campCell(CGI, CTAB), imgs = campImages(g[2], g[1]);
     var last = (CGI === CGROUPS.length - 1);
     var h = '<div class="bcstop"><span class="bcsttl">' + esc(CKIND) + '</span>' +
       '<span class="bcsno">' + (CGI + 1) + ' / ' + CGROUPS.length + '</span></div>';
@@ -11911,8 +11924,8 @@ function bcCampCode_() {
 
   // ── ③いつもの最終確認へ（送り先と中身を入れ替えて渡す）──
   function campToLast() {
-    if (!CTPL.length) { status('送り先の決まりを読み込めていません。少し待ってからもう一度押してください。', true); if (!CTPL.length) campLoadTpl(); return; }
     if (!campAny()) { status('文章か画像を入れたタブがありません。', true); return; }
+    if (!CTPL.length) { CWAITLAST = true; status('送り先の決まりを読み込んでいます。終わったら自動で最終確認に進みます…'); campLoadTpl(); return; }
     if (!CORIG) CORIG = { tpl: TPL, data: DATA, cat: CAT, tags: TAGS };
     TPL = CTPL; CAT = CAMPCAT; TAGS = [];
     DATA = CTPL.map(function (t) {
