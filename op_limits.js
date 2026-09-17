@@ -32,6 +32,7 @@
     "new_customer_reservations": 120,
     "preview_reservation": 180,
     "run_all": 600,
+    "sejutsugo_next_memo": 30,
     "timed_line_send": 180,
     "timedsend_cancel": 180,
     "timedsend_list": 60,
