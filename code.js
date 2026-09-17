@@ -5281,7 +5281,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ta=document.getElementById("bctxt"),cnt=document.getElementById("bccnt"),ad=document.getElementById("bcaddtxt");' +
   'function growTa(){if(!ta)return;ta.style.height="0px";ta.style.height=(ta.scrollHeight+12)+"px";}' +
   'if(ta){ta.focus();growTa();setTimeout(growTa,0);setTimeout(growTa,200);' +
-  'ta.oninput=function(){var L=ta.value.length;cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください）"):"");' +
+  'ta.oninput=function(){var L=ta.value.replace(/^\\s+|\\s+$/g,"").length;cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください）"):"");' +
   'cnt.className="bccount"+(L>MAXT?" over":"");growTa();};' +
   'ad.onclick=function(){var v=(ta.value||"").trim();' +
   'if(!v){status("文章が空です。",true);return;}' +
@@ -11889,7 +11889,8 @@ function bcCampCode_() {
 
     var ta = document.getElementById('bcctx'), cnt = document.getElementById('bcccnt');
     function count() {
-      var L = (ta.value || '').length, over = L > MAXT;
+      // ★前後の空白は数えない（送る時に取る・LINEの管理画面も数えない＝2026-09-17 まるちゃん「LINEは500ちょうど」）
+      var L = String(ta.value || '').replace(/^\s+|\s+$/g, '').length, over = L > MAXT;
       cnt.textContent = L ? (L + ' / ' + MAXT + ' 文字' + (over ? '（あと' + (L - MAXT) + '文字減らしてください）' : '')) : '';
       cnt.className = 'bccount' + (over ? ' over' : '');
     }
@@ -11927,7 +11928,7 @@ function bcCampCode_() {
       c.text = ta.value;
       for (var tb = 0; tb < 2; tb++) {
         var x = campCell(CGI, tb), n = (x.imgs || []).length + (String(x.text || '').replace(/^\s+|\s+$/g, '') ? 1 : 0);
-        if (String(x.text || '').length > MAXT) { CTAB = tb; status('文章は' + MAXT + '文字までです。', true); draw(); return; }
+        if (String(x.text || '').replace(/^\s+|\s+$/g, '').length > MAXT) { CTAB = tb; status('文章は' + MAXT + '文字までです。', true); draw(); return; }
         if (n > MAXP) { CTAB = tb; status('文章と画像を合わせて' + MAXP + 'つまでにしてください。', true); draw(); return; }
       }
       saveNow();
