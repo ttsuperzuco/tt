@@ -8200,28 +8200,28 @@ function renderProcampPage_(list, choice, base, staff, dev) {
   'function paint(tr){var v=picks[tr.getAttribute("data-id")];[].forEach.call(tr.querySelectorAll(".pcopt button"),function(b){b.classList.toggle("on",b.getAttribute("data-v")===v);});}' +
   'trs.forEach(function(tr){var id=tr.getAttribute("data-id");if(PREV[id])picks[id]=PREV[id];paint(tr);' +
   '[].forEach.call(tr.querySelectorAll(".pcopt button"),function(b){b.addEventListener("click",function(){picks[id]=b.getAttribute("data-v");paint(tr);});});});' +
-  'if(PREVAT)setSt("前回の送信："+PREVAT);' +
+  'if(PREVAT)setSt("前回の登録："+PREVAT);' +
   'function jsonp(p,cb){var n="__pcamp"+Date.now()+Math.floor(Math.random()*1000);window[n]=function(r){try{delete window[n];}catch(e){}cb(r);};' +
   'var q="callback="+n;for(var k in p)q+="&"+k+"="+encodeURIComponent(p[k]);' +
   'var s=document.createElement("script");s.src=EXEC+"?"+q+"&cb="+Date.now();s.onerror=function(){cb({ok:false,error:"通信エラーです"});};document.body.appendChild(s);}' +
   'function fail(msg){btn.disabled=false;setSt("");if(typeof szPopup_==="function")szPopup_(msg);else setSt(msg,"err");}' +
-  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("procamp_save",1000)){fail("時間切れです。事務所PCが動いているかご確認のうえ、もう一度送信してください。");return;}' +
-  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){fail("送信できませんでした："+((r&&r.error)||"不明"));return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("procamp_save",1000)){fail("時間切れです。事務所PCが動いているかご確認のうえ、もう一度登録してください。");return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){fail("登録できませんでした："+((r&&r.error)||"不明"));return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1000);return;}' +
-  'if(r.status!=="done"){fail("送信できませんでした："+(r.result||r.status));return;}' +
-  'btn.disabled=false;var d=new Date();setSt("送信しました（"+(d.getMonth()+1)+"/"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+"）","ok");});}' +
-  'function send(){btn.disabled=true;polls=0;setSt("送信しています…");' +
+  'if(r.status!=="done"){fail("登録できませんでした："+(r.result||r.status));return;}' +
+  'btn.disabled=false;var d=new Date();setSt("登録しました（"+(d.getMonth()+1)+"/"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+"）","ok");});}' +
+  'function send(){btn.disabled=true;polls=0;setSt("登録しています…");' +
   'jsonp({action:"submit",key:KEY,op:"procamp_save",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({picks:picks})},' +
-  'function(r){if(!r||!r.ok||!r.id){fail("送信できませんでした："+((r&&r.error)||"不明"));return;}setTimeout(function(){poll(r.id);},1000);});}' +
+  'function(r){if(!r||!r.ok||!r.id){fail("登録できませんでした："+((r&&r.error)||"不明"));return;}setTimeout(function(){poll(r.id);},1000);});}' +
   'btn.addEventListener("click",function(){var left=trs.length-Object.keys(picks).length;' +
-  'if(left>0&&typeof szPopup_==="function"){szPopup_("まだ選んでいない方が "+left+" 人います。このまま送信しますか？",{cancel:true,icon:"",onYes:send});return;}send();});' +
+  'if(left>0&&typeof szPopup_==="function"){szPopup_("まだ選んでいない方が "+left+" 人います。このまま登録しますか？",{cancel:true,icon:"",onYes:send});return;}send();});' +
   '})();<\/script>';
   return '<style>' + HOMECSS_ + PROCAMPCSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) + head +
     '<div class="pcamp"><div class="pcampscroll"><table>' +
       '<thead><tr><th>キャ案内する？</th><th>番号・お名前</th><th>最後に来た日／次の予約</th><th>購入済みプロセル頭皮の内容</th></tr></thead>' +
       '<tbody>' + body + '</tbody></table></div>' +
-      '<div class="pcampfoot"><button type="button" class="pcampsend" id="pcampsend">送信</button>' +
+      '<div class="pcampfoot"><button type="button" class="pcampsend" id="pcampsend">登録</button>' +
       '<span class="pcampst" id="pcampst"></span></div>' +
     '</div></div>' + script;
 }
