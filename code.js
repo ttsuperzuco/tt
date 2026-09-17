@@ -5973,6 +5973,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '<button type="button" class="sggo" id="sgmgo">この予約メモの内容で確定</button>' +
     '</div>';
   var backTop = backBar_(base, staff, dev);          /* 1枚目の戻る＝ホームへ */
+  /* ★2026-09-17 まるちゃん「TOMATOのスマホで開くと一番に🍊が選択されてる」。
+     社長版（スタッフ版でも開発版でもない）は名前を選ばない作りなので、この端末の名前が空のまま届き、
+     「自分のスマホなら自分の施術者がはじめから選ばれる」が効いていなかった（開いた記録71回すべて空）。
+     社長版の持ち主＝🍅トマトさん（判断の正本の WHO_TO_MARK の kanbu）なので、ここだけ kanbu として渡す。
+     ※全体の名前は変えない（操作の記録や名前の取り合いに響くため）。 */
+  if (!who && !staff && !dev) who = 'kanbu';
   var backList = '<div class="backbar" id="sgbackbar" style="display:none">' +
     '<a class="backbtn" id="sgback" href="javascript:void(0)">← 戻る</a></div>';
   var script =
