@@ -1034,7 +1034,13 @@
   function boot(cfg) {
     var people = (cfg && cfg.people) || ['kanbu','ringo','mikan','olive','marron','mango','coconut','reception'];
     var labels = (cfg && cfg.labels) || {};
-    var perms  = (cfg && cfg.perms) || null;
+    // ★2026-09-17 まるちゃん指摘「トマトさんの画面にプロセルボタンが出ていない」：
+    //   ここに届くのは保存したそのまま（人ごとの表示で触れるボタンだけ）なので、保存に書いていない
+    //   新しいボタン（プロセル頭キャリスト・施術後の予約）は社長版で「見せない」扱いになっていた。
+    //   グーグル側で開いた時と同じく、初めの決まり（code.js の defaultPerms_）を混ぜてから使う。
+    //   スタッフに割り当てるボタンは保存に全部書いてあるので、スタッフの見え方は変わらない（確認済み）。
+    var perms  = (cfg && cfg.perms)
+      ? ((typeof _permsFromCfg_ === 'function') ? _permsFromCfg_(cfg) : cfg.perms) : null;
     var order  = (cfg && cfg.order) || null;   // ボタンの並び順（自動監視メニュー4で変更可）
 
     // 端末リセットの合図：この端末が名前を選んだ時刻より後にリセット指示があれば、記憶を消して選び直し。
