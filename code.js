@@ -4482,7 +4482,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ── 中身の言い方 ──────────────────────────────────────
   'function picks(){return MADE.concat(PRE);}' +
   'function preOf(key){var a=picks();for(var i=0;i<a.length;i++)if(a[i].key===key)return a[i];return null;}' +
-  'function partLabel(p){if(p.kind==="text")return "文章 "+p.text.length+"文字　"+p.text.replace(/\\n/g," ").slice(0,22);' +
+  'function partLabel(p){if(p.kind==="text")return "文章 "+ulen(p.text)+"文字　"+p.text.replace(/\\n/g," ").slice(0,22);' +
   'if((p.src||"").indexOf("made:")===0)return "予約可能枠の画像";' +
   'var pr=preOf((p.src||"").replace(/^(preset|made):/,""));return pr?pr.label:"その場で選んだ写真";}' +
   'function partThumb(p){if(p.kind==="text")return "";' +
@@ -4874,12 +4874,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'for(i=0;i<gs.length;i++)if(!!gs[i].z===!!want&&gs[i].atama===atama&&gs[i].sei===sei)return gs[i].text;' +
   'for(i=0;i<gs.length;i++)if(!!gs[i].z===!!want&&gs[i].atama===atama&&!gs[i].sei)return gs[i].text;}' +
   'return "";}' +
-  'function tooLong(a){for(var i=0;i<a.length;i++)if((a[i].text||"").length>MAXT)return a[i].label;' +
+  'function tooLong(a){for(var i=0;i<a.length;i++)if(ulen(a[i].text)>MAXT)return a[i].label;' +
   'return "";}' +
-  'function cardsOf(a){return a.map(function(x){var over=(x.text||"").length>MAXT;' +
+  'function cardsOf(a){return a.map(function(x){var over=ulen(x.text)>MAXT;' +
   'return \'<div class="bcout"><div class="bcouth"><b>\'+esc(x.label)+\'</b></div>\'+' +
   '\'<div class="bcouttx">\'+esc(x.text)+\'</div>\'+' +
-  '\'<div class="bcnum\'+(over?" over":"")+\'">\'+esc(numMsg((x.text||"").length))+' +
+  '\'<div class="bcnum\'+(over?" over":"")+\'">\'+esc(numMsg(ulen(x.text)))+' +
   '\'</div></div>\';}).join("");}' +
   // ── 配信文を作る（専用の画面・2026-09-08 まるちゃんの決めた順）──────────
   //   ①日本語の文章を入れる →②時間が入った文を確かめる →③台湾版（自動で訳す）を確かめる
@@ -4911,7 +4911,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(MSTEP===0){' +
   'var x=BORDER[MIDX],last=(MIDX===N-1);' +
   'var body=MBODYS[MIDX]||"",done=joinBody(body,timesOf(x[0],x[1]));' +
-  'var over=done.length>MAXT;' +
+  'var over=ulen(done)>MAXT;' +
   'h=\'<div class="bcstop"><span class="bcsttl">配信文を作成</span>\'+' +
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
   // ★「【時間】」は区分の名前の右はし（まるちゃん指示 2026-09-09）。押すとそのまま写せる。
@@ -4923,7 +4923,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<div class="bcouttx" id="bcmprev" style="margin-top:13px">\'+' +
   'esc(body.replace(/^\\s+|\\s+$/g,"")?done:' +
   '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません"))+\'</div>\'+' +
-  '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?numMsg(done.length):"")+' +
+  '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?numMsg(ulen(done)):"")+' +
   '\'</div>\';' +
   'h+=\'</div>\';' +
   // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）
@@ -4941,7 +4941,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'else if(MSTEP===1){' +
   'var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
   'var zb=MZBODYS[MIDX]||"",zdone=joinBody(zb,zhOf(timesOf(zx[0],zx[1],true)));' +
-  'var zov=zdone.length>MAXT;' +
+  'var zov=ulen(zdone)>MAXT;' +
   'h=\'<div class="bcstop"><span class="bcsttl">中国語版を作成</span>\'+' +
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b>\'+' +
@@ -4952,7 +4952,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<div class="bcouttx" id="bcmzprev" style="margin-top:13px">\'+' +
   'esc(zb.replace(/^\\s+|\\s+$/g,"")?zdone:' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません"))+\'</div>\'+' +
-  '\'<div class="bcnum\'+(zov?" over":"")+\'" id="bcmznum">\'+(zb?numMsg(zdone.length):"")+' +
+  '\'<div class="bcnum\'+(zov?" over":"")+\'" id="bcmznum">\'+(zb?numMsg(ulen(zdone)):"")+' +
   '\'</div>\';' +
   'h+=\'</div>\';' +
   'if(!MBUSY){h+=zov?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
@@ -4963,7 +4963,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★中身のある区分だけを順に見せる。数え方もその数だけ（まるちゃん指示 2026-09-09）
   'var lv=zLive(),pos=lv.indexOf(MIDX);' +
   'if(pos<0&&lv.length){MIDX=lv[0];pos=0;}' +
-  'var z=MZH[MIDX]||{text:""},lastz=(pos<0||pos===lv.length-1),ov2=(z.text||"").length>MAXT;' +
+  'var z=MZH[MIDX]||{text:""},lastz=(pos<0||pos===lv.length-1),ov2=ulen(z.text)>MAXT;' +
   'h=\'<div class="bcstop"><span class="bcsttl">中国語版の配信分の確認</span>\'+' +
   '\'<span class="bcsno">\'+(lv.length?((pos+1)+\' / \'+lv.length):\'0 / 0\')+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b></div>\'+' +
@@ -4971,7 +4971,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmzedit" class="bcmtx" placeholder="\'+' +
   'esc("空欄のため、"+ordLabel(MIDX,true)+"には配信しません")+\'">\'+' +
   'esc(z.text||"")+\'</textarea>\'+' +
-  '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+numMsg((z.text||"").length)+' +
+  '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+numMsg(ulen(z.text))+' +
   '\'</div></div>\';' +
   'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
   ':(lastz?makeBtn("bcmok3")' +
@@ -4991,7 +4991,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(pv)pv.textContent=ta.value.replace(/^\\s+|\\s+$/g,"")?done:' +
   '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません");' +
   'var nm=document.getElementById("bcmnum");' +
-  'if(nm){var ov=done.length>MAXT;nm.textContent=ta.value?numMsg(done.length):"";' +
+  'if(nm){var ov=ulen(done)>MAXT;nm.textContent=ta.value?numMsg(ulen(done)):"";' +
   'nm.className="bcnum"+(ov?" over":"");}' +
   'saveNow();};' +
   'var e=document.getElementById("bcmedit");' +
@@ -5005,8 +5005,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'atama:BORDER[MIDX][0],sei:BORDER[MIDX][1],text:""};' +
   'MZH[MIDX].text=zed.value;' +
   'var zn=document.getElementById("bcmznum2");' +
-  'if(zn){var zo=zed.value.length>MAXT;' +
-  'zn.textContent=numMsg(zed.value.length);' +
+  'if(zn){var zo=ulen(zed.value)>MAXT;' +
+  'zn.textContent=numMsg(ulen(zed.value));' +
   'zn.className="bcnum"+(zo?" over":"");}' +
   'saveNow();};' +
   'e=document.getElementById("bcmoknext");' +
@@ -5044,7 +5044,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(zpv)zpv.textContent=zta.value.replace(/^\\s+|\\s+$/g,"")?zdone:' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません");' +
   'var znm=document.getElementById("bcmznum");' +
-  'if(znm){var zov=zdone.length>MAXT;znm.textContent=zta.value?numMsg(zdone.length):"";' +
+  'if(znm){var zov=ulen(zdone)>MAXT;znm.textContent=zta.value?numMsg(ulen(zdone)):"";' +
   'znm.className="bcnum"+(zov?" over":"");}' +
   'saveNow();};' +
   'var zok=document.getElementById("bcmzok");' +
@@ -5191,7 +5191,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="see"){' +
   'var sp=d.parts[EDI]||{text:""};' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">\'+(EDI+1)+\'つ目の文章（\'+(sp.text||"").length+\'文字）</div>\'+' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">\'+(EDI+1)+\'つ目の文章（\'+ulen(sp.text)+\'文字）</div>\'+' +
   '\'<div class="bcouttx bcseetx">\'+esc(sp.text||"")+\'</div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcseeedit">この文章を修正する</button>\'+' +
   '\'<button type="button" class="bcghost" id="bccancel">閉じる</button>\';}' +
@@ -5200,7 +5200,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<div class="bchr"></div><div class="bcleft">\'+((EDI>=0)?"文章を直す":"文章を入れる")+' +
   '\'（\'+MAXT+\'文字まで）</div>\'+' +
   '\'<textarea id="bctxt" placeholder="この対象へ送る文章">\'+esc(old)+\'</textarea>\'+' +
-  '\'<div class="bccount" id="bccnt">\'+old.length+\' / \'+MAXT+\' 文字</div></div>\'+' +
+  '\'<div class="bccount" id="bccnt">\'+ulen(old)+\' / \'+MAXT+\' 文字</div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcaddtxt">\'+' +
   '((EDI>=0)?"この文章に直す":"この文章を入れる")+\'</button>\'+' +
   '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
@@ -5285,11 +5285,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ta=document.getElementById("bctxt"),cnt=document.getElementById("bccnt"),ad=document.getElementById("bcaddtxt");' +
   'function growTa(){if(!ta)return;ta.style.height="0px";ta.style.height=(ta.scrollHeight+12)+"px";}' +
   'if(ta){ta.focus();growTa();setTimeout(growTa,0);setTimeout(growTa,200);' +
-  'ta.oninput=function(){var L=ta.value.replace(/^\\s+|\\s+$/g,"").length;cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください）"):"");' +
+  'ta.oninput=function(){var L=ulen(ta.value.replace(/^\\s+|\\s+$/g,""));cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください）"):"");' +
   'cnt.className="bccount"+(L>MAXT?" over":"");growTa();};' +
   'ad.onclick=function(){var v=(ta.value||"").trim();' +
   'if(!v){status("文章が空です。",true);return;}' +
-  'if(v.length>MAXT){status("文章は"+MAXT+"文字までです（いまは"+v.length+"文字）。",true);return;}' +
+  'if(ulen(v)>MAXT){status("文章は"+MAXT+"文字までです（いまは"+ulen(v)+"文字）。",true);return;}' +
   'if(EDI>=0&&d.parts[EDI]){d.parts[EDI].text=v;}else{d.parts.push({kind:"text",text:v});}' +
   'EDI=-1;mode="";status("");saveNow();draw();};}}' +
   // ── 最後（確認＋日時）────────────────────────────────
@@ -11732,6 +11732,9 @@ function teikeiStart_(rows) {
  *     文字の中に命令を書く形にしなかったのは、引用符を1つ間違えると画面全体が止まるため（2026-09-17）。
  */
 function bcCampCode_() {
+  // ★文字数はLINEと同じ数え方＝絵文字（😳👉など）も1文字（2026-09-17 まるちゃん「LINEで500文字なのに503」＝
+  //   普通に数えると絵文字が2文字になっていた）。一斉配信の画面の文字数は全部これで数える。
+  function ulen(t) { return Array.from(String(t == null ? '' : t)).length; }
   var CAMPCAT = 'キャンペーン・商品の紹介', CAMPWIP = 'bc_wip_camp.json';
   var CGROUPS = [['日本男性', '男', '日本語'], ['日本女性', '女', '日本語'], ['台湾男性', '男', '中文'], ['台湾女性', '女', '中文']];
   var CMODE = false, CTPL = [], CDATA = {}, CLINKS = null, CLINKERR = '', CKIND = '', CGI = 0, CTAB = 0, CORIG = null, CWIPT = null;
@@ -11930,7 +11933,7 @@ function bcCampCode_() {
     h += '<button type="button" class="bcgo" id="bccnext">' + (last ? '配信内容の最終確認をする' : 'この内容でOK') + '</button>';
     box.innerHTML = h;
 
-    function trimLen(t) { return String(t || '').replace(/^\s+|\s+$/g, '').length; }
+    function trimLen(t) { return ulen(String(t || '').replace(/^\s+|\s+$/g, '')); }
     function markTab() {
       var tb = box.querySelector('[data-ct="' + CTAB + '"]');
       if (tb) tb.textContent = (CTAB ? '来店済' : '未来店') + g[1] + (campFilled(c) ? ' ✓' : '');
