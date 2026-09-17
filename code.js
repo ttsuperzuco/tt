@@ -167,6 +167,9 @@ function doGet(e) {
   } else if (view === 'yoyaku') {
     title = '予約入力';                                  // ★予約入力のトップ画面（新規／既存／変更の3ボタン・PC版と同じ見た目）
     html = renderReservationHomePage_(base, staff, dev);
+  } else if (view === 'procamp') {
+    title = 'プロセル頭キャリスト';                     // ★社長版と開発版。静的アプリが一覧を取って描く（ここは中身なし）
+    html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてください。' }, {}, base, staff, dev);
   } else if (view === 'yoyaku_sejutsugo') {
     title = '施術後の予約';                              // ★施術者がその場で次回の予約を入れる入口（中身はこれから）
     html = renderAfterTreatmentPage_(base, staff, dev, who);
@@ -996,12 +999,16 @@ var DEFAULT_TILE_SETTINGS_ = {
   sejutsugo:  { exec: true, staff: false },
   // ★TimeTree＝ズコの中でタイムツリーの予定を見る（月→日→予定の中身・読むだけ）。2026-09-15。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
-  timetree:   { exec: false, staff: false }
+  timetree:   { exec: false, staff: false },
+  // ★プロセル頭キャ案内リスト＝社長(🍅トマト)がキャンペーンを案内するかを1人ずつ選んで送る（2026-09-17 まるちゃん依頼）。
+  //   社長版(無印)と開発版に出す・スタッフには出さない（施術後の予約と同じ出し方）。
+  //   tile_settings.py の STAFF_ASSIGNABLE には入れない＝スタッフの人ごとの表示ではONにできない。
+  procamp:    { exec: true, staff: false }
 };
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'timetree'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'timetree', 'procamp'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1037,7 +1044,7 @@ function defaultPerms_(people) {
     // ★zenjitsu(前日お知らせ)＝2026-08-24 まるちゃん決定で全員ON（スタッフにも見せる）。
     // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
     //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: (list[i] === 'kanbu') };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: (list[i] === 'kanbu'), procamp: (list[i] === 'kanbu') };
   }
   return perms;
 }
@@ -1703,7 +1710,10 @@ var TILE_DEFS_ = [
   // ★TimeTree＝タイムツリーを開かずに、月のカレンダー→日付→その日の予定→中身を見る（2026-09-15）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'timetree', cls: 'timetree', view: 'timetree',
-    icon: '<span class="ticon">' + TT_LOGO_ + '</span>', label: 'Time\nTree' }
+    icon: '<span class="ticon">' + TT_LOGO_ + '</span>', label: 'Time\nTree' },
+  // ★プロセル頭キャ案内リスト（2026-09-17）＝社長版と開発版に出す。選んで送信→事務所PCの共有データに残る。
+  { id: 'procamp', cls: 'procamp', view: 'procamp',
+    icon: '<span class="ticon">💈</span>', label: 'プロセル頭\nキャリスト' }
 ];
 
 // ★2026-08-02 まるちゃん決定：開発版(?dev=1)とPC版のホームは、まず「管理者用／実務者用／開発者用」の
@@ -1717,7 +1727,7 @@ var TILE_DEFS_ = [
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
-  uriage: 'kanri', procell: 'kanri',
+  uriage: 'kanri', procell: 'kanri', procamp: 'kanri',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
@@ -8125,6 +8135,96 @@ function renderProcell_(base, staff, dev) {
   }
 }
 
+// ========== プロセル頭キャリスト（2026-09-17 まるちゃん依頼・社長版と開発版） ==========
+// プロセル頭をやったことがあり今もLINEがつながっている人を1行ずつ並べ、「キャ案内する？」を
+// しない／する／旅人タグにする の3つのボタンで選んで送る。一覧(procamp_list.json)と前回の選択
+// (procamp_choice.json)は事務所PCが置き場に出す（プロセル頭キャ案内\programs\procamp.py）。
+// 送信は受付係(op=procamp_save)が共有DBへ残すだけ（タイムツリーにもLINEにも触らない）。
+var PROCAMPCSS_ =
+  '.pcamp{background:#fff;border-radius:14px;padding:8px;color:#1a2429;text-align:left;}' +
+  '.pcampscroll{overflow-x:auto;}' +
+  '.pcamp table{border-collapse:collapse;width:100%;min-width:720px;font-size:13px;line-height:1.35;}' +
+  '.pcamp th,.pcamp td{border:1px solid #d5dde1;padding:4px 6px;vertical-align:middle;text-align:left;}' +
+  '.pcamp th{background:#2C7A99;color:#fff;font-weight:700;white-space:nowrap;}' +
+  '.pcamp tbody tr:nth-child(even) td{background:#f4f8f9;}' +
+  '.pcamp td.nw{white-space:nowrap;}' +
+  '.pcopt{display:inline-flex;border:1px solid #c9d3d8;border-radius:6px;overflow:hidden;white-space:nowrap;}' +
+  '.pcopt button{font:inherit;font-size:12px;padding:5px 7px;border:0;border-left:1px solid #c9d3d8;background:#fff;color:#5f6f76;cursor:pointer;}' +
+  '.pcopt button:first-child{border-left:0;}' +
+  '.pcopt button.on[data-v="n"]{background:#6b7780;color:#fff;font-weight:700;}' +
+  '.pcopt button.on[data-v="y"]{background:#1f8a5b;color:#fff;font-weight:700;}' +
+  '.pcopt button.on[data-v="t"]{background:#b8661c;color:#fff;font-weight:700;}' +
+  '.pcampfoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 2px 2px;}' +
+  '.pcampsend{font:inherit;font-weight:800;font-size:15px;padding:9px 22px;border-radius:999px;border:0;background:#2C7A99;color:#fff;cursor:pointer;}' +
+  '.pcampsend:disabled{opacity:.5;}' +
+  '.pcampst{font-size:13px;color:#5f6f76;}' +
+  '.pcampst.ok{color:#1f8a5b;font-weight:700;}.pcampst.err{color:#b42318;font-weight:700;}';
+
+function renderProcampPage_(list, choice, base, staff, dev) {
+  list = list || {};
+  choice = choice || {};
+  var head = '<div class="hhead"><span class="bmark">💈</span><span class="bname">プロセル頭キャリスト</span></div>';
+  var rows = list.rows || [];
+  if (list.error || !rows.length) {
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="home">' + backBar_(base, staff, dev) + head +
+      '<div class="soon"><div class="soonic">📄</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">一覧を読めませんでした</div>' +
+      '<div class="soondesc">' + esc_(list.error || 'まだ一覧が作られていません。') + '</div></div></div>';
+  }
+  var body = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    body += '<tr data-id="' + esc_(r.id) + '">' +
+      '<td class="nw"><span class="pcopt">' +
+        '<button type="button" data-v="n">しない</button>' +
+        '<button type="button" data-v="y">する</button>' +
+        '<button type="button" data-v="t">旅人タグにする</button>' +
+      '</span></td>' +
+      '<td class="nw">' + esc_(r.id + ' ' + r.name) + '</td>' +
+      '<td class="nw">' + esc_(r.dates) + '</td>' +
+      '<td>' + esc_(r.bought) + '</td></tr>';
+  }
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  var KEY = 'kx7Q2p9mVt4Zr8';
+  var script =
+  '<script>(function(){' +
+  'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
+  'var PREV=' + JSON.stringify(choice.picks || {}).replace(/</g, '\\u003c') + ';' +
+  'var PREVAT=' + JSON.stringify(choice.submitted_at || '').replace(/</g, '\\u003c') + ';' +
+  'var idn={who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""};' +
+  'var picks={};var trs=[].slice.call(document.querySelectorAll(".pcamp tbody tr"));' +
+  'var st=document.getElementById("pcampst"),btn=document.getElementById("pcampsend");' +
+  'function setSt(t,k){st.textContent=t;st.className="pcampst"+(k?" "+k:"");}' +
+  'function paint(tr){var v=picks[tr.getAttribute("data-id")];[].forEach.call(tr.querySelectorAll(".pcopt button"),function(b){b.classList.toggle("on",b.getAttribute("data-v")===v);});}' +
+  'trs.forEach(function(tr){var id=tr.getAttribute("data-id");if(PREV[id])picks[id]=PREV[id];paint(tr);' +
+  '[].forEach.call(tr.querySelectorAll(".pcopt button"),function(b){b.addEventListener("click",function(){picks[id]=b.getAttribute("data-v");paint(tr);});});});' +
+  'if(PREVAT)setSt("前回の送信："+PREVAT);' +
+  'function jsonp(p,cb){var n="__pcamp"+Date.now()+Math.floor(Math.random()*1000);window[n]=function(r){try{delete window[n];}catch(e){}cb(r);};' +
+  'var q="callback="+n;for(var k in p)q+="&"+k+"="+encodeURIComponent(p[k]);' +
+  'var s=document.createElement("script");s.src=EXEC+"?"+q+"&cb="+Date.now();s.onerror=function(){cb({ok:false,error:"通信エラーです"});};document.body.appendChild(s);}' +
+  'function fail(msg){btn.disabled=false;setSt("");if(typeof szPopup_==="function")szPopup_(msg);else setSt(msg,"err");}' +
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("procamp_save",1000)){fail("時間切れです。事務所PCが動いているかご確認のうえ、もう一度送信してください。");return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){fail("送信できませんでした："+((r&&r.error)||"不明"));return;}' +
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1000);return;}' +
+  'if(r.status!=="done"){fail("送信できませんでした："+(r.result||r.status));return;}' +
+  'btn.disabled=false;var d=new Date();setSt("送信しました（"+(d.getMonth()+1)+"/"+d.getDate()+" "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2)+"）","ok");});}' +
+  'function send(){btn.disabled=true;polls=0;setSt("送信しています…");' +
+  'jsonp({action:"submit",key:KEY,op:"procamp_save",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({picks:picks})},' +
+  'function(r){if(!r||!r.ok||!r.id){fail("送信できませんでした："+((r&&r.error)||"不明"));return;}setTimeout(function(){poll(r.id);},1000);});}' +
+  'btn.addEventListener("click",function(){var left=trs.length-Object.keys(picks).length;' +
+  'if(left>0&&typeof szPopup_==="function"){szPopup_("まだ選んでいない方が "+left+" 人います。このまま送信しますか？",{cancel:true,icon:"",onYes:send});return;}send();});' +
+  '})();<\/script>';
+  return '<style>' + HOMECSS_ + PROCAMPCSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) + head +
+    '<div class="pcamp"><div class="pcampscroll"><table>' +
+      '<thead><tr><th>キャ案内する？</th><th>番号・お名前</th><th>最後に来た日／次の予約</th><th>購入済みプロセル頭皮の内容</th></tr></thead>' +
+      '<tbody>' + body + '</tbody></table></div>' +
+      '<div class="pcampfoot"><button type="button" class="pcampsend" id="pcampsend">送信</button>' +
+      '<span class="pcampst" id="pcampst"></span></div>' +
+    '</div></div>' + script;
+}
+
 // GAS側から開いた時用（静的アプリは index.html が窓口から取って renderPcStatusPage_ を直接呼ぶ）。
 function renderPcStatus_(base, staff, dev) {
   try {
@@ -10497,6 +10597,7 @@ var HOMECSS_ =
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile.timetree::before { background:#2bad6f; }' +
+'  .tile.procamp::before { background:#9333ea; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -10517,6 +10618,7 @@ var HOMECSS_ =
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .tile.sejutsugo .ticon { background:rgba(14,165,233,.16); }' +
 '  .tile.timetree .ticon { background:rgba(43,173,111,.16); }' +
+'  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
