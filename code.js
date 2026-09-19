@@ -143,6 +143,9 @@ function doGet(e) {
   } else if (view === 'pcstatus') {
     title = '自宅PC';                                   // ★開発URL(?dev=1)専用。事務所PCの生き死にと止まった理由
     html = renderPcStatus_(base, staff, dev);
+  } else if (view === 'shophist') {
+    title = 'T＆Tショップ履歴';                        // ★開発URL(?dev=1)専用。静的アプリが shop_history.json を取って描く
+    html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてください。' }, base, staff, dev);
   } else if (view === 'kanshi') {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
@@ -1002,7 +1005,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   sejutsugo:  { exec: true, staff: true },
   // ★TimeTree＝ズコの中でタイムツリーの予定を見る（月→日→予定の中身・読むだけ）。2026-09-15。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
-  timetree:   { exec: false, staff: false }
+  timetree:   { exec: false, staff: false },
+  // ★T＆Tショップ履歴＝ネットショップに誰が何回来たか（2026-09-19 まるちゃん依頼・管理者用）。
+  //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
+  shophist:   { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1010,7 +1016,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'timetree'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'timetree', 'shophist'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1716,7 +1722,11 @@ var TILE_DEFS_ = [
   // ★TimeTree＝タイムツリーを開かずに、月のカレンダー→日付→その日の予定→中身を見る（2026-09-15）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'timetree', cls: 'timetree', view: 'timetree',
-    icon: '<span class="ticon">' + TT_LOGO_ + '</span>', label: 'Time\nTree' }
+    icon: '<span class="ticon">' + TT_LOGO_ + '</span>', label: 'Time\nTree' },
+  // ★T＆Tショップ履歴＝ネットショップ（T＆T SIGNATURE）に、どなたが・何回・何を見て・注文したか（2026-09-19）。
+  //   事務所PCがまとめた shop_history.json を読んで出すだけ（まとめは 商品ページ（T＆Tショップ）の ショップ履歴.py）。
+  { id: 'shophist', cls: 'shophist', view: 'shophist',
+    icon: '<span class="ticon">🛍️</span>', label: 'T＆Tショップ\n履歴' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -1731,7 +1741,7 @@ var TILE_DEFS_ = [
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
-  uriage: 'kanri', procell: 'kanri',
+  uriage: 'kanri', procell: 'kanri', shophist: 'kanri',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
@@ -8523,6 +8533,72 @@ var PROCELLCSS_ = ''
 + '.pcDim{opacity:.7}'
 + '.pcFoot{margin:14px 4px;font-size:.85rem;opacity:.7}';
 
+// ========== T＆Tショップ履歴（2026-09-19 まるちゃん依頼・開発URL専用・管理者用） ==========
+// ネットショップ（T＆T SIGNATURE）に、どなたが・何回来て・何を見て・どこまで進み・注文したか。
+// 事務所PCがまとめた shop_history.json（商品ページ（T＆Tショップ）\programs\ショップ履歴.py）を描くだけ＝判定はPC側。
+// ★名前が出るのは注文した方だけ（注文の文と突き合わせて分かる）。それ以外は「LINEの方 #末尾4字」「ブラウザの方 #…」。
+var SHOPHCSS_ = ''
++ '.shCards .pcCard{flex:1 1 40%}'
++ '.shTbl td{vertical-align:top}'
++ '.shNm{font-weight:700}'
++ '.shCode{font-size:.8rem;opacity:.75;margin-left:4px}'
++ '.shWrap{white-space:normal !important;min-width:9em;line-height:1.5}'
++ '.shBuy{color:#16a34a;font-weight:800}'
++ '.shNone{opacity:.55}';
+function renderShopHistPage_(d, base, staff, dev) {
+  d = d || {};
+  var head = '<style>' + HOMECSS_ + PROCELLCSS_ + SHOPHCSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">🛍️</span><span class="bname">T＆Tショップ履歴</span></div>';
+  if (d.error || !d.summary) {
+    return head + '<div class="soon"><div class="soonic">📄</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">まだ記録がありません</div>' +
+      '<div class="soondesc">' + esc_(d.error || 'ショップが開かれると、ここに出てきます。') + '</div></div></div>';
+  }
+  var sm = d.summary;
+  var cards = [['today', '今日'], ['d7', '7日'], ['d30', '30日'], ['all', 'これまで']].map(function (k) {
+    var v = sm[k[0]] || {};
+    return '<div class="pcCard"><div class="pcName">' + k[1] + '</div>' +
+      '<div class="pcNum">' + (v.people || 0) + '<span class="pcUnit">人</span></div>' +
+      '<div class="pcSub">来店 ' + (v.visits || 0) + '回・注文 ' + (v.orders || 0) + '件</div></div>';
+  }).join('');
+  var ppl = (d.people || []).map(function (p) {
+    return '<tr>' +
+      '<td class="pcL"><span class="shNm' + (p.known ? '' : ' shNone') + '">' + esc_(p.name) + '</span>' +
+        (p.code && p.name.indexOf(p.code) < 0 ? '<span class="shCode">' + esc_(p.code) + '</span>' : '') + '</td>' +
+      '<td class="pcR">' + (p.visits || 0) + '回</td>' +
+      '<td class="pcR">' + (p.orders ? '<span class="shBuy">' + p.orders + '件</span>' : '<span class="shNone">—</span>') + '</td>' +
+      '<td class="pcL pcDim">' + esc_(p.last || '') + '</td>' +
+      '<td class="pcL">' + esc_(p.lang || '') + '</td>' +
+      '<td class="pcL shWrap">' + esc_(p.routes || '') + '</td>' +
+      '<td class="pcL shWrap">' + esc_((p.items || []).join('／') || '—') + '</td>' +
+      '<td class="pcL">' + esc_(p.reached || '開いただけ') + '</td>' +
+    '</tr>';
+  }).join('');
+  var rec = (d.recent || []).map(function (r) {
+    return '<tr><td class="pcL pcDim">' + esc_(r.at) + '</td>' +
+      '<td class="pcL">' + esc_(r.name) + '</td>' +
+      '<td class="pcL shWrap' + (/^注文/.test(r.what) ? ' shBuy' : '') + '">' + esc_(r.what) + '</td>' +
+      '<td class="pcL">' + esc_(r.route || '') + '</td></tr>';
+  }).join('');
+  return head +
+    '<div class="pcLead">ネットショップを開いた人の記録です。お名前が出るのは注文した方だけです（注文の文と突き合わせて分かります）。</div>' +
+    '<div class="pcCards shCards">' + cards + '</div>' +
+    '<div class="pcTitle">お客様ごと（新しい順）</div>' +
+    '<div class="pcTableWrap"><table class="pcTable shTbl">' +
+      '<tr><th class="pcL">お名前</th><th class="pcR">来店</th><th class="pcR">注文</th><th class="pcL">最後</th>' +
+      '<th class="pcL">言葉</th><th class="pcL">入口</th><th class="pcL">見た商品</th><th class="pcL">どこまで</th></tr>' +
+      (ppl || '<tr><td class="pcL" colspan="8">まだありません</td></tr>') +
+    '</table></div>' +
+    '<div class="pcTitle" style="margin-top:18px">最近の動き</div>' +
+    '<div class="pcTableWrap"><table class="pcTable shTbl">' +
+      '<tr><th class="pcL">時刻</th><th class="pcL">お名前</th><th class="pcL">何をしたか</th><th class="pcL">入口</th></tr>' +
+      (rec || '<tr><td class="pcL" colspan="4">まだありません</td></tr>') +
+    '</table></div>' +
+    '<div class="pcFoot">まとめた時刻：' + esc_(d.generated_at || '') + '（新しい記録が届くと1分以内にまとめ直します）。半年より古い記録は自動で消えます。</div>' +
+  '</div>';
+}
+
 function renderAkijikan_(base, staff, dev) {
   try {
     var d = JSON.parse(getAkijikanFile_().getBlob().getDataAsString('UTF-8'));
@@ -10687,6 +10763,7 @@ var HOMECSS_ =
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile.timetree::before { background:#2bad6f; }' +
+'  .tile.shophist::before { background:#22707f; }' +
 '  .tile.procamp::before { background:#9333ea; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -10708,6 +10785,7 @@ var HOMECSS_ =
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .tile.sejutsugo .ticon { background:rgba(14,165,233,.16); }' +
 '  .tile.timetree .ticon { background:rgba(43,173,111,.16); }' +
+'  .tile.shophist .ticon { background:rgba(34,112,127,.16); }' +
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
