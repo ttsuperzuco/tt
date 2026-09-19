@@ -225,7 +225,7 @@
 <script src="sg_rules.js?v=e4734e8ffb"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
 <script src="bigsend.js?v=0371a3ad72"></script>
-<script src="code.js?v=24e29e11ce"></script>
+<script src="code.js?v=26e92cf173"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -699,6 +699,23 @@
     document.head.appendChild(s);
   }
 
+  // ★T＆Tショップ履歴（2026-09-19・開発版だけ・管理者用）。事務所PCがまとめた shop_history.json を読んで描くだけ。
+  function showShopHist() {
+    var cb = '__shh' + Date.now();
+    window[cb] = function (payload) {
+      try { delete window[cb]; } catch (e) {}
+      try { mount(renderShopHistPage_(payload || {}, base, staff, dev)); }
+      catch (e) { fail('描画エラー：' + e); }
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=data&name=shop_history.json&callback=' + cb + '&cb=' + Date.now();
+    s.onerror = function () {
+      try { mount(renderShopHistPage_({ error: '通信エラーです。通信環境をご確認ください。' }, base, staff, dev)); }
+      catch (e) {}
+    };
+    document.head.appendChild(s);
+  }
+
   // ★プロセル頭キャリスト（2026-09-17・社長版と開発版）。一覧と前回の選択を窓口(action=data)から
   //   同時に取り、両方そろったら描く（前回の選択が無い・取れない時は空で描く＝一覧さえあれば出す）。
   function showProcamp() {
@@ -1106,6 +1123,7 @@
     else if (v === 'cost') showCost();
     else if (v === 'koukoku') showKoukoku();
     else if (v === 'pcstatus') showPcStatus();
+    else if (v === 'shophist') showShopHist();
     else if (v === 'procamp') showProcamp();
     else if (v === 'instadm') showInstaDm();
     else if (v === 'igdm') showIgdm();
