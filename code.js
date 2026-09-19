@@ -8579,10 +8579,21 @@ var SHOPHCSS_ = ''
 + '.shOld{margin-top:8px}'
 + '.shOld summary{cursor:pointer;font-size:.88rem;opacity:.85;padding:4px 0}'
 + '.shOldV{margin-top:6px;padding-top:4px;border-top:1px solid var(--line)}'
-+ '.shNone{opacity:.6;font-size:.9rem;padding:6px 0}';
++ '.shNone{opacity:.6;font-size:.9rem;padding:6px 0}'
++ '.shTabs{display:flex;gap:6px;margin:0 0 14px}'
++ '.shTab{flex:1 1 0;min-width:0;padding:10px 4px;border-radius:999px;border:2px solid rgba(255,255,255,.7);'
++   'background:transparent;color:#fff;font-weight:800;font-size:.95rem;cursor:pointer;white-space:nowrap}'
++ '.shTab.on{background:#fff;color:#2C7A99;border-color:#fff}'
++ '.shTabN{display:block;font-size:.72rem;font-weight:600;opacity:.85;margin-top:1px}';
 // ★2026-09-19 まるちゃん「履歴がすごく見にくい。ベストの構成を考えて」→横に長い表をやめ、上から
 //   ①数（今日・7日・30日・これまで）②どこで離れたか ③トップの映像はどこまで見られたか ④商品ごと
 //   ⑤お客様ごとのカード（最新の来店の見た順番を縦に・前の来店は開くと出る）にした。横にはみ出さない。
+// タブの切り替え（押したタブの中身だけ出す）
+function shTab_(b) {
+  var t = b.getAttribute('data-t');
+  [].slice.call(document.querySelectorAll('.shTab')).forEach(function (x) { x.classList.toggle('on', x === b); });
+  [].slice.call(document.querySelectorAll('.shPane')).forEach(function (x) { x.style.display = x.getAttribute('data-t') === t ? '' : 'none'; });
+}
 function shIcon_(k) {
   return { perm: '🔓', lang: '🌐', film: '🎬', list: '📋', item: '🧴', step: '↳', cart: '🛒', click: '👆', buy: '✅' }[k] || '・';
 }
@@ -8624,7 +8635,10 @@ function renderShopHistPage_(d, base, staff, dev) {
       '<div class="soontitle" style="font-size:1.4rem">まだ記録がありません</div>' +
       '<div class="soondesc">' + esc_(d.error || 'ショップが開かれると、ここに出てきます。') + '</div></div></div>';
   }
-  var sm = d.summary, st = d.stats || {};
+  // ★2026-09-19 まるちゃん「日本人・台湾人・全体の3つのタブ」＝PC側が d（全体）と d.tabs.ja／d.tabs.zh を同じ形で作る。
+  //   ここは1つぶんの中身を作る shPart を3回呼んで、タブで切り替えるだけ（日本人か台湾人かは最初に選んだ言葉＝PC側で決める）。
+  function shPart(dd) {
+  var sm = dd.summary || {}, st = dd.stats || {};
   var cards = [['today', '今日'], ['d7', '7日'], ['d30', '30日'], ['all', 'これまで']].map(function (k) {
     var v = sm[k[0]] || {};
     return '<div class="pcCard"><div class="pcName">' + k[1] + '</div>' +
@@ -8662,7 +8676,7 @@ function renderShopHistPage_(d, base, staff, dev) {
   }).join('');
   var secItems = its ? '<div class="shSec"><div class="shSecT">商品ごと<small>30日</small></div>' + its + '</div>' : '';
   // ⑤ お客様ごと
-  var ppl = (d.people || []).map(function (p) {
+  var ppl = (dd.people || []).map(function (p) {
     var vis = p.vis || [];
     var v0 = vis[0] || {};
     var chips = [];
@@ -8681,12 +8695,24 @@ function renderShopHistPage_(d, base, staff, dev) {
       (old ? '<details class="shOld"><summary>前の来店（' + (vis.length - 1) + '回）を見る</summary>' + old + '</details>' : '') +
     '</div>';
   }).join('');
-  return head +
-    '<div class="pcLead">ネットショップを開いた人の記録です。お名前が出るのは注文した方だけです（注文の文と突き合わせて分かります）。</div>' +
-    '<div class="pcCards shCards">' + cards + '</div>' +
+  return '<div class="pcCards shCards">' + cards + '</div>' +
     secFunnel + secFilm + secItems +
     '<div class="pcTitle">お客様ごと（新しい順）</div>' +
-    (ppl || '<div class="shNone">まだありません</div>') +
+    (ppl || '<div class="shNone">まだありません</div>');
+  }
+  var tabs = d.tabs || {};
+  var TABS = [['all', '全体', d], ['ja', '日本人', tabs.ja || {}], ['zh', '台湾人', tabs.zh || {}]];
+  return head +
+    '<div class="pcLead">ネットショップを開いた人の記録です。お名前が出るのは注文した方だけです（注文の文と突き合わせて分かります）。' +
+    '日本人か台湾人かは、その方が最初に選んだ言葉（日本語／中文）で分けています。</div>' +
+    '<div class="shTabs">' + TABS.map(function (x, i) {
+      var n = ((x[2].summary || {}).all || {}).people || 0;
+      return '<button type="button" class="shTab' + (i ? '' : ' on') + '" data-t="' + x[0] + '" onclick="shTab_(this)">' +
+        x[1] + '<span class="shTabN">' + n + '人</span></button>';
+    }).join('') + '</div>' +
+    TABS.map(function (x, i) {
+      return '<div class="shPane" data-t="' + x[0] + '"' + (i ? ' style="display:none"' : '') + '>' + shPart(x[2]) + '</div>';
+    }).join('') +
     '<div class="pcFoot">まとめた時刻：' + esc_(d.generated_at || '') + '（新しい記録が届くと1分以内にまとめ直します）。' +
     '秒数・映像の場面・押した物は 2026-09-19 22時22分より後の来店から記録しています。半年より古い記録は自動で消えます。</div>' +
   '</div>';
