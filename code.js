@@ -8567,15 +8567,16 @@ function renderShopHistPage_(d, base, staff, dev) {
     return '<tr>' +
       '<td class="pcL"><span class="shNm' + (p.known ? '' : ' shNone') + '">' + esc_(p.name) + '</span>' +
         (p.code && p.name.indexOf(p.code) < 0 ? '<span class="shCode">' + esc_(p.code) + '</span>' : '') + '</td>' +
+      // ★2026-09-19 まるちゃん「どこ？」＝秒数などが右にはみ出して見えなかった→名前のすぐ右に並べた
+      '<td class="pcL shWrap">' + esc_(p.top || '—') + '</td>' +
+      '<td class="pcL shWrap">' + esc_((p.items || []).join('／') || '—') + '</td>' +
+      '<td class="pcL shWrap">' + esc_((p.clicks || []).join('／') || '—') + '</td>' +
+      '<td class="pcL">' + esc_(p.reached || '開いただけ') + '</td>' +
       '<td class="pcR">' + (p.visits || 0) + '回</td>' +
       '<td class="pcR">' + (p.orders ? '<span class="shBuy">' + p.orders + '件</span>' : '<span class="shNone">—</span>') + '</td>' +
       '<td class="pcL pcDim">' + esc_(p.last || '') + '</td>' +
       '<td class="pcL">' + esc_(p.lang || '') + '</td>' +
       '<td class="pcL shWrap">' + esc_(p.routes || '') + '</td>' +
-      '<td class="pcL shWrap">' + esc_(p.top || '—') + '</td>' +
-      '<td class="pcL shWrap">' + esc_((p.items || []).join('／') || '—') + '</td>' +
-      '<td class="pcL shWrap">' + esc_((p.clicks || []).join('／') || '—') + '</td>' +
-      '<td class="pcL">' + esc_(p.reached || '開いただけ') + '</td>' +
     '</tr>';
   }).join('');
   // ★2026-09-19 まるちゃん：1回の来店ごとに「どの画面を何秒・映像はどの場面まで・何を押したか」を順に
@@ -8596,9 +8597,9 @@ function renderShopHistPage_(d, base, staff, dev) {
     '<div class="pcCards shCards">' + cards + '</div>' +
     '<div class="pcTitle">お客様ごと（新しい順）</div>' +
     '<div class="pcTableWrap"><table class="pcTable shTbl">' +
-      '<tr><th class="pcL">お名前</th><th class="pcR">来店</th><th class="pcR">注文</th><th class="pcL">最後</th>' +
-      '<th class="pcL">言葉</th><th class="pcL">入口</th><th class="pcL">トップの映像</th><th class="pcL">見た商品</th>' +
-      '<th class="pcL">押した物</th><th class="pcL">どこまで</th></tr>' +
+      '<tr><th class="pcL">お名前</th><th class="pcL">トップの映像</th><th class="pcL">見た商品</th>' +
+      '<th class="pcL">押した物</th><th class="pcL">どこまで</th><th class="pcR">来店</th><th class="pcR">注文</th>' +
+      '<th class="pcL">最後</th><th class="pcL">言葉</th><th class="pcL">入口</th></tr>' +
       (ppl || '<tr><td class="pcL" colspan="10">まだありません</td></tr>') +
     '</table></div>' +
     '<div class="pcTitle" style="margin-top:18px">見た道のり（1回の来店ごと・新しい順）</div>' +
