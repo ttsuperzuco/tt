@@ -8543,6 +8543,7 @@ var SHOPHCSS_ = ''
 + '.shNm{font-weight:700}'
 + '.shCode{font-size:.8rem;opacity:.75;margin-left:4px}'
 + '.shWrap{white-space:normal !important;min-width:9em;line-height:1.5}'
++ '.shPath{white-space:normal !important;min-width:18em;line-height:1.6}'
 + '.shBuy{color:#16a34a;font-weight:800}'
 + '.shNone{opacity:.55}';
 function renderShopHistPage_(d, base, staff, dev) {
@@ -8571,9 +8572,18 @@ function renderShopHistPage_(d, base, staff, dev) {
       '<td class="pcL pcDim">' + esc_(p.last || '') + '</td>' +
       '<td class="pcL">' + esc_(p.lang || '') + '</td>' +
       '<td class="pcL shWrap">' + esc_(p.routes || '') + '</td>' +
+      '<td class="pcL shWrap">' + esc_(p.top || '—') + '</td>' +
       '<td class="pcL shWrap">' + esc_((p.items || []).join('／') || '—') + '</td>' +
+      '<td class="pcL shWrap">' + esc_((p.clicks || []).join('／') || '—') + '</td>' +
       '<td class="pcL">' + esc_(p.reached || '開いただけ') + '</td>' +
     '</tr>';
+  }).join('');
+  // ★2026-09-19 まるちゃん：1回の来店ごとに「どの画面を何秒・映像はどの場面まで・何を押したか」を順に
+  var vis = (d.visits || []).map(function (v) {
+    return '<tr><td class="pcL pcDim">' + esc_(v.at) + '</td>' +
+      '<td class="pcL">' + esc_(v.name) + '</td>' +
+      '<td class="pcL shPath' + (v.buy ? ' shBuy' : '') + '">' + esc_(v.path) + '</td>' +
+      '<td class="pcL">' + esc_(v.route || '') + '</td></tr>';
   }).join('');
   var rec = (d.recent || []).map(function (r) {
     return '<tr><td class="pcL pcDim">' + esc_(r.at) + '</td>' +
@@ -8587,8 +8597,14 @@ function renderShopHistPage_(d, base, staff, dev) {
     '<div class="pcTitle">お客様ごと（新しい順）</div>' +
     '<div class="pcTableWrap"><table class="pcTable shTbl">' +
       '<tr><th class="pcL">お名前</th><th class="pcR">来店</th><th class="pcR">注文</th><th class="pcL">最後</th>' +
-      '<th class="pcL">言葉</th><th class="pcL">入口</th><th class="pcL">見た商品</th><th class="pcL">どこまで</th></tr>' +
-      (ppl || '<tr><td class="pcL" colspan="8">まだありません</td></tr>') +
+      '<th class="pcL">言葉</th><th class="pcL">入口</th><th class="pcL">トップの映像</th><th class="pcL">見た商品</th>' +
+      '<th class="pcL">押した物</th><th class="pcL">どこまで</th></tr>' +
+      (ppl || '<tr><td class="pcL" colspan="10">まだありません</td></tr>') +
+    '</table></div>' +
+    '<div class="pcTitle" style="margin-top:18px">見た道のり（1回の来店ごと・新しい順）</div>' +
+    '<div class="pcTableWrap"><table class="pcTable shTbl">' +
+      '<tr><th class="pcL">来た時刻</th><th class="pcL">お名前</th><th class="pcL">見た順番と秒数</th><th class="pcL">入口</th></tr>' +
+      (vis || '<tr><td class="pcL" colspan="4">まだありません（2026-09-19 夜から記録しています）</td></tr>') +
     '</table></div>' +
     '<div class="pcTitle" style="margin-top:18px">最近の動き</div>' +
     '<div class="pcTableWrap"><table class="pcTable shTbl">' +
