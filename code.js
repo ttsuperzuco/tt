@@ -6422,6 +6422,8 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(prevWrap)prevWrap.style.display=v.memo?"":"none";' +
     'b=document.getElementById("nrStep3");if(b)b.style.display=v.time?"":"none";' +
     'b=document.getElementById("nrrest");if(b)b.style.display=v.rest?"":"none";' +
+    'b=document.getElementById("nrStepGender");if(b)b.style.display=v.gender?"":"none";' +
+    'b=document.getElementById("nrStepTitle");if(b)b.style.display=v.title?"":"none";' +
     'if(v.memo&&prevEl){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";}' +
     // ★直す所の知らせに小窓は出さない（2026-09-22 まるちゃん「ここの前に出るメッセージBOXはださない。
     //   ここに修正があってわかるから」）＝同じ画面に赤い行が出るので二度手間だった。
@@ -6519,6 +6521,13 @@ function renderNewReservationPage_(base, staff, dev) {
     'rows.push({name:"施術",locked:false,staffOk:nrAnySel("staff"),roomNeeded:!window.__nrMayu,roomOk:nrAnySel("room")});}' +
     'var r=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:!sel.gender,tw:!sel.tw});window.__nrCanReg=r;btn.disabled=!r.ok;' +
     'if(ngbox){ngbox.textContent=r.msg;ngbox.style.display=r.ok?"none":"";}' +
+    // ★担当・部屋の画面の「これでOK」＝性別・国籍は次の画面で選ぶので、ここでは見ない（2026-09-22）。
+    'var rRest=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:false,tw:false});' +
+    'var _rb=document.getElementById("nrRestOk");if(_rb)_rb.disabled=!rRest.ok;' +
+    'var _rng=document.getElementById("nrRestNg");if(_rng){_rng.textContent=rRest.msg;_rng.style.display=rRest.ok?"none":"";}' +
+    // ★性別・国籍の画面の「これでOK」＝両方選ぶまで押させない（タイトルに入る情報のため）。
+    'var _gok=NR.genderOk(sel.gender,sel.tw),_gb=document.getElementById("nrGenderOk");if(_gb)_gb.disabled=!_gok.ok;' +
+    'var _gng=document.getElementById("nrGenderNg");if(_gng){_gng.textContent=_gok.msg;_gng.style.display=_gok.ok?"none":"";}' +
     // ★白い枠のすぐ上の赤い知らせ＝人が直すたびに出し直す（直し終われば自然に消える・2026-09-22）。
     //   「予約メモはこれでOK」「この時間でOK」を押させてよいかも共通の1本に聞く。
     'var _memo=(prevEl?prevEl.value:""),_fn=NR.fixNotice(_memo);' +
@@ -6684,13 +6693,13 @@ function renderNewReservationPage_(base, staff, dev) {
     //   空きの答えで狂っても、出た瞬間の姿は必ず正しくなる（枠の中で選ぶ時は外の⑤を出さない）。
     'var _shown=false;function _showAll(){if(_shown)return;_shown=true;nrApplyNeedC();' +
     // ★読み取ったら次の画面へ進む（2026-09-22 まるちゃん）。聞く画面が要る人だけ、先にそれが出る。
-    'window.__nrSteps=NR.stepList(window.__nrHasProcell,window.__nrHasCouns);nrShowStep(1);' +
+    'window.__nrSteps=NR.stepList(window.__nrHasProcell,window.__nrHasCouns,NR.needGenderStep(d.gender,d.tw));nrShowStep(1);' +
     'status("",false);}' +                                                           // 読み取り後の一言は出さない
     // ★万一タイトルの返事が返ってこなくても、20秒たったら他の欄だけは出す（画面が出ないままにしない）。
     'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";nrGoCheck();});' +
     // ★1つずつ進む・戻る（2026-09-22 まるちゃん）。
-    'var _ob=["nrProcellOk","nrCounsOk","nrMemoOk","nrTimeOk"];' +
+    'var _ob=["nrProcellOk","nrCounsOk","nrMemoOk","nrTimeOk","nrRestOk","nrGenderOk"];' +
     'for(var _oi=0;_oi<_ob.length;_oi++){var _o=document.getElementById(_ob[_oi]);if(_o)_o.addEventListener("click",nrNext);}' +
     // ★「お客様情報を確認」＝貼り付けたお客様の文をそのまま小窓で出す（閉じれば元の画面に戻る）。
     //   同じボタンを開始時間の画面と予約メモの画面の両方に置いてある（2026-09-22 まるちゃん）。
@@ -6841,8 +6850,19 @@ function renderNewReservationPage_(base, staff, dev) {
         '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px">⚠ カウンセリングの部屋（コスモス）が、この時間ふさがっています。<span id="cosmosWho"></span></div>' +
         '<div id="secStaffWrap"><div class="nrsec">⑥ 施術担当<span id="noneStaff" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div><div class="nrpills">' + staffPills('staff', '2') + '</div></div>' +
         '<div id="nrRoomWrap"><div class="nrsec">⑦ 部屋<span id="noneRoom" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は部屋が空いていません</span></div><div class="nrpills">' + roomPills + '</div></div>' +
+        '<div id="nrRestNg" class="nrwarn" style="display:none"></div>' +
+        '<button type="button" class="nrgo" id="nrRestOk">これでOK</button>' +
+      '</div>' +
+      // ── 画面5＝性別・国籍（2026-09-22 まるちゃん「性別選択は次の画面にする」） ──
+      //    ★どちらも貼り付けた文から読めていた人は、この画面じたいを飛ばす（NR.needGenderStep）。
+      '<div id="nrStepGender" style="display:none">' +
         '<div id="secGender"><div class="nrsec">性別（タイトルに入ります）</div><div class="nrpills">' + genderPills + '</div></div>' +
         '<div id="secTw"><div class="nrsec">国籍</div><div class="nrpills">' + natPills + '</div></div>' +
+        '<div id="nrGenderNg" class="nrwarn" style="display:none"></div>' +
+        '<button type="button" class="nrgo" id="nrGenderOk">これでOK</button>' +
+      '</div>' +
+      // ── 画面6＝タイトル（ここで登録・2026-09-22 まるちゃん「その次が、タイトル」） ──
+      '<div id="nrStepTitle" style="display:none">' +
         '<div id="secTitle" style="display:none"><div class="nrsec">タイムツリーに登録されるタイトル（直せます）</div><div id="nrTitleWrap"></div></div>' +
         '<div id="nrGoNg" class="nrwarn" style="display:none"></div>' +
         '<button type="button" class="nrgo" id="nrgo">この内容で登録する</button>' +

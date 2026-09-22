@@ -258,12 +258,21 @@
        （予約メモの確認より前）。
      ★聞く画面を予約メモより**前**に置く理由＝押すと予約メモの文がその場で作り直されるので、
        後ろに置くと人が手で直した文が消えるため。
-     hasProcell／hasCouns＝読み取った時に聞く必要があったか。返り＝出す画面の名前の並び。 */
-  NR.stepList = function (hasProcell, hasCouns) {
+     hasProcell／hasCouns＝読み取った時に聞く必要があったか。返り＝出す画面の名前の並び。
+     ★2026-09-22 まるちゃん決定（この日2回目の分割）＝**担当・部屋のあとを、さらに3つに分ける**。
+       「性別選択は次の画面にする。で その次が、タイトル 全部画面わける」
+       ＝ … → 担当・部屋など → **性別・国籍** → **タイトル（ここで登録）**。
+       まるちゃん指定＝①カウンセリングの必要・やる順番・所要時間・担当・部屋は同じ画面のまま
+       （空きを見ながら一緒に選ぶため）②国籍は性別と同じ画面。
+     needGender＝性別・国籍のどちらかを人に選ばせる必要があるか（両方とも貼り付けた文から
+       読めていれば、その画面は空っぽになるので飛ばす）。 */
+  NR.stepList = function (hasProcell, hasCouns, needGender) {
     var a = ["paste"];
     if (hasProcell) a.push("procell");
     if (hasCouns) a.push("couns");
     a.push("time", "memo", "rest");
+    if (needGender !== false) a.push("gender");
+    a.push("title");
     return a;
   };
 
@@ -271,7 +280,24 @@
   NR.stepView = function (name) {
     var n = String(name || "paste");
     return { name: n, paste: n === "paste", procell: n === "procell", couns: n === "couns",
-             memo: n === "memo", time: n === "time", rest: n === "rest" };
+             memo: n === "memo", time: n === "time", rest: n === "rest",
+             gender: n === "gender", title: n === "title" };
+  };
+
+  /* ── 性別・国籍の画面が要るか（2026-09-22）───────────────
+     貼り付けた文から**両方とも読めていれば要らない**（画面が空っぽになるため飛ばす）。 */
+  NR.needGenderStep = function (gender, tw) {
+    return !(String(gender || "") && String(tw || ""));
+  };
+
+  /* ── 性別・国籍の画面で次へ進ませてよいか（2026-09-22）──────
+     どちらも選ばれていないと、タイトルが作れない（タイトルに入る情報のため）。 */
+  NR.genderOk = function (gender, tw) {
+    var miss = [];
+    if (!String(gender || "")) miss.push("性別");
+    if (!String(tw || "")) miss.push("国籍");
+    return { ok: miss.length === 0,
+             msg: miss.length ? (miss.join("と") + "を選んでください。") : "" };
   };
 
   /* ── ⑪-1e プロセルが顔か頭皮か決まっていないか ───────────────
