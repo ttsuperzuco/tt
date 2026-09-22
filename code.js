@@ -6708,9 +6708,10 @@ function renderNewReservationPage_(base, staff, dev) {
           '<div id="nrCounsLabel" style="background:#1e3a8a;color:#dbeafe;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0"></div>' +
           '<div id="nrCounsWhy" style="display:none;color:#cbd5e1;font-size:14px;line-height:1.5;margin:0 2px 6px"></div>' +
           '<div class="nrpills">' +
-            '<button type="button" class="nrpill" data-couns="1">①カウンセリングのみ（施術なし）</button>' +
-            '<button type="button" class="nrpill" data-couns="2">②カウンセリング後に決める</button>' +
-            '<button type="button" class="nrpill" data-couns="3">③施術もやる</button>' +
+            // ★地の色(plain=#475569)を必ず付ける。付けないと白い字が地に溶けて読めない（2026-09-22 まるちゃん指摘）
+            '<button type="button" class="nrpill plain" data-couns="1">①カウンセリングのみ（施術なし）</button>' +
+            '<button type="button" class="nrpill plain" data-couns="2">②カウンセリング後に決める</button>' +
+            '<button type="button" class="nrpill plain" data-couns="3">③施術もやる</button>' +
           '</div>' +
         '</div>' +
       '</div>' +
