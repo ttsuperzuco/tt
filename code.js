@@ -6695,7 +6695,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(_bk)_bk.addEventListener("click",function(ev){if((window.__nrStepI||0)>0){ev.preventDefault();nrPrev();}});' +
     // ★出す・出さないは画面の並び（nrShowStep）が決めるので、ここでは中身を書き換えるだけにする
     //   （2026-09-22 まるちゃん「画面をいっしょにすんな」＝カウンセリングは専用の画面になったため）。
-    'window.__nrApplyCouns=function(v){var box=document.getElementById("nrCounsAsk");if(!box)return;var lb=document.getElementById("nrCounsLabel");if(lb)lb.textContent=v.label;var wy=document.getElementById("nrCounsWhy"),why=(window.__nrCouns&&window.__nrCouns.why)||"";var _wt=NR.counselingWhy(why);if(wy){wy.textContent=_wt;wy.style.display=_wt?"":"none";}var bs=document.querySelectorAll("[data-couns]");for(var i=0;i<bs.length;i++){if(bs[i].getAttribute("data-couns")===String(v.sel))bs[i].classList.add("sel");else bs[i].classList.remove("sel");}};' +
+    'window.__nrApplyCouns=function(v){var box=document.getElementById("nrCounsAsk");if(!box)return;var lb=document.getElementById("nrCounsLabel");if(lb)lb.textContent=v.label;' +
+    // ★「AIがそう判断した理由：…」の1行は出さない（2026-09-22 まるちゃん「この文はいらん」）。
+    'var bs=document.querySelectorAll("[data-couns]");for(var i=0;i<bs.length;i++){if(bs[i].getAttribute("data-couns")===String(v.sel))bs[i].classList.add("sel");else bs[i].classList.remove("sel");}};' +
     // ★①②③に合わせて枠を作り直す（判断は共通の1本 NR.counselingSlots・2026-09-11 まるちゃん決定）。
     //   ②相談してから決める＝相談の枠のあとに施術の枠も押さえる／①相談だけ＝施術の枠は作らない。
     'window.__nrCounsSlots=function(kind){if(!window.__nrSlotsBase)return;var B=[];for(var _i2=0;_i2<window.__nrSlotsBase.length;_i2++){var _o2={},_s2=window.__nrSlotsBase[_i2];for(var _k2 in _s2){_o2[_k2]=_s2[_k2];}B.push(_o2);}buildSlotUI(NR.counselingSlots(B,kind));nrApplyNeedC();nrSlotAvail();};' +
@@ -6770,8 +6772,9 @@ function renderNewReservationPage_(base, staff, dev) {
       //    ★AIが読んだ答えを初期値に出し、スタッフが押して直せる（2026-08-25 まるちゃん）
       '<div id="nrStepCouns" style="display:none">' +
         '<div id="nrCounsAsk">' +
-          '<div id="nrCounsLabel" style="background:#1e3a8a;color:#dbeafe;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0"></div>' +
-          '<div id="nrCounsWhy" style="display:none;color:#cbd5e1;font-size:14px;line-height:1.5;margin:0 2px 6px"></div>' +
+          // ★見出しは他の画面と同じ白い字の見出しにする（2026-09-22 まるちゃん「表題と選択が同じような
+          //   枠で見にくい」＝紺色の箱だと下の選ぶボタンと見分けにくかった）。
+          '<div id="nrCounsLabel" class="nrsec"></div>' +
           '<div class="nrpills">' +
             // ★地の色(plain=#475569)を必ず付ける。付けないと白い字が地に溶けて読めない（2026-09-22 まるちゃん指摘）
             '<button type="button" class="nrpill plain" data-couns="1">①カウンセリングのみ（施術なし）</button>' +
