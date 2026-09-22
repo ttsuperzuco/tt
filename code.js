@@ -6798,9 +6798,14 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(rows.length===ins.length){var r=rows[j],b=[];b.push("担当："+(STN[r.staff]||r.staff));' +
     'if(r.room)b.push("部屋："+r.room);if(r.dur)b.push(r.dur+"分");out.push(b.join("／"));}}' +
     'return out.join("\\n");}' +
+    // ★聞く一言は大きく、登録する中身はひとまわり小さく左寄せ＝スマホでもスクロールせずに読める
+    //   （そのままの大きさだと「カウンセリング」の行までしか見えなかった）。
+    'function esch(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}' +
     'goEl.addEventListener("click",function(){' +
-    'szPopup_("以下の内容を、タイムツリーに登録してよろしいですか？\\n\\n"+nrSummaryText(),' +
-    '{icon:"",yesLabel:"OK",noLabel:"やめる",cancel:true,onYes:go});});' +
+    'szPopup_("<div style=\\"font-size:1.15rem;line-height:1.5;font-weight:800\\">以下の内容を、タイムツリーに登録してよろしいですか？</div>"' +
+    '+"<div style=\\"font-size:.95rem;line-height:1.6;text-align:left;margin-top:14px;white-space:pre-wrap;font-weight:700\\">"' +
+    '+esch(nrSummaryText())+"</div>",' +
+    '{icon:"",isHtml:true,yesLabel:"OK",noLabel:"やめる",cancel:true,onYes:go});});' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' +
