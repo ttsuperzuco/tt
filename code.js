@@ -6565,7 +6565,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(done)done();return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){nrAvPoll(id,done);},700);return;}' +
     'if(r.status!=="done"){if(done)done();return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
-    'if(av&&av.ok)applyAvail(av);if(done)done();});}' +
+    // ★2026-09-22：空きを取り直すと、ふさがっている担当・部屋が消えて**別の人・別の部屋が
+    //   自動で選ばれる**ことがある。その時タイトルの担当の印が古いままになるので、必ず作り直す。
+    'if(av&&av.ok){applyAvail(av);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");}if(done)done();});}' +
     // ★開始時間の「修正」＝月日時分を直して、空きと登録日時をやり直す。
     'function nrStartEditInit(){var row=document.getElementById("nrStartRow"),ed=document.getElementById("nrStartEdit");' +
     'var bFix=document.getElementById("btnStartFix"),bOk=document.getElementById("btnStartOk"),bNo=document.getElementById("btnStartCancel");' +
