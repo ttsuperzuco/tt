@@ -6376,6 +6376,8 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrfixred{flex:1 1 auto;background:#fde2e4;color:#b3121f;padding:12px 14px;border-radius:12px;font-weight:900;font-size:19px;line-height:1.7;}' +
     // ★白い丸ボタン（スーパーズコ共通の見た目）。青緑のままだと地の色と同じで見えない。
     '.nrrawbtn{flex:0 0 auto;margin-left:auto;border:0;border-radius:999px;padding:12px 20px;font-size:16px;font-weight:800;color:#2C7A99;background:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.20);}' +
+    // 赤い知らせが無い画面（開始時間）では、右寄せで1つだけ置く。
+    '.nrrawrow{display:flex;margin:10px 0 4px;}' +
     '.nrslot.nrlock .nrpills,.nrslot.nrlock .nrsub{display:none;}' +
     '.nrorow{display:flex;align-items:center;gap:10px;background:#fff;color:#123;border-radius:12px;padding:12px 14px;margin:8px 0;font-size:17px;font-weight:900;}' +
     '.nrono{background:#2C7A99;color:#fff;border-radius:999px;min-width:32px;text-align:center;padding:2px 8px;}' +
@@ -6688,8 +6690,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'var _ob=["nrProcellOk","nrCounsOk","nrMemoOk","nrTimeOk"];' +
     'for(var _oi=0;_oi<_ob.length;_oi++){var _o=document.getElementById(_ob[_oi]);if(_o)_o.addEventListener("click",nrNext);}' +
     // ★「お客様情報を確認」＝貼り付けたお客様の文をそのまま小窓で出す（閉じれば元の画面に戻る）。
-    'var _rb=document.getElementById("nrShowRaw");' +
-    'if(_rb)_rb.addEventListener("click",function(){szPopup_((txtEl.value||"").trim()||"貼り付けた内容がありません。",{icon:"📄"});});' +
+    //   同じボタンを開始時間の画面と予約メモの画面の両方に置いてある（2026-09-22 まるちゃん）。
+    'var _rbs=document.querySelectorAll("[data-raw]");' +
+    'for(var _ri=0;_ri<_rbs.length;_ri++){_rbs[_ri].addEventListener("click",function(){szPopup_((txtEl.value||"").trim()||"貼り付けた内容がありません。",{icon:"📄"});});}' +
     // ★上の「← 戻る」＝画面2以降は1つ前の画面へ戻す（画面1ならふだんどおり予約の入口へ）。
     'var _bk=document.getElementById("nrBack");' +
     'if(_bk)_bk.addEventListener("click",function(ev){if((window.__nrStepI||0)>0){ev.preventDefault();nrPrev();}});' +
@@ -6791,7 +6794,7 @@ function renderNewReservationPage_(base, staff, dev) {
         //   白い枠は色を付けられない普通の文字の箱なので、枠の**すぐ上**に赤で出す。
         '<div id="nrFixRow" class="nrfixrow" style="display:none">' +
           '<div id="nrFixRed" class="nrfixred"></div>' +
-          '<button type="button" class="nrrawbtn" id="nrShowRaw">お客様情報を確認</button>' +
+          '<button type="button" class="nrrawbtn" data-raw="1">お客様情報を確認</button>' +
         '</div>' +
         '<textarea id="nrprev"></textarea>' +
         '<button type="button" class="nrgo" id="nrMemoOk">予約メモはこれでOK</button>' +
@@ -6813,6 +6816,9 @@ function renderNewReservationPage_(base, staff, dev) {
           '<button type="button" id="btnStartCancel" style="border:0;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:#fff;background:#64748b">やめる</button>' +
         '</div>' +
         '<div id="nrTimeNg" class="nrwarn" style="display:none"></div>' +
+        // ★ここにも「お客様情報を確認」を置く（2026-09-22 まるちゃん）＝日付・時間が合っているかを
+        //   お客様が送ってきた文で見比べられるように。
+        '<div class="nrrawrow"><button type="button" class="nrrawbtn" data-raw="1">お客様情報を確認</button></div>' +
         '<button type="button" class="nrgo" id="nrTimeOk">この時間でOK</button>' +
       '</div>' +
       // ── 画面4＝担当・部屋などの残り ──
