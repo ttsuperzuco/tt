@@ -6423,9 +6423,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'b=document.getElementById("nrStep3");if(b)b.style.display=v.time?"":"none";' +
     'b=document.getElementById("nrrest");if(b)b.style.display=v.rest?"":"none";' +
     'if(v.memo&&prevEl){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";}' +
-    'nrGoCheck();try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){window.scrollTo(0,0);}' +
-    // ★直す所の知らせは「予約メモの確認」画面に着いた時に1回だけ出す。
-    'if(v.memo&&window.__nrFixPopup){var _p=window.__nrFixPopup;window.__nrFixPopup="";szPopup_(_p);}}' +
+    // ★直す所の知らせに小窓は出さない（2026-09-22 まるちゃん「ここの前に出るメッセージBOXはださない。
+    //   ここに修正があってわかるから」）＝同じ画面に赤い行が出るので二度手間だった。
+    'nrGoCheck();try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){window.scrollTo(0,0);}}' +
     'function nrNext(){nrShowStep((window.__nrStepI||0)+1);}' +
     'function nrPrev(){nrShowStep((window.__nrStepI||0)-1);}' +
     // 文字だけでなく箱ごと出す（何も無い時は箱を消す）＝どの明るさの画面でも読める。
@@ -6648,9 +6648,8 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
-    // ★読み取った直後に、経由の行を「経由→【確認して修正】」へ書き換え、小窓の文を覚えておく
-    //   （2026-09-22 まるちゃん決定。小窓は画面がそろってから＝_showAll の最後に1回だけ出す）。
-    'var _fx=NR.fixNotice(d.memo||"");window.__nrFixPopup=_fx.popup;' +
+    // ★読み取った直後に、経由の行を「経由→【確認して修正】」へ書き換える（2026-09-22 まるちゃん決定）。
+    'var _fx=NR.fixNotice(d.memo||"");' +
     'prevEl.value=_fx.memo;selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);if(d.room)selVal("room",d.room);window.__rvdt={mm:d.mm,dd:d.dd,hh:d.hh,mi:d.mi};' +
     // ★プロセルが顔か頭皮か決まっていないか＝共通の1本(NR.procellAsk)に聞く。聞く時だけ専用の画面を出す。
     'window.__nrHasProcell=NR.procellAsk(_fx.memo).ask;window.__procellWord=d.procell_face_word||"トライアル";var _pp=document.querySelector(\'[data-procell="顔プロセルPro"]\');if(_pp)_pp.textContent="顔プロセルPro "+window.__procellWord;var _pm=document.querySelector(\'[data-procell="顔プロセルMD"]\');if(_pm)_pm.textContent="顔プロセルMD "+window.__procellWord;window.__nrCouns=d.counseling||{kind:"3",hint:false,memos:{}};' +
