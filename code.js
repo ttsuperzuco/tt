@@ -6371,7 +6371,11 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrnote2{color:#cfe6ef;font-size:14px;margin:0 2px 8px;}' +
     '.nrcoswarn{background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:8px 0;}' +
     // ★直す所の赤い知らせ（2026-09-22 まるちゃん）＝薄い赤の地に濃い赤の太字（他の警告と同じ見た目）。
-    '.nrfixred{background:#fde2e4;color:#b3121f;padding:12px 14px;border-radius:12px;font-weight:900;font-size:19px;line-height:1.7;margin:6px 0 8px;}' +
+    //   その行の右端に「お客様情報を確認」を右寄せで置く（まるちゃん指定）。
+    '.nrfixrow{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:6px 0 8px;}' +
+    '.nrfixred{flex:1 1 auto;background:#fde2e4;color:#b3121f;padding:12px 14px;border-radius:12px;font-weight:900;font-size:19px;line-height:1.7;}' +
+    // ★白い丸ボタン（スーパーズコ共通の見た目）。青緑のままだと地の色と同じで見えない。
+    '.nrrawbtn{flex:0 0 auto;margin-left:auto;border:0;border-radius:999px;padding:12px 20px;font-size:16px;font-weight:800;color:#2C7A99;background:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.20);}' +
     '.nrslot.nrlock .nrpills,.nrslot.nrlock .nrsub{display:none;}' +
     '.nrorow{display:flex;align-items:center;gap:10px;background:#fff;color:#123;border-radius:12px;padding:12px 14px;margin:8px 0;font-size:17px;font-weight:900;}' +
     '.nrono{background:#2C7A99;color:#fff;border-radius:999px;min-width:32px;text-align:center;padding:2px 8px;}' +
@@ -6402,6 +6406,17 @@ function renderNewReservationPage_(base, staff, dev) {
     'var sel={dur:"60",staff:"2",counsel:"1",needc:"yes",room:"FREEDOM",gender:"",tw:""};' +
     'var stEl=document.getElementById("nrstatus"),goEl=document.getElementById("nrgo"),txtEl=document.getElementById("nrtext");' +
     'var prevEl=document.getElementById("nrprev"),prevWrap=document.getElementById("nrprevwrap"),readEl=document.getElementById("nrread");' +
+    // ★1つずつ画面を進める（2026-09-22 まるちゃん）＝1:貼り付け 2:予約メモ 3:開始時間 4:残り。
+    //   どの画面を出すかの判断は共通の1本（NR.stepView）に聞く＝パソコン版と必ず同じ。
+    'window.__nrStep=1;' +
+    'function nrGoStep(n){var v=NR.stepView(n);window.__nrStep=v.step;' +
+    'var b1=document.getElementById("nrStep1"),b3=document.getElementById("nrStep3"),b4=document.getElementById("nrrest");' +
+    'if(b1)b1.style.display=v.paste?"":"none";' +
+    'if(prevWrap)prevWrap.style.display=v.memo?"":"none";' +
+    'if(b3)b3.style.display=v.time?"":"none";' +
+    'if(b4)b4.style.display=v.rest?"":"none";' +
+    'if(v.memo&&prevEl){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";}' +
+    'nrGoCheck();try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){window.scrollTo(0,0);}}' +
     // 文字だけでなく箱ごと出す（何も無い時は箱を消す）＝どの明るさの画面でも読める。
     'function status(t,err){stEl.textContent=t;stEl.className="nrstatus"+(t?(err?" ng":" on"):"");}' +
     'function esc(s){return (s==null?"":String(s));}' +
@@ -6494,9 +6509,14 @@ function renderNewReservationPage_(base, staff, dev) {
     'var r=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:!sel.gender,tw:!sel.tw});window.__nrCanReg=r;btn.disabled=!r.ok;' +
     'if(ngbox){ngbox.textContent=r.msg;ngbox.style.display=r.ok?"none":"";}' +
     // ★白い枠のすぐ上の赤い知らせ＝人が直すたびに出し直す（直し終われば自然に消える・2026-09-22）。
-    'var _fr=document.getElementById("nrFixRed");' +
-    'if(_fr){var _fn=NR.fixNotice(prevEl?prevEl.value:"");' +
-    'if(_fn.red.length){_fr.textContent=_fn.red.join("　／　");_fr.style.display="";}else{_fr.style.display="none";}}' +
+    //   「予約メモはこれでOK」「この時間でOK」を押させてよいかも共通の1本に聞く。
+    'var _memo=(prevEl?prevEl.value:""),_fn=NR.fixNotice(_memo);' +
+    'var _frow=document.getElementById("nrFixRow"),_fr=document.getElementById("nrFixRed");' +
+    'if(_frow&&_fr){if(_fn.red){_fr.textContent=_fn.red;_frow.style.display="";}else{_frow.style.display="none";}}' +
+    'var _mok=NR.memoOk(_memo),_mb=document.getElementById("nrMemoOk");if(_mb)_mb.disabled=!_mok.ok;' +
+    'var _tok=NR.timeOk(!!window.__nrTimeMissing),_tb=document.getElementById("nrTimeOk");if(_tb)_tb.disabled=!_tok.ok;' +
+    'var _tng=document.getElementById("nrTimeNg");' +
+    'if(_tng){_tng.textContent=_tok.msg;_tng.style.display=_tok.ok?"none":"";}' +
     // ★担当か部屋が決まらない＝中身が確定しないので、タイトルは出さない（判断は共通の1本に聞く）。
     'var tv=NR.titleView(r),tsec=document.getElementById("secTitle");' +
     'if(tsec&&!tv.shown)tsec.style.display="none";' +
@@ -6642,15 +6662,23 @@ function renderNewReservationPage_(base, staff, dev) {
     //   出す/隠すの判断を**画面を出す直前にもう一度**やる＝途中の順番や、あとから届く
     //   空きの答えで狂っても、出た瞬間の姿は必ず正しくなる（枠の中で選ぶ時は外の⑤を出さない）。
     'var _shown=false;function _showAll(){if(_shown)return;_shown=true;nrApplyNeedC();' +
-    'prevWrap.style.display="";var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +
-    'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
-    'nrGoCheck();prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
+    // ★読み取ったら「画面2＝予約メモの確認」へ進む（2026-09-22 まるちゃん「次の画面に遷移し」）。
+    'nrGoStep(2);' +
     // ★直す所があれば小窓で知らせる（2026-09-22 まるちゃん決定）＝下の一行は読み落とされるため。
     'if(window.__nrFixPopup){var _p=window.__nrFixPopup;window.__nrFixPopup="";szPopup_(_p);}' +
     'status("",false);}' +                                                           // 読み取り後の一言は出さない
     // ★万一タイトルの返事が返ってこなくても、20秒たったら他の欄だけは出す（画面が出ないままにしない）。
     'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";nrGoCheck();});' +
+    // ★1つずつ進む・戻る（2026-09-22 まるちゃん）。
+    'var _mb2=document.getElementById("nrMemoOk");if(_mb2)_mb2.addEventListener("click",function(){nrGoStep(3);});' +
+    'var _tb2=document.getElementById("nrTimeOk");if(_tb2)_tb2.addEventListener("click",function(){nrGoStep(4);});' +
+    // ★「お客様情報を確認」＝貼り付けたお客様の文をそのまま小窓で出す（閉じれば元の画面に戻る）。
+    'var _rb=document.getElementById("nrShowRaw");' +
+    'if(_rb)_rb.addEventListener("click",function(){szPopup_((txtEl.value||"").trim()||"貼り付けた内容がありません。",{icon:"📄"});});' +
+    // ★上の「← 戻る」＝画面2以降は1つ前の画面へ戻す（画面1ならふだんどおり予約の入口へ）。
+    'var _bk=document.getElementById("nrBack");' +
+    'if(_bk)_bk.addEventListener("click",function(ev){if((window.__nrStep||1)>1){ev.preventDefault();nrGoStep((window.__nrStep||1)-1);}});' +
     'window.__nrApplyCouns=function(v){var box=document.getElementById("nrCounsAsk");if(!box)return;box.style.display=v.shown?"":"none";var lb=document.getElementById("nrCounsLabel");if(lb)lb.textContent=v.label;var wy=document.getElementById("nrCounsWhy"),why=(window.__nrCouns&&window.__nrCouns.why)||"";var _wt=NR.counselingWhy(why);if(wy){wy.textContent=_wt;wy.style.display=_wt?"":"none";}var bs=document.querySelectorAll("[data-couns]");for(var i=0;i<bs.length;i++){if(bs[i].getAttribute("data-couns")===String(v.sel))bs[i].classList.add("sel");else bs[i].classList.remove("sel");}};' +
     // ★①②③に合わせて枠を作り直す（判断は共通の1本 NR.counselingSlots・2026-09-11 まるちゃん決定）。
     //   ②相談してから決める＝相談の枠のあとに施術の枠も押さえる／①相談だけ＝施術の枠は作らない。
@@ -6696,19 +6724,20 @@ function renderNewReservationPage_(base, staff, dev) {
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' +
-    '<div class="ubar"><a class="uhome" href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a></div>' +
+    '<div class="ubar"><a class="uhome" id="nrBack" href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a></div>' +
     '<div class="hhead"><span class="bmark">📝</span><span class="bname">新規予約入力</span></div>' +
     '<div class="nr">' +
-      '<div class="nrnote">お客様から送られた"お客様情報"を、下の欄にそのまま貼って完了ボタンを押すと、自動で予約メモの形式に変換されます</div>' +
-      '<div class="nrsec">① 予約フォームを貼る</div>' +
-      '<textarea id="nrtext" placeholder="予約フォームの内容をここに貼り付け"></textarea>' +
-      '<button type="button" class="nrread" id="nrread">貼り付け完了（読み取る）</button>' +
+      // ── 画面1＝貼り付け（2026-09-22 まるちゃん「一つずつ画面移動するようにする」） ──
+      '<div id="nrStep1">' +
+        '<div class="nrnote">お客様から送られた"お客様情報"を、下の欄にそのまま貼って完了ボタンを押すと、自動で予約メモの形式に変換されます</div>' +
+        '<div class="nrsec">① 予約フォームを貼る</div>' +
+        '<textarea id="nrtext" placeholder="予約フォームの内容をここに貼り付け"></textarea>' +
+        '<button type="button" class="nrread" id="nrread">貼り付け完了（読み取る）</button>' +
+      '</div>' +
+      // ── 画面2＝予約メモの確認 ──
       '<div id="nrprevwrap" style="display:none">' +
-        '<div class="nrsec">予約メモ形式に変換されました（白い枠内で自由に文字を編集できます）</div>' +
-        // ★直す所の赤い知らせ（2026-09-22 まるちゃん決定）＝白い枠は色を付けられない普通の文字の箱なので、
-        //   枠の**すぐ上**に赤で出す。中身の作り方は共通の1本（NR.fixNotice）に聞く。
-        '<div id="nrFixRed" class="nrfixred" style="display:none"></div>' +
-        '<textarea id="nrprev"></textarea>' +
+        // ★プロセルの選択と相談①②③は**予約メモより前**（2026-09-22 まるちゃん）。
+        //   押すと予約メモの文が作り直されるので、後ろにあると人が直した文が消えるため。
         '<div id="nrProcellAsk" style="display:none">' +
           '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選んでください。</div>' +
           '<div class="nrpills">' +
@@ -6728,8 +6757,18 @@ function renderNewReservationPage_(base, staff, dev) {
             '<button type="button" class="nrpill plain" data-couns="3">③施術もやる</button>' +
           '</div>' +
         '</div>' +
+        '<div class="nrsec">以下の予約メモで間違いがないか確認してください。メモは直接編集可能です。</div>' +
+        // ★直す所の赤い知らせ＋その右端に「お客様情報を確認」（2026-09-22 まるちゃん決定）。
+        //   白い枠は色を付けられない普通の文字の箱なので、枠の**すぐ上**に赤で出す。
+        '<div id="nrFixRow" class="nrfixrow" style="display:none">' +
+          '<div id="nrFixRed" class="nrfixred"></div>' +
+          '<button type="button" class="nrrawbtn" id="nrShowRaw">お客様情報を確認</button>' +
+        '</div>' +
+        '<textarea id="nrprev"></textarea>' +
+        '<button type="button" class="nrgo" id="nrMemoOk">予約メモはこれでOK</button>' +
       '</div>' +
-      '<div id="nrrest" style="display:none">' +
+      // ── 画面3＝開始時間 ──
+      '<div id="nrStep3" style="display:none">' +
         // ★開始時間の欄（2026-08-21 まるちゃん）＝「〇月〇日（水）〇時〇分」＋修正ボタン。パソコン版と同じ。
         '<div class="nrsec">② 開始時間</div>' +
         '<div id="nrStartRow" style="display:flex;align-items:center;gap:12px;background:#fff;color:#123;border-radius:12px;padding:12px 14px;font-size:19px;font-weight:900;margin:2px 0 6px">' +
@@ -6744,6 +6783,11 @@ function renderNewReservationPage_(base, staff, dev) {
           '<button type="button" id="btnStartOk" style="border:0;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:#fff;background:#16a34a">決定</button>' +
           '<button type="button" id="btnStartCancel" style="border:0;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:#fff;background:#64748b">やめる</button>' +
         '</div>' +
+        '<div id="nrTimeNg" class="nrwarn" style="display:none"></div>' +
+        '<button type="button" class="nrgo" id="nrTimeOk">この時間でOK</button>' +
+      '</div>' +
+      // ── 画面4＝担当・部屋などの残り ──
+      '<div id="nrrest" style="display:none">' +
         // ★並び（2026-08-23 まるちゃん）＝先にカウンセリングの要不要 → 次に順番 → 最後に枠ごとの中身
         '<div id="secNeedC" style="display:none"><div class="nrsec">③ カウンセリングの必要</div><div class="nrpills">' +
         // ★カウンセリングが必要かどうかの2択（2026-08-21 まるちゃん）。既定＝必要あり。
