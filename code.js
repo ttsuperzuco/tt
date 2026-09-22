@@ -6370,6 +6370,8 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrsub{font-weight:800;margin:12px 2px 6px;font-size:15px;color:#dbeafe;}' +
     '.nrnote2{color:#cfe6ef;font-size:14px;margin:0 2px 8px;}' +
     '.nrcoswarn{background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:8px 0;}' +
+    // ★直す所の赤い知らせ（2026-09-22 まるちゃん）＝薄い赤の地に濃い赤の太字（他の警告と同じ見た目）。
+    '.nrfixred{background:#fde2e4;color:#b3121f;padding:12px 14px;border-radius:12px;font-weight:900;font-size:19px;line-height:1.7;margin:6px 0 8px;}' +
     '.nrslot.nrlock .nrpills,.nrslot.nrlock .nrsub{display:none;}' +
     '.nrorow{display:flex;align-items:center;gap:10px;background:#fff;color:#123;border-radius:12px;padding:12px 14px;margin:8px 0;font-size:17px;font-weight:900;}' +
     '.nrono{background:#2C7A99;color:#fff;border-radius:999px;min-width:32px;text-align:center;padding:2px 8px;}' +
@@ -6491,6 +6493,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'rows.push({name:"施術",locked:false,staffOk:nrAnySel("staff"),roomNeeded:!window.__nrMayu,roomOk:nrAnySel("room")});}' +
     'var r=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:!sel.gender,tw:!sel.tw});window.__nrCanReg=r;btn.disabled=!r.ok;' +
     'if(ngbox){ngbox.textContent=r.msg;ngbox.style.display=r.ok?"none":"";}' +
+    // ★白い枠のすぐ上の赤い知らせ＝人が直すたびに出し直す（直し終われば自然に消える・2026-09-22）。
+    'var _fr=document.getElementById("nrFixRed");' +
+    'if(_fr){var _fn=NR.fixNotice(prevEl?prevEl.value:"");' +
+    'if(_fn.red.length){_fr.textContent=_fn.red.join("　／　");_fr.style.display="";}else{_fr.style.display="none";}}' +
     // ★担当か部屋が決まらない＝中身が確定しないので、タイトルは出さない（判断は共通の1本に聞く）。
     'var tv=NR.titleView(r),tsec=document.getElementById("secTitle");' +
     'if(tsec&&!tv.shown)tsec.style.display="none";' +
@@ -6608,7 +6614,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
     'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
-    'prevEl.value=d.memo||"";selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);if(d.room)selVal("room",d.room);window.__rvdt={mm:d.mm,dd:d.dd,hh:d.hh,mi:d.mi};' +
+    // ★読み取った直後に、経由の行を「経由→【確認して修正】」へ書き換え、小窓の文を覚えておく
+    //   （2026-09-22 まるちゃん決定。小窓は画面がそろってから＝_showAll の最後に1回だけ出す）。
+    'var _fx=NR.fixNotice(d.memo||"");window.__nrFixPopup=_fx.popup;' +
+    'prevEl.value=_fx.memo;selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);if(d.room)selVal("room",d.room);window.__rvdt={mm:d.mm,dd:d.dd,hh:d.hh,mi:d.mi};' +
     'var _mm=d.memo||"",_hasPro=(/procell/i.test(_mm)||/プロセル/.test(_mm)||/プロ肌|プロ頭|プロ(?!グラム)/.test(_mm)),_hasF=(/顔プロセル/.test(_mm)||/プロ肌/.test(_mm)),_hasS=(/頭皮プロセル/.test(_mm)||/プロ頭/.test(_mm));var _pa=document.getElementById("nrProcellAsk");if(_pa)_pa.style.display=(_hasPro&&!_hasF&&!_hasS)?"":"none";window.__procellWord=d.procell_face_word||"トライアル";var _pp=document.querySelector(\'[data-procell="顔プロセルPro"]\');if(_pp)_pp.textContent="顔プロセルPro "+window.__procellWord;var _pm=document.querySelector(\'[data-procell="顔プロセルMD"]\');if(_pm)_pm.textContent="顔プロセルMD "+window.__procellWord;window.__nrCouns=d.counseling||{kind:"3",hint:false,memos:{}};window.__nrApplyCouns(NR.counselingView(window.__nrCouns.kind,window.__nrCouns.hint,window.__nrCouns.has_hair));' +
     // ★2026-08-24 まるちゃん指摘「タイトルが後から表示される」＝ここではまだ画面に出さない。
     //   タイトルまで作り終えてから、下の refreshTitles の答えが返った所でまとめて1回だけ出す。
@@ -6636,7 +6645,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'prevWrap.style.display="";var rest=document.getElementById("nrrest");if(rest)rest.style.display="";' +
     'prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +   // 全文が見えるよう欄を伸ばす
     'nrGoCheck();prevWrap.scrollIntoView({behavior:"smooth",block:"start"});' +                     // 変換後を画面の一番上へ
-    'status("",false);}' +                                                             // 読み取り後の一言は出さない
+    // ★直す所があれば小窓で知らせる（2026-09-22 まるちゃん決定）＝下の一行は読み落とされるため。
+    'if(window.__nrFixPopup){var _p=window.__nrFixPopup;window.__nrFixPopup="";szPopup_(_p);}' +
+    'status("",false);}' +                                                           // 読み取り後の一言は出さない
     // ★万一タイトルの返事が返ってこなくても、20秒たったら他の欄だけは出す（画面が出ないままにしない）。
     'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";nrGoCheck();});' +
@@ -6694,6 +6705,9 @@ function renderNewReservationPage_(base, staff, dev) {
       '<button type="button" class="nrread" id="nrread">貼り付け完了（読み取る）</button>' +
       '<div id="nrprevwrap" style="display:none">' +
         '<div class="nrsec">予約メモ形式に変換されました（白い枠内で自由に文字を編集できます）</div>' +
+        // ★直す所の赤い知らせ（2026-09-22 まるちゃん決定）＝白い枠は色を付けられない普通の文字の箱なので、
+        //   枠の**すぐ上**に赤で出す。中身の作り方は共通の1本（NR.fixNotice）に聞く。
+        '<div id="nrFixRed" class="nrfixred" style="display:none"></div>' +
         '<textarea id="nrprev"></textarea>' +
         '<div id="nrProcellAsk" style="display:none">' +
           '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選んでください。</div>' +
