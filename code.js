@@ -6395,8 +6395,10 @@ function renderNewReservationPage_(base, staff, dev) {
     //      薄い赤の文字＝この画面のプロセルの問いかけと同じ）。
     //   ★この画面の背景そのものが青緑(#2C7A99)なので、青緑の箱は使えない（＝まるちゃんの
     //     「色がかぶってる」はこれ）。何も出ていない時は箱ごと消す。
+    // ★2026-09-22 まるちゃん：読み取れなかった理由を画面に出すようにしたので、改行をそのまま見せる
+    //   （white-space:pre-line）。1行に続くと長くて読みにくいため。改行の無い今までの文は見た目が変わらない。
     '.nrstatus{font-weight:900;min-height:0;margin:16px 4px;font-size:23px;line-height:1.5;'
-    + 'border-radius:12px;padding:0;}' +
+    + 'white-space:pre-line;border-radius:12px;padding:0;}' +
     '.nrstatus.on{background:#fff;color:#0f172a;padding:14px 16px;'
     + 'box-shadow:0 2px 6px rgba(0,0,0,.12);}' +
     '.nrstatus.ng{background:#7f1d1d;color:#fecaca;padding:14px 16px;}';
