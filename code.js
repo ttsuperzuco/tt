@@ -6775,7 +6775,32 @@ function renderNewReservationPage_(base, staff, dev) {
     'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields(ins.length?{titles:JSON.stringify(ts)}:null))},' +
     'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});}' +
-    'goEl.addEventListener("click",go);' +
+    // ★★2026-09-22 まるちゃん決定：**押したらすぐ登録**をやめ、先に中身を見せて確かめてもらう。
+    //   ＝この画面は一番最後で、押すと本物の予約が入り部屋も担当も押さえてしまうため。
+    //   小窓の形＝「以下の内容を、タイムツリーに登録してよろしいですか？」＋登録する中身＋OK／やめる。
+    'function nrSummaryText(){var out=[nrStartText()],S=window.__nrSlots||[];' +
+    'var ins=document.querySelectorAll(".nrTitleIn");' +
+    'var wrap=document.getElementById("nrTitleWrap");' +
+    'var lbls=wrap?wrap.getElementsByTagName("div"):[];' +
+    // 画面に出ている枠だけ、選ばれている担当・部屋・所要時間を順に拾う。
+    'var rows=[];' +
+    'if(NR.perSlot(S)){var bx=document.querySelectorAll("#nrSlotWrap .nrslot");' +
+    'for(var i=0;i<S.length;i++){if(S[i].kind==="counsel"&&sel.needc==="no")continue;' +
+    'if(bx[i]&&bx[i].style.display==="none")continue;' +
+    'rows.push({staff:sel["staff#"+i],room:(S[i].kind==="counsel")?"コスモス":sel["room#"+i],dur:sel["dur#"+i]});}}' +
+    'else{if(window.__nrNeedCounsel&&sel.needc!=="no")rows.push({staff:sel.counsel,room:"コスモス",dur:""});' +
+    'rows.push({staff:sel.staff,room:(window.__nrMayu?"":sel.room),dur:sel.dur});}' +
+    'var STN={"1":"🍅 トマト","2":"🍊 みかん","3":"🫒 オリーブ","4":"🥭 マンゴー","5":"🍍 パイン"};' +
+    'for(var j=0;j<ins.length;j++){out.push("");' +
+    'out.push("■ "+((lbls[j]&&lbls[j].textContent)||("枠"+(j+1))));' +
+    'out.push(ins[j].value);' +
+    // 枠の数とタイトルの数が合う時だけ担当・部屋を添える（取り違えて見せないため）。
+    'if(rows.length===ins.length){var r=rows[j],b=[];b.push("担当："+(STN[r.staff]||r.staff));' +
+    'if(r.room)b.push("部屋："+r.room);if(r.dur)b.push(r.dur+"分");out.push(b.join("／"));}}' +
+    'return out.join("\\n");}' +
+    'goEl.addEventListener("click",function(){' +
+    'szPopup_("以下の内容を、タイムツリーに登録してよろしいですか？\\n\\n"+nrSummaryText(),' +
+    '{icon:"",yesLabel:"OK",noLabel:"やめる",cancel:true,onYes:go});});' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' +
@@ -6884,7 +6909,7 @@ function renderNewReservationPage_(base, staff, dev) {
       '<div id="nrStepTitle" style="display:none">' +
         '<div id="secTitle" style="display:none"><div class="nrsec">タイムツリーに登録されるタイトル（直せます）</div><div id="nrTitleWrap"></div></div>' +
         '<div id="nrGoNg" class="nrwarn" style="display:none"></div>' +
-        '<button type="button" class="nrgo" id="nrgo">この内容で登録する</button>' +
+        '<button type="button" class="nrgo" id="nrgo">タイムツリーに登録する</button>' +
       '</div>' +
       '<div class="nrstatus" id="nrstatus"></div>' +
     '</div>' +
