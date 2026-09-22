@@ -6528,7 +6528,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var _pok=NR.procellOk(_memo),_pb=document.getElementById("nrProcellOk");if(_pb)_pb.disabled=!_pok.ok;' +
     'var _png=document.getElementById("nrProcellNg");' +
     'if(_png){_png.textContent=_pok.msg;_png.style.display=_pok.ok?"none":"";}' +
-    'var _tok=NR.timeOk(!!window.__nrTimeMissing),_tb=document.getElementById("nrTimeOk");if(_tb)_tb.disabled=!_tok.ok;' +
+    'var _tok=NR.timeOk(!!window.__nrTimeMissing,(!!window.__nrTimeChecking||!!window.__nrAvPending)),_tb=document.getElementById("nrTimeOk");if(_tb)_tb.disabled=!_tok.ok;' +
     'var _tng=document.getElementById("nrTimeNg");' +
     'if(_tng){_tng.textContent=_tok.msg;_tng.style.display=_tok.ok?"none":"";}' +
     // ★担当か部屋が決まらない＝中身が確定しないので、タイトルは出さない（判断は共通の1本に聞く）。
@@ -6569,7 +6569,11 @@ function renderNewReservationPage_(base, staff, dev) {
     'window.__rvdt={mm:mm,dd:dd,hh:hh,mi:mi};window.__nrTimeMissing=false;' +
     'window.__nrDate=y+"-"+(mm<10?"0":"")+mm+"-"+(dd<10?"0":"")+dd;' +
     'window.__nrWd="日月火水木金土".charAt(dt.getDay());window.__nrSat=(dt.getDay()===6);' +
-    'close();nrShowStart();nrRecheckAvail();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
+    // ★時間を変えたら、空いている部屋・担当を取り直す。取り直し終わるまで「この時間でOK」は押させない
+    //   （2026-09-22 まるちゃん「時間かえたら、あいてる部屋や担当も読み直しだろ」）。
+    'close();nrShowStart();window.__nrTimeChecking=true;nrGoCheck();' +
+    'nrRecheckAvail(function(){window.__nrTimeChecking=false;nrGoCheck();});' +
+    'if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     // ★あとから作るボタン（枠ごとの所要時間・担当・部屋）も効くように、押した場所から拾う形にする。
     'document.addEventListener("click",function(ev){var b=(ev.target&&ev.target.closest)?ev.target.closest(".nrpill"):null;if(!b)return;' +
     'var g=b.getAttribute("data-grp"),v=b.getAttribute("data-val");if(!g)return;sel[g]=v;' +

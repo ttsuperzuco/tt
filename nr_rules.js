@@ -297,9 +297,18 @@
     return { ok: pend.length === 0,
              msg: pend.length ? (pend.join("・") + "を直してから「予約メモはこれでOK」を押してください。") : "" };
   };
-  NR.timeOk = function (timeMissing) {
-    return { ok: !timeMissing,
-             msg: timeMissing ? "開始時間が読み取れませんでした。上の「修正」から時刻を入れてください。" : "" };
+  /* ★時間を変えたら、空いている部屋・担当を取り直し終わるまで次へ行かせない
+     （2026-09-22 まるちゃん「時間かえたら、あいてる部屋や担当も読み直しだろ」）。
+     取り直しは事務所パソコンに聞きに行くので数秒かかる。待たずに進めると、
+     ふさがっている部屋・担当のまま登録の画面へ行けてしまう。 */
+  NR.timeOk = function (timeMissing, checking) {
+    if (timeMissing) {
+      return { ok: false, msg: "開始時間が読み取れませんでした。上の「修正」から時刻を入れてください。" };
+    }
+    if (checking) {
+      return { ok: false, msg: "空いている部屋・担当を調べています。少しお待ちください。" };
+    }
+    return { ok: true, msg: "" };
   };
 
   /* ── ⑪-2 登録してよいか（決まっていない枠があれば押させない） ──────
