@@ -249,17 +249,43 @@
     return { items: items, memo: s, popup: popup, red: red };
   };
 
-  /* ── ⑪-1c 1つずつ画面を進める（2026-09-22 まるちゃん決定） ─────────
-     まるちゃん「貼り付け完了したら次の画面に遷移」「開始時間にも『この時間でOK』ボタンを作り、
-     一つずつ画面移動するようにする」。
-     画面の順＝1:貼り付け → 2:予約メモの確認 → 3:開始時間 → 4:残り（担当・部屋…登録）。
-     ★相談（①②③）とプロセルの選択は**予約メモより前**に置く（2026-09-22 まるちゃん）。
-       押すと予約メモの文が作り直されるので、後ろに置くと人が手で直した文が消えるため。
-     step＝今いる画面の番号。返り＝どの画面を出すか。 */
-  NR.stepView = function (step) {
-    var n = Number(step) || 1;
-    if (n < 1) n = 1; if (n > 4) n = 4;
-    return { step: n, paste: n === 1, memo: n === 2, time: n === 3, rest: n === 4, canBack: n > 1 };
+  /* ── ⑪-1c 1つずつ画面を進める（2026-09-22 まるちゃん決定・聞く物は同じ画面に混ぜない） ──
+     まるちゃん「画面をいっしょにすんなって。カウンセリング聞く画面を先にやってから、
+     予約メモの確認する画面だよ」。
+     画面の並び＝
+       貼り付け →（プロセルはどれ？）→（カウンセリングのみ？）→ 予約メモの確認 → 開始時間
+       → 担当・部屋など（登録）。
+     かっこの中は**聞く必要がある時だけ**出す（要らない人は飛ばす）。
+     ★聞く画面を予約メモより**前**に置く理由＝押すと予約メモの文がその場で作り直されるので、
+       後ろに置くと人が手で直した文が消えるため。
+     hasProcell／hasCouns＝読み取った時に聞く必要があったか。返り＝出す画面の名前の並び。 */
+  NR.stepList = function (hasProcell, hasCouns) {
+    var a = ["paste"];
+    if (hasProcell) a.push("procell");
+    if (hasCouns) a.push("couns");
+    a.push("memo", "time", "rest");
+    return a;
+  };
+
+  /* どの画面を出すか（画面の名前で聞く）。 */
+  NR.stepView = function (name) {
+    var n = String(name || "paste");
+    return { name: n, paste: n === "paste", procell: n === "procell", couns: n === "couns",
+             memo: n === "memo", time: n === "time", rest: n === "rest" };
+  };
+
+  /* ── ⑪-1e プロセルが顔か頭皮か決まっていないか ───────────────
+     ★お店の書き方ルール（2026-08-21）でメモは「プロ肌／プロ頭／プロ」になるので、その言葉でも見分ける。 */
+  NR.procellAsk = function (memo) {
+    var s = String(memo || "");
+    var has = /procell/i.test(s) || /プロセル/.test(s) || /プロ肌|プロ頭|プロ(?!グラム)/.test(s);
+    var face = /顔プロセル/.test(s) || /プロ肌/.test(s);
+    var scalp = /頭皮プロセル/.test(s) || /プロ頭/.test(s);
+    return { ask: !!(has && !face && !scalp) };
+  };
+  NR.procellOk = function (memo) {
+    var a = NR.procellAsk(memo);
+    return { ok: !a.ask, msg: a.ask ? "どのプロセルかを選んでください。" : "" };
   };
 
   /* ── ⑪-1d 次の画面へ進ませてよいか ─────────────────────
