@@ -6601,6 +6601,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'var _dh=document.getElementById("nrDurHead1");' +
     'if(_dh){var _S3=window.__nrSlots||[];_dh.textContent=NR.durHeadText((_S3[0]&&_S3[0].label)||"施術");}' +
     // ★性別・国籍の画面の「これでOK」＝両方選ぶまで押させない（タイトルに入る情報のため）。
+    // ★2026-09-23 まるちゃん：相談の①②③を選ぶまで「これでOK」を押させない。
+    'var _cok2=NR.counselOk((window.__nrCouns||{}).kind),_cb2=document.getElementById("nrCounsOk");' +
+    'if(_cb2)_cb2.disabled=!_cok2.ok;' +
     'var _gok=NR.genderOk(sel.gender,sel.tw),_gb=document.getElementById("nrGenderOk");if(_gb)_gb.disabled=!_gok.ok;' +
     'var _gng=document.getElementById("nrGenderNg");if(_gng){_gng.textContent=_gok.msg;_gng.style.display=_gok.ok?"none":"";}' +
     // ★白い枠のすぐ上の赤い知らせ＝人が直すたびに出し直す（直し終われば自然に消える・2026-09-22）。
