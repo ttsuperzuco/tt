@@ -216,9 +216,12 @@
       var inner = m[1] || "";
       // ★「確認して修正」も同じ扱い（2026-09-22 まるちゃん決定）＝経由の行はこの言葉に書き換わるので、
       //   ここに足さないと「直っていないのに登録ボタンが押せる」穴が開く。
+      // ★2026-09-23 まるちゃん指定でメモの書き方が「【部位入力】」に短くなった。
+      //   ここに「入力」を足さないと**直っていないのに登録ボタンが押せる**穴が開く。
       var word = (inner.indexOf("要確認") >= 0) ? "要確認"
                : (inner.indexOf("要記入") >= 0) ? "要記入"
-               : (inner.indexOf("確認して修正") >= 0) ? "確認して修正" : "";
+               : (inner.indexOf("確認して修正") >= 0) ? "確認して修正"
+               : (inner.indexOf("入力") >= 0) ? "入力" : "";
       if (!word) continue;
       var i = inner.indexOf(word);
       var before = inner.slice(0, i).replace(/[をがの・\s　]+$/, "").split(/[・、]/).pop();
@@ -259,7 +262,8 @@
     // ★小窓（メッセージの箱）は出さない（2026-09-22 まるちゃん「ここの前に出るメッセージBOXはださない。
     //   ここに修正があってわかるから」）＝赤い行だけで足りるため、popup は必ず空にする。
     var items = NR.pendingChecks(s), red = "";
-    if (items.length) red = items.join("・") + " を修正してください";
+    // ★2026-09-23 まるちゃん指定：どこを見て直すかを添える（メモの中は短くしたため）。
+    if (items.length) red = items.join("・") + " を修正してください（LINEのやりとりを参照）";
     return { items: items, memo: s, popup: "", red: red };
   };
 
