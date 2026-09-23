@@ -6665,13 +6665,9 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(tsec&&!tv.shown)tsec.style.display="none";' +
     // ★タイトルがまだ出来ていない時だけ取りに行く（2026-09-22）。前は画面を触るたびに毎回
     //   聞きに行っており、返事の前後が入れ替わって**古い性別のタイトルが残る**もとになっていた。
-    'if(tv.shown&&!titleEdited&&!_titleErr&&!document.querySelector(".nrTitleIn"))refreshTitles();' +
+    'if(tv.shown&&!titleEdited&&!document.querySelector(".nrTitleIn"))refreshTitles();' +
     // ★タイトルを作り直している間は登録させない（古い性別のまま登録されるのを防ぐ）。
-    'if(_titleKeep&&NR.titleView(r).shown){var _k=_titleKeep;_titleKeep=null;fillTitles(_k.t,_k.d);return;}' +
-    // ★2026-09-23 まるちゃん「（タイトルが）でない」＝作れなかった時に理由を出さず、
-    //   「作っています」のまま永久に止まっていた。理由を出して、何が起きたか分かるようにする。
-    'if(_titleErr){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルが作れませんでした。"+_titleErr+"\n「← 戻る」で予約メモや担当・部屋を見直してください。";ngbox.style.display="";}}' +
-    'else if(titleStale){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作っています。少しお待ちください。";ngbox.style.display="";}}}' +
+    'if(titleStale){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作っています。少しお待ちください。";ngbox.style.display="";}}}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
     'var nrAvTimer=null;function nrScheduleAvail(){if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
@@ -6884,27 +6880,22 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(sl)f.slots=JSON.stringify(sl);' +
     'if(extra){for(var k in extra){f[k]=extra[k];}}return f;}' +
     // 画面のタイトル欄に、いま登録されるタイトルを出す（人が手で直したら自動で上書きしない）。
-    'var titleEdited=false,titleReq=0,_titleTimer=null,titleStale=false,_titleKeep=null,_titleErr="";' +
+    'var titleEdited=false,titleReq=0,_titleTimer=null,titleStale=false;' +
     'function fillTitles(titles,disps){var wrap=document.getElementById("nrTitleWrap"),sec=document.getElementById("secTitle");if(!wrap||!sec)return;' +
     // ★担当・部屋が決まっていない間はタイトルを出さない（まるちゃん2026-08-25）。
-    // ★★2026-09-23 まるちゃん「（タイトルが）でない」への直し。
-    //   前は、答えが返ってきた時にまだ出せない場面（空きを調べている最中など）だと**答えを捨てて**
-    //   いた。作り直しの合図も出ないので「タイトルを作っています」のまま**永久に止まった**。
-    //   → 出せない時は答えを**とっておき**、出せるようになった時（nrGoCheck）に出す。
-    'if(!NR.titleView(window.__nrCanReg).shown){_titleKeep={t:titles,d:disps};sec.style.display="none";titleStale=false;nrGoCheck();return;}' +
-    '_titleKeep=null;' +
+    'if(!NR.titleView(window.__nrCanReg).shown){sec.style.display="none";return;}' +
     'var rows="";for(var i=0;i<titles.length;i++){rows+=\'<div style="color:#eaf3f7;font-weight:800;font-size:14px;margin:8px 2px 2px">\'+esc(disps[i]||("枠"+(i+1)))+\'</div><input class="nrTitleIn" value="\'+esc(titles[i]).replace(/"/g,"&quot;")+\'" style="width:100%;box-sizing:border-box;font:inherit;font-size:18px;font-weight:800;color:#0f172a;background:#fff;border:0;border-radius:12px;padding:14px 14px;margin:6px 0;box-shadow:0 2px 6px rgba(0,0,0,.12)">\';}wrap.innerHTML=rows;sec.style.display="";titleStale=false;var ins=wrap.querySelectorAll(".nrTitleIn");for(var j=0;j<ins.length;j++){ins[j].addEventListener("input",function(){titleEdited=true;});}nrGoCheck();}' +
     // ★cb＝タイトルの答えが出た（または出せなかった）時に必ず1回呼ぶ後始末。読み取り直後は
     //   これで「まとめて1回だけ画面に出す」＝タイトルが後から出てこない（2026-08-24 まるちゃん）。
     //   どの終わり方（返事なし・失敗・待ちすぎ）でも呼ぶこと。呼び忘れると画面が出ないままになる。
-    'var tpolls=0;function pollTitles(id,myReq,cb){tpolls++;if(tpolls>LIMITS.tries("preview_new_titles",400)){if(cb)cb();return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(cb)cb();return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb);},400);return;}if(r.status!=="done"){if(cb)cb();return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){_titleErr=(d&&d.error)?String(d.error):"タイトルが作れませんでした。";titleStale=false;var _we=document.getElementById("nrTitleWrap");if(_we)_we.innerHTML=\'<div class=\\"nrnote2\\">タイトルが作れませんでした</div>\';nrGoCheck();if(cb)cb();return;}if(myReq!==titleReq||titleEdited){if(cb)cb();return;}fillTitles(d.titles||[],d.disps||[]);if(cb)cb();});}' +
+    'var tpolls=0;function pollTitles(id,myReq,cb){tpolls++;if(tpolls>LIMITS.tries("preview_new_titles",400)){if(cb)cb();return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(cb)cb();return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb);},400);return;}if(r.status!=="done"){if(cb)cb();return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){if(cb)cb();return;}if(myReq!==titleReq||titleEdited){if(cb)cb();return;}fillTitles(d.titles||[],d.disps||[]);if(cb)cb();});}' +
     'function refreshTitles(cb){if(titleEdited){if(cb)cb();return;}var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim()){if(cb)cb();return;}var myReq=++titleReq;tpolls=0;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id){if(cb)cb();return;}setTimeout(function(){pollTitles(r.id,myReq,cb);},400);});}' +
     // ★★2026-09-22 まるちゃん指摘：「女で進んで、戻って男にしてまた進むとタイトルがFのまま」。
     //   原因＝タイトルは事務所パソコンに聞いて作るので数秒かかるのに、その間**古いタイトルが
     //   そのまま画面に残り、しかも登録ボタンが押せた**（＝古い性別のまま登録できてしまう）。
     //   → 性別・国籍・担当・部屋を変えた瞬間に**古いタイトルを消して「作っています」にし、
     //     新しい答えが返るまで登録ボタンを押させない**。
-    'function markTitleStale(){titleStale=true;_titleKeep=null;_titleErr="";var w=document.getElementById("nrTitleWrap");' +
+    'function markTitleStale(){titleStale=true;var w=document.getElementById("nrTitleWrap");' +
     'if(w)w.innerHTML=\'<div class="nrnote2">タイトルを作っています…</div>\';' +
     'var s=document.getElementById("secTitle");if(s&&NR.titleView(window.__nrCanReg).shown)s.style.display="";' +
     'nrGoCheck();}' +
