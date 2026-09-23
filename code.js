@@ -2262,6 +2262,12 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
   'if(s.status!=="done"){(onFail||function(){})(String(s.result||"うまくいきませんでした。"));return;}' +
   'var d=null;try{d=JSON.parse(s.result);}catch(e){d={ok:false,error:String(s.result||"")};}' +
+  /* ★2026-09-23：答えが長すぎる時（お知らせ一覧など）は、事務所パソコンが置き場に別に置き、
+     ここには「置いた場所」だけが届く。そこを読みに行って本当の答えを渡す。 */
+  'if(d&&d.__bigres){jsonp({action:"data",name:d.__bigres},function(x){' +
+  'var v=null;try{v=JSON.parse(x&&x.result);}catch(e){v=null;}' +
+  'if(!v){(onFail||function(){})("答えを読み込めませんでした。もう一度お試しください。");return;}' +
+  'onDone(v);});return;}' +
   'onDone(d);});})();});};' +
   'if(typeof BIG==="undefined"){go(JSON.stringify(F));return;}' +
   'BIG.prepare({exec:EXEC,key:KEY,slot:slot,op:"zenjitsu_act",tag:job,' +
