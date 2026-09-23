@@ -6799,15 +6799,16 @@ function renderNewReservationPage_(base, staff, dev) {
     'else{var d1=window.__rvdt||{},b1=(Number(d1.hh)*60+Number(d1.mi));' +
     'if(window.__nrNeedCounsel&&sel.needc!=="no"){rows.push({start:NR.hhmm(b1),staff:sel.counsel,room:"コスモス",dur:""});}' +
     'rows.push({start:NR.hhmm(b1),staff:sel.staff,room:(window.__nrMayu?"":sel.room),dur:sel.dur});}' +
-    'var STN={"1":"🍅 トマト","2":"🍊 みかん","3":"🫒 オリーブ","4":"🥭 マンゴー","5":"🍍 パイン"};' +
-    // 枠の数と題名の数が合う時だけ、時刻・担当・部屋を添える（取り違えて見せないため）。
+    // 枠の数と題名の数が合う時だけ、時刻・部屋を添える（取り違えて見せないため）。
+    // ★担当は書かない（2026-09-22 まるちゃん指定）＝題名の頭の印（🍅🍊…）で分かるため。
     'var ok=(rows.length===ins.length);' +
     'for(var j=0;j<ins.length;j++){out.push("");' +
     'var nm=((lbls[j]&&lbls[j].textContent)||("枠"+(j+1)));' +
     'out.push("■ "+(ok&&rows[j].start?(rows[j].start+"～　"):"")+nm);' +
-    'out.push(ins[j].value);' +
-    'if(ok){var r=rows[j],b=[];b.push("担当："+(STN[r.staff]||r.staff));' +
-    'if(r.room)b.push("部屋："+r.room);if(r.dur)b.push(r.dur+"分");out.push(b.join("／"));}}' +
+    'out.push("タイトル："+ins[j].value);' +
+    'if(ok){var r=rows[j],b=[];' +
+    'if(r.room)b.push("部屋："+r.room);if(r.dur)b.push(r.dur+"分");' +
+    'if(b.length)out.push(b.join("／"));}}' +
     'return out.join("\\n");}' +
     // ★聞く一言は大きく、登録する中身はひとまわり小さく左寄せ＝スマホでもスクロールせずに読める
     //   （そのままの大きさだと「カウンセリング」の行までしか見えなかった）。
