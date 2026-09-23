@@ -6455,6 +6455,40 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(v.shown&&onRest){if(!_avBox)_avBox=szPopup_(v.msg,{icon:"⏳",yesLabel:"閉じる"});}' +
     'else nrAvailWaitHide();}' +
     'window.__nrAvailWaitSync=nrAvailWaitSync;' +
+    // ★★2026-09-23 まるちゃん決定：**予約メモを確かめたら、そのメモから施術の枠を作り直す**。
+    //   まるちゃん「カウンセリングだけじゃなくて、施術の時間もいれないとだめだし、この時点では
+    //   施術内容きまってない（予約メモがまだかいてない）から、予約メモのあとの時間入力じゃない？」
+    //   ＝どんな施術をやるかは予約メモで決まる。貼った用紙の「当日施術」が空欄だと、機械は施術の枠を
+    //   1つも作れず、所要時間の画面にカウンセリングしか出なかった（実際に起きた）。
+    //   人がメモに書き足した施術も拾えるように、メモを確かめた後に事務所パソコンへ渡して作り直す。
+    //   ★作る所は貼った直後とまったく同じ1か所（事務所パソコンの slots_from_memo）＝食い違わない。
+    'var _slBox=null;' +
+    'function nrSlotsWaitHide(){if(_slBox&&_slBox.parentNode)_slBox.parentNode.removeChild(_slBox);_slBox=null;}' +
+    'function nrSlotsWaitShow(){if(!_slBox)_slBox=szPopup_(NR.slotsWaitView(true).msg,{icon:"⏳",yesLabel:"閉じる"});}' +
+    'var nrSlPolls=0;' +
+    'function nrMemoNext(){var m=(prevEl?prevEl.value:"")||"";' +
+    'if(m===(window.__nrSlotsMemo||"")){nrNext();return;}' +          // メモが変わっていなければ作り直さない
+    'nrSlotsWaitShow();var d0=window.__rvdt||{};' +
+    'var need=(!!window.__nrNeedCounsel&&sel.needc!=="no")?"1":"0";' +
+    'jsonp({action:"submit",key:KEY,op:"new_slots",who:idn.who,role:idn.role,device:idn.device,' +
+    'fields:JSON.stringify({memo:m,service:(window.__nrService||""),date:(window.__nrDate||""),' +
+    'start_min:(Number(d0.hh||0)*60+Number(d0.mi||0)),gender:(sel.gender||window.__nrReadGender||""),' +
+    'tw:(sel.tw||window.__nrReadTw||""),is_new:(window.__nrIsNew?"1":"0"),need_counsel:need})},' +
+    'function(r){if(!r||!r.ok||!r.id){nrSlotsWaitHide();window.__nrSlotsMemo=m;nrNext();return;}' +
+    'nrSlPolls=0;setTimeout(function(){nrSlPoll(r.id,m);},700);});}' +
+    'function nrSlPoll(id,m){nrSlPolls++;' +
+    'if(nrSlPolls>LIMITS.tries("new_slots",700)){nrSlotsWaitHide();window.__nrSlotsMemo=m;nrNext();return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){' +
+    'if(!r||!r.ok){nrSlotsWaitHide();window.__nrSlotsMemo=m;nrNext();return;}' +
+    'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){nrSlPoll(id,m);},700);return;}' +
+    'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){d=null;}' +
+    'nrSlotsWaitHide();window.__nrSlotsMemo=m;' +
+    'if(d&&d.ok&&d.slots&&d.slots.length){' +
+    'window.__nrSlotsBase=[];for(var b=0;b<d.slots.length;b++){var o={},s0=d.slots[b];for(var k in s0){o[k]=s0[k];}window.__nrSlotsBase.push(o);}' +
+    'buildSlotUI(d.slots);window.__nrCounsSlots((window.__nrCouns||{}).kind);nrApplyNeedC();applyAvail(d);' +
+    'if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}' +
+    'if(window.__nrRebuildSteps)window.__nrRebuildSteps();nrScheduleAvail();}' +
+    'nrNext();});}' +
     // ★枠ごとの画面＝その枠の箱だけ出し、見出しに「日付　開始時刻～　施術名」を入れる。
     'function nrSlotHeadOf(i){var S=window.__nrSlots||[],d=window.__rvdt||{};' +
     'var durs=[];for(var q=0;q<S.length;q++)durs.push(sel["dur#"+q]);' +
@@ -6770,6 +6804,8 @@ function renderNewReservationPage_(base, staff, dev) {
     'var scn=document.getElementById("secCounsel");if(scn)scn.style.display=d.datsumo?"":"none";' +            // カウンセリング担当は脱毛のときだけ
     // ★開始時間の欄に出す材料を覚える（2026-08-21 まるちゃん）。パソコン版と同じ作り。
     'window.__nrDate=d.date||"";window.__nrWd=d.weekday||"";window.__nrNeedCounsel=!!d.need_counsel;window.__nrTimeMissing=!!d.time_missing;' +
+    // ★枠を作り直す時に事務所パソコンへ返す材料＋「この文から枠を作った」印（2026-09-23 まるちゃん）。
+    'window.__nrService=d.service||"";window.__nrIsNew=!!d.is_new;window.__nrSlotsMemo=_fx.memo;' +
     'window.__nrMayu=(d.service_kind==="mayu"||d.service_kind==="matsuek");window.__nrSat=d.date?(new Date(d.date+"T00:00:00").getDay()===6):false;' +
     // ★2026-08-24 まるちゃん指摘「スマホだけ⑤カウンセリング担当が出る。1つ目でカウンセリング担当を
     //   選ぶので重複」。原因＝出す/隠すの判断(nrApplyNeedC)を、枠を組み立てる前にやっていたので
@@ -6792,7 +6828,11 @@ function renderNewReservationPage_(base, staff, dev) {
     'titleEdited=false;'+'if(d.titles&&d.titles.length){fillTitles(d.titles,d.disps||[]);_showAll();}'+'else{setTimeout(_showAll,20000);refreshTitles(_showAll);}});}' +
     'prevEl.addEventListener("input",function(){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";nrGoCheck();});' +
     // ★1つずつ進む・戻る（2026-09-22 まるちゃん）。
-    'var _ob=["nrProcellOk","nrCounsOk","nrMemoOk","nrTimeOk","nrRestOk","nrGenderOk","nrNeedcOk","nrOrderOk","nrDurOk","nrSlotOk"];' +
+    'var _ob=["nrProcellOk","nrTimeOk","nrRestOk","nrGenderOk","nrNeedcOk","nrOrderOk","nrDurOk","nrSlotOk"];' +
+    // ★カウンセリングの①②③は、選んでから進む（押せない状態は nrGoCheck が外す）。
+    "var _cok=document.getElementById(\"nrCounsOk\");if(_cok)_cok.addEventListener(\"click\",nrNext);" +
+    // ★★2026-09-23 まるちゃん：予約メモの「これでOK」だけは、先にメモから施術の枠を作り直す。
+    "var _mok=document.getElementById(\"nrMemoOk\");if(_mok)_mok.addEventListener(\"click\",nrMemoNext);" +
     'for(var _oi=0;_oi<_ob.length;_oi++){var _o=document.getElementById(_ob[_oi]);if(_o)_o.addEventListener("click",nrNext);}' +
     // ★「お客様情報を確認」＝貼り付けたお客様の文をそのまま小窓で出す（閉じれば元の画面に戻る）。
     //   同じボタンを開始時間の画面と予約メモの画面の両方に置いてある（2026-09-22 まるちゃん）。
@@ -6809,10 +6849,11 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★①②③に合わせて枠を作り直す（判断は共通の1本 NR.counselingSlots・2026-09-11 まるちゃん決定）。
     //   ②相談してから決める＝相談の枠のあとに施術の枠も押さえる／①相談だけ＝施術の枠は作らない。
     'window.__nrCounsSlots=function(kind){if(!window.__nrSlotsBase)return;var B=[];for(var _i2=0;_i2<window.__nrSlotsBase.length;_i2++){var _o2={},_s2=window.__nrSlotsBase[_i2];for(var _k2 in _s2){_o2[_k2]=_s2[_k2];}B.push(_o2);}buildSlotUI(NR.counselingSlots(B,kind));nrApplyNeedC();nrSlotAvail();};' +
-    'var _cab=document.querySelectorAll("[data-couns]");for(var _j=0;_j<_cab.length;_j++){_cab[_j].addEventListener("click",function(){var k=this.getAttribute("data-couns"),c=window.__nrCouns||{memos:{}};prevEl.value=NR.counselingMemo(c.memos,k,prevEl.value);prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";c.kind=k;window.__nrApplyCouns(NR.counselingView(k,true,(window.__nrCouns?window.__nrCouns.has_hair:true)));window.__nrCounsSlots(k);if(window.__nrRebuildSteps)window.__nrRebuildSteps();nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
+    'var _cab=document.querySelectorAll("[data-couns]");for(var _j=0;_j<_cab.length;_j++){_cab[_j].addEventListener("click",function(){var k=this.getAttribute("data-couns"),c=window.__nrCouns||{memos:{}};prevEl.value=NR.counselingMemo(c.memos,k,prevEl.value);prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";c.kind=k;window.__nrApplyCouns(NR.counselingView(k,true,(window.__nrCouns?window.__nrCouns.has_hair:true)));window.__nrCounsSlots(k);window.__nrSlotsMemo=prevEl.value;if(window.__nrRebuildSteps)window.__nrRebuildSteps();nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'var _pab=document.querySelectorAll("[data-procell]");for(var _i=0;_i<_pab.length;_i++){_pab[_i].addEventListener("click",function(){var base=this.getAttribute("data-procell");var tw=(base==="頭皮プロセル")?"トライアル":(window.__procellWord||"トライアル");var sh=(base==="頭皮プロセル")?"プロ頭":(base==="顔プロセルPro"?"プロ肌Pro":"プロ肌MD");var full=sh+" "+tw.replace("キャンペーン","キャ").replace("トライアル","トラ");var lines=prevEl.value.split("\\n");for(var k=0;k<lines.length;k++){lines[k]=lines[k].replace(/(?:(?:顔|頭皮)?プロセル(?:セラピーズ)?|procell|プロ肌|プロ頭|プロ(?!グラム))(?:[ \\u3000]*(?:キャンペーントライアル|トライアル|キャトラ|トラ))?/gi,full);}prevEl.value=lines.join("\\n");prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";' +
     // ★押した物に白い枠を付けて「これを選んだ」と分かるようにする（画面が分かれたので目印が要る・2026-09-22）。
     'for(var _q=0;_q<_pab.length;_q++){_pab[_q].classList.toggle("sel",_pab[_q]===this);}' +
+    'window.__nrSlotsMemo=prevEl.value;' +          // ★機械が書き換えた分は「作り直し」の対象にしない
     'nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
     'readEl.disabled=true;prevT0=Date.now();status("変換中です。通常は10秒以内に終わります。",false);' +
@@ -6914,7 +6955,7 @@ function renderNewReservationPage_(base, staff, dev) {
       // ── 画面1＝貼り付け（2026-09-22 まるちゃん「一つずつ画面移動するようにする」） ──
       '<div id="nrStep1">' +
         '<div class="nrnote">お客様から送られた"お客様情報"を、下の欄にそのまま貼って完了ボタンを押すと、自動で予約メモの形式に変換されます</div>' +
-        '<div class="nrsec">① 予約フォームを貼る</div>' +
+        '<div class="nrsec">予約フォームを貼る</div>' +
         '<textarea id="nrtext" placeholder="予約フォームの内容をここに貼り付け"></textarea>' +
         '<button type="button" class="nrread" id="nrread">貼り付け完了（読み取る）</button>' +
       '</div>' +
@@ -6962,7 +7003,7 @@ function renderNewReservationPage_(base, staff, dev) {
       // ── 画面3＝開始時間 ──
       '<div id="nrStep3" style="display:none">' +
         // ★開始時間の欄（2026-08-21 まるちゃん）＝「〇月〇日（水）〇時〇分」＋修正ボタン。パソコン版と同じ。
-        '<div class="nrsec">② 開始時間</div>' +
+        '<div class="nrsec">開始時間</div>' +
         '<div id="nrStartRow" style="display:flex;align-items:center;gap:12px;background:#fff;color:#123;border-radius:12px;padding:12px 14px;font-size:19px;font-weight:900;margin:2px 0 6px">' +
           '<span id="nrStartDisp">―</span>' +
           '<button type="button" id="btnStartFix" style="border:0;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:#fff;background:#2C7A99">修正</button>' +
@@ -7012,12 +7053,12 @@ function renderNewReservationPage_(base, staff, dev) {
       // ── 画面＝担当・部屋（施術が1つだけの方は今までどおり1画面） ──
       '<div id="nrrest" style="display:none">' +
         '<div class="nrsec" id="nrRestHead"></div>' +
-        '<div id="secCounsel" style="display:none"><div class="nrsec">⑤ カウンセリング担当' +
+        '<div id="secCounsel" style="display:none"><div class="nrsec">カウンセリング担当' +
           '<span id="noneCounsel" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div>' +
           '<div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
         '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px">⚠ カウンセリングの部屋（コスモス）が、この時間ふさがっています。<span id="cosmosWho"></span></div>' +
-        '<div id="secStaffWrap"><div class="nrsec">⑥ 施術担当<span id="noneStaff" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div><div class="nrpills">' + staffPills('staff', '2') + '</div></div>' +
-        '<div id="nrRoomWrap"><div class="nrsec">⑦ 部屋<span id="noneRoom" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は部屋が空いていません</span></div><div class="nrpills">' + roomPills + '</div></div>' +
+        '<div id="secStaffWrap"><div class="nrsec">施術担当<span id="noneStaff" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div><div class="nrpills">' + staffPills('staff', '2') + '</div></div>' +
+        '<div id="nrRoomWrap"><div class="nrsec">部屋<span id="noneRoom" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は部屋が空いていません</span></div><div class="nrpills">' + roomPills + '</div></div>' +
         '<div id="nrRestNg" class="nrwarn" style="display:none"></div>' +
         '<button type="button" class="nrgo" id="nrRestOk">これでOK</button>' +
       '</div>' +

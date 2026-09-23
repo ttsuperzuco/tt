@@ -30,6 +30,7 @@
     "make_allday": 180,
     "new_availability": 120,
     "new_customer_reservations": 120,
+    "new_slots": 120,
     "preview_reservation": 180,
     "run_all": 600,
     "sejutsugo_next_memo": 30,
