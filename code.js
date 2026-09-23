@@ -6425,9 +6425,21 @@ function renderNewReservationPage_(base, staff, dev) {
     'b=document.getElementById("nrStepGender");if(b)b.style.display=v.gender?"":"none";' +
     'b=document.getElementById("nrStepTitle");if(b)b.style.display=v.title?"":"none";' +
     'if(v.memo&&prevEl){prevEl.style.height="auto";prevEl.style.height=(prevEl.scrollHeight+6)+"px";}' +
+    // ★★2026-09-23 まるちゃん決定：空きの取り直しは**開始時間の画面では待たせず裏で続ける**。
+    //   担当・部屋を選ぶ画面に着いた時、まだ終わっていなければここで小窓を出して待ってもらう。
+    'if(v.rest)nrAvailWaitSync();else nrAvailWaitHide();' +
     // ★直す所の知らせに小窓は出さない（2026-09-22 まるちゃん「ここの前に出るメッセージBOXはださない。
     //   ここに修正があってわかるから」）＝同じ画面に赤い行が出るので二度手間だった。
     'nrGoCheck();try{window.scrollTo({top:0,behavior:"smooth"});}catch(e){window.scrollTo(0,0);}}' +
+    // ★空きを調べている間の小窓（担当・部屋を選ぶ画面にいる時だけ出す・自分で消える）。
+    'var _avBox=null;' +
+    'function nrAvailWaitHide(){if(_avBox&&_avBox.parentNode)_avBox.parentNode.removeChild(_avBox);_avBox=null;}' +
+    'function nrAvailWaitSync(){' +
+    'var v=NR.availWaitView(window.__nrAvPending,window.__nrTimeChecking);' +
+    'var onRest=(((window.__nrSteps||[])[window.__nrStepI||0])==="rest");' +
+    'if(v.shown&&onRest){if(!_avBox)_avBox=szPopup_(v.msg,{icon:"⏳",yesLabel:"閉じる"});}' +
+    'else nrAvailWaitHide();}' +
+    'window.__nrAvailWaitSync=nrAvailWaitSync;' +
     'function nrNext(){nrShowStep((window.__nrStepI||0)+1);}' +
     'function nrPrev(){nrShowStep((window.__nrStepI||0)-1);}' +
     // 文字だけでなく箱ごと出す（何も無い時は箱を消す）＝どの明るさの画面でも読める。
@@ -6466,10 +6478,10 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★枠ごとの「始まる時刻」の積み上げは共通の1本（NR）に聞く＝パソコン版と必ず同じ答えになる。
     'var durs=[];for(var q=0;q<S.length;q++){durs.push(sel["dur#"+q]);}' +
     'var PLAN=NR.slotStarts(S,durs,Number(d.hh)*60+Number(d.mi),sel.needc);' +
-    'window.__nrAvPending=true;nrGoCheck();' +          // ★答えが揃うまでは押させない
+    'window.__nrAvPending=true;nrGoCheck();nrAvailWaitSync();' +          // ★答えが揃うまでは押させない
 
     'function hhmm(m){var h=Math.floor(m/60),i2=m%60;return h+"時"+(i2<10?"0":"")+i2+"分";}' +
-    'function step(i,pos){if(i>=S.length){window.__nrAvPending=false;nrGoCheck();return;}' +
+    'function step(i,pos){if(i>=S.length){window.__nrAvPending=false;nrGoCheck();nrAvailWaitSync();return;}' +
     'var pp=PLAN[i];var isC=pp.isCounsel,du=pp.dur;pos=pp.startMin;' +
     'if(pp.skip){step(i+1,pos);return;}' +
     'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
@@ -6567,7 +6579,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(r.status!=="done"){if(done)done();return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
     // ★2026-09-22：空きを取り直すと、ふさがっている担当・部屋が消えて**別の人・別の部屋が
     //   自動で選ばれる**ことがある。その時タイトルの担当の印が古いままになるので、必ず作り直す。
-    'if(av&&av.ok){applyAvail(av);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");}if(done)done();});}' +
+    'if(av&&av.ok){applyAvail(av);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");}if(done)done();nrAvailWaitSync();});}' +
     // ★開始時間の「修正」＝月日時分を直して、空きと登録日時をやり直す。
     'function nrStartEditInit(){var row=document.getElementById("nrStartRow"),ed=document.getElementById("nrStartEdit");' +
     'var bFix=document.getElementById("btnStartFix"),bOk=document.getElementById("btnStartOk"),bNo=document.getElementById("btnStartCancel");' +
@@ -6587,7 +6599,7 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★時間を変えたら、空いている部屋・担当を取り直す。取り直し終わるまで「この時間でOK」は押させない
     //   （2026-09-22 まるちゃん「時間かえたら、あいてる部屋や担当も読み直しだろ」）。
     'close();nrShowStart();window.__nrTimeChecking=true;nrGoCheck();' +
-    'nrRecheckAvail(function(){window.__nrTimeChecking=false;nrGoCheck();});' +
+    'nrRecheckAvail(function(){window.__nrTimeChecking=false;nrGoCheck();nrAvailWaitSync();});' +
     'if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
     // ★あとから作るボタン（枠ごとの所要時間・担当・部屋）も効くように、押した場所から拾う形にする。
     'document.addEventListener("click",function(ev){var b=(ev.target&&ev.target.closest)?ev.target.closest(".nrpill"):null;if(!b)return;' +
