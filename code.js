@@ -6778,24 +6778,35 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★★2026-09-22 まるちゃん決定：**押したらすぐ登録**をやめ、先に中身を見せて確かめてもらう。
     //   ＝この画面は一番最後で、押すと本物の予約が入り部屋も担当も押さえてしまうため。
     //   小窓の形＝「以下の内容を、タイムツリーに登録してよろしいですか？」＋登録する中身＋OK／やめる。
-    'function nrSummaryText(){var out=[nrStartText()],S=window.__nrSlots||[];' +
+    // ★★2026-09-22 まるちゃん指摘：「3つとも別々に登録するんでしょ？ なら一つ一つに開始時間を
+    //   見せないとだめじゃないの？」＝そのとおり。枠は1つずつ別の予約になり、開始時刻も積み上がる
+    //   （18:30カウンセリング30分 → 19:00施術 …）。上には日付だけ、時刻は枠ごとの見出しに出す。
+    'function nrSummaryText(){var S=window.__nrSlots||[];' +
+    'var out=[NR.dateText(window.__rvdt,window.__nrWd)];' +
     'var ins=document.querySelectorAll(".nrTitleIn");' +
     'var wrap=document.getElementById("nrTitleWrap");' +
     'var lbls=wrap?wrap.getElementsByTagName("div"):[];' +
-    // 画面に出ている枠だけ、選ばれている担当・部屋・所要時間を順に拾う。
+    // 画面に出ている枠だけ、開始時刻・担当・部屋・所要時間を順に拾う。
     'var rows=[];' +
     'if(NR.perSlot(S)){var bx=document.querySelectorAll("#nrSlotWrap .nrslot");' +
-    'for(var i=0;i<S.length;i++){if(S[i].kind==="counsel"&&sel.needc==="no")continue;' +
+    'var durs=[];for(var q=0;q<S.length;q++)durs.push(sel["dur#"+q]);' +
+    'var d0=window.__rvdt||{},base=(Number(d0.hh)*60+Number(d0.mi));' +
+    'var ps=NR.slotStarts(S,durs,base,sel.needc);' +
+    'for(var i=0;i<S.length;i++){if(ps[i]&&ps[i].skip)continue;' +
     'if(bx[i]&&bx[i].style.display==="none")continue;' +
-    'rows.push({staff:sel["staff#"+i],room:(S[i].kind==="counsel")?"コスモス":sel["room#"+i],dur:sel["dur#"+i]});}}' +
-    'else{if(window.__nrNeedCounsel&&sel.needc!=="no")rows.push({staff:sel.counsel,room:"コスモス",dur:""});' +
-    'rows.push({staff:sel.staff,room:(window.__nrMayu?"":sel.room),dur:sel.dur});}' +
+    'rows.push({start:(ps[i]?NR.hhmm(ps[i].startMin):""),staff:sel["staff#"+i],' +
+    'room:(S[i].kind==="counsel")?"コスモス":sel["room#"+i],dur:sel["dur#"+i]});}}' +
+    'else{var d1=window.__rvdt||{},b1=(Number(d1.hh)*60+Number(d1.mi));' +
+    'if(window.__nrNeedCounsel&&sel.needc!=="no"){rows.push({start:NR.hhmm(b1),staff:sel.counsel,room:"コスモス",dur:""});}' +
+    'rows.push({start:NR.hhmm(b1),staff:sel.staff,room:(window.__nrMayu?"":sel.room),dur:sel.dur});}' +
     'var STN={"1":"🍅 トマト","2":"🍊 みかん","3":"🫒 オリーブ","4":"🥭 マンゴー","5":"🍍 パイン"};' +
+    // 枠の数と題名の数が合う時だけ、時刻・担当・部屋を添える（取り違えて見せないため）。
+    'var ok=(rows.length===ins.length);' +
     'for(var j=0;j<ins.length;j++){out.push("");' +
-    'out.push("■ "+((lbls[j]&&lbls[j].textContent)||("枠"+(j+1))));' +
+    'var nm=((lbls[j]&&lbls[j].textContent)||("枠"+(j+1)));' +
+    'out.push("■ "+(ok&&rows[j].start?(rows[j].start+"～　"):"")+nm);' +
     'out.push(ins[j].value);' +
-    // 枠の数とタイトルの数が合う時だけ担当・部屋を添える（取り違えて見せないため）。
-    'if(rows.length===ins.length){var r=rows[j],b=[];b.push("担当："+(STN[r.staff]||r.staff));' +
+    'if(ok){var r=rows[j],b=[];b.push("担当："+(STN[r.staff]||r.staff));' +
     'if(r.room)b.push("部屋："+r.room);if(r.dur)b.push(r.dur+"分");out.push(b.join("／"));}}' +
     'return out.join("\\n");}' +
     // ★聞く一言は大きく、登録する中身はひとまわり小さく左寄せ＝スマホでもスクロールせずに読める
