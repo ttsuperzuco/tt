@@ -285,23 +285,60 @@
        まるちゃん指定＝①カウンセリングの必要・やる順番・所要時間・担当・部屋は同じ画面のまま
        （空きを見ながら一緒に選ぶため）②国籍は性別と同じ画面。
      needGender＝性別・国籍のどちらかを人に選ばせる必要があるか（両方とも貼り付けた文から
-       読めていれば、その画面は空っぽになるので飛ばす）。 */
-  NR.stepList = function (hasProcell, hasCouns, needGender) {
+       読めていれば、その画面は空っぽになるので飛ばす）。
+     ★★2026-09-23 まるちゃん決定（この日3回目の分割）＝**1画面1つの用事にする**。
+       「開始時間の画面の次に ③カウンセリングの必要。次の画面に移ってから やる順番。そのあと
+        所要時間（『所要時間（分）』だけじゃ分からないから『〇〇の所要時間（分）』）。その後 予約メモ。
+        そのあと 〇〇 担当・部屋。その画面は、カウンセリング・施術が二つあるならそれぞれ。
+        つまり『〇月〇日〇時 カウンセリング／担当／部屋』、次の画面が『〇月〇日〇時 ハイドラ』、
+        次『〇月〇日〇時 学生応援』みたいな感じ」。
+       ＝並び＝… 開始時間 → カウンセリングの必要 → やる順番 → 所要時間 → 予約メモ
+         → 施術ごとの担当・部屋（1つにつき1画面）→ 性別・国籍 → タイトル。
+     opts＝{ needcShown:カウンセリングの必要を聞くか, orderShown:やる順番の欄を出すか,
+             slotCount:枠ごとに分ける時の枠の数（0＝今までの1画面） }。 */
+  NR.stepList = function (hasProcell, hasCouns, needGender, opts) {
+    var o = opts || {};
     var a = ["paste"];
     if (hasProcell) a.push("procell");
     if (hasCouns) a.push("couns");
-    a.push("time", "memo", "rest");
+    a.push("time");
+    if (o.needcShown) a.push("needc");
+    if (o.orderShown) a.push("order");
+    a.push("dur", "memo");
+    var n = Number(o.slotCount || 0);
+    if (n > 0) {
+      for (var i = 0; i < n; i++) a.push("slot" + i);
+    } else {
+      a.push("rest");
+    }
     if (needGender !== false) a.push("gender");
     a.push("title");
     return a;
   };
 
-  /* どの画面を出すか（画面の名前で聞く）。 */
+  /* どの画面を出すか（画面の名前で聞く）。slot＝枠ごとの画面の番号（-1＝ちがう）。 */
   NR.stepView = function (name) {
     var n = String(name || "paste");
+    var sl = /^slot(\d+)$/.exec(n);
     return { name: n, paste: n === "paste", procell: n === "procell", couns: n === "couns",
              memo: n === "memo", time: n === "time", rest: n === "rest",
-             gender: n === "gender", title: n === "title" };
+             gender: n === "gender", title: n === "title",
+             needc: n === "needc", order: n === "order", dur: n === "dur",
+             slot: sl ? Number(sl[1]) : -1 };
+  };
+
+  /* ── 枠ごとの画面の見出し（2026-09-23 まるちゃん）───────────────
+     例＝「12月1日（火）19:00～　ハイドラ」。dateText＝NR.dateText の答え。 */
+  NR.slotHeadText = function (dateText, hhmm, label) {
+    var d = String(dateText || "");
+    var t = hhmm ? (String(hhmm) + "～") : "";
+    var s = String(label || "施術");
+    return (d ? (d + "　") : "") + (t ? (t + "　") : "") + s;
+  };
+
+  /* 所要時間の見出し（例＝「ハイドラの所要時間（分）」）。 */
+  NR.durHeadText = function (label) {
+    return String(label || "施術") + "の所要時間（分）";
   };
 
   /* ── 性別・国籍の画面が要るか（2026-09-22）───────────────
