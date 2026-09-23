@@ -173,6 +173,22 @@
     return out;
   };
 
+  /* ── ⑪-0 日付だけの文／時刻だけの文（2026-09-22 まるちゃん）──────────
+     登録前の確かめの小窓で使う。**枠は1つずつ別の予約として登録される**ので、
+     上には日付だけを出し、開始時刻は枠ごとに出す。 */
+  NR.dateText = function (rvdt, weekday) {
+    var d = rvdt;
+    if (!d || d.mm == null) return "―";
+    var wd = weekday ? ("（" + weekday + "）") : "";
+    return Number(d.mm) + "月" + Number(d.dd) + "日" + wd;
+  };
+  NR.hhmm = function (min) {
+    var m = Number(min);
+    if (!isFinite(m) || m < 0) return "―";
+    var h = Math.floor(m / 60), mi = m % 60;
+    return h + ":" + (mi < 10 ? "0" + mi : String(mi));
+  };
+
   /* ── ⑪ やる順番の欄 ───────────────────────────────
      返り：{ shown:欄を出すか, rows:[{no, name, canUp}] } */
   NR.orderRows = function (slots) {
