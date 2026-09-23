@@ -6375,7 +6375,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '.nrslot{border:2px solid rgba(255,255,255,.28);border-radius:14px;padding:4px 12px 12px;margin:14px 0;}' +
     '.nrsub{font-weight:800;margin:12px 2px 6px;font-size:15px;color:#dbeafe;}' +
     '.nrnote2{color:#cfe6ef;font-size:14px;margin:0 2px 8px;}' +
-    '.nrcoswarn{background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:8px 0;}' +
+    '.nrcoswarn{background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:8px 0;white-space:pre-line;}' +
     // ★直す所の赤い知らせ（2026-09-22 まるちゃん）＝薄い赤の地に濃い赤の太字（他の警告と同じ見た目）。
     //   その行の右端に「お客様情報を確認」を右寄せで置く（まるちゃん指定）。
     '.nrfixrow{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:6px 0 8px;}' +
@@ -6545,11 +6545,13 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★選べる物が1つも無くなったら、見出しの右に赤い知らせを出す（2026-08-21 まるちゃん）。
     'function nrShowNone(g,id){var el=document.getElementById(id);if(!el)return;var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),h=[];' +
     'for(var i=0;i<pl.length;i++){h.push(pl[i].style.display==="none");}el.style.display=NR.noneLeft(h)?"inline":"none";}' +
-    'function applyAvail(av){if(!av)return;var cw=document.getElementById("cosmosWarn"),cwho=document.getElementById("cosmosWho");' +
+    'function applyAvail(av){if(!av)return;var cw=document.getElementById("cosmosWarn");' +
     // ★カウンセリングの部屋（コスモス）がふさがっている時は、1つ目のカウンセリングの枠の中に知らせを出し、
     //   その枠の所要時間・担当を選べないようにする（2026-08-23 まるちゃん）。
     // ★枠ごとに選ぶ形の時、コスモスの空きは「カウンセリングの枠が実際に始まる時刻」で見る（下の nrSlotAvail）。
-    'if(cw)cw.style.display=NR.cosmosWarnOutside(av,window.__nrSlots,window.__nrNeedCounsel,sel.needc)?"":"none";' + 'if(cwho)cwho.textContent=av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"";' +
+    'if(cw)cw.style.display=NR.cosmosWarnOutside(av,window.__nrSlots,window.__nrNeedCounsel,sel.needc)?"":"none";' +
+    // ★文は共通の1本にそろえる（枠ごとの画面と同じ言い方・2026-09-23 まるちゃん）。
+    'if(cw){var _d1=window.__rvdt||{};cw.textContent=NR.cosmosBusyText(NR.hhmm(Number(_d1.hh||0)*60+Number(_d1.mi||0)),av.cosmos_busy_text);}' +
     // ★2026-08-24 まるちゃん「コスモスが埋まってますの知らせが、1つ目の枠の中と一番下の2か所に出る」。
     //   原因＝この2行が逆さまだった（先に「枠があるから出さない」と隠したのに、次の行が
     //   埋まり具合でまた出し直していた）。パソコン版と同じ「出し入れを決めたあとに隠す」順番にそろえる。
@@ -6580,8 +6582,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(pw,700);return;}' +
     'if(x.status==="done"){var av={};try{av=JSON.parse(x.result||"{}");}catch(e){}' +
     'if(av&&av.ok){if(isC){var bx=document.querySelectorAll("#nrSlotWrap .nrslot")[i],w=document.getElementById("cosWarn"+i);' +
-    'if(w){w.textContent="⚠ この時間（"+hhmm(pos)+"〜）、カウンセリングの部屋（コスモス）がうまっています。"' +
-    '+(av.cosmos_busy_text?("（"+av.cosmos_busy_text+"）"):"")+" 上の「開始時間」を変えるか、やる順番を変えてください。";' +
+    'if(w){w.textContent=NR.cosmosBusyText(NR.hhmm(pos),av.cosmos_busy_text);' +
     'w.style.display=av.cosmos_busy?"":"none";}' +
     'if(bx){if(av.cosmos_busy){bx.classList.add("nrlock");}else{bx.classList.remove("nrlock");}}' +
     'nrHideBusy("staff#"+i,av.busy_counsel_staff);nrShowNone("staff#"+i,"noneStaff"+i);}' +
@@ -6627,10 +6628,13 @@ function renderNewReservationPage_(base, staff, dev) {
     'var _need=[];if(!nrAnySel("staff#"+_si))_need.push("担当");' +
     'if(!_isC2&&!nrAnySel("room#"+_si))_need.push("部屋");' +
     'var _wait=!!window.__nrAvPending;' +
-    '_sb.disabled=(_need.length>0)||_wait;' +
-    'if(_sng){var _m2=_wait?"空いている担当・部屋を調べています。少しお待ちください。":' +
-    '(_need.length?(_need.join("と")+"を選んでください。"):"");' +
-    '_sng.textContent=_m2;_sng.style.display=_m2?"":"none";}}' +
+    // ★2026-09-23 まるちゃん「担当をえらんでください　のもじいる？」＝部屋がふさがっていて
+    //   選ぶボタンが1つも出ていない時は、その一言を出さない（判断は共通の1本 NR.slotGo）。
+    'var _bx2=document.querySelectorAll("#nrSlotWrap .nrslot")[_si];' +
+    'var _lk2=!!(_bx2&&_bx2.className.indexOf("nrlock")>=0);' +
+    'var _sg=NR.slotGo(_need,_wait,_lk2);' +
+    '_sb.disabled=!!_sg.disabled;' +
+    'if(_sng){_sng.textContent=_sg.msg;_sng.style.display=_sg.msg?"":"none";}}' +
     // ★所要時間の画面の見出し（施術が1つだけの方）＝「〇〇の所要時間（分）」。
     'var _dh=document.getElementById("nrDurHead1");' +
     'if(_dh){var _S3=window.__nrSlots||[];_dh.textContent=NR.durHeadText((_S3[0]&&_S3[0].label)||"施術");}' +
@@ -7056,7 +7060,7 @@ function renderNewReservationPage_(base, staff, dev) {
         '<div id="secCounsel" style="display:none"><div class="nrsec">カウンセリング担当' +
           '<span id="noneCounsel" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div>' +
           '<div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
-        '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px">⚠ カウンセリングの部屋（コスモス）が、この時間ふさがっています。<span id="cosmosWho"></span></div>' +
+        '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px;white-space:pre-line"></div>' +
         '<div id="secStaffWrap"><div class="nrsec">施術担当<span id="noneStaff" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div><div class="nrpills">' + staffPills('staff', '2') + '</div></div>' +
         '<div id="nrRoomWrap"><div class="nrsec">部屋<span id="noneRoom" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は部屋が空いていません</span></div><div class="nrpills">' + roomPills + '</div></div>' +
         '<div id="nrRestNg" class="nrwarn" style="display:none"></div>' +
