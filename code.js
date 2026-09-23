@@ -6455,7 +6455,15 @@ function renderNewReservationPage_(base, staff, dev) {
     'var ps=NR.slotStarts(S,durs,(Number(d.hh)*60+Number(d.mi)),sel.needc);' +
     'var lb=(S[i]&&S[i].label)||((S[i]&&S[i].kind==="counsel")?"カウンセリング":"施術");' +
     'return NR.slotHeadText(NR.dateText(window.__rvdt,window.__nrWd),(ps[i]?NR.hhmm(ps[i].startMin):""),lb);}' +
-    'function nrShowOneSlot(i){var bx=document.querySelectorAll("#nrSlotWrap .nrslot");' +
+    // ★★「カウンセリング必要なし」にすると、その枠は作らない＝**画面の番号と箱の番号がずれる**。
+    //   n番目に出す画面 → 実際の箱の番号 に直してから出す（直さないと、必要なしなのに
+    //   1画面目でカウンセリングの担当を選ばせてしまう）。
+    'function nrSlotBoxOf(n){var S=window.__nrSlots||[],durs=[];' +
+    'for(var q=0;q<S.length;q++)durs.push(sel["dur#"+q]);' +
+    'var ps=NR.slotStarts(S,durs,0,sel.needc),c=0;' +
+    'for(var i=0;i<S.length;i++){if(ps[i]&&ps[i].skip)continue;if(c===n)return i;c++;}return -1;}' +
+    'function nrShowOneSlot(n){var bx=document.querySelectorAll("#nrSlotWrap .nrslot");' +
+    'var i=nrSlotBoxOf(n);if(i<0)i=n;' +
     'for(var k=0;k<bx.length;k++){bx[k].style.display=(k===i)?"":"none";}' +
     'var hd=document.getElementById("nrSlotHead");if(hd)hd.textContent=nrSlotHeadOf(i);' +
     'window.__nrSlotNow=i;nrGoCheck();}' +
