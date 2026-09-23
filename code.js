@@ -1252,14 +1252,18 @@ function szPopup_(msg, opts) {
       // ★2026-09-16まるちゃん：長い文でも「OK／閉じる」は下に止めておく（文の部分だけが動く）。
       (icon ? "<div style='flex:0 0 auto;font-size:56px;line-height:1;margin-bottom:14px;'>" + icon + "</div>" : "") +
       "<div class='szpopmsg' style='flex:1 1 auto;min-height:0;overflow:auto;color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:22px;'></div>" +
+      // ★2026-09-23 まるちゃん「これ閉じるボタンあるのはおかしい　けして」＝待っている間の知らせは
+      //   終われば自分で消えるので、押すボタンを出さない（押せると「何が起きるの？」と迷わせる）。
+      (opts.noButtons ? "" :
       "<div style='flex:0 0 auto;display:flex;gap:12px;'>" +
         (opts.cancel ? "<button type='button' class='szpopno' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#eaf3f7;cursor:pointer;'>" + (opts.noLabel || 'キャンセル') + "</button>" : "") +
         "<button type='button' class='szpopyes' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:0;background:#2C7A99;color:#fff;cursor:pointer;'>" + yesLabel + "</button>" +
-      "</div>" +
+      "</div>") +
     "</div>";
   if (opts.isHtml) mask.querySelector('.szpopmsg').innerHTML = msg; else mask.querySelector('.szpopmsg').textContent = msg;
   document.body.appendChild(mask);
-  mask.querySelector('.szpopyes').addEventListener('click', function () { if (mask.parentNode) mask.parentNode.removeChild(mask); if (opts.onYes) opts.onYes(); });
+  var yes = mask.querySelector('.szpopyes');
+  if (yes) yes.addEventListener('click', function () { if (mask.parentNode) mask.parentNode.removeChild(mask); if (opts.onYes) opts.onYes(); });
   var no = mask.querySelector('.szpopno'); if (no) no.addEventListener('click', function () { if (mask.parentNode) mask.parentNode.removeChild(mask); if (opts.onNo) opts.onNo(); });
   return mask;
 }
@@ -6452,7 +6456,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var v=NR.availWaitView(window.__nrAvPending,window.__nrTimeChecking);' +
     'var _nm0=((window.__nrSteps||[])[window.__nrStepI||0])||"";' +
     'var onRest=(_nm0==="rest")||/^slot\d+$/.test(_nm0);' +
-    'if(v.shown&&onRest){if(!_avBox)_avBox=szPopup_(v.msg,{icon:"⏳",yesLabel:"閉じる"});}' +
+    'if(v.shown&&onRest){if(!_avBox)_avBox=szPopup_(v.msg,{icon:"⏳",noButtons:true});}' +
     'else nrAvailWaitHide();}' +
     'window.__nrAvailWaitSync=nrAvailWaitSync;' +
     // ★★2026-09-23 まるちゃん決定：**予約メモを確かめたら、そのメモから施術の枠を作り直す**。
@@ -6464,7 +6468,7 @@ function renderNewReservationPage_(base, staff, dev) {
     //   ★作る所は貼った直後とまったく同じ1か所（事務所パソコンの slots_from_memo）＝食い違わない。
     'var _slBox=null;' +
     'function nrSlotsWaitHide(){if(_slBox&&_slBox.parentNode)_slBox.parentNode.removeChild(_slBox);_slBox=null;}' +
-    'function nrSlotsWaitShow(){if(!_slBox)_slBox=szPopup_(NR.slotsWaitView(true).msg,{icon:"⏳",yesLabel:"閉じる"});}' +
+    'function nrSlotsWaitShow(){if(!_slBox)_slBox=szPopup_(NR.slotsWaitView(true).msg,{icon:"⏳",noButtons:true});}' +
     'var nrSlPolls=0;' +
     'function nrMemoNext(){var m=(prevEl?prevEl.value:"")||"";' +
     'if(m===(window.__nrSlotsMemo||"")){nrNext();return;}' +          // メモが変わっていなければ作り直さない
