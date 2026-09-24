@@ -7217,7 +7217,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '<div id="exNum">' +
       '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 戻る</a></div>' +
       '<div class="hhead"><span class="bmark">📝</span><span class="bname">' + head + '</span></div>' +
-      '<textarea class="exbox" id="exdisp" rows="2" placeholder="ここにお客様番号を貼り付けるか、下の英語・番号ボタンで入力する"></textarea>' +
+      '<textarea class="exbox" id="exdisp" rows="2" placeholder="下のボタンでお客様番号を入力する"></textarea>' +
       '<div class="exseg" id="exseg"><span class="thumb"></span>' +
         '<button data-v="M" aria-pressed="true">M（男）</button>' +
         '<button data-v="F">F（女）</button>' +
