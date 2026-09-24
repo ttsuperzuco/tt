@@ -5774,11 +5774,12 @@ var SG_STEPS_JS_ =
     'var DAYSTAFF=[];' +
     'function goMonth(){step=3;show();drawMonths();window.scrollTo(0,0);}' +
     'function goDay(){step=4;show();drawCal();window.scrollTo(0,0);}' +
-    /* ── 3枚目：月をえらぶ（今月から3か月ぶん・縦に並べる／まるちゃん 2026-09-11） ── */
+    /* ── 3枚目：月をえらぶ（今月から6か月ぶん・縦に並べる。2026-09-11は3か月、2026-09-24まるちゃん決定で6か月＝
+       空き状況の材料も180日ぶんに増やした／増やしても作るのは0.1秒・受け取りは+0.5秒だけと実測） ── */
     'function drawMonths(){' +
       'var base=new Date(NOW());base.setDate(1);' +
       'var h="";' +
-      'for(var i=0;i<3;i++){' +
+      'for(var i=0;i<6;i++){' +
         'var d=new Date(base.getFullYear(),base.getMonth()+i,1);' +
         'h+="<button type=\\"button\\" class=\\"sgmon\\" data-y=\\""+d.getFullYear()+"\\" data-m=\\""+d.getMonth()+"\\">"+' +
           '(d.getMonth()+1)+"月</button>";}' +
