@@ -7435,7 +7435,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function rvTitle(){var t=(rvctx.prev_title||"").split("新規").join("");var a=t.indexOf("預約");if(a<0&&disp())a=t.indexOf(disp());if(a<0)a=t.length;var head=rvStripHead(t.slice(0,a));var rest=t.slice(a);return (SEMO_[rvsel.staff]||"")+rvEffMarks().join("")+head+rest+rvSuffix();}' +
     'function rvDrawMarks(){var tm=(rvctx.title_marks||[]);var h="<button type=\\"button\\" class=\\"exp"+((rvEffMarks().length===0)?" sel":"")+"\\" data-mark=\\"__none\\" style=\\"background:#475569\\">なし</button>";for(var i=0;i<tm.length;i++){var mk=tm[i][0];if(mk==="🌿")continue;h+="<button type=\\"button\\" class=\\"exp"+(rvMarkOn(mk)?" sel":"")+"\\" data-mark=\\""+esc(mk)+"\\" style=\\"background:#475569\\">"+esc(mk)+"</button>";}document.getElementById("exrvmarks").innerHTML=h;var sf=document.querySelectorAll("#exrvsuf .exp");for(var j=0;j<sf.length;j++){var k=sf[j].getAttribute("data-suf");sf[j].classList.toggle("sel",(k==="__none")?(!rvDochi&&!rvEyeOn()):((k==="dochi")?rvDochi:rvEyeOn()));}var tt=document.getElementById("exrvtitle");if(tt&&rvTitleOv==null)tt.value=rvTitle();rvDrawSlots();rvUpdateNowMemo();}' +
     'var _nowMemoT=null;function rvUpdateNowMemo(){if(_nowMemoT)clearTimeout(_nowMemoT);_nowMemoT=setTimeout(rvUpdateNowMemoDo,700);}' +
-    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx)return;var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid()};jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度お試しください）";return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok)return;if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done")return;var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exPayRemovedNote(el2);});})();});}' +
+    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx)return;var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid()};jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度お試しください）";return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok)return;if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done")return;var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exPayRemovedNote(el2);exPaidNote(el2,(d&&d.paid_note)||"");});})();});}' +
     // ★複数枠：印が2つ以上なら印ごとに1枠。枠ごとに部屋・担当・分を選び、時間は続けて自動で並べる。
     'var rvSlotCfg={},rvLastSlotCount=0;' +
     'function rvSlotCfg_(mk){if(!rvSlotCfg[mk])rvSlotCfg[mk]={room:rvsel.room,staff:rvsel.staff,dur:rvsel.dur};return rvSlotCfg[mk];}' +
@@ -7532,6 +7532,12 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(!box){box=document.createElement("div");box.id="exrvpayrm";box.style.cssText="margin:6px 2px 0;font-size:14px;line-height:1.6;";' +
         'el.parentNode.insertBefore(box,el.nextSibling);}' +
       'var h="";for(var i=0;i<rm.length;i++){h+="<div>お支払い状況から <b>"+esc(rm[i])+"</b> を消しました</div>";}box.innerHTML=h;}' +
+    /* ★2026-09-25：帳簿で「次回分を先にいただいている」と分かった時だけ、その根拠を出す（黙って入れない）。 */
+    'function exPaidNote(el,why){if(!el||!el.parentNode)return;var box=document.getElementById("exrvpaidnote");' +
+      'if(!why){if(box&&box.parentNode)box.parentNode.removeChild(box);return;}' +
+      'if(!box){box=document.createElement("div");box.id="exrvpaidnote";box.style.cssText="margin:6px 2px 0;font-size:14px;line-height:1.6;color:#166534;";' +
+        'el.parentNode.insertBefore(box,el.nextSibling);}' +
+      'box.innerHTML="<b>先にお支払いいただいています</b>："+esc(why)+"<br>お支払い状況に「支払い済み」を入れました。";}' +
     'function exP2(n){return ("0"+n).slice(-2);}' +
     /* 日にちを押した瞬間から、前回の予約を裏で読み始める（時間を決めている間に読み終わる）。 */
     'function exPrefetch(date){if(PREF&&PREF.date===date&&!PREF.err)return;var me={date:date,ctx:null,err:"",wait:null};PREF=me;' +
@@ -7546,15 +7552,17 @@ function renderExistingPage_(base, staff, dev, mode) {
             'me.err=esc(st.result)||"エラーが発生しました。りゅうさんにお伝えください。";exPrefDone(me);});return;}' +
           'setTimeout(tryData,700);});}' +
         'tryData();});}' +
-    'function exPrefDone(me){if(me.ctx&&me.ctx.found){SGX.setAhead(me.ctx.paid_ahead||{});SGX.setAsk(!!me.ctx.ask);}var w=me.wait;me.wait=null;if(w)w();}' +
+    /* ★2026-09-25 まるちゃん決定：既存の予約（LINEで予約を受けた時）は「次回の費用は支払済みですか？」を聞かない
+       （その場にお客様がいないのでスタッフが調べようがない）。代わりに事務所パソコンが帳簿を見て、
+       先にいただいていると分かる時だけメモに「◯/◯分: 支払い済み」を入れる。施術後の予約は今までどおり聞く。 */
+    'function exPrefDone(me){if(me.ctx&&me.ctx.found){SGX.setAhead(me.ctx.paid_ahead||{});SGX.setAsk(false);}var w=me.wait;me.wait=null;if(w)w();}' +
     /* 「この時間と部屋で決定」＝予約メモの画面へ。読み終わっていなければ、読み終わるまで待つ。 */
     'function exGoMemo(st){if(!PREF||PREF.date!==st.date)exPrefetch(st.date);var me=PREF;' +
       'if(me.err){var m=me.err;PREF=null;szPopup_(m);return;}' +
       'if(!me.ctx){exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
         'me.wait=function(){exOvHide_();exGoMemo(SGX.state());};return;}' +
       'if(!me.ctx.found){szPopup_("「"+disp()+"」の前回の予約が見つかりません。");return;}' +
-      /* 払ったかを聞く方なのに、まだ答えていない（読み終わる前に押した）＝予約時間設定に戻って聞く。 */
-      'if(me.ctx.ask&&st.paid===null){SGX.setAsk(true);SGX.toTime();return;}' +
+      /* ★2026-09-25：既存の予約は支払いを聞かないので、ここで時間の画面へ戻す必要がなくなった（決まりは上のとおり）。 */
       'rvctx=JSON.parse(JSON.stringify(me.ctx));rvctx._ymd=st.date;rvctx._tm=exP2(Math.floor(st.ts/60))+":"+exP2(st.ts%60);' +
       /* 担当＝空き状況で担当の枠を押したらその担当、部屋の枠なら前回と同じ担当（まるちゃん決定）。 */
       'var stf=(st.slot&&st.slot.kind==="staff")?staffNum(st.slot.who):staffNum(rvctx.prev_staff||"");' +
@@ -7569,7 +7577,8 @@ function renderExistingPage_(base, staff, dev, mode) {
       'function show(){SWAP=Date.now();hideSteps();var m={3:"sgMonth",4:"sgDay",5:"sgFree",6:"sgTime"};' +
         'if(m[step]){$(m[step]).style.display="";$("sgbackbar").style.display="";}}' +
       'function freeStaffAt(a,b){var out=[];for(var i=0;i<DAYSTAFF.length;i++){var s=DAYSTAFF[i];for(var j=0;j<(s.slots||[]).length;j++){if(hm2m(s.slots[j].s)<=a&&b<=hm2m(s.slots[j].e)){out.push(staffNum(s.emoji));break;}}}return out;}' +
-      'function sgOnDate(d){PAID=null;PAIDAUTO="";exPrefetch(d);ASK=!!(PREF&&PREF.ctx&&PREF.ctx.found&&PREF.ctx.ask);' +
+      /* ★2026-09-25：既存の予約は支払いを聞かない（ASKは常に出さない）。帳簿は事務所パソコンが見る。 */
+      'function sgOnDate(d){PAID=null;PAIDAUTO="";exPrefetch(d);ASK=false;' +
         'AHEAD=(PREF&&PREF.ctx&&PREF.ctx.paid_ahead)||{};}' +
       SG_STEPS_JS_ +
       'function back(){if(step===6){goFree();}else if(step===5){goDay();}else if(step===4){goMonth();}' +
