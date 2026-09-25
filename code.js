@@ -7577,6 +7577,26 @@ function renderExistingPage_(base, staff, dev, mode) {
       's=s.replace(/[ 　]*[@＠][0-9０-９,]+.*$/,"");' +
       'for(var k=0;k<2;k++){var t=s.replace(/[ 　:：・,、]*(あり|なし|有り|無し)[ 　。．]*$/,"").replace(/[ 　:：・,、]+$/,"");if(t===s)break;s=t;}' +
       'return s.replace(/[ 　:：・,、]+$/,"")||String(n||"");}' +
+    /* ★2026-09-25 まるちゃん「『VIO＋脇＋学生平日A』をやりますか？ でいい。回数とかあるからへんになる」
+       ＝聞く時の名前は部位だけ（まとめ買い・回数・都度・購入済み・期限を落とす）。
+       ★事務所パソコン側にも同じ物がある（treatment_memo.ask_name）＝直す時は両方直す。 */
+    'function exAskName(n){var s=exShort(n);var K="一二三四五六七八九十〇零壱弐参";' +
+      's=s.replace(new RegExp("[ 　]*[（(][^（()）]*(?:有効期限|期限|使用期限)[^（()）]*[)）]","g"),"");' +
+      's=s.replace(new RegExp("[ 　]*[＋+][0-9０-９"+K+"]+回?(?:フリー|プレゼント|プレ|🎁)?","g"),"");' +
+      's=s.replace(new RegExp("[ 　]*全?[0-9０-９"+K+"]+回[ 　]*(?:おまとめ|まとめ|コース|分|パック|セット)","g"),"");' +
+      's=s.replace(new RegExp("[ 　]*(?:おまとめ|まとめ|お|御)[0-9０-９"+K+"]+回","g"),"");' +
+      's=s.replace(/[ 　]*(?:おまとめ|まとめ買い)/g,"");' +
+      's=s.replace(/[ 　]*都度(?:払い)?/g,"");' +
+      's=s.replace(/[ 　]*購入(?:済み|済)?/g,"");' +
+      's=s.replace(new RegExp("[ 　]*[0-9０-９"+K+"]+回(?![目])","g"),"");' +
+      's=s.replace(/[ 　]*[（(][ 　]*[)）]/g,"");' +
+      'function cnt(x,ch){return x.split(ch).length-1;}' +
+      'while(cnt(s,")")>cnt(s,"(")&&s.indexOf(")")>=0)s=s.replace(")","");' +
+      'while(cnt(s,"）")>cnt(s,"（")&&s.indexOf("）")>=0)s=s.replace("）","");' +
+      'while(cnt(s,"(")>cnt(s,")")&&s.lastIndexOf("(")>=0){var i1=s.lastIndexOf("(");s=s.slice(0,i1)+s.slice(i1+1);}' +
+      'while(cnt(s,"（")>cnt(s,"）")&&s.lastIndexOf("（")>=0){var i2=s.lastIndexOf("（");s=s.slice(0,i2)+s.slice(i2+1);}' +
+      's=s.replace(/[ 　]{2,}/g," ").replace(/^[ 　:：;；・,、_]+/,"").replace(/[ 　:：;；・,、_]+$/,"");' +
+      'return s||exShort(n);}' +
     'function exChosen(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}' +
       'for(var k=0;k<rvNewItems.length;k++)a.push(rvNewItems[k]);return a;}' +
     /* この施術なら何分か＝事務所パソコンが渡した「言葉ごとの分数」の中で一番長い物（出し方の正本は共通側）。 */
@@ -7593,7 +7613,8 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exEl("exaskwho").innerHTML="「"+esc(disp())+"」"+(rvctx.name?esc(rvctx.name)+"様":"");' +
       'exEl("exaskprev").innerHTML=(rvctx.prev_date?("<div class=\\"exsec\\">前回の予約（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）</div>"):"")+' +
         '"<div class=\\"rvprevmemo\\">"+esc(rvctx.prev_note||"")+"</div>";' +
-      'var ns=[];for(var i=0;i<rvitems.length;i++)ns.push(exShort(rvitems[i].name));' +
+      /* ★聞く時は部位だけ（まるちゃん 2026-09-25）。同じ部位が重なったら1つにまとめる。 */
+      'var ns=[];for(var i=0;i<rvitems.length;i++){var _an=exAskName(rvitems[i].name);if(_an&&ns.indexOf(_an)<0)ns.push(_an);}' +
       'exEl("exaskq").textContent=ns.length?("今回も「"+ns.join("＋")+"」をやりますか？"):"今回やる施術を選んでください";' +
       'exEl("exaskyes").style.display=ns.length?"":"none";}' +
     /* いいえ＝今回やる施術を選び直す */
