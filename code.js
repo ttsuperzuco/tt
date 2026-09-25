@@ -7873,7 +7873,9 @@ function renderExistingPage_(base, staff, dev, mode) {
         'if(m[step]){$(m[step]).style.display="";$("sgbackbar").style.display="";}}' +
       'function freeStaffAt(a,b){var out=[];for(var i=0;i<DAYSTAFF.length;i++){var s=DAYSTAFF[i];for(var j=0;j<(s.slots||[]).length;j++){if(hm2m(s.slots[j].s)<=a&&b<=hm2m(s.slots[j].e)){out.push(staffNum(s.emoji));break;}}}return out;}' +
       /* ★2026-09-25：既存の予約は支払いを聞かない（ASKは常に出さない）。帳簿は事務所パソコンが見る。 */
-      'function sgOnDate(d){PAID=null;PAIDAUTO="";exPrefetch(d);ASK=false;' +
+      /* ★2026-09-25：新しい流れでは番号のすぐ後に材料を取ってあるので、日を選んでも取り直さない
+         （取り直すと、時間を決めた時にまだ終わっておらず『前回の予約を読み込み中です』が出る）。 */
+      'function sgOnDate(d){PAID=null;PAIDAUTO="";if(!(EXFLOW&&PREF&&PREF.ctx))exPrefetch(d);ASK=false;' +
         'AHEAD=(PREF&&PREF.ctx&&PREF.ctx.paid_ahead)||{};}' +
       SG_STEPS_JS_ +
       'function back(){if(step===6){goFree();}else if(step===5){goDay();}else if(step===4){goMonth();}' +
