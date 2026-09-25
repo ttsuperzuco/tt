@@ -7363,7 +7363,7 @@ function renderExistingPage_(base, staff, dev, mode) {
         '<div id="exrvroomdurwrap"><div class="exsec">部屋</div><div class="mvng" id="exrvroomnone" style="display:none">その時間に空いている部屋がありません</div><div class="rvbusy" id="exrvroombusy" style="display:none">前回と同じ部屋はこの時間は空いていません。空いている部屋から選んでください。</div><div class="expills" id="exrvroom">' + rvRoomP + '</div>' +
         '<div class="exsec">施術時間（分）</div><div class="expills exdur" id="exrvdur">' + rvDurP + '</div></div>' +
       '</div>' +
-      '<div class="exsec">タイトルの印</div><div class="expills" id="exrvmarks"></div>' +
+      '<div class="exsec">タイトルの印<span style="font-weight:600;font-size:13px;opacity:.85">（施術から自動で選んでいます）</span></div>' + '<div class="expills" id="exrvmarks"></div>' +
       '<div class="exsec">末尾</div><div class="expills" id="exrvsuf">' +
         '<button type="button" class="exp" data-suf="__none" style="background:#475569">なし</button>' +
         '<button type="button" class="exp" data-suf="dochi" style="background:#475569">都度</button>' +
