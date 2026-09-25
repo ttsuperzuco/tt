@@ -7567,10 +7567,15 @@ function renderExistingPage_(base, staff, dev, mode) {
       'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;' +
       'rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0);cb();}' +
     /* 画面に出す名前＝回数や値段を落として短くする（登録に使う名前は変えない）。 */
+    /* ★2026-09-25 まるちゃん「表示がおかしい」＝「VIO都度(学生＋…」とかっこが閉じないまま出ていた。
+       値段のかっこ（@付き）はかっこごと外し、末尾の「あり／なし」も落とす。
+       ★事務所パソコン側にも同じ物がある（treatment_memo.short_name）＝直す時は両方直す。 */
     'function exShort(n){var s=String(n||"");' +
+      's=s.replace(/[ 　]*[（(][^（()）]*[@＠][0-9０-９][^（()）]*[)）]/g,"");' +
       's=s.replace(/[ 　]*全[0-9０-９]+回.*$/,"");' +
       's=s.replace(/[ 　]*[0-9０-９]+回目.*$/,"");' +
       's=s.replace(/[ 　]*[@＠][0-9０-９,]+.*$/,"");' +
+      'for(var k=0;k<2;k++){var t=s.replace(/[ 　:：・,、]*(あり|なし|有り|無し)[ 　。．]*$/,"").replace(/[ 　:：・,、]+$/,"");if(t===s)break;s=t;}' +
       'return s.replace(/[ 　:：・,、]+$/,"")||String(n||"");}' +
     'function exChosen(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}' +
       'for(var k=0;k<rvNewItems.length;k++)a.push(rvNewItems[k]);return a;}' +
