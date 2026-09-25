@@ -7540,11 +7540,27 @@ function renderExistingPage_(base, staff, dev, mode) {
         'else if(dp[i+1][j]>=dp[i][j+1]){out.push(["-",A[i]]);i++;}else{out.push(["+",B[j]]);j++;}}' +
       'while(i<n){out.push(["-",A[i]]);i++;}while(j<m){out.push(["+",B[j]]);j++;}return out;}' +
     /* 消した行のすぐ後に似た行を足していたら「◯◯→◯◯に変えました」とまとめる（頭4文字が同じ＝同じ行の書き換え）。 */
+    /* ★2026-09-25 まるちゃん指摘：行をそのまま並べると読みにくい（「これなに？」）。
+       何が起きたかの言葉にする＝回数は違う所だけ・お支払いの行と予約の行は意味を書く。 */
+    'function exSay_(sign,line,line2){' +
+      'var m1=line.match(/([0-9０-９]+)\\s*回目/),m2=line2?line2.match(/([0-9０-９]+)\\s*回目/):null;' +
+      'if(sign==="~"&&m1&&m2&&m1[1]!==m2[1]){' +
+        'var nm=line.slice(0,m1.index).replace(/^[◉●・\\s　]+/,"").replace(/[\\s　]+$/,"");' +
+        'return esc(nm)+"　<b>"+esc(m1[1])+"回目</b> → <b>"+esc(m2[1])+"回目</b> にしました";}' +
+      'var pay=line.match(/^[◉●・\\s　]*([0-9]{1,2}\\/[0-9]{1,2})\\s*分?\\s*[:：]\\s*(.*)$/);' +
+      'if(pay&&sign!=="~"){' +
+        'if(sign==="-")return "前回("+esc(pay[1])+")のお支払いの記録「"+esc(pay[2])+"」は、今回のメモには残しません";' +
+        'return "お支払い状況に <b>"+esc(pay[1])+"分: "+esc(pay[2])+"</b> を入れました";}' +
+      'if(/^予約/.test(line)&&sign!=="~"){var t=line.replace(/^予約[\\s　]*/,"");' +
+        'return (sign==="-")?("前回の予約の行「"+esc(t)+"」を消しました")' +
+          ':("今回の予約を書きました　<b>"+esc(t)+"</b>");}' +
+      'if(sign==="~")return "<b>"+esc(line)+"</b> を <b>"+esc(line2)+"</b> に変えました";' +
+      'return "<b>"+esc(line)+"</b> を"+((sign==="-")?"消しました":"足しました");}' +
     'function exChangeLines_(prev,now){var d=exDiff_(String(prev||"").split("\\n"),String(now||"").split("\\n")),r=[],k=0;' +
       'while(k<d.length){var a=d[k],b=d[k+1];' +
         'if(a[0]==="-"&&b&&b[0]==="+"&&a[1].slice(0,4)===b[1].slice(0,4)){' +
-          'r.push("<b>"+esc(a[1])+"</b> を <b>"+esc(b[1])+"</b> に変えました");k+=2;continue;}' +
-        'r.push(a[0]==="-"?("<b>"+esc(a[1])+"</b> を消しました"):("<b>"+esc(a[1])+"</b> を足しました"));k++;}' +
+          'r.push(exSay_("~",a[1],b[1]));k+=2;continue;}' +
+        'r.push(exSay_(a[0],a[1],""));k++;}' +
       'return r;}' +
     'function exPayRemovedNote(el,now){if(!el||!el.parentNode)return;var box=document.getElementById("exrvpayrm");' +
       'var prev=(typeof rvctx!=="undefined"&&rvctx&&rvctx.prev_note)||"";' +
