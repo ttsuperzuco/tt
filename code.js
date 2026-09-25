@@ -7570,7 +7570,12 @@ function renderExistingPage_(base, staff, dev, mode) {
       'rvitems=(rvctx.items||[]).map(function(it){return {line_no:it.line_no,name:it.name,arinashi:it.arinashi,' +
         'count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:true,finish:false,mark:it.mark||""};});' +
       'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;' +
-      'rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0);cb();}' +
+      /* ★2026-09-25 まるちゃん決定（「②い」）＝**メモに「都度」の行が1つでもあれば
+         タイトルに「都度」を付ける**（コースの行が一緒にあっても付ける）。
+         これまでは前回のタイトルを写すだけだった。実データでは都度とコースが両方ある予約153件のうち
+         「都度」を付けていたのが38件・付けていないのが115件でスタッフによってばらばらだった。 */
+      'rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0)' +
+      '||(rvctx.items||[]).some(function(it){return String(it.name||"").indexOf("都度")>=0;});cb();}' +
     /* 画面に出す名前＝回数や値段を落として短くする（登録に使う名前は変えない）。 */
     /* ★2026-09-25 まるちゃん「表示がおかしい」＝「VIO都度(学生＋…」とかっこが閉じないまま出ていた。
        値段のかっこ（@付き）はかっこごと外し、末尾の「あり／なし」も落とす。
