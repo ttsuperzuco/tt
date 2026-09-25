@@ -7183,6 +7183,11 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exp{border:0;border-radius:999px;padding:12px 18px;font-weight:800;font-size:16px;color:#fff;opacity:.6;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15);}' +
     '.exp.plain{background:#475569;}' +
     '.exp.sel{opacity:1;outline:3px solid #fff;outline-offset:-3px;}' +
+    /* ★2026-09-25 まるちゃん「mienai」＝「今回やる施術を選んでください」のボタンは
+       背景の色を付けていなかったので、白い文字が下地に溶けて読めなかった。
+       ここだけ白いボタン＋濃い文字にする（選ぶとオレンジの枠＝他の選ぶ画面と同じ）。 */
+    '.exp.pick{background:#fff;color:#0f172a;opacity:1;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
+    '.exp.pick.sel{background:#fff7ed;color:#0f172a;outline:3px solid #fb8c44;outline-offset:-3px;}' +
     '.exdur .exp{flex:0 0 calc((100% - 40px)/6);padding:12px 2px;text-align:center;box-sizing:border-box;}' +
     '.exmlist{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}' +
     '.exmbtn{display:block;width:100%;text-align:center;background:#fff;color:#0f172a;border:0;border-radius:14px;padding:16px 8px;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
@@ -7620,7 +7625,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     /* いいえ＝今回やる施術を選び直す */
     'function exShowPick(){exOpen("exPickItems");exDrawPick();}' +
     'function exDrawPick(){var h="";' +
-      'for(var i=0;i<rvitems.length;i++){h+="<button type=\\"button\\" class=\\"exp"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exShort(rvitems[i].name))+"</button>";}' +
+      'for(var i=0;i<rvitems.length;i++){h+="<button type=\\"button\\" class=\\"exp pick"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exShort(rvitems[i].name))+"</button>";}' +
       'exEl("expkitems").innerHTML=h||"<div class=\\"exnone\\">前回の施術がありません</div>";' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-expknew=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("expknew").innerHTML=n;}' +
