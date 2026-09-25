@@ -7435,7 +7435,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function rvTitle(){var t=(rvctx.prev_title||"").split("新規").join("");var a=t.indexOf("預約");if(a<0&&disp())a=t.indexOf(disp());if(a<0)a=t.length;var head=rvStripHead(t.slice(0,a));var rest=t.slice(a);return (SEMO_[rvsel.staff]||"")+rvEffMarks().join("")+head+rest+rvSuffix();}' +
     'function rvDrawMarks(){var tm=(rvctx.title_marks||[]);var h="<button type=\\"button\\" class=\\"exp"+((rvEffMarks().length===0)?" sel":"")+"\\" data-mark=\\"__none\\" style=\\"background:#475569\\">なし</button>";for(var i=0;i<tm.length;i++){var mk=tm[i][0];if(mk==="🌿")continue;h+="<button type=\\"button\\" class=\\"exp"+(rvMarkOn(mk)?" sel":"")+"\\" data-mark=\\""+esc(mk)+"\\" style=\\"background:#475569\\">"+esc(mk)+"</button>";}document.getElementById("exrvmarks").innerHTML=h;var sf=document.querySelectorAll("#exrvsuf .exp");for(var j=0;j<sf.length;j++){var k=sf[j].getAttribute("data-suf");sf[j].classList.toggle("sel",(k==="__none")?(!rvDochi&&!rvEyeOn()):((k==="dochi")?rvDochi:rvEyeOn()));}var tt=document.getElementById("exrvtitle");if(tt&&rvTitleOv==null)tt.value=rvTitle();rvDrawSlots();rvUpdateNowMemo();}' +
     'var _nowMemoT=null;function rvUpdateNowMemo(){if(_nowMemoT)clearTimeout(_nowMemoT);_nowMemoT=setTimeout(rvUpdateNowMemoDo,700);}' +
-    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx)return;var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid()};jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度お試しください）";return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok)return;if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done")return;var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exPayRemovedNote(el2);exPaidNote(el2,(d&&d.paid_note)||"");});})();});}' +
+    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx)return;var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid()};jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度お試しください）";return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok)return;if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done")return;var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exPayRemovedNote(el2,(d&&d.memo)||"");exPaidNote(el2,(d&&d.paid_note)||"");});})();});}' +
     // ★複数枠：印が2つ以上なら印ごとに1枠。枠ごとに部屋・担当・分を選び、時間は続けて自動で並べる。
     'var rvSlotCfg={},rvLastSlotCount=0;' +
     'function rvSlotCfg_(mk){if(!rvSlotCfg[mk])rvSlotCfg[mk]={room:rvsel.room,staff:rvsel.staff,dur:rvsel.dur};return rvSlotCfg[mk];}' +
@@ -7526,12 +7526,34 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var EXSEL=null,PREF=null;' +
     'function exPaid(){return (EXSEL&&EXSEL.paid!=null)?String(EXSEL.paid):"";}' +
     /* ★2026-09-17：前回のメモから消した『払った／未払い』の行を、今回のメモの下に出す（本当にまだ頂いていない時に気づけるように）。 */
-    'function exPayRemovedNote(el){if(!el||!el.parentNode)return;var box=document.getElementById("exrvpayrm");' +
-      'var rm=(typeof rvctx!=="undefined"&&rvctx&&rvctx.pay_removed)||[];' +
-      'if(!rm.length){if(box)box.parentNode.removeChild(box);return;}' +
+    /* ★2026-09-25 まるちゃん指摘：**前回の予約メモから変えた所は、ぜんぶ欄の下に出す**（決まり）。
+       前は「お支払い状況から ◯ を消しました」だけだったので、回数を進めた・予約の行を作り直した等が出ていなかった。
+       前回のメモと今回のメモを1行ずつ突き合わせて、足した・消した・変えた を全部出す（空行は数えない）。 */
+    'function exDiff_(a,b){var A=[],B=[],i,j;' +
+      'for(i=0;i<a.length;i++){if(a[i].trim())A.push(a[i].trim());}' +
+      'for(j=0;j<b.length;j++){if(b[j].trim())B.push(b[j].trim());}' +
+      'var n=A.length,m=B.length,dp=[];' +
+      'for(i=0;i<=n;i++){var row=[];for(j=0;j<=m;j++)row.push(0);dp.push(row);}' +
+      'for(i=n-1;i>=0;i--)for(j=m-1;j>=0;j--)dp[i][j]=(A[i]===B[j])?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);' +
+      'var out=[];i=0;j=0;' +
+      'while(i<n&&j<m){if(A[i]===B[j]){i++;j++;}' +
+        'else if(dp[i+1][j]>=dp[i][j+1]){out.push(["-",A[i]]);i++;}else{out.push(["+",B[j]]);j++;}}' +
+      'while(i<n){out.push(["-",A[i]]);i++;}while(j<m){out.push(["+",B[j]]);j++;}return out;}' +
+    /* 消した行のすぐ後に似た行を足していたら「◯◯→◯◯に変えました」とまとめる（頭4文字が同じ＝同じ行の書き換え）。 */
+    'function exChangeLines_(prev,now){var d=exDiff_(String(prev||"").split("\\n"),String(now||"").split("\\n")),r=[],k=0;' +
+      'while(k<d.length){var a=d[k],b=d[k+1];' +
+        'if(a[0]==="-"&&b&&b[0]==="+"&&a[1].slice(0,4)===b[1].slice(0,4)){' +
+          'r.push("<b>"+esc(a[1])+"</b> を <b>"+esc(b[1])+"</b> に変えました");k+=2;continue;}' +
+        'r.push(a[0]==="-"?("<b>"+esc(a[1])+"</b> を消しました"):("<b>"+esc(a[1])+"</b> を足しました"));k++;}' +
+      'return r;}' +
+    'function exPayRemovedNote(el,now){if(!el||!el.parentNode)return;var box=document.getElementById("exrvpayrm");' +
+      'var prev=(typeof rvctx!=="undefined"&&rvctx&&rvctx.prev_note)||"";' +
+      'var r=(prev&&now)?exChangeLines_(prev,now):[];' +
+      'if(!r.length){if(box&&box.parentNode)box.parentNode.removeChild(box);return;}' +
       'if(!box){box=document.createElement("div");box.id="exrvpayrm";box.style.cssText="margin:6px 2px 0;font-size:14px;line-height:1.6;";' +
         'el.parentNode.insertBefore(box,el.nextSibling);}' +
-      'var h="";for(var i=0;i<rm.length;i++){h+="<div>お支払い状況から <b>"+esc(rm[i])+"</b> を消しました</div>";}box.innerHTML=h;}' +
+      'var h="<div style=\\"font-weight:700;margin-bottom:2px\\">前回の予約メモから変えた所</div>";' +
+      'for(var i=0;i<r.length;i++)h+="<div>・"+r[i]+"</div>";box.innerHTML=h;}' +
     /* ★2026-09-25：帳簿で「次回分を先にいただいている」と分かった時だけ、その根拠を出す（黙って入れない）。 */
     'function exPaidNote(el,why){if(!el||!el.parentNode)return;var box=document.getElementById("exrvpaidnote");' +
       'if(!why){if(box&&box.parentNode)box.parentNode.removeChild(box);return;}' +
