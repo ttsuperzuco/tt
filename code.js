@@ -5733,7 +5733,9 @@ function sgStepsHtml_() {
           '</span>' +
         '</div>' +
       '</div>' +
-      '<div class="sgtimebox">' +
+      /* ★2026-09-25：施術時間を先に決めている時（既存の予約）は、この箱ごと出さない
+         （前の画面で決めたのに、また選ばせないため＝まるちゃん指摘）。 */
+      '<div class="sgtimebox" id="sgdurbox">' +
         '<div class="sgtlab">施術の長さ（押すと終了時間が決まります）</div>' +
         '<div class="sgdur" id="sgdur"></div>' +
       '</div>' +
@@ -5937,6 +5939,8 @@ var SG_STEPS_JS_ =
         'er.innerHTML="その時間は空いていません。<br>入力し直してください。";}' +
       'else{er.style.display="none";er.textContent="";}' +
       /* ★はい／いいえの見た目。答えていないと決定は押せない（メモに書く物だから）。 */
+      /* ★2026-09-25：施術時間を先に決めている時は「施術の長さ」を出さない（終了時間で細かく直せる）。 */
+      'var _db=$("sgdurbox");if(_db)_db.style.display=NEEDMIN?"none":"";' +
       '$("sgpaidbox").style.display=ASK?"":"none";' +
       '$("sgpaid1").className="sgyn"+(PAID===1?" sel":"");' +
       '$("sgpaid0").className="sgyn"+(PAID===0?" sel":"");' +
