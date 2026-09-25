@@ -7383,8 +7383,8 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" id="exbackAdd" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="exmh" id="exaddq"></div>' +
       '<div id="exaddlist"></div>' +
-      '<button type="button" class="exgo" id="exaddyes" style="background:#2563eb">ある（メニューから選ぶ）</button>' +
-      '<button type="button" class="exgo" id="exaddno" style="margin-top:8px">ない（次へ）</button>' +
+      '<button type="button" class="exgo" id="exaddno">ない（このメニューだけ）</button>' +
+      '<button type="button" class="exgo" id="exaddyes" style="background:#2563eb;margin-top:8px">ある（追加メニューあり）</button>' +
     '</div>';
   var splitSec =
     '<div id="exSplit" style="display:none">' +
