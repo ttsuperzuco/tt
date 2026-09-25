@@ -7530,7 +7530,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       's=s.replace(/[ 　]*全[0-9０-９]+回の[0-9０-９]+回目.*$/,"");' +
       's=s.replace(/[ 　]*[0-9０-９]+回目.*$/,"");' +
       's=s.replace(/[ 　]*[@＠][0-9０-９,]+.*$/,"");' +
-      'return s.replace(/[ 　]+$/,"")||String(n||"");}' +
+      'return s.replace(/[ 　:：・,、]+$/,"")||String(n||"");}' +
     'function exChosen(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}' +
       'for(var k=0;k<rvNewItems.length;k++)a.push(rvNewItems[k]);return a;}' +
     /* この施術なら何分か＝事務所パソコンが渡した「言葉ごとの分数」の中で一番長い物（出し方の正本は共通側）。 */
