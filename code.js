@@ -5852,6 +5852,9 @@ var SG_STEPS_JS_ =
       /* 空きの帯を押すと「予約時間設定」へ */
       'var fs=$("sgfree").getElementsByClassName("akffree");' +
       'for(var f=0;f<fs.length;f++){' +
+        /* ★2026-09-25 まるちゃん指摘「部屋も選べちゃう。担当者だけ押せるように」＝
+           施術室の帯は見るだけ（部屋は次の画面で選ぶ）。押せるのは担当の帯だけ。 */
+        'if(fs[f].getAttribute("data-kind")!=="staff"){fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
         /* ★長さが決まっている時は、その長さが入らない空きは押せない（薄く出す）。 */
         'if(NEEDMIN&&(hm2m(fs[f].getAttribute("data-e"))-hm2m(fs[f].getAttribute("data-s")))<NEEDMIN){' +
           'fs[f].style.opacity="0.3";fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
