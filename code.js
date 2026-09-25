@@ -7525,11 +7525,17 @@ function renderExistingPage_(base, staff, dev, mode) {
         'count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:true,finish:false,mark:it.mark||""};});' +
       'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;' +
       'rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0);cb();}' +
+    /* 画面に出す名前＝回数や値段を落として短くする（登録に使う名前は変えない）。 */
+    'function exShort(n){var s=String(n||"");' +
+      's=s.replace(/[ 　]*全[0-9０-９]+回の[0-9０-９]+回目.*$/,"");' +
+      's=s.replace(/[ 　]*[0-9０-９]+回目.*$/,"");' +
+      's=s.replace(/[ 　]*[@＠][0-9０-９,]+.*$/,"");' +
+      'return s.replace(/[ 　]+$/,"")||String(n||"");}' +
     'function exChosen(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}' +
       'for(var k=0;k<rvNewItems.length;k++)a.push(rvNewItems[k]);return a;}' +
     /* この施術なら何分か＝事務所パソコンが渡した「言葉ごとの分数」の中で一番長い物（出し方の正本は共通側）。 */
-    'function exDurOf(ns){var t=ns.join(" ");var w=rvctx.dur_words||{};var best=0;' +
-      'for(var k in w){if(w.hasOwnProperty(k)&&t.indexOf(k)>=0&&w[k]>best)best=w[k];}' +
+    'function exDurOf(ns){var t=ns.join(" ").toUpperCase();var w=rvctx.dur_words||{};var best=0;' +
+      'for(var k in w){if(w.hasOwnProperty(k)&&t.indexOf(k.toUpperCase())>=0&&w[k]>best)best=w[k];}' +
       'if(t.indexOf("プロセル")>=0||t.indexOf("プロ肌")>=0||t.indexOf("プロ頭")>=0)best=rvctx.dur_procell||70;' +
       'return best||rvctx.dur_default||30;}' +
     'function exMarkOfNames(ns){var t=ns.join(" ");var tm=(rvctx.title_marks||[]);' +
@@ -7541,19 +7547,19 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exEl("exaskwho").innerHTML="「"+esc(disp())+"」"+(rvctx.name?esc(rvctx.name)+"様":"");' +
       'exEl("exaskprev").innerHTML=(rvctx.prev_date?("<div class=\\"exsec\\">前回の予約（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）</div>"):"")+' +
         '"<div class=\\"rvprevmemo\\">"+esc(rvctx.prev_note||"")+"</div>";' +
-      'var ns=[];for(var i=0;i<rvitems.length;i++)ns.push(rvitems[i].name);' +
+      'var ns=[];for(var i=0;i<rvitems.length;i++)ns.push(exShort(rvitems[i].name));' +
       'exEl("exaskq").textContent=ns.length?("今回も「"+ns.join("＋")+"」をやりますか？"):"今回やる施術を選んでください";' +
       'exEl("exaskyes").style.display=ns.length?"":"none";}' +
     /* いいえ＝今回やる施術を選び直す */
     'function exShowPick(){exOpen("exPickItems");exDrawPick();}' +
     'function exDrawPick(){var h="";' +
-      'for(var i=0;i<rvitems.length;i++){h+="<button type=\\"button\\" class=\\"exp"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(rvitems[i].name)+"</button>";}' +
+      'for(var i=0;i<rvitems.length;i++){h+="<button type=\\"button\\" class=\\"exp"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exShort(rvitems[i].name))+"</button>";}' +
       'exEl("expkitems").innerHTML=h||"<div class=\\"exnone\\">前回の施術がありません</div>";' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-expknew=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("expknew").innerHTML=n;}' +
     /* 2枚目＝〇〇以外にやるメニューはありますか？ */
     'function exShowAdd(){exOpen("exAdd");var ns=exChosen();' +
-      'exEl("exaddq").textContent="「"+ns.join("＋")+"」以外にやるメニューはありますか？";' +
+      'exEl("exaddq").textContent="「"+ns.map(exShort).join("＋")+"」以外にやるメニューはありますか？";' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-exaddel=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("exaddlist").innerHTML=n;}' +
     /* 施術が決まったあと＝1つなら施術時間へ、2つ以上なら分けるか聞く */
@@ -7561,7 +7567,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(!ns.length){szPopup_("今回やる施術を1つ以上選んでください。");return;}' +
       'if(ns.length<2){exSetGroups([ns]);exShowDur();return;}' +
       'exOpen("exSplit");' +
-      'var h="";for(var i=0;i<ns.length;i++)h+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(ns[i])+"</div></div>";' +
+      'var h="";for(var i=0;i<ns.length;i++)h+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(exShort(ns[i]))+"</div></div>";' +
       'exEl("exsplist").innerHTML=h;}' +
     'function exSetGroups(list){var g=[];for(var i=0;i<list.length;i++){if(!list[i].length)continue;' +
       'g.push({key:"g"+g.length,names:list[i],mark:exMarkOfNames(list[i]),dur:exDurOf(list[i])});}' +
@@ -7574,14 +7580,14 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exDrawGroup(){var ns=exChosen();var h="";' +
       'for(var i=0;i<ns.length;i++){var b="";' +
         'for(var n=1;n<=ns.length;n++){b+="<button type=\\"button\\" class=\\"exp plain"+(EXGRP[i]===n?" sel":"")+"\\" data-exgi=\\""+i+"\\" data-exgn=\\""+n+"\\">"+n+"</button>";}' +
-        'h+="<div class=\\"rvslot\\"><div class=\\"rvname\\">◉ "+esc(ns[i])+"</div><div class=\\"expills\\">"+b+"</div></div>";}' +
+        'h+="<div class=\\"rvslot\\"><div class=\\"rvname\\">◉ "+esc(exShort(ns[i]))+"</div><div class=\\"expills\\">"+b+"</div></div>";}' +
       'exEl("exgrplist").innerHTML=h;}' +
     /* 施術時間を選ぶ（枠ごと・おすすめを最初から選んでおく） */
     'function exShowDur(){exOpen("exDur");exDrawDur();}' +
     'function exDrawDur(){var g=(EXFLOW&&EXFLOW.groups)||[];var h="";' +
       'for(var i=0;i<g.length;i++){var p="";' +
         'for(var d=0;d<EXDURS.length;d++){p+="<button type=\\"button\\" class=\\"exp plain"+(String(EXDURS[d])===String(g[i].dur)?" sel":"")+"\\" data-exdi=\\""+i+"\\" data-exdv=\\""+EXDURS[d]+"\\">"+EXDURS[d]+"</button>";}' +
-        'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(g.length>1?((i+1)+"枠目　"):"")+esc(g[i].names.join("＋"))+"</div><div class=\\"expills exdur\\">"+p+"</div></div>";}' +
+        'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(g.length>1?((i+1)+"枠目　"):"")+esc(g[i].names.map(exShort).join("＋"))+"</div><div class=\\"expills exdur\\">"+p+"</div></div>";}' +
       'var tot=exTotalMin();h+="<div class=\\"exsec\\">合計 "+tot+"分</div>";' +
       'exEl("exdurlist").innerHTML=h;}' +
     'function exTotalMin(){var g=(EXFLOW&&EXFLOW.groups)||[];var t=0;for(var i=0;i<g.length;i++)t+=(parseInt(g[i].dur,10)||30);return t;}' +
@@ -7593,7 +7599,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exSlotKeys(){if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length>=2){var a=[];for(var i=0;i<EXFLOW.groups.length;i++)a.push(EXFLOW.groups[i].key);return a;}return rvEffMarks();}' +
     'function exSlotGroup(k){var g=(EXFLOW&&EXFLOW.groups)||[];for(var i=0;i<g.length;i++){if(g[i].key===k)return g[i];}return null;}' +
     'function exSlotMark(k){var g=exSlotGroup(k);return g?g.mark:k;}' +
-    'function exSlotLabel(k){var g=exSlotGroup(k);return g?g.names.join("＋"):("印「"+k+"」");}' +
+    'function exSlotLabel(k){var g=exSlotGroup(k);return g?g.names.map(exShort).join("＋"):("印「"+k+"」");}' +
     /* ボタンの受け口（新しい画面ぶん） */
     'exEl("exaskyes").onclick=function(){for(var i=0;i<rvitems.length;i++)rvitems[i].do=true;exShowAdd();};' +
     'exEl("exaskno").onclick=function(){for(var i=0;i<rvitems.length;i++)rvitems[i].do=false;exShowPick();};' +
