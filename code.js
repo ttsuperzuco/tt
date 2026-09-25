@@ -7852,7 +7852,7 @@ function renderExistingPage_(base, staff, dev, mode) {
        先にいただいていると分かる時だけメモに「◯/◯分: 支払い済み」を入れる。施術後の予約は今までどおり聞く。 */
     'function exPrefDone(me){if(me.ctx&&me.ctx.found){SGX.setAhead(me.ctx.paid_ahead||{});SGX.setAsk(false);}var w=me.wait;me.wait=null;if(w)w();}' +
     /* 「この時間と部屋で決定」＝予約メモの画面へ。読み終わっていなければ、読み終わるまで待つ。 */
-    'function exGoMemo(st){if(!PREF||PREF.date!==st.date)exPrefetch(st.date);var me=PREF;' +
+    'function exGoMemo(st){if(!(EXFLOW&&PREF&&PREF.ctx)&&(!PREF||PREF.date!==st.date))exPrefetch(st.date);var me=PREF;' +
       'if(me.err){var m=me.err;PREF=null;szPopup_(m);return;}' +
       'if(!me.ctx){exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
         'me.wait=function(){exOvHide_();exGoMemo(SGX.state());};return;}' +
@@ -7882,7 +7882,9 @@ function renderExistingPage_(base, staff, dev, mode) {
       'sgBindSteps();' +
       '$("sgtgo").onclick=function(){if(!tapOK())return;exGoMemo({date:PICKDATE,ts:TS,te:TE,room:ROOM,slot:SLOT,paid:PAID,free:freeStaffAt(TS,TE)});};' +
       'window.addEventListener("resize",function(){if(step===6)fitLine($("sgtwho"),26,13);});' +
-      'return {goMonth:function(){PREF=null;EXSEL=null;goMonth();},' +
+      /* ★2026-09-25：新しい流れでは番号のすぐ後に材料を取ってあるので、ここで捨てない
+         （捨てると、時間を決めたあとに取り直して『前回の予約を読み込み中です』が出る）。 */
+      'return {goMonth:function(){if(!EXFLOW)PREF=null;EXSEL=null;goMonth();},' +
         'toTime:function(){step=6;show();drawTime();window.scrollTo(0,0);},' +
         'setAsk:function(a){ASK=!!a;if(step===6)drawTime();},' +
         /* ★2026-09-25：先に決めた施術時間を渡す＝その長さが入らない空きは押せなくする。 */
