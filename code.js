@@ -7620,7 +7620,18 @@ function renderExistingPage_(base, staff, dev, mode) {
         '"<div class=\\"rvprevmemo\\">"+esc(rvctx.prev_note||"")+"</div>";' +
       /* ★聞く時は部位だけ（まるちゃん 2026-09-25）。同じ部位が重なったら1つにまとめる。 */
       'var ns=[];for(var i=0;i<rvitems.length;i++){var _an=exAskName(rvitems[i].name);if(_an&&ns.indexOf(_an)<0)ns.push(_an);}' +
-      'exEl("exaskq").textContent=ns.length?("今回も「"+ns.join("＋")+"」をやりますか？"):"今回やる施術を選んでください";' +
+      /* ★2026-09-25 まるちゃん指定の言い方＝
+         1つ  … 今回も「脇」をやりますか？
+         2つ  … 今回も「①A　②B」を、両方やりますか？
+         3つ〜 … 今回も「①A　②B　③C」を、三つともやりますか？（四つとも／五つとも…最大9つ） */
+      'var MRU_=["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];' +
+      'var KAZ_=["","","両方","三つとも","四つとも","五つとも","六つとも","七つとも","八つとも","九つとも","十とも"];' +
+      'var _q="今回やる施術を選んでください";' +
+      'if(ns.length===1){_q="今回も「"+ns[0]+"」をやりますか？";}' +
+      'else if(ns.length>=2){var _t=[];for(var _i=0;_i<ns.length;_i++){_t.push((MRU_[_i]||("("+(_i+1)+")"))+ns[_i]);}' +
+      'var _k=KAZ_[ns.length]||(ns.length+"つとも");' +
+      '_q="今回も「"+_t.join("　")+"」を、"+_k+"やりますか？";}' +
+      'exEl("exaskq").textContent=_q;' +
       'exEl("exaskyes").style.display=ns.length?"":"none";}' +
     /* いいえ＝今回やる施術を選び直す */
     'function exShowPick(){exOpen("exPickItems");exDrawPick();}' +
