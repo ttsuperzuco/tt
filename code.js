@@ -7366,7 +7366,7 @@ function renderExistingPage_(base, staff, dev, mode) {
         '<div id="exrvroomdurwrap"><div class="exsec">部屋</div><div class="mvng" id="exrvroomnone" style="display:none">その時間に空いている部屋がありません</div><div class="rvbusy" id="exrvroombusy" style="display:none">前回と同じ部屋はこの時間は空いていません。空いている部屋から選んでください。</div><div class="expills" id="exrvroom">' + rvRoomP + '</div>' +
         '<div class="exsec">施術時間（分）</div><div class="expills exdur" id="exrvdur">' + rvDurP + '</div></div>' +
       '</div>' +
-      '<div class="exsec">タイトルの印<span style="font-weight:600;font-size:13px;opacity:.85">（施術から自動で選んでいます）</span></div>' + '<div class="expills" id="exrvmarks"></div>' +
+      '<div class="exsec" id="exrvmarksh">タイトルの印<span style="font-weight:600;font-size:13px;opacity:.85">（施術から自動で選んでいます）</span></div>' + '<div class="expills" id="exrvmarks"></div>' +
       '<div class="exsec">末尾</div><div class="expills" id="exrvsuf">' +
         '<button type="button" class="exp" data-suf="__none" style="background:#475569">なし</button>' +
         '<button type="button" class="exp" data-suf="dochi" style="background:#475569">都度</button>' +
@@ -7673,6 +7673,12 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exShowTitle(){exOpen("exResv");exHideA_();EXSTEP="title";' +
       'exEl("exrvA").style.display="";exEl("exrvB").style.display="none";' +
       'exEl("exToConfirm").style.display="";' +
+      /* ★2026-09-25 まるちゃん「印は選ばせる必要ある？読み取れない時以外」＝施術から自動で決まるので
+         ふつうは出さない（実データ2,209件で93%が人の付け方と同じ。ちがう分も機械の方が細かい）。
+         施術が1つも読み取れない時だけ出す（その時は機械も決められないため）。 */
+      'var _rd=exChosen().length>0;' +
+      'var _mh=exEl("exrvmarksh");if(_mh)_mh.style.display=_rd?"none":"";' +
+      'var _mp=exEl("exrvmarks");if(_mp)_mp.style.display=_rd?"none":"";' +
       'var _h=exEl("exrvhead");if(_h){_h.textContent="タイトル作成";_h.style.display="";}window.scrollTo(0,0);}' +
     'function exShowConfirm(){exOpen("exResv");exHideA_();EXSTEP="confirm";' +
       'exEl("exrvA").style.display="none";exEl("exrvB").style.display="";' +
