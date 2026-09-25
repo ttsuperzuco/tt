@@ -1003,6 +1003,8 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★★2026-09-17（同日・後から）まるちゃん決定「施術後の予約ボタンをスタッフにもだす」＝全員ON。
   //   tile_settings.py の STAFF_ASSIGNABLE に入れた＝自動監視の人ごとの表示で入切できる。
   sejutsugo:  { exec: true, staff: true },
+  // ★既存の予約＝作り替え中なので開発の住所だけ（共通ルール16）。
+  kizon:      { exec: false, staff: false },
   // ★TimeTree＝ズコの中でタイムツリーの予定を見る（月→日→予定の中身・読むだけ）。2026-09-15。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
   timetree:   { exec: false, staff: false },
@@ -1016,7 +1018,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'timetree', 'shophist'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1157,6 +1159,7 @@ function viewAllowed_(view, allow) {
   // ★施術後の予約：ボタンのidは 'sejutsugo'、画面のviewは 'yoyaku_sejutsugo'。
   //   ボタンが出る人は画面も開ける、で合わせる（ここを書かないとボタンから飛んでも弾かれる）。
   if (view === 'yoyaku_sejutsugo') return allow['sejutsugo'] === true;
+  if (view === 'yoyaku_kizon') return allow['kizon'] === true;
   return allow[view] === true;
 }
 
@@ -1723,6 +1726,11 @@ var TILE_DEFS_ = [
   //   （tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
     icon: '<span class="ticon">💆</span>', label: '施術後の\n予約' },
+  // ★既存の予約＝LINEで予約を受けた時に使う入口（いま作り替え中）。
+  //   まるちゃん依頼 2026-09-25「一番トップの画面に出して。開発中だからしょっちゅう押す」。
+  //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発の住所(?dev=1)だけ。
+  { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
+    icon: '<span class="ticon">📖</span>', label: '既存の\n予約' },
   // ★TimeTree＝タイムツリーを開かずに、月のカレンダー→日付→その日の予定→中身を見る（2026-09-15）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'timetree', cls: 'timetree', view: 'timetree',
@@ -11475,6 +11483,7 @@ var HOMECSS_ =
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
+'  .tile.kizon::before { background:#7c3aed; }' +
 '  .tile.timetree::before { background:#2bad6f; }' +
 '  .tile.shophist::before { background:#22707f; }' +
 '  .tile.procamp::before { background:#9333ea; }' +
@@ -11497,6 +11506,7 @@ var HOMECSS_ =
 '  .tile.igdm .ticon { background:rgba(193,53,132,.16); }' +
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .tile.sejutsugo .ticon { background:rgba(14,165,233,.16); }' +
+'  .tile.kizon .ticon { background:rgba(124,58,237,.16); }' +
 '  .tile.timetree .ticon { background:rgba(43,173,111,.16); }' +
 '  .tile.shophist .ticon { background:rgba(34,112,127,.16); }' +
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
