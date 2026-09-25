@@ -7527,7 +7527,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0);cb();}' +
     /* 画面に出す名前＝回数や値段を落として短くする（登録に使う名前は変えない）。 */
     'function exShort(n){var s=String(n||"");' +
-      's=s.replace(/[ 　]*全[0-9０-９]+回の[0-9０-９]+回目.*$/,"");' +
+      's=s.replace(/[ 　]*全[0-9０-９]+回.*$/,"");' +
       's=s.replace(/[ 　]*[0-9０-９]+回目.*$/,"");' +
       's=s.replace(/[ 　]*[@＠][0-9０-９,]+.*$/,"");' +
       'return s.replace(/[ 　:：・,、]+$/,"")||String(n||"");}' +
