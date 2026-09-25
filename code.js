@@ -7349,6 +7349,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" id="exbackResv" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="exwho1" id="exrvwho"></div>' +
       '<div id="exrvprev"></div>' +
+      '<div class="exmh" id="exrvhead" style="display:none"></div>' +
       /* ★2026-09-25 まるちゃん決定：ここから下を2つに分ける＝A＝タイトル作成の画面／B＝確認画面。
          新しい流れ（施術を先に決める）では、施術の選び直し・足すボタン・担当/部屋/時間は出さない。 */
       '<div id="exrvA">' +
@@ -7665,9 +7666,11 @@ function renderExistingPage_(base, staff, dev, mode) {
       'var ch=exEl("exrvcnth");if(ch)ch.style.display="";}' +
     'function exShowTitle(){exOpen("exResv");exHideA_();EXSTEP="title";' +
       'exEl("exrvA").style.display="";exEl("exrvB").style.display="none";' +
-      'exEl("exToConfirm").style.display="";window.scrollTo(0,0);}' +
+      'exEl("exToConfirm").style.display="";' +
+      'var _h=exEl("exrvhead");if(_h){_h.textContent="タイトル作成";_h.style.display="";}window.scrollTo(0,0);}' +
     'function exShowConfirm(){exOpen("exResv");exHideA_();EXSTEP="confirm";' +
       'exEl("exrvA").style.display="none";exEl("exrvB").style.display="";' +
+      'var _h2=exEl("exrvhead");if(_h2){_h2.textContent="確認";_h2.style.display="";}' +
       'rvUpdateNowMemo();window.scrollTo(0,0);}' +
     'var EXSTEP="";' +
     'exEl("exToConfirm").onclick=function(){exShowConfirm();};' +
@@ -7681,7 +7684,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'document.getElementById("exrvslots").addEventListener("click",function(e){var b=e.target.closest("[data-rvslot]");if(!b)return;var cf=rvSlotCfg_(b.getAttribute("data-rvslot"));cf[b.getAttribute("data-rvsg")]=String(b.getAttribute("data-rvsv"));rvDrawSlots();});' +
     'document.getElementById("exrvmarks").addEventListener("click",function(e){var b=e.target.closest(".exp");if(!b)return;rvTitleOv=null;var mk=b.getAttribute("data-mark");if(mk==="__none"){var tm=(rvctx.title_marks||[]);for(var i=0;i<tm.length;i++){rvMarkOv[tm[i][0]]=false;}}else{rvMarkOv[mk]=!rvMarkOn(mk);}rvDrawMarks();});' +
     'document.getElementById("exrvsuf").addEventListener("click",function(e){var b=e.target.closest(".exp");if(!b)return;rvTitleOv=null;var k=b.getAttribute("data-suf");if(k==="__none"){rvDochi=false;rvEyeOv=false;}else if(k==="dochi"){rvDochi=!rvDochi;}else{rvEyeOv=!rvEyeOn();}rvDrawMarks();});' +
-    'function drawRvItems(){var h="";for(var i=0;i<rvitems.length;i++){var it=rvitems[i];if(EXFLOW&&(!it.do||it.finish))continue;var cv=(it.do?it.count:it.orig);var cnt=(cv==null?"【要確認】":cv+"回目");h+="<div class=\\"rvcard\\" data-i=\\""+i+"\\"><div class=\\"rvname\\">"+esc(it.name)+"</div>"+(EXFLOW?"":"<div class=\\"rvbtns\\"><button class=\\"rvb"+((it.do&&!it.finish)?" on":"")+"\\" data-act=\\"do\\">今回やる</button><button class=\\"rvb"+((!it.do&&!it.finish)?" on":"")+"\\" data-act=\\"skip\\">今回やらない</button><button class=\\"rvb"+(it.finish?" on":"")+"\\" data-act=\\"fin\\">終わった</button></div>")+"<div class=\\"rvcnt\\"><button class=\\"rvstep\\" data-act=\\"dec\\">−</button><span class=\\"rvcv"+(cv==null?" need":"")+"\\">"+cnt+"</span><button class=\\"rvstep\\" data-act=\\"inc\\">＋</button></div></div>";}if(!rvitems.length){h="<div class=\\"exnone\\" style=\\"background:rgba(255,255,255,.14)\\">前回のメモに施術が見つかりません</div>";}document.getElementById("exrvitems").innerHTML=h;}' +
+    'function drawRvItems(){var h="";for(var i=0;i<rvitems.length;i++){var it=rvitems[i];if(EXFLOW&&(!it.do||it.finish))continue;var cv=(it.do?it.count:it.orig);var cnt=(cv==null?"【要確認】":cv+"回目");h+="<div class=\\"rvcard\\" data-i=\\""+i+"\\"><div class=\\"rvname\\">"+esc(EXFLOW?exShort(it.name):it.name)+"</div>"+(EXFLOW?"":"<div class=\\"rvbtns\\"><button class=\\"rvb"+((it.do&&!it.finish)?" on":"")+"\\" data-act=\\"do\\">今回やる</button><button class=\\"rvb"+((!it.do&&!it.finish)?" on":"")+"\\" data-act=\\"skip\\">今回やらない</button><button class=\\"rvb"+(it.finish?" on":"")+"\\" data-act=\\"fin\\">終わった</button></div>")+"<div class=\\"rvcnt\\"><button class=\\"rvstep\\" data-act=\\"dec\\">−</button><span class=\\"rvcv"+(cv==null?" need":"")+"\\">"+cnt+"</span><button class=\\"rvstep\\" data-act=\\"inc\\">＋</button></div></div>";}if(!rvitems.length){h="<div class=\\"exnone\\" style=\\"background:rgba(255,255,255,.14)\\">前回のメモに施術が見つかりません</div>";}document.getElementById("exrvitems").innerHTML=h;}' +
     'function rvSelPill(g,v){var pl=document.querySelectorAll(".exp[data-eg=\\""+g+"\\"]");for(var i=0;i<pl.length;i++){pl[i].classList.toggle("sel",pl[i].getAttribute("data-ev")===String(v));}}' +
     // ★前回コピーでも担当・部屋は「その時間に空いている人・部屋だけ」出す（二重予約防止・まるちゃん2026-08-08）。
     'var rvAvail=null;' +
