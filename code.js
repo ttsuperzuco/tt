@@ -7537,7 +7537,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(!why){if(box&&box.parentNode)box.parentNode.removeChild(box);return;}' +
       'if(!box){box=document.createElement("div");box.id="exrvpaidnote";box.style.cssText="margin:6px 2px 0;font-size:14px;line-height:1.6;color:#166534;";' +
         'el.parentNode.insertBefore(box,el.nextSibling);}' +
-      'box.innerHTML="<b>先にお支払いいただいています</b>："+esc(why)+"<br>お支払い状況に「支払い済み」を入れました。";}' +
+      'box.textContent=why;}' +
     'function exP2(n){return ("0"+n).slice(-2);}' +
     /* 日にちを押した瞬間から、前回の予約を裏で読み始める（時間を決めている間に読み終わる）。 */
     'function exPrefetch(date){if(PREF&&PREF.date===date&&!PREF.err)return;var me={date:date,ctx:null,err:"",wait:null};PREF=me;' +
