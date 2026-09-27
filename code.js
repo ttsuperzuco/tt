@@ -9386,6 +9386,16 @@ function renderShopHistPage_(d, base, staff, dev) {
     return '<div class="shIt"><div class="shItN">' + esc_(it.name) + '</div><div class="shItS">' + esc_(s.join('　')) + '</div></div>';
   }).join('');
   var secItems = its ? '<div class="shSec"><div class="shSecT">商品ごと<small>30日</small></div>' + its + '</div>' : '';
+  // ★④-2 どこから入ったか（2026-09-27 まるちゃん「一斉配信のリンクとリッチメニュー、どっちを押されたか数えたい」）
+  var rtRows = [['today', '今日'], ['d7', '7日'], ['d30', '30日'], ['all', 'これまで']].map(function (k) {
+    var rs = (sm[k[0]] || {}).routes || [];
+    if (!rs.length) return '';
+    return '<div class="shIt"><div class="shItN">' + k[1] + '</div><div class="shItS">' +
+      esc_(rs.map(function (r) { return r.name + ' ' + r.n; }).join('　')) + '</div></div>';
+  }).join('');
+  var secRoute = rtRows ? '<div class="shSec"><div class="shSecT">どこから入ったか<small>来店1回＝1つ</small></div>' +
+    rtRows + '<div class="shNote">※「入口の前で閉じた」「LINE（ふつうのリンク）」は、' +
+    'LINEの本人確認が終わる前に閉じた方＝どちらのボタンか分からなかった回です。</div></div>' : '';
   // ⑤ お客様ごと
   var ppl = (dd.people || []).map(function (p) {
     var vis = p.vis || [];
@@ -9407,7 +9417,7 @@ function renderShopHistPage_(d, base, staff, dev) {
     '</div>';
   }).join('');
   return '<div class="pcCards shCards">' + cards + '</div>' +
-    secFunnel + secFilm + secItems +
+    secRoute + secFunnel + secFilm + secItems +
     '<div class="pcTitle">お客様ごと（新しい順）</div>' +
     (ppl || '<div class="shNone">まだありません</div>');
   }
