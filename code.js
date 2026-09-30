@@ -7499,7 +7499,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var _rvcat="",_rvsub="";' +
     'function showResvEdit(){hideSteps();document.getElementById("exResv").style.display="";document.getElementById("exrvwho").innerHTML="「"+disp()+"」"+(rvctx.name?rvctx.name+"様":"")+"<br>"+rvctx._ymd+" "+rvctx._tm+" に予約";var _pe=document.getElementById("exrvprev");if(_pe){var _pn=rvctx.prev_note||"";_pe.innerHTML=_pn?("<div class=\\"exsec\\">前回の予約メモ"+(rvctx.prev_date?("（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）"):"")+"</div><div class=\\"rvprevmemo\\">"+esc(_pn)+"</div>"):"";}EXMENUBACK="exResv";' +
       /* ★2026-09-25：新しい流れで来た時は、手前の画面で決めた施術・枠をそのまま使う（作り直さない）。 */
-      'if(!EXFLOW){rvitems=(rvctx.items||[]).map(function(it){return {line_no:it.line_no,name:it.name,arinashi:it.arinashi,count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:true,finish:false,mark:it.mark||""};});rvMarkOv={};rvEyeOv=null;rvNewItems=[];rvSlotCfg={};rvTitleOv=null;rvMemoOv=null;rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0);}' +
+      'if(!EXFLOW){rvitems=(rvctx.items||[]).map(function(it){return {line_no:it.line_no,name:it.name,arinashi:it.arinashi,count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||""};});rvMarkOv={};rvEyeOv=null;rvNewItems=[];rvSlotCfg={};rvTitleOv=null;rvMemoOv=null;rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0);}' +
       'drawRvItems();rvDrawSuggest();rvDrawNew();rvsel.staff=staffNum(rvctx.prev_staff||"");rvsel.room=roomVal(rvctx.prev_room||"");rvsel.dur=String(nearDur(rvctx.prev_dur||30));if(EXSEL){rvsel.staff=EXSEL.staff;rvsel.room=EXSEL.room;rvsel.dur=EXSEL.dur;}var _sw=document.getElementById("exrvstaffwrap"),_rw=document.getElementById("exrvroomdurwrap");if(_rw)_rw.style.display=EXSEL?"none":"";if(_sw)_sw.style.display=EXSEL?"none":"";rvSelPill("rvstaff",rvsel.staff);rvSelPill("rvroom",rvsel.room);rvSelPill("rvdur",rvsel.dur);rvDrawMarks();rvLoadAvail();if(EXSEL&&EXSEL.freeStaff){rvAvail={free_staff:EXSEL.freeStaff,free_rooms:[String(rvsel.room)]};rvFilterAvail();}window.scrollTo(0,0);}' +
     'function rvDoingTexts(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}for(var k=0;k<rvNewItems.length;k++){var n=rvNewItems[k];a.push((n==="ハイドラ"&&!rvDidPart("hydra"))?"ハイドラ トライアル":n);}return a;}' +
     'function rvBookingTexts(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}for(var k=0;k<rvNewItems.length;k++){var n=rvNewItems[k];a.push((n==="ハイドラ"&&!rvDidPart("hydra"))?"ハイドラ トライアル":n);}return a;}' +
@@ -7568,7 +7568,11 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(!me.ctx.found){szPopup_("「"+disp()+"」の前回の予約が見つかりません。");return;}' +
       'rvctx=JSON.parse(JSON.stringify(me.ctx));' +
       'rvitems=(rvctx.items||[]).map(function(it){return {line_no:it.line_no,name:it.name,arinashi:it.arinashi,' +
-        'count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:true,finish:false,mark:it.mark||""};});' +
+        /* ★2026-09-30 まるちゃん「前回なしのをなぜ今回もと聞く？？」＝前回やっていない施術は
+   はじめから『今回やらない』にする。実データ（2025年6月以降）で、前回『なし』だった施術が
+   次の回にやられたのは17%だけ（1,116件はまたやらない）。
+   選び直す画面には今までどおり並ぶので、やる時は押せばよい。 */
+      'count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||""};});' +
       'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;' +
       /* ★2026-09-25 まるちゃん決定（「②い」）＝**メモに「都度」の行が1つでもあれば
          タイトルに「都度」を付ける**（コースの行が一緒にあっても付ける）。
@@ -7624,7 +7628,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exEl("exaskprev").innerHTML=(rvctx.prev_date?("<div class=\\"exsec\\">前回の予約（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）</div>"):"")+' +
         '"<div class=\\"rvprevmemo\\">"+esc(rvctx.prev_note||"")+"</div>";' +
       /* ★聞く時は部位だけ（まるちゃん 2026-09-25）。同じ部位が重なったら1つにまとめる。 */
-      'var ns=[];for(var i=0;i<rvitems.length;i++){var _an=exAskName(rvitems[i].name);if(_an&&ns.indexOf(_an)<0)ns.push(_an);}' +
+      'var ns=[];for(var i=0;i<rvitems.length;i++){if(!rvitems[i].do)continue;var _an=exAskName(rvitems[i].name);if(_an&&ns.indexOf(_an)<0)ns.push(_an);}' +
       /* ★2026-09-25 まるちゃん指定の言い方＝
          1つ  … 今回も「脇」をやりますか？
          2つ  … 今回も「①A　②B」を、両方やりますか？
