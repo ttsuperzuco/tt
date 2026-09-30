@@ -7422,7 +7422,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '<div id="exSplit" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackSplit" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="exmh">今回の施術</div>' +
-      '<div id="exsplist"></div>' +
+      '<div id="exspunits"></div>' +
       '<div class="exmh">担当者・部屋を分けますか？</div>' +
       '<button type="button" class="exgo" id="exsplitsame">全部同じ担当＆部屋</button>' +
       '<button type="button" class="exgo" id="exsplitdiv" style="background:#2563eb;margin-top:8px">担当者か部屋を分ける</button>' +
@@ -7666,7 +7666,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(us.length<2){exSetGroups([ns]);exShowDur();return;}' +
       'exOpen("exSplit");' +
       'var h="";for(var i=0;i<us.length;i++)h+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(exShort(us[i]))+"</div></div>";' +
-      'exEl("exsplist").innerHTML=h;}' +
+      'exEl("exspunits").innerHTML=h;}' +
     'function exSetGroups(list){var g=[];for(var i=0;i<list.length;i++){if(!list[i].length)continue;' +
       'g.push({key:"g"+g.length,names:list[i],mark:exMarkOfNames(list[i]),dur:exDurOf(list[i])});}' +
       'EXFLOW={groups:g,split:(g.length>=2)};' +
