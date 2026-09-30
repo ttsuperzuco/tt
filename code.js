@@ -7616,9 +7616,12 @@ function renderExistingPage_(base, staff, dev, mode) {
     /* ★2026-09-30 まるちゃん指摘：**1枚のプランの中でも、部位ごとに部屋・担当が違うことがある**
        （李名翔様M420「ピカピカキャB（VIO＋足全部）」）。だから「分けられる単位」は施術の行ではなく
        **部位**。事務所パソコンが行ごとに渡した部位（parts）が2つ以上ならそれを1つずつの単位にする。 */
-    'function exUnits(){var a=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];if(!it.do||it.finish)continue;' +
-      'var ps=it.parts||[];if(ps.length>=2){for(var j=0;j<ps.length;j++)a.push(ps[j]);}else a.push(it.name);}' +
-      'for(var k=0;k<rvNewItems.length;k++)a.push(rvNewItems[k]);return a;}' +
+    'function exUnits(){var a=[],mi={};' +
+      /* 同じ部位が2回並ばないようにする（プランの中の部位と、単品で足した同じ部位が重なる時） */
+      'function put(n){var k=exShort(n).replace(/[ 　:：・]/g,"");if(k&&mi[k])return;if(k)mi[k]=1;a.push(n);}' +
+      'for(var i=0;i<rvitems.length;i++){var it=rvitems[i];if(!it.do||it.finish)continue;' +
+      'var ps=it.parts||[];if(ps.length>=2){for(var j=0;j<ps.length;j++)put(ps[j]);}else put(it.name);}' +
+      'for(var k=0;k<rvNewItems.length;k++)put(rvNewItems[k]);return a;}' +
     /* この施術なら何分か＝事務所パソコンが渡した「言葉ごとの分数」の中で一番長い物（出し方の正本は共通側）。 */
     'function exDurOf(ns){var t=ns.join(" ").toUpperCase();var w=rvctx.dur_words||{};var best=0;' +
       'for(var k in w){if(w.hasOwnProperty(k)&&t.indexOf(k.toUpperCase())>=0&&w[k]>best)best=w[k];}' +
