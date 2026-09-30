@@ -7693,7 +7693,10 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exSlotMark(k){var g=exSlotGroup(k);return g?g.mark:k;}' +
     'function exSlotLabel(k){var g=exSlotGroup(k);return g?g.names.map(exShort).join("＋"):("印「"+k+"」");}' +
     /* ボタンの受け口（新しい画面ぶん） */
-    'exEl("exaskyes").onclick=function(){for(var i=0;i<rvitems.length;i++)rvitems[i].do=true;exShowAdd();};' +
+    /* ★2026-09-30 「はい」＝**聞いた施術をやる**。ここで全部を『やる』に戻すと、
+   前回やっていない施術まで今回やることになり、1つしか聞いていないのに
+   『担当者・部屋を分けますか？』が出てしまう（まるちゃん指摘）。今の状態のまま進む。 */
+    'exEl("exaskyes").onclick=function(){exShowAdd();};' +
     'exEl("exaskno").onclick=function(){for(var i=0;i<rvitems.length;i++)rvitems[i].do=false;exShowPick();};' +
     'exEl("exbackAsk").onclick=function(){hideSteps();exEl("exNum").style.display="";window.scrollTo(0,0);};' +
     'exEl("exbackPickItems").onclick=function(){exShowAsk();};' +
