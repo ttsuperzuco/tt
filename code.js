@@ -7572,7 +7572,7 @@ function renderExistingPage_(base, staff, dev, mode) {
    はじめから『今回やらない』にする。実データ（2025年6月以降）で、前回『なし』だった施術が
    次の回にやられたのは17%だけ（1,116件はまたやらない）。
    選び直す画面には今までどおり並ぶので、やる時は押せばよい。 */
-      'count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||""};});' +
+      'count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||"",parts:(it.parts||[])};});' +
       'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;' +
       /* ★2026-09-25 まるちゃん決定（「②い」）＝**メモに「都度」の行が1つでもあれば
          タイトルに「都度」を付ける**（コースの行が一緒にあっても付ける）。
