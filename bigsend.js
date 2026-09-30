@@ -113,5 +113,103 @@
     });
   };
 
+  /* ■2026-09-30 まるちゃん決定：**返す向きの別便を、どの画面でも受け取れるようにする**
+   *   2026-09-23 から、事務所パソコンは長すぎる答え（約8,000文字超）を置き場に別に置き、
+   *   答えには「置いた場所（__bigres）」だけを書いて返している（受付係の _report_result）。
+   *   ところが、それを取りに行けるのは前日お知らせの画面だけで、ほかの画面は中身が空のまま
+   *   扱っていた。実例＝予約変更の画面で M346 林子淇様（予約メモが長い）を探すと
+   *   「この番号の予約が見つかりません」と出た。今後予約のある147人中76人が同じだった。
+   *   → 画面ごとに直すのをやめ、**「結果を聞く」依頼の返事をここ1か所で受け止め、
+   *     別便なら取りに行って、本物の答えに差し替えてから各画面へ渡す**。
+   *     各画面は何も知らなくてよい（今ある三十数か所にも、これから作る画面にも効く）。
+   *   ・取りに行った荷物の番号が、聞いた依頼の番号と違う時は古い荷物＝使わない（失敗として渡す）。
+   *   ・取りに行けなかった時は、黙って空にせず「もう一度お試しください」を失敗として渡す。 */
+  BIG.RES_FAIL = '答えを読み込めませんでした。もう一度お試しください。';
+
+  function _param(src, key) {
+    var m = String(src).match(new RegExp('[?&]' + key + '=([^&]*)'));
+    if (!m) return '';
+    try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch (e) { return m[1]; }
+  }
+
+  function _copy(r) {
+    var o = {};
+    for (var k in r) { if (Object.prototype.hasOwnProperty.call(r, k)) o[k] = r[k]; }
+    return o;
+  }
+
+  var _append = null;      // 元の appendChild（取りに行く時は、この仕掛けを通さずに足す）
+
+  BIG.fetchBigres = function (exec, name, onOk, onFail) {
+    var cb = '__bigres' + Date.now() + Math.floor(Math.random() * 100000);
+    var el = document.createElement('script');
+    var finished = false;
+    var giveup = setTimeout(function () {
+      if (finished) return;
+      finished = true;
+      try { delete root[cb]; } catch (e) { root[cb] = undefined; }
+      onFail();
+    }, 30000);
+    root[cb] = function (x) {
+      if (finished) return;
+      finished = true; clearTimeout(giveup);
+      try { delete root[cb]; } catch (e) { root[cb] = undefined; }
+      try { el.parentNode && el.parentNode.removeChild(el); } catch (e2) {}
+      if (!x || typeof x.result !== 'string') { onFail(); return; }
+      onOk(x);
+    };
+    el.src = String(exec) + '?callback=' + cb + '&action=data&name=' + encodeURIComponent(name)
+      + '&cb=' + Date.now();
+    el.onerror = function () {
+      if (finished) return;
+      finished = true; clearTimeout(giveup);
+      onFail();
+    };
+    (_append || Node.prototype.appendChild).call(document.head || document.documentElement, el);
+  };
+
+  /* 「結果を聞く」依頼（action=status）の返事の受け手を、差し替え付きの受け手で包む。 */
+  function _wrapStatus(el) {
+    try {
+      if (!el || el.tagName !== 'SCRIPT') return;
+      var src = String(el.src || '');
+      if (src.indexOf('action=status') < 0) return;
+      var cbName = _param(src, 'callback');
+      if (!cbName || typeof root[cbName] !== 'function' || root[cbName].__bigWrapped) return;
+      var orig = root[cbName];
+      var askId = _param(src, 'id');
+      var exec = src.split('?')[0];
+      var wrapped = function (r) {
+        var self = this;
+        var d = null;
+        if (r && r.status === 'done' && typeof r.result === 'string'
+            && r.result.indexOf('__bigres') >= 0) {
+          try { d = JSON.parse(r.result); } catch (e) { d = null; }
+        }
+        if (!d || !d.__bigres) { return orig.apply(self, arguments); }
+        var fail = function () {
+          var r2 = _copy(r); r2.status = 'error'; r2.result = BIG.RES_FAIL;
+          orig.call(self, r2);
+        };
+        BIG.fetchBigres(exec, d.__bigres, function (x) {
+          var want = String(d.id || askId || '');
+          if (want && x.id && String(x.id) !== want) { fail(); return; }   // 古い荷物は使わない
+          var r2 = _copy(r); r2.result = x.result;
+          orig.call(self, r2);
+        }, fail);
+      };
+      wrapped.__bigWrapped = true;
+      root[cbName] = wrapped;
+    } catch (e) { /* 包めなくても今までどおり動く（何もしない） */ }
+  }
+
+  if (typeof Node !== 'undefined' && Node.prototype && !Node.prototype.__bigHooked) {
+    _append = Node.prototype.appendChild;
+    var _insert = Node.prototype.insertBefore;
+    Node.prototype.appendChild = function (el) { _wrapStatus(el); return _append.apply(this, arguments); };
+    Node.prototype.insertBefore = function (el) { _wrapStatus(el); return _insert.apply(this, arguments); };
+    Node.prototype.__bigHooked = true;
+  }
+
   root.BIG = BIG;
 })(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this));
