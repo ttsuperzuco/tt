@@ -397,7 +397,12 @@
         '&role=' + encodeURIComponent(role) + '&device=' + encodeURIComponent(device) +
         '&view=' + encodeURIComponent(v) + '&cb=' + Date.now();
       s.onerror = function(){ /* ログ失敗は無視（画面は出す） */ };
-      document.body.appendChild(s);
+      // ★2026-09-30まるちゃん「おそいのなんで？」（売上転記の窓で18秒）：覚えている設定で描く時は、この記録が
+      //   ページの読み込み中にグーグルへ出ていた。パソコンの窓は読み込みが全部終わるまで手元のデータを渡せないので、
+      //   毎回この記録の返事（ふだん1秒・グーグルが混むと10〜45秒）を待っていた。→ パソコンの窓だけ読み込み後に出す。
+      var PCW = !!(window.chrome && window.chrome.webview);
+      if (!PCW || document.readyState === 'complete') { document.body.appendChild(s); }
+      else { window.addEventListener('load', function(){ setTimeout(function(){ document.body.appendChild(s); }, 0); }); }
     } catch(e){}
   }
 
