@@ -9900,8 +9900,9 @@ var AKISCRIPT_ =
 //   その時はコピーを「日本語でコピー」「中文でコピー」の2つにする（コピーした文の曜日を言葉ごとに正しくするため）。
 //   日付の絞り込みを変えるたびに組み直すので、その期間で同じかどうかで決まる。
 '  var packs=[];' +
-'  WGROUPS.forEach(function(g){' +
-'    WKINDS.forEach(function(k){' +
+// ★並びは区分ごとに日本→台湾（新規男性🇯🇵→新規男性🇹🇼→既存男性…・2026-10-01 まるちゃん指示）。
+'  WKINDS.forEach(function(k){' +
+'    WGROUPS.forEach(function(g){' +
 '      var key=wakuKey_(k,g.zh);' +
 '      var hit=null; packs.forEach(function(p){ if(p.key===key) hit=p; });' +
 '      var m={k:k,zh:g.zh,flag:g.flag};' +
