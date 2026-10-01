@@ -4313,6 +4313,10 @@ function renderBroadcastPage_(base, staff, dev) {
     'box-shadow:0 0 0 3px #fff inset;}' +
     '.bcper button.bcon::before{content:"✓ ";}' +
     '.bcper button.bcrestore{grid-column:1 / -1;background:#7C3AED;}' +
+    '.bcper button.bcwide2{grid-column:1 / -1;}' +
+    '.bcnovio{grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:9px;' +
+    'padding:6px 0 2px;font-size:16px;font-weight:800;color:#E8EEF7;cursor:pointer;}' +
+    '.bcnovio input{width:22px;height:22px;accent-color:#2563EB;cursor:pointer;}' +
     '.bcper button.bcrestore:disabled{background:#0B1220;color:#5B6B85;}' +
     '.bccard.bcwide{margin-left:-22px;margin-right:-22px;padding:14px 9px 16px;}' +
     '.bc textarea.bcmtx{min-height:200px;font-size:16px;line-height:1.8;padding:9px;}' +
@@ -4469,7 +4473,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★はじめは「配信の種類をえらぶ」画面（まるちゃん指示 2026-09-08）
   'var TPL=[],PRE=[],MADE=[],CAT="",MAXP=3,MAXT=500,DATA=[],step=0,mode="",page="k";' +
   'var WTEXT="",WDONE=[],WBUSY=false,WMSG="";' +
-  'var SPER="",SRES=null,SBUSY=false,SBUSYAT=0;' +
+  'var SPER="",SRES=null,SBUSY=false,SBUSYAT=0,SNOVIO=false;' +
   'var MSTEP=0,MBODY="",MJA=[],MZH=[],MBUSY=false,MMSG="";' +
   // ★配信文は区分ごとに違う＝本文も区分ごとに持つ（まるちゃん指示 2026-09-08）
   'var MBODYS=["","","",""],MIDX=0;' +
@@ -4756,13 +4760,17 @@ function renderBroadcastPage_(base, staff, dev) {
   'document.getElementById("bcreload").onclick=function(){LPOSTS=null;status("");draw();};' +
   'if(LPOSTS){drawList(LPOSTS);}else{loadList();}}' +
   'function drawText(){' +
-  'var P=[["今週","今週"],["明日","明日"],["今日明日","今日・明日"],["一週間","今日から一週間"]];' +
+  // ★期間は3つ（まるちゃん指示 2026-10-01）＝今週／今週＆来週／今日から一週間。
+  'var P=[["今週","今週"],["今週来週","今週＆来週"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];var h;' +
   'if(!gs.length){' +
   'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span></div>\'+' +
   '\'<div class="bccard">\'+' +
   '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
-  '((x[0]===SPER)?\' class="bcon"\':"")+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
+  '\' class="\'+((x[0]===SPER)?"bcon":"")+((x[0]==="一週間")?" bcwide2":"")+\'"\'+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
+  // ★入切「『男性VIO以外』を含める」（まるちゃん指示 2026-10-01・最初は切）。
+  //   切＝男性の時刻はVIOもできる人が空いている時だけ。入＝（VIO以外）の時刻も出す。
+  '\'<label class="bcnovio"><input type="checkbox" id="bcnoviocb"\'+(SNOVIO?" checked":"")+(SBUSY?" disabled":"")+\'>「男性VIO以外」を含める</label>\'+' +
   '\'<button type="button" class="bcrestore" id="bcrest"\'+(SBUSY?" disabled":"")+\'>\'+' +
   '\'作業中のデータを復元する</button></div>\';' +
   // ★待っている間は、ボタンのすぐ下に「データ読み込み中です（◯秒）」を出す（まるちゃん指示 2026-09-14）。
@@ -4802,6 +4810,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'goSaved(s);status("作業中のデータを復元しました。");draw();});};' +
   // ★ここは専用の入れ物にする。e は下でほかの部品に入れ替わるので、
   //   e のまま覚えると押した時に別の部品を見てしまう（2026-09-09の不具合）。
+  'var nv=document.getElementById("bcnoviocb");' +
+  'if(nv)nv.onchange=function(){SNOVIO=nv.checked;};' +
   'var cb=document.getElementById("bcsplitcb");' +
   'if(cb)cb.onchange=function(){splitOn(cb.checked);};' +
   'if(cb)cb.onclick=function(){splitOn(cb.checked);};' +
@@ -4815,7 +4825,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var wt=setInterval(function(){var el=document.getElementById("bcwaitmsg");' +
   'if(!SBUSY){clearInterval(wt);return;}' +
   'if(el)el.textContent="データ読み込み中です（"+Math.round((Date.now()-SBUSYAT)/1000)+"秒）";},1000);' +
-  'ask("bc_waku",{fields:JSON.stringify({period:k})},function(r){SBUSY=false;clearInterval(wt);' +
+  'ask("bc_waku",{fields:JSON.stringify({period:k,novio:SNOVIO?"1":""})},function(r){SBUSY=false;clearInterval(wt);' +
   'if(!r||!r.ok){status((r&&r.note)||"算出できませんでした。",true);draw();return;}' +
   'setWaku(r);SIDX=0;status("");draw();},function(m){SBUSY=false;status(m,true);draw();});};});' +
   '[].slice.call(box.querySelectorAll("[data-ed]")).forEach(function(a){a.oninput=function(){' +
