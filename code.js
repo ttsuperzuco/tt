@@ -9882,10 +9882,23 @@ var AKISCRIPT_ =
 '}' +
 // ★「予約枠出力（VIO以外を除く）」の時は、（VIO以外）／（VBO除外）の印が付いた時刻を外す（2026-10-01 まるちゃん指示）。
 'var wakuNoVio=false;' +
+// ★2026-10-01 まるちゃん決定（LINE一斉配信の予約可能時間文と答えをそろえた）：
+//   ①今日のもう過ぎた時刻は出さない（お客様に過ぎた時刻を案内しないため）。
+//   ②「VIO以外を除く」は印の時刻を消すだけでなく、事務所PCが探し直した時刻（枠_VIO）を使う
+//     （例＝12:00がオリーブだけでも12:30にみかんが空けば12:30）。古いデータで無い時だけ消すだけにする。
+'function wakuToday_(){var n=new Date();return n.getFullYear()+"-"+("0"+(n.getMonth()+1)).slice(-2)+"-"+("0"+n.getDate()).slice(-2);}' +
 'function wakuList_(w,kind,zh){' +
 '  var src=zh ? (w["枠_zh"]||w["枠"]) : w["枠"];' +
 '  var list=(src||{})[kind]||[];' +
-'  if(wakuNoVio) list=list.filter(function(x){ return !/（VIO以外）|（VBO除外）/.test(String(x)); });' +
+'  if(wakuNoVio){' +
+'    var vs=zh ? w["枠_zh_VIO"] : w["枠_VIO"];' +
+'    if(vs && vs[kind]) list=vs[kind];' +
+'    else list=list.filter(function(x){ return !/（VIO以外）|（VBO除外）/.test(String(x)); });' +
+'  }' +
+'  if(w.date===wakuToday_()){' +
+'    var n=new Date(), cut=n.getHours()*60+n.getMinutes();' +
+'    list=list.filter(function(x){ var m=String(x).match(/^(\\d{1,2}):(\\d{2})/); return !m || (m[1]*60+(+m[2]))>=cut; });' +
+'  }' +
 '  return list;' +
 '}' +
 'function wakuRows_(kind,zh){' +
