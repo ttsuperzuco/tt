@@ -4484,6 +4484,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'var MSTEP=0,MBODY="",MJA=[],MZH=[],MBUSY=false,MMSG="";' +
   // ★配信文は区分ごとに違う＝本文も区分ごとに持つ（まるちゃん指示 2026-09-08）
   'var MBODYS=["","","",""],MIDX=0;' +
+  // ★2026-10-01 まるちゃん「訳している時・画像を作る時も秒数を出せ。動いているか分からない」
+  'var MBUSYAT=0,WBUSYAT=0;' +
+  'function secTag(t){return \'<span class="bcsec" data-t="\'+t+\'">（\'+Math.round((Date.now()-t)/1000)+\'秒）</span>\';}' +
+  'setInterval(function(){[].slice.call(document.querySelectorAll(".bcsec")).forEach(function(e){' +
+  'e.textContent="（"+Math.round((Date.now()-(+e.getAttribute("data-t")))/1000)+"秒）";});},1000);' +
+  // ★2026-10-01 まるちゃん「スクロールさせなきゃだめなの確認しずらい」＝文の欄を中身の高さまで伸ばす
+  'function autoH(el){if(!el)return;el.style.height="0px";el.style.height=(el.scrollHeight+10)+"px";}' +
   // ★自分で入れる中国語の文（まるちゃん指示 2026-09-09）
   'var MZBODYS=["","","",""];' +
   // ★最後の確認＝""はボタン2つ／"at"は日時を決める画面（まるちゃん指示 2026-09-08）
@@ -4665,7 +4672,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'</div>\';' +
   'h+=\'<button type="button" class="bcgo" id="bcwmake"\'+(WBUSY?" disabled":"")+\'>\'+' +
   '(WBUSY?"画像を生成しています...":"この内容で画像を作る")+\'</button>\';' +
-  'if(WMSG)h+=\'<div class="bcstatus on">\'+esc(WMSG)+\'</div>\';' +
+  'if(WBUSY&&!WBUSYAT)WBUSYAT=Date.now();if(!WBUSY)WBUSYAT=0;' +
+  'if(WMSG||WBUSY)h+=\'<div class="bcstatus on">\'+esc(WMSG||"画像を作っています…")+(WBUSY?secTag(WBUSYAT):"")+\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindWaku();bindFresh();}' +
   'function bindWaku(){' +
   'var ta=document.getElementById("bcwtxt");' +
@@ -5058,11 +5066,15 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'</div></div>\';' +
   'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作成</div><div class="bchr"></div>\'+' +
-  '\'<div class="bcouttx">\'+esc(MMSG)+\'</div></div>\';' +
+  '\'<div class="bcouttx">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT||(MBUSYAT=Date.now())):"")+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
-  'if(MMSG&&(MSTEP<3||MSTEP===5))h+=\'<div class="bcstatus on">\'+esc(MMSG)+\'</div>\';' +
+  'if(MBUSY&&!MBUSYAT)MBUSYAT=Date.now();if(!MBUSY)MBUSYAT=0;' +
+  'if(MMSG&&(MSTEP<3||MSTEP===5))h+=\'<div class="bcstatus on">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT):"")+\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindMake();bindFresh();}' +
   'function bindMake(){' +
+  // 文の欄は中身の高さまで伸ばす（スクロールせずに全部見える）。打つたびに伸び縮みする。
+  '["bcmbody","bcmzbody","bcmzedit"].forEach(function(i){var t=document.getElementById(i);' +
+  'if(t){autoH(t);if(!t.__ah){t.__ah=1;t.addEventListener("input",function(){autoH(t);});}}});' +
   'var ta=document.getElementById("bcmbody");' +
   // ★打っている間は画面を描き直さない（描き直すとボタンが作り直されて押せなくなる）
   'if(ta)ta.oninput=function(){MBODYS[MIDX]=ta.value;MBODY=ta.value;' +
