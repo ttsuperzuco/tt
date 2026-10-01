@@ -4346,7 +4346,9 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcouttx{white-space:pre-wrap;font-size:14px;line-height:1.75;color:#E8EEF7;}' +
     // ★2026-10-01 まるちゃん「スマホでの見せ方で見たい」＝LINEの吹き出しの形・1行13文字（まるちゃんのスマホと同じ）。
     //   幅を全角13文字ぶん(13em)にして、あとは自然に折り返させる＝半角は半分の幅で数えられ、実物に近い。
-    '.bc .bcbub{width:13em;max-width:100%;box-sizing:content-box;background:#fff;color:#111827;border-radius:18px;' +
+    // ★2026-10-02 まるちゃんの実物のスマホ（文字の大きさ＝中）の画面と10行すべて同じ所で折り返すよう合わせた
+    //   （幅14.25文字ぶん＋字の間を少し空ける＝英数字の幅が実物に近くなる）。色もスマホの吹き出しの緑 #9CE594。
+    '.bc .bcbub{width:14.25em;letter-spacing:.06em;max-width:100%;box-sizing:content-box;background:#9CE594;color:#111827;border-radius:18px;' +
     'padding:10px 14px;margin:0 0 14px;font-size:16px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;' +
     'font-family:-apple-system,"Hiragino Sans","Noto Sans JP","Noto Sans TC",sans-serif;}' +
     '.bcbubcap{font-size:12px;color:#94A3B8;margin:13px 0 5px;}' +
