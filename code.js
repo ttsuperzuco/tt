@@ -4407,6 +4407,11 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcempty{font-size:14px;color:#94A3B8;padding:2px 0 4px;}' +
     '.bcleft{font-size:13px;color:#94A3B8;font-weight:700;margin:0 0 8px;}' +
     '.bcadd{display:flex;gap:10px;}' +
+    // ★空いている枠（◯つ目）と、その枠に追加するボタン（2026-10-01）
+    '.bcslot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:2px dashed #3B4A66;border-radius:10px;' +
+    'padding:9px 10px;margin:0 0 8px;}' +
+    '.bcslot button{flex:1 1 120px;padding:13px 8px;font-size:15.5px;font-weight:800;border:0;border-radius:10px;' +
+    'background:#2563EB;color:#fff;cursor:pointer;}' +
     '.bcadd button{flex:1;padding:16px 8px;font-size:16.5px;font-weight:800;border:0;' +
     'border-radius:12px;background:#2563EB;color:#fff;}' +
     '.bcadd button:disabled{background:#26324A;color:#94A3B8;}' +
@@ -4517,7 +4522,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   「← 戻る」でここへ戻す（まるちゃん指摘 2026-09-09）
   'var MBACK=0;' +
   // ★対象ごとに選び直した送り先（空＝もとの決まりのまま）と、選べる送り先の一覧
-  'var TAGS=[],TAGLIST=[],TAGBUSY=false;' +
+  'var TAGS=[],TAGLIST=[],TAGBUSY=false,ADDAT=-1;' +
   // ★まるちゃんが入口から先へ進んだか（進んだあとに、遅れて届いた返事で画面を戻さない）
   'var MOVED=false;' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
@@ -5307,10 +5312,16 @@ function renderBroadcastPage_(base, staff, dev) {
   '(p.kind==="text"?(\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div><div class="bcpvtx bcbub">\'+esc(p.text||"")+\'</div>\')' +
   ':(th?(\'<img class="bcpvimg" src="\'+th+\'" data-big="\'+i+\'">\'):""));}).join("");' +
   'h+=\'<input type="file" accept="image/*" id="bcrepfile" style="display:none">\';}' +
-  // ★「まだ何も入っていません…」は出さない（まるちゃん指示 2026-09-08）
-  'else{h+="";}' +
+  // ★2026-10-01 まるちゃん「LINEは3つまで。何つ目に画像か文章かを指定できない。入れるじゃなくて追加」
+  //   ＝空いている枠（◯つ目）を並べ、その枠で「画像を追加／文章を追加」。押した枠の位置に入る。
+  'if(!mode){for(var sk=n;sk<MAXP;sk++){' +
+  'h+=\'<div class="bcslot"><span class="bcpno">\'+(sk+1)+\'つ目</span>\'+' +
+  '\'<button type="button" data-addimg="\'+sk+\'">🖼 画像を追加</button>\'+' +
+  '\'<button type="button" data-addtx="\'+sk+\'">✍ 文章を追加</button></div>\';}' +
+  'if(n>=MAXP)h+=\'<div class="bcwho">\'+MAXP+\'つまで送れます（いっぱいです）。\'+' +
+  '\'入れ替える時は「消去」してから追加してください。</div>\';}' +
   'if(mode==="img"){' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">画像を選ぶ</div><div class="bcgrid">\'+' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">\'+(ADDAT+1)+\'つ目に追加する画像を選ぶ</div><div class="bcgrid">\'+' +
   'picks().map(function(p){return \'<div class="bcpick\'+(p.made?" new":"")+\'">\'+' +
   '\'<button type="button" class="sel" data-pre="\'+esc(p.key)+\'">\'+' +
   '\'<img src="\'+p.thumb+\'"><span>\'+esc(p.label)+\'</span></button>\'+' +
@@ -5338,18 +5349,16 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" class="bcghost" id="bccancel">閉じる</button>\';}' +
   'else if(mode==="txt"){' +
   'var old=(EDI>=0&&d.parts[EDI])?(d.parts[EDI].text||""):"";' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">\'+((EDI>=0)?"文章を直す":"文章を入れる")+' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">\'+((EDI>=0)?"文章を直す":((ADDAT+1)+"つ目に文章を追加"))+' +
   '\'（\'+MAXT+\'文字まで）</div>\'+' +
   '\'<textarea id="bctxt" placeholder="この対象へ送る文章">\'+esc(old)+\'</textarea>\'+' +
   '\'<div class="bccount" id="bccnt">\'+ulen(old)+\' / \'+MAXT+\' 文字</div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcaddtxt">\'+' +
-  '((EDI>=0)?"この文章に直す":"この文章を入れる")+\'</button>\'+' +
+  '((EDI>=0)?"この文章に直す":"この文章を追加")+\'</button>\'+' +
   '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else{' +
   // ★「あと ◯ つ入れられます」も出さない（まるちゃん指示 2026-09-08）
-  'h+=\'<div class="bchr"></div>\'+' +
-  '\'<div class="bcadd"><button type="button" id="bcimg"\'+(left?"":" disabled")+\'>🖼 画像を入れる</button>\'+' +
-  '\'<button type="button" id="bctx"\'+(left?"":" disabled")+\'>✍ 文章を入れる</button></div></div>\';' +
+  'h+=\'</div>\';' +
   'if(n)h+=\'<button type="button" class="bcgo" id="bcnext">この内容でOK</button>\';' +
   'h+=\'<button type="button" class="bcmini" id="bcskip">この対象は送らない（飛ばす）</button>\';' +
   '\'\';}' +
@@ -5361,6 +5370,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'var cv=document.createElement("canvas");cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);' +
   'var durl=cv.toDataURL("image/jpeg",0.82);' +
   'cb({kind:"image",src:"",b64:durl.split(",")[1],thumb:durl});};im.src=fr.result;};fr.readAsDataURL(f);}' +
+  // 選んだ枠の位置に足す（枠が空なら一番うしろ）。3つを超えたら足さない。
+  'function addAt(d,obj){if(d.parts.length>=MAXP){status(MAXP+"つまでです。",true);return;}' +
+  'var at=(ADDAT<0||ADDAT>d.parts.length)?d.parts.length:ADDAT;d.parts.splice(at,0,obj);ADDAT=-1;}' +
   'function bindOne(){' +
   'var d=DATA[step];' +
   '[].slice.call(box.querySelectorAll("[data-del]")).forEach(function(b){b.onclick=function(){' +
@@ -5391,8 +5403,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'var nm=((p.src||"").indexOf("made:")===0)?p.src.slice(5):"";' +
   'bigView(partThumb(p),nm);};});' +
   'var e;' +
-  'if(e=document.getElementById("bcimg"))e.onclick=function(){mode="img";draw();};' +
-  'if(e=document.getElementById("bctx"))e.onclick=function(){EDI=-1;mode="txt";draw();};' +
+  'if(e=document.getElementById("bcimg"))e.onclick=function(){ADDAT=-1;mode="img";draw();};' +
+  // ★空いている枠の「画像を追加／文章を追加」＝押した枠の位置に入れる（2026-10-01）
+  '[].slice.call(box.querySelectorAll("[data-addimg]")).forEach(function(b){b.onclick=function(){' +
+  'ADDAT=+b.getAttribute("data-addimg");mode="img";status("");draw();};});' +
+  '[].slice.call(box.querySelectorAll("[data-addtx]")).forEach(function(b){b.onclick=function(){' +
+  'ADDAT=+b.getAttribute("data-addtx");EDI=-1;mode="txt";status("");draw();};});' +
+  'if(e=document.getElementById("bctx"))e.onclick=function(){ADDAT=-1;EDI=-1;mode="txt";draw();};' +
   // ★送り先を選び直す（一覧は初めて開いた時に1回だけ事務所パソコンから取る）
   'if(e=document.getElementById("bctag"))e.onclick=function(){mode="tag";' +
   'if(!TAGLIST.length&&!TAGBUSY){TAGBUSY=true;draw();' +
@@ -5415,13 +5432,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(e=document.getElementById("bcprev"))e.onclick=function(){step--;mode="";status("");draw();};' +
   '[].slice.call(box.querySelectorAll("[data-pre]")).forEach(function(b){b.onclick=function(){' +
   'var k=b.getAttribute("data-pre");var pr=preOf(k);' +
-  'd.parts.push({kind:"image",src:(pr&&pr.made?"made:":"preset:")+k});mode="";draw();};});' +
+  'addAt(d,{kind:"image",src:(pr&&pr.made?"made:":"preset:")+k});mode="";saveNow();draw();};});' +
   '[].slice.call(box.querySelectorAll("[data-zoom]")).forEach(function(b){b.onclick=function(ev){' +
   'ev.stopPropagation();var k=b.getAttribute("data-zoom");var pr=preOf(k);if(!pr)return;' +
   'bigView(pr.thumb, pr.made?k:"");};});' +
   'var fe=document.getElementById("bcfile");' +
   'if(fe)fe.onchange=function(){var f=fe.files&&fe.files[0];if(!f)return;' +
-  'readImg(f,function(obj){if(!obj)return;d.parts.push(obj);mode="";draw();});};' +
+  'readImg(f,function(obj){if(!obj)return;addAt(d,obj);mode="";saveNow();draw();});};' +
   // ★文章の欄は全文が見える高さにする（まるちゃん指示 2026-09-14「全文を一画面に表示」）
   'var ta=document.getElementById("bctxt"),cnt=document.getElementById("bccnt"),ad=document.getElementById("bcaddtxt");' +
   'function growTa(){if(!ta)return;ta.style.height="0px";ta.style.height=(ta.scrollHeight+12)+"px";}' +
@@ -5431,7 +5448,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'ad.onclick=function(){var v=(ta.value||"").trim();' +
   'if(!v){status("文章が空です。",true);return;}' +
   'if(ulen(v)>MAXT){status("文章は"+MAXT+"文字までです（いまは"+ulen(v)+"文字）。",true);return;}' +
-  'if(EDI>=0&&d.parts[EDI]){d.parts[EDI].text=v;}else{d.parts.push({kind:"text",text:v});}' +
+  'if(EDI>=0&&d.parts[EDI]){d.parts[EDI].text=v;}else{addAt(d,{kind:"text",text:v});}' +
   'EDI=-1;mode="";status("");saveNow();draw();};}}' +
   // ── 最後（確認＋日時）────────────────────────────────
   // ★この画面には「まっさらに戻す」を出さない（送信の直前で押し間違えると全部消えるため・
