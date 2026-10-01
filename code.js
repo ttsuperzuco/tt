@@ -4376,6 +4376,10 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcpart{flex-wrap:wrap;}' +
     '.bcpbtns{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}' +
     '.bcseetx{background:#0B1220;border-radius:10px;padding:12px 14px;margin-top:6px;}' +
+    // ★届く中身をそのまま見せる（2026-10-01）＝文はLINEの吹き出しのように白地・画像は大きく
+    '.bcpvtx{white-space:pre-wrap;word-break:break-word;background:#fff;color:#111827;border-radius:12px;' +
+    'padding:12px 14px;font-size:15px;line-height:1.7;margin:0 0 14px;}' +
+    '.bc img.bcpvimg{display:block;width:auto;max-width:100%;max-height:420px;border-radius:10px;margin:0 0 14px;cursor:zoom-in;}' +
     // ★配信待ち／配信済みのタブ（まるちゃん指示 2026-09-09）
     '.bctab{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;}' +
     '.bctab button{border:1px solid #26324A;background:#131C2E;color:#9FB3C8;' +
@@ -5287,9 +5291,12 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<span class="bcpbtns">\'+' +
   '(i>0?(\'<button type="button" class="bcmv" data-up="\'+i+\'">▲</button>\'):"")+' +
   '((i<n-1)?(\'<button type="button" class="bcmv" data-dn="\'+i+\'">▼</button>\'):"")+' +
-  '\'<button type="button" class="bcmv" data-see="\'+i+\'">確認</button>\'+' +
+  // ★2026-10-01 まるちゃん「確認画面、これで何を確認しろと？」＝届く中身をその場で全部見せる。
+  //   画像は大きく（押すとさらに大きく）・文章は全文を改行どおり。中身が見えるので「確認」ボタンは外した。
   '\'<button type="button" class="bcmv" data-edit="\'+i+\'">修正</button>\'+' +
-  '\'<button type="button" class="bcdel" data-del="\'+i+\'">消去</button></span></div>\';}).join("");' +
+  '\'<button type="button" class="bcdel" data-del="\'+i+\'">消去</button></span></div>\'+' +
+  '(p.kind==="text"?(\'<div class="bcpvtx">\'+esc(p.text||"")+\'</div>\')' +
+  ':(th?(\'<img class="bcpvimg" src="\'+th+\'" data-big="\'+i+\'">\'):""));}).join("");' +
   'h+=\'<input type="file" accept="image/*" id="bcrepfile" style="display:none">\';}' +
   // ★「まだ何も入っていません…」は出さない（まるちゃん指示 2026-09-08）
   'else{h+="";}' +
