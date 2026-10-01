@@ -9918,7 +9918,10 @@ var AKISCRIPT_ =
 '      body+= \'<div class="akiwdh">\'+r.dh+\'</div>\'+r.lines.map(function(l){ return \'<div class="akiwtimes">\'+l+\'</div>\'; }).join("");' +
 '    });' +
 '    if(!body) body=\'<div class="akinone">この期間に案内できる時間はありません</div>\';' +
-'    function cbtn(m,label){ return \'<button type="button" class="akiwcopy" data-kind="\'+m.k+\'" data-zh="\'+(m.zh?"1":"0")+\'">\'+label+\'</button>\'; }' +
+// ★コピーした文の一番上に見出し（例＝日本人新規男性）を付ける（2026-10-01 まるちゃん指示）。
+//   日本と台湾がまとまった枠は、押したボタンの言葉で決める（日本語でコピー＝日本人既存女性／中文でコピー＝台湾人既存女性）。
+'    function headOf(zh){ return (zh?"台湾人":"日本人")+p.mem.filter(function(m){ return m.zh===zh; }).map(function(m){ return m.k; }).join("・"); }' +
+'    function cbtn(m,label){ return \'<button type="button" class="akiwcopy" data-kind="\'+m.k+\'" data-zh="\'+(m.zh?"1":"0")+\'" data-head="\'+headOf(m.zh)+\'">\'+label+\'</button>\'; }' +
 '    var btns=(ja&&zh) ? cbtn(ja,"日本語でコピー")+cbtn(zh,"中文でコピー") : cbtn(first,"コピー");' +
 '    return \'<div class="akiwsec">\'+' +
 '      \'<div class="akiwhead"><span class="akiwks">\'+p.mem.map(function(m){' +
@@ -9931,7 +9934,9 @@ var AKISCRIPT_ =
 '  });' +
 '}' +
 'function copyWaku_(btn){' +
-'  var txt=wakuText_(btn.getAttribute("data-kind"), btn.getAttribute("data-zh")==="1"); var lab=btn.getAttribute("data-lab")||btn.textContent; btn.setAttribute("data-lab",lab);' +
+'  var txt=wakuText_(btn.getAttribute("data-kind"), btn.getAttribute("data-zh")==="1");' +
+'  if(txt&&btn.getAttribute("data-head")) txt=btn.getAttribute("data-head")+"\\n"+txt;' +
+'  var lab=btn.getAttribute("data-lab")||btn.textContent; btn.setAttribute("data-lab",lab);' +
 '  if(!txt){ btn.textContent="なし"; setTimeout(function(){ btn.textContent=lab; },1200); return; }' +
 '  function done(){ btn.textContent="コピーしました"; btn.classList.add("done");' +
 '    setTimeout(function(){ btn.textContent=lab; btn.classList.remove("done"); },1500); }' +
