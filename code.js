@@ -4550,8 +4550,15 @@ function renderBroadcastPage_(base, staff, dev) {
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
   'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,zbodies:MZBODYS,' +
   'ja:MJA,zh:MZH,tags:TAGS,mback:MBACK,' +
-  'midx:MIDX,mstep:MSTEP,' +
+  'midx:MIDX,mstep:MSTEP,names:TPL.map(function(t){return t.name;}),' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
+  // ★2026-10-01：対象の並びを変えた（男性の新規日本→新規台湾→既存日本→既存台湾→女性も同じ）。
+  //   覚えた作業は「並びの何番目」ではなく「対象の名前（頭の番号を外した物）」で戻す＝並びを変えても中身がずれない。
+  //   名前を持っていない古い控えは、前の並びだった物として読む。
+  'var OLDNAMES=["新規 日本男性","新規 日本女性","既存 日本男性","既存 日本女性","新規 台湾男性","新規 台湾女性","既存 台湾男性","既存 台湾女性"];' +
+  'function nkey(n){return String(n||"").replace(/^[\\u2460-\\u2473]\\s*/,"").replace(/^\\s+|\\s+$/g,"");}' +
+  'function savedIdx(s,i){var src=(s.names&&s.names.length)?s.names:(CAT==="予約可能枠案内"?OLDNAMES:null);' +
+  'if(!src)return i;var k=nkey(TPL[i].name);for(var j=0;j<src.length;j++)if(nkey(src[j])===k)return j;return -1;}' +
   // ★キャンペーン・商品の紹介の間は、予約可能枠案内の途中の作業に書かず別の置き場へ（2026-09-17）
   'function saveNow(){if(CMODE){campSave();return;}if(!WIPON)return;' +
   'if(WIPT)clearTimeout(WIPT);' +
@@ -4578,19 +4585,22 @@ function renderBroadcastPage_(base, staff, dev) {
   'pg=((SRES&&SRES.groups||[]).length)?"s":"t";' +
   'page=pg;mode="";}' +
   'function applySaved(s){' +
-  'for(var i=0;i<TPL.length;i++){var ps=((s.data[i]||{}).parts)||[];' +
+  'var oldTags=(s.tags&&s.tags.length)?s.tags:null,oldStep=s.step;' +
+  'for(var i=0;i<TPL.length;i++){var si=savedIdx(s,i);var ps=(si>=0&&((s.data[si]||{}).parts))||[];' +
+  'if(oldTags){TAGS[i]=(si>=0&&oldTags[si])||[];}' +
+  'if(typeof oldStep==="number"&&si>=0&&si===oldStep)s.__step=i;' +
   'DATA[i].parts=ps.slice(0,MAXP).map(function(p){' +
   'if(p.kind==="image"&&p.b64&&!p.thumb)p.thumb="data:image/jpeg;base64,"+p.b64;return p;});}' +
   'WTEXT=s.text||"";MBODY=s.body||"";SPER=s.per||"";SIDX=s.sidx||0;' +
   'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
   'if(s.zbodies&&s.zbodies.length)MZBODYS=s.zbodies;' +
   'if(s.ja&&s.ja.length)MJA=s.ja;if(s.zh&&s.zh.length)MZH=s.zh;' +
-  'if(s.tags&&s.tags.length)TAGS=s.tags;' +
   'if(s.mback===0||s.mback===1||s.mback===2)MBACK=s.mback;' +
   'MIDX=s.midx||0;' +
   'if(s.mstep===0||s.mstep===1||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();}' +
-  'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)step=s.step;}' +
+  'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)' +
+  'step=(typeof s.__step==="number")?s.__step:s.step;}' +
   // ★大きく見る（押した1枚だけ、事務所パソコンから大きい見本をもらう）
   'function bigView(src,name){' +
   'function show(u){szOvShow_(\'<div style="padding:14px;text-align:center">\'+' +
