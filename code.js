@@ -4771,8 +4771,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!gs.length){' +
   'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span></div>\'+' +
   '\'<div class="bccard">\'+' +
-  '\'<div class="bcper">\'+P.map(function(x){return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
-  '\' class="\'+((x[0]===SPER)?"bcon":"")+((x[0]==="一週間")?" bcwide2":"")+\'"\'+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
+  // ★読み込み中は押したボタンだけを横いっぱいに出し、ほかのボタンは隠す（まるちゃん指示 2026-10-01「わかりにくい」）
+  '\'<div class="bcper">\'+P.map(function(x){if(SBUSY&&x[0]!==SPER)return "";' +
+  'return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
+  '\' class="\'+((x[0]===SPER)?"bcon":"")+((x[0]==="一週間"||SBUSY)?" bcwide2":"")+\'"\'+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
   // ★入切「『男性VIO以外』を含める」（まるちゃん指示 2026-10-01・最初は切）。
   //   切＝男性の時刻はVIOもできる人が空いている時だけ。入＝（VIO以外）の時刻も出す。
   '\'<label class="bcnovio"><input type="checkbox" id="bcnoviocb"\'+(SNOVIO?" checked":"")+(SBUSY?" disabled":"")+\'>「男性VIO以外」を含める</label>\'+' +
@@ -4784,7 +4786,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';' +
   'h+=\'</div>\';' +
   // ★「作業中のデータを復元する」は黒い枠の外・下に置く（まるちゃん指示 2026-10-01）
-  'h+=\'<button type="button" class="bcrestore bcrestout" id="bcrest"\'+(SBUSY?" disabled":"")+\'>\'+' +
+  'if(!SBUSY)h+=\'<button type="button" class="bcrestore bcrestout" id="bcrest">\'+' +
   '\'作業中のデータを復元する</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();return;}' +
   'if(SIDX>=gs.length)SIDX=gs.length-1;if(SIDX<0)SIDX=0;' +
