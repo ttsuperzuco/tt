@@ -4598,7 +4598,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.mback===0||s.mback===1||s.mback===2)MBACK=s.mback;' +
   'MIDX=s.midx||0;' +
   'if(s.mstep===0||s.mstep===1||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
-  'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();}' +
+  'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();if(SRES.all)buildG();}' +
   'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)' +
   'step=(typeof s.__step==="number")?s.__step:s.step;}' +
   // ★大きく見る（押した1枚だけ、事務所パソコンから大きい見本をもらう）
@@ -4911,9 +4911,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'SRES.groups=[];' +
   'for(var k=0;k<a.length;k++){if(!SRES.split&&a[k].sei!=="男性")continue;' +
   'var sei=SRES.split?a[k].sei:"",lab=SRES.split?a[k].label:a[k].atama;' +
-  'SRES.groups.push({atama:a[k].atama,sei:sei,label:lab,text:a[k].text,k:k});' +
+  // ★2026-10-01 まるちゃん「新規男性（日本人＆台湾人）なのか新規男性（日本人）なのか、はっきりさせて」
+  //   台湾人向けが別の時刻の時だけ欄が2つに分かれる＝（日本人）（台湾人）。分かれない時は（日本人＆台湾人）。
   'var zi=zOf(a[k].atama,a[k].sei);' +
-  'if(zi>=0)SRES.groups.push({atama:a[k].atama,sei:sei,label:lab+"（台湾のお客様）",text:SRES.zall[zi].text,k:zi,z:1});}}' +
+  'SRES.groups.push({atama:a[k].atama,sei:sei,label:lab+(zi>=0?"（日本人）":"（日本人＆台湾人）"),text:a[k].text,k:k});' +
+  'if(zi>=0)SRES.groups.push({atama:a[k].atama,sei:sei,label:lab+"（台湾人）",text:SRES.zall[zi].text,k:zi,z:1});}}' +
   // 古い保存（男女に分ける前の形）から戻した時も動くようにする
   'function fixWaku(){if(!SRES||!SRES.groups||SRES.all)return;' +
   'var g=SRES.groups;SRES.split=!!(g.length&&g[0].sei);' +
