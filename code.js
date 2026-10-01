@@ -4956,6 +4956,30 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★中身のある区分の番号だけを並べる（空欄は数にも入れない・まるちゃん指示 2026-09-09）
   'function zLive(){var a=[],i;for(i=0;i<BORDER.length;i++)' +
   'if(String((MZH[i]||{}).text||"").replace(/^\\s+|\\s+$/g,""))a.push(i);return a;}' +
+  // ★下のボタンは、いま入っている文から毎回作る（2026-10-01 まるちゃん「短い文いれてもボタンがでない」）。
+  //   前は画面を描いた時に1回だけ決めていたので、長すぎて消えたボタンが、短くしても戻らなかった。
+  //   打つたびに refreshBtns() で出し直す（入力欄は作り直さない＝打っている字は消えない）。
+  'function btnHtml(){var N=BORDER.length,LNG=\'<div class="bcstatus ng">長すぎます。上の文を短くしてください（短くするとボタンが出ます）。</div>\';' +
+  'if(MSTEP===0){var x=BORDER[MIDX],last=(MIDX===N-1);' +
+  'if(ulen(joinBody(MBODYS[MIDX]||"",timesOf(x[0],x[1])))>MAXT)return LNG;' +
+  // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）。自動で訳す1つ目だけ紫。
+  'return last?(\'<button type="button" class="bctxt" id="bcmok">以上の内容を翻訳し自動で中国語版を作成する</button>\'+' +
+  '\'<button type="button" class="bcgo" id="bcmman">翻訳せずに手動で中国語版を作成する</button>\'+' +
+  '\'<button type="button" class="bcgo" id="bcmnozh">中国語版は配信しない</button>\')' +
+  ':\'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\';}' +
+  'if(MSTEP===1){var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
+  'if(ulen(joinBody(MZBODYS[MIDX]||"",zhOf(timesOf(zx[0],zx[1],true))))>MAXT)return LNG;' +
+  'return zlast?makeBtn("bcmzok3"):\'<button type="button" class="bcgo" id="bcmzok">この内容でOK</button>\';}' +
+  'if(MSTEP===2){var lv=zLive(),pos=lv.indexOf(MIDX),z=MZH[MIDX]||{text:""};' +
+  'var lastz=(pos<0||pos===lv.length-1);' +
+  // ★この区分だけ訳し直す（2026-10-01 まるちゃん「再翻訳ボタンがない」）。日本語の文がある時だけ出す。
+  'var re=String(MBODYS[MIDX]||"").replace(/^\\s+|\\s+$/g,"")?' +
+  '\'<button type="button" class="bcgo" id="bcmretr" style="background:#fff;color:#1e293b">🀄 この文だけ訳し直す</button>\':"";' +
+  'if(ulen(z.text)>MAXT)return LNG+re;' +
+  'return (lastz?makeBtn("bcmok3"):\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\')+re;}' +
+  'return "";}' +
+  'function refreshBtns(){var bb=document.getElementById("bcmbtns");' +
+  'if(bb){bb.innerHTML=btnHtml();bindMake();}}' +
   'function drawMake(){var h,N=BORDER.length;' +
   'if(MIDX>=N)MIDX=N-1;if(MIDX<0)MIDX=0;' +
   'if(MSTEP===0){' +
@@ -4976,17 +5000,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?numMsg(ulen(done)):"")+' +
   '\'</div>\';' +
   'h+=\'</div>\';' +
-  // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）
-  'if(!MBUSY){h+=over?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
-  // ★自動で訳す1つ目だけ紫（まるちゃん指示 2026-09-09）
-  ':(last?(\'<button type="button" class="bctxt" id="bcmok">\'+' +
-  '\'以上の内容を翻訳し自動で中国語版を作成する</button>\'+' +
-  '\'<button type="button" class="bcgo" id="bcmman">\'+' +
-  '\'翻訳せずに手動で中国語版を作成する</button>\'+' +
-  '\'<button type="button" class="bcgo" id="bcmnozh">\'+' +
-  '\'中国語版は配信しない</button>\')' +
-  ':\'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\');' +
-  '\'\';}}' +
+  // ★ボタンは打つたびに出し直す（2026-10-01 まるちゃん「短い文いれてもボタンがでない」）
+  'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   // ★自分で中国語を入れる画面（まるちゃん指示 2026-09-09）。日本語の画面と同じ作り。
   'else if(MSTEP===1){' +
   'var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
@@ -5005,10 +5020,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcnum\'+(zov?" over":"")+\'" id="bcmznum">\'+(zb?numMsg(ulen(zdone)):"")+' +
   '\'</div>\';' +
   'h+=\'</div>\';' +
-  'if(!MBUSY){h+=zov?(\'<div class="bcstatus ng">長すぎます。短くしてください。</div>\')' +
-  ':(zlast?makeBtn("bcmzok3")' +
-  ':\'<button type="button" class="bcgo" id="bcmzok">この内容でOK</button>\');' +
-  '\'\';}}' +
+  'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else if(MSTEP===2){' +
   // ★中身のある区分だけを順に見せる。数え方もその数だけ（まるちゃん指示 2026-09-09）
   'var lv=zLive(),pos=lv.indexOf(MIDX);' +
@@ -5023,10 +5035,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'esc(z.text||"")+\'</textarea>\'+' +
   '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+numMsg(ulen(z.text))+' +
   '\'</div></div>\';' +
-  'if(!MBUSY){h+=ov2?(\'<div class="bcstatus ng">長すぎます。日本語の文を短くしてください。</div>\')' +
-  ':(lastz?makeBtn("bcmok3")' +
-  ':\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\');' +
-  '\'\';}}' +
+  'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作成</div><div class="bchr"></div>\'+' +
   '\'<div class="bcouttx">\'+esc(MMSG)+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
@@ -5043,7 +5052,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var nm=document.getElementById("bcmnum");' +
   'if(nm){var ov=ulen(done)>MAXT;nm.textContent=ta.value?numMsg(ulen(done)):"";' +
   'nm.className="bcnum"+(ov?" over":"");}' +
-  'saveNow();};' +
+  'saveNow();refreshBtns();};' +
   'var e=document.getElementById("bcmedit");' +
   'if(e)e.onclick=function(){MSTEP=0;MIDX=0;MMSG="";status("");draw();};' +
   'e=document.getElementById("bcmprev2");' +
@@ -5058,7 +5067,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(zn){var zo=ulen(zed.value)>MAXT;' +
   'zn.textContent=numMsg(ulen(zed.value));' +
   'zn.className="bcnum"+(zo?" over":"");}' +
-  'saveNow();};' +
+  'saveNow();refreshBtns();};' +
   'e=document.getElementById("bcmoknext");' +
   'if(e)e.onclick=function(){var lv=zLive(),q=lv.indexOf(MIDX);' +
   'MIDX=(q>=0&&q+1<lv.length)?lv[q+1]:MIDX;status("");draw();};' +
@@ -5096,7 +5105,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var znm=document.getElementById("bcmznum");' +
   'if(znm){var zov=ulen(zdone)>MAXT;znm.textContent=zta.value?numMsg(ulen(zdone)):"";' +
   'znm.className="bcnum"+(zov?" over":"");}' +
-  'saveNow();};' +
+  'saveNow();refreshBtns();};' +
   'var zok=document.getElementById("bcmzok");' +
   'if(zok)zok.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
   'MIDX++;status("");draw();};' +
@@ -5112,11 +5121,22 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ok4=document.getElementById("bcmok3");' +
   'if(ok4)ok4.onclick=function(){MBACK=2;applyAll(true);};' +
   'var ok4n=document.getElementById("bcmok3n");' +
-  'if(ok4n)ok4n.onclick=function(){MBACK=2;applyAll(false);};}' +
+  'if(ok4n)ok4n.onclick=function(){MBACK=2;applyAll(false);};' +
+  // ★この区分だけ訳し直す（2026-10-01）＝覚えた訳を使わず、必ず新しく訳す
+  'var rt=document.getElementById("bcmretr");' +
+  'if(rt)rt.onclick=function(){var k=MIDX;MBUSY=true;' +
+  'MMSG="「"+ordLabel(k,true)+"」を訳し直しています…（1分ほど）";status("");draw();' +
+  'transIdx(k,true,function(s,lst){' +
+  'MZH[k]={label:ordLabel(k,true),atama:BORDER[k][0],sei:BORDER[k][1],text:s};' +
+  'MBUSY=false;MMSG=lst?"※時間を入れる場所の目印が訳の中に残らなかったので、時間は文の最後に入れました。":"";' +
+  'saveNow();draw();},' +
+  'function(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();});};}' +
   // ★台湾版＝区分ごとに本文を訳し、時間の表は訳さず曜日を入れ替えて差し込む
   // ★男女を渡す＝男性向けは VIO脱毛 が VBO になる（メニューの表に男性だけの言い方がある）
-  'function transOne(s,g,cb,onErr){if(!String(s||"").trim()){cb("");return;}' +
-  'ask("translate",{fields:JSON.stringify({text:s,gender:(g||"共通"),quality:"1"})},' +
+  // ★force＝覚えた訳を使わず訳し直す（「この文だけ訳し直す」用）
+  'function transOne(s,g,cb,onErr,force){if(!String(s||"").trim()){cb("");return;}' +
+  'var fd={text:s,gender:(g||"共通"),quality:"1"};if(force)fd.force="1";' +
+  'ask("translate",{fields:JSON.stringify(fd)},' +
   'function(r){var v=(r&&typeof r==="object")?((r.note!==undefined)?r.note:(r.result||"")):r;' +
   'cb(String(v==null?"":v));},onErr);}' +
   // ★訳す側に「【時間】」を見せない（見せると「これは空欄です」と独り言を書くことがある＝実測）。
@@ -5124,6 +5144,23 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ZSEP="＝＝＝＝＝＝＝＝";' +
   'function zsplit(s){var m=String(s||"").split(/[＝=]{5,}/);' +
   'return (m.length>=2)?[m[0],m.slice(1).join("")]:null;}' +
+  // 訳した本文に、曜日を入れ替えた時間の表を差し込む（全部訳す時も1つ訳し直す時も同じ1か所）
+  'function zhCompose(k,z0,had){var x=BORDER[k],tt=zhOf(timesOf(x[0],x[1],true));' +
+  'var z=String(z0||"").replace(/^\\s+|\\s+$/g,""),s;' +
+  'var pair=had?zsplit(z):null;' +
+  'if(pair){var a=pair[0].replace(/^\\s+|\\s+$/g,""),b=pair[1].replace(/^\\s+|\\s+$/g,"");' +
+  's=(a?(a+"\\n\\n"):"")+tt+(b?("\\n\\n"+b):"");}' +
+  'else{z=z.replace(/[＝=]{5,}/g,"").replace(/^\\s+|\\s+$/g,"");' +
+  's=z?(z+"\\n\\n"+tt):"";}' +
+  'return s;}' +
+  // 区分1つぶんの日本語を訳しに出す形にする（「【時間】」の所に飾りの線を入れる）
+  'function zhSend(k){var b0=String(MBODYS[k]||"").replace(/^\\s+|\\s+$/g,"");' +
+  'var k0=b0.indexOf("【時間】"),had=(k0>=0);' +
+  'return {b0:b0,had:had,send:had?(b0.slice(0,k0).replace(/\\s+$/,"")+"\\n\\n"+ZSEP+"\\n\\n"+' +
+  'b0.slice(k0+4).replace(/^\\s+/,"")):b0,sei:(BORDER[k][1]==="男性")?"男":"女"};}' +
+  'function transIdx(k,force,cb,onErr){var o=zhSend(k);' +
+  'transOne(o.send,o.sei,function(z){var zz=String(z||"").replace(/^\\s+|\\s+$/g,"");' +
+  'cb(zhCompose(k,zz,o.had),o.had&&!zsplit(zz));},onErr,force);}' +
   // ★訳すのは中身のある区分だけ。数え方もその数（まるちゃん指示 2026-09-09）
   'function makeZh(){var N=BORDER.length,zs=[],i=0,lost=0;' +
   'var need=[],w;for(w=0;w<N;w++)' +
@@ -5133,25 +5170,15 @@ function renderBroadcastPage_(base, staff, dev) {
   'function ng(m){MBUSY=false;MMSG="";status("訳せませんでした："+m,true);draw();}' +
   '(function next(){' +
   'if(i>=N){' +
-  'MZH=BORDER.map(function(x,k){var tt=zhOf(timesOf(x[0],x[1],true)),g=zs[k]||{z:"",had:false};' +
-  'var z=String(g.z||"").replace(/^\\s+|\\s+$/g,""),s;' +
-  'var pair=g.had?zsplit(z):null;' +
-  'if(pair){var a=pair[0].replace(/^\\s+|\\s+$/g,""),b=pair[1].replace(/^\\s+|\\s+$/g,"");' +
-  's=(a?(a+"\\n\\n"):"")+tt+(b?("\\n\\n"+b):"");}' +
-  'else{z=z.replace(/[＝=]{5,}/g,"").replace(/^\\s+|\\s+$/g,"");' +
-  's=z?(z+"\\n\\n"+tt):"";}' +
-  'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:s};});' +
+  'MZH=BORDER.map(function(x,k){var g=zs[k]||{z:"",had:false};' +
+  'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:zhCompose(k,g.z,g.had)};});' +
   'MBUSY=false;MSTEP=2;MIDX=(zLive()[0]===undefined)?0:zLive()[0];status("");' +
   'MMSG=lost?("※"+lost+"つで、時間を入れる場所の目印が訳の中に残らなかったので、"+' +
   '"時間は文の最後に入れました。"):"";' +
   'draw();return;}' +
-  'var b0=String(MBODYS[i]||"").replace(/^\\s+|\\s+$/g,"");' +
+  'var o=zhSend(i),b0=o.b0,had=o.had,send=o.send,sei=o.sei;' +
   'if(!b0){zs[i]={z:"",had:false};i++;next();return;}' +
   'dn++;MMSG=dn+" / "+nn+"　「"+ordLabel(i,false)+"」を訳しています…";draw();' +
-  'var k0=b0.indexOf("【時間】"),had=(k0>=0);' +
-  'var send=had?(b0.slice(0,k0).replace(/\\s+$/,"")+"\\n\\n"+ZSEP+"\\n\\n"+' +
-  'b0.slice(k0+4).replace(/^\\s+/,"")):b0;' +
-  'var sei=(BORDER[i][1]==="男性")?"男":"女";' +
   'var same=-1,q;for(q=0;q<i;q++)' +
   'if(String(MBODYS[q]||"").replace(/^\\s+|\\s+$/g,"")===b0&&BORDER[q][1]===BORDER[i][1])same=q;' +
   'if(same>=0){zs[i]=zs[same];i++;next();return;}' +
