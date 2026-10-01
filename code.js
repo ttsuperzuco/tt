@@ -4995,11 +4995,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'return zlast?makeBtn("bcmzok3"):\'<button type="button" class="bcgo" id="bcmzok">この内容でOK</button>\';}' +
   'if(MSTEP===2){var lv=zLive(),pos=lv.indexOf(MIDX),z=MZH[MIDX]||{text:""};' +
   'var lastz=(pos<0||pos===lv.length-1);' +
-  // ★この区分だけ訳し直す（2026-10-01 まるちゃん「再翻訳ボタンがない」）。日本語の文がある時だけ出す。
-  'var re=String(MBODYS[MIDX]||"").replace(/^\\s+|\\s+$/g,"")?' +
-  '\'<button type="button" class="bcgo" id="bcmretr" style="background:#fff;color:#1e293b">🀄 この文だけ訳し直す</button>\':"";' +
-  'if(ulen(z.text)>MAXT)return LNG+re;' +
-  'return (lastz?makeBtn("bcmok3"):\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\')+re;}' +
+  // ★「この文だけ訳し直す」は2026-10-01に足したが、同じ日にまるちゃん決定で外した（同じ文を訳し直しても
+  //   ほぼ同じ訳になる＝意味が無い。決まりどおりでない訳は機械が自動で訳し直す）。直したい時は欄を直接書き換える。
+  'if(ulen(z.text)>MAXT)return LNG;' +
+  'return lastz?makeBtn("bcmok3"):\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\';}' +
   'return "";}' +
   'function refreshBtns(){var bb=document.getElementById("bcmbtns");' +
   'if(bb){bb.innerHTML=btnHtml();bindMake();}}' +
