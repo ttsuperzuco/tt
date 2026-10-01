@@ -9850,7 +9850,17 @@ var AKISCRIPT_ =
 // 日本のお客様向け（🇯🇵・9/8（火））を4つ出したあと、台湾のお客様向け（🇹🇼・9/8（二））を4つ出す。
 // 曜日の書き分けは事務所PCが両方の形で渡してくる（dh／dh_zh）＝画面で作らない。
 'var WGROUPS=[{flag:"🇯🇵",zh:false},{flag:"🇹🇼",zh:true}];' +
-'function wakuText_(kind,zh){' +
+// ★同じ印（（VIO以外）等）が続く時刻はまとめ、印は最後に1回だけ付ける。印が変わる所で行を分ける
+//   （2026-10-01 まるちゃん指示）。例＝12:00（VIO以外）/13:00（VIO以外）/16:30 →「12:00 / 13:00（VIO以外）」「16:30」。
+'function wakuLines_(list){' +
+'  var lines=[], cur=null;' +
+'  list.forEach(function(x){' +
+'    var m=String(x).match(/^(\\d{1,2}:\\d{2})(.*)$/); var t=m?m[1]:String(x), tag=m?m[2]:"";' +
+'    if(cur&&cur.tag===tag) cur.ts.push(t); else { cur={tag:tag,ts:[t]}; lines.push(cur); }' +
+'  });' +
+'  return lines.map(function(g){ return g.ts.join(" / ")+g.tag; });' +
+'}' +
+'function wakuRows_(kind,zh){' +
 '  var out=[];' +
 '  (window.AKIWAKU_||[]).forEach(function(w){' +
 '    if(!dateVisible_(w.date)) return;' +
@@ -9858,9 +9868,12 @@ var AKISCRIPT_ =
 '    var src=zh ? (w["枠_zh"]||w["枠"]) : w["枠"];' +
 '    var list=(src||{})[kind]||[];' +
 '    if(!list.length) return;' +
-'    out.push(zh ? (w.dh_zh||w.dh) : w.dh); out.push(list.join(" / "));' +
+'    out.push({dh:(zh ? (w.dh_zh||w.dh) : w.dh), lines:wakuLines_(list)});' +
 '  });' +
-'  return out.join("\\n");' +
+'  return out;' +
+'}' +
+'function wakuText_(kind,zh){' +
+'  return wakuRows_(kind,zh).map(function(r){ return r.dh+"\\n"+r.lines.join("\\n"); }).join("\\n");' +
 '}' +
 'function wakuKey_(kind,zh){' +
 '  var out=[];' +
@@ -9892,12 +9905,10 @@ var AKISCRIPT_ =
 '    var ja=null, zh=null;' +
 '    p.mem.forEach(function(m){ if(!m.zh&&!ja) ja=m; if(m.zh&&!zh) zh=m; });' +
 '    var first=ja||zh;' +
-'    var txt=wakuText_(first.k,first.zh);' +
-'    var lines=txt? txt.split("\\n") : [];' +
 '    var body="";' +
-'    for(var i=0;i<lines.length;i+=2){' +
-'      body+= \'<div class="akiwdh">\'+lines[i]+\'</div><div class="akiwtimes">\'+lines[i+1]+\'</div>\';' +
-'    }' +
+'    wakuRows_(first.k,first.zh).forEach(function(r){' +
+'      body+= \'<div class="akiwdh">\'+r.dh+\'</div>\'+r.lines.map(function(l){ return \'<div class="akiwtimes">\'+l+\'</div>\'; }).join("");' +
+'    });' +
 '    if(!body) body=\'<div class="akinone">この期間に案内できる時間はありません</div>\';' +
 '    function cbtn(m,label){ return \'<button type="button" class="akiwcopy" data-kind="\'+m.k+\'" data-zh="\'+(m.zh?"1":"0")+\'">\'+label+\'</button>\'; }' +
 '    var btns=(ja&&zh) ? cbtn(ja,"日本語でコピー")+cbtn(zh,"中文でコピー") : cbtn(first,"コピー");' +
