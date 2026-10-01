@@ -4344,6 +4344,12 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bccopy{border:0;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:800;' +
     'background:#2563EB;color:#fff;white-space:nowrap;}' +
     '.bcouttx{white-space:pre-wrap;font-size:14px;line-height:1.75;color:#E8EEF7;}' +
+    // ★2026-10-01 まるちゃん「スマホでの見せ方で見たい」＝LINEの吹き出しの形・1行13文字（まるちゃんのスマホと同じ）。
+    //   幅を全角13文字ぶん(13em)にして、あとは自然に折り返させる＝半角は半分の幅で数えられ、実物に近い。
+    '.bc .bcbub{width:13em;max-width:100%;box-sizing:content-box;background:#fff;color:#111827;border-radius:18px;' +
+    'padding:10px 14px;margin:0 0 14px;font-size:16px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;' +
+    'font-family:-apple-system,"Hiragino Sans","Noto Sans JP","Noto Sans TC",sans-serif;}' +
+    '.bcbubcap{font-size:12px;color:#94A3B8;margin:13px 0 5px;}' +
     '.bc textarea.bcotx{min-height:120px;line-height:1.9;padding:9px;' +
     'overflow-y:hidden;resize:none;white-space:pre;}' +
     '.bcnum{font-size:12px;font-weight:800;color:#94A3B8;margin-top:7px;}' +
@@ -5022,7 +5028,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入れてください。&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(body)+\'</textarea>\';' +
-  'h+=\'<div class="bcouttx" id="bcmprev" style="margin-top:13px">\'+' +
+  'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div><div class="bcouttx bcbub" id="bcmprev">\'+' +
   'esc(body.replace(/^\\s+|\\s+$/g,"")?done:' +
   '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません"))+\'</div>\'+' +
   '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?numMsg(ulen(done)):"")+' +
@@ -5054,7 +5060,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmzbody" class="bcmtx" placeholder="ここに、この対象へ送る中国語の文章を入れてください。&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(zb)+\'</textarea>\';' +
-  'h+=\'<div class="bcouttx" id="bcmzprev" style="margin-top:13px">\'+' +
+  'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div><div class="bcouttx bcbub" id="bcmzprev">\'+' +
   'esc(zb.replace(/^\\s+|\\s+$/g,"")?zdone:' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません"))+\'</div>\'+' +
   '\'<div class="bcnum\'+(zov?" over":"")+\'" id="bcmznum">\'+(zb?numMsg(ulen(zdone)):"")+' +
@@ -5073,8 +5079,10 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmzedit" class="bcmtx" placeholder="\'+' +
   'esc("空欄のため、"+ordLabel(MIDX,true)+"には配信しません")+\'">\'+' +
   'esc(z.text||"")+\'</textarea>\'+' +
-  '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+numMsg(ulen(z.text))+' +
-  '\'</div></div>\';' +
+  '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+numMsg(ulen(z.text))+\'</div>\'+' +
+  // ★お客様に届く形（1行13文字の吹き出し）。上の欄を直すとすぐ変わる（2026-10-01）
+  '\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div>\'+' +
+  '\'<div class="bcouttx bcbub" id="bcmzbub">\'+esc(z.text||"")+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作成</div><div class="bchr"></div>\'+' +
   '\'<div class="bcouttx">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT||(MBUSYAT=Date.now())):"")+\'</div></div>\';' +
@@ -5107,6 +5115,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!MZH[MIDX])MZH[MIDX]={label:ordLabel(MIDX,true),' +
   'atama:BORDER[MIDX][0],sei:BORDER[MIDX][1],text:""};' +
   'MZH[MIDX].text=zed.value;' +
+  'var zbb=document.getElementById("bcmzbub");if(zbb)zbb.textContent=zed.value;' +
   'var zn=document.getElementById("bcmznum2");' +
   'if(zn){var zo=ulen(zed.value)>MAXT;' +
   'zn.textContent=numMsg(ulen(zed.value));' +
@@ -5295,7 +5304,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   画像は大きく（押すとさらに大きく）・文章は全文を改行どおり。中身が見えるので「確認」ボタンは外した。
   '\'<button type="button" class="bcmv" data-edit="\'+i+\'">修正</button>\'+' +
   '\'<button type="button" class="bcdel" data-del="\'+i+\'">消去</button></span></div>\'+' +
-  '(p.kind==="text"?(\'<div class="bcpvtx">\'+esc(p.text||"")+\'</div>\')' +
+  '(p.kind==="text"?(\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div><div class="bcpvtx bcbub">\'+esc(p.text||"")+\'</div>\')' +
   ':(th?(\'<img class="bcpvimg" src="\'+th+\'" data-big="\'+i+\'">\'):""));}).join("");' +
   'h+=\'<input type="file" accept="image/*" id="bcrepfile" style="display:none">\';}' +
   // ★「まだ何も入っていません…」は出さない（まるちゃん指示 2026-09-08）
