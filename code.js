@@ -4314,9 +4314,14 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcper button.bcon::before{content:"✓ ";}' +
     '.bcper button.bcrestore{grid-column:1 / -1;background:#7C3AED;}' +
     '.bcper button.bcwide2{grid-column:1 / -1;}' +
-    '.bcnovio{grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:9px;' +
-    'padding:6px 0 2px;font-size:16px;font-weight:800;color:#E8EEF7;cursor:pointer;}' +
-    '.bcnovio input{width:22px;height:22px;accent-color:#2563EB;cursor:pointer;}' +
+    // ★入切の行は大きく（まるちゃん指示 2026-10-01）
+    '.bcnovio{grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:12px;' +
+    'padding:12px 0 6px;font-size:21px;font-weight:800;color:#E8EEF7;cursor:pointer;}' +
+    '.bcnovio input{width:30px;height:30px;accent-color:#2563EB;cursor:pointer;flex:none;}' +
+    // ★黒い枠の外に出した「作業中のデータを復元する」（枠の中と同じ形・紫）
+    '.bcrestout{display:block;width:100%;margin:14px 0 0;padding:16px 8px;font-size:16px;font-weight:800;' +
+    'border:0;border-radius:12px;background:#7C3AED;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22);}' +
+    '.bcrestout:disabled{background:#0B1220;color:#5B6B85;}' +
     '.bcper button.bcrestore:disabled{background:#0B1220;color:#5B6B85;}' +
     '.bccard.bcwide{margin-left:-22px;margin-right:-22px;padding:14px 9px 16px;}' +
     '.bc textarea.bcmtx{min-height:200px;font-size:16px;line-height:1.8;padding:9px;}' +
@@ -4771,14 +4776,16 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★入切「『男性VIO以外』を含める」（まるちゃん指示 2026-10-01・最初は切）。
   //   切＝男性の時刻はVIOもできる人が空いている時だけ。入＝（VIO以外）の時刻も出す。
   '\'<label class="bcnovio"><input type="checkbox" id="bcnoviocb"\'+(SNOVIO?" checked":"")+(SBUSY?" disabled":"")+\'>「男性VIO以外」を含める</label>\'+' +
-  '\'<button type="button" class="bcrestore" id="bcrest"\'+(SBUSY?" disabled":"")+\'>\'+' +
-  '\'作業中のデータを復元する</button></div>\';' +
+  '\'</div>\';' +
   // ★待っている間は、ボタンのすぐ下に「データ読み込み中です（◯秒）」を出す（まるちゃん指示 2026-09-14）。
   //   下の小さな知らせだけだと画面の外で見えず、押したのに何も起きていないように見えたため。
   'if(SBUSY)h+=\'<div class="bchr"></div><div class="bcwaitmsg" id="bcwaitmsg">データ読み込み中です（\'+Math.round((Date.now()-SBUSYAT)/1000)+\'秒）</div>\';' +
   'if(SRES)h+=\'<div class="bchr"></div><div class="bcempty">\'+' +
   'esc(SRES.note||"この期間に空いている枠がありませんでした。")+\'</div>\';' +
   'h+=\'</div>\';' +
+  // ★「作業中のデータを復元する」は黒い枠の外・下に置く（まるちゃん指示 2026-10-01）
+  'h+=\'<button type="button" class="bcrestore bcrestout" id="bcrest"\'+(SBUSY?" disabled":"")+\'>\'+' +
+  '\'作業中のデータを復元する</button>\';' +
   'box.innerHTML=freshBar()+h;bindText();bindFresh();return;}' +
   'if(SIDX>=gs.length)SIDX=gs.length-1;if(SIDX<0)SIDX=0;' +
   'var g=gs[SIDX];' +
