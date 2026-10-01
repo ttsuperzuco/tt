@@ -9825,7 +9825,8 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '<button type="button" class="akichip" data-sec="time">各時間帯別</button>' +
     '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
     '<button type="button" class="akichip" data-sec="rooms">施術室別</button>' +
-    (wakuOn ? '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約枠出力</button>' : '') +
+    (wakuOn ? '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約枠出力（全）</button>' +
+      '<button type="button" class="akichip akiwakubtn" data-sec="wakunv">予約枠出力（VIO以外を除く）</button>' : '') +
   '</div>' +
   '<div id="akidays">' + cards + '</div>' +
   (wakuOn ? '<div id="akiwakubox" class="akiwakubox akihidden"></div>' : '') +
@@ -9860,13 +9861,20 @@ var AKISCRIPT_ =
 '  });' +
 '  return lines.map(function(g){ return g.ts.join(" / ")+g.tag; });' +
 '}' +
+// ★「予約枠出力（VIO以外を除く）」の時は、（VIO以外）／（VBO除外）の印が付いた時刻を外す（2026-10-01 まるちゃん指示）。
+'var wakuNoVio=false;' +
+'function wakuList_(w,kind,zh){' +
+'  var src=zh ? (w["枠_zh"]||w["枠"]) : w["枠"];' +
+'  var list=(src||{})[kind]||[];' +
+'  if(wakuNoVio) list=list.filter(function(x){ return !/（VIO以外）|（VBO除外）/.test(String(x)); });' +
+'  return list;' +
+'}' +
 'function wakuRows_(kind,zh){' +
 '  var out=[];' +
 '  (window.AKIWAKU_||[]).forEach(function(w){' +
 '    if(!dateVisible_(w.date)) return;' +
 // ★台湾のお客様向けは「枠_zh」を読む（新規のカウンセリングはトマトだけ。日本向けはみかんも入る・2026-09-14）。
-'    var src=zh ? (w["枠_zh"]||w["枠"]) : w["枠"];' +
-'    var list=(src||{})[kind]||[];' +
+'    var list=wakuList_(w,kind,zh);' +
 '    if(!list.length) return;' +
 '    out.push({dh:(zh ? (w.dh_zh||w.dh) : w.dh), lines:wakuLines_(list)});' +
 '  });' +
@@ -9879,8 +9887,7 @@ var AKISCRIPT_ =
 '  var out=[];' +
 '  (window.AKIWAKU_||[]).forEach(function(w){' +
 '    if(!dateVisible_(w.date)) return;' +
-'    var src=zh ? (w["枠_zh"]||w["枠"]) : w["枠"];' +
-'    var list=(src||{})[kind]||[];' +
+'    var list=wakuList_(w,kind,zh);' +
 '    if(list.length) out.push(w.date+"="+list.join(","));' +
 '  });' +
 '  return out.join("|");' +
@@ -9940,7 +9947,8 @@ var AKISCRIPT_ =
 'chips.forEach(function(c){ c.addEventListener("click",function(){' +
 '  var sec=c.getAttribute("data-sec");' +
 '  chips.forEach(function(x){ x.classList.toggle("on", x===c); });' +
-'  var isWaku=(sec==="waku");' +
+'  var isWaku=(sec==="waku"||sec==="wakunv");' +
+'  wakuNoVio=(sec==="wakunv");' +
 '  if(daysBox) daysBox.classList.toggle("akihidden", isWaku);' +
 '  if(wakuBox) wakuBox.classList.toggle("akihidden", !isWaku);' +
 '  if(isWaku){ drawWaku_(); return; }' +
