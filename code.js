@@ -7581,7 +7581,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var _rvcat="",_rvsub="";' +
     'function showResvEdit(){hideSteps();document.getElementById("exResv").style.display="";document.getElementById("exrvwho").innerHTML="「"+disp()+"」"+(rvctx.name?rvctx.name+"様":"")+"<br>"+rvctx._ymd+" "+rvctx._tm+" に予約";var _pe=document.getElementById("exrvprev");if(_pe){var _pn=rvctx.prev_note||"";_pe.innerHTML=_pn?("<div class=\\"exsec\\">前回の予約メモ"+(rvctx.prev_date?("（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）"):"")+"</div><div class=\\"rvprevmemo\\">"+esc(_pn)+"</div>"):"";}EXMENUBACK="exResv";' +
       /* ★2026-09-25：新しい流れで来た時は、手前の画面で決めた施術・枠をそのまま使う（作り直さない）。 */
-      'if(!EXFLOW){rvitems=(rvctx.items||[]).map(function(it){return {line_no:it.line_no,name:it.name,arinashi:it.arinashi,count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||"",parts:(it.parts||[])};});rvMarkOv={};rvEyeOv=null;rvNewItems=[];rvSlotCfg={};rvTitleOv=null;rvMemoOv=null;rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0);}' +
+      'if(!EXFLOW){rvitems=(rvctx.items||[]).map(function(it){return {line_no:it.line_no,name:it.name,arinashi:it.arinashi,count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||"",parts:(it.parts||[])};});rvMarkOv={};rvEyeOv=null;rvNewItems=[];rvSlotCfg={};rvTitleOv=null;rvMemoOv=null;rvDochi=rvDochiDefault();}' +
       'drawRvItems();rvDrawSuggest();rvDrawNew();rvsel.staff=staffNum(rvctx.prev_staff||"");rvsel.room=roomVal(rvctx.prev_room||"");rvsel.dur=String(nearDur(rvctx.prev_dur||30));if(EXSEL){rvsel.staff=EXSEL.staff;rvsel.room=EXSEL.room;rvsel.dur=EXSEL.dur;}var _sw=document.getElementById("exrvstaffwrap"),_rw=document.getElementById("exrvroomdurwrap");if(_rw)_rw.style.display=EXSEL?"none":"";if(_sw)_sw.style.display=EXSEL?"none":"";rvSelPill("rvstaff",rvsel.staff);rvSelPill("rvroom",rvsel.room);rvSelPill("rvdur",rvsel.dur);rvDrawMarks();rvLoadAvail();if(EXSEL&&EXSEL.freeStaff){rvAvail={free_staff:EXSEL.freeStaff,free_rooms:[String(rvsel.room)]};rvFilterAvail();}window.scrollTo(0,0);}' +
     'function rvDoingTexts(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}for(var k=0;k<rvNewItems.length;k++){var n=rvNewItems[k];a.push((n==="ハイドラ"&&!rvDidPart("hydra"))?"ハイドラ トライアル":n);}return a;}' +
     'function rvBookingTexts(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}for(var k=0;k<rvNewItems.length;k++){var n=rvNewItems[k];a.push((n==="ハイドラ"&&!rvDidPart("hydra"))?"ハイドラ トライアル":n);}return a;}' +
@@ -7617,6 +7617,11 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function rvAutoEye(){return false;}' +
     'function rvEyeOn(){return (rvEyeOv==null)?rvAutoEye():rvEyeOv;}' +
     'function rvSuffix(){return (rvDochi?"都度":"")+(rvEyeOn()?"イーライト":"");}' +
+    /* ★2026-10-01 まるちゃん決定：末尾の「都度」は**前回のタイトルを写さない**。事務所パソコンがメモから決めた
+       答え（dochi_default＝施術ごとにコースで払ってあるかを見る・共通の1本）を使う。
+       前回のタイトルが一度間違うとずっと写り続けた（F673様＝コースなのに3/24から6回都度）。
+       事務所パソコンが古くて答えが無い時だけ、今までの決め方に戻る。 */
+    'function rvDochiDefault(){if(typeof rvctx.dochi_default==="boolean")return rvctx.dochi_default;return ((rvctx.prev_title||"").indexOf("都度")>=0)||(rvctx.items||[]).some(function(it){return String(it.name||"").indexOf("都度")>=0;});}' +
     'function rvStripHead(h){h=String(h||"");var managed=["🇫🇷","🍯","🌿","👑","福:","福：","福"];for(var i=0;i<managed.length;i++){h=h.split(managed[i]).join("");}h=h.replace(/[\\u2600-\\u27bf\\ufe0f\\u200d]/g,"").replace(/[\\u{1F300}-\\u{1FAFF}]/gu,"");return h.replace(/^[\\s:：]+/,"").replace(/[\\s:：]+$/,"");}' +
     /* ★2026-09-25：末尾（都度・イーライト）は画面で入れ替える物なので、前回タイトルの末尾に
        付いている分は外してから付け直す（事務所パソコン側 treatment_memo.rebuild_title と同じ直し）。 */
@@ -7660,8 +7665,7 @@ function renderExistingPage_(base, staff, dev, mode) {
          タイトルに「都度」を付ける**（コースの行が一緒にあっても付ける）。
          これまでは前回のタイトルを写すだけだった。実データでは都度とコースが両方ある予約153件のうち
          「都度」を付けていたのが38件・付けていないのが115件でスタッフによってばらばらだった。 */
-      'rvDochi=((rvctx.prev_title||"").indexOf("都度")>=0)' +
-      '||(rvctx.items||[]).some(function(it){return String(it.name||"").indexOf("都度")>=0;});cb();}' +
+      'rvDochi=rvDochiDefault();cb();}' +
     /* 画面に出す名前＝回数や値段を落として短くする（登録に使う名前は変えない）。 */
     /* ★2026-09-25 まるちゃん「表示がおかしい」＝「VIO都度(学生＋…」とかっこが閉じないまま出ていた。
        値段のかっこ（@付き）はかっこごと外し、末尾の「あり／なし」も落とす。
