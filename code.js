@@ -4485,7 +4485,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★配信文は区分ごとに違う＝本文も区分ごとに持つ（まるちゃん指示 2026-09-08）
   'var MBODYS=["","","",""],MIDX=0;' +
   // ★2026-10-01 まるちゃん「訳している時・画像を作る時も秒数を出せ。動いているか分からない」
-  'var MBUSYAT=0,WBUSYAT=0;' +
+  'var MBUSYAT=0,WBUSYAT=0,M6FROM=2;' +
   'function secTag(t){return \'<span class="bcsec" data-t="\'+t+\'">（\'+Math.round((Date.now()-t)/1000)+\'秒）</span>\';}' +
   'setInterval(function(){[].slice.call(document.querySelectorAll(".bcsec")).forEach(function(e){' +
   'e.textContent="（"+Math.round((Date.now()-(+e.getAttribute("data-t")))/1000)+"秒）";});},1000);' +
@@ -4559,7 +4559,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
   'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,zbodies:MZBODYS,' +
   'ja:MJA,zh:MZH,tags:TAGS,mback:MBACK,' +
-  'midx:MIDX,mstep:MSTEP,names:TPL.map(function(t){return t.name;}),' +
+  'midx:MIDX,mstep:MSTEP,m6from:M6FROM,names:TPL.map(function(t){return t.name;}),' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   // ★2026-10-01：対象の並びを変えた（男性の新規日本→新規台湾→既存日本→既存台湾→女性も同じ）。
   //   覚えた作業は「並びの何番目」ではなく「対象の名前（頭の番号を外した物）」で戻す＝並びを変えても中身がずれない。
@@ -4604,9 +4604,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
   'if(s.zbodies&&s.zbodies.length)MZBODYS=s.zbodies;' +
   'if(s.ja&&s.ja.length)MJA=s.ja;if(s.zh&&s.zh.length)MZH=s.zh;' +
-  'if(s.mback===0||s.mback===1||s.mback===2||s.mback===5)MBACK=s.mback;' +
+  'if(s.mback===0||s.mback===1||s.mback===2||s.mback===5||s.mback===6)MBACK=s.mback;if(s.m6from===1||s.m6from===2)M6FROM=s.m6from;' +
   'MIDX=s.midx||0;' +
-  'if(s.mstep===0||s.mstep===1||s.mstep===2||s.mstep===5)MSTEP=s.mstep;else MSTEP=0;' +
+  'if(s.mstep===0||s.mstep===1||s.mstep===2||s.mstep===5||s.mstep===6)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();if(SRES.all)buildG();}' +
   'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)' +
   'step=(typeof s.__step==="number")?s.__step:s.step;}' +
@@ -4992,13 +4992,15 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" class="bcgo" id="bcmnozh">中国語版は配信しない</button>\';' +
   'if(MSTEP===1){var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
   'if(ulen(joinBody(MZBODYS[MIDX]||"",zhOf(timesOf(zx[0],zx[1],true))))>MAXT)return LNG;' +
-  'return zlast?makeBtn("bcmzok3"):\'<button type="button" class="bcgo" id="bcmzok">この内容でOK</button>\';}' +
+  // ★2026-10-01 まるちゃん：最後も「この内容でOK」。画像を作るかは次の画面（MSTEP=6）で選ぶ。
+  'return \'<button type="button" class="bcgo" id="\'+(zlast?"bcmzok6":"bcmzok")+\'">この内容でOK</button>\';}' +
   'if(MSTEP===2){var lv=zLive(),pos=lv.indexOf(MIDX),z=MZH[MIDX]||{text:""};' +
   'var lastz=(pos<0||pos===lv.length-1);' +
   // ★「この文だけ訳し直す」は2026-10-01に足したが、同じ日にまるちゃん決定で外した（同じ文を訳し直しても
   //   ほぼ同じ訳になる＝意味が無い。決まりどおりでない訳は機械が自動で訳し直す）。直したい時は欄を直接書き換える。
   'if(ulen(z.text)>MAXT)return LNG;' +
-  'return lastz?makeBtn("bcmok3"):\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\';}' +
+  'return lastz?\'<button type="button" class="bcgo" id="bcmok6">この内容でOK</button>\':\'<button type="button" class="bcgo" id="bcmoknext">つぎへ</button>\';}' +
+  'if(MSTEP===6)return makeBtn("bcmok3");' +
   'return "";}' +
   'function refreshBtns(){var bb=document.getElementById("bcmbtns");' +
   'if(bb){bb.innerHTML=btnHtml();bindMake();}}' +
@@ -5031,6 +5033,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'h=\'<div class="bcstop"><span class="bcsttl">中国語版の作り方を選ぶ</span></div>\'+' +
   '(ja5.length?cardsOf(ja5):\'<div class="bcstatus ng">日本語の文がありません。「← 戻る」で文を入れてください。</div>\');' +
   'if(!MBUSY&&ja5.length)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
+  // ★画像を作るか選ぶ画面（2026-10-01 まるちゃん「日本語のときとおなじ。つぎのがめんでいってから」）
+  'else if(MSTEP===6){var nm6=sendNames();' +
+  'h=\'<div class="bcstop"><span class="bcsttl">予約可能枠の画像を作るか選ぶ</span></div>\'+' +
+  '\'<div class="bccard bcwide"><div class="bcouth"><b>送る対象（\'+nm6.length+\'種類）</b></div>\'+' +
+  '\'<div class="bcouttx">\'+esc(nm6.join("\\n"))+\'</div></div>\';' +
+  'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else if(MSTEP===1){' +
   'var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
   'var zb=MZBODYS[MIDX]||"",zdone=joinBody(zb,zhOf(timesOf(zx[0],zx[1],true)));' +
@@ -5068,7 +5076,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcouttx">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT||(MBUSYAT=Date.now())):"")+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
   'if(MBUSY&&!MBUSYAT)MBUSYAT=Date.now();if(!MBUSY)MBUSYAT=0;' +
-  'if(MMSG&&(MSTEP<3||MSTEP===5))h+=\'<div class="bcstatus on">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT):"")+\'</div>\';' +
+  'if(MMSG&&(MSTEP<3||MSTEP===5||MSTEP===6))h+=\'<div class="bcstatus on">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT):"")+\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindMake();bindFresh();}' +
   'function bindMake(){' +
   // 文の欄は中身の高さまで伸ばす（スクロールせずに全部見える）。打つたびに伸び縮みする。
@@ -5150,13 +5158,18 @@ function renderBroadcastPage_(base, staff, dev) {
   'var zok3=document.getElementById("bcmzok3");' +
   'if(zok3)zok3.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
   'MBACK=1;bldZhMan();applyAll(true);};' +
+  // ★最後の中国語で「この内容でOK」＝画像を作るか選ぶ画面へ（自分で入れた時／自動で訳した時）
+  'var z6=document.getElementById("bcmzok6");' +
+  'if(z6)z6.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;bldZhMan();M6FROM=1;MSTEP=6;MMSG="";status("");saveNow();draw();};' +
+  'var o6=document.getElementById("bcmok6");' +
+  'if(o6)o6.onclick=function(){M6FROM=2;MSTEP=6;MMSG="";status("");saveNow();draw();};' +
   'var zok3n=document.getElementById("bcmzok3n");' +
   'if(zok3n)zok3n.onclick=function(){if(zta)MZBODYS[MIDX]=zta.value;' +
   'MBACK=1;bldZhMan();applyAll(false);};' +
   'var ok4=document.getElementById("bcmok3");' +
-  'if(ok4)ok4.onclick=function(){MBACK=2;applyAll(true);};' +
+  'if(ok4)ok4.onclick=function(){MBACK=6;applyAll(true);};' +
   'var ok4n=document.getElementById("bcmok3n");' +
-  'if(ok4n)ok4n.onclick=function(){MBACK=2;applyAll(false);};' +
+  'if(ok4n)ok4n.onclick=function(){MBACK=6;applyAll(false);};' +
   // ★この区分だけ訳し直す（2026-10-01）＝覚えた訳を使わず、必ず新しく訳す
   'var rt=document.getElementById("bcmretr");' +
   'if(rt)rt.onclick=function(){var k=MIDX;MBUSY=true;' +
@@ -5562,6 +5575,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(MSTEP===3){goBackFromT();return true;}' +
   // ★中国語の画面の1つ目から戻ると「中国語版の作り方を選ぶ」へ（2026-10-01）
   'if(MSTEP===5){MSTEP=0;MIDX=BORDER.length-1;return true;}' +
+  // 画像を作るか選ぶ画面から戻る＝来た中国語の画面の最後へ
+  'if(MSTEP===6){if(M6FROM===1){MSTEP=1;MIDX=BORDER.length-1;}else{MSTEP=2;var l6=zLive();MIDX=l6.length?l6[l6.length-1]:0;}return true;}' +
   'if(MSTEP===1){if(MIDX>0){MIDX--;}else{MSTEP=5;}return true;}' +
   'if(MSTEP===2){var zl2=zLive(),zp=zl2.indexOf(MIDX);' +
   'if(zp>0){MIDX=zl2[zp-1];return true;}' +
