@@ -9795,9 +9795,9 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '<div class="akidaterow">' +
       '<input type="text" readonly class="akidate" id="akiFrom" placeholder="日付で選ぶ"' +
         ' min="' + esc_(d.date_from || '') + '" max="' + esc_(d.date_to || '') + '">' +
-      '<button type="button" class="akipreset sm" data-preset="today">今日</button>' +
-      '<button type="button" class="akipreset sm" data-preset="tomorrow">明日</button>' +
-      '<button type="button" class="akipreset on" data-preset="thisnext">今・来週</button>' +
+      // ★2026-10-01 まるちゃん指示：今日・明日を消して「今週」を足し、既定は今週。
+      '<button type="button" class="akipreset on" data-preset="thisweek">今週</button>' +
+      '<button type="button" class="akipreset" data-preset="thisnext">今・来週</button>' +
       '<button type="button" class="akipreset" data-preset="all">全期間</button>' +
     '</div>' +
     // 曜日で絞り込み（定休日の月・日は元々出ないので対象外＝2026-07-17ユーザー指示）。
@@ -10022,6 +10022,8 @@ var AKISCRIPT_ =
 'function addDays(iso0,n){ var d=new Date(iso0+"T00:00:00"); d.setDate(d.getDate()+n); return iso(d); }' +
 'function clamp(v){ if(minD&&v<minD)return minD; if(maxD&&v>maxD)return maxD; return v; }' +
 'function endOfThisWeek(iso0){ var d=new Date(iso0+"T00:00:00"); var wd=(d.getDay()+6)%7; return addDays(iso0,6-wd); }' +
+// 「今週」＝今日からその週の日曜まで。今日が日曜（定休＝今週はもう営業日が無い）なら次の週の日曜まで。
+'function thisWeekEnd_(iso0){ var e=endOfThisWeek(iso0); return e===iso0 ? addDays(iso0,7) : e; }' +
 'var selectedWd=null;' +   // null=「全て」＝曜日での絞り込み無し。配列の時はその曜日番号(getDay())だけ表示。
 'function wdVisible_(dt){ if(!selectedWd) return true; var d=new Date(dt+"T00:00:00"); return selectedWd.indexOf(d.getDay())>-1; }' +
 'var rangeFrom=minD, rangeTo=minD;' +   // プリセット(今日/明日/今・来週/全期間)が使う範囲
@@ -10043,7 +10045,6 @@ var AKISCRIPT_ =
 '  if(emptyMsg) emptyMsg.hidden = shown>0;' +
 '}' +
 'function setRange(f,t){ rangeFrom=clamp(f); rangeTo=clamp(t); manualDates=null; updateDateBoxLabel_(); applyFilter(); }' +
-'function setSingle_(f){ setRange(f,f); }' +
 'var presets=[].slice.call(document.querySelectorAll(".akipreset"));' +
 'function clearPresetSel(){ presets.forEach(function(b){ b.classList.remove("on"); }); }' +
 'if(fromEl){' +
@@ -10053,8 +10054,7 @@ var AKISCRIPT_ =
 '    var kind=b.getAttribute("data-preset");' +
 '    var today=minD;' +
 '    setAllWd_();' +   // 今日/明日/今・来週/全期間を選んだら曜日絞り込みは必ず「全て」に戻す（2026-07-17ユーザー指示）
-'    if(kind==="today") setSingle_(today);' +
-'    else if(kind==="tomorrow") setSingle_(addDays(today,1));' +
+'    if(kind==="thisweek") setRange(today, thisWeekEnd_(today));' +
 '    else if(kind==="thisnext") setRange(today, addDays(endOfThisWeek(today),7));' +
 '    else if(kind==="all") setRange(minD, maxD);' +
 '  }); });' +
@@ -10090,7 +10090,7 @@ var AKISCRIPT_ =
 '      el.classList.toggle("akidurhide", dur<lo);' +
 '    });' +
 '  }); });' +
-'  setRange(minD, addDays(endOfThisWeek(minD),7));' +   // 初期表示＝今・来週（2026-07-16ユーザー指定で今日ピンポイントから変更）
+'  setRange(minD, thisWeekEnd_(minD));' +   // 初期表示＝今週（2026-10-01 まるちゃん指示。前は今・来週）
 '}' +
 '})();</scr' + 'ipt>';
 
