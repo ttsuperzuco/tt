@@ -4970,8 +4970,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function makeBtn(id){var a=sendNames();' +
   'if(!a.length)return \'<div class="bcstatus ng">送る区分がありません。\'+' +
   '\'「← 戻る」で文を入れてください。</div>\';' +
-  'return \'<button type="button" class="bctxt" id="\'+id+\'">以上の内容で、\'+' +
-  'a.length+\'種類（\'+esc(a.join("・"))+\'）の予約可能枠画像を生成する</button>\'+' +
+  // ★2026-10-01 まるちゃん：対象の一覧は上に出しているので、ボタンは「以上◯種類の画像を生成する」だけ
+  'return \'<button type="button" class="bctxt" id="\'+id+\'">以上\'+a.length+\'種類の画像を生成する</button>\'+' +
   // ★絵を作らずに中身の確認へ進む道（まるちゃん指示 2026-09-09）
   '\'<button type="button" class="bcgo" id="\'+id+\'n">\'+' +
   '\'画像は生成せず配信内容の最終確認をする</button>\';}' +
@@ -5035,8 +5035,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!MBUSY&&ja5.length)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   // ★画像を作るか選ぶ画面（2026-10-01 まるちゃん「日本語のときとおなじ。つぎのがめんでいってから」）
   'else if(MSTEP===6){var nm6=sendNames();' +
-  'h=\'<div class="bcstop"><span class="bcsttl">予約可能枠の画像を作るか選ぶ</span></div>\'+' +
-  '\'<div class="bccard bcwide"><div class="bcouth"><b>送る対象（\'+nm6.length+\'種類）</b></div>\'+' +
+  'h=\'<div class="bcstop"><span class="bcsttl">予約可能枠の画像を作りますか？</span></div>\'+' +
+  '\'<div class="bccard bcwide"><div class="bcouth"><b>画像生成の対象（以下の\'+nm6.length+\'種類）</b></div>\'+' +
   '\'<div class="bcouttx">\'+esc(nm6.join("\\n"))+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else if(MSTEP===1){' +
