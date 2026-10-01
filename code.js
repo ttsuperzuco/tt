@@ -9825,7 +9825,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '<button type="button" class="akichip" data-sec="time">各時間帯別</button>' +
     '<button type="button" class="akichip" data-sec="staff">スタッフ別</button>' +
     '<button type="button" class="akichip" data-sec="rooms">施術室別</button>' +
-    (wakuOn ? '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約可能枠出力</button>' : '') +
+    (wakuOn ? '<button type="button" class="akichip akiwakubtn" data-sec="waku">予約枠出力</button>' : '') +
   '</div>' +
   '<div id="akidays">' + cards + '</div>' +
   (wakuOn ? '<div id="akiwakubox" class="akiwakubox akihidden"></div>' : '') +
