@@ -4597,9 +4597,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
   'if(s.zbodies&&s.zbodies.length)MZBODYS=s.zbodies;' +
   'if(s.ja&&s.ja.length)MJA=s.ja;if(s.zh&&s.zh.length)MZH=s.zh;' +
-  'if(s.mback===0||s.mback===1||s.mback===2)MBACK=s.mback;' +
+  'if(s.mback===0||s.mback===1||s.mback===2||s.mback===5)MBACK=s.mback;' +
   'MIDX=s.midx||0;' +
-  'if(s.mstep===0||s.mstep===1||s.mstep===2)MSTEP=s.mstep;else MSTEP=0;' +
+  'if(s.mstep===0||s.mstep===1||s.mstep===2||s.mstep===5)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();if(SRES.all)buildG();}' +
   'if(typeof s.step==="number"&&s.step>=0&&s.step<=TPL.length)' +
   'step=(typeof s.__step==="number")?s.__step:s.step;}' +
@@ -4977,10 +4977,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(MSTEP===0){var x=BORDER[MIDX],last=(MIDX===N-1);' +
   'if(ulen(joinBody(MBODYS[MIDX]||"",timesOf(x[0],x[1])))>MAXT)return LNG;' +
   // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）。自動で訳す1つ目だけ紫。
-  'return last?(\'<button type="button" class="bctxt" id="bcmok">以上の内容を翻訳し自動で中国語版を作成する</button>\'+' +
+  // ★2026-10-01 まるちゃん：最後の区分も「この内容でOK」。中国語版の作り方は次の画面（MSTEP=5）で選ぶ。
+  'return \'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\';}' +
+  'if(MSTEP===5)return \'<button type="button" class="bctxt" id="bcmauto">以上の日本語文を全て翻訳し、中国語版を作成する</button>\'+' +
   '\'<button type="button" class="bcgo" id="bcmman">翻訳せずに手動で中国語版を作成する</button>\'+' +
-  '\'<button type="button" class="bcgo" id="bcmnozh">中国語版は配信しない</button>\')' +
-  ':\'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\';}' +
+  '\'<button type="button" class="bcgo" id="bcmnozh">中国語版は配信しない</button>\';' +
   'if(MSTEP===1){var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
   'if(ulen(joinBody(MZBODYS[MIDX]||"",zhOf(timesOf(zx[0],zx[1],true))))>MAXT)return LNG;' +
   'return zlast?makeBtn("bcmzok3"):\'<button type="button" class="bcgo" id="bcmzok">この内容でOK</button>\';}' +
@@ -5017,6 +5018,12 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★ボタンは打つたびに出し直す（2026-10-01 まるちゃん「短い文いれてもボタンがでない」）
   'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   // ★自分で中国語を入れる画面（まるちゃん指示 2026-09-09）。日本語の画面と同じ作り。
+  // ★中国語版の作り方を選ぶ画面（2026-10-01 まるちゃん）。上に日本語の文を全部並べ、下で3つから選ぶ。
+  'else if(MSTEP===5){' +
+  'var ja5=MJA.filter(function(x){return String(x.text||"").replace(/^\\s+|\\s+$/g,"");});' +
+  'h=\'<div class="bcstop"><span class="bcsttl">中国語版の作り方を選ぶ</span></div>\'+' +
+  '(ja5.length?cardsOf(ja5):\'<div class="bcstatus ng">日本語の文がありません。「← 戻る」で文を入れてください。</div>\');' +
+  'if(!MBUSY&&ja5.length)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else if(MSTEP===1){' +
   'var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
   'var zb=MZBODYS[MIDX]||"",zdone=joinBody(zb,zhOf(timesOf(zx[0],zx[1],true)));' +
@@ -5053,7 +5060,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作成</div><div class="bchr"></div>\'+' +
   '\'<div class="bcouttx">\'+esc(MMSG)+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
-  'if(MMSG&&MSTEP<3)h+=\'<div class="bcstatus on">\'+esc(MMSG)+\'</div>\';' +
+  'if(MMSG&&(MSTEP<3||MSTEP===5))h+=\'<div class="bcstatus on">\'+esc(MMSG)+\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindMake();bindFresh();}' +
   'function bindMake(){' +
   'var ta=document.getElementById("bcmbody");' +
@@ -5097,7 +5104,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ok1=document.getElementById("bcmok");' +
   'if(ok1)ok1.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
   'if(MIDX<BORDER.length-1){MIDX++;status("");draw();return;}' +
-  'bldJa();makeZh();};' +
+  'bldJa();MSTEP=5;MMSG="";status("");draw();};' +
+  // ①以上の日本語文を全て訳して中国語版を作る
+  'var oka=document.getElementById("bcmauto");' +
+  'if(oka)oka.onclick=function(){bldJa();makeZh();};' +
   // ②自分で中国語を入れる
   'var ok2=document.getElementById("bcmman");' +
   'if(ok2)ok2.onclick=function(){if(ta)MBODYS[MIDX]=ta.value;' +
@@ -5108,7 +5118,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'bldJa();MZH=BORDER.map(function(x,k){' +
   'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:""};});' +
   // ★勝手に絵づくりを始めない（まるちゃん指示 2026-09-09）。中身の確認へ進む。
-  'MBACK=0;applyAll(false);};' +
+  'MBACK=5;applyAll(false);};' +
   // 自分で入れる中国語の欄
   'var zta=document.getElementById("bcmzbody");' +
   'if(zta)zta.oninput=function(){MZBODYS[MIDX]=zta.value;' +
@@ -5539,10 +5549,12 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★配信文づくりの中＝1つずつ前へ。一番前まで来たら予約可能時間の画面へ。
   'if(page==="m"){MMSG="";' +
   'if(MSTEP===3){goBackFromT();return true;}' +
-  'if(MSTEP===1){if(MIDX>0){MIDX--;}else{MSTEP=0;MIDX=BORDER.length-1;}return true;}' +
+  // ★中国語の画面の1つ目から戻ると「中国語版の作り方を選ぶ」へ（2026-10-01）
+  'if(MSTEP===5){MSTEP=0;MIDX=BORDER.length-1;return true;}' +
+  'if(MSTEP===1){if(MIDX>0){MIDX--;}else{MSTEP=5;}return true;}' +
   'if(MSTEP===2){var zl2=zLive(),zp=zl2.indexOf(MIDX);' +
   'if(zp>0){MIDX=zl2[zp-1];return true;}' +
-  'MSTEP=0;MIDX=BORDER.length-1;return true;}' +
+  'MSTEP=5;return true;}' +
   'if(MIDX>0){MIDX--;return true;}' +
   'page="s";return true;}' +
   // ★最終確認＝送る対象があれば最後の対象へ。1つも無ければ配信文づくりへ戻す
