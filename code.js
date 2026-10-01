@@ -4303,6 +4303,8 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcsplit{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:800;' +
     'color:#E8EEF7;white-space:nowrap;cursor:pointer;}' +
     '.bcsplit input{width:19px;height:19px;accent-color:#2563EB;cursor:pointer;}' +
+    '.bcsplitb{flex:0 0 auto;padding:9px 14px;font-size:14px;font-weight:800;border:0;border-radius:10px;' +
+    'background:#2563EB;color:#fff;white-space:nowrap;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);}' +
     '.bcper{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
     '.bcper button{padding:16px 8px;font-size:16px;font-weight:800;border:0;border-radius:12px;' +
     'background:#2563EB;color:#fff;}' +
@@ -4808,9 +4810,10 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★2枚目からは中身を見せないが、帯そのものは同じ大きさで置く。
   //   消すと下の欄が上にずれてしまうため（まるちゃん指示 2026-09-09）。
   'h+=\'<div class="bcsame\'+((SIDX===0)?"":" bckage")+\'"><span>\'+' +
-  '(SRES.split?"新規・既存を男女に分けて作成":"新規と既存の二種類だけ作成")+\'</span>\'+' +
-  '\'<label class="bcsplit"><input type="checkbox" id="bcsplitcb"\'+' +
-  '(SRES.split?" checked":"")+\'>男女版も作成</label></div>\';' +
+  // ★2026-10-01 まるちゃん：文言を「〜作成します」に・右は入切でなく押すボタン（男女を分けない／男女に分ける）
+  '(SRES.split?"新規・既存を男女に分けて作成します":"新規・既存を男女に分けずに作成します")+\'</span>\'+' +
+  '\'<button type="button" class="bcsplitb" id="bcsplitbtn">\'+' +
+  '(SRES.split?"男女を分けない":"男女に分ける")+\'</button></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+SIDX+\'">コピー</button></div>\'+' +
   '\'<textarea class="bcotx" wrap="off" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
@@ -4831,9 +4834,8 @@ function renderBroadcastPage_(base, staff, dev) {
   //   e のまま覚えると押した時に別の部品を見てしまう（2026-09-09の不具合）。
   'var nv=document.getElementById("bcnoviocb");' +
   'if(nv)nv.onchange=function(){SNOVIO=nv.checked;};' +
-  'var cb=document.getElementById("bcsplitcb");' +
-  'if(cb)cb.onchange=function(){splitOn(cb.checked);};' +
-  'if(cb)cb.onclick=function(){splitOn(cb.checked);};' +
+  'var cb=document.getElementById("bcsplitbtn");' +
+  'if(cb)cb.onclick=function(){splitOn(!(SRES&&SRES.split));};' +
   'e=document.getElementById("bcsnext");' +
   'if(e)e.onclick=function(){var gs=(SRES&&SRES.groups)||[];' +
   'if(SIDX>=gs.length-1){page="m";MSTEP=0;MMSG="";status("");draw();return;}' +
