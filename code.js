@@ -5772,6 +5772,21 @@ function renderReservationHomePage_(base, staff, dev) {
 //   使う側が用意する物：$ / esc / tapOK / NOW / step / show() と、状態の入れ物
 //   （MY, AKI, AKIERR, AKIWAIT, PICKDATE, SLOT, TS, TE, ROOM, DAYROOMS, ASK, PAID）。
 //   使う側だけの動き＝日にちを押した時 sgOnDate(日付)（あれば）／「この時間と部屋で決定」の押した後。
+// ★2026-10-02 まるちゃん「時刻の入力は左右に施術後の予約のようなプラスマイナスボタン」
+//   ＝施術後の予約の「開始時間」の −1時間/−5分/＋1時間/＋5分 の見た目を、ここ1か所で作る。
+//   p＝名前の頭（施術後の予約＝'sgt'／予約変更の時刻入力＝'ext'）。押した時の動きは各画面が持つ。
+function stepTimeCss_(p) {
+  return (
+    '.' + p + 'row{display:flex;align-items:stretch;gap:10px;}' +
+    '.' + p + 'col{flex:none;width:78px;display:flex;flex-direction:column;gap:8px;}' +
+    '.' + p + 'val{flex:1;min-width:0;background:#fff;color:#0f172a;border-radius:14px;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'font-size:40px;font-weight:900;padding:10px 4px;letter-spacing:.04em;}' +
+    '.' + p + 'pm{flex:1;width:100%;min-height:46px;border:0;border-radius:14px;background:#fff;color:#0f172a;' +
+      'font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+    '.' + p + 'pm:active{transform:translateY(2px);}'
+  );
+}
 function sgCss_() {
   return (
     '.sg{max-width:560px;width:100%;min-width:0;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
@@ -5816,14 +5831,8 @@ function sgCss_() {
     '.sgtlab{color:#eaf6fb;font-weight:800;font-size:15px;margin-bottom:6px;}' +
     /* ★左右に「1時間」「5分」を縦2つずつ（まるちゃん 2026-09-11）。
        1行に4つ並べると時刻の字が小さくなり、下に段を足すと画面が縦に伸びるので、この形にした。 */
-    '.sgtrow{display:flex;align-items:stretch;gap:10px;}' +
-    '.sgtcol{flex:none;width:78px;display:flex;flex-direction:column;gap:8px;}' +
-    '.sgtval{flex:1;min-width:0;background:#fff;color:#0f172a;border-radius:14px;' +
-      'display:flex;align-items:center;justify-content:center;' +
-      'font-size:40px;font-weight:900;padding:10px 4px;letter-spacing:.04em;}' +
-    '.sgtpm{flex:1;width:100%;min-height:46px;border:0;border-radius:14px;background:#fff;color:#0f172a;' +
-      'font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
-    '.sgtpm:active{transform:translateY(2px);}' +
+    /* ★2026-10-02：同じ見た目を「予約変更の時刻入力」でも使うので、共通の1か所（stepTimeCss_）にした。 */
+    stepTimeCss_('sgt') +
     '.sgdur{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0;}' +
     '.sgdurb{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:18px 4px;' +
       'font-size:22px;font-weight:900;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}' +
@@ -7345,6 +7354,9 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exhint{color:#eaf6fb;font-weight:700;font-size:16px;line-height:1.5;margin:2px 4px 12px;}' +
     '.exwho1{color:#fff;font-weight:900;font-size:24px;margin:2px 4px 4px;}' +
     '.exwd2{color:#fff;font-weight:900;font-size:40px;line-height:1.2;margin:0 4px 14px;}' +
+    stepTimeCss_('ext') +
+    '.extrow{margin:6px 0 16px;}' +
+    '.extrow .exbox{flex:1;min-width:0;margin:0;padding:16px 4px;font-size:40px;}' +
     '#expickwho{color:#fff;font-weight:900;font-size:36px;line-height:1.25;margin:8px 4px 12px;}' +
     '.exstatus{color:#fff;font-weight:800;font-size:18px;margin:8px 4px;min-height:24px;}' +
     '.expick{display:flex;flex-direction:column;gap:12px;margin:6px 0 8px;}' +
@@ -7483,7 +7495,17 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="extop"></div>' +
       '<div class="hhead"><span class="bmark">🕐</span><span class="bname">時刻入力</span></div>' +
       '<div class="exstep" id="exwhen"></div>' +
-      '<input class="exbox" id="extime" readonly placeholder="__ : __">' +
+      '<div class="extrow">' +
+        '<span class="extcol">' +
+          '<button type="button" class="extpm" data-d="-60">− 1時間</button>' +
+          '<button type="button" class="extpm" data-d="-5">− 5分</button>' +
+        '</span>' +
+        '<input class="exbox" id="extime" readonly placeholder="__ : __">' +
+        '<span class="extcol">' +
+          '<button type="button" class="extpm" data-d="60">＋ 1時間</button>' +
+          '<button type="button" class="extpm" data-d="5">＋ 5分</button>' +
+        '</span>' +
+      '</div>' +
       '<div class="exhint">例：9時→0900 ／ 12時10分→1210（4ケタで入れてね）</div>' +
       '<div class="expad" id="extpad">' + padHtml + '</div>' +
       '<button class="exgo" id="exToDone">この内容で進む→</button>' +
@@ -7688,6 +7710,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function initTdig_(){if(!ISCHANGE)return "";var t0=String((chosen&&chosen.start_hm)||"").replace(":","");return /^[0-9]{4}$/.test(t0)?t0:"";}' +
     'function tdisp(){if(!tdig){return "";}if(tdig.length<4){return tdig;}return tdig.slice(0,2)+":"+tdig.slice(2);}' +
     'function tupd(){document.getElementById("extime").value=tdisp();}' +
+    /* ★2026-10-02：時刻の左右の −1時間/−5分/＋1時間/＋5分。入れかけ（4ケタ未満）の時は、今の予約の時刻（無ければ10:00）から動かす。 */
+    'var _tpm=document.querySelectorAll(".extpm");for(var _ti=0;_ti<_tpm.length;_ti++){_tpm[_ti].addEventListener("click",function(){var d=parseInt(this.getAttribute("data-d"),10);var t=(tdig.length===4)?tdig:(initTdig_()||"1000");var m=parseInt(t.slice(0,2),10)*60+parseInt(t.slice(2),10)+d;if(m<0)m=0;if(m>23*60+55)m=23*60+55;tdig=("0"+Math.floor(m/60)).slice(-2)+("0"+(m%60)).slice(-2);tupd();});}' +
     'document.getElementById("extpad").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");if(k==="clr"){tdig="";}else if(k==="del"){tdig=tdig.slice(0,-1);}else if(/^[0-9]$/.test(b.textContent)&&tdig.length<4){tdig+=b.textContent;}tupd();});' +
     'document.getElementById("exbackTime").addEventListener("click",function(){document.getElementById("exTime").style.display="none";document.getElementById(chgtype==="t"?"exMenu":"exDate").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){szPopup_("時刻を4ケタで入れてください（例 1230）");return;}if(ISCHANGE){if(MULTI_){startMultiMove();}else{startPickFlow();}}else{startExistingReserve();}});' +
