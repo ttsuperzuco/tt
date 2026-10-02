@@ -4625,7 +4625,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(s.bodies&&s.bodies.length)MBODYS=s.bodies;' +
   'if(s.zbodies&&s.zbodies.length)MZBODYS=s.zbodies;' +
   'if(s.ja&&s.ja.length)MJA=s.ja;if(s.zh&&s.zh.length)MZH=s.zh;' +
-  'if(s.mback===0||s.mback===1||s.mback===2||s.mback===5||s.mback===6)MBACK=s.mback;if(s.m6from===1||s.m6from===2)M6FROM=s.m6from;' +
+  'if(s.mback===0||s.mback===1||s.mback===2||s.mback===5||s.mback===6)MBACK=s.mback;if(s.m6from===1||s.m6from===2||s.m6from===5)M6FROM=s.m6from;' +
   'MIDX=s.midx||0;' +
   'if(s.mstep===0||s.mstep===1||s.mstep===2||s.mstep===5||s.mstep===6)MSTEP=s.mstep;else MSTEP=0;' +
   'if(s.waku&&s.waku.groups){SRES=s.waku;fixWaku();if(SRES.all)buildG();}' +
@@ -5165,7 +5165,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'bldJa();MZH=BORDER.map(function(x,k){' +
   'return {label:ordLabel(k,true),atama:x[0],sei:x[1],text:""};});' +
   // ★勝手に絵づくりを始めない（まるちゃん指示 2026-09-09）。中身の確認へ進む。
-  'MBACK=5;applyAll(false);};' +
+  // ★2026-10-02 まるちゃん「中国語版を配信しないを押すと画像生成の画面にいかない」＝ほかの2つと同じく画像を作るか選ぶ画面へ
+  'M6FROM=5;MSTEP=6;MMSG="";status("");saveNow();draw();};' +
   // 自分で入れる中国語の欄
   'var zta=document.getElementById("bcmzbody");' +
   'if(zta)zta.oninput=function(){MZBODYS[MIDX]=zta.value;' +
@@ -5631,7 +5632,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★中国語の画面の1つ目から戻ると「中国語版の作り方を選ぶ」へ（2026-10-01）
   'if(MSTEP===5){MSTEP=0;MIDX=BORDER.length-1;return true;}' +
   // 画像を作るか選ぶ画面から戻る＝来た中国語の画面の最後へ
-  'if(MSTEP===6){if(M6FROM===1){MSTEP=1;MIDX=BORDER.length-1;}else{MSTEP=2;var l6=zLive();MIDX=l6.length?l6[l6.length-1]:0;}return true;}' +
+  'if(MSTEP===6){if(M6FROM===5){MSTEP=5;}else if(M6FROM===1){MSTEP=1;MIDX=BORDER.length-1;}else{MSTEP=2;var l6=zLive();MIDX=l6.length?l6[l6.length-1]:0;}return true;}' +
   'if(MSTEP===1){if(MIDX>0){MIDX--;}else{MSTEP=5;}return true;}' +
   'if(MSTEP===2){var zl2=zLive(),zp=zl2.indexOf(MIDX);' +
   'if(zp>0){MIDX=zl2[zp-1];return true;}' +
