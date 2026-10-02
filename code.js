@@ -5368,7 +5368,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★2026-10-02 まるちゃん「送り先じゃなくてタグ」「もとの決まりとやめるの違いが分からない」
   //   開いた時は、いま送るタグ（選び直していなければ最初の決まりのタグ）を選んだ状態で見せる。
   'var cur=(TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(t);' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">送るタグをえらぶ（いくつでも・押すたびに入切）</div>\';' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">送るタグをえらぶ（いくつでも選べます。もう一度押すと外れます）</div>\';' +
   'if(TAGBUSY){h+=\'<div class="bcouttx">タグの一覧を読んでいます…</div>\';}' +
   'else if(!TAGLIST.length){h+=\'<div class="bcouttx">タグの一覧を読めませんでした。</div>\';}' +
   'else{h+=\'<div class="bctaglist">\'+TAGLIST.map(function(x){' +
