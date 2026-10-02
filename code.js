@@ -427,7 +427,10 @@ function _permsFromCfg_(d) {
     for (var i = 0; i < people.length; i++) {
       var pid = people[i];
       if (saved[pid] && typeof saved[pid] === 'object') {
-        for (var t in perms[pid]) { if (t in saved[pid]) perms[pid][t] = !!saved[pid][t]; }
+        // ★2026-10-02：保存に書いてあるボタンは全部読む。前は初めの決まり(defaultPerms_)に名前がある
+        //   ボタンしか読まなかったため、人ごとの表示でONにしたプロセル在庫(procstock)がスタッフに出なかった。
+        //   保存に載るのは人ごとの表示で入切できるボタンだけ（tile_settings.py の STAFF_ASSIGNABLE）。
+        for (var t in saved[pid]) perms[pid][t] = !!saved[pid][t];
       }
     }
   }
@@ -1062,7 +1065,7 @@ function defaultPerms_(people) {
     // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
     //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
     // ★★2026-09-17 まるちゃん決定「施術後の予約ボタンをスタッフにもだす」＝全員ON（tile_settings.py と一致）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, procstock: false };
   }
   return perms;
 }
