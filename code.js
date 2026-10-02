@@ -9524,6 +9524,11 @@ function procStockScript_(C) {
     else { staffLabel = autoLabel(); openItem(0, false); }
   });
   $('psBackWho').addEventListener('click', function (e) { e.preventDefault(); show('psMenu'); });
+  // 閉じる＝画面の上の「← 戻る」をそのまま押す（パソコン版の窓・スマホのどちらでも、いつもの戻り方になる）
+  $('psClose').addEventListener('click', function () {
+    var a = document.querySelector('.home > .ubar a.uhome');
+    if (a) a.click(); else location.href = '?view=home';
+  });
 
   // ★2026-10-02 まるちゃん依頼：在庫を登録したら、この表を画像にしてリーダーのLINEグループへ送る。
   //   事務所PCが見えないブラウザで「?view=procstock&dev=1&pstbl=<表>&at=<日時>」を開き、#psTbl だけを写真にする
@@ -9534,6 +9539,7 @@ function procStockScript_(C) {
       doneAt = qs.get('at') || '';
       show('psDone');
       $('psDoneMsg').style.display = 'none';
+      $('psClose').style.display = 'none';
       var hd = document.querySelectorAll('.hhead, .ubar');
       for (var hi = 0; hi < hd.length; hi++) hd[hi].style.display = 'none';
       $('psTbl').style.padding = '6px 8px 14px';
@@ -9582,6 +9588,8 @@ function renderProcStockPage_(base, staff, dev) {
       '<div id="psDone" style="display:none">' + head('✅', 'プロセル在庫') +
         '<div class="psdone" id="psDoneMsg"></div>' +
         '<div id="psTbl"></div>' +
+        // ★2026-10-02 まるちゃん指定：一番下に緑の「確認しました。画面を閉じる」（上の「← 戻る」と同じ動き）
+        '<button type="button" class="exgo" id="psClose">確認しました。画面を閉じる</button>' +
       '</div>' +
     '</div></div>' +
     '<script>(' + procStockScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
