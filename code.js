@@ -4504,6 +4504,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'var MBODYS=["","","",""],MIDX=0;' +
   // ★2026-10-01 まるちゃん「訳している時・画像を作る時も秒数を出せ。動いているか分からない」
   'var MBUSYAT=0,WBUSYAT=0,M6FROM=2,LASTSCR="";' +
+  // ★画像生成を中止する（2026-10-02 まるちゃん「中止できないのおかしい」）。次の絵を頼まない・作りかけの絵は使わない。
+  'document.addEventListener("click",function(ev){var b=ev.target&&ev.target.closest&&ev.target.closest("[data-imgstop]");' +
+  'if(!b)return;MKSTOP=true;b.disabled=true;b.textContent="中止しています…（今作っている1枚が終わるまで少し待ちます）";},true);' +
   // ★お客様のスマホでの折り返し＝共通の部品 bcLineWrap_（line_wrap.js・正本は 共通\画面\LINEの折り返し.js）を使う
   'function secTag(t){return \'<span class="bcsec" data-t="\'+t+\'">（\'+Math.round((Date.now()-t)/1000)+\'秒）</span>\';}' +
   'setInterval(function(){[].slice.call(document.querySelectorAll(".bcsec")).forEach(function(e){' +
@@ -4698,6 +4701,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<button type="button" class="bcgo" id="bcwmake"\'+(WBUSY?" disabled":"")+\'>\'+' +
   '(WBUSY?"画像を生成しています...":"この内容で画像を作る")+\'</button>\';' +
   'if(WBUSY&&!WBUSYAT)WBUSYAT=Date.now();if(!WBUSY)WBUSYAT=0;' +
+  'if(WBUSY&&MKRUN&&!MKSTOP)h+=\'<button type="button" class="bcghost" data-imgstop="1">画像生成を中止する</button>\';' +
   'if(WMSG||WBUSY)h+=\'<div class="bcstatus on">\'+esc(WMSG||"画像を作っています…")+(WBUSY?secTag(WBUSYAT):"")+\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindWaku();bindFresh();}' +
   'function bindWaku(){' +
@@ -4713,20 +4717,24 @@ function renderBroadcastPage_(base, staff, dev) {
   'document.getElementById("bcwmake").onclick=function(){' +
   'if(ta)WTEXT=ta.value;' +
   'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してください。",true);return;}' +
-  'WBUSY=true;WDONE=[];WMSG="";status("");draw();' +
+  'WBUSY=true;WDONE=[];WMSG="";SENDN=null;status("");draw();' +
   'runMake(WTEXT,function(i,tot,label){WMSG=(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
   'function(done,err){WBUSY=false;' +
   'if(err){WMSG="";status(err,true);}' +
   'else WMSG="できました。"+done+"枚を、それぞれの対象の1つ目に入れました。";' +
   'draw();});};}' +
-  'function runMake(text,onStep,onDone){' +
+  'var MKSTOP=false,MKRUN=false;' +
+  'function runMake(text,onStep,onDone){MKSTOP=false;MKRUN=true;var _od=onDone;onDone=function(a,b){MKRUN=false;_od(a,b);};' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"plan",text:text})},' +
   'function(r){if(!r||!r.ok||!r.jobs||!r.jobs.length){onDone(0,(r&&r.note)||"読み取れませんでした。");return;}' +
   'var jobs=r.jobs,i=0,done=0;' +
-  '(function next(){if(i>=jobs.length){onDone(done,"");return;}' +
+  // ★送る対象が決まっている時（配信文づくりから来た時）は、その対象に入る絵だけ作る
+  'if(SENDN)jobs=jobs.filter(function(j){return (j.targets||[]).some(function(nm){return SENDN.indexOf(nm)>=0;});});' +
+  'if(!jobs.length){onDone(0,"");return;}' +
+  '(function next(){if(MKSTOP){onDone(done,"中止");return;}if(i>=jobs.length){onDone(done,"");return;}' +
   'var j=jobs[i];onStep(i,jobs.length,j.label);' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:j.kind,days:j.days})},' +
-  'function(g){if(g&&g.ok&&g.name){WDONE.push({label:j.label,thumb:g.thumb,name:g.name});' +
+  'function(g){if(MKSTOP){onDone(done,"中止");return;}if(g&&g.ok&&g.name){WDONE.push({label:j.label,thumb:g.thumb,name:g.name});' +
   'putIntoTargets(j.targets,g.name,g.thumb);done++;}i++;next();},' +
   'function(m2){onDone(done,"「"+j.label+"」で止まりました："+m2);});})();},' +
   'function(m){onDone(0,m);});}' +
@@ -5101,8 +5109,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作成</div><div class="bchr"></div>\'+' +
   '\'<div class="bcouttx">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT||(MBUSYAT=Date.now())):"")+\'</div></div>\';' +
-  'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';}' +
+  'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';' +
+  '}' +
   'if(MBUSY&&!MBUSYAT)MBUSYAT=Date.now();if(!MBUSY)MBUSYAT=0;' +
+  'if(MBUSY&&MKRUN&&!MKSTOP)h+=\'<button type="button" class="bcghost" data-imgstop="1">画像生成を中止する</button>\';' +
   'if(MMSG&&(MSTEP<3||MSTEP===5||MSTEP===6))h+=\'<div class="bcstatus on">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT):"")+\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindMake();bindFresh();}' +
   'function bindMake(){' +
@@ -5289,7 +5299,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'runMake(src,function(i,tot,label){' +
   'MMSG="画像を生成しています… "+(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
   'function(done,err){MBUSY=false;MSTEP=3;' +
-  'MMSG=err?("文は入れました。画像で止まりました："+err)' +
+  'MMSG=(err==="中止")?("画像生成を中止しました。文は対象に入っています（できた画像"+done+"枚も入れてあります）。")' +
+  ':err?("文は入れました。画像で止まりました："+err)' +
   ':("できました。文を入れ、画像を"+done+"枚それぞれの対象の1つ目に入れました。");' +
   'draw();});}' +
   // ── 対象1つぶんの設定 ────────────────────────────────
