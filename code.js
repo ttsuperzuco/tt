@@ -9345,6 +9345,7 @@ var PROCSTOCKCSS_ =
   '.pstbl td.o{background:#fef08a;color:#b91c1c;font-size:22px;font-weight:900;}' +
   '.pstbl td.o.z{background:#f1f5f9;color:#94a3b8;font-size:16px;}' +
   '.pstitle{color:#fff;font-weight:900;font-size:26px;line-height:1.3;margin:18px 4px 4px;text-align:center;}' +
+  '.psnone{color:#fde047;font-weight:900;font-size:28px;line-height:1.4;text-align:center;margin:14px 0 6px;text-shadow:0 2px 6px rgba(0,0,0,.35);}' +
   '.pstnote{color:#eaf6fb;font-weight:700;font-size:14px;line-height:1.5;margin:4px 4px 10px;}';
 
 // 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
@@ -9491,6 +9492,10 @@ function procStockScript_(C) {
         '<td class="o' + (x[4] ? '' : ' z') + '">' + x[4] + '</td></tr>';
     }
     h += '</tbody></table></div>';
+    // ★2026-10-02 まるちゃん指定：補充が1つも要らない時は、表の下に大きく目立つ色で知らせる。
+    var any = false;
+    for (var k = 0; k < t.rows.length; k++) if (t.rows[k][4]) any = true;
+    if (!any) h += '<div class="psnone">今回は補充は必要ありません</div>';
     for (var j = 0; j < (t.notes || []).length; j++) h += '<div class="pstnote">※' + esc(t.notes[j]) + '</div>';
     $('psTbl').innerHTML = h;
   }
