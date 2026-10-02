@@ -4475,8 +4475,8 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bccx{margin-top:9px;font-size:12.5px;padding:7px 13px;border-radius:9px;' +
     'border:1px solid #7f1d1d;background:#2a1214;color:#fca5a5;font-weight:800;}' +
     '.bcstatus{font-weight:800;margin:10px 2px;font-size:14.5px;border-radius:11px;padding:0;}' +
-    '.bcstatus.on{background:#131C2E;color:#E8EEF7;padding:11px 14px;}' +
-    '.bcstatus.ng{background:#2a1214;color:#fca5a5;padding:11px 14px;}' +
+    '.bcstatus.on{background:transparent;color:#F0FFF4;border-left:4px solid #22C55E;border-radius:0;padding:6px 12px;}' +
+    '.bcstatus.ng{background:transparent;color:#FECACA;border-left:4px solid #EF4444;border-radius:0;padding:6px 12px;}' +
     '.bcwaitmsg{text-align:center;font-weight:800;font-size:17px;color:#E8EEF7;padding:14px 6px 6px;}' +
     // ★キャンペーン・商品の紹介（2026-09-17）＝種類のボタン・見出し・タブ・選んだ画像
     '.bccamph{font-size:17px;font-weight:900;color:#fff;margin:14px 2px 10px;}' +
@@ -4526,7 +4526,9 @@ function renderBroadcastPage_(base, staff, dev) {
   //   「← 戻る」でここへ戻す（まるちゃん指摘 2026-09-09）
   'var MBACK=0;' +
   // ★対象ごとに選び直した送り先（空＝もとの決まりのまま）と、選べる送り先の一覧
-  'var TAGS=[],TAGLIST=[],TAGBUSY=false,ADDAT=-1;' +
+  'var TAGS=[],TAGLIST=[],TAGBUSY=false,ADDAT=-1,TAGSNAP=[];' +
+  'function defTags(t){return String((t&&t.who)||"").split("　（外す")[0].split("＋").filter(function(x){return x;});}' +
+  'function sameSet(a,b){a=(a||[]).slice().sort();b=(b||[]).slice().sort();return a.join("|")===b.join("|");}' +
   // ★まるちゃんが入口から先へ進んだか（進んだあとに、遅れて届いた返事で画面を戻さない）
   'var MOVED=false;' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
@@ -5297,16 +5299,16 @@ function renderBroadcastPage_(base, staff, dev) {
   //   数えるのは「送る対象」だけ（本文を作らなかった対象は出さない）。
   'var lv=tLive(),pos=lv.indexOf(step);' +
   // ★2026-10-02 まるちゃん：題は大きく「最終確認」、その下に小さめで「※画像や文章を追加できます」
-  'var mt=(mode==="tag")?"送り先を変更":(mode==="img")?((ADDAT>=0?(ADDAT+1)+"つ目に":"")+"追加する画像を選ぶ")' +
+  'var mt=(mode==="tag")?"タグを変更":(mode==="img")?((ADDAT>=0?(ADDAT+1)+"つ目に":"")+"追加する画像を選ぶ")' +
   ':(mode==="txt")?((EDI>=0)?"文章を修正":((ADDAT>=0?(ADDAT+1)+"つ目に":"")+"文章を追加")):(mode==="see")?"文章を見る":"最終確認";' +
   'var h=\'<div class="bcstop"><span class="bcsttl">\'+mt+\'</span>\'+' +
   '\'<span class="bcsno">\'+(pos+1)+\' / \'+lv.length+\'</span></div>\'+' +
   '(mode?"":\'<div class="bcsubnote">※画像や文章を追加できます</div>\')+' +
   // ★送り先を選び直せる（まるちゃん指示 2026-09-09）。選んでいなければ元の決まりのまま。
   '\'<div class="bccard"><div class="bcnamerow"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
-  '\'<button type="button" class="bcmv" id="bctag">タグを変更</button></div>\'+' +
+  '(mode==="tag"?"":\'<button type="button" class="bcmv" id="bctag">タグを変更</button>\')+\'</div>\'+' +
   '\'<div class="bcwho">\'+esc((TAGS[step]&&TAGS[step].length)?' +
-  '("送り先："+TAGS[step].join("＋")):t.who)+\'</div><div class="bchr"></div>\';' +
+  '("タグ："+TAGS[step].join("＋")):("タグ："+t.who))+\'</div><div class="bchr"></div>\';' +
   // ★並べ替えと、文の直し（まるちゃん指示 2026-09-09）
   'if(n&&n<MAXP&&!mode)h+=\'<div class="bcaddslot"><span class="bcpno">1つ目の前に追加</span>\'+' +
   '\'<button type="button" data-addimg="0">🖼 画像を追加</button>\'+' +
@@ -5345,17 +5347,19 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcleft" style="margin-top:14px">別の画像を選ぶ</div><input type="file" accept="image/*" id="bcfile">\'+' +
   '\'</div><button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
   'else if(mode==="tag"){' +
-  'var cur=TAGS[step]||[];' +
-  'h+=\'<div class="bchr"></div><div class="bcleft">送り先をえらぶ（いくつでも）</div>\';' +
-  'if(TAGBUSY){h+=\'<div class="bcouttx">送り先の一覧を読んでいます…</div>\';}' +
-  'else if(!TAGLIST.length){h+=\'<div class="bcouttx">送り先の一覧を読めませんでした。</div>\';}' +
+  // ★2026-10-02 まるちゃん「送り先じゃなくてタグ」「もとの決まりとやめるの違いが分からない」
+  //   開いた時は、いま送るタグ（選び直していなければ最初の決まりのタグ）を選んだ状態で見せる。
+  'var cur=(TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(t);' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">送るタグをえらぶ（いくつでも・押すたびに入切）</div>\';' +
+  'if(TAGBUSY){h+=\'<div class="bcouttx">タグの一覧を読んでいます…</div>\';}' +
+  'else if(!TAGLIST.length){h+=\'<div class="bcouttx">タグの一覧を読めませんでした。</div>\';}' +
   'else{h+=\'<div class="bctaglist">\'+TAGLIST.map(function(x){' +
   'return \'<button type="button" data-tag="\'+esc(x)+\'" class="\'+' +
   '((cur.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';}' +
   'h+=\'</div>\';' +
-  'h+=\'<button type="button" class="bcgo" id="bctagok">この送り先にする</button>\'+' +
-  '\'<button type="button" class="bcmini" id="bctagdef">もとの決まりにもどす</button>\'+' +
-  '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
+  'h+=\'<button type="button" class="bcgo" id="bctagok">このタグで送る</button>\'+' +
+  '\'<button type="button" class="bcghost" id="bctagdef">最初のタグに戻す（\'+esc(t.who)+\'）</button>\'+' +
+  '\'<button type="button" class="bcghost" id="bctagcancel">タグを変えずに戻る</button>\';}' +
   'else if(mode==="see"){' +
   'var sp=d.parts[EDI]||{text:""};' +
   'h+=\'<div class="bchr"></div><div class="bcleft">\'+(EDI+1)+\'つ目の文章（\'+ulen(sp.text)+\'文字）</div>\'+' +
@@ -5426,19 +5430,22 @@ function renderBroadcastPage_(base, staff, dev) {
   'ADDAT=+b.getAttribute("data-addtx");EDI=-1;mode="txt";status("");draw();};});' +
   'if(e=document.getElementById("bctx"))e.onclick=function(){ADDAT=-1;EDI=-1;mode="txt";draw();};' +
   // ★送り先を選び直す（一覧は初めて開いた時に1回だけ事務所パソコンから取る）
-  'if(e=document.getElementById("bctag"))e.onclick=function(){mode="tag";' +
+  'if(e=document.getElementById("bctag"))e.onclick=function(){mode="tag";TAGSNAP=(TAGS[step]||[]).slice();status("");' +
   'if(!TAGLIST.length&&!TAGBUSY){TAGBUSY=true;draw();' +
   'ask("bc_tags",{},function(r){TAGBUSY=false;' +
   'TAGLIST=((r&&r.tags)||[]);if(!TAGLIST.length&&r&&r.note)status(r.note,true);draw();},' +
   'function(m){TAGBUSY=false;status(m,true);draw();});return;}' +
   'draw();};' +
   '[].slice.call(box.querySelectorAll("[data-tag]")).forEach(function(b){b.onclick=function(){' +
-  'var x=b.getAttribute("data-tag"),a=(TAGS[step]||[]).slice(),k=a.indexOf(x);' +
+  'var x=b.getAttribute("data-tag"),a=((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).slice(),k=a.indexOf(x);' +
   'if(k>=0)a.splice(k,1);else a.push(x);TAGS[step]=a;saveNow();draw();};});' +
-  'if(e=document.getElementById("bctagok"))e.onclick=function(){mode="";saveNow();' +
-  'status((TAGS[step]&&TAGS[step].length)?"送り先を変えました。":"");draw();};' +
-  'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];mode="";' +
-  'saveNow();status("もとの決まりにもどしました。");draw();};' +
+  'if(e=document.getElementById("bctagok"))e.onclick=function(){' +
+  'if(!(TAGS[step]||[]).length){status("タグを1つ以上えらんでください。",true);return;}' +
+  // 最初の決まりと同じなら「選び直していない」に戻す（決まりの外すタグもそのまま効く）
+  'if(sameSet(TAGS[step],defTags(TPL[step])))TAGS[step]=[];' +
+  'mode="";saveNow();status("タグを決めました。");draw();};' +
+  'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];saveNow();status("");draw();};' +
+  'if(e=document.getElementById("bctagcancel"))e.onclick=function(){TAGS[step]=(TAGSNAP||[]).slice();mode="";saveNow();status("");draw();};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){EDI=-1;mode="";draw();};' +
   'if(e=document.getElementById("bcnext"))e.onclick=function(){' +
   'step=nextLive(step);mode="";status("");draw();};' +
