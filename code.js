@@ -4346,10 +4346,10 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcouttx{white-space:pre-wrap;font-size:14px;line-height:1.75;color:#E8EEF7;}' +
     // ★2026-10-01 まるちゃん「スマホでの見せ方で見たい」＝LINEの吹き出しの形・1行13文字（まるちゃんのスマホと同じ）。
     //   幅を全角13文字ぶん(13em)にして、あとは自然に折り返させる＝半角は半分の幅で数えられ、実物に近い。
-    // ★2026-10-02 まるちゃんの実物のスマホ（文字の大きさ＝中）の画面と10行すべて同じ所で折り返すよう合わせた
-    //   （幅14.25文字ぶん＋字の間を少し空ける＝英数字の幅が実物に近くなる）。色もスマホの吹き出しの緑 #9CE594。
-    '.bc .bcbub{width:14.25em;letter-spacing:.06em;max-width:100%;box-sizing:content-box;background:#9CE594;color:#111827;border-radius:18px;' +
-    'padding:10px 14px;margin:0 0 14px;font-size:16px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;' +
+    // ★2026-10-02 改行はブラウザの字に頼らず bcLineWrap_ が計算して入れる（実物のスマホで測った幅の表＝41行中38行一致）。
+    //   ここは「その改行のまま見せる」だけ。色はスマホの吹き出しの緑 #9CE594。
+    '.bc .bcbub{display:table;max-width:100%;box-sizing:content-box;background:#9CE594;color:#111827;border-radius:18px;' +
+    'padding:10px 14px;margin:0 0 14px;font-size:16px;line-height:1.55;white-space:pre;' +
     'font-family:-apple-system,"Hiragino Sans","Noto Sans JP","Noto Sans TC",sans-serif;}' +
     '.bcbubcap{font-size:12px;color:#94A3B8;margin:13px 0 5px;}' +
     '.bc textarea.bcotx{min-height:120px;line-height:1.9;padding:9px;' +
@@ -4503,6 +4503,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var MBODYS=["","","",""],MIDX=0;' +
   // ★2026-10-01 まるちゃん「訳している時・画像を作る時も秒数を出せ。動いているか分からない」
   'var MBUSYAT=0,WBUSYAT=0,M6FROM=2;' +
+  // ★お客様のスマホでの折り返しを計算する部品（2026-10-02・下の bcLineWrap_ をそのまま差し込む）
+  String(bcLineWrap_) + ';' +
   'function secTag(t){return \'<span class="bcsec" data-t="\'+t+\'">（\'+Math.round((Date.now()-t)/1000)+\'秒）</span>\';}' +
   'setInterval(function(){[].slice.call(document.querySelectorAll(".bcsec")).forEach(function(e){' +
   'e.textContent="（"+Math.round((Date.now()-(+e.getAttribute("data-t")))/1000)+"秒）";});},1000);' +
@@ -5035,8 +5037,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入れてください。&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(body)+\'</textarea>\';' +
-  'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div><div class="bcouttx bcbub" id="bcmprev">\'+' +
-  'esc(body.replace(/^\\s+|\\s+$/g,"")?done:' +
+  'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（文字の大きさ＝中）</div><div class="bcouttx bcbub" id="bcmprev">\'+' +
+  'esc(body.replace(/^\\s+|\\s+$/g,"")?bcLineWrap_(done):' +
   '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません"))+\'</div>\'+' +
   '\'<div class="bcnum\'+(over?" over":"")+\'" id="bcmnum">\'+(body?numMsg(ulen(done)):"")+' +
   '\'</div>\';' +
@@ -5067,8 +5069,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bcmzbody" class="bcmtx" placeholder="ここに、この対象へ送る中国語の文章を入れてください。&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(zb)+\'</textarea>\';' +
-  'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div><div class="bcouttx bcbub" id="bcmzprev">\'+' +
-  'esc(zb.replace(/^\\s+|\\s+$/g,"")?zdone:' +
+  'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（文字の大きさ＝中）</div><div class="bcouttx bcbub" id="bcmzprev">\'+' +
+  'esc(zb.replace(/^\\s+|\\s+$/g,"")?bcLineWrap_(zdone):' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません"))+\'</div>\'+' +
   '\'<div class="bcnum\'+(zov?" over":"")+\'" id="bcmznum">\'+(zb?numMsg(ulen(zdone)):"")+' +
   '\'</div>\';' +
@@ -5088,8 +5090,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'esc(z.text||"")+\'</textarea>\'+' +
   '\'<div class="bcnum\'+(ov2?" over":"")+\'" id="bcmznum2">\'+numMsg(ulen(z.text))+\'</div>\'+' +
   // ★お客様に届く形（1行13文字の吹き出し）。上の欄を直すとすぐ変わる（2026-10-01）
-  '\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div>\'+' +
-  '\'<div class="bcouttx bcbub" id="bcmzbub">\'+esc(z.text||"")+\'</div></div>\';' +
+  '\'<div class="bcbubcap">お客様のスマホでの見え方（文字の大きさ＝中）</div>\'+' +
+  '\'<div class="bcouttx bcbub" id="bcmzbub">\'+esc(bcLineWrap_(z.text||""))+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else{h=\'<div class="bccard"><div class="bcname">配信文を作成</div><div class="bchr"></div>\'+' +
   '\'<div class="bcouttx">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT||(MBUSYAT=Date.now())):"")+\'</div></div>\';' +
@@ -5106,7 +5108,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(ta)ta.oninput=function(){MBODYS[MIDX]=ta.value;MBODY=ta.value;' +
   'var x=BORDER[MIDX],done=joinBody(ta.value,timesOf(x[0],x[1]));' +
   'var pv=document.getElementById("bcmprev");' +
-  'if(pv)pv.textContent=ta.value.replace(/^\\s+|\\s+$/g,"")?done:' +
+  'if(pv)pv.textContent=ta.value.replace(/^\\s+|\\s+$/g,"")?bcLineWrap_(done):' +
   '("空欄のため、"+ordLabel(MIDX,false)+"には配信しません");' +
   'var nm=document.getElementById("bcmnum");' +
   'if(nm){var ov=ulen(done)>MAXT;nm.textContent=ta.value?numMsg(ulen(done)):"";' +
@@ -5122,7 +5124,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!MZH[MIDX])MZH[MIDX]={label:ordLabel(MIDX,true),' +
   'atama:BORDER[MIDX][0],sei:BORDER[MIDX][1],text:""};' +
   'MZH[MIDX].text=zed.value;' +
-  'var zbb=document.getElementById("bcmzbub");if(zbb)zbb.textContent=zed.value;' +
+  'var zbb=document.getElementById("bcmzbub");if(zbb)zbb.textContent=bcLineWrap_(zed.value);' +
   'var zn=document.getElementById("bcmznum2");' +
   'if(zn){var zo=ulen(zed.value)>MAXT;' +
   'zn.textContent=numMsg(ulen(zed.value));' +
@@ -5163,7 +5165,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(zta)zta.oninput=function(){MZBODYS[MIDX]=zta.value;' +
   'var zx=BORDER[MIDX],zdone=joinBody(zta.value,zhOf(timesOf(zx[0],zx[1],true)));' +
   'var zpv=document.getElementById("bcmzprev");' +
-  'if(zpv)zpv.textContent=zta.value.replace(/^\\s+|\\s+$/g,"")?zdone:' +
+  'if(zpv)zpv.textContent=zta.value.replace(/^\\s+|\\s+$/g,"")?bcLineWrap_(zdone):' +
   '("空欄のため、"+ordLabel(MIDX,true)+"には配信しません");' +
   'var znm=document.getElementById("bcmznum");' +
   'if(znm){var zov=ulen(zdone)>MAXT;znm.textContent=zta.value?numMsg(ulen(zdone)):"";' +
@@ -5311,7 +5313,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   画像は大きく（押すとさらに大きく）・文章は全文を改行どおり。中身が見えるので「確認」ボタンは外した。
   '\'<button type="button" class="bcmv" data-edit="\'+i+\'">修正</button>\'+' +
   '\'<button type="button" class="bcdel" data-del="\'+i+\'">消去</button></span></div>\'+' +
-  '(p.kind==="text"?(\'<div class="bcbubcap">お客様のスマホでの見え方（1行13文字）</div><div class="bcpvtx bcbub">\'+esc(p.text||"")+\'</div>\')' +
+  '(p.kind==="text"?(\'<div class="bcbubcap">お客様のスマホでの見え方（文字の大きさ＝中）</div><div class="bcpvtx bcbub">\'+esc(bcLineWrap_(p.text||""))+\'</div>\')' +
   ':(th?(\'<img class="bcpvimg" src="\'+th+\'" data-big="\'+i+\'">\'):""));}).join("");' +
   'h+=\'<input type="file" accept="image/*" id="bcrepfile" style="display:none">\';}' +
   // ★2026-10-01 まるちゃん「LINEは3つまで。何つ目に画像か文章かを指定できない。入れるじゃなくて追加」
@@ -13268,6 +13270,64 @@ function bcCampCode_() {
 }
 
 // 上の関数の中身の文だけを取り出す（renderBroadcastPage_ の仕掛けに差し込む用）
+// LINE（Android・文字の大きさ＝中）で、1通の文がどこで折り返されるかを計算して改行を入れる。
+// 2026-10-02 まるちゃんのスマホの実物の画面2枚（お試しの文）で測った幅の表。
+function bcLineWrap_(text) {
+  var W = 13.6;                         // 1行の幅（漢字1文字＝1）
+  var EM = 1.081 / 2048;                // 英数字＝Androidの標準の字（Roboto）の幅×この倍率
+  var R = {a:1112,b:1148,c:1072,d:1150,e:1083,f:711,g:1149,h:1128,i:497,j:489,k:1015,l:497,m:1755,n:1130,o:1168,p:1148,q:1158,r:692,s:1056,t:669,u:1129,v:992,w:1512,x:1013,y:976,z:1013,
+    A:1336,B:1275,C:1333,D:1343,E:1164,F:1132,G:1395,H:1460,I:557,J:1131,K:1285,L:1103,M:1788,N:1460,O:1408,P:1292,Q:1408,R:1260,S:1218,T:1221,U:1328,V:1303,W:1817,X:1284,Y:1229,Z:1226,
+    ' ':507,'/':844,':':484,'.':538,'-':553,',':393,'!':528,'?':945,'(':684,')':695,'&':1243,'@':1796,'#':1232,'%':1466,'+':1133,'=':1101,'_':902,'~':1358,"'":349,'"':640,';':434,'*':883,'[':532,']':532};
+  for (var k = 0; k < 10; k++) R[String(k)] = 1150;
+  var NOSTART = "、。，．・：；？！ー」』】〕〉》）］｝〙〗’”ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ々〻‐゠–〜～…‥!?)]}.,:;%";
+  var NOEND = "「『【〔〈《（［｛〘〖‘“([{";
+  function cw(ch) {
+    if (R[ch] !== undefined) return R[ch] * EM;
+    var c = ch.codePointAt(0);
+    if (c < 0x80) return 1100 * EM;                       // 表に無い半角はふつうの英字くらい
+    if (c >= 0x1F000 || (c >= 0x2600 && c <= 0x27BF) || (c >= 0x2B00 && c <= 0x2BFF)) return 1.3; // 絵文字
+    if (c === 0xFE0F || c === 0x200D) return 0;           // 絵文字の付き添い記号
+    return 1;                                             // 漢字・かな・中国語の字・全角の記号
+  }
+  function asc(ch) { return /^[A-Za-z0-9]$/.test(ch); }
+  function canBreak(p, c) {                               // p と c の間で改行できるか
+    if (p === " ") return c !== " ";
+    if (c === " ") return false;
+    if (NOSTART.indexOf(c) >= 0) return false;
+    if (NOEND.indexOf(p) >= 0) return false;
+    if ((asc(p) || /[:.,'%&@#_=+*]/.test(p)) && (asc(c) || /[:.,'%&@#_=+*]/.test(c))) return false; // 英単語・時刻は切らない
+    if ((p === "/" || p === "-") && /[0-9]/.test(c)) return false;
+    if (asc(p) && (c === "/" || c === "-")) return false;
+    return true;
+  }
+  function wrapPara(s) {
+    var ch = Array.from(s), segs = [], cur = "";
+    for (var i = 0; i < ch.length; i++) {
+      if (i > 0 && canBreak(ch[i - 1], ch[i])) { segs.push(cur); cur = ""; }
+      cur += ch[i];
+    }
+    if (cur) segs.push(cur);
+    function w(t) { var x = 0; Array.from(t).forEach(function (q) { x += cw(q); }); return x; }
+    var out = [], line = "", lw = 0;
+    segs.forEach(function (sg) {
+      var body = sg.replace(/ +$/, ""), bw = w(body);
+      if (line && lw + bw > W) { out.push(line.replace(/ +$/, "")); line = ""; lw = 0; }
+      if (!line && bw > W) {                              // 1つの塊が1行より長い＝1文字ずつ詰める
+        Array.from(sg).forEach(function (q) {
+          var qw = cw(q);
+          if (line && lw + qw > W && q !== " ") { out.push(line.replace(/ +$/, "")); line = ""; lw = 0; }
+          line += q; lw += qw;
+        });
+        return;
+      }
+      line += sg; lw += w(sg);
+    });
+    out.push(line.replace(/ +$/, ""));
+    return out.join("\n");
+  }
+  return String(text == null ? "" : text).split("\n").map(wrapPara).join("\n");
+}
+
 function bcCampSrc_() {
   var s = String(bcCampCode_);
   return s.slice(s.indexOf('{') + 1, s.lastIndexOf('}'));
