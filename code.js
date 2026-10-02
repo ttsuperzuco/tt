@@ -4510,7 +4510,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'var MBUSYAT=0,WBUSYAT=0,M6FROM=2,LASTSCR="";' +
   // ★画像生成を中止する（2026-10-02 まるちゃん「中止できないのおかしい」）。次の絵を頼まない・作りかけの絵は使わない。
   'document.addEventListener("click",function(ev){var b=ev.target&&ev.target.closest&&ev.target.closest("[data-imgstop]");' +
-  'if(!b)return;MKSTOP=true;b.disabled=true;b.textContent="中止しています…（今作っている1枚が終わるまで少し待ちます）";},true);' +
+  'if(!b)return;MKSTOP=true;b.disabled=true;b.textContent="中止しています…";' +
+  // 事務所パソコンに「今作っている絵を止めて」と伝える（作りかけの1枚もその場で止まる）
+  'try{ask("bc_wakuimg",{fields:JSON.stringify({mode:"stop"})},function(){},function(){});}catch(e2){}},true);' +
   // ★お客様のスマホでの折り返し＝共通の部品 bcLineWrap_（line_wrap.js・正本は 共通\画面\LINEの折り返し.js）を使う
   'function secTag(t){return \'<span class="bcsec" data-t="\'+t+\'">（\'+Math.round((Date.now()-t)/1000)+\'秒）</span>\';}' +
   'setInterval(function(){[].slice.call(document.querySelectorAll(".bcsec")).forEach(function(e){' +
@@ -4740,7 +4742,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:j.kind,days:j.days})},' +
   'function(g){if(MKSTOP){onDone(done,"中止");return;}if(g&&g.ok&&g.name){WDONE.push({label:j.label,thumb:g.thumb,name:g.name});' +
   'putIntoTargets(j.targets,g.name,g.thumb);done++;}i++;next();},' +
-  'function(m2){onDone(done,"「"+j.label+"」で止まりました："+m2);});})();},' +
+  'function(m2){onDone(done,MKSTOP?"中止":("「"+j.label+"」で止まりました："+m2));});})();},' +
   'function(m){onDone(0,m);});}' +
   // できた絵を、その対象の1つ目に入れる（前に入れた予約可能枠の絵は取り替える）
   // ★空っぽの区分（送らない区分）には絵も入れない（まるちゃん指示 2026-09-09）
