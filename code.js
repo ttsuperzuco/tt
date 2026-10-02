@@ -9524,6 +9524,22 @@ function procStockScript_(C) {
     else { staffLabel = autoLabel(); openItem(0, false); }
   });
   $('psBackWho').addEventListener('click', function (e) { e.preventDefault(); show('psMenu'); });
+
+  // ★2026-10-02 まるちゃん依頼：在庫を登録したら、この表を画像にしてリーダーのLINEグループへ送る。
+  //   事務所PCが見えないブラウザで「?view=procstock&dev=1&pstbl=<表>&at=<日時>」を開き、#psTbl だけを写真にする
+  //   （見た目をスマホの画面1か所で持つため＝PC側で描き直さない）。この時は表だけを出す。
+  try {
+    var qs = new URLSearchParams(location.search), q = qs.get('pstbl');
+    if (q) {
+      doneAt = qs.get('at') || '';
+      show('psDone');
+      $('psDoneMsg').style.display = 'none';
+      var hd = document.querySelectorAll('.hhead, .ubar');
+      for (var hi = 0; hi < hd.length; hi++) hd[hi].style.display = 'none';
+      $('psTbl').style.padding = '6px 8px 14px';
+      drawTable(q);
+    }
+  } catch (e) {}
 }
 
 function renderProcStockPage_(base, staff, dev) {
