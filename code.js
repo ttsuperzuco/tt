@@ -4678,7 +4678,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'banEl.style.display=slim;' +
   // ★画面（どの段階の・何番目か）が変わった時は、必ず一番上から見せる（2026-10-02 まるちゃん「確認なんだから一番上でなきゃだめ」）。
   //   同じ画面の中で欄を開いた・打った時は動かさない（打っている所が飛ばないように）。
-  'var sk2=[page,step,MSTEP,MIDX,SIDX,(typeof CGI!=="undefined"?CGI:"")].join("|");' +
+  'var sk2=[page,step,MSTEP,MIDX,SIDX,mode,(typeof CGI!=="undefined"?CGI:"")].join("|");' +
   'if(sk2!==LASTSCR){LASTSCR=sk2;try{window.scrollTo(0,0);}catch(e){}}}' +
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
@@ -5297,9 +5297,11 @@ function renderBroadcastPage_(base, staff, dev) {
   //   数えるのは「送る対象」だけ（本文を作らなかった対象は出さない）。
   'var lv=tLive(),pos=lv.indexOf(step);' +
   // ★2026-10-02 まるちゃん：題は大きく「最終確認」、その下に小さめで「※画像や文章を追加できます」
-  'var h=\'<div class="bcstop"><span class="bcsttl">最終確認</span>\'+' +
+  'var mt=(mode==="tag")?"送り先を変更":(mode==="img")?((ADDAT>=0?(ADDAT+1)+"つ目に":"")+"追加する画像を選ぶ")' +
+  ':(mode==="txt")?((EDI>=0)?"文章を修正":((ADDAT>=0?(ADDAT+1)+"つ目に":"")+"文章を追加")):(mode==="see")?"文章を見る":"最終確認";' +
+  'var h=\'<div class="bcstop"><span class="bcsttl">\'+mt+\'</span>\'+' +
   '\'<span class="bcsno">\'+(pos+1)+\' / \'+lv.length+\'</span></div>\'+' +
-  '\'<div class="bcsubnote">※画像や文章を追加できます</div>\'+' +
+  '(mode?"":\'<div class="bcsubnote">※画像や文章を追加できます</div>\')+' +
   // ★送り先を選び直せる（まるちゃん指示 2026-09-09）。選んでいなければ元の決まりのまま。
   '\'<div class="bccard"><div class="bcnamerow"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
   '\'<button type="button" class="bcmv" id="bctag">タグを変更</button></div>\'+' +
@@ -5309,7 +5311,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(n&&n<MAXP&&!mode)h+=\'<div class="bcaddslot"><span class="bcpno">1つ目の前に追加</span>\'+' +
   '\'<button type="button" data-addimg="0">🖼 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="0">✍ 文章を追加</button></div>\';' +
-  'if(n){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
+  'if(n&&!mode){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
   '(th?(\'<img src="\'+th+\'" data-big="\'+i+\'" style="cursor:zoom-in">\'):"")+' +
   '\'<span class="bcptx">\'+esc(partLabel(p))+\'</span>\'+' +
