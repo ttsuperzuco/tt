@@ -5005,7 +5005,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）。自動で訳す1つ目だけ紫。
   // ★2026-10-01 まるちゃん：最後の区分も「この内容でOK」。中国語版の作り方は次の画面（MSTEP=5）で選ぶ。
   'return \'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\';}' +
-  'if(MSTEP===5)return \'<button type="button" class="bctxt" id="bcmauto">以上の日本語文を全て翻訳し、中国語版を作成する</button>\'+' +
+  'if(MSTEP===5)return \'<button type="button" class="bctxt" id="bcmauto">今までの日本語文を全て翻訳し、中国語版を作成する</button>\'+' +
   '\'<button type="button" class="bcgo" id="bcmman">翻訳せずに手動で中国語版を作成する</button>\'+' +
   '\'<button type="button" class="bcgo" id="bcmnozh">中国語版は配信しない</button>\';' +
   'if(MSTEP===1){var zx=BORDER[MIDX],zlast=(MIDX===N-1);' +
@@ -5049,7 +5049,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'else if(MSTEP===5){' +
   'var ja5=MJA.filter(function(x){return String(x.text||"").replace(/^\\s+|\\s+$/g,"");});' +
   'h=\'<div class="bcstop"><span class="bcsttl">中国語版の作り方を選ぶ</span></div>\'+' +
-  '(ja5.length?cardsOf(ja5):\'<div class="bcstatus ng">日本語の文がありません。「← 戻る」で文を入れてください。</div>\');' +
+  '(ja5.length?"":\'<div class="bcstatus ng">日本語の文がありません。「← 戻る」で文を入れてください。</div>\');' +
   'if(!MBUSY&&ja5.length)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   // ★画像を作るか選ぶ画面（2026-10-01 まるちゃん「日本語のときとおなじ。つぎのがめんでいってから」）
   'else if(MSTEP===6){var nm6=sendNames();' +
