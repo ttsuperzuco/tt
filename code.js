@@ -4329,6 +4329,7 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bc textarea.bcmtx{min-height:200px;font-size:16px;line-height:1.8;padding:9px;}' +
     '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
     '.bcsttl{font-size:22px;font-weight:900;color:#fff;}' +
+    '.bcsubnote{font-size:13.5px;font-weight:700;color:#DCEAF2;margin:-6px 0 12px;}' +
     '.bcsno{margin-left:auto;font-size:13px;font-weight:800;color:#DCE7F2;}' +
     '#bcreload{margin-left:auto;align-self:center;padding:9px 18px;font-size:14px;font-weight:800;}' +
     '.bcagain{margin:0 0 12px;text-align:left;}' +
@@ -5295,8 +5296,10 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★「対象」の字は出さない（まるちゃん指示 2026-09-09）。番号だけ残す。
   //   数えるのは「送る対象」だけ（本文を作らなかった対象は出さない）。
   'var lv=tLive(),pos=lv.indexOf(step);' +
-  'var h=\'<div class="bcstop"><span class="bcsttl"></span>\'+' +
+  // ★2026-10-02 まるちゃん：題は大きく「最終確認」、その下に小さめで「※画像や文章を追加できます」
+  'var h=\'<div class="bcstop"><span class="bcsttl">最終確認</span>\'+' +
   '\'<span class="bcsno">\'+(pos+1)+\' / \'+lv.length+\'</span></div>\'+' +
+  '\'<div class="bcsubnote">※画像や文章を追加できます</div>\'+' +
   // ★送り先を選び直せる（まるちゃん指示 2026-09-09）。選んでいなければ元の決まりのまま。
   '\'<div class="bccard"><div class="bcnamerow"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
   '\'<button type="button" class="bcmv" id="bctag">タグを変更</button></div>\'+' +
