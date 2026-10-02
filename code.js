@@ -9344,6 +9344,7 @@ var PROCSTOCKCSS_ =
   '.pstbl th.o{background:#dc2626;font-size:13px;}' +
   '.pstbl td.o{background:#fef08a;color:#b91c1c;font-size:22px;font-weight:900;}' +
   '.pstbl td.o.z{background:#f1f5f9;color:#94a3b8;font-size:16px;}' +
+  '.pstitle{color:#fff;font-weight:900;font-size:26px;line-height:1.3;margin:18px 4px 4px;text-align:center;}' +
   '.pstnote{color:#eaf6fb;font-weight:700;font-size:14px;line-height:1.5;margin:4px 4px 10px;}';
 
 // 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
@@ -9480,7 +9481,9 @@ function procStockScript_(C) {
   function drawTable(res) {
     var t; try { t = JSON.parse(res || ''); } catch (e) { t = null; }
     if (!t || !t.rows) { $('psTbl').innerHTML = ''; return; }
-    var h = '<div class="pstnote">' + esc(t.from) + '〜' + esc(t.to) + 'の予約（' + t.visits + '件）と余裕分から出した、補充する数です。</div>' +
+    // ★2026-10-02 まるちゃん指定：表の上は「◯月◯日プロセル在庫の補充必要数」を大きく出すだけ（予約の期間の小さい説明は出さない）。
+    var md = (doneAt || '').slice(5, 10).split('-');
+    var h = '<div class="pstitle">' + (md.length === 2 ? (+md[0]) + '月' + (+md[1]) + '日<br>' : '') + 'プロセル在庫の補充必要数</div>' +
       '<div class="pstbl"><table><thead><tr><th>品物</th><th>今の<br>お店在庫</th><th>1か月の<br>予約分</th><th>余裕分</th><th class="o">必要<br>補充数</th></tr></thead><tbody>';
     for (var i = 0; i < t.rows.length; i++) {
       var x = t.rows[i];
