@@ -1991,6 +1991,34 @@ function ltCard_(r) {
   '</article>';
 }
 
+// GGMAP書き込み未返信（グーグルマップの口コミで、お店がまだ返事していない物）の欄。
+function ltGmapSection_(g) {
+  var list = (g && g.unreplied) || [];
+  if (!list.length) return '';
+  var when = String(g.checked_at || '').replace(/^\d{4}-(\d{2})-(\d{2}) (\d{2}:\d{2}).*$/, '$1/$2 $3');
+  var cardsHtml = list.map(function (u) {
+    var n = parseInt(u.stars, 10);
+    var stars = (n >= 1 && n <= 5)
+      ? '<span class="lgmstar">' + '★★★★★'.slice(0, n) + '<span class="lgmoff">' + '★★★★★'.slice(n) + '</span></span>' : '';
+    var body = u.text
+      ? esc_(u.text).replace(/\n/g, '<br>')
+      : '<span class="lgmnone">（星だけで、文は書かれていません）</span>';
+    return '' +
+    '<article class="lcard lgm">' +
+      '<div class="lhead"><span class="lname">' + esc_(u.name || '（名前なし）') + '</span></div>' +
+      '<div class="lmeta"><span class="ltag">書いた<br>時期</span><span class="ltxt">' + esc_(u.when || '') + stars + '</span></div>' +
+      '<div class="lgmbox">' +
+        '<div class="lgmh"><span class="lgmlab">口コミの本文</span>' +
+          '<a class="lgmbtn" href="' + esc_(g.reply_url || 'https://business.google.com/reviews') + '" target="_blank" rel="noopener">グーグルで<br>返信する ↗</a></div>' +
+        '<div class="lgmb">' + body + '</div>' +
+      '</div>' +
+    '</article>';
+  }).join('\n');
+  return '<h1>⚠️ GGMAP書き込み未返信 <span class="lcnt">' + list.length + '件</span></h1>' +
+         '<div class="lgmwhen">口コミを確かめた時刻：' + esc_(when) + '</div>' +
+         '<div class="lcards">' + cardsHtml + '</div>';
+}
+
 // 下にまとめる「まだ予約前・対応不要」の1行の状態ラベル（記入漏れではない物）。
 function ltDismLabel_(r) {
   var rc = r.recheck_disposition || '';
@@ -2031,6 +2059,9 @@ function renderLtPage_(d, base, staff, dev) {
   if (!action.length) {
     cards = '<h1>TimeTree予約 記入漏れ</h1><div class="lempty">記入漏れはありません 🎉</div>';
   }
+  // ★2026-10-02 まるちゃん決定：グーグルマップの口コミで、お店がまだ返事していない物をこの画面の下に出す。
+  //   事務所PCが毎日10時に読んだ結果（d.gmap）をそのまま出すだけ。返事待ちが無い日は何も出さない。
+  cards += ltGmapSection_(d.gmap);
 
   var dismRows = dismissed.length
     ? dismissed.map(function (r) {
@@ -12091,6 +12122,17 @@ var LTCSS_ =
 '  .lqb.s{ background:#0b6e3b; color:#fff; border-radius:14px 14px 3px 14px; }' +
 '  .lqnone{ color:var(--sub); font-size:13px; padding:6px 2px; }' +
 '  .lempty{ text-align:center; color:#fff; padding:26px; font-weight:700; }' +
+// ★2026-10-02：GGMAP書き込み未返信のカード（グーグルの青で、記入漏れのカードと見分ける）。
+'  .lcard.lgm{ border-left-color:#4285F4; }' +
+'  .lgmwhen{ color:rgba(255,255,255,.85); font-size:12px; margin:-8px 0 12px; }' +
+'  .lgmstar{ margin-left:10px; color:#f59e0b; font-size:1.3rem; letter-spacing:1px; } .lgmoff{ color:#cbd5e1; }' +
+'  .lgmbox{ border:2px solid #4285F4; border-radius:12px; overflow:hidden; margin-top:6px; }' +
+'  .lgmh{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:#fff; padding:9px 10px; }' +
+'  .lgmlab{ font-size:1.33rem; font-weight:900; color:#4285F4; }' +
+'  .lgmbtn{ flex:0 0 auto; text-align:center; background:#4285F4; color:#fff; font-weight:800;' +
+'    font-size:1.2rem; line-height:1.25; text-decoration:none; border-radius:11px; padding:11px 15px; }' +
+'  .lgmb{ background:#f8fafc; color:#0f172a; font-size:1.12rem; padding:11px 13px; white-space:normal; }' +
+'  .lgmnone{ color:#64748b; }' +
 '  .loksec{ margin-top:14px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px 12px; }' +
 '  .loksec summary{ cursor:pointer; font-weight:800; padding:10px 0; }' +
 '  .loksec table{ width:100%; border-collapse:collapse; font-size:12.5px; }' +
