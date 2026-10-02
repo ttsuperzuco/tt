@@ -1936,6 +1936,10 @@ function ltCard_(r) {
   // LINEとTimeTreeで時刻がズレている時（要修正）は、両方の時刻をピンクで強調する。
   var _diff = (r.status === 'time_mismatch') ? ' ldtdiff' : '';
   var dateStr = esc_(jpDateWeekday_(r.date));
+  // ★2026-10-02 まるちゃん：次回予約のお知らせの不一致は、タイムツリー側の日付が違うことがあるので、その日付で出す。
+  var _isNext = (r.status === 'next_notice_mismatch');
+  var ttDateStr = (_isNext && r.tt_date) ? esc_(jpDateWeekday_(r.tt_date)) : dateStr;
+  if (_isNext) _diff = ' ldtdiff';
 
   // ★削除もれ＝お客様はLINEでキャンセル済み。LINE側は時刻でなく「キャンセル」と出す
   //   （普通の予約に見えないように＝やることは"消す"）。
@@ -1952,7 +1956,7 @@ function ltCard_(r) {
   var ttInner = r.room_undecided
     ? '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt ltroomx">部屋未定</span></span>'
     : (_ttHas
-      ? '<span class="ldtdt"><span class="ldtd">' + dateStr + '</span><span class="ldtt' + _diff + '">' + esc_(ttStart) + '</span></span>'
+      ? '<span class="ldtdt"><span class="ldtd">' + ttDateStr + '</span><span class="ldtt' + _diff + '">' + esc_(ttStart) + '</span></span>'
       : '<span class="ldtdt"><span class="ldtt ldtnone">記入なし</span></span>');
   var ttCell =
     '<div class="ldtcell">' +
@@ -1964,6 +1968,7 @@ function ltCard_(r) {
   '<article class="lcard ' + cls + '" data-search="' + search + '">' +
     '<div class="lhead">' + codeHtml + '<span class="lname">' + esc_(name) + '</span></div>' +
     '<div class="ldtwrap"><div class="ldtin">' + lineCell + ttCell + '</div></div>' +
+    (_isNext && r.action ? '<div class="lnextact">' + esc_(r.action) + '</div>' : '') +
     treatHtml +
     '<div class="lconv">' +
       '<div class="lconvh"><span class="lconvlab">根拠のLINE会話</span>' + lineBtn + '</div>' +
@@ -1988,6 +1993,8 @@ function renderLtPage_(d, base, staff, dev) {
 
   // ★状態ごとに見出しを分ける（時刻ズレ／記入もれ／要確認）。「⚠️ TimeTree予約ズレ ◯件」の形。
   var LTGROUPS = [
+    // ★2026-10-02 まるちゃん：施術後のお知らせ（☆次回のご予約）とタイムツリーの日時が合わない
+    { st: 'next_notice_mismatch', title: 'TT：次回予約のお知らせの不一致' },
     { st: 'time_mismatch',  title: 'TimeTree予約ズレ' },
     { st: 'not_found',      title: '記入もれ' },
     { st: 'room_undecided', title: '部屋未定' },
@@ -8007,7 +8014,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'document.getElementById("exrplist").addEventListener("click",function(e){var b=e.target.closest(".expk");if(!b||b.className.indexOf("dis")>=0)return;var v=b.getAttribute("data-v");pickRoom=(v==="__keep")?"":v;if(MULTI_){var p=MPLAN[MIDX];p.staff=pickStaff;p.room=pickRoom;MIDX++;exMultiPlanStep();return;}realChange(document.getElementById("exdone2"));});' +
     /* ★★2026-09-30 まるちゃん決定：同じ日の予約をまとめて移す。
        1件目の開始時刻だけ入れれば、2件目以降は今と同じ間隔のまま一緒に動く。担当・部屋はそれぞれ今のまま移し、
-       移す先で空いていない予約があれば、その予約だけ「担当を変更しますか？」「部屋を変更しますか？」を出す。
+       ★2026-10-02 まるちゃん：1件ずつ必ず「担当を変更しますか？」「部屋を変更しますか？」を出す（空いていても聞く＝1件の時と同じ）。
        書き込みは1件ずつ順番に行い、途中で失敗したら「何件目まで済んだか」をそのまま出す。 */
     'var MPLAN=[],MIDX=0;' +
     'function exHm_(m){return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2);}' +
@@ -8018,7 +8025,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exPlanStaff_(q){return q.staff||staffNum(q.r.staff_emoji||"");}' +
     'function exPlanRoom_(q){return q.room||roomVal(q.r.room||"");}' +
     /* 同じ時間に重なる予約どうしで、同じ担当・同じ部屋を取り合わないように、先に決めた分を空きから外す。 */
-    'function exMultiPlanStep(){while(MIDX<MPLAN.length){var p=MPLAN[MIDX];var fs=p.fs.slice(),fr=p.fr.slice();for(var j=0;j<MIDX;j++){var q=MPLAN[j];if(q.sm<p.sm+p.dur&&p.sm<q.sm+q.dur){var a=fs.indexOf(exPlanStaff_(q));if(a>=0)fs.splice(a,1);var b=fr.indexOf(exPlanRoom_(q));if(b>=0)fr.splice(b,1);}}var cs=staffNum(p.r.staff_emoji||""),cr=roomVal(p.r.room||"");if(fs.indexOf(cs)>=0&&fr.indexOf(cr)>=0){p.staff="";p.room="";MIDX++;continue;}chosen=p.r;availData={free_staff:fs,free_rooms:fr};newSm=p.sm;pickStaff="";pickRoom="";showStaffPick();return;}chosen=MULTI_[0];exMultiConfirm();}' +
+    'function exMultiPlanStep(){while(MIDX<MPLAN.length){var p=MPLAN[MIDX];var fs=p.fs.slice(),fr=p.fr.slice();for(var j=0;j<MIDX;j++){var q=MPLAN[j];if(q.sm<p.sm+p.dur&&p.sm<q.sm+q.dur){var a=fs.indexOf(exPlanStaff_(q));if(a>=0)fs.splice(a,1);var b=fr.indexOf(exPlanRoom_(q));if(b>=0)fr.splice(b,1);}}chosen=p.r;availData={free_staff:fs,free_rooms:fr};newSm=p.sm;pickStaff="";pickRoom="";showStaffPick();return;}chosen=MULTI_[0];exMultiConfirm();}' +
     'function exMultiConfirm(){var t="この"+MPLAN.length+"件を移します。よろしいですか？\\n";for(var i=0;i<MPLAN.length;i++){var p=MPLAN[i];var rk=exPlanRoom_(p);var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var sn=exPlanStaff_(p);t+="\\n"+(i+1)+"件目："+newYmd+" "+exHm_(p.sm)+"〜"+exHm_(p.sm+p.dur)+"　"+(SEMO_[sn]||"")+(SNM_[sn]||"")+"　"+rn;}szPopup_(t,{cancel:true,yesLabel:"移す",onYes:exMultiRunMove});}' +
     'function exMultiRunMove(){var p0=newYmd.split("-");var list=[];for(var i=0;i<MPLAN.length;i++){var p=MPLAN[i];var sd=new Date(parseInt(p0[0],10),parseInt(p0[1],10)-1,parseInt(p0[2],10),0,0,0,0);sd.setMinutes(p.sm);var ed=new Date(sd.getTime()+p.dur*60000);var f={cal:p.r.calendar_id,event:p.r.event_id,start:_iso(sd),end:_iso(ed)};if(p.staff){f.new_fruit=SEMO_[p.staff];}if(p.room&&RMAP_[p.room]){f.to_cal=RMAP_[p.room].cal;f.to_label=RMAP_[p.room].label;}list.push(f);}var md=parseInt(p0[1],10)+"月"+parseInt(p0[2],10)+"日 "+exHm_(MPLAN[0].sm);exMultiRun("change_reservation",list,MPLAN.length+"件を "+md+"〜 へ移しました");}' +
     'function exMultiRun(op,list,doneTitle){var i=0;function step(){if(i>=list.length){exOvShow_(szDoneHtml_(doneTitle,"予約入力に戻る"),"#16a34a");var b=document.getElementById("szDoneBack");if(b){b.addEventListener("click",function(){location.href=TOPHREF;});}return;}exOvShow_(szBusyHtml_("まとめて変更中です（"+(i+1)+"／"+list.length+"件目）"),"#2C7A99");jsonp({action:"submit",key:KEY,op:op,who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(list[i])},function(r){if(!r||!r.ok||!r.id){exMultiFail_(i);return;}exPollJob_(r.id,function(ok,res){var d={};try{d=JSON.parse(res||"{}");}catch(e){}if(!ok||(d&&d.ok===false)){exMultiFail_(i,ok?"":res);return;}i++;step();});});}step();}' +
@@ -11729,6 +11736,8 @@ var LTCSS_ =
 '  .ldtdiff{ color:#ff5fa2; }' +
 '  .ldtnone{ color:#111; background:#fff; font-size:1.2rem; font-weight:900; padding:0 6px; border-radius:7px; white-space:nowrap; }' +
 '  .ltroomx{ color:#ff5fa2; font-size:1.6rem; font-weight:900; white-space:nowrap; }' +
+// ★2026-10-02：次回予約のお知らせの不一致＝スタッフがすることの1行（今の見出しの文字色・太さにそろえる）。
+'  .lnextact{ margin-top:8px; font-size:1.1rem; font-weight:800; color:#ff5fa2; }' +
 '  .lmeta{ display:flex; align-items:stretch; gap:9px; margin:8px 0 14px; }' +
 '  .ltag{ flex:0 0 auto; min-width:3.6em; background:#312e81; color:#c7d2fe; font-size:.74rem;' +
 '    font-weight:700; border-radius:8px; padding:8px 6px; display:flex; align-items:center;' +
