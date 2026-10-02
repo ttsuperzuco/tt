@@ -170,6 +170,9 @@ function doGet(e) {
   } else if (view === 'yoyaku') {
     title = '予約入力';                                  // ★予約入力のトップ画面（新規／既存／変更の3ボタン・PC版と同じ見た目）
     html = renderReservationHomePage_(base, staff, dev);
+  } else if (view === 'procstock') {
+    title = 'プロセル在庫';                             // ★品物ごとの今ある数を入れる（純JS・登録は受付係）
+    html = renderProcStockPage_(base, staff, dev);
   } else if (view === 'procamp') {
     title = 'プロセル頭キャリスト';                     // ★社長版と開発版。静的アプリが一覧を取って描く（ここは中身なし）
     html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてください。' }, {}, base, staff, dev);
@@ -1010,7 +1013,11 @@ var DEFAULT_TILE_SETTINGS_ = {
   timetree:   { exec: false, staff: false },
   // ★T＆Tショップ履歴＝ネットショップに誰が何回来たか（2026-09-19 まるちゃん依頼・管理者用）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
-  shophist:   { exec: false, staff: false }
+  shophist:   { exec: false, staff: false },
+  // ★プロセル在庫＝品物ごとの今ある数を入れる（2026-10-02 まるちゃん依頼・実務者用）。
+  //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝
+  //   自動監視の人ごとの表示でスタッフにONにできる（まるちゃん「完成したらスタッフにも」）。
+  procstock:  { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1018,7 +1025,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1738,7 +1745,11 @@ var TILE_DEFS_ = [
   // ★T＆Tショップ履歴＝ネットショップ（T＆T SIGNATURE）に、どなたが・何回・何を見て・注文したか（2026-09-19）。
   //   事務所PCがまとめた shop_history.json を読んで出すだけ（まとめは 商品ページ（T＆Tショップ）の ショップ履歴.py）。
   { id: 'shophist', cls: 'shophist', view: 'shophist',
-    icon: '<span class="ticon">🛍️</span>', label: 'T＆Tショップ\n履歴' }
+    icon: '<span class="ticon">🛍️</span>', label: 'T＆Tショップ\n履歴' },
+  // ★プロセル在庫＝品物を1つずつ数字ボタンで入れて、最後に一覧で確かめて登録（2026-10-02・実務者用）。
+  //   登録は事務所PCの記録に残すだけ（受付係 op=procell_stock_save）。
+  { id: 'procstock', cls: 'procstock', view: 'procstock',
+    icon: '<span class="ticon">📦</span>', label: 'プロセル\n在庫' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -7310,6 +7321,22 @@ function renderNewReservationPage_(base, staff, dev) {
   script;
 }
 
+// ★数字ボタン（1〜9・⌫・0・C）と、数字を見せる白い箱・緑の進むボタン＝共通の部品（2026-10-02）。
+//   既存の予約（お客様番号・時刻）とプロセル在庫（個数）が同じ物を使う。見た目を直す時はここだけ直す。
+//   ボタンの押し方：data-k="del"＝1文字消す／data-k="clr"＝全部消す／それ以外は数字。
+var EXPADCSS_ =
+  '.exbox{width:100%;box-sizing:border-box;background:#fff;color:#0f172a;border:0;border-radius:16px;text-align:center;letter-spacing:.08em;font-size:44px;font-weight:900;padding:16px 12px;margin:6px 0 16px;box-shadow:0 4px 14px rgba(0,0,0,.15);resize:none;overflow:hidden;line-height:1.35;font-family:inherit;}' +
+  '.exbox::placeholder{color:#94a3b8;font-weight:800;font-size:23px;letter-spacing:normal;line-height:1.5;}' +
+  '.expad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 16px;}' +
+  '.expad button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:8px 0;font-size:30px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.expad button.util{background:#fde2e4;color:#9b1c31;font-size:24px;}' +
+  '.exgo{display:block;width:100%;margin:22px 0 6px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);cursor:pointer;}';
+var EXPADHTML_ =
+  '<button>1</button><button>2</button><button>3</button>' +
+  '<button>4</button><button>5</button><button>6</button>' +
+  '<button>7</button><button>8</button><button>9</button>' +
+  '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>';
+
 /** 既存の予約／既存の変更＝番号入力→日付選択の2画面（PC版と同じ青緑の見た目・日付選択まで）。
  *  ★2026-08-03：まるちゃん指示①＝まずは番号→日付の2画面だけ（予約えらび・登録は後回し）。 */
 function renderExistingPage_(base, staff, dev, mode) {
@@ -7334,23 +7361,17 @@ function renderExistingPage_(base, staff, dev, mode) {
   for (var _rd = 0; _rd < DURS2.length; _rd++) { rvDurP += exp_('rvdur', DURS2[_rd], DURS2[_rd], '', true); }
   for (var _rs = 0; _rs < STAFF2.length; _rs++) { rvStaffP += exp_('rvstaff', STAFF2[_rs][0], STAFF2[_rs][1], STAFF2[_rs][2], false); }
   for (var _rr = 0; _rr < ROOMS2.length; _rr++) { rvRoomP += exp_('rvroom', ROOMS2[_rr][0], ROOMS2[_rr][1], ROOMS2[_rr][2], false); }
-  var css =
+  var css = EXPADCSS_ +   /* 数字ボタン・数字の箱・緑の進むボタン＝共通（プロセル在庫と同じ物） */
     '.ex{max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.exstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:14px;margin:2px 4px 8px;}' +
     '#exwho{font-size:28px;color:#fff;font-weight:900;margin:2px 4px 14px;}' +   /* 日付ページの「M332の既存の予約」＝2倍 */
-    '.exbox{width:100%;box-sizing:border-box;background:#fff;color:#0f172a;border:0;border-radius:16px;text-align:center;letter-spacing:.08em;font-size:44px;font-weight:900;padding:16px 12px;margin:6px 0 16px;box-shadow:0 4px 14px rgba(0,0,0,.15);resize:none;overflow:hidden;line-height:1.35;font-family:inherit;}' +
-    '.exbox::placeholder{color:#94a3b8;font-weight:800;font-size:23px;letter-spacing:normal;line-height:1.5;}' +
     '.exseg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(255,255,255,.16);border-radius:16px;padding:6px;margin:0 0 14px;overflow:hidden;}' +
     '.exseg .thumb{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/3);background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .22s;}' +
     '.exseg button{position:relative;z-index:1;background:none;border:0;padding:14px 4px;font-size:19px;font-weight:800;color:#eaf6fb;cursor:pointer;}' +
     '.exseg button[aria-pressed="true"]{color:#0f172a;}' +
-    '.expad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 16px;}' +
-    '.expad button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:8px 0;font-size:30px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
-    '.expad button.util{background:#fde2e4;color:#9b1c31;font-size:24px;}' +
     '.expaste{background:rgba(255,255,255,.14);border-radius:14px;padding:12px 14px;margin:2px 0 4px;}' +
     '.expl{color:#eaf6fb;font-weight:800;font-size:15px;margin-bottom:8px;}' +
     '.expaste input{width:100%;box-sizing:border-box;border:0;border-radius:10px;padding:14px;font-size:20px;font-weight:800;color:#0f172a;background:#fff;}' +
-    '.exgo{display:block;width:100%;margin:22px 0 6px;padding:18px;font-size:21px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);cursor:pointer;}' +
     '.exhint{color:#eaf6fb;font-weight:700;font-size:16px;line-height:1.5;margin:2px 4px 12px;}' +
     '.exwho1{color:#fff;font-weight:900;font-size:24px;margin:2px 4px 4px;}' +
     '.exwd2{color:#fff;font-weight:900;font-size:40px;line-height:1.2;margin:0 4px 14px;}' +
@@ -7454,12 +7475,7 @@ function renderExistingPage_(base, staff, dev, mode) {
         '<button data-v="M" aria-pressed="true">M（男）</button>' +
         '<button data-v="F">F（女）</button>' +
         '<button data-v="">文字なし</button></div>' +
-      '<div class="expad" id="expad">' +
-        '<button>1</button><button>2</button><button>3</button>' +
-        '<button>4</button><button>5</button><button>6</button>' +
-        '<button>7</button><button>8</button><button>9</button>' +
-        '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>' +
-      '</div>' +
+      '<div class="expad" id="expad">' + EXPADHTML_ + '</div>' +
       '<button class="exgo" id="exToDate">' + (isChange ? '予約をさがす→' : '日付入力へ→') + '</button>' +
       (isChange ? '<button class="exgo" id="exNewCust" style="background:#7c3aed;margin-top:8px">新規のお客様（番号なし）から選ぶ</button>' : '') +
     '</div>';
@@ -7484,11 +7500,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="exgrid" id="exgrid"></div>' +
       '<div class="exdone" id="exdone" style="display:none"></div>' +
     '</div>';
-  var padHtml =
-    '<button>1</button><button>2</button><button>3</button>' +
-    '<button>4</button><button>5</button><button>6</button>' +
-    '<button>7</button><button>8</button><button>9</button>' +
-    '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>';
+  var padHtml = EXPADHTML_;
   var timeSec =
     '<div id="exTime" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackTime" href="javascript:void(0)">← 戻る</a></div>' +
@@ -9290,6 +9302,235 @@ function renderProcampPage_(list, choice, base, staff, dev) {
       '<div class="pcampfoot"><button type="button" class="pcampsend" id="pcampsend">登録</button>' +
       '<span class="pcampst" id="pcampst"></span></div>' +
     '</div></div>' + script;
+}
+
+// ========== プロセル在庫（2026-10-02 まるちゃん依頼・実務者用） ==========
+// 「現在庫入力」を押す→（お店のパソコン・お店スマホ・パソコン版だけ）入力する人をえらぶ→
+// 品物を1つずつ数字ボタンで入れて「これでOK」→最後に一覧→「これで在庫を登録」。
+// ★まるちゃん決定：前回の数は出さない／＋−ボタンは付けない（毎日かなり変わるので数字で入れる）／
+//   日時は入れない（登録した時の日時を残す）／スマホは誰が入れたか分かるので人をえらばない。
+// 送り先は受付係(op=procell_stock_save)＝事務所PCの記録に残すだけ（タイムツリーにもLINEにも触らない）。
+//   受け取り＝プロセル残り本数計算\programs\procell_stock.py。品物の名前と並びの正本はここ（PROCSTOCK_ITEMS_）。
+var PROCSTOCK_ITEMS_ = ['Tip0.25', 'Tip0.5', 'Hairセラム', 'Proセラム', 'MDセラム', 'マスク',
+  'アフターTryPro', 'アフターTryMD', 'アフターFullPro', 'アフターFullMD'];
+var PROCSTOCKCSS_ =
+  '.ps{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+  '.psstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:16px;margin:4px 4px 6px;}' +
+  '.psname{color:#fff;font-weight:900;font-size:40px;line-height:1.2;margin:0 4px 10px;word-break:break-all;}' +
+  '.pswho{color:#eaf6fb;font-weight:800;font-size:16px;margin:2px 4px 12px;}' +
+  '.pshint{color:#eaf6fb;font-weight:700;font-size:16px;line-height:1.5;margin:6px 4px 12px;}' +
+  '.psbox{min-height:1.35em;}' +
+  '.psbox .ph{color:#94a3b8;font-weight:800;font-size:23px;letter-spacing:normal;}' +
+  '.psbox .u{font-size:26px;margin-left:6px;letter-spacing:normal;}' +
+  '.pspeople{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px;}' +
+  '.pspeople button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:18px 6px;font-size:21px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.pslist{background:#fff;border-radius:14px;overflow:hidden;margin:6px 0 4px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+  '.pslist button{display:flex;width:100%;align-items:center;justify-content:space-between;background:#fff;color:#0f172a;border:0;border-top:1px solid #e2e8f0;padding:13px 16px;font:inherit;font-size:19px;font-weight:800;cursor:pointer;text-align:left;}' +
+  '.pslist button:first-child{border-top:0;}' +
+  '.pslist button:nth-child(even){background:#f4f8f9;}' +
+  '.pslist .q{font-size:24px;font-weight:900;white-space:nowrap;margin-left:12px;}' +
+  '.psst{color:#eaf6fb;font-weight:800;font-size:16px;margin:8px 4px;min-height:1.4em;}' +
+  '.psdone{background:#fff;color:#0f172a;border-radius:16px;padding:22px 16px;text-align:center;font-weight:900;font-size:24px;line-height:1.5;margin:10px 0;}' +
+  '.psdone small{display:block;font-size:16px;font-weight:700;color:#475569;margin-top:6px;}';
+
+// 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
+function procStockScript_(C) {
+  var ITEMS = C.items;
+  function $(id) { return document.getElementById(id); }
+  var SECS = ['psMenu', 'psWho', 'psItem', 'psList', 'psDone'];
+  function show(id) {
+    for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none';
+    window.scrollTo(0, 0);
+  }
+  var vals = {}, cur = 0, fromList = false, digits = '', staffLabel = '', sending = false;
+  function cfg() { try { return JSON.parse(localStorage.getItem('sz_cfg') || '{}'); } catch (e) { return {}; } }
+  function labels() { return (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(cfg()) : {}; }
+  // お店のパソコン（お店受付PC・パソコン版のズコ）とお店スマホは、誰が入れたか分からない＝人をえらぶ。
+  function needPick() {
+    var w = window.__SZ_WHO_ || '';
+    return !!window.pywebview || w === 'reception' || w === 'reception_sp';
+  }
+  function autoLabel() {
+    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = labels();
+    if (w && L[w]) return L[w];
+    if (r === '社長(幹部)') return L.kanbu || '🍅トマト';
+    if (r === '開発') return 'Ryu';
+    return r || '不明';
+  }
+  function popup(msg) { if (typeof szPopup_ === 'function') szPopup_(msg); else alert(msg); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  // ── 人をえらぶ ──
+  function drawPeople() {
+    var ids = (typeof _peopleFromCfg_ === 'function') ? _peopleFromCfg_(cfg()) : [];
+    var L = labels(), h = '';
+    for (var i = 0; i < ids.length; i++) {
+      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
+      h += '<button type="button" data-lb="' + esc(L[ids[i]] || ids[i]) + '">' + esc(L[ids[i]] || ids[i]) + '</button>';
+    }
+    $('psPeople').innerHTML = h;
+  }
+  $('psPeople').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    staffLabel = b.getAttribute('data-lb'); vals = {}; openItem(0, false);
+  });
+
+  // ── 1品ずつ入れる ──
+  function drawBox() {
+    $('psBox').innerHTML = digits ? esc(digits) + '<span class="u">個</span>' : '<span class="ph">数字を入れてください</span>';
+  }
+  function openItem(i, back) {
+    cur = i; fromList = !!back; digits = (vals[i] !== undefined) ? String(vals[i]) : '';
+    $('psStep').textContent = (i + 1) + ' / ' + ITEMS.length;
+    $('psName').textContent = ITEMS[i];
+    $('psWho1').textContent = '入力する人：' + staffLabel;
+    $('psOk').textContent = fromList ? 'これでOK → 一覧へもどる' : (i === ITEMS.length - 1 ? 'これでOK → 一覧へ' : 'これでOK → 次へ');
+    drawBox(); show('psItem');
+  }
+  function press(k) {
+    if (k === 'clr') digits = '';
+    else if (k === 'del') digits = digits.slice(0, -1);
+    else if (/^[0-9]$/.test(k) && digits.length < 4) digits = (digits === '0') ? k : digits + k;
+    drawBox();
+  }
+  $('psPad').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    press(b.getAttribute('data-k') || b.textContent);
+  });
+  function ok() {
+    if (digits === '') { popup('数を入れてください（無い時は 0）'); return; }
+    vals[cur] = parseInt(digits, 10);
+    if (fromList || cur === ITEMS.length - 1) openList(); else openItem(cur + 1, false);
+  }
+  $('psOk').addEventListener('click', ok);
+  // パソコンはキーボードの数字・Enter・BackSpaceでも入れられる。
+  document.addEventListener('keydown', function (e) {
+    if ($('psItem').style.display === 'none') return;
+    if (/^[0-9]$/.test(e.key)) { press(e.key); e.preventDefault(); }
+    else if (e.key === 'Backspace') { press('del'); e.preventDefault(); }
+    else if (e.key === 'Enter') { ok(); e.preventDefault(); }
+  });
+  $('psBackItem').addEventListener('click', function (e) {
+    e.preventDefault();
+    if (fromList) openList();
+    else if (cur > 0) openItem(cur - 1, false);
+    else if (needPick()) show('psWho');
+    else show('psMenu');
+  });
+
+  // ── 最後に一覧 ──
+  function openList() {
+    var h = '';
+    for (var i = 0; i < ITEMS.length; i++) {
+      h += '<button type="button" data-i="' + i + '"><span>' + esc(ITEMS[i]) + '</span><span class="q">' + vals[i] + ' 個</span></button>';
+    }
+    $('psRows').innerHTML = h;
+    $('psWho2').textContent = '入力する人：' + staffLabel;
+    $('psSt').textContent = '';
+    $('psSend').disabled = false;
+    show('psList');
+  }
+  $('psRows').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || sending) return;
+    openItem(parseInt(b.getAttribute('data-i'), 10), true);
+  });
+  $('psBackList').addEventListener('click', function (e) {
+    e.preventDefault(); if (sending) return; openItem(ITEMS.length - 1, false);
+  });
+
+  // ── 登録（事務所PCへ頼んで、済んだか見に行く） ──
+  function two(n) { return ('0' + n).slice(-2); }
+  function stamp(d) { return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds()); }
+  function jsonp(p, cb) {
+    var n = '__pstock' + Date.now() + Math.floor(Math.random() * 1000);
+    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+    var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
+    s.onerror = function () { cb({ ok: false, error: '通信エラーです' }); }; document.body.appendChild(s);
+  }
+  function fail(msg) { sending = false; $('psSend').disabled = false; $('psSt').textContent = ''; popup(msg); }
+  var polls = 0, doneAt = '';
+  function poll(id) {
+    polls++;
+    if (polls > LIMITS.tries('procell_stock_save', 1000)) { fail('時間切れです。事務所PCが動いているかご確認のうえ、もう一度「これで在庫を登録」を押してください。'); return; }
+    jsonp({ action: 'status', key: C.key, id: id }, function (r) {
+      if (!r || !r.ok) { fail('登録できませんでした：' + ((r && r.error) || '不明')); return; }
+      if (r.status === 'pending' || r.status === 'running' || r.status === 'queued' || r.status === '') { setTimeout(function () { poll(id); }, 1000); return; }
+      if (r.status !== 'done') { fail('登録できませんでした：' + (r.result || r.status)); return; }
+      sending = false;
+      $('psDoneMsg').innerHTML = '在庫を登録しました<small>' + esc(doneAt.slice(0, 16).replace(/-/g, '/')) + '　' + esc(staffLabel) + '</small>';
+      show('psDone');
+    });
+  }
+  $('psSend').addEventListener('click', function () {
+    if (sending) return;
+    var counts = {};
+    for (var i = 0; i < ITEMS.length; i++) {
+      if (vals[i] === undefined) { popup(ITEMS[i] + ' の数がまだ入っていません'); return; }
+      counts[ITEMS[i]] = vals[i];
+    }
+    sending = true; polls = 0; doneAt = stamp(new Date());
+    $('psSend').disabled = true; $('psSt').textContent = '登録しています…';
+    jsonp({ action: 'submit', key: C.key, op: 'procell_stock_save',
+            who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '',
+            fields: JSON.stringify({ staff: staffLabel, at: doneAt, counts: counts }) },
+      function (r) {
+        if (!r || !r.ok || !r.id) { fail('登録できませんでした：' + ((r && r.error) || '不明')); return; }
+        setTimeout(function () { poll(r.id); }, 1000);
+      });
+  });
+
+  // ── はじめ ──
+  $('psStart').addEventListener('click', function () {
+    vals = {};
+    if (needPick()) { staffLabel = ''; drawPeople(); show('psWho'); }
+    else { staffLabel = autoLabel(); openItem(0, false); }
+  });
+  $('psBackWho').addEventListener('click', function (e) { e.preventDefault(); show('psMenu'); });
+}
+
+function renderProcStockPage_(base, staff, dev) {
+  var head = function (icon, name) {
+    return '<div class="hhead"><span class="bmark">' + icon + '</span><span class="bname">' + name + '</span></div>';
+  };
+  var inBack = function (id) {
+    return '<div class="ubar"><a class="uhome" id="' + id + '" href="javascript:void(0)">← 戻る</a></div>';
+  };
+  var C = {
+    items: PROCSTOCK_ITEMS_,
+    exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
+    key: 'kx7Q2p9mVt4Zr8'
+  };
+  return '<style>' + HOMECSS_ + EXPADCSS_ + PROCSTOCKCSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="ps">' +
+      '<div id="psMenu">' + head('📦', 'プロセル在庫') +
+        '<button type="button" class="exgo" id="psStart">現在庫入力</button>' +
+      '</div>' +
+      '<div id="psWho" style="display:none">' + inBack('psBackWho') + head('🙋', '入力する人') +
+        '<div class="pshint">入力する人をえらんでください</div>' +
+        '<div class="pspeople" id="psPeople"></div>' +
+      '</div>' +
+      '<div id="psItem" style="display:none">' + inBack('psBackItem') + head('📦', '現在庫入力') +
+        '<div class="psstep" id="psStep"></div>' +
+        '<div class="psname" id="psName"></div>' +
+        '<div class="exbox psbox" id="psBox"></div>' +
+        '<div class="expad" id="psPad">' + EXPADHTML_ + '</div>' +
+        '<button type="button" class="exgo" id="psOk">これでOK → 次へ</button>' +
+        '<div class="pswho" id="psWho1"></div>' +
+      '</div>' +
+      '<div id="psList" style="display:none">' + inBack('psBackList') + head('📋', '入力した在庫') +
+        '<div class="pswho" id="psWho2"></div>' +
+        '<div class="pshint">直したい品物は、押すと入れ直せます</div>' +
+        '<div class="pslist" id="psRows"></div>' +
+        '<button type="button" class="exgo" id="psSend">これで在庫を登録</button>' +
+        '<div class="psst" id="psSt"></div>' +
+      '</div>' +
+      '<div id="psDone" style="display:none">' + head('✅', 'プロセル在庫') +
+        '<div class="psdone" id="psDoneMsg"></div>' +
+      '</div>' +
+    '</div></div>' +
+    '<script>(' + procStockScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
 
 // GAS側から開いた時用（静的アプリは index.html が窓口から取って renderPcStatusPage_ を直接呼ぶ）。
@@ -11916,6 +12157,7 @@ var HOMECSS_ =
 '  .tile.timetree::before { background:#2bad6f; }' +
 '  .tile.shophist::before { background:#22707f; }' +
 '  .tile.procamp::before { background:#9333ea; }' +
+'  .tile.procstock::before { background:#7a5c2e; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -11939,6 +12181,7 @@ var HOMECSS_ =
 '  .tile.timetree .ticon { background:rgba(43,173,111,.16); }' +
 '  .tile.shophist .ticon { background:rgba(34,112,127,.16); }' +
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
+'  .tile.procstock .ticon { background:rgba(122,92,46,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
