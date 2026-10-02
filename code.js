@@ -4329,6 +4329,10 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bc textarea.bcmtx{min-height:200px;font-size:16px;line-height:1.8;padding:9px;}' +
     '.bcstop{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;}' +
     '.bcsttl{font-size:22px;font-weight:900;color:#fff;}' +
+    // ★画像生成を中止するボタン＝押せると分かる赤（2026-10-02 まるちゃん「黒だから押せないと感じる」）
+    '.bcstopbtn{display:block;width:100%;margin:12px 0;padding:15px;font-size:17px;font-weight:800;border:0;border-radius:12px;' +
+    'background:#DC2626;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.25);cursor:pointer;}' +
+    '.bcstopbtn:disabled{background:#64748B;color:#E2E8F0;box-shadow:none;cursor:default;}' +
     '.bcsubnote{font-size:13.5px;font-weight:700;color:#DCEAF2;margin:-6px 0 12px;}' +
     '.bcsno{margin-left:auto;font-size:13px;font-weight:800;color:#DCE7F2;}' +
     '#bcreload{margin-left:auto;align-self:center;padding:9px 18px;font-size:14px;font-weight:800;}' +
@@ -4701,7 +4705,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<button type="button" class="bcgo" id="bcwmake"\'+(WBUSY?" disabled":"")+\'>\'+' +
   '(WBUSY?"画像を生成しています...":"この内容で画像を作る")+\'</button>\';' +
   'if(WBUSY&&!WBUSYAT)WBUSYAT=Date.now();if(!WBUSY)WBUSYAT=0;' +
-  'if(WBUSY&&MKRUN&&!MKSTOP)h+=\'<button type="button" class="bcghost" data-imgstop="1">画像生成を中止する</button>\';' +
+  'if(WBUSY&&MKRUN&&!MKSTOP)h+=\'<button type="button" class="bcstopbtn" data-imgstop="1">画像生成を中止する</button>\';' +
   'if(WMSG||WBUSY)h+=\'<div class="bcstatus on">\'+esc(WMSG||"画像を作っています…")+(WBUSY?secTag(WBUSYAT):"")+\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindWaku();bindFresh();}' +
   'function bindWaku(){' +
@@ -5112,7 +5116,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!MBUSY)h+=\'<button type="button" class="bcgo" id="bcmdone">対象の設定を見る</button>\';' +
   '}' +
   'if(MBUSY&&!MBUSYAT)MBUSYAT=Date.now();if(!MBUSY)MBUSYAT=0;' +
-  'if(MBUSY&&MKRUN&&!MKSTOP)h+=\'<button type="button" class="bcghost" data-imgstop="1">画像生成を中止する</button>\';' +
+  'if(MBUSY&&MKRUN&&!MKSTOP)h+=\'<button type="button" class="bcstopbtn" data-imgstop="1">画像生成を中止する</button>\';' +
   'if(MMSG&&(MSTEP<3||MSTEP===5||MSTEP===6))h+=\'<div class="bcstatus on">\'+esc(MMSG)+(MBUSY?secTag(MBUSYAT):"")+\'</div>\';' +
   'box.innerHTML=freshBar()+h;bindMake();bindFresh();}' +
   'function bindMake(){' +
