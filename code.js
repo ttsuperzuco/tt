@@ -5306,6 +5306,9 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcwho">\'+esc((TAGS[step]&&TAGS[step].length)?' +
   '("送り先："+TAGS[step].join("＋")):t.who)+\'</div><div class="bchr"></div>\';' +
   // ★並べ替えと、文の直し（まるちゃん指示 2026-09-09）
+  'if(n&&n<MAXP&&!mode)h+=\'<div class="bcaddslot"><span class="bcpno">1つ目の前に追加</span>\'+' +
+  '\'<button type="button" data-addimg="0">🖼 画像を追加</button>\'+' +
+  '\'<button type="button" data-addtx="0">✍ 文章を追加</button></div>\';' +
   'if(n){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
   '(th?(\'<img src="\'+th+\'" data-big="\'+i+\'" style="cursor:zoom-in">\'):"")+' +
@@ -5364,8 +5367,8 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<textarea id="bctxt" placeholder="この対象へ送る文章">\'+esc(old)+\'</textarea>\'+' +
   '\'<div class="bccount" id="bccnt">\'+ulen(old)+\' / \'+MAXT+\' 文字</div></div>\'+' +
   '\'<button type="button" class="bcgo" id="bcaddtxt">\'+' +
-  '((EDI>=0)?"この文章に直す":"この文章を追加")+\'</button>\'+' +
-  '\'<button type="button" class="bcghost" id="bccancel">やめる</button>\';}' +
+  '((EDI>=0)?"この文章に修正する":"この文章を追加")+\'</button>\'+' +
+  '\'<button type="button" class="bcghost" id="bccancel">\'+((EDI>=0)?"修正はしない":"追加はしない")+\'</button>\';}' +
   'else{' +
   // ★「あと ◯ つ入れられます」も出さない（まるちゃん指示 2026-09-08）
   'h+=\'</div>\';' +
