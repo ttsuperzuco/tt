@@ -5304,10 +5304,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'WDONE=[];' +
   'runMake(src,function(i,tot,label){' +
   'MMSG="画像を生成しています… "+(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
-  'function(done,err){MBUSY=false;MSTEP=3;' +
-  'MMSG=(err==="中止")?("画像生成を中止しました。文は対象に入っています（できた画像"+done+"枚も入れてあります）。")' +
-  ':err?("文は入れました。画像で止まりました："+err)' +
-  ':("できました。文を入れ、画像を"+done+"枚それぞれの対象の1つ目に入れました。");' +
+  // ★2026-10-02 まるちゃん「間の画面はなくして。何枚入れましたも言わなくていい」
+  //   ＝画像ができたらそのまま最終確認へ（画像を作らない時と同じ道）。中止・失敗の時だけ一言出す。
+  'function(done,err){MBUSY=false;MSTEP=3;MMSG="";page="t";step=0;mode="";' +
+  'status((err==="中止")?"画像生成を中止しました。":(err?("画像を作れませんでした："+err):""),!!(err&&err!=="中止"));' +
   'draw();});}' +
   // ── 対象1つぶんの設定 ────────────────────────────────
   'function drawOne(){' +
