@@ -9334,7 +9334,17 @@ var PROCSTOCKCSS_ =
   '.pslist .q{font-size:24px;font-weight:900;white-space:nowrap;margin-left:12px;}' +
   '.psst{color:#eaf6fb;font-weight:800;font-size:16px;margin:8px 4px;min-height:1.4em;}' +
   '.psdone{background:#fff;color:#0f172a;border-radius:16px;padding:22px 16px;text-align:center;font-weight:900;font-size:24px;line-height:1.5;margin:10px 0;}' +
-  '.psdone small{display:block;font-size:16px;font-weight:700;color:#475569;margin-top:6px;}';
+  '.psdone small{display:block;font-size:16px;font-weight:700;color:#475569;margin-top:6px;}' +
+  /* ★2026-10-02 補充の表（必要補充の欄を目立たせる＝まるちゃん指定） */
+  '.pstbl{background:#fff;border-radius:14px;overflow:hidden;margin:10px 0 6px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+  '.pstbl table{width:100%;border-collapse:collapse;color:#0f172a;font-size:14px;}' +
+  '.pstbl th{background:#2C7A99;color:#fff;font-weight:800;font-size:12px;line-height:1.25;padding:6px 3px;text-align:center;}' +
+  '.pstbl td{border-top:1px solid #e2e8f0;padding:8px 4px;text-align:center;font-weight:800;}' +
+  '.pstbl td.n{text-align:left;padding-left:8px;font-size:13px;word-break:break-all;}' +
+  '.pstbl th.o{background:#dc2626;font-size:13px;}' +
+  '.pstbl td.o{background:#fef08a;color:#b91c1c;font-size:22px;font-weight:900;}' +
+  '.pstbl td.o.z{background:#f1f5f9;color:#94a3b8;font-size:16px;}' +
+  '.pstnote{color:#eaf6fb;font-weight:700;font-size:14px;line-height:1.5;margin:4px 4px 10px;}';
 
 // 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
 function procStockScript_(C) {
@@ -9462,8 +9472,24 @@ function procStockScript_(C) {
       if (r.status !== 'done') { fail('登録できませんでした：' + (r.result || r.status)); return; }
       sending = false;
       $('psDoneMsg').innerHTML = '在庫を登録しました<small>' + esc(doneAt.slice(0, 16).replace(/-/g, '/')) + '　' + esc(staffLabel) + '</small>';
+      drawTable(r.result);
       show('psDone');
     });
+  }
+  // 事務所PCが返した補充の表（今のお店在庫／1か月の予約分／余裕分／必要補充数）を描く。描けない時は出さない。
+  function drawTable(res) {
+    var t; try { t = JSON.parse(res || ''); } catch (e) { t = null; }
+    if (!t || !t.rows) { $('psTbl').innerHTML = ''; return; }
+    var h = '<div class="pstnote">' + esc(t.from) + '〜' + esc(t.to) + 'の予約（' + t.visits + '件）と余裕分から出した、補充する数です。</div>' +
+      '<div class="pstbl"><table><thead><tr><th>品物</th><th>今の<br>お店在庫</th><th>1か月の<br>予約分</th><th>余裕分</th><th class="o">必要<br>補充数</th></tr></thead><tbody>';
+    for (var i = 0; i < t.rows.length; i++) {
+      var x = t.rows[i];
+      h += '<tr><td class="n">' + esc(x[0]) + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + x[3] + '</td>' +
+        '<td class="o' + (x[4] ? '' : ' z') + '">' + x[4] + '</td></tr>';
+    }
+    h += '</tbody></table></div>';
+    for (var j = 0; j < (t.notes || []).length; j++) h += '<div class="pstnote">※' + esc(t.notes[j]) + '</div>';
+    $('psTbl').innerHTML = h;
   }
   $('psSend').addEventListener('click', function () {
     if (sending) return;
@@ -9531,6 +9557,7 @@ function renderProcStockPage_(base, staff, dev) {
       '</div>' +
       '<div id="psDone" style="display:none">' + head('✅', 'プロセル在庫') +
         '<div class="psdone" id="psDoneMsg"></div>' +
+        '<div id="psTbl"></div>' +
       '</div>' +
     '</div></div>' +
     '<script>(' + procStockScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
