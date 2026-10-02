@@ -4846,7 +4846,9 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(LPOSTS){drawList(LPOSTS);}else{loadList();}}' +
   'function drawText(){' +
   // ★期間は3つ（まるちゃん指示 2026-10-01）＝今週／今週＆来週／今日から一週間。
-  'var P=[["今週","今週"],["今週来週","今週＆来週"],["一週間","今日から一週間"]];' +
+  // ★2026-10-02 まるちゃん指示：今週の隣に「来週」、今週＆来週は左下へ＝2つずつ2段（今週｜来週／今週＆来週｜今日から一週間）。
+  //   期間の意味は事務所PCの 共通\予約可能枠.py の1か所だけが持つ（来週＝来週の日曜〜土曜）。
+  'var P=[["今週","今週"],["来週","来週"],["今週来週","今週＆来週"],["一週間","今日から一週間"]];' +
   'var gs=(SRES&&SRES.groups)||[];var h;' +
   'if(!gs.length){' +
   'h=\'<div class="bcstop"><span class="bcsttl">予約可能時間を自動生成</span></div>\'+' +
@@ -4854,7 +4856,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★読み込み中は押したボタンだけを横いっぱいに出し、ほかのボタンは隠す（まるちゃん指示 2026-10-01「わかりにくい」）
   '\'<div class="bcper">\'+P.map(function(x){if(SBUSY&&x[0]!==SPER)return "";' +
   'return \'<button type="button" data-per="\'+x[0]+\'"\'+' +
-  '\' class="\'+((x[0]===SPER)?"bcon":"")+((x[0]==="一週間"||SBUSY)?" bcwide2":"")+\'"\'+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
+  '\' class="\'+((x[0]===SPER)?"bcon":"")+((SBUSY)?" bcwide2":"")+\'"\'+(SBUSY?" disabled":"")+\'>\'+x[1]+\'</button>\';}).join("")+' +
   // ★入切「『男性VIO以外』を含める」（まるちゃん指示 2026-10-01・最初は切）。
   //   切＝男性の時刻はVIOもできる人が空いている時だけ。入＝（VIO以外）の時刻も出す。
   '\'<label class="bcnovio"><input type="checkbox" id="bcnoviocb"\'+(SNOVIO?" checked":"")+(SBUSY?" disabled":"")+\'>「男性VIO以外」を含める</label>\'+' +
