@@ -4410,9 +4410,9 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bcleft{font-size:13px;color:#94A3B8;font-weight:700;margin:0 0 8px;}' +
     '.bcadd{display:flex;gap:10px;}' +
     // ★空いている枠（◯つ目）と、その枠に追加するボタン（2026-10-01）
-    '.bcslot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:2px dashed #3B4A66;border-radius:10px;' +
+    '.bcaddslot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:2px dashed #3B4A66;border-radius:10px;' +
     'padding:9px 10px;margin:0 0 8px;}' +
-    '.bcslot button{flex:1 1 120px;padding:13px 8px;font-size:15.5px;font-weight:800;border:0;border-radius:10px;' +
+    '.bcaddslot button{flex:1 1 120px;padding:13px 8px;font-size:15.5px;font-weight:800;border:0;border-radius:10px;' +
     'background:#2563EB;color:#fff;cursor:pointer;}' +
     '.bcadd button{flex:1;padding:16px 8px;font-size:16.5px;font-weight:800;border:0;' +
     'border-radius:12px;background:#2563EB;color:#fff;}' +
@@ -4502,7 +4502,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★配信文は区分ごとに違う＝本文も区分ごとに持つ（まるちゃん指示 2026-09-08）
   'var MBODYS=["","","",""],MIDX=0;' +
   // ★2026-10-01 まるちゃん「訳している時・画像を作る時も秒数を出せ。動いているか分からない」
-  'var MBUSYAT=0,WBUSYAT=0,M6FROM=2;' +
+  'var MBUSYAT=0,WBUSYAT=0,M6FROM=2,LASTSCR="";' +
   // ★お客様のスマホでの折り返し＝共通の部品 bcLineWrap_（line_wrap.js・正本は 共通\画面\LINEの折り返し.js）を使う
   'function secTag(t){return \'<span class="bcsec" data-t="\'+t+\'">（\'+Math.round((Date.now()-t)/1000)+\'秒）</span>\';}' +
   'setInterval(function(){[].slice.call(document.querySelectorAll(".bcsec")).forEach(function(e){' +
@@ -4674,7 +4674,11 @@ function renderBroadcastPage_(base, staff, dev) {
   'var slim=((page==="k")||(page==="s"))?"none":"";' +
   'if(topEl)topEl.style.display="none";' +
   'if(ttlEl)ttlEl.style.display=(page==="k")?"":"none";' +
-  'banEl.style.display=slim;}' +
+  'banEl.style.display=slim;' +
+  // ★画面（どの段階の・何番目か）が変わった時は、必ず一番上から見せる（2026-10-02 まるちゃん「確認なんだから一番上でなきゃだめ」）。
+  //   同じ画面の中で欄を開いた・打った時は動かさない（打っている所が飛ばないように）。
+  'var sk2=[page,step,MSTEP,MIDX,SIDX,(typeof CGI!=="undefined"?CGI:"")].join("|");' +
+  'if(sk2!==LASTSCR){LASTSCR=sk2;try{window.scrollTo(0,0);}catch(e){}}}' +
   // ── 予約可能枠の画像を作る（専用の画面）──────────────────
   'function drawWaku(){' +
   'var h=\'<div class="bccard"><div class="bcname">予約可能枠の画像を作る</div>\'+' +
@@ -5318,7 +5322,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★2026-10-01 まるちゃん「LINEは3つまで。何つ目に画像か文章かを指定できない。入れるじゃなくて追加」
   //   ＝空いている枠（◯つ目）を並べ、その枠で「画像を追加／文章を追加」。押した枠の位置に入る。
   'if(!mode){for(var sk=n;sk<MAXP;sk++){' +
-  'h+=\'<div class="bcslot"><span class="bcpno">\'+(sk+1)+\'つ目</span>\'+' +
+  'h+=\'<div class="bcaddslot"><span class="bcpno">\'+(sk+1)+\'つ目</span>\'+' +
   '\'<button type="button" data-addimg="\'+sk+\'">🖼 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="\'+sk+\'">✍ 文章を追加</button></div>\';}' +
   'if(n>=MAXP)h+=\'<div class="bcwho">\'+MAXP+\'つまで送れます（いっぱいです）。\'+' +
