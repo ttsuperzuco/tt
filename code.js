@@ -8250,7 +8250,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'var prev=(typeof rvctx!=="undefined"&&rvctx&&rvctx.prev_note)||"";' +
       'var r=(prev&&now)?exChangeLines_(prev,now):[];' +
       'if(!r.length){if(box&&box.parentNode)box.parentNode.removeChild(box);return;}' +
-      'if(!box){box=document.createElement("div");box.id="exrvpayrm";box.style.cssText="margin:8px 2px 0;font-size:15px;line-height:1.65;color:#0f172a;background:#fff;border-radius:12px;padding:10px 12px;";' +
+      'if(!box){box=document.createElement("div");box.id="exrvpayrm";box.style.cssText="margin:8px 2px 0;font-size:15px;line-height:1.65;color:#5b4a00;background:#fff3cd;border-radius:12px;padding:10px 12px;font-weight:700;";' +
         'el.parentNode.insertBefore(box,el.nextSibling);}' +
       'var h="<div style=\\"font-weight:700;margin-bottom:2px\\">前回の予約メモから変えた所</div>";' +
       'for(var i=0;i<r.length;i++)h+="<div>・"+r[i]+"</div>";box.innerHTML=h;}' +
