@@ -7997,8 +7997,21 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exOpen("exSplit");' +
       'var h="";for(var i=0;i<us.length;i++)h+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(exShort(us[i]))+"</div></div>";' +
       'exEl("exspunits").innerHTML=h;}' +
+    /* ★2026-10-04 まるちゃん「前回と同じものをやるって選んでるんだよ？」＝この画面は最初に
+       『今回も〇〇をやりますか？』で前回と同じ施術を選んでいる。だから文字で見比べる必要はなく、
+       **前回の行をそのまま全部やる（やめた物も足した物も終わった物も無い）なら、前回と同じ内容**。
+       その時は前回かかった分数をそのまま最初に選んでおく（人は押し直せる）。
+       ★枠を2つ以上に分けた時は、前回1枠ぶんの分数を分けられないので今までどおり施術の名前から出す。 */
+    'function exSameAsPrev(){if(rvNewItems.length)return false;' +
+      'for(var i=0;i<rvitems.length;i++){var it=rvitems[i];' +
+        'if(it.finish)return false;' +
+        'var zen=(String(it.arinashi||"")!=="なし");' +
+        'if(zen!==!!it.do)return false;}' +
+      'return true;}' +
     'function exSetGroups(list){var g=[];for(var i=0;i<list.length;i++){if(!list[i].length)continue;' +
       'g.push({key:"g"+g.length,names:list[i],mark:exMarkOfNames(list[i]),dur:exDurOf(list[i])});}' +
+      'var _pd=parseInt((rvctx&&rvctx.prev_dur)||0,10);' +
+      'if(g.length===1&&_pd>0&&exSameAsPrev())g[0].dur=nearDur(_pd);' +
       'EXFLOW={groups:g,split:(g.length>=2)};' +
       'for(var j=0;j<g.length;j++){rvSlotCfg[g[j].key]={room:roomVal(rvctx.prev_room||""),staff:staffNum(rvctx.prev_staff||""),dur:String(g[j].dur)};}}' +
     /* 3つ以上で分ける時＝どれとどれが同じ担当＆部屋か */
