@@ -5989,11 +5989,12 @@ function sgStepsHtml_() {
     /* 6枚目＝予約時間設定。空きの帯を押すとここへ来る（まるちゃん 2026-09-11）。 */
     '<div class="sg" id="sgTime" style="display:none">' +
       '<div class="sgwho">予約時間設定</div>' +
-      '<div class="sgct" id="sgtday"></div>' +
-      '<div class="sgtwho1" id="sgtwho"></div>' +
       /* ★2026-10-04 まるちゃん「1件目の画面は1件目の内容も書いて、次の画面は2件目用」。
-         枠を2つ以上に分けた時、この画面は**1枠目**の時間・部屋・担当を決める画面だと分かるようにする。 */
+         枠を2つ以上に分けた時、この画面は**1枠目**の時間・部屋・担当を決める画面だと分かるようにする。
+         ★まるちゃん「予約時間設定のすぐ下に1件目じゃない？」＝題のすぐ下に置く（2026-10-04）。 */
       '<div class="sgtslot" id="sgtslot" style="display:none"></div>' +
+      /* ★まるちゃん「オリーブの右に日付」＝日付は別の行にせず、施術者の右に並べる（2026-10-04）。 */
+      '<div class="sgtwho1" id="sgtwho"></div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">開始時間</div>' +
         '<div class="sgtrow">' +
@@ -6136,10 +6137,12 @@ var SG_STEPS_JS_ =
     'function m2hm(m){return Math.floor(m/60)+":"+("0"+(m%60)).slice(-2);}' +
     /* ★2026-09-17 まるちゃん「15分のボタンを20分にしたい」＝15→20。 */
     'var DURS=[20,30,40,60,90,120];' +
+    /* 日付の字（施術者の右に並べる・2026-10-04 まるちゃん指示） */
+    'var SGDAYTXT="";' +
     'function goTime(){step=6;show();' +
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
-      '$("sgtday").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）";' +
+      'SGDAYTXT=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）";' +
       'TS=SLOT.s;' +
       /* はじめの終了時間＝30分（施術時間を先に決めている時はその長さ）。入りきらなければ空きの終わりまで。 */
       'TE=Math.min(SLOT.s+(NEEDMIN||30),SLOT.e);' +
@@ -6189,7 +6192,7 @@ var SG_STEPS_JS_ =
       'if(TS>SLOT.e-5)TS=SLOT.e-5;' +
       'if(TE<TS+5)TE=TS+5;' +
       '$("sgtS").textContent=m2hm(TS);$("sgtE").textContent=m2hm(TE);' +
-      '$("sgtwho").textContent=(SLOT.kind==="staff"?"施術者 ":"施術室 ")+SLOT.who+"　空き "+' +
+      '$("sgtwho").textContent=(SLOT.kind==="staff"?"施術者 ":"施術室 ")+SLOT.who+"　"+SGDAYTXT+"　空き "+' +
         'm2hm(SLOT.s)+"〜"+m2hm(SLOT.e);' +
       'fitLine($("sgtwho"),26,13);' +
       'var h="";' +
@@ -7776,7 +7779,9 @@ function renderExistingPage_(base, staff, dev, mode) {
   var slotPickSec =
     '<div id="exSlotPick" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackSlotPick" href="javascript:void(0)">← 戻る</a></div>' +
-      '<div class="exmh" id="exspkhead"></div>' +
+      /* ★2026-10-04 まるちゃん「2件目以降も1件目と同じ背景にしないと。3件目4件目があればそれも」
+         ＝1枠目の画面と同じ薄い黄色の帯にする（枠が何枚でもこの画面を使い回すので全部そろう）。 */
+      '<div class="sgtslot" id="exspkhead"></div>' +
       '<div class="exsec">担当</div><div class="expills" id="exspkstaff"></div>' +
       '<div class="exsec">部屋</div><div class="expills" id="exspkroom"></div>' +
       '<button type="button" class="exgo" id="exspkGo">次へ→</button>' +
