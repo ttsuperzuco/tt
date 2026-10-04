@@ -227,7 +227,7 @@
 <script src="bigsend.js?v=1e2776a38e"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=cd129e8d73"></script>
+<script src="code.js?v=011c4dbef3"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -548,7 +548,7 @@
     if (__ltTimer) { clearInterval(__ltTimer); __ltTimer = null; }
     function draw(payload) {
       if (!payload || payload.error) { fail('データ取得エラー：' + ((payload && payload.error) || '不明')); return; }
-      var key = JSON.stringify([payload.action || [], payload.gmap || null]);   // 記入漏れ・口コミの返事待ちが変わった時だけ描き直す
+      var key = JSON.stringify([payload.action || [], payload.gmap || null, payload.kaeshi || null]);   // 記入漏れ・口コミの返事待ちが変わった時だけ描き直す
       if (key === __ltLast) return;
       __ltLast = key;
       mount(renderLtPage_(payload, base, staff, dev));

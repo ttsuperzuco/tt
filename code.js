@@ -2019,6 +2019,32 @@ function ltGmapSection_(g) {
          '<div class="lcards">' + cardsHtml + '</div>';
 }
 
+// ★2026-10-04 まるちゃん決定：脱毛のおまとめ最終回で🔁（続けるかの申し送り）が書かれていない予約。
+//   事務所PCの『リピートマークの書き忘れ点検』（15分ごと）が見つけた物（d.kaeshi）をそのまま出すだけ。
+//   書く人＝最終回の担当ではなく、その1つ前の来店の担当。🔁が書かれたら次の点検で自動で消える。
+function ltKaeshiSection_(k) {
+  var list = (k && k.items) || [];
+  if (!list.length) return '';
+  var cardsHtml = list.map(function (u) {
+    var md = String(u.date || '').replace(/^\d{4}-0?(\d+)-0?(\d+)$/, '$1/$2');
+    var pd = String(u.prev_date || '').replace(/^\d{4}-0?(\d+)-0?(\d+)$/, '$1/$2');
+    var who = (u.staff || '') + (u.staff_name || '') + (pd ? '（' + pd + 'の担当）' : '');
+    var what = u.kind === '書き方の確認'
+      ? '🔁は書いてありますが、ズコが読めない書き方です：' + esc_(u.line || '')
+      : '🔁がまだ書かれていません';
+    return '' +
+    '<article class="lcard">' +
+      '<div class="lhead"><span class="lname">' + esc_(u.name || '') + ' ' + esc_(u.code || '') + '</span></div>' +
+      '<div class="lmeta"><span class="ltag">最終回</span><span class="ltxt">' + esc_(md + '(' + (u.youbi || '') + ') ' + (u.time || '')) + '</span></div>' +
+      '<div class="lmeta"><span class="ltag">施術</span><span class="ltxt">' + esc_(u.parts || '') + '<br>' + esc_(u.count || '') + '</span></div>' +
+      '<div class="lmeta"><span class="ltag">書く人</span><span class="ltxt">' + esc_(who) + '</span></div>' +
+      '<div class="lmeta"><span class="ltag">内容</span><span class="ltxt">' + what + '</span></div>' +
+    '</article>';
+  }).join('\n');
+  return '<h1>⚠️ 🔁記入漏れ（おまとめ最終回） <span class="lcnt">' + list.length + '件</span></h1>' +
+         '<div class="lcards">' + cardsHtml + '</div>';
+}
+
 // 下にまとめる「まだ予約前・対応不要」の1行の状態ラベル（記入漏れではない物）。
 function ltDismLabel_(r) {
   var rc = r.recheck_disposition || '';
@@ -2061,6 +2087,8 @@ function renderLtPage_(d, base, staff, dev) {
   }
   // ★2026-10-02 まるちゃん決定：グーグルマップの口コミで、お店がまだ返事していない物をこの画面の下に出す。
   //   事務所PCが毎日10時に読んだ結果（d.gmap）をそのまま出すだけ。返事待ちが無い日は何も出さない。
+  // ★2026-10-04 まるちゃん決定：脱毛のおまとめ最終回で🔁が書かれていない予約（LINEでは知らせない）。
+  cards += ltKaeshiSection_(d.kaeshi);
   cards += ltGmapSection_(d.gmap);
 
   var dismRows = dismissed.length
