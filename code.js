@@ -8328,8 +8328,8 @@ function renderExistingPage_(base, staff, dev, mode) {
       /* ★2026-10-04 まるちゃん「1件目もう選んだのに、次のがまた出てる」＝この画面で決めた
          部屋・担当・長さを**1枠目にそのまま入れる**。次の画面は2枠目から。 */
       'if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length){var _k0=EXFLOW.groups[0].key;' +
-        'rvSlotCfg[_k0]={room:roomVal(st.room||""),staff:stf,dur:String(st.te-st.ts)};' +
-        'EXFLOW.groups[0].dur=(st.te-st.ts);}' +
+        'var _d0=(rvSlotCfg[_k0]&&rvSlotCfg[_k0].dur)||String(EXFLOW.groups[0].dur||30);' +
+        'rvSlotCfg[_k0]={room:roomVal(st.room||""),staff:stf,dur:_d0};}' +
       'showResvEdit();if(EXFLOW)exShowTitle();}' +
     'var SGX=(function(){' +
       'if(!document.getElementById("sgMonth"))return {goMonth:function(){},toTime:function(){},setAsk:function(){},setAhead:function(){},setNeed:function(){},state:function(){return {};}};' +
