@@ -5919,7 +5919,7 @@ function sgCss_() {
       'white-space:nowrap;overflow:hidden;}' +
     /* 施術室のボタン（空いている部屋だけ出す） */
     '.sgrooms{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0;}' +
-    '.sgtslot{background:rgba(255,255,255,.16);color:#fff;font-weight:900;font-size:17px;border-radius:12px;padding:10px 12px;margin:0 2px 10px;}' +
+    '.sgtslot{background:#fff3cd;color:#5b4a00;font-weight:900;font-size:19px;border-radius:12px;padding:12px 14px;margin:0 2px 12px;box-shadow:0 4px 12px rgba(0,0,0,.14);}' +
     '.sgroomb{color:#fff;border:0;border-radius:14px;padding:16px 4px;font-size:17px;font-weight:900;' +
       'cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.16);text-shadow:0 1px 2px rgba(0,0,0,.35);}' +
     '.sgroomb.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
