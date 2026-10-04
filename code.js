@@ -6142,7 +6142,8 @@ var SG_STEPS_JS_ =
     'function goTime(){step=6;show();' +
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
-      'SGDAYTXT=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）";' +
+      /* ★施術者の右に並べるので短い形にする（長いと字が小さくなりすぎて欠ける・2026-10-04）。 */
+      'SGDAYTXT=(d.getMonth()+1)+"/"+d.getDate()+"（"+wd[d.getDay()]+"）";' +
       'TS=SLOT.s;' +
       /* はじめの終了時間＝30分（施術時間を先に決めている時はその長さ）。入りきらなければ空きの終わりまで。 */
       'TE=Math.min(SLOT.s+(NEEDMIN||30),SLOT.e);' +
