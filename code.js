@@ -7553,6 +7553,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exrvtitle{background:#fff;color:#0f172a;border-radius:12px;padding:14px;font-size:20px;font-weight:900;line-height:1.5;word-break:break-all;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
     'textarea.exrvtitleedit{width:100%;box-sizing:border-box;border:2px solid #93c5fd;resize:vertical;min-height:60px;font-family:inherit;}' +
     '.rvprevmemo{background:#f1f5f9;color:#0f172a;border:1px solid #cbd5e1;border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto;}' +
+    /* ★聞く画面の『現在進行中』は全部見せる＝高さの上限もスクロールも無し（2026-10-05 まるちゃん） */
+    '.rvnowall{max-height:none;overflow:visible;font-size:17px;}' +
     /* ★2026-10-04 まるちゃん「確認が面倒なんだから、支払い状況までは一画面で見えてないとだめ。
        スタッフはスクロールする暇なんかない」＝欄の中でスクロールさせず、中身の高さまで伸ばす。 */
     'textarea.rvmemoedit{width:100%;box-sizing:border-box;min-height:260px;height:auto;max-height:none;overflow:hidden;resize:vertical;border:2px solid #93c5fd;font-family:inherit;}' +
@@ -8006,11 +8008,23 @@ function renderExistingPage_(base, staff, dev, mode) {
       'for(var k=0;k<rvitems.length;k++){if(rvitems[k].mark&&ns.indexOf(rvitems[k].name)>=0)return rvitems[k].mark;}' +
       'for(var i=0;i<tm.length;i++){var w=tm[i][1]||[];for(var j=0;j<w.length;j++){if(t.indexOf(w[j])>=0)return tm[i][0];}}' +
       'return "";}' +
+    /* ★2026-10-05 まるちゃん「現在進行中が全部見えないから、やりますかと言われても判断つかない」
+       ＝聞く画面では**『⭐️現在進行中』のところだけを丸ごと**出す（スクロールさせない）。
+       前のように予約メモ全部を小さな枠に入れると、肝心のところが枠の外に隠れて判断できない。 */
+    'function exNowBlock(note){var s=String(note||"");var i=s.indexOf("現在進行中");if(i<0)return "";' +
+      'var ls=s.slice(i).split("\\n"),out=[];' +
+      'for(var k=1;k<ls.length;k++){var t=ls[k];' +
+        'if(t.indexOf("お支払い状況")>=0||t.indexOf("終了")>=0||t.replace(/\\s/g,"").indexOf("ーー")===0)break;' +
+        'out.push(t);}' +
+      'while(out.length&&!String(out[out.length-1]).trim())out.pop();' +
+      'return out.join("\\n");}' +
     /* 1枚目＝今回も〇〇をやりますか？ */
     'function exShowAsk(){exOpen("exAsk");' +
       'exEl("exaskwho").innerHTML="「"+esc(disp())+"」"+(rvctx.name?esc(rvctx.name)+"様":"");' +
-      'exEl("exaskprev").innerHTML=(rvctx.prev_date?("<div class=\\"exsec\\">前回の予約（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）</div>"):"")+' +
-        '"<div class=\\"rvprevmemo\\">"+esc(rvctx.prev_note||"")+"</div>";' +
+      'var _nb=exNowBlock(rvctx.prev_note||"");' +
+      /* 『現在進行中』が無いメモ（まれ）は今までどおり予約メモ全部を小さな枠で出す。 */
+      'exEl("exaskprev").innerHTML=(rvctx.prev_date?("<div class=\\"exsec\\">前回の予約（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）"+(_nb?"の⭐️現在進行中":"")+"</div>"):"")+' +
+        '"<div class=\\"rvprevmemo'+'"+(_nb?" rvnowall":"")+"'+'\\">"+esc(_nb||(rvctx.prev_note||""))+"</div>";' +
       /* ★聞く時は部位だけ（まるちゃん 2026-09-25）。同じ部位が重なったら1つにまとめる。 */
       'var ns=[];for(var i=0;i<rvitems.length;i++){if(!rvitems[i].do)continue;var _an=exAskName(rvitems[i].name);if(_an&&ns.indexOf(_an)<0)ns.push(_an);}' +
       /* ★2026-09-25 まるちゃん指定の言い方＝
