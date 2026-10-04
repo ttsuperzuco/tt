@@ -8244,8 +8244,9 @@ function renderExistingPage_(base, staff, dev, mode) {
         'r.push(exSay_(a[0],a[1],""));k++;}' +
       'return r;}' +
     'function exPayRemovedNote(el,now){if(!el||!el.parentNode)return;var box=document.getElementById("exrvpayrm");' +
-      /* ★2026-09-25 まるちゃん「変えた所の一覧はもういらない」＝新しい流れでは出さない。 */
-      'if(EXFLOW){if(box&&box.parentNode)box.parentNode.removeChild(box);return;}' +
+      /* ★2026-10-04 まるちゃん「4回目を5回目にかえたのだから、この下に変えた内容を出す決まりはどこいった？」
+         ＝**新しい流れでも出す**。2026-09-25にまるちゃんの「変えた所の一覧はもういらない」で一度外したが、
+         回数を人が直せる場所は残してあるので、直した結果がその場で見えないと確かめられない。だから戻した。 */
       'var prev=(typeof rvctx!=="undefined"&&rvctx&&rvctx.prev_note)||"";' +
       'var r=(prev&&now)?exChangeLines_(prev,now):[];' +
       'if(!r.length){if(box&&box.parentNode)box.parentNode.removeChild(box);return;}' +
