@@ -7055,10 +7055,13 @@ function renderNewReservationPage_(base, staff, dev) {
     'var h="";for(var i=0;i<o.rows.length;i++){var rr=o.rows[i];h+="<div class=\\"nrorow\\"><span class=\\"nrono\\">"+rr.no+"</span><span class=\\"nroname\\">"+esc(rr.name)+"</span>"' +
     '+(rr.canUp?("<button type=\\"button\\" class=\\"nroup\\" data-up=\\""+(rr.no-1)+"\\">↑ 上へ</button>"):"")+"</div>";}lst.innerHTML=h;' +
     'var bs=lst.querySelectorAll(".nroup");for(var j=0;j<bs.length;j++){bs[j].addEventListener("click",function(){' +
-    'var i=Number(this.getAttribute("data-up")),S2=window.__nrSlots,keep=[];' +
+    'var _y2=window.scrollY||0;' +
+'var i=Number(this.getAttribute("data-up")),S2=window.__nrSlots,keep=[];' +
     'for(var k=0;k<S2.length;k++){keep.push({dur:sel["dur#"+k],staff:sel["staff#"+k],room:sel["room#"+k]});}' +
     'var mv=NR.moveUp(S2,keep,i);window.__nrSlots=mv.slots;' +
-    'buildSlotUI(window.__nrSlots);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");nrScheduleAvail();});}}' +
+    'buildSlotUI(window.__nrSlots);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");nrScheduleAvail();' +
+/* ★2026-10-04 一覧を作り直しても見ている位置を動かさない（まるちゃん指摘） */
+'try{window.scrollTo(0,_y2);setTimeout(function(){window.scrollTo(0,_y2);},0);}catch(e3){}});}}' +
     'nrStartEditInit();' +
     'function jsonp(params,onR){var cb="__nr"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
     'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
@@ -8133,8 +8136,11 @@ function renderExistingPage_(base, staff, dev, mode) {
     'exEl("exbackGroup").onclick=function(){exAfterItems();};' +
     'exEl("exbackOrder").onclick=function(){exAfterItems();};' +
     'exEl("exorderlist").addEventListener("click",function(e){var b=e.target.closest("[data-exup]");if(!b)return;' +
+      'var _y=window.scrollY||0;' +
       'var i=parseInt(b.getAttribute("data-exup"),10);var g=EXFLOW.groups;' +
-      'var t=g[i-1];g[i-1]=g[i];g[i]=t;exDrawOrder();});' +
+      'var t=g[i-1];g[i-1]=g[i];g[i]=t;exDrawOrder();' +
+      /* 一覧を作り直しても、見ている位置を動かさない（まるちゃん 2026-10-04） */
+      'try{window.scrollTo(0,_y);setTimeout(function(){window.scrollTo(0,_y);},0);}catch(e2){}});' +
     'exEl("exorderGo").onclick=function(){exShowDur();};' +
     /* 2枠目から先の画面＝部屋と担当を選ぶ */
     'exEl("exbackSlotPick").onclick=function(){if(EXSLOTI>1){exShowSlotPick(EXSLOTI-1);return;}SGX.toTime();};' +
