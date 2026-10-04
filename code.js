@@ -7979,8 +7979,21 @@ function renderExistingPage_(base, staff, dev, mode) {
       'var ps=it.parts||[];if(ps.length>=2){for(var j=0;j<ps.length;j++)put(ps[j]);}else put(it.name);}' +
       'for(var k=0;k<rvNewItems.length;k++)put(rvNewItems[k]);return a;}' +
     /* この施術なら何分か＝事務所パソコンが渡した「言葉ごとの分数」の中で一番長い物（出し方の正本は共通側）。 */
-    'function exDurOf(ns){var t=ns.join(" ").toUpperCase();var w=rvctx.dur_words||{};var best=0;' +
-      'for(var k in w){if(w.hasOwnProperty(k)&&t.indexOf(k.toUpperCase())>=0&&w[k]>best)best=w[k];}' +
+    /* ★2026-10-04 まるちゃん「お尻きれいO+臀部 が 60分になってたよ」＝この枠でやる施術が
+       1つだけの時は「その施術だけをやった回」の分数を使う（ほかの施術と一緒にやった回の
+       長さを混ぜない）。2つ以上の時は今までの表のほうが当たるのでそのまま。 */
+    /* この枠でやる施術が1つだけなら、そのまとめ名（2つ以上・0なら空）。
+       長い言葉から先に見て食べていく＝「大小腿」を「小腿」とも数えて2つに見せない。 */
+    'function exDurGroup(t){var gs=rvctx.dur_groups||[];var seen={},n=0,last="",i=0;' +
+      'while(i<t.length){var hit="";' +
+        'for(var j=0;j<gs.length;j++){if(t.substr(i,gs[j][0].length)===gs[j][0]){hit=gs[j][0];' +
+          'if(!seen[gs[j][1]]){seen[gs[j][1]]=1;n++;last=gs[j][1];}break;}}' +
+        'if(hit)i+=hit.length;else i++;}' +
+      'return (n===1)?last:"";}' +
+    'function exDurOf(ns){var t=ns.join(" ").toUpperCase();var best=0;' +
+      'var sv=(rvctx.dur_solo||{})[exDurGroup(t)];' +
+      'if(sv)best=sv;else{var w=rvctx.dur_words||{};' +
+      'for(var k in w){if(w.hasOwnProperty(k)&&t.indexOf(k.toUpperCase())>=0&&w[k]>best)best=w[k];}}' +
       'if(t.indexOf("プロセル")>=0||t.indexOf("プロ肌")>=0||t.indexOf("プロ頭")>=0)best=rvctx.dur_procell||70;' +
       'return best||rvctx.dur_default||30;}' +
     'function exMarkOfNames(ns){var t=ns.join(" ");var tm=(rvctx.title_marks||[]);' +
