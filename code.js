@@ -6152,10 +6152,15 @@ var SG_STEPS_JS_ =
       'el.style.fontSize=fs+"px";' +
       'for(var t=0;t<4&&fs>min&&el.scrollWidth>el.clientWidth;t++){fs--;el.style.fontSize=fs+"px";}}' +
     /* ★その時間にまるごと空いている施術室だけ返す（事務所PCが出した空きの区間から見る）。 */
+    /* ★2026-10-04 まるちゃん「既存の予約で、COSMOSをつかうことはない。カウンセリングルームだから」。
+       ＝この画面（施術後の予約・既存の予約）はどちらも既存のお客様の施術なので、コスモスは選ばせない。
+       前からある決まり（コスモスは部屋移動の候補にも空き部屋の一覧にも出さない）を、予約を取る画面にも広げた。
+       ★新規のお客様のカウンセリングは別の画面（新規予約入力）なので、そちらは今までどおりコスモスを使う。 */
     'function freeRooms(a,b){' +
       'var out=[];' +
       'for(var i=0;i<DAYROOMS.length;i++){' +
         'var r=DAYROOMS[i],ok=false;' +
+        'if(String(r.room||"").toUpperCase().indexOf("COSMOS")>=0)continue;' +
         'for(var j=0;j<(r.slots||[]).length;j++){' +
           'if(hm2m(r.slots[j].s)<=a&&b<=hm2m(r.slots[j].e)){ok=true;break;}}' +
         'if(ok)out.push(r.room);}' +
