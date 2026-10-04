@@ -7497,6 +7497,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     '.exsumroom{display:inline-block;color:#fff;font-weight:900;font-size:15px;padding:2px 14px;border-radius:999px;vertical-align:middle;}' +
     '.exsummemo{color:#fff;font-size:14px;line-height:1.5;white-space:pre-wrap;background:rgba(0,0,0,.20);border-radius:8px;padding:8px 10px;margin-top:4px;max-height:110px;overflow:auto;}' +
     '.exmh{color:#fff;font-weight:900;font-size:19px;margin:6px 4px 8px;}' +
+    '.exmhrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;}' +
+    '.exmhsub{color:#dff1f8;font-weight:800;font-size:15px;margin:6px 4px 8px;white-space:nowrap;}' +
     '.exallday{display:block;width:100%;box-sizing:border-box;text-align:center;margin:14px 0 4px;background:#c0392b;color:#fff;border:0;border-radius:14px;padding:18px 10px;font-size:20px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.15);}' +
     '.exallday:active{transform:translateY(1px);}' +
     '#exmemobox{text-align:left;font-size:20px;line-height:1.6;height:300px;overflow:auto;resize:vertical;-webkit-overflow-scrolling:touch;}' +
@@ -7743,7 +7745,10 @@ function renderExistingPage_(base, staff, dev, mode) {
   var durSec =
     '<div id="exDur" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackDur" href="javascript:void(0)">← 戻る</a></div>' +
-      '<div class="exmh">施術時間を選んでください</div>' +
+      /* ★2026-10-04 まるちゃん「前回の時間数：〇分　と　参考で　選んでくださいの　みぎにだす」。
+         ＝最初から選んでおくのではなく、**前回が何分だったかを参考として見出しの右に出す**。選ぶのは人のまま。 */
+      '<div class="exmhrow"><div class="exmh">施術時間を選んでください</div>' +
+        '<div class="exmhsub" id="exdurprev"></div></div>' +
       '<div id="exdurlist"></div>' +
       '<button type="button" class="exgo" id="exdurGo">日付をえらぶ→</button>' +
     '</div>';
@@ -8006,7 +8011,11 @@ function renderExistingPage_(base, staff, dev, mode) {
         'h+="<div class=\\"rvslot\\"><div class=\\"rvname\\">◉ "+esc(exShort(ns[i]))+"</div><div class=\\"expills\\">"+b+"</div></div>";}' +
       'exEl("exgrplist").innerHTML=h;}' +
     /* 施術時間を選ぶ（枠ごと・おすすめを最初から選んでおく） */
-    'function exShowDur(){exOpen("exDur");exDrawDur();}' +
+    'function exShowDur(){exOpen("exDur");' +
+      'var pv=document.getElementById("exdurprev");' +
+      'var pd=parseInt((rvctx&&rvctx.prev_dur)||0,10);' +
+      'if(pv)pv.textContent=(pd>0?("前回の時間数："+pd+"分"):"");' +
+      'exDrawDur();}' +
     'function exDrawDur(){var g=(EXFLOW&&EXFLOW.groups)||[];var h="";' +
       'for(var i=0;i<g.length;i++){var p="";' +
         'for(var d=0;d<EXDURS.length;d++){p+="<button type=\\"button\\" class=\\"exp plain"+(String(EXDURS[d])===String(g[i].dur)?" sel":"")+"\\" data-exdi=\\""+i+"\\" data-exdv=\\""+EXDURS[d]+"\\">"+EXDURS[d]+"</button>";}' +
