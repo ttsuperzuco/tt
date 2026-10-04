@@ -5919,6 +5919,7 @@ function sgCss_() {
       'white-space:nowrap;overflow:hidden;}' +
     /* 施術室のボタン（空いている部屋だけ出す） */
     '.sgrooms{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0;}' +
+    '.sgtslot{background:rgba(255,255,255,.16);color:#fff;font-weight:900;font-size:17px;border-radius:12px;padding:10px 12px;margin:0 2px 10px;}' +
     '.sgroomb{color:#fff;border:0;border-radius:14px;padding:16px 4px;font-size:17px;font-weight:900;' +
       'cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.16);text-shadow:0 1px 2px rgba(0,0,0,.35);}' +
     '.sgroomb.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
@@ -5990,6 +5991,9 @@ function sgStepsHtml_() {
       '<div class="sgwho">予約時間設定</div>' +
       '<div class="sgct" id="sgtday"></div>' +
       '<div class="sgtwho1" id="sgtwho"></div>' +
+      /* ★2026-10-04 まるちゃん「1件目の画面は1件目の内容も書いて、次の画面は2件目用」。
+         枠を2つ以上に分けた時、この画面は**1枠目**の時間・部屋・担当を決める画面だと分かるようにする。 */
+      '<div class="sgtslot" id="sgtslot" style="display:none"></div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">開始時間</div>' +
         '<div class="sgtrow">' +
@@ -8047,6 +8051,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exDurDone(){var g=(EXFLOW&&EXFLOW.groups)||[];' +
       'for(var i=0;i<g.length;i++){rvSlotCfg[g[i].key]=rvSlotCfg[g[i].key]||{};rvSlotCfg[g[i].key].dur=String(g[i].dur);}' +
       'if(g.length===1)rvsel.dur=String(g[0].dur);' +
+      'var _g=(EXFLOW&&EXFLOW.groups)||[];' +
+      'SGX.setSlot1(_g.length>=2?("1枠目　"+_g[0].names.map(exShort).join("＋")):"");' +
       'SGX.setNeed(exTotalMin());SGX.goMonth();}' +
     /* 枠のキー＝人が決めた組み合わせがあればそれ、無ければ今までどおり印ごと。 */
     'function exSlotKeys(){if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length>=2){var a=[];for(var i=0;i<EXFLOW.groups.length;i++)a.push(EXFLOW.groups[i].key);return a;}return rvEffMarks();}' +
@@ -8121,7 +8127,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var rvSlotCfg={},rvLastSlotCount=0;' +
     'function rvSlotCfg_(mk){if(!rvSlotCfg[mk])rvSlotCfg[mk]={room:rvsel.room,staff:rvsel.staff,dur:rvsel.dur};return rvSlotCfg[mk];}' +
     'function rvSlotTitle_(mk,st){var t=(rvctx.prev_title||"").split("新規").join("");var a=t.indexOf("預約");if(a<0&&disp())a=t.indexOf(disp());if(a<0)a=t.length;var head=rvStripHead(t.slice(0,a));var rest=rvStripSuf(t.slice(a));return (SEMO_[st]||"")+(mk||"")+head+rest+rvSuffix();}' +
-    'function rvDrawSlots(){var effM=exSlotKeys();var multi=(effM.length>=2);var single=document.getElementById("exrvsingle");var slotsEl=document.getElementById("exrvslots");var titleEl=document.getElementById("exrvtitle");var go=document.getElementById("exResvGo");if(!slotsEl)return;if(!multi){if(single)single.style.display="";slotsEl.style.display="none";slotsEl.innerHTML="";if(titleEl)titleEl.style.display="";if(go)go.textContent="この内容でTimeTreeに登録する";return;}if(single)single.style.display="none";if(titleEl)titleEl.style.display="none";var SC={"1":"#d1443c","2":"#e08a1e","3":"#4b8b3b","4":"#c9a227"};var SORD=["2","3","1","4"];var RORD=["FREEDOM","HAPPY","LUCKY","STAR/福/🇫🇷"];var DUR=[15,20,30,40,45,50,60,70,80,90,120,150];var tmp=(rvctx._tm||"00:00").split(":");var acc=parseInt(tmp[0],10)*60+parseInt(tmp[1],10);var h="<div class=\\"exsec\\">枠を分けて登録（時間は続けて自動で並びます）</div>";for(var i=0;i<effM.length;i++){var mk=effM[i];var cf=rvSlotCfg_(mk);var hh=Math.floor(acc/60),mm=acc%60;var stt=("0"+hh).slice(-2)+":"+("0"+mm).slice(-2);var rp="";for(var r=0;r<RORD.length;r++){var rk=RORD[r];rp+="<button type=\\"button\\" class=\\"exp"+(rk===cf.room?" sel":"")+"\\" data-rvslot=\\""+esc(mk)+"\\" data-rvsg=\\"room\\" data-rvsv=\\""+esc(rk)+"\\" style=\\"background:"+roomColor_(rk)+"\\">"+shortRoomName_(rk)+"</button>";}var sp="";for(var s=0;s<SORD.length;s++){var sn=SORD[s];sp+="<button type=\\"button\\" class=\\"exp"+(sn===cf.staff?" sel":"")+"\\" data-rvslot=\\""+esc(mk)+"\\" data-rvsg=\\"staff\\" data-rvsv=\\""+sn+"\\" style=\\"background:"+SC[sn]+"\\">"+SEMO_[sn]+" "+SNM_[sn]+"</button>";}var dp="";for(var d=0;d<DUR.length;d++){dp+="<button type=\\"button\\" class=\\"exp plain"+(String(DUR[d])===String(cf.dur)?" sel":"")+"\\" data-rvslot=\\""+esc(mk)+"\\" data-rvsg=\\"dur\\" data-rvsv=\\""+DUR[d]+"\\">"+DUR[d]+"</button>";}h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(i+1)+"枠目　"+esc(exSlotLabel(mk))+"　開始 "+stt+(i>0?"（自動）":"")+"</div><div class=\\"rvslotk\\">部屋</div><div class=\\"expills\\">"+rp+"</div><div class=\\"rvslotk\\">担当</div><div class=\\"expills\\">"+sp+"</div>"+(EXFLOW?"":"<div class=\\"rvslotk\\">施術時間（分）</div><div class=\\"expills exdur\\">"+dp+"</div>")+"<div class=\\"exrvtitle\\" style=\\"margin-top:8px\\">"+(i+1)+"枠目："+esc(rvSlotTitle_(exSlotMark(mk),cf.staff))+"</div></div>";acc+=parseInt(cf.dur,10)||30;}slotsEl.innerHTML=h;slotsEl.style.display="";if(go)go.textContent="この内容でTimeTreeに"+effM.length+"枠を登録する";}' +
+    'function rvDrawSlots(){var effM=exSlotKeys();var multi=(effM.length>=2);var single=document.getElementById("exrvsingle");var slotsEl=document.getElementById("exrvslots");var titleEl=document.getElementById("exrvtitle");var go=document.getElementById("exResvGo");if(!slotsEl)return;if(!multi){if(single)single.style.display="";slotsEl.style.display="none";slotsEl.innerHTML="";if(titleEl)titleEl.style.display="";if(go)go.textContent="この内容でTimeTreeに登録する";return;}if(single)single.style.display="none";if(titleEl)titleEl.style.display="none";var SC={"1":"#d1443c","2":"#e08a1e","3":"#4b8b3b","4":"#c9a227"};var SORD=["2","3","1","4"];var RORD=["FREEDOM","HAPPY","LUCKY","STAR/福/🇫🇷"];var DUR=[15,20,30,40,45,50,60,70,80,90,120,150];var tmp=(rvctx._tm||"00:00").split(":");var acc=parseInt(tmp[0],10)*60+parseInt(tmp[1],10);var h="<div class=\\"exsec\\">枠を分けて登録（時間は続けて自動で並びます）</div>";for(var i=0;i<effM.length;i++){var mk=effM[i];var cf=rvSlotCfg_(mk);var hh=Math.floor(acc/60),mm=acc%60;var stt=("0"+hh).slice(-2)+":"+("0"+mm).slice(-2);if(EXFLOW&&i===0){h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(i+1)+"枠目　"+esc(exSlotLabel(mk))+"　開始 "+stt+"</div><div class=\\"rvslotk\\">部屋 "+esc(shortRoomName_(cf.room))+"　担当 "+esc((SEMO_[cf.staff]||"")+(SNM_[cf.staff]||""))+"（前の画面で決めました）</div><div class=\\"exrvtitle\\" style=\\"margin-top:8px\\">"+(i+1)+"枠目："+esc(rvSlotTitle_(exSlotMark(mk),cf.staff))+"</div></div>";acc+=parseInt(cf.dur,10)||30;continue;}var rp="";for(var r=0;r<RORD.length;r++){var rk=RORD[r];rp+="<button type=\\"button\\" class=\\"exp"+(rk===cf.room?" sel":"")+"\\" data-rvslot=\\""+esc(mk)+"\\" data-rvsg=\\"room\\" data-rvsv=\\""+esc(rk)+"\\" style=\\"background:"+roomColor_(rk)+"\\">"+shortRoomName_(rk)+"</button>";}var sp="";for(var s=0;s<SORD.length;s++){var sn=SORD[s];sp+="<button type=\\"button\\" class=\\"exp"+(sn===cf.staff?" sel":"")+"\\" data-rvslot=\\""+esc(mk)+"\\" data-rvsg=\\"staff\\" data-rvsv=\\""+sn+"\\" style=\\"background:"+SC[sn]+"\\">"+SEMO_[sn]+" "+SNM_[sn]+"</button>";}var dp="";for(var d=0;d<DUR.length;d++){dp+="<button type=\\"button\\" class=\\"exp plain"+(String(DUR[d])===String(cf.dur)?" sel":"")+"\\" data-rvslot=\\""+esc(mk)+"\\" data-rvsg=\\"dur\\" data-rvsv=\\""+DUR[d]+"\\">"+DUR[d]+"</button>";}h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(i+1)+"枠目　"+esc(exSlotLabel(mk))+"　開始 "+stt+(i>0?"（自動）":"")+"</div><div class=\\"rvslotk\\">部屋</div><div class=\\"expills\\">"+rp+"</div><div class=\\"rvslotk\\">担当</div><div class=\\"expills\\">"+sp+"</div>"+(EXFLOW?"":"<div class=\\"rvslotk\\">施術時間（分）</div><div class=\\"expills exdur\\">"+dp+"</div>")+"<div class=\\"exrvtitle\\" style=\\"margin-top:8px\\">"+(i+1)+"枠目："+esc(rvSlotTitle_(exSlotMark(mk),cf.staff))+"</div></div>";acc+=parseInt(cf.dur,10)||30;}slotsEl.innerHTML=h;slotsEl.style.display="";if(go)go.textContent="この内容でTimeTreeに"+effM.length+"枠を登録する";}' +
     'document.getElementById("exrvslots").addEventListener("click",function(e){var b=e.target.closest("[data-rvslot]");if(!b)return;var cf=rvSlotCfg_(b.getAttribute("data-rvslot"));cf[b.getAttribute("data-rvsg")]=String(b.getAttribute("data-rvsv"));rvDrawSlots();});' +
     'document.getElementById("exrvmarks").addEventListener("click",function(e){var b=e.target.closest(".exp");if(!b)return;rvTitleOv=null;var mk=b.getAttribute("data-mark");if(mk==="__none"){var tm=(rvctx.title_marks||[]);for(var i=0;i<tm.length;i++){rvMarkOv[tm[i][0]]=false;}}else{rvMarkOv[mk]=!rvMarkOn(mk);}rvDrawMarks();});' +
     'document.getElementById("exrvsuf").addEventListener("click",function(e){var b=e.target.closest(".exp");if(!b)return;rvTitleOv=null;var k=b.getAttribute("data-suf");if(k==="__none"){rvDochi=false;rvEyeOv=false;}else if(k==="dochi"){rvDochi=!rvDochi;}else{rvEyeOv=!rvEyeOn();}rvDrawMarks();});' +
@@ -8318,7 +8324,13 @@ function renderExistingPage_(base, staff, dev, mode) {
       'rvctx=JSON.parse(JSON.stringify(me.ctx));rvctx._ymd=st.date;rvctx._tm=exP2(Math.floor(st.ts/60))+":"+exP2(st.ts%60);' +
       /* 担当＝空き状況で担当の枠を押したらその担当、部屋の枠なら前回と同じ担当（まるちゃん決定）。 */
       'var stf=(st.slot&&st.slot.kind==="staff")?staffNum(st.slot.who):staffNum(rvctx.prev_staff||"");' +
-      'EXSEL={staff:stf,room:st.room,dur:String(st.te-st.ts),paid:st.paid,freeStaff:st.free||null};showResvEdit();if(EXFLOW)exShowTitle();}' +
+      'EXSEL={staff:stf,room:st.room,dur:String(st.te-st.ts),paid:st.paid,freeStaff:st.free||null};' +
+      /* ★2026-10-04 まるちゃん「1件目もう選んだのに、次のがまた出てる」＝この画面で決めた
+         部屋・担当・長さを**1枠目にそのまま入れる**。次の画面は2枠目から。 */
+      'if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length){var _k0=EXFLOW.groups[0].key;' +
+        'rvSlotCfg[_k0]={room:roomVal(st.room||""),staff:stf,dur:String(st.te-st.ts)};' +
+        'EXFLOW.groups[0].dur=(st.te-st.ts);}' +
+      'showResvEdit();if(EXFLOW)exShowTitle();}' +
     'var SGX=(function(){' +
       'if(!document.getElementById("sgMonth"))return {goMonth:function(){},toTime:function(){},setAsk:function(){},setAhead:function(){},setNeed:function(){},state:function(){return {};}};' +
       'var step=0,SWAP=0,MY=null,AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0,ROOM=null,DAYROOMS=[],ASK=false,PAID=null,AHEAD={},PAIDAUTO="";' +
@@ -8348,6 +8360,8 @@ function renderExistingPage_(base, staff, dev, mode) {
         'setAsk:function(a){ASK=!!a;if(step===6)drawTime();},' +
         /* ★2026-09-25：先に決めた施術時間を渡す＝その長さが入らない空きは押せなくする。 */
         'setNeed:function(m){NEEDMIN=parseInt(m,10)||0;},' +
+        'setSlot1:function(t){var el=$("sgtslot");if(!el)return;'+
+          'el.textContent=t||"";el.style.display=t?"":"none";},' +
         'setAhead:function(a){AHEAD=a||{};if(step===6)drawTime();},' +
         'state:function(){return {date:PICKDATE,ts:TS,te:TE,room:ROOM,slot:SLOT,paid:PAID,free:freeStaffAt(TS,TE)};}};' +
     '})();' +
