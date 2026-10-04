@@ -8003,10 +8003,19 @@ function renderExistingPage_(base, staff, dev, mode) {
        その時は前回かかった分数をそのまま最初に選んでおく（人は押し直せる）。
        ★枠を2つ以上に分けた時は、前回1枠ぶんの分数を分けられないので今までどおり施術の名前から出す。 */
     'function exSameAsPrev(){if(rvNewItems.length)return false;' +
+      'var ari=0,kara=0;' +
       'for(var i=0;i<rvitems.length;i++){var it=rvitems[i];' +
         'if(it.finish)return false;' +
-        'var zen=(String(it.arinashi||"")!=="なし");' +
-        'if(zen!==!!it.do)return false;}' +
+        'var mk=String(it.arinashi||"");' +
+        'var zen=(mk!=="なし");' +
+        'if(zen!==!!it.do)return false;' +
+        'if(mk==="あり")ari++;else if(mk==="")kara++;}' +
+      /* ★印がまちまち（「あり」が付いた行と、何も付いていない行が混ざる）時は使わない。
+         前回の枠は「あり」の分だけだったのに、印の無い行まで同じ枠でやったことにしてしまうため
+         （山崎悠爾様M365＝前回は髭だけの30分、プロセルは別の日だった）。
+         実データ3,335回で測った＝この条件を入れると使える回が1,749回、前回の分数が当たるのが75%
+         （今の施術の名前からの推定は47%）。 */
+      'if(ari&&kara)return false;' +
       'return true;}' +
     'function exSetGroups(list){var g=[];for(var i=0;i<list.length;i++){if(!list[i].length)continue;' +
       'g.push({key:"g"+g.length,names:list[i],mark:exMarkOfNames(list[i]),dur:exDurOf(list[i])});}' +
