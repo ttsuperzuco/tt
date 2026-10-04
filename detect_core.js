@@ -291,6 +291,7 @@ function detectStaff(events, dateFrom) {
   var conflicts = [];
   var splitExcluded = 0;
   var familyExcluded = 0;
+  var roomHold = 0;
   groups.forEach(function (g) {
     var evs = g.evs.slice().sort(function (x, y) { return x.start_at_ms - y.start_at_ms; });
     for (var i2 = 0; i2 < evs.length; i2++) {
@@ -304,6 +305,12 @@ function detectStaff(events, dateFrom) {
           var ca = codeOf(a.title), cb = codeOf(b.title);
           var na = customerLine(a.note), nb = customerLine(b.note);
           var dupSuspect = !!((ca && cb && ca === cb) || (na.phone && nb.phone && na.phone === nb.phone));
+          // ★2026-10-04まるちゃん決定：パインの土曜の部屋おさえ＝同じ予約をデザイン眉カレンダーと借りた部屋の
+          //   カレンダーの両方に書く決まり。部屋側が予約の形で書かれていても担当かぶりにしない。
+          //   見分け＝同じお客様で片方だけがデザイン眉カレンダー（detect_core.py と同じ判定）。
+          if (dupSuspect && ((String(a.calendar_id) === DESIGN_MAYU_CAL) !== (String(b.calendar_id) === DESIGN_MAYU_CAL))) {
+            roomHold++; continue;
+          }
           // 施術者被りはグループ化の時点で必ず「同じ担当」＝家族連れ(relatedParty)でも1人で同時に2件は
           // 物理的に不可なので除外せず出す（detect_core.py の detect_staff と同じ。連麗惠様親子対策・2026-07-25）。
           var ovMin = Math.floor((Math.min(a.end_at_ms, b.end_at_ms)
@@ -349,7 +356,8 @@ function detectStaff(events, dateFrom) {
     staff_list: staffList,
     checked: target.length,
     split: splitExcluded,
-    family: familyExcluded
+    family: familyExcluded,
+    room_hold: roomHold
   };
   return { conflicts: conflicts, meta: meta };
 }

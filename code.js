@@ -2062,9 +2062,10 @@ function renderLtPage_(d, base, staff, dev) {
   // ★状態ごとに見出しを分ける（時刻ズレ／記入もれ／要確認）。「⚠️ TimeTree予約ズレ ◯件」の形。
   var LTGROUPS = [
     // ★2026-10-02 まるちゃん：施術後のお知らせ（☆次回のご予約）とタイムツリーの日時が合わない
+    // ★2026-10-04 まるちゃん：タイムツリーの予約もれ（記入もれ）がいちばん大事＝いちばん上に出す
+    { st: 'not_found',      title: '記入もれ' },
     { st: 'next_notice_mismatch', title: 'TT：次回予約のお知らせの不一致' },
     { st: 'time_mismatch',  title: 'TimeTree予約ズレ' },
-    { st: 'not_found',      title: '記入もれ' },
     { st: 'room_undecided', title: '部屋未定' },
     { st: 'need_delete',    title: '削除もれ' },
     { st: 'need_check',     title: '要確認' }
