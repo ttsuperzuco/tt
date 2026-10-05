@@ -10692,14 +10692,22 @@ var AKISCRIPT_ =
 '        return \'<span class="akiwk" style="background:\'+WCOL[m.k]+\'"><span class="akiwflag">\'+m.flag+\'</span>\'+m.k+\'</span>\';' +
 '      }).join("")+\'</span><span class="akiwbtns">\'+btns+\'</span></div>\'+body+\'</div>\';' +
 '  }).join("");' +
+// ★一番上に「全コピー」＝下のコピーボタンを上から順に全部押したのと同じ文を、1行空けてつなげてコピー（2026-10-05 まるちゃん指示）。
+'  html = \'<button type="button" class="akiwcopy akiwall" data-all="1">全コピー</button>\'+html;' +
 '  wakuBox.innerHTML = html;' +
 '  [].slice.call(wakuBox.querySelectorAll(".akiwcopy")).forEach(function(b){' +
 '    b.addEventListener("click",function(){ copyWaku_(b); });' +
 '  });' +
 '}' +
+'function wakuOneText_(btn){' +
+'  var t=wakuText_(btn.getAttribute("data-kind"), btn.getAttribute("data-zh")==="1");' +
+'  if(t&&btn.getAttribute("data-head")) t=btn.getAttribute("data-head")+"\\n"+t;' +
+'  return t;' +
+'}' +
 'function copyWaku_(btn){' +
-'  var txt=wakuText_(btn.getAttribute("data-kind"), btn.getAttribute("data-zh")==="1");' +
-'  if(txt&&btn.getAttribute("data-head")) txt=btn.getAttribute("data-head")+"\\n"+txt;' +
+'  var txt = btn.getAttribute("data-all")==="1"' +
+'    ? [].slice.call(wakuBox.querySelectorAll(".akiwcopy:not(.akiwall)")).map(wakuOneText_).filter(Boolean).join("\\n\\n")' +
+'    : wakuOneText_(btn);' +
 '  var lab=btn.getAttribute("data-lab")||btn.textContent; btn.setAttribute("data-lab",lab);' +
 '  if(!txt){ btn.textContent="なし"; setTimeout(function(){ btn.textContent=lab; },1200); return; }' +
 '  function done(){ btn.textContent="コピーしました"; btn.classList.add("done");' +
@@ -11020,6 +11028,7 @@ AKFCSS_ +
 '    padding:9px clamp(10px,4vw,16px); cursor:pointer; white-space:nowrap; }' +
 '  .akiwcopy:active{ transform:translateY(1px); }' +
 '  .akiwcopy.done{ background:#16a34a; border-color:#16a34a; }' +
+'  .akiwall{ display:block; width:100%; margin-bottom:12px; padding:12px; font-size:clamp(15px,5vw,19px); }' +
 '  .akiwdh{ font-weight:800; font-size:clamp(15px,5vw,19px); color:var(--akisub); margin-top:8px; }' +
 '  .akiwdh:first-of-type{ margin-top:0; }' +
 '  .akiwtimes{ font-weight:800; font-variant-numeric:tabular-nums; line-height:1.6;' +
