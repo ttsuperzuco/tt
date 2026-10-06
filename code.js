@@ -9890,8 +9890,10 @@ var KAESHITESTCSS_ =
   '.ktstaff button.on{border-color:#16a34a;background:#dcfce7;}' +
   '.ktcard{background:#fff;color:#0f172a;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 4px 14px rgba(0,0,0,.15);border-left:8px solid #f97316;}' +
   '.ktcard.done{border-left-color:#16a34a;}' +
-  '.ktcard h4{margin:0 0 4px;font-size:19px;font-weight:900;}' +
-  '.ktcard .q{font-size:15px;font-weight:700;color:#475569;margin:0 0 10px;}' +
+  '.ktlast{background:#dc2626;color:#fff;font-size:26px;font-weight:900;text-align:center;border-radius:12px;padding:12px 8px;margin:0 0 12px;letter-spacing:.02em;}' +
+  '.ktcard.done .ktlast{background:#16a34a;}' +
+  '.ktcard h4{margin:0 0 6px;font-size:17px;font-weight:800;color:#334155;}' +
+  '.ktcard .q{font-size:20px;font-weight:900;color:#0f172a;margin:4px 0 10px;}' +
   '.ktcard .pl{font-size:16px;font-weight:900;margin:12px 0 6px;}' +
   '.ktopts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}' +
   '.ktopts button{background:#f1f5f9;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 2px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
@@ -10009,8 +10011,10 @@ function kaeshiTestScript_(C) {
     }
     for (var k = 0; k < finals.length; k++) {
       var idx = finals[k], ln = lineOf(idx);
-      h += '<div class="ktcard' + (ln ? ' done' : '') + '"><h4>' + esc(shortName(memoL[idx])) + '</h4>' +
-        '<div class="q">次が最終回です。この後のご案内は？</div>' + optsHtml(idx, ans[idx]);
+      /* ★2026-10-06 まるちゃん「次回最終回の文がいちばん大きく目立たないとだめ」「お知らせのおすすめは？」 */
+      h += '<div class="ktcard' + (ln ? ' done' : '') + '"><div class="ktlast">⚠️ 次が最終回です</div>' +
+        '<h4>' + esc(shortName(memoL[idx])) + '</h4>' +
+        '<div class="q">お知らせのおすすめは？</div>' + optsHtml(idx, ans[idx]);
       h += '<div class="ktline">' + (ln ? '入る行： ' + esc(ln) : '') + '</div></div>';
     }
     $('ktCards').innerHTML = h;
