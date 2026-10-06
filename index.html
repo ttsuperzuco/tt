@@ -227,7 +227,7 @@
 <script src="bigsend.js?v=1e2776a38e"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=0070fba0bb"></script>
+<script src="code.js?v=460ef19a36"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -725,6 +725,7 @@
 
   // ★プロセル在庫（2026-10-02・実務者用）。取ってくるデータは無い＝描くだけ。登録は画面の中から受付係へ頼む。
   function showProcStock() { mount(renderProcStockPage_(base, staff, dev)); }
+  function showKaeshiTest() { mount(renderKaeshiTestPage_(base, staff, dev)); }
 
   // ★プロセル頭キャリスト（2026-09-17・社長版と開発版）。一覧と前回の選択を窓口(action=data)から
   //   同時に取り、両方そろったら描く（前回の選択が無い・取れない時は空で描く＝一覧さえあれば出す）。
@@ -1136,6 +1137,7 @@
     else if (v === 'shophist') showShopHist();
     else if (v === 'procamp') showProcamp();
     else if (v === 'procstock') showProcStock();
+    else if (v === 'kaeshitest') showKaeshiTest();
     else if (v === 'instadm') showInstaDm();
     else if (v === 'igdm') showIgdm();
     else if (v === 'claudetools') showClaudeTools();
