@@ -4949,11 +4949,16 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'\';' +
   // ★2枚目からは中身を見せないが、帯そのものは同じ大きさで置く。
   //   消すと下の欄が上にずれてしまうため（まるちゃん指示 2026-09-09）。
-  'h+=\'<div class="bcsame\'+((SIDX===0)?"":" bckage")+\'"><span>\'+' +
   // ★2026-10-01 まるちゃん：文言を「〜作成します」に・右は入切でなく押すボタン（男女を分けない／男女に分ける）
-  '(SRES.split?"新規・既存を男女に分けて作成します":"新規・既存を男女に分けずに作成します")+\'</span>\'+' +
-  '\'<button type="button" class="bcsplitb" id="bcsplitbtn">\'+' +
-  '(SRES.split?"男女を分けない":"男女に分ける")+\'</button></div>\';' +
+  // ★2026-10-06 まるちゃん指摘「男女が違う時間帯だったら分けるしかなくない？」＝男女で時刻が違う時は
+  //   「男女を分けない」を出さない（押すと男性の時刻だけ残り、女性にも男性の時刻を送ってしまうため）。
+  //   分けていない状態の古い保存から戻した時だけは、分け直せるようにボタンを残す。
+  'var SCAN=!!(SRES.same||!SRES.split);' +
+  'h+=\'<div class="bcsame\'+((SIDX===0)?"":" bckage")+\'"><span>\'+' +
+  '(SCAN?(SRES.split?"新規・既存を男女に分けて作成します":"新規・既存を男女に分けずに作成します"):' +
+  '"男性と女性で時間が違うので、男女に分けて作成します")+\'</span>\'+' +
+  '(SCAN?(\'<button type="button" class="bcsplitb" id="bcsplitbtn">\'+' +
+  '(SRES.split?"男女を分けない":"男女に分ける")+\'</button>\'):"")+\'</div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(g.label)+\'</b>\'+' +
   '\'<button type="button" class="bccopy" data-cp="\'+SIDX+\'">コピー</button></div>\'+' +
   '\'<textarea class="bcotx" wrap="off" data-ed="\'+SIDX+\'">\'+esc(g.text)+\'</textarea></div>\';' +
@@ -5064,7 +5069,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'SRES.all=g.map(function(x){return {atama:x.atama,sei:x.sei||"男性",' +
   'label:x.label,text:x.text};});buildG();}' +
   // 男女が同じ時に「分ける」へ切り替えたら、女性側へ男性側の中身をそのまま写す
-  'function splitOn(on){if(!SRES)return;' +
+  'function splitOn(on){if(!SRES)return;if(!on&&!SRES.same&&SRES.split)return;' +
   'if(on&&!SRES.split&&SRES.same){var a=SRES.all,i,j;' +
   'for(i=0;i<a.length;i++){if(a[i].sei!=="女性")continue;' +
   'for(j=0;j<a.length;j++)if(a[j].sei==="男性"&&a[j].atama===a[i].atama)a[i].text=a[j].text;}' +
