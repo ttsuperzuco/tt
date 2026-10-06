@@ -236,6 +236,80 @@
     return { list: rows, selected: selected };
   };
 
+  /* ── ★🔁（次が最終回の時の「お知らせのおすすめ」）の入れ方（まるちゃん 2026-10-06）──────────
+     予約メモの修正（7枚目）の確定のあと、次が最終回の施術がある時だけ🔁の画面（8枚目）を出す。
+     ・どの施術が「次が最終回」かは事務所パソコンが決めて渡す（共通\kaeshi_target.py）＝ここでは決めない。
+       渡ってくるのは施術の行の文字（head＝◉を外した行）だけ。
+     ・ここが決めるのは「今のメモ欄のどこに🔁の行を入れるか」だけ。
+       ★人が7枚目でメモを直していてもよいように、**今の欄の中身**から施術の行を探す（直しを消さない）。
+       ★入れる場所＝その施術のかたまり（◉の行＋折り返しの回数・値段・※の行）のすぐ下。
+         折り返しの行の途中に入れると、値段の行（@1600 等）が施術から切り離されるため。
+       ★すぐ下に🔁の行がもうあれば入れ替える（2行にしない）。
+     ・ボタンの言葉はスタッフに配った🔁の書き方そのまま（骨格ルール「🔁の書き方」の正本）。
+       「キャンペーン」は脱毛で効き目が無いので出さない（2026-10-06 まるちゃん決定）。
+       セットの行も部位ごとに分けない（セットに都度が1つでも混ざるとセット全体が都度扱いのため）。 */
+  SG.KAESHI_MARK = '🔁';
+  SG.KAESHI_OPTS = [
+    ['5回おまとめ', 'お5回'], ['8回おまとめ', 'お8回'], ['5回も8回も', 'お5回8回'],
+    ['都度', '都度'], ['なし', 'なし']
+  ];
+  /* かたまりの切れ目になる行の頭（次の施術・申し送り・欄の見出し・空行） */
+  var KS_STOP = ['◉', '●', '⚫', '🔁', '⭐', '💰', '⚠', '🆕'];
+  function ksIsStop(s) {
+    var t = String(s || '').replace(/^\s+/, '');
+    if (!t) return true;
+    for (var i = 0; i < KS_STOP.length; i++) if (t.indexOf(KS_STOP[i]) === 0) return true;
+    return false;
+  }
+  function ksBare(s) {
+    return String(s || '').replace(/^\s*[◉●⚫][︎️]?\s*/, '').replace(/\s+/g, '');
+  }
+  /* 今の欄の中で、その施術の◉の行が何行目か（見つからなければ -1）。 */
+  SG.kaeshiFind = function (lines, t) {
+    var want = ksBare(t && t.head);
+    if (!want) return -1;
+    var i;
+    for (i = 0; i < lines.length; i++) if (ksBare(lines[i]) === want) return i;
+    var pre = want.slice(0, 12);
+    for (i = 0; i < lines.length; i++) {
+      if (/^\s*[◉●⚫]/.test(lines[i]) && ksBare(lines[i]).indexOf(pre) === 0) return i;
+    }
+    return -1;
+  };
+  /* その施術のかたまりの最後の行（ここのすぐ下に🔁を入れる） */
+  function ksBlockEnd(lines, i) {
+    var j = i;
+    while (j + 1 < lines.length && !ksIsStop(lines[j + 1])) j++;
+    return j;
+  }
+  /* 今の欄で、その施術のすぐ下にある🔁の行。null＝施術の行が見つからない／''＝まだ無い。 */
+  SG.kaeshiLineOf = function (text, t) {
+    var L = String(text || '').replace(/\r\n/g, '\n').split('\n');
+    var i = SG.kaeshiFind(L, t);
+    if (i < 0) return null;
+    var e = ksBlockEnd(L, i);
+    var nx = L[e + 1];
+    return (nx && nx.replace(/^\s+/, '').indexOf(SG.KAESHI_MARK) === 0) ? nx.trim() : '';
+  };
+  /* 🔁の行を入れた（入れ替えた）メモを返す。施術の行が見つからない時は何も変えない。 */
+  SG.kaeshiPut = function (text, t, word, mark) {
+    var L = String(text || '').replace(/\r\n/g, '\n').split('\n');
+    var i = SG.kaeshiFind(L, t);
+    if (i < 0) return String(text || '');
+    var e = ksBlockEnd(L, i);
+    var line = SG.KAESHI_MARK + word + (mark || '');
+    var nx = L[e + 1];
+    if (nx && nx.replace(/^\s+/, '').indexOf(SG.KAESHI_MARK) === 0) L[e + 1] = line;
+    else L.splice(e + 1, 0, line);
+    return L.join('\n');
+  };
+  /* まだ🔁が入っていない施術の数（★施術の行が見つからない物は数えない＝人が消した施術で止めない）。 */
+  SG.kaeshiMissing = function (text, targets) {
+    var n = 0;
+    for (var k = 0; k < (targets || []).length; k++) if (SG.kaeshiLineOf(text, targets[k]) === '') n++;
+    return n;
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = SG;
   root.SG = SG;
 })(typeof window !== 'undefined' ? window : this);
