@@ -9935,8 +9935,8 @@ function renderKaeshiTestPage_(base, staff, dev) {
         '<div class="kttest">テスト画面です。お客様は全部ダミーで、登録もしません</div>' +
         '<div class="ktlab" id="ktWho"></div>' +
         '<div id="ktCards"></div>' +
-        '<div class="ktlab">予約メモ（押すとすぐ下に🔁の行が入ります）</div>' +
-        '<textarea class="ktmemo" id="ktText" readonly></textarea>' +
+        '<div class="ktlab">予約メモ（直せます。ボタンを押すと施術の行のすぐ下に🔁の行が入ります）</div>' +
+        '<textarea class="ktmemo" id="ktText"></textarea>' +
         '<div class="ktwarn" id="ktWarn"></div>' +
         '<button type="button" class="ktgo" id="ktGo">この予約メモの内容で確定</button>' +
       '</div>' +
@@ -9958,7 +9958,13 @@ function kaeshiTestScript_(C) {
     window.scrollTo(0, 0);
   }
   var STAFF = ['🍅', '🍊', '🫒', '🥭'];
-  var mark = '🍊', cas = null, finals = [], ans = {};
+  var KAESHI = '🔁';
+  /* finals＝次が最終回の施術（元のメモの行の文字と、短い名前）。
+     ★2026-10-06 まるちゃん「予約メモは修正できる欄にしたら、🔁は入らない？」＝メモ欄は人が直せる。
+       だからボタンは「元のメモ」ではなく**今の欄の中身**に入れる（人の直しを消さない）。
+       施術の行は、元の行の文字そのまま → 無ければ短い名前を含む◉の行、の順で探す。
+       欄に手で🔁を書いた時も、その行のすぐ下に🔁があれば「選び済み」と数える。 */
+  var mark = '🍊', cas = null, finals = [], pick = {};
 
   function drawStaff() {
     var h = '';
@@ -9978,30 +9984,40 @@ function kaeshiTestScript_(C) {
     var bs = $('ktCases').querySelectorAll('button');
     for (var j = 0; j < bs.length; j++) bs[j].onclick = function () { open(parseInt(this.getAttribute('data-i'), 10)); };
   }
+  function shortName(line) {
+    return line.replace(/^◉/, '').replace(/[：:].*$/, '').replace(/\s*\d+回おまとめ.*$/, '');
+  }
   /* ダミーなので「全N回のN回目」の行＝次が最終回とする（本番は事務所パソコンが決める）。 */
   function findFinals(memo) {
     var L = memo.split('\n'), out = [];
     for (var i = 0; i < L.length; i++) {
       var m = L[i].match(/全\s*(\d+)\s*回の\s*(\d+)\s*回目/);
-      if (L[i].charAt(0) === '◉' && m && m[1] === m[2]) out.push(i);
+      if (L[i].charAt(0) === '◉' && m && m[1] === m[2]) out.push({ line: L[i], name: shortName(L[i]) });
     }
     return out;
   }
-  function shortName(line) {
-    return line.replace(/^◉/, '').replace(/[：:].*$/, '').replace(/\s*\d+回おまとめ.*$/, '');
+  /* 今の欄の中で、その施術の行が何行目か（見つからなければ -1）。 */
+  function locate(L, f) {
+    for (var i = 0; i < L.length; i++) if (L[i] === f.line) return i;
+    for (var j = 0; j < L.length; j++) if (L[j].charAt(0) === '◉' && f.name && L[j].indexOf(f.name) >= 0) return j;
+    return -1;
+  }
+  function text() { return $('ktText').value.replace(/\r\n/g, '\n'); }
+  /* 今の欄で、その施術のすぐ下にある🔁の行（無ければ ''）。 */
+  function kaeshiLineOf(k) {
+    var L = text().split('\n'), i = locate(L, finals[k]);
+    if (i < 0) return null;
+    return (L[i + 1] && L[i + 1].indexOf(KAESHI) === 0) ? L[i + 1] : '';
   }
   function open(i) {
     cas = C.cases[i];
     finals = findFinals(cas.memo);
-    ans = {};
-    for (var k = 0; k < finals.length; k++) ans[finals[k]] = '';
+    pick = {};
     $('ktWho').textContent = cas.name + '　' + cas.code + '　（今日の担当 ' + mark + '）';
+    $('ktText').value = cas.memo;
     drawCards();
     refresh();
     show('ktMemo');
-  }
-  function lineOf(idx) {
-    return ans[idx] ? '🔁' + ans[idx] + mark : '';
   }
   function optsHtml(key, cur) {
     var h = '<div class="ktopts">';
@@ -10011,52 +10027,49 @@ function kaeshiTestScript_(C) {
     return h + '</div>';
   }
   function drawCards() {
-    var memoL = cas.memo.split('\n'), h = '';
+    var h = '';
     if (!finals.length) {
       h = '<div class="ktnone">次は最終回ではないので、🔁はいりません（カードは出ません）。</div>';
     }
     for (var k = 0; k < finals.length; k++) {
-      var idx = finals[k], ln = lineOf(idx);
+      var ln = kaeshiLineOf(k);
       /* ★2026-10-06 まるちゃん「次回最終回の文がいちばん大きく目立たないとだめ」「お知らせのおすすめは？」 */
       h += '<div class="ktcard' + (ln ? ' done' : '') + '"><div class="ktlast">⚠️ 次が最終回です</div>' +
-        '<h4>' + esc(shortName(memoL[idx])) + '</h4>' +
-        '<div class="q">お知らせのおすすめは？</div>' + optsHtml(idx, ans[idx]);
-      h += '<div class="ktline">' + (ln ? '入る行： ' + esc(ln) : '') + '</div></div>';
+        '<h4>' + esc(finals[k].name) + '</h4>' +
+        '<div class="q">お知らせのおすすめは？</div>' + optsHtml(k, ln ? (pick[k] || '') : '');
+      var msg = ln === null ? 'メモの中にこの施術の行が見つかりません'
+        : (ln ? '入っている行： ' + ln : '');
+      h += '<div class="ktline">' + esc(msg) + '</div></div>';
     }
     $('ktCards').innerHTML = h;
     var ob = $('ktCards').querySelectorAll('.ktopts button');
     for (var j = 0; j < ob.length; j++) ob[j].onclick = function () {
-      ans[parseInt(this.getAttribute('data-k'), 10)] = this.getAttribute('data-v');
+      var k2 = parseInt(this.getAttribute('data-k'), 10), v = this.getAttribute('data-v');
+      var L = text().split('\n'), i = locate(L, finals[k2]);
+      if (i < 0) return;
+      var line = KAESHI + v + mark;
+      if (L[i + 1] && L[i + 1].indexOf(KAESHI) === 0) L[i + 1] = line;   /* 前からある🔁は入れ替える */
+      else L.splice(i + 1, 0, line);                                     /* 施術の行のすぐ下に入れる */
+      $('ktText').value = L.join('\n');
+      pick[k2] = v;
       drawCards(); refresh();
     };
   }
-  /* 施術の行（◉）のすぐ下に🔁の行を入れる（前からある🔁の行は入れ替える）。 */
-  function build() {
-    var L = cas.memo.split('\n'), out = [];
-    for (var i = 0; i < L.length; i++) {
-      out.push(L[i]);
-      if (ans[i]) {
-        var ln = lineOf(i);
-        if (L[i + 1] && L[i + 1].indexOf('🔁') === 0) i++;
-        if (ln) out.push(ln);
-      }
-    }
-    return out.join('\n');
-  }
   function missing() {
     var n = 0;
-    for (var k = 0; k < finals.length; k++) if (!lineOf(finals[k])) n++;
+    for (var k = 0; k < finals.length; k++) if (!kaeshiLineOf(k)) n++;
     return n;
   }
   function refresh() {
-    $('ktText').value = build();
     var n = missing();
     $('ktGo').disabled = n > 0;
     $('ktWarn').textContent = n > 0 ? '🔁をえらんでいない施術があと' + n + 'つあります' : '';
   }
+  /* 人が欄を直した時も、🔁が入っているかを数え直す（手で🔁を消したら、また押せなくなる）。 */
+  $('ktText').oninput = function () { drawCards(); refresh(); };
   $('ktGo').onclick = function () {
     if (missing() > 0) return;
-    $('ktFinal').textContent = cas.title + '\n\n' + build();
+    $('ktFinal').textContent = cas.title + '\n\n' + text();
     show('ktDone');
   };
   $('ktBack1').onclick = function () { drawStaff(); show('ktPick'); };
