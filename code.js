@@ -9849,7 +9849,10 @@ function renderProcStockPage_(base, staff, dev) {
 //   ・お客様・メモは全部ダミー（本物の予約・タイムツリー・LINEには一切触らない＝登録も送らない）。
 //   ・入る1行の書き方は、まるちゃんがスタッフに配った「🔁の書き方」そのまま
 //     （正本＝LINE前日お知らせ送信\全自動お知らせ_骨格ルール.md「★★確定・正本★★ 🔁の書き方」）。
-//       1部位＝「🔁お5回🍊」／セットで全部同じ＝「🔁お5回🍊」／セットで分ける＝「🔁VIOお5回　髭なし🍊」。
+//       どの行も「🔁お5回🍊」の形だけ（セットの行も部位名を付けない）。
+//     ★2026-10-06 まるちゃん「全部同じ・部位ごと選択いらない」＝セットでも部位ごとに分けるボタンは出さない。
+//       セットの中に1つでも都度があればセット全体が都度扱い（骨格ルール追記85の続き4）なので、
+//       部位ごとに分けても結果は「セットで都度」と同じだった（写しのデータで完成文を作って確かめた）。
 //   ・「次が最終回か」はダミーなので画面で「全N回のN回目」を見て決めている。
 //     ★本番では事務所パソコンが決める（お知らせ・書き忘れの見張りと同じ見分けを借りる）。画面では判断しない。
 //   開発の住所(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
@@ -9862,7 +9865,7 @@ var KAESHITEST_CASES_ = [
     parts: {} },
   { name: 'ダミー次郎 様', code: 'M998', title: '🇫🇷🍅預約M998ダミー次郎',
     memo: '⭐️現在進行中\n◉2026ピカピカＡプラン（VIO＋髭）：全9回の9回目あり\n\n💰お支払い状況\n◉4/5:ピカピカＡ 8回おまとめ購入済み',
-    parts: { 1: ['VIO', '髭'] } },
+    parts: {} },
   { name: 'ダミー美咲 様', code: 'F998', title: '🇫🇷🥭預約F998ダミー美咲',
     memo: '⭐️現在進行中\n◉脇脱毛 8回おまとめ：全9回の6回目あり\n\n💰お支払い状況\n◉6/1:8回おまとめ購入済み',
     parts: {} }
@@ -9891,9 +9894,6 @@ var KAESHITESTCSS_ =
   '.ktopts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}' +
   '.ktopts button{background:#f1f5f9;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 2px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
   '.ktopts button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
-  '.ktseg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 6px;}' +
-  '.ktseg button{background:#e2e8f0;color:#0f172a;border:0;border-radius:10px;padding:9px 2px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
-  '.ktseg button.on{background:#2C7A99;color:#fff;}' +
   '.ktline{margin-top:10px;font-size:16px;font-weight:900;color:#15803d;min-height:1.3em;}' +
   '.ktnone{background:#fff;color:#0f172a;border-radius:14px;padding:14px;font-weight:800;font-size:16px;margin:10px 0;}' +
   '.ktmemo{width:100%;box-sizing:border-box;min-height:220px;border-radius:12px;border:0;padding:12px;font:inherit;font-size:16px;line-height:1.5;}' +
@@ -9984,24 +9984,14 @@ function kaeshiTestScript_(C) {
     cas = C.cases[i];
     finals = findFinals(cas.memo);
     ans = {};
-    for (var k = 0; k < finals.length; k++) {
-      var parts = cas.parts[finals[k]] || [];
-      ans[finals[k]] = { mode: 'same', all: '', per: {}, parts: parts };
-    }
+    for (var k = 0; k < finals.length; k++) ans[finals[k]] = '';
     $('ktWho').textContent = cas.name + '　' + cas.code + '　（今日の担当 ' + mark + '）';
     drawCards();
     refresh();
     show('ktMemo');
   }
   function lineOf(idx) {
-    var a = ans[idx];
-    if (!a.parts.length || a.mode === 'same') return a.all ? '🔁' + a.all + mark : '';
-    var segs = [];
-    for (var p = 0; p < a.parts.length; p++) {
-      if (!a.per[a.parts[p]]) return '';
-      segs.push(a.parts[p] + a.per[a.parts[p]]);
-    }
-    return '🔁' + segs.join('　') + mark;
+    return ans[idx] ? '🔁' + ans[idx] + mark : '';
   }
   function optsHtml(key, cur) {
     var h = '<div class="ktopts">';
@@ -10016,32 +10006,15 @@ function kaeshiTestScript_(C) {
       h = '<div class="ktnone">次は最終回ではないので、🔁はいりません（カードは出ません）。</div>';
     }
     for (var k = 0; k < finals.length; k++) {
-      var idx = finals[k], a = ans[idx], ln = lineOf(idx);
+      var idx = finals[k], ln = lineOf(idx);
       h += '<div class="ktcard' + (ln ? ' done' : '') + '"><h4>' + esc(shortName(memoL[idx])) + '</h4>' +
-        '<div class="q">次が最終回です。この後のご案内は？</div>';
-      if (a.parts.length) {
-        h += '<div class="ktseg"><button type="button" data-seg="' + idx + '" data-mode="same" class="' + (a.mode === 'same' ? 'on' : '') + '">全部同じ</button>' +
-          '<button type="button" data-seg="' + idx + '" data-mode="per" class="' + (a.mode === 'per' ? 'on' : '') + '">部位ごとに分ける</button></div>';
-      }
-      if (!a.parts.length || a.mode === 'same') {
-        h += optsHtml(idx + '|', a.all);
-      } else {
-        for (var p = 0; p < a.parts.length; p++) {
-          h += '<div class="pl">' + esc(a.parts[p]) + '</div>' + optsHtml(idx + '|' + a.parts[p], a.per[a.parts[p]] || '');
-        }
-      }
+        '<div class="q">次が最終回です。この後のご案内は？</div>' + optsHtml(idx, ans[idx]);
       h += '<div class="ktline">' + (ln ? '入る行： ' + esc(ln) : '') + '</div></div>';
     }
     $('ktCards').innerHTML = h;
     var ob = $('ktCards').querySelectorAll('.ktopts button');
     for (var j = 0; j < ob.length; j++) ob[j].onclick = function () {
-      var kp = this.getAttribute('data-k').split('|'), idx2 = parseInt(kp[0], 10), v = this.getAttribute('data-v');
-      if (kp[1]) ans[idx2].per[kp[1]] = v; else ans[idx2].all = v;
-      drawCards(); refresh();
-    };
-    var sb = $('ktCards').querySelectorAll('.ktseg button');
-    for (var s = 0; s < sb.length; s++) sb[s].onclick = function () {
-      ans[parseInt(this.getAttribute('data-seg'), 10)].mode = this.getAttribute('data-mode');
+      ans[parseInt(this.getAttribute('data-k'), 10)] = this.getAttribute('data-v');
       drawCards(); refresh();
     };
   }
