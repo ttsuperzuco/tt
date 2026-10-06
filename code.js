@@ -170,6 +170,9 @@ function doGet(e) {
   } else if (view === 'yoyaku') {
     title = '予約入力';                                  // ★予約入力のトップ画面（新規／既存／変更の3ボタン・PC版と同じ見た目）
     html = renderReservationHomePage_(base, staff, dev);
+  } else if (view === 'kaeshitest') {
+    title = '🔁テスト';                                 // ★開発URL(?dev=1)専用。ダミーで🔁ボタンを試す（純JS・登録しない）
+    html = renderKaeshiTestPage_(base, staff, dev);
   } else if (view === 'procstock') {
     title = 'プロセル在庫';                             // ★品物ごとの今ある数を入れる（純JS・登録は受付係）
     html = renderProcStockPage_(base, staff, dev);
@@ -1020,7 +1023,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★プロセル在庫＝品物ごとの今ある数を入れる（2026-10-02 まるちゃん依頼・実務者用）。
   //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝
   //   自動監視の人ごとの表示でスタッフにONにできる（まるちゃん「完成したらスタッフにも」）。
-  procstock:  { exec: false, staff: false }
+  procstock:  { exec: false, staff: false },
+  // ★🔁テスト＝施術後の予約で「次が最終回」の時に🔁をボタンで入れる部品を、ダミーで試す（2026-10-06 まるちゃん依頼）。
+  //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
+  kaeshitest: { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1028,7 +1034,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock', 'kaeshitest'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1752,7 +1758,10 @@ var TILE_DEFS_ = [
   // ★プロセル在庫＝品物を1つずつ数字ボタンで入れて、最後に一覧で確かめて登録（2026-10-02・実務者用）。
   //   登録は事務所PCの記録に残すだけ（受付係 op=procell_stock_save）。
   { id: 'procstock', cls: 'procstock', view: 'procstock',
-    icon: '<span class="ticon">📦</span>', label: 'プロセル\n在庫' }
+    icon: '<span class="ticon">📦</span>', label: 'プロセル\n在庫' },
+  // ★🔁テスト＝施術後の予約の🔁ボタンをダミーで試す（2026-10-06・開発者だけ・登録しない）。
+  { id: 'kaeshitest', cls: 'kaeshitest', view: 'kaeshitest',
+    icon: '<span class="ticon">🔁</span>', label: '🔁\nテスト' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -1768,7 +1777,7 @@ var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   uriage: 'kanri', procell: 'kanri', shophist: 'kanri',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu', kaeshitest: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'kanri', icon: '🛠️', title: '管理者用' },
@@ -9834,6 +9843,244 @@ function renderProcStockPage_(base, staff, dev) {
     '<script>(' + procStockScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
 
+// ========== 🔁テスト（施術後の予約で「次が最終回」の時に🔁をボタンで入れる・ダミーで試す画面） ==========
+// ★2026-10-06 まるちゃん依頼「テストボタンを開発者につくってみて。データはダミーで」。
+//   本番の「施術後の予約」7枚目（予約メモの修正）に足す予定の部品を、ここで先に触って確かめる。
+//   ・お客様・メモは全部ダミー（本物の予約・タイムツリー・LINEには一切触らない＝登録も送らない）。
+//   ・入る1行の書き方は、まるちゃんがスタッフに配った「🔁の書き方」そのまま
+//     （正本＝LINE前日お知らせ送信\全自動お知らせ_骨格ルール.md「★★確定・正本★★ 🔁の書き方」）。
+//       1部位＝「🔁お5回🍊」／セットで全部同じ＝「🔁お5回🍊」／セットで分ける＝「🔁VIOお5回　髭なし🍊」。
+//   ・「次が最終回か」はダミーなので画面で「全N回のN回目」を見て決めている。
+//     ★本番では事務所パソコンが決める（お知らせ・書き忘れの見張りと同じ見分けを借りる）。画面では判断しない。
+//   開発の住所(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
+var KAESHITEST_CASES_ = [
+  { name: 'ダミー花子 様', code: 'F999', title: '🇫🇷🍊預約F999ダミー花子',
+    memo: '⭐️現在進行中\n◉VIO脱毛 8回おまとめ：全9回の9回目あり\n\n💰お支払い状況\n◉5/10:8回おまとめ購入済み',
+    parts: {} },
+  { name: 'ダミー太郎 様', code: 'M999', title: '🇫🇷🫒預約M999ダミー太郎',
+    memo: '⭐️現在進行中\n◉髭脱毛 8回おまとめ：全9回の9回目あり\n◉脇脱毛 8回おまとめ：全9回の5回目あり\n\n💰お支払い状況\n◉3/2:髭8回おまとめ購入済み\n◉7/1:脇8回おまとめ購入済み',
+    parts: {} },
+  { name: 'ダミー次郎 様', code: 'M998', title: '🇫🇷🍅預約M998ダミー次郎',
+    memo: '⭐️現在進行中\n◉2026ピカピカＡプラン（VIO＋髭）：全9回の9回目あり\n\n💰お支払い状況\n◉4/5:ピカピカＡ 8回おまとめ購入済み',
+    parts: { 1: ['VIO', '髭'] } },
+  { name: 'ダミー美咲 様', code: 'F998', title: '🇫🇷🥭預約F998ダミー美咲',
+    memo: '⭐️現在進行中\n◉脇脱毛 8回おまとめ：全9回の6回目あり\n\n💰お支払い状況\n◉6/1:8回おまとめ購入済み',
+    parts: {} }
+];
+// ボタン＝[画面の文字, 🔁のあとに入る言葉]（スタッフに配った書き方と同じ言葉だけ）
+var KAESHITEST_OPTS_ = [
+  ['5回おまとめ', 'お5回'], ['8回おまとめ', 'お8回'], ['5回も8回も', 'お5回8回'],
+  ['都度', '都度'], ['なし', 'なし'], ['キャンペーン', 'キャンペーンおすすめ']
+];
+
+var KAESHITESTCSS_ =
+  '.kt{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+  '.kttest{background:#fde047;color:#713f12;font-weight:900;font-size:15px;border-radius:10px;padding:8px 12px;margin:6px 0 10px;text-align:center;}' +
+  '.ktlab{color:#eaf6fb;font-weight:800;font-size:16px;margin:12px 4px 6px;}' +
+  '.ktcases{display:grid;grid-template-columns:1fr;gap:10px;margin:6px 0 12px;}' +
+  '.ktcases button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:14px 14px;font:inherit;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);text-align:left;}' +
+  '.ktcases button small{display:block;font-size:13px;font-weight:700;color:#475569;margin-top:4px;white-space:pre-line;}' +
+  '.ktstaff{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 10px;}' +
+  '.ktstaff button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:10px 2px;font:inherit;font-size:17px;font-weight:800;cursor:pointer;}' +
+  '.ktstaff button.on{border-color:#16a34a;background:#dcfce7;}' +
+  '.ktcard{background:#fff;color:#0f172a;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 4px 14px rgba(0,0,0,.15);border-left:8px solid #f97316;}' +
+  '.ktcard.done{border-left-color:#16a34a;}' +
+  '.ktcard h4{margin:0 0 4px;font-size:19px;font-weight:900;}' +
+  '.ktcard .q{font-size:15px;font-weight:700;color:#475569;margin:0 0 10px;}' +
+  '.ktcard .pl{font-size:16px;font-weight:900;margin:12px 0 6px;}' +
+  '.ktopts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}' +
+  '.ktopts button{background:#f1f5f9;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 2px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
+  '.ktopts button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
+  '.ktseg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 6px;}' +
+  '.ktseg button{background:#e2e8f0;color:#0f172a;border:0;border-radius:10px;padding:9px 2px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
+  '.ktseg button.on{background:#2C7A99;color:#fff;}' +
+  '.ktline{margin-top:10px;font-size:16px;font-weight:900;color:#15803d;min-height:1.3em;}' +
+  '.ktnone{background:#fff;color:#0f172a;border-radius:14px;padding:14px;font-weight:800;font-size:16px;margin:10px 0;}' +
+  '.ktmemo{width:100%;box-sizing:border-box;min-height:220px;border-radius:12px;border:0;padding:12px;font:inherit;font-size:16px;line-height:1.5;}' +
+  '.ktwarn{color:#fde047;font-weight:900;font-size:16px;margin:10px 4px 0;min-height:1.3em;}' +
+  '.ktgo{display:block;width:100%;margin:14px 0 6px;padding:18px;font-size:20px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);cursor:pointer;}' +
+  '.ktgo:disabled{background:#94a3b8;cursor:not-allowed;box-shadow:none;}' +
+  '.ktdone{background:#fff;color:#0f172a;border-radius:16px;padding:18px 16px;font-weight:900;font-size:20px;line-height:1.5;margin:10px 0;text-align:center;}' +
+  '.ktdone pre{text-align:left;white-space:pre-wrap;font:inherit;font-size:15px;font-weight:700;background:#f1f5f9;border-radius:10px;padding:10px;margin:10px 0 0;}';
+
+function renderKaeshiTestPage_(base, staff, dev) {
+  var head = function (icon, name) {
+    return '<div class="hhead"><span class="bmark">' + icon + '</span><span class="bname">' + name + '</span></div>';
+  };
+  var inBack = function (id) {
+    return '<div class="ubar"><a class="uhome" id="' + id + '" href="javascript:void(0)">← 戻る</a></div>';
+  };
+  var C = { cases: KAESHITEST_CASES_, opts: KAESHITEST_OPTS_ };
+  return '<style>' + HOMECSS_ + KAESHITESTCSS_ + '</style>' +
+    '<div class="home">' +
+    '<div class="kt">' +
+      '<div id="ktPick">' + backBar_(base, staff, dev) + head('🔁', '🔁テスト') +
+        '<div class="kttest">テスト画面です。お客様は全部ダミーで、登録もしません</div>' +
+        '<div class="ktlab">今日の担当（🔁の後ろに付く印）</div>' +
+        '<div class="ktstaff" id="ktStaff"></div>' +
+        '<div class="ktlab">ダミーのお客様をえらんでください</div>' +
+        '<div class="ktcases" id="ktCases"></div>' +
+      '</div>' +
+      '<div id="ktMemo" style="display:none">' + inBack('ktBack1') + head('📝', '予約メモの修正') +
+        '<div class="kttest">テスト画面です。お客様は全部ダミーで、登録もしません</div>' +
+        '<div class="ktlab" id="ktWho"></div>' +
+        '<div id="ktCards"></div>' +
+        '<div class="ktlab">予約メモ（押すとすぐ下に🔁の行が入ります）</div>' +
+        '<textarea class="ktmemo" id="ktText" readonly></textarea>' +
+        '<div class="ktwarn" id="ktWarn"></div>' +
+        '<button type="button" class="ktgo" id="ktGo">この予約メモの内容で確定</button>' +
+      '</div>' +
+      '<div id="ktDone" style="display:none">' + inBack('ktBack2') + head('✅', '🔁テスト') +
+        '<div class="ktdone">テストなので登録はしていません。<br>本番ならこのメモが次回の予約に入ります。<pre id="ktFinal"></pre></div>' +
+        '<button type="button" class="ktgo" id="ktAgain">ほかのダミーで試す</button>' +
+      '</div>' +
+    '</div></div>' +
+    '<script>(' + kaeshiTestScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
+
+// 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
+function kaeshiTestScript_(C) {
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var SECS = ['ktPick', 'ktMemo', 'ktDone'];
+  function show(id) {
+    for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none';
+    window.scrollTo(0, 0);
+  }
+  var STAFF = ['🍅', '🍊', '🫒', '🥭'];
+  var mark = '🍊', cas = null, finals = [], ans = {};
+
+  function drawStaff() {
+    var h = '';
+    for (var i = 0; i < STAFF.length; i++) h += '<button type="button" data-m="' + STAFF[i] + '" class="' + (STAFF[i] === mark ? 'on' : '') + '">' + STAFF[i] + '</button>';
+    $('ktStaff').innerHTML = h;
+    var bs = $('ktStaff').querySelectorAll('button');
+    for (var j = 0; j < bs.length; j++) bs[j].onclick = function () { mark = this.getAttribute('data-m'); drawStaff(); };
+  }
+  function drawCases() {
+    var h = '';
+    for (var i = 0; i < C.cases.length; i++) {
+      var c = C.cases[i];
+      var lines = c.memo.split('\n').filter(function (l) { return l.charAt(0) === '◉' && /回目/.test(l); });
+      h += '<button type="button" data-i="' + i + '">' + esc(c.name + '　' + c.code) + '<small>' + esc(lines.join('\n')) + '</small></button>';
+    }
+    $('ktCases').innerHTML = h;
+    var bs = $('ktCases').querySelectorAll('button');
+    for (var j = 0; j < bs.length; j++) bs[j].onclick = function () { open(parseInt(this.getAttribute('data-i'), 10)); };
+  }
+  /* ダミーなので「全N回のN回目」の行＝次が最終回とする（本番は事務所パソコンが決める）。 */
+  function findFinals(memo) {
+    var L = memo.split('\n'), out = [];
+    for (var i = 0; i < L.length; i++) {
+      var m = L[i].match(/全\s*(\d+)\s*回の\s*(\d+)\s*回目/);
+      if (L[i].charAt(0) === '◉' && m && m[1] === m[2]) out.push(i);
+    }
+    return out;
+  }
+  function shortName(line) {
+    return line.replace(/^◉/, '').replace(/[：:].*$/, '').replace(/\s*\d+回おまとめ.*$/, '');
+  }
+  function open(i) {
+    cas = C.cases[i];
+    finals = findFinals(cas.memo);
+    ans = {};
+    for (var k = 0; k < finals.length; k++) {
+      var parts = cas.parts[finals[k]] || [];
+      ans[finals[k]] = { mode: 'same', all: '', per: {}, parts: parts };
+    }
+    $('ktWho').textContent = cas.name + '　' + cas.code + '　（今日の担当 ' + mark + '）';
+    drawCards();
+    refresh();
+    show('ktMemo');
+  }
+  function lineOf(idx) {
+    var a = ans[idx];
+    if (!a.parts.length || a.mode === 'same') return a.all ? '🔁' + a.all + mark : '';
+    var segs = [];
+    for (var p = 0; p < a.parts.length; p++) {
+      if (!a.per[a.parts[p]]) return '';
+      segs.push(a.parts[p] + a.per[a.parts[p]]);
+    }
+    return '🔁' + segs.join('　') + mark;
+  }
+  function optsHtml(key, cur) {
+    var h = '<div class="ktopts">';
+    for (var o = 0; o < C.opts.length; o++) {
+      h += '<button type="button" data-k="' + esc(key) + '" data-v="' + esc(C.opts[o][1]) + '" class="' + (cur === C.opts[o][1] ? 'on' : '') + '">' + esc(C.opts[o][0]) + '</button>';
+    }
+    return h + '</div>';
+  }
+  function drawCards() {
+    var memoL = cas.memo.split('\n'), h = '';
+    if (!finals.length) {
+      h = '<div class="ktnone">次は最終回ではないので、🔁はいりません（カードは出ません）。</div>';
+    }
+    for (var k = 0; k < finals.length; k++) {
+      var idx = finals[k], a = ans[idx], ln = lineOf(idx);
+      h += '<div class="ktcard' + (ln ? ' done' : '') + '"><h4>' + esc(shortName(memoL[idx])) + '</h4>' +
+        '<div class="q">次が最終回です。この後のご案内は？</div>';
+      if (a.parts.length) {
+        h += '<div class="ktseg"><button type="button" data-seg="' + idx + '" data-mode="same" class="' + (a.mode === 'same' ? 'on' : '') + '">全部同じ</button>' +
+          '<button type="button" data-seg="' + idx + '" data-mode="per" class="' + (a.mode === 'per' ? 'on' : '') + '">部位ごとに分ける</button></div>';
+      }
+      if (!a.parts.length || a.mode === 'same') {
+        h += optsHtml(idx + '|', a.all);
+      } else {
+        for (var p = 0; p < a.parts.length; p++) {
+          h += '<div class="pl">' + esc(a.parts[p]) + '</div>' + optsHtml(idx + '|' + a.parts[p], a.per[a.parts[p]] || '');
+        }
+      }
+      h += '<div class="ktline">' + (ln ? '入る行： ' + esc(ln) : '') + '</div></div>';
+    }
+    $('ktCards').innerHTML = h;
+    var ob = $('ktCards').querySelectorAll('.ktopts button');
+    for (var j = 0; j < ob.length; j++) ob[j].onclick = function () {
+      var kp = this.getAttribute('data-k').split('|'), idx2 = parseInt(kp[0], 10), v = this.getAttribute('data-v');
+      if (kp[1]) ans[idx2].per[kp[1]] = v; else ans[idx2].all = v;
+      drawCards(); refresh();
+    };
+    var sb = $('ktCards').querySelectorAll('.ktseg button');
+    for (var s = 0; s < sb.length; s++) sb[s].onclick = function () {
+      ans[parseInt(this.getAttribute('data-seg'), 10)].mode = this.getAttribute('data-mode');
+      drawCards(); refresh();
+    };
+  }
+  /* 施術の行（◉）のすぐ下に🔁の行を入れる（前からある🔁の行は入れ替える）。 */
+  function build() {
+    var L = cas.memo.split('\n'), out = [];
+    for (var i = 0; i < L.length; i++) {
+      out.push(L[i]);
+      if (ans[i]) {
+        var ln = lineOf(i);
+        if (L[i + 1] && L[i + 1].indexOf('🔁') === 0) i++;
+        if (ln) out.push(ln);
+      }
+    }
+    return out.join('\n');
+  }
+  function missing() {
+    var n = 0;
+    for (var k = 0; k < finals.length; k++) if (!lineOf(finals[k])) n++;
+    return n;
+  }
+  function refresh() {
+    $('ktText').value = build();
+    var n = missing();
+    $('ktGo').disabled = n > 0;
+    $('ktWarn').textContent = n > 0 ? '🔁をえらんでいない施術があと' + n + 'つあります' : '';
+  }
+  $('ktGo').onclick = function () {
+    if (missing() > 0) return;
+    $('ktFinal').textContent = cas.title + '\n\n' + build();
+    show('ktDone');
+  };
+  $('ktBack1').onclick = function () { drawStaff(); show('ktPick'); };
+  $('ktBack2').onclick = function () { show('ktMemo'); };
+  $('ktAgain').onclick = function () { drawStaff(); show('ktPick'); };
+  drawStaff();
+  drawCases();
+}
+
 // GAS側から開いた時用（静的アプリは index.html が窓口から取って renderPcStatusPage_ を直接呼ぶ）。
 function renderPcStatus_(base, staff, dev) {
   try {
@@ -12481,6 +12728,7 @@ var HOMECSS_ =
 '  .tile.shophist::before { background:#22707f; }' +
 '  .tile.procamp::before { background:#9333ea; }' +
 '  .tile.procstock::before { background:#7a5c2e; }' +
+'  .tile.kaeshitest::before { background:#f97316; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -12505,6 +12753,7 @@ var HOMECSS_ =
 '  .tile.shophist .ticon { background:rgba(34,112,127,.16); }' +
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
 '  .tile.procstock .ticon { background:rgba(122,92,46,.16); }' +
+'  .tile.kaeshitest .ticon { background:rgba(249,115,22,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
