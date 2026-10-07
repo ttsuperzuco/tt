@@ -6865,9 +6865,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
 function renderNewReservationPage_(base, staff, dev) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
-  // 表示の並び順＝みかん・オリーブ・トマト・マンゴー（2026-08-03 まるちゃん指定）。
+  // 表示の並び順＝みかん・オリーブ・トマト（2026-08-03 まるちゃん指定・2026-10-07 マンゴーは施術者から外した）。
   //   5=パイン🍍＝デザイン眉・まつエク専用（既定は隠し、デザ眉/まつエクの時だけ出す）。
-  var STAFF = [['2', '🍊', 'みかん'], ['3', '🫒', 'オリーブ'], ['1', '🍅', 'トマト'], ['4', '🥭', 'マンゴー'], ['5', '🍍', 'パイン']];
+  var STAFF = [['2', '🍊', 'みかん'], ['3', '🫒', 'オリーブ'], ['1', '🍅', 'トマト'], ['5', '🍍', 'パイン']];
   var ROOMS = [['FREEDOM', 'FREEDOM'], ['HAPPY', 'HAPPY'], ['LUCKY', 'LUCKY'], ['STAR', 'STAR/福/🇫🇷']];
   var DURS = [15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 120, 150];
   function staffPills(grp, defVal, ids) {
@@ -7253,7 +7253,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(dw)dw.style.display=o.dur?"":"none";if(sw)sw.style.display=o.staff?"":"none";if(rw)rw.style.display=o.room?"":"none";' +
     'if(!NR.perSlot(window.__nrSlots)){wrap.style.display="none";wrap.innerHTML="";return;}' +
     'var DU=[15,20,30,40,45,50,60,70,80,90,120,150];' +
-    'var ST=[["2","🍊 みかん","#e08a1e"],["3","🫒 オリーブ","#4b8b3b"],["1","🍅 トマト","#d1443c"],["4","🥭 マンゴー","#c9a227"]];' +
+    'var ST=[["2","🍊 みかん","#e08a1e"],["3","🫒 オリーブ","#4b8b3b"],["1","🍅 トマト","#d1443c"]];' +
     'var RM=[["FREEDOM","FREEDOM","#2ecc87"],["HAPPY","HAPPY","#e73b3b"],["LUCKY","LUCKY","#fdc02d"],["STAR/福/🇫🇷","STAR/福","#b38bdc"]];' +
     'function pl(g,v,l,c,on){var o=(c?" style=\\"background:"+c+"\\"":"");return "<button type=\\"button\\" class=\\"nrpill"+(c?"":" plain")+(on?" sel":"")+"\\" data-grp=\\""+g+"\\" data-val=\\""+v+"\\""+o+">"+l+"</button>";}' +
     // ★★2026-09-23 まるちゃん決定：**所要時間と「担当・部屋」を別の画面に分ける**。
@@ -7652,7 +7652,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
   var DURS2 = [15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 120, 150];
-  var STAFF2 = [['2', '🍊 みかん', '#e08a1e'], ['3', '🫒 オリーブ', '#4b8b3b'], ['1', '🍅 トマト', '#d1443c'], ['4', '🥭 マンゴー', '#c9a227']];
+  var STAFF2 = [['2', '🍊 みかん', '#e08a1e'], ['3', '🫒 オリーブ', '#4b8b3b'], ['1', '🍅 トマト', '#d1443c']];
   var ROOMS2 = [['FREEDOM', 'FREEDOM', '#2ecc87'], ['HAPPY', 'HAPPY', '#e73b3b'], ['LUCKY', 'LUCKY', '#fdc02d'], ['STAR/福/🇫🇷', 'STAR/福', '#b38bdc']];
   function exp_(grp, val, label, color, plain) {
     return '<button type="button" class="exp' + (plain ? ' plain' : '') + '" data-eg="' + grp + '" data-ev="' + esc_(val) + '"' + (color ? ' style="background:' + color + '"' : '') + '>' + label + '</button>';
@@ -10593,7 +10593,7 @@ function akiWakuColor_(kind) {
  *  ・空きの帯には**始まりと終わりの時刻を直接書く**（左の目盛りと見比べなくてよい）。
  *  ・1時間ごとに横線（30分は点線）。
  *  ・色は必ず共通の正本（部屋＝roomColor_／担当＝staffColor_）。自作の配色は作らない。
- *  ・施術者の並びはオリーブ→みかん→トマト→マンゴー。**パインは出さない**（まるちゃん指示）。
+ *  ・施術者の並びはオリーブ→みかん→トマト（2026-10-07 マンゴーは施術者から外した＝空き時間のデータに出ない）。**パインは出さない**（まるちゃん指示）。
  *    マンゴーはその日出勤していれば出る（出勤していない人はデータに入らない）。
  *  材料は akijikan.json にすでに入っている物だけ（事務所PC側は変えていない）。 */
 /** ★2026-09-11 まるちゃん指示：狭い列の見出しは**決まった位置で折り返す**（自動まかせにしない）。
