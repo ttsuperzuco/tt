@@ -25,6 +25,7 @@
     "instadm_delete": 120,
     "instadm_reply": 120,
     "instadm_reqdetail": 90,
+    "kaeshi_booking": 30,
     "line_broadcast": 600,
     "links_refresh": 120,
     "make_allday": 180,
