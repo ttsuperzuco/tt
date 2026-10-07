@@ -5825,12 +5825,17 @@ function renderReservationHomePage_(base, staff, dev) {
   var sg = (dev || !!(_sgAllow && _sgAllow.sejutsugo === true)) ?
       ('<a class="rolebtn sejutsugo" href="' + base + '?view=yoyaku_sejutsugo' + sfx + '" target="_top">' +
         '<span class="ricon">💆</span><span class="rname">施術後の予約</span></a>') : '';
+  // ★2026-10-07 まるちゃん決定：一番下に「🔁 リピート入力」（最終回の1つ前の担当が🔁を入れる入口）。
+  //   新しいボタンなので既定は開発者(?dev=1)だけ（共通ルール16）。試して良ければスタッフにも出す。
+  var rp = dev ?
+      ('<a class="rolebtn kaihatsu" href="' + base + '?view=yoyaku_sejutsugo&mode=repeat' + sfx + '" target="_top">' +
+        '<span class="ricon">🔁</span><span class="rname">リピート入力</span></a>') : '';
   var menu =
     '<div class="rolemenu">' +
       sg +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
         '<span class="ricon">📝</span><span class="rname">新規の予約</span></a>' +
-      ex +
+      ex + rp +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) + head + menu + '</div>';
@@ -6261,11 +6266,16 @@ var SG_STEPS_JS_ =
     '}' +
     '';
 
-function renderAfterTreatmentPage_(base, staff, dev, who) {
+function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
+  /* ★2026-10-07 まるちゃん決定「🔁 リピート入力」＝この画面を mode='repeat' で開いた時だけ流れを変える。
+     1枚目（施術者）→【今日の予約のお客様】【お客様番号から検索】→ 🔁の画面（8枚目と同じ）→ その予約のメモに🔁を書き足す。
+     施術者・今日のお客様一覧・🔁の画面は施術後の予約とまったく同じ物を使う（作りを2つに分けない）。 */
+  var REP = (mode === 'repeat');
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
   /* ★2026-09-11 まるちゃん「ここのたいわんとまとの文字いらない」＝見出しの下の店名は出さない。 */
-  var head = '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>';
+  var head = REP ? '<div class="hhead"><span class="bmark">🔁</span><span class="bname">リピート入力</span></div>'
+                 : '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>';
   var css = sgCss_();
   /* 4枚の画面。出すのは1枚だけ。 */
   var body =
@@ -6281,6 +6291,21 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '<div class="sglist" id="sglist"></div>' +
       '<div class="sgstatus" id="sgstatus2"></div>' +
     '</div>' +
+    /* ★リピート入力だけ：お客様の選び方（今日の予約のお客様／お客様番号から検索）と、番号を入れる画面。 */
+    (REP ?
+    '<div class="sg" id="sgRChoose" style="display:none">' +
+      '<div class="sgwho" id="sgrwho">お客様の選択</div>' +
+      '<button type="button" class="sgrbig" id="sgrtoday"><span class="sgrbi">📅</span>今日の予約のお客様</button>' +
+      '<button type="button" class="sgrbig" id="sgrnum"><span class="sgrbi">🔢</span>お客様番号から検索</button>' +
+    '</div>' +
+    '<div class="sg" id="sgRNum" style="display:none">' +
+      '<div class="sgwho">お客様番号から検索</div>' +
+      '<div class="exbox" id="sgrdisp"></div>' +
+      '<div class="ktmode" id="sgrseg"><button type="button" data-v="M" class="on">M（男）</button>' +
+        '<button type="button" data-v="F">F（女）</button></div>' +
+      '<div class="expad" id="sgrpad">' + EXPADHTML_ + '</div>' +
+      '<button type="button" class="exgo" id="sgrgo">🔁 リピート入力へ →</button>' +
+    '</div>' : '') +
     sgStepsHtml_() +
     /* 7枚目＝予約メモの修正。今日の予約メモをそのまま出し、次回用に直してもらう
        （そのままタイムツリーの次回の予約メモになる・まるちゃん 2026-09-12）。 */
@@ -6306,13 +6331,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
        どの施術が最終回かは事務所パソコンが決める（共通\kaeshi_target.py）。🔁を入れる場所は共通の判断（SG.kaeshi〜）。 */
     '<div class="sg" id="sgKaeshi" style="display:none">' +
       '<div class="sgwho">お知らせのおすすめ</div>' +
+      '<div class="sgmnote" id="sgrinfo" style="display:none"></div>' +
       '<div id="sgkcards"></div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">次回の予約メモ（ボタンを押すと🔁の行が入ります）</div>' +
         '<pre class="sgkpre" id="sgkpre"></pre>' +
       '</div>' +
       '<div class="ktwarn" id="sgkwarn"></div>' +
-      '<button type="button" class="sggo" id="sgkgo">この内容で予約を登録</button>' +
+      '<button type="button" class="sggo" id="sgkgo">' + (REP ? 'この内容で🔁を書き込む' : 'この内容で予約を登録') + '</button>' +
     '</div>';
   var backTop = backBar_(base, staff, dev);          /* 1枚目の戻る＝ホームへ */
   /* ★2026-09-17 まるちゃん「TOMATOのスマホで開くと一番に🍊が選択されてる」。
@@ -6336,6 +6362,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();' +
       'sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
     'var pick=null,dflt=null,BK=[],ALLEV=[],LIST=[],step=1,CUST=null,MY=null;' +
+    /* ★リピート入力：REP＝この画面をリピート入力として開いた／RB＝🔁を書く予約（事務所パソコンが決める）／
+       RFROM＝🔁の画面の前の画面（2＝今日のお客様一覧・22＝番号の画面）／RPRE・RDIG＝入れた番号。 */
+    'var REP=' + (REP ? 'true' : 'false') + ',RB=null,RFROM=2,RPRE="M",RDIG="";' +
     /* 今日の日付（事務所パソコンが今日の予約の払い方を見るために使う）。 */
     'var TODAY="";' +
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
@@ -6405,7 +6434,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
           'roomLabelOf(e.calendar_id,e.label_id,e.title||"",ALL_ROOM_LABELS):null;' +
         'var rn=(rm!=null&&typeof ALL_ROOM_LABELS!=="undefined")?ALL_ROOM_LABELS[rm]:(e.calendar_name||"");' +
         'day.push({mark:mk,start:e.start_at_ms,end:e.end_at_ms,title:e.title||"",note:e.note||"",' +
-          'room:rn,st:e.start_time||"",et:e.end_time||""});}' +
+          'room:rn,st:e.start_time||"",et:e.end_time||"",id:e.event_id||""});}' +
       /* ★カウンセリングの枠を出すかどうかは共通の1本にきく（同じ日に施術もある人の相談は出さない）。 */
       'var vis=SG.visibleBookings(day);' +
       'for(var v=0;v<vis.length;v++){var x=vis[v];' +
@@ -6423,13 +6452,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgTime").style.display=step===6?"":"none";' +
       '$("sgMemo").style.display=step===7?"":"none";' +
       '$("sgKaeshi").style.display=step===8?"":"none";' +
+      'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
       'var hd=$("sghead");if(hd)hd.style.display=step===1?"":"none";}' +
     'function goPick(){step=1;show();drawPick();window.scrollTo(0,0);}' +
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     /* ★7枚目から戻る時は、せっかく決めた時間と部屋をそのまま残す（goTimeだと選び直しになる）。 */
-    'function back(){if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
+    'function back(){if(REP&&repBack())return;if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
       'else if(step===7){step=6;show();drawTime();window.scrollTo(0,0);}' +
       'else if(step===6){goFree();}else if(step===5){goDay();}' +
       'else if(step===4){goMonth();}else if(step===3){goList();}else{goPick();}}' +
@@ -6453,7 +6483,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'var bs=$("sgstaff").getElementsByClassName("sgbtn");' +
       'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){' +
         'if(!tapOK())return;' +
-        'pick=this.getAttribute("data-mk");goList();};}}' +
+        'pick=this.getAttribute("data-mk");if(REP){goRChoose();}else{goList();}};}}' +
     /* ── 2枚目：お客様の選択 ── */
     'function drawList(){' +
       'var now=NOW();' +
@@ -6485,6 +6515,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'if(!tapOK())return;' +
         'CUST=LIST[parseInt(this.getAttribute("data-id"),10)];' +
         'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];' +
+        'if(REP){RFROM=2;repOpen("today",(typeof codeOf==="function")?(codeOf(CUST.title)||""):"",CUST.id||"");return;}' +
         'askNextMemo();goMonth();};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
@@ -6643,9 +6674,75 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'szOvShow_(szDoneHtml_("次回の予約を登録しました","お客様の選択に戻る",u),"#16a34a");' +
         'var bb=document.getElementById("szDoneBack");' +
         'if(bb)bb.addEventListener("click",function(){szOvHide_();goList();});});}' +
+    /* ── ★リピート入力（2026-10-07 まるちゃん決定）── */
+    'function goRChoose(){step=21;show();$("sgrwho").textContent=((pick&&pick!==SG.ALL)?SG.labelOfMark(pick)+"　":"")+"お客様の選択";window.scrollTo(0,0);}' +
+    'function goRNum(){step=22;show();rUpd();window.scrollTo(0,0);}' +
+    'function repBack(){if(step===8){if(RFROM===22){goRNum();}else{goList();}return true;}' +
+      'if(step===2||step===22){goRChoose();return true;}if(step===21){goPick();return true;}return false;}' +
+    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入れてください";}' +
+    'function repBind(){' +
+      '$("sgrtoday").onclick=function(){if(!tapOK())return;goList();};' +
+      '$("sgrnum").onclick=function(){if(!tapOK())return;goRNum();};' +
+      'var sb=$("sgrseg").querySelectorAll("button");' +
+      'for(var i=0;i<sb.length;i++){sb[i].onclick=function(){' +
+        'for(var j=0;j<sb.length;j++)sb[j].className=(sb[j]===this?"on":"");RPRE=this.getAttribute("data-v");rUpd();};}' +
+      '$("sgrpad").onclick=function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");' +
+        'if(k==="clr"){RDIG="";}else if(k==="del"){RDIG=RDIG.slice(0,-1);}' +
+        'else if(/^[0-9]$/.test(b.textContent)&&RDIG.length<4){RDIG+=b.textContent;}rUpd();};' +
+      '$("sgrgo").onclick=function(){if(!tapOK())return;if(!RDIG){szPopup_("お客様番号を入れてください");return;}' +
+        'RFROM=22;repOpen("number",RPRE+RDIG,"");};}' +
+    /* 事務所パソコンに「🔁を書く予約」と「🔁を聞く施術」を聞く（決め方は 共通\kaeshi_target.target_booking）。 */
+    'function repOpen(md,fnum,ev){if(!fnum){szPopup_("お客様番号が分かりません。");return;}' +
+      'szOvShow_(szBusyHtml_("予約をさがしています"),"#2C7A99");var n=0;' +
+      'var fail=function(m){szOvHide_();szPopup_(m||"エラーが発生しました。通信に失敗しました。もう一度お試しください。");};' +
+      'jsonp({action:"submit",key:KEY,op:"kaeshi_booking",who:idn.who,role:idn.role,device:idn.device,' +
+        'fields:JSON.stringify({fnum:fnum,today:TODAY,mode:md,event:ev||""})},' +
+      'function(r){if(!r||!r.ok||!r.id){fail();return;}' +
+        'var poll=function(){n++;if(n>350){fail();return;}' +
+          'jsonp({action:"status",key:KEY,id:r.id},function(x){' +
+            'if(!x||!x.ok){fail();return;}' +
+            'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(poll,600);return;}' +
+            'if(x.status!=="done"){fail();return;}' +
+            'var d=null;try{d=JSON.parse(x.result||"{}");}catch(e){}' +
+            'szOvHide_();' +
+            'if(!d||!d.ok){szPopup_((d&&d.reason)||"🔁を書く予約が見つかりません。");return;}' +
+            'RB=d;$("sgmtext").value=d.note||"";KT=[];KPICK={};' +
+            'for(var i=0;i<(d.finals||[]).length;i++){if(SG.kaeshiLineOf(d.note||"",d.finals[i])!==null)KT.push(d.finals[i]);}' +
+            'if(!KT.length){szPopup_("次の予約で最終回になる施術はありません。");return;}' +
+            'var dt=String(d.date||"").split("-"),wk=["日","月","火","水","木","金","土"];' +
+            'var w=wk[new Date(+dt[0],(+dt[1])-1,+dt[2]).getDay()]||"";' +
+            'var ri=$("sgrinfo");ri.style.display="block";' +
+            'ri.innerHTML="🔁を書く予約：<b>"+esc(+dt[1]+"/"+(+dt[2])+"（"+w+"）"+(d.start||""))+"</b>"+' +
+              '(d.kind==="before"?"<br>（最終回の1つ前の予約です。最終回の予約は、このメモを写して作られます）":"<br>（最終回の予約です）");' +
+            'step=8;show();drawKaeshi();window.scrollTo(0,0);});};' +
+        'setTimeout(poll,900);});}' +
+    /* その予約のメモに🔁を書き足す＝予約変更の書き込み（画面を開いた時のメモと本物が違えば上書きしない）。
+       違った時は、本物の今のメモに🔁を入れ直してもう一度だけ送る（スタッフの直しを消さない）。 */
+    'function repSend(){if(sending||!RB)return;sending=true;$("sgkgo").disabled=true;' +
+      'szOvShow_(szBusyHtml_("予約メモに🔁を書き込み中です"),"#2C7A99");repSubmit($("sgmtext").value||"",RB.note||"",0);}' +
+    'function repSubmit(note,expect,tries){var n=0;' +
+      'jsonp({action:"submit",key:KEY,op:"change_reservation",who:idn.who,role:idn.role,device:idn.device,' +
+        'fields:JSON.stringify({cal:RB.cal,event:RB.event_id,note:note,expect_note:expect})},' +
+      'function(r){if(!r||!r.ok||!r.id){memoFail();return;}' +
+        'var poll=function(){n++;if(n>350){memoFail();return;}' +
+          'jsonp({action:"status",key:KEY,id:r.id},function(x){' +
+            'if(!x||!x.ok){memoFail();return;}' +
+            'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(poll,600);return;}' +
+            'if(x.status!=="done"){memoFail("エラーが発生しました。りゅうさんに連絡しました。");return;}' +
+            'var d=null;try{d=JSON.parse(x.result||"{}");}catch(e){}' +
+            'if(d&&d.ok){sending=false;$("sgkgo").disabled=false;RB.note=note;' +
+              'szOvShow_(szDoneHtml_("🔁を書き込みました","お客様の選択に戻る"),"#16a34a");' +
+              'var bb=document.getElementById("szDoneBack");' +
+              'if(bb)bb.addEventListener("click",function(){szOvHide_();goRChoose();});return;}' +
+            'if(d&&d.conflict&&tries<1){var live=String(d.note||""),t2=live;' +
+              'for(var i=0;i<KT.length;i++){var ln=SG.kaeshiSetLine(KT[i],kPick(KT[i]),kMark());if(ln)t2=SG.kaeshiPutLine(t2,KT[i],ln);}' +
+              'RB.note=live;$("sgmtext").value=t2;repSubmit(t2,live,tries+1);return;}' +
+            'memoFail("予約メモが別の所で直されていました。もう一度お客様を選び直してください。");});};' +
+        'setTimeout(poll,1200);});}' +
     /* ── 8枚目：お知らせのおすすめ（🔁） ── */
     /* 🔁の後ろの印＝今日この施術をした担当（＝最終回の1つ前の来店の担当。🔁を書く人の決まり）。 */
-    'function kMark(){var m=(typeof staffOf==="function"&&CUST)?staffOf(CUST.title||""):"";' +
+    'function kMark(){if(REP&&pick&&pick!==SG.ALL)return pick;' +      /* ★リピート入力＝えらんだ施術者の印 */
+      'var m=(typeof staffOf==="function"&&CUST)?staffOf(CUST.title||""):"";' +
       'if(!m&&pick&&pick!==SG.ALL)m=pick;return m||"";}' +
     'function kDecide(list){' +
       /* ★判断ファイルが古い（🔁の判断が無い）時は今までどおりすぐ登録する＝画面を止めない */
@@ -6721,7 +6818,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       '$("sgtgo").onclick=function(){if(!tapOK())return;askNextMemo();goMemo();};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
-        'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;sendMemo();};' +
+        'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
+      'if(REP)repBind();' +
       '$("sgmtext").addEventListener("input",function(){MEMOTOUCHED=true;growMemo();});})();' +
     /* 窓の大きさを変えた時も、お名前が2行にならないように測り直す（パソコンの窓用）。 */
     'window.addEventListener("resize",function(){if(step===2){fitNames();gapAfterNow();}' +
@@ -6729,7 +6827,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'showTestNote();' +
     'need(build);' +
     '})();<' + '/script>';
-  return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHICSS_ +
+  return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHICSS_ + (REP ? EXPADCSS_ +
+    '.sgrbig{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:12px 0;padding:22px 18px;border:0;border-radius:18px;background:#fff;color:#0f172a;font:inherit;font-size:24px;font-weight:900;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+    '.sgrbig .sgrbi{font-size:30px;}' +
+    '#sgrdisp{text-align:center;font-size:34px;font-weight:900;min-height:1.35em;}' : '') +
     '.sgkpre{white-space:pre-wrap;word-break:break-all;background:#fff;color:#0f172a;border-radius:12px;padding:12px;margin:0;font:inherit;font-size:15px;line-height:1.5;}' +
     '</style>' +
     '<div class="home">' +
