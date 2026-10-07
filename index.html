@@ -227,7 +227,7 @@
 <script src="bigsend.js?v=1e2776a38e"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=0d08362e6d"></script>
+<script src="code.js?v=f6e9b9c5cf"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -952,7 +952,7 @@
 
   // ★予約入力＝開発URL専用。貼って選ぶ→事務所PC(edit_worker op=new_reservation)が新規予約を作る（renderNewReservationPage_ 内スクリプトが窓口へ依頼）。
   function showYoyaku() { mount(renderReservationHomePage_(base, staff, dev)); }        // トップ画面（新規/既存/変更）
-  function showYoyakuSejutsugo() { mount(renderAfterTreatmentPage_(base, staff, dev, who)); } // 「施術後の予約」＝担当を選んでその担当のお客様をしぼりこむ
+  function showYoyakuSejutsugo() { mount(renderAfterTreatmentPage_(base, staff, dev, who, /[?&]mode=repeat(&|$)/.test(location.search) ? 'repeat' : '')); } // 「施術後の予約」＝担当を選んでその担当のお客様をしぼりこむ
   function showYoyakuNew() { mount(renderNewReservationPage_(base, staff, dev)); }       // 「新規の予約」の入力画面
   function showYoyakuKizon() { mount(renderExistingPage_(base, staff, dev, '予約')); }   // 「既存の予約」＝番号→日付
   function showYoyakuHenkou() { mount(renderExistingPage_(base, staff, dev, '変更')); }  // 「既存の変更」＝番号→日付
