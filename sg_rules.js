@@ -291,35 +291,37 @@
     var nx = L[e + 1];
     return (nx && nx.replace(/^\s+/, '').indexOf(SG.KAESHI_MARK) === 0) ? nx.trim() : '';
   };
-  /* 🔁の行を入れた（入れ替えた）メモを返す。施術の行が見つからない時は何も変えない。 */
-  SG.kaeshiPut = function (text, t, word, mark) {
-    var L = String(text || '').replace(/\r\n/g, '\n').split('\n');
-    var i = SG.kaeshiFind(L, t);
-    if (i < 0) return String(text || '');
-    var e = ksBlockEnd(L, i);
-    var line = SG.KAESHI_MARK + word + (mark || '');
-    var nx = L[e + 1];
-    if (nx && nx.replace(/^\s+/, '').indexOf(SG.KAESHI_MARK) === 0) L[e + 1] = line;
-    else L.splice(e + 1, 0, line);
-    return L.join('\n');
-  };
-  /* ★2026-10-07 まるちゃん「複数部位あるときは、別々に選択させる」。
-     1行に部位が2つ以上ある施術（t.parts＝[{code,word}]・事務所パソコンが読み戻しを確かめた言葉）は、
-     部位ごとに選んだ答え（pick＝{言葉:答え}）から「🔁VIOお5回　髭なし🍊」を組む。全部選ぶまでは ''。
-     部位が1つの施術は pick["_"] だけを見る（「🔁お5回🍊」）。 */
+  /* 1行に部位が2つ以上ある施術（t.parts＝[{code,word}]・事務所パソコンが読み戻しを確かめた言葉）だけ部位を返す。 */
   SG.kaeshiParts = function (t) {
     var p = (t && t.parts) || [];
     return p.length >= 2 ? p : [];
   };
-  SG.kaeshiLine = function (t, pick, mark) {
+  /* ★2026-10-07 まるちゃん（セットの選び方）：1行に部位が2つ以上ある施術は、まず
+       【全部位が同じおすすめ】【部位によっておすすめが違う】の2つから選ぶ。
+       ・同じ＝答えを1つ（5回／8回／5回も8回も／都度／なし）→「🔁お5回🍊」
+       ・違う＝部位ごとに答えを選ぶ（なしも選べる＝やめる部位をわざわざ言わない）→「🔁VIOお5回　髭なし🍊」
+         ★部位ごとに選んでも全部同じ答えなら「同じ」と同じ行にする。
+     pick＝{mode:'same', all:答え} か {mode:'diff', each:{言葉:答え}}。全部そろわない時は ''。 */
+  SG.kaeshiSetLine = function (t, pick, mark) {
     var ps = SG.kaeshiParts(t), pk = pick || {};
-    if (!ps.length) return pk._ ? SG.KAESHI_MARK + pk._ + (mark || '') : '';
-    var seg = [];
+    if (!ps.length || pk.mode !== 'diff') return pk.all ? SG.KAESHI_MARK + pk.all + (mark || '') : '';
+    var each = pk.each || {}, seg = [], first = null, same = true;
     for (var i = 0; i < ps.length; i++) {
-      if (!pk[ps[i].word]) return '';
-      seg.push(ps[i].word + pk[ps[i].word]);
+      var v = each[ps[i].word];
+      if (!v) return '';
+      if (first === null) first = v; else if (v !== first) same = false;
+      seg.push(ps[i].word + v);
     }
-    return SG.KAESHI_MARK + seg.join('　') + (mark || '');
+    return SG.KAESHI_MARK + (same ? first : seg.join('　')) + (mark || '');
+  };
+  /* その施術のすぐ下の🔁の行を消す（選び直しで答えがそろわなくなった時）。 */
+  SG.kaeshiRemove = function (text, t) {
+    var L = String(text || '').replace(/\r\n/g, '\n').split('\n');
+    var i = SG.kaeshiFind(L, t);
+    if (i < 0) return String(text || '');
+    var e = ksBlockEnd(L, i), nx = L[e + 1];
+    if (nx && nx.replace(/^\s+/, '').indexOf(SG.KAESHI_MARK) === 0) L.splice(e + 1, 1);
+    return L.join('\n');
   };
   /* 組んだ🔁の行を、その施術のかたまりのすぐ下に入れる（すぐ下に🔁があれば入れ替える）。 */
   SG.kaeshiPutLine = function (text, t, line) {
