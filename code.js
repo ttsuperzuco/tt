@@ -5817,14 +5817,7 @@ function renderReservationHomePage_(base, staff, dev) {
         '<span class="ricon">📖</span><span class="rname">既存の予約</span></a>' +
       '<a class="rolebtn kanri" href="' + base + '?view=yoyaku_henkou' + sfx + '" target="_top">' +
         '<span class="ricon">✏️</span><span class="rname">既存の変更</span></a>') : '';
-  // ★2026-09-11 まるちゃん指示：一番上に「施術後の予約」＝施術者がその場でそのお客様の次回を入れる入口。
-  //   中身はこれから作る（今は準備中の画面）。新しいボタンなので既定は開発者(?dev=1)だけに出す。
-  // ★★2026-09-17 まるちゃん決定「スタッフにもだす」＝ホームのボタンを見せてよい人には、ここにも出す
-  //   （誰に見せるかは人ごとの表示の1か所だけで決める＝index.html が起動時に置く __SZ_ALLOW_）。
-  var _sgAllow = (typeof window !== 'undefined') && window.__SZ_ALLOW_;
-  var sg = (dev || !!(_sgAllow && _sgAllow.sejutsugo === true)) ?
-      ('<a class="rolebtn sejutsugo" href="' + base + '?view=yoyaku_sejutsugo' + sfx + '" target="_top">' +
-        '<span class="ricon">💆</span><span class="rname">施術後の予約</span></a>') : '';
+  // ★2026-10-07 まるちゃん決定：「施術後の予約」はホームに大きいボタンがあるので、ここには出さない（二重になるため）。
   // ★2026-10-07 まるちゃん決定：一番下に「🔁 リピート入力」（最終回の1つ前の担当が🔁を入れる入口）。
   //   新しいボタンなので既定は開発者(?dev=1)だけ（共通ルール16）。試して良ければスタッフにも出す。
   var rp = dev ?
@@ -5832,7 +5825,6 @@ function renderReservationHomePage_(base, staff, dev) {
         '<span class="ricon">🔁</span><span class="rname">リピート入力</span></a>') : '';
   var menu =
     '<div class="rolemenu">' +
-      sg +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
         '<span class="ricon">📝</span><span class="rname">新規の予約</span></a>' +
       ex + rp +
