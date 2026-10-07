@@ -170,9 +170,6 @@ function doGet(e) {
   } else if (view === 'yoyaku') {
     title = '予約入力';                                  // ★予約入力のトップ画面（新規／既存／変更の3ボタン・PC版と同じ見た目）
     html = renderReservationHomePage_(base, staff, dev);
-  } else if (view === 'kaeshitest') {
-    title = '🔁テスト';                                 // ★開発URL(?dev=1)専用。ダミーで🔁ボタンを試す（純JS・登録しない）
-    html = renderKaeshiTestPage_(base, staff, dev);
   } else if (view === 'procstock') {
     title = 'プロセル在庫';                             // ★品物ごとの今ある数を入れる（純JS・登録は受付係）
     html = renderProcStockPage_(base, staff, dev);
@@ -1024,10 +1021,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★プロセル在庫＝品物ごとの今ある数を入れる（2026-10-02 まるちゃん依頼・実務者用）。
   //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝
   //   自動監視の人ごとの表示でスタッフにONにできる（まるちゃん「完成したらスタッフにも」）。
-  procstock:  { exec: false, staff: false },
-  // ★🔁テスト＝施術後の予約で「次が最終回」の時に🔁をボタンで入れる部品を、ダミーで試す（2026-10-06 まるちゃん依頼）。
-  //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
-  kaeshitest: { exec: false, staff: false }
+  procstock:  { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1035,7 +1029,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock', 'kaeshitest'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1759,10 +1753,7 @@ var TILE_DEFS_ = [
   // ★プロセル在庫＝品物を1つずつ数字ボタンで入れて、最後に一覧で確かめて登録（2026-10-02・実務者用）。
   //   登録は事務所PCの記録に残すだけ（受付係 op=procell_stock_save）。
   { id: 'procstock', cls: 'procstock', view: 'procstock',
-    icon: '<span class="ticon">📦</span>', label: 'プロセル\n在庫' },
-  // ★🔁テスト＝施術後の予約の🔁ボタンをダミーで試す（2026-10-06・開発者だけ・登録しない）。
-  { id: 'kaeshitest', cls: 'kaeshitest', view: 'kaeshitest',
-    icon: '<span class="ticon">🔁</span>', label: '🔁\nテスト' }
+    icon: '<span class="ticon">📦</span>', label: 'プロセル\n在庫' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -1778,7 +1769,7 @@ var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   uriage: 'kanri', procell: 'kanri', shophist: 'kanri',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu', kaeshitest: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'kanri', icon: '🛠️', title: '管理者用' },
@@ -6737,7 +6728,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
     'showTestNote();' +
     'need(build);' +
     '})();<' + '/script>';
-  return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHITESTCSS_ +
+  return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHICSS_ +
     '.sgkpre{white-space:pre-wrap;word-break:break-all;background:#fff;color:#0f172a;border-radius:12px;padding:12px;margin:0;font:inherit;font-size:15px;line-height:1.5;}' +
     '</style>' +
     '<div class="home">' +
@@ -9943,53 +9934,10 @@ function renderProcStockPage_(base, staff, dev) {
     '<script>(' + procStockScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
 
-// ========== 🔁テスト（施術後の予約で「次が最終回」の時に🔁をボタンで入れる・ダミーで試す画面） ==========
-// ★2026-10-06 まるちゃん依頼「テストボタンを開発者につくってみて。データはダミーで」。
-//   本番の「施術後の予約」7枚目（予約メモの修正）に足す予定の部品を、ここで先に触って確かめる。
-//   ・お客様・メモは全部ダミー（本物の予約・タイムツリー・LINEには一切触らない＝登録も送らない）。
-//   ・入る1行の書き方は、まるちゃんがスタッフに配った「🔁の書き方」そのまま
-//     （正本＝LINE前日お知らせ送信\全自動お知らせ_骨格ルール.md「★★確定・正本★★ 🔁の書き方」）。
-//       どの行も「🔁お5回🍊」の形だけ（セットの行も部位名を付けない）。
-//     ★2026-10-07 まるちゃん「複数部位あるときは、別々に選択させる」＝1行に部位が2つ以上ある時は部位ごとにボタン
-//       （前日の「全部同じ・部位ごと選択いらない」は**切り替えボタンが要らない**という意味だった＝読み違えを直した）。
-//   ・「次が最終回か」はダミーなので画面で「全N回のN回目」を見て決めている。
-//     ★本番では事務所パソコンが決める（お知らせ・書き忘れの見張りと同じ見分けを借りる）。画面では判断しない。
-//   開発の住所(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
-var KAESHITEST_CASES_ = [
-  { name: 'ダミー花子 様', code: 'F999', title: '🇫🇷🍊預約F999ダミー花子',
-    memo: '⭐️現在進行中\n◉VIO脱毛 8回おまとめ：全9回の9回目あり\n\n💰お支払い状況\n◉5/10:8回おまとめ購入済み',
-    parts: {} },
-  { name: 'ダミー太郎 様', code: 'M999', title: '🇫🇷🫒預約M999ダミー太郎',
-    memo: '⭐️現在進行中\n◉髭脱毛 8回おまとめ：全9回の9回目あり\n◉脇脱毛 8回おまとめ：全9回の5回目あり\n\n💰お支払い状況\n◉3/2:髭8回おまとめ購入済み\n◉7/1:脇8回おまとめ購入済み',
-    parts: {} },
-  { name: 'ダミー次郎 様', code: 'M998', title: '🇫🇷🍅預約M998ダミー次郎',
-    memo: '⭐️現在進行中\n◉2026ピカピカＡプラン（VIO＋髭）：全9回の9回目あり\n\n💰お支払い状況\n◉4/5:ピカピカＡ 8回おまとめ購入済み',
-    parts: {}, sets: { 'ピカピカＡプラン': ['VIO', '髭'] } },
-  { name: 'ダミー三郎 様', code: 'M997', title: '🇫🇷🫒預約M997ダミー三郎',
-    memo: '⭐️現在進行中\n◉2026ピカピカＥプラン（VIO＋髭＋脚全部）：全9回の9回目あり\n\n💰お支払い状況\n◉4/5:ピカピカＥ 8回おまとめ購入済み',
-    parts: {}, sets: { 'ピカピカＥプラン': ['VIO', '髭', '脚全部'] } },
-  { name: 'ダミー美咲 様', code: 'F998', title: '🇫🇷🥭預約F998ダミー美咲',
-    memo: '⭐️現在進行中\n◉脇脱毛 8回おまとめ：全9回の6回目あり\n\n💰お支払い状況\n◉6/1:8回おまとめ購入済み',
-    parts: {} }
-];
-// ボタン＝[画面の文字, 🔁のあとに入る言葉]（スタッフに配った書き方と同じ言葉だけ）
-// ★2026-10-06 まるちゃん決定：「キャンペーン」は外した（脱毛では何も書かない時と同じ文になり効き目が無い・
-//   プロセルは10月から🔁不要のため）。機械が「🔁キャンペーンおすすめ」を読む仕組みはそのまま残っている。
-var KAESHITEST_OPTS_ = [
-  ['5回おまとめ', 'お5回'], ['8回おまとめ', 'お8回'], ['5回も8回も', 'お5回8回'],
-  ['都度', '都度'], ['なし', 'なし']
-];
-
-var KAESHITESTCSS_ =
-  '.kt{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
-  '.kttest{background:#fde047;color:#713f12;font-weight:900;font-size:15px;border-radius:10px;padding:8px 12px;margin:6px 0 10px;text-align:center;}' +
-  '.ktlab{color:#eaf6fb;font-weight:800;font-size:16px;margin:12px 4px 6px;}' +
-  '.ktcases{display:grid;grid-template-columns:1fr;gap:10px;margin:6px 0 12px;}' +
-  '.ktcases button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:14px 14px;font:inherit;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);text-align:left;}' +
-  '.ktcases button small{display:block;font-size:13px;font-weight:700;color:#475569;margin-top:4px;white-space:pre-line;}' +
-  '.ktstaff{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 10px;}' +
-  '.ktstaff button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:10px 2px;font:inherit;font-size:17px;font-weight:800;cursor:pointer;}' +
-  '.ktstaff button.on{border-color:#16a34a;background:#dcfce7;}' +
+// ========== 🔁（施術後の予約の8枚目「お知らせのおすすめ」）の見た目 ==========
+// ★2026-10-06〜07 まるちゃん決定。次が最終回の時だけ出る8枚目のカード・ボタンの見た目（renderSejutsugo の8枚目が使う）。
+//   ダミーで試す「🔁テスト」の画面とボタンは 2026-10-07 まるちゃん指示で消した（本番に組み込み済み）。
+var KAESHICSS_ =
   '.ktcard{background:#fff;color:#0f172a;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 4px 14px rgba(0,0,0,.15);border-left:8px solid #f97316;}' +
   '.ktcard.done{border-left-color:#16a34a;}' +
   '.ktlast{background:#dc2626;color:#fff;font-size:26px;font-weight:900;text-align:center;border-radius:12px;padding:12px 8px;margin:0 0 12px;letter-spacing:.02em;}' +
@@ -10004,181 +9952,9 @@ var KAESHITESTCSS_ =
   '.ktmode button{background:#e2e8f0;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 4px;font:inherit;font-size:15px;font-weight:900;line-height:1.35;cursor:pointer;}' +
   '.ktmode button.on{background:#2C7A99;color:#fff;border-color:#1e5a73;}' +
   '.ktline{margin-top:10px;font-size:16px;font-weight:900;color:#15803d;min-height:1.3em;}' +
-  '.ktnone{background:#fff;color:#0f172a;border-radius:14px;padding:14px;font-weight:800;font-size:16px;margin:10px 0;}' +
-  '.ktmemo{width:100%;box-sizing:border-box;min-height:220px;border-radius:12px;border:0;padding:12px;font:inherit;font-size:16px;line-height:1.5;}' +
-  '.ktwarn{color:#fde047;font-weight:900;font-size:16px;margin:10px 4px 0;min-height:1.3em;}' +
-  '.ktgo{display:block;width:100%;margin:14px 0 6px;padding:18px;font-size:20px;font-weight:800;border:0;border-radius:16px;background:#16a34a;color:#fff;box-shadow:0 4px 10px rgba(0,0,0,.18);cursor:pointer;}' +
-  '.ktgo:disabled{background:#94a3b8;cursor:not-allowed;box-shadow:none;}' +
-  '.ktdone{background:#fff;color:#0f172a;border-radius:16px;padding:18px 16px;font-weight:900;font-size:20px;line-height:1.5;margin:10px 0;text-align:center;}' +
-  '.ktdone pre{text-align:left;white-space:pre-wrap;font:inherit;font-size:15px;font-weight:700;background:#f1f5f9;border-radius:10px;padding:10px;margin:10px 0 0;}';
+  '.ktwarn{color:#fde047;font-weight:900;font-size:16px;margin:10px 4px 0;min-height:1.3em;}';
 
-function renderKaeshiTestPage_(base, staff, dev) {
-  var head = function (icon, name) {
-    return '<div class="hhead"><span class="bmark">' + icon + '</span><span class="bname">' + name + '</span></div>';
-  };
-  var inBack = function (id) {
-    return '<div class="ubar"><a class="uhome" id="' + id + '" href="javascript:void(0)">← 戻る</a></div>';
-  };
-  var C = { cases: KAESHITEST_CASES_, opts: KAESHITEST_OPTS_ };
-  return '<style>' + HOMECSS_ + KAESHITESTCSS_ + '</style>' +
-    '<div class="home">' +
-    '<div class="kt">' +
-      '<div id="ktPick">' + backBar_(base, staff, dev) + head('🔁', '🔁テスト') +
-        '<div class="kttest">テスト画面です。お客様は全部ダミーで、登録もしません</div>' +
-        '<div class="ktlab">今日の担当（🔁の後ろに付く印）</div>' +
-        '<div class="ktstaff" id="ktStaff"></div>' +
-        '<div class="ktlab">ダミーのお客様をえらんでください</div>' +
-        '<div class="ktcases" id="ktCases"></div>' +
-      '</div>' +
-      '<div id="ktMemo" style="display:none">' + inBack('ktBack1') + head('📝', '予約メモの修正') +
-        '<div class="kttest">テスト画面です。お客様は全部ダミーで、登録もしません</div>' +
-        '<div class="ktlab" id="ktWho"></div>' +
-        '<div id="ktCards"></div>' +
-        '<div class="ktlab">予約メモ（直せます。ボタンを押すと施術の行のすぐ下に🔁の行が入ります）</div>' +
-        '<textarea class="ktmemo" id="ktText"></textarea>' +
-        '<div class="ktwarn" id="ktWarn"></div>' +
-        '<button type="button" class="ktgo" id="ktGo">この予約メモの内容で確定</button>' +
-      '</div>' +
-      '<div id="ktDone" style="display:none">' + inBack('ktBack2') + head('✅', '🔁テスト') +
-        '<div class="ktdone">テストなので登録はしていません。<br>本番ならこのメモが次回の予約に入ります。<pre id="ktFinal"></pre></div>' +
-        '<button type="button" class="ktgo" id="ktAgain">ほかのダミーで試す</button>' +
-      '</div>' +
-    '</div></div>' +
-    '<script>(' + kaeshiTestScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
-}
 
-// 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
-function kaeshiTestScript_(C) {
-  function $(id) { return document.getElementById(id); }
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  var SECS = ['ktPick', 'ktMemo', 'ktDone'];
-  function show(id) {
-    for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none';
-    window.scrollTo(0, 0);
-  }
-  var STAFF = ['🍅', '🍊', '🫒', '🥭'];
-  /* ★2026-10-07：本番の8枚目と同じ共通の判断（SG.kaeshi〜）を使う＝テストと本番で動きが食い違わない。
-     ボタン・🔁の入れ場所・部位ごとの選び方（1行に部位が2つ以上ある時）は全部 SG に聞く。
-     ダミーなので「次が最終回」の見分けと部位の言葉だけは画面で決める（本番は事務所パソコン）。 */
-  var mark = '🍊', cas = null, finals = [], picks = {};
-
-  function drawStaff() {
-    var h = '';
-    for (var i = 0; i < STAFF.length; i++) h += '<button type="button" data-m="' + STAFF[i] + '" class="' + (STAFF[i] === mark ? 'on' : '') + '">' + STAFF[i] + '</button>';
-    $('ktStaff').innerHTML = h;
-    var bs = $('ktStaff').querySelectorAll('button');
-    for (var j = 0; j < bs.length; j++) bs[j].onclick = function () { mark = this.getAttribute('data-m'); drawStaff(); };
-  }
-  function drawCases() {
-    var h = '';
-    for (var i = 0; i < C.cases.length; i++) {
-      var c = C.cases[i];
-      var lines = c.memo.split('\n').filter(function (l) { return l.charAt(0) === '◉' && /回目/.test(l); });
-      h += '<button type="button" data-i="' + i + '">' + esc(c.name + '　' + c.code) + '<small>' + esc(lines.join('\n')) + '</small></button>';
-    }
-    $('ktCases').innerHTML = h;
-    var bs = $('ktCases').querySelectorAll('button');
-    for (var j = 0; j < bs.length; j++) bs[j].onclick = function () { open(parseInt(this.getAttribute('data-i'), 10)); };
-  }
-  function findFinals(c) {
-    var L = c.memo.split('\n'), out = [];
-    for (var i = 0; i < L.length; i++) {
-      var m = L[i].match(/全\s*(\d+)\s*回の\s*(\d+)\s*回目/);
-      if (L[i].charAt(0) !== '◉' || !m || m[1] !== m[2]) continue;
-      var head = L[i].replace(/^◉/, ''), parts = [];
-      for (var key in (c.sets || {})) {
-        if (head.indexOf(key) >= 0) parts = c.sets[key].map(function (w) { return { word: w }; });
-      }
-      out.push({ head: head, name: head.replace(/[：:].*$/, ''), parts: parts });
-    }
-    return out;
-  }
-  function text() { return $('ktText').value.replace(/\r\n/g, '\n'); }
-  function open(i) {
-    cas = C.cases[i];
-    finals = findFinals(cas);
-    picks = {};
-    $('ktWho').textContent = cas.name + '　' + cas.code + '　（今日の担当 ' + mark + '）';
-    $('ktText').value = cas.memo;
-    drawCards();
-    show('ktMemo');
-  }
-  function optsHtml(k, pw, cur, list) {
-    var h = '<div class="ktopts">';
-    for (var o = 0; o < list.length; o++) {
-      var w = list[o][1];
-      h += '<button type="button" data-k="' + k + '" data-p="' + esc(pw) + '" data-v="' + esc(w) + '" class="' + (cur === w ? 'on' : '') + '">' + esc(list[o][0]) + '</button>';
-    }
-    return h + '</div>';
-  }
-  /* ★2026-10-07 まるちゃん：セット（1行に部位が2つ以上）は、まず【全部位が同じおすすめ】【部位によっておすすめが違う】。
-     同じ＝答えを1つ／違う＝部位ごとに答え（なしも選べる）。部位が1つの施術は今までどおり1列のボタン。
-     答えから🔁の行を組むのは共通の判断（SG.kaeshiSetLine）。 */
-  function drawCards() {
-    var tx = text(), h = '';
-    if (!finals.length) {
-      h = '<div class="ktnone">次は最終回ではないので、🔁はいりません（カードは出ません）。</div>';
-    }
-    for (var k = 0; k < finals.length; k++) {
-      var t = finals[k], ln = SG.kaeshiLineOf(tx, t), pk = picks[k] || {}, ps = SG.kaeshiParts(t);
-      h += '<div class="ktcard' + (ln ? ' done' : '') + '"><div class="ktlast">⚠️ 次が最終回です</div>' +
-        '<h4>' + esc(t.name) + '</h4><div class="q">お知らせのおすすめは？</div>';
-      if (!ps.length) {
-        h += optsHtml(k, '__all', pk.all || '', SG.KAESHI_OPTS);
-      } else {
-        h += '<div class="ktmode">' +
-          '<button type="button" data-k="' + k + '" data-mode="same" class="' + (pk.mode === 'same' ? 'on' : '') + '">全部位が<br>同じおすすめ</button>' +
-          '<button type="button" data-k="' + k + '" data-mode="diff" class="' + (pk.mode === 'diff' ? 'on' : '') + '">部位によって<br>おすすめが違う</button></div>';
-        if (pk.mode === 'same') {
-          h += optsHtml(k, '__all', pk.all || '', SG.KAESHI_OPTS);
-        } else if (pk.mode === 'diff') {
-          var each = pk.each || {};
-          for (var c = 0; c < ps.length; c++) {
-            h += '<div class="pl">' + esc(ps[c].word) + '</div>' + optsHtml(k, ps[c].word, each[ps[c].word] || '', SG.KAESHI_OPTS);
-          }
-        }
-      }
-      var msg = ln === null ? 'メモの中にこの施術の行が見つかりません' : (ln ? '入っている行： ' + ln : '');
-      h += '<div class="ktline">' + esc(msg) + '</div></div>';
-    }
-    $('ktCards').innerHTML = h;
-    function apply(k2) {
-      var line = SG.kaeshiSetLine(finals[k2], picks[k2], mark);
-      $('ktText').value = line ? SG.kaeshiPutLine(text(), finals[k2], line) : SG.kaeshiRemove(text(), finals[k2]);
-      drawCards();
-    }
-    var mb = $('ktCards').querySelectorAll('.ktmode button');
-    for (var m = 0; m < mb.length; m++) mb[m].onclick = function () {
-      var k2 = parseInt(this.getAttribute('data-k'), 10), md = this.getAttribute('data-mode');
-      if ((picks[k2] || {}).mode === md) return;
-      picks[k2] = { mode: md, all: '', each: {} };     /* 切り替えたら選び直し */
-      apply(k2);
-    };
-    var ob = $('ktCards').querySelectorAll('.ktopts button[data-v]');
-    for (var j = 0; j < ob.length; j++) ob[j].onclick = function () {
-      var k2 = parseInt(this.getAttribute('data-k'), 10), p = this.getAttribute('data-p'), v = this.getAttribute('data-v');
-      var pk2 = picks[k2] || {};
-      if (p === '__all') { pk2.all = v; if (!pk2.mode) pk2.mode = 'same'; }
-      else { pk2.each = pk2.each || {}; pk2.each[p] = v; }
-      picks[k2] = pk2; apply(k2);
-    };
-    var n = SG.kaeshiMissing(tx, finals);
-    $('ktGo').disabled = n > 0;
-    $('ktWarn').textContent = n > 0 ? '🔁をえらんでいない施術があと' + n + 'つあります' : '';
-  }
-  /* 人が欄を直した時も、🔁が入っているかを数え直す（手で🔁を消したら、また押せなくなる）。 */
-  $('ktText').oninput = function () { drawCards(); };
-  $('ktGo').onclick = function () {
-    if (SG.kaeshiMissing(text(), finals) > 0) return;
-    $('ktFinal').textContent = cas.title + '\n\n' + text();
-    show('ktDone');
-  };
-  $('ktBack1').onclick = function () { drawStaff(); show('ktPick'); };
-  $('ktBack2').onclick = function () { show('ktMemo'); };
-  $('ktAgain').onclick = function () { drawStaff(); show('ktPick'); };
-  drawStaff();
-  drawCases();
-}
 
 // GAS側から開いた時用（静的アプリは index.html が窓口から取って renderPcStatusPage_ を直接呼ぶ）。
 function renderPcStatus_(base, staff, dev) {
@@ -12827,7 +12603,6 @@ var HOMECSS_ =
 '  .tile.shophist::before { background:#22707f; }' +
 '  .tile.procamp::before { background:#9333ea; }' +
 '  .tile.procstock::before { background:#7a5c2e; }' +
-'  .tile.kaeshitest::before { background:#f97316; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -12852,7 +12627,6 @@ var HOMECSS_ =
 '  .tile.shophist .ticon { background:rgba(34,112,127,.16); }' +
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
 '  .tile.procstock .ticon { background:rgba(122,92,46,.16); }' +
-'  .tile.kaeshitest .ticon { background:rgba(249,115,22,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
