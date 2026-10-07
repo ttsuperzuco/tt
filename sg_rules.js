@@ -303,6 +303,35 @@
     else L.splice(e + 1, 0, line);
     return L.join('\n');
   };
+  /* ★2026-10-07 まるちゃん「複数部位あるときは、別々に選択させる」。
+     1行に部位が2つ以上ある施術（t.parts＝[{code,word}]・事務所パソコンが読み戻しを確かめた言葉）は、
+     部位ごとに選んだ答え（pick＝{言葉:答え}）から「🔁VIOお5回　髭なし🍊」を組む。全部選ぶまでは ''。
+     部位が1つの施術は pick["_"] だけを見る（「🔁お5回🍊」）。 */
+  SG.kaeshiParts = function (t) {
+    var p = (t && t.parts) || [];
+    return p.length >= 2 ? p : [];
+  };
+  SG.kaeshiLine = function (t, pick, mark) {
+    var ps = SG.kaeshiParts(t), pk = pick || {};
+    if (!ps.length) return pk._ ? SG.KAESHI_MARK + pk._ + (mark || '') : '';
+    var seg = [];
+    for (var i = 0; i < ps.length; i++) {
+      if (!pk[ps[i].word]) return '';
+      seg.push(ps[i].word + pk[ps[i].word]);
+    }
+    return SG.KAESHI_MARK + seg.join('　') + (mark || '');
+  };
+  /* 組んだ🔁の行を、その施術のかたまりのすぐ下に入れる（すぐ下に🔁があれば入れ替える）。 */
+  SG.kaeshiPutLine = function (text, t, line) {
+    var L = String(text || '').replace(/\r\n/g, '\n').split('\n');
+    var i = SG.kaeshiFind(L, t);
+    if (i < 0 || !line) return String(text || '');
+    var e = ksBlockEnd(L, i);
+    var nx = L[e + 1];
+    if (nx && nx.replace(/^\s+/, '').indexOf(SG.KAESHI_MARK) === 0) L[e + 1] = line;
+    else L.splice(e + 1, 0, line);
+    return L.join('\n');
+  };
   /* まだ🔁が入っていない施術の数（★施術の行が見つからない物は数えない＝人が消した施術で止めない）。 */
   SG.kaeshiMissing = function (text, targets) {
     var n = 0;

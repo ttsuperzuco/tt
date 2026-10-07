@@ -6657,24 +6657,38 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'if(!m&&pick&&pick!==SG.ALL)m=pick;return m||"";}' +
     'function kDecide(list){' +
       /* ★判断ファイルが古い（🔁の判断が無い）時は今までどおりすぐ登録する＝画面を止めない */
-      'if(typeof SG.kaeshiLineOf!=="function"){sendMemo();return;}' +
+      'if(typeof SG.kaeshiLineOf!=="function"||typeof SG.kaeshiLine!=="function"){sendMemo();return;}' +
       'var tx=$("sgmtext").value||"";KT=[];' +
       'for(var i=0;i<(list||[]).length;i++){if(SG.kaeshiLineOf(tx,list[i])!==null)KT.push(list[i]);}' +
       'if(!KT.length){sendMemo();return;}' +
       'step=8;show();drawKaeshi();window.scrollTo(0,0);}' +
-    'function drawKaeshi(){var tx=$("sgmtext").value||"",mk=kMark(),h="";' +
+    /* ★2026-10-07 まるちゃん「複数部位あるときは、別々に選択させる」＝1行に部位が2つ以上ある施術は、
+       部位ごとにボタンを出す（部位の言葉は事務所パソコンが読み戻しを確かめた物＝KT[k].parts）。
+       選んだ答えは KPICK に覚え、全部そろった時だけ🔁の行を入れる（共通の判断 SG.kaeshiLine／kaeshiPutLine）。 */
+    'var KPICK={};' +
+    'function kPick(t){var key=t.head||"";if(!KPICK[key])KPICK[key]={};return KPICK[key];}' +
+    'function kOpts(k,pw,cur){var h="<div class=\\"ktopts\\">";' +
+      'for(var o=0;o<SG.KAESHI_OPTS.length;o++){var w=SG.KAESHI_OPTS[o][1];' +
+        'h+="<button type=\\"button\\" data-k=\\""+k+"\\" data-p=\\""+esc(pw)+"\\" data-v=\\""+esc(w)+"\\" class=\\""+' +
+          '(cur===w?"on":"")+"\\">"+esc(SG.KAESHI_OPTS[o][0])+"</button>";}' +
+      'return h+"</div>";}' +
+    'function drawKaeshi(){var tx=$("sgmtext").value||"",h="";' +
       'for(var k=0;k<KT.length;k++){var ln=SG.kaeshiLineOf(tx,KT[k]);if(ln===null)continue;' +
+        'var pk=kPick(KT[k]),ps=SG.kaeshiParts(KT[k]);' +
         'h+="<div class=\\"ktcard"+(ln?" done":"")+"\\"><div class=\\"ktlast\\">⚠️ 次が最終回です</div>"+' +
-          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめは？</div><div class=\\"ktopts\\">";' +
-        'for(var o=0;o<SG.KAESHI_OPTS.length;o++){var w=SG.KAESHI_OPTS[o][1];' +
-          'h+="<button type=\\"button\\" data-k=\\""+k+"\\" data-v=\\""+esc(w)+"\\" class=\\""+' +
-            '(ln===SG.KAESHI_MARK+w+mk?"on":"")+"\\">"+esc(SG.KAESHI_OPTS[o][0])+"</button>";}' +
-        'h+="</div><div class=\\"ktline\\">"+(ln?"入っている行： "+esc(ln):"")+"</div></div>";}' +
+          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめは？</div>";' +
+        'if(ps.length){for(var q=0;q<ps.length;q++){' +
+          'h+="<div class=\\"pl\\">"+esc(ps[q].word)+"</div>"+kOpts(k,ps[q].word,pk[ps[q].word]||"");}}' +
+        'else{h+=kOpts(k,"_",pk._||"");}' +
+        'h+="<div class=\\"ktline\\">"+(ln?"入っている行： "+esc(ln):"")+"</div></div>";}' +
       '$("sgkcards").innerHTML=h;$("sgkpre").textContent=tx;' +
       'var bs=$("sgkcards").querySelectorAll(".ktopts button");' +
       'for(var j=0;j<bs.length;j++)bs[j].onclick=function(){if(sending)return;' +
-        '$("sgmtext").value=SG.kaeshiPut($("sgmtext").value||"",KT[parseInt(this.getAttribute("data-k"),10)],' +
-          'this.getAttribute("data-v"),kMark());drawKaeshi();};' +
+        'var t=KT[parseInt(this.getAttribute("data-k"),10)],pk=kPick(t);' +
+        'pk[this.getAttribute("data-p")]=this.getAttribute("data-v");' +
+        'var line=SG.kaeshiLine(t,pk,kMark());' +
+        'if(line)$("sgmtext").value=SG.kaeshiPutLine($("sgmtext").value||"",t,line);' +
+        'drawKaeshi();};' +
       'var n=SG.kaeshiMissing(tx,KT);$("sgkgo").disabled=n>0||sending;' +
       '$("sgkwarn").textContent=n>0?"🔁をえらんでいない施術があと"+n+"つあります":"";}' +
     /* 7枚目の確定。★人がメモを直していなければ、下書きと一緒にもらった答え（FINALS）をそのまま使う＝待ち時間なし。
@@ -9925,9 +9939,8 @@ function renderProcStockPage_(base, staff, dev) {
 //   ・入る1行の書き方は、まるちゃんがスタッフに配った「🔁の書き方」そのまま
 //     （正本＝LINE前日お知らせ送信\全自動お知らせ_骨格ルール.md「★★確定・正本★★ 🔁の書き方」）。
 //       どの行も「🔁お5回🍊」の形だけ（セットの行も部位名を付けない）。
-//     ★2026-10-06 まるちゃん「全部同じ・部位ごと選択いらない」＝セットでも部位ごとに分けるボタンは出さない。
-//       セットの中に1つでも都度があればセット全体が都度扱い（骨格ルール追記85の続き4）なので、
-//       部位ごとに分けても結果は「セットで都度」と同じだった（写しのデータで完成文を作って確かめた）。
+//     ★2026-10-07 まるちゃん「複数部位あるときは、別々に選択させる」＝1行に部位が2つ以上ある時は部位ごとにボタン
+//       （前日の「全部同じ・部位ごと選択いらない」は**切り替えボタンが要らない**という意味だった＝読み違えを直した）。
 //   ・「次が最終回か」はダミーなので画面で「全N回のN回目」を見て決めている。
 //     ★本番では事務所パソコンが決める（お知らせ・書き忘れの見張りと同じ見分けを借りる）。画面では判断しない。
 //   開発の住所(?dev=1)専用（tile_settings.py の TILES に入れない＝誰もONにできない・共通ルール16）。
@@ -9940,7 +9953,7 @@ var KAESHITEST_CASES_ = [
     parts: {} },
   { name: 'ダミー次郎 様', code: 'M998', title: '🇫🇷🍅預約M998ダミー次郎',
     memo: '⭐️現在進行中\n◉2026ピカピカＡプラン（VIO＋髭）：全9回の9回目あり\n\n💰お支払い状況\n◉4/5:ピカピカＡ 8回おまとめ購入済み',
-    parts: {} },
+    parts: {}, sets: { 'ピカピカＡプラン': ['VIO', '髭'] } },
   { name: 'ダミー美咲 様', code: 'F998', title: '🇫🇷🥭預約F998ダミー美咲',
     memo: '⭐️現在進行中\n◉脇脱毛 8回おまとめ：全9回の6回目あり\n\n💰お支払い状況\n◉6/1:8回おまとめ購入済み',
     parts: {} }
@@ -10027,13 +10040,10 @@ function kaeshiTestScript_(C) {
     window.scrollTo(0, 0);
   }
   var STAFF = ['🍅', '🍊', '🫒', '🥭'];
-  var KAESHI = '🔁';
-  /* finals＝次が最終回の施術（元のメモの行の文字と、短い名前）。
-     ★2026-10-06 まるちゃん「予約メモは修正できる欄にしたら、🔁は入らない？」＝メモ欄は人が直せる。
-       だからボタンは「元のメモ」ではなく**今の欄の中身**に入れる（人の直しを消さない）。
-       施術の行は、元の行の文字そのまま → 無ければ短い名前を含む◉の行、の順で探す。
-       欄に手で🔁を書いた時も、その行のすぐ下に🔁があれば「選び済み」と数える。 */
-  var mark = '🍊', cas = null, finals = [], pick = {};
+  /* ★2026-10-07：本番の8枚目と同じ共通の判断（SG.kaeshi〜）を使う＝テストと本番で動きが食い違わない。
+     ボタン・🔁の入れ場所・部位ごとの選び方（1行に部位が2つ以上ある時）は全部 SG に聞く。
+     ダミーなので「次が最終回」の見分けと部位の言葉だけは画面で決める（本番は事務所パソコン）。 */
+  var mark = '🍊', cas = null, finals = [], picks = {};
 
   function drawStaff() {
     var h = '';
@@ -10053,91 +10063,72 @@ function kaeshiTestScript_(C) {
     var bs = $('ktCases').querySelectorAll('button');
     for (var j = 0; j < bs.length; j++) bs[j].onclick = function () { open(parseInt(this.getAttribute('data-i'), 10)); };
   }
-  function shortName(line) {
-    return line.replace(/^◉/, '').replace(/[：:].*$/, '').replace(/\s*\d+回おまとめ.*$/, '');
-  }
-  /* ダミーなので「全N回のN回目」の行＝次が最終回とする（本番は事務所パソコンが決める）。 */
-  function findFinals(memo) {
-    var L = memo.split('\n'), out = [];
+  function findFinals(c) {
+    var L = c.memo.split('\n'), out = [];
     for (var i = 0; i < L.length; i++) {
       var m = L[i].match(/全\s*(\d+)\s*回の\s*(\d+)\s*回目/);
-      if (L[i].charAt(0) === '◉' && m && m[1] === m[2]) out.push({ line: L[i], name: shortName(L[i]) });
+      if (L[i].charAt(0) !== '◉' || !m || m[1] !== m[2]) continue;
+      var head = L[i].replace(/^◉/, ''), parts = [];
+      for (var key in (c.sets || {})) {
+        if (head.indexOf(key) >= 0) parts = c.sets[key].map(function (w) { return { word: w }; });
+      }
+      out.push({ head: head, name: head.replace(/[：:].*$/, ''), parts: parts });
     }
     return out;
   }
-  /* 今の欄の中で、その施術の行が何行目か（見つからなければ -1）。 */
-  function locate(L, f) {
-    for (var i = 0; i < L.length; i++) if (L[i] === f.line) return i;
-    for (var j = 0; j < L.length; j++) if (L[j].charAt(0) === '◉' && f.name && L[j].indexOf(f.name) >= 0) return j;
-    return -1;
-  }
   function text() { return $('ktText').value.replace(/\r\n/g, '\n'); }
-  /* 今の欄で、その施術のすぐ下にある🔁の行（無ければ ''）。 */
-  function kaeshiLineOf(k) {
-    var L = text().split('\n'), i = locate(L, finals[k]);
-    if (i < 0) return null;
-    return (L[i + 1] && L[i + 1].indexOf(KAESHI) === 0) ? L[i + 1] : '';
-  }
   function open(i) {
     cas = C.cases[i];
-    finals = findFinals(cas.memo);
-    pick = {};
+    finals = findFinals(cas);
+    picks = {};
     $('ktWho').textContent = cas.name + '　' + cas.code + '　（今日の担当 ' + mark + '）';
     $('ktText').value = cas.memo;
     drawCards();
-    refresh();
     show('ktMemo');
   }
-  function optsHtml(key, cur) {
+  function optsHtml(k, pw, cur) {
     var h = '<div class="ktopts">';
-    for (var o = 0; o < C.opts.length; o++) {
-      h += '<button type="button" data-k="' + esc(key) + '" data-v="' + esc(C.opts[o][1]) + '" class="' + (cur === C.opts[o][1] ? 'on' : '') + '">' + esc(C.opts[o][0]) + '</button>';
+    for (var o = 0; o < SG.KAESHI_OPTS.length; o++) {
+      var w = SG.KAESHI_OPTS[o][1];
+      h += '<button type="button" data-k="' + k + '" data-p="' + esc(pw) + '" data-v="' + esc(w) + '" class="' + (cur === w ? 'on' : '') + '">' + esc(SG.KAESHI_OPTS[o][0]) + '</button>';
     }
     return h + '</div>';
   }
   function drawCards() {
-    var h = '';
+    var tx = text(), h = '';
     if (!finals.length) {
       h = '<div class="ktnone">次は最終回ではないので、🔁はいりません（カードは出ません）。</div>';
     }
     for (var k = 0; k < finals.length; k++) {
-      var ln = kaeshiLineOf(k);
-      /* ★2026-10-06 まるちゃん「次回最終回の文がいちばん大きく目立たないとだめ」「お知らせのおすすめは？」 */
+      var t = finals[k], ln = SG.kaeshiLineOf(tx, t), pk = picks[k] || {}, ps = SG.kaeshiParts(t);
       h += '<div class="ktcard' + (ln ? ' done' : '') + '"><div class="ktlast">⚠️ 次が最終回です</div>' +
-        '<h4>' + esc(finals[k].name) + '</h4>' +
-        '<div class="q">お知らせのおすすめは？</div>' + optsHtml(k, ln ? (pick[k] || '') : '');
-      var msg = ln === null ? 'メモの中にこの施術の行が見つかりません'
-        : (ln ? '入っている行： ' + ln : '');
+        '<h4>' + esc(t.name) + '</h4><div class="q">お知らせのおすすめは？</div>';
+      if (ps.length) {
+        for (var q = 0; q < ps.length; q++) h += '<div class="pl">' + esc(ps[q].word) + '</div>' + optsHtml(k, ps[q].word, pk[ps[q].word] || '');
+      } else {
+        h += optsHtml(k, '_', pk._ || '');
+      }
+      var msg = ln === null ? 'メモの中にこの施術の行が見つかりません' : (ln ? '入っている行： ' + ln : '');
       h += '<div class="ktline">' + esc(msg) + '</div></div>';
     }
     $('ktCards').innerHTML = h;
     var ob = $('ktCards').querySelectorAll('.ktopts button');
     for (var j = 0; j < ob.length; j++) ob[j].onclick = function () {
-      var k2 = parseInt(this.getAttribute('data-k'), 10), v = this.getAttribute('data-v');
-      var L = text().split('\n'), i = locate(L, finals[k2]);
-      if (i < 0) return;
-      var line = KAESHI + v + mark;
-      if (L[i + 1] && L[i + 1].indexOf(KAESHI) === 0) L[i + 1] = line;   /* 前からある🔁は入れ替える */
-      else L.splice(i + 1, 0, line);                                     /* 施術の行のすぐ下に入れる */
-      $('ktText').value = L.join('\n');
-      pick[k2] = v;
-      drawCards(); refresh();
+      var k2 = parseInt(this.getAttribute('data-k'), 10);
+      picks[k2] = picks[k2] || {};
+      picks[k2][this.getAttribute('data-p')] = this.getAttribute('data-v');
+      var line = SG.kaeshiLine(finals[k2], picks[k2], mark);
+      if (line) $('ktText').value = SG.kaeshiPutLine(text(), finals[k2], line);
+      drawCards();
     };
-  }
-  function missing() {
-    var n = 0;
-    for (var k = 0; k < finals.length; k++) if (!kaeshiLineOf(k)) n++;
-    return n;
-  }
-  function refresh() {
-    var n = missing();
+    var n = SG.kaeshiMissing(tx, finals);
     $('ktGo').disabled = n > 0;
     $('ktWarn').textContent = n > 0 ? '🔁をえらんでいない施術があと' + n + 'つあります' : '';
   }
   /* 人が欄を直した時も、🔁が入っているかを数え直す（手で🔁を消したら、また押せなくなる）。 */
-  $('ktText').oninput = function () { drawCards(); refresh(); };
+  $('ktText').oninput = function () { drawCards(); };
   $('ktGo').onclick = function () {
-    if (missing() > 0) return;
+    if (SG.kaeshiMissing(text(), finals) > 0) return;
     $('ktFinal').textContent = cas.title + '\n\n' + text();
     show('ktDone');
   };
