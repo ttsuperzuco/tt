@@ -6677,11 +6677,31 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ── ★リピート入力（2026-10-07 まるちゃん決定）── */
     'function goRChoose(){step=21;show();$("sgrwho").textContent=((pick&&pick!==SG.ALL)?SG.labelOfMark(pick)+"　":"")+"お客様の選択";window.scrollTo(0,0);}' +
     'function goRNum(){step=22;show();rUpd();window.scrollTo(0,0);}' +
+    /* 1枚目＝施術者のボタンだけ（今日の予約を読まない＝番号検索では要らないため）。今日の日付はこの端末の日付。 */
+    'var RLOADED=false;' +
+    'function repStart(){var d=new Date(),p2=function(n){return (n<10?"0":"")+n;};' +
+      'TODAY=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());' +
+      'if(pick===null){var my=SG.markOfWho(WHO);pick=my||null;}' +
+      'var h="";for(var i=0;i<SG.STAFF.length;i++){var x=SG.STAFF[i];' +
+        'h+="<button type=\\"button\\" class=\\"sgbtn"+(pick===x.mark?" sel":"")+"\\" data-mk=\\""+esc(x.mark)+"\\">"+' +
+          '"<span class=\\"sgmk\\">"+esc(x.mark)+"</span><span class=\\"sgnm\\">"+esc(x.name)+"</span></button>";}' +
+      'h+="<button type=\\"button\\" class=\\"sgbtn all"+(pick===SG.ALL?" sel":"")+"\\" data-mk=\\""+SG.ALL+"\\">"+' +
+        '"<span class=\\"sgmk\\">👥</span><span class=\\"sgnm\\">全施術者</span></button>";' +
+      '$("sgstaff").innerHTML=h;$("sgpickhead").style.display="";$("sgstatus").textContent="";' +
+      'var bs=$("sgstaff").getElementsByClassName("sgbtn");' +
+      'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){if(!tapOK())return;' +
+        'pick=this.getAttribute("data-mk");goRChoose();};}}' +
+    /* 【今日の予約のお客様】を押した時だけ今日の予約を読む（2回目からは読んだ物を使う）。 */
+    'function repLoadToday(cb){if(RLOADED){cb();return;}' +
+      'szOvShow_(szBusyHtml_("今日の予約を読んでいます"),"#2C7A99");' +
+      'need(function(p){szOvHide_();var keep=pick;build(p);pick=keep;' +
+        'if(!p||p.error||!p.events){szPopup_("今日の予約を読めませんでした。通信環境をご確認ください。");return;}' +
+        'if(RLOADED){if(step===2)drawList();return;}RLOADED=true;cb();});}' +
     'function repBack(){if(step===8){if(RFROM===22){goRNum();}else{goList();}return true;}' +
       'if(step===2||step===22){goRChoose();return true;}if(step===21){goPick();return true;}return false;}' +
     'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入れてください";}' +
     'function repBind(){' +
-      '$("sgrtoday").onclick=function(){if(!tapOK())return;goList();};' +
+      '$("sgrtoday").onclick=function(){if(!tapOK())return;repLoadToday(goList);};' +
       '$("sgrnum").onclick=function(){if(!tapOK())return;goRNum();};' +
       'var sb=$("sgrseg").querySelectorAll("button");' +
       'for(var i=0;i<sb.length;i++){sb[i].onclick=function(){' +
@@ -6825,7 +6845,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'window.addEventListener("resize",function(){if(step===2){fitNames();gapAfterNow();}' +
       'if(step===6)fitLine($("sgtwho"),26,13);if(step===7)growMemo();});' +
     'showTestNote();' +
-    'need(build);' +
+    /* ★2026-10-07 まるちゃん「番号検索の場合は今日の予約は要らない。必要な所で読むように」＝
+       リピート入力は1枚目（施術者）を今日の予約を読まずにすぐ出し、【今日の予約のお客様】を押した時だけ読む。 */
+    'if(REP){repStart();}else{need(build);}' +
     '})();<' + '/script>';
   return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHICSS_ + (REP ? EXPADCSS_ +
     '.sgrbig{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:12px 0;padding:22px 18px;border:0;border-radius:18px;background:#fff;color:#0f172a;font:inherit;font-size:24px;font-weight:900;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
