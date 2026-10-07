@@ -2024,7 +2024,7 @@ function ltGmapSection_(g) {
 // ★2026-10-04 まるちゃん決定：脱毛のおまとめ最終回で🔁（続けるかの申し送り）が書かれていない予約。
 //   事務所PCの『リピートマークの書き忘れ点検』（15分ごと）が見つけた物（d.kaeshi）をそのまま出すだけ。
 //   書く人＝最終回の担当ではなく、その1つ前の来店の担当。🔁が書かれたら次の点検で自動で消える。
-function ltKaeshiSection_(k) {
+function ltKaeshiSection_(k, base, staff, dev) {
   var list = (k && k.items) || [];
   if (!list.length) return '';
   var cardsHtml = list.map(function (u) {
@@ -2041,9 +2041,15 @@ function ltKaeshiSection_(k) {
       '<div class="lmeta"><span class="ltag">施術</span><span class="ltxt">' + esc_(u.parts || '') + '<br>' + esc_(u.count || '') + '</span></div>' +
       '<div class="lmeta"><span class="ltag">書く人</span><span class="ltxt">' + esc_(who) + '</span></div>' +
       '<div class="lmeta"><span class="ltag">内容</span><span class="ltxt">' + what + '</span></div>' +
+      // ★2026-10-07 まるちゃん決定：押すとそのお客様の🔁の画面へ直接（施術者だけ選ぶ・番号は打たない）。
+      (u.code ? '<a class="lkaeshigo" href="' + base + '?view=yoyaku_sejutsugo&mode=repeat&num=' +
+        encodeURIComponent(u.code) + '&mk=' + encodeURIComponent(u.staff || '') + roleSfx_(staff, dev) +
+        '" target="_top">🔁 リピート入力</a>' : '') +
     '</article>';
   }).join('\n');
-  return '<h1>⚠️ 🔁記入漏れ（おまとめ最終回） <span class="lcnt">' + list.length + '件</span></h1>' +
+  return '<style>.lkaeshigo{display:block;margin:12px 0 2px;padding:14px;border-radius:14px;background:#2C7A99;' +
+         'color:#fff;font-weight:800;font-size:17px;text-align:center;text-decoration:none}</style>' +
+         '<h1>⚠️ 🔁記入漏れ（おまとめ最終回） <span class="lcnt">' + list.length + '件</span></h1>' +
          '<div class="lcards">' + cardsHtml + '</div>';
 }
 
@@ -2091,7 +2097,7 @@ function renderLtPage_(d, base, staff, dev) {
   // ★2026-10-02 まるちゃん決定：グーグルマップの口コミで、お店がまだ返事していない物をこの画面の下に出す。
   //   事務所PCが毎日10時に読んだ結果（d.gmap）をそのまま出すだけ。返事待ちが無い日は何も出さない。
   // ★2026-10-04 まるちゃん決定：脱毛のおまとめ最終回で🔁が書かれていない予約（LINEでは知らせない）。
-  cards += ltKaeshiSection_(d.kaeshi);
+  cards += ltKaeshiSection_(d.kaeshi, base, staff, dev);
   cards += ltGmapSection_(d.gmap);
 
   var dismRows = dismissed.length
@@ -5820,7 +5826,9 @@ function renderReservationHomePage_(base, staff, dev) {
   // ★2026-10-07 まるちゃん決定：「施術後の予約」はホームに大きいボタンがあるので、ここには出さない（二重になるため）。
   // ★2026-10-07 まるちゃん決定：一番下に「🔁 リピート入力」（最終回の1つ前の担当が🔁を入れる入口）。
   //   新しいボタンなので既定は開発者(?dev=1)だけ（共通ルール16）。試して良ければスタッフにも出す。
-  var rp = dev ?
+  var _sgAllow = (typeof window !== 'undefined') && window.__SZ_ALLOW_;
+  // ★2026-10-07 まるちゃん「だす」＝施術後の予約を見せてよい人には、リピート入力も出す。
+  var rp = (dev || !!(_sgAllow && _sgAllow.sejutsugo === true)) ?
       ('<a class="rolebtn kaihatsu" href="' + base + '?view=yoyaku_sejutsugo&mode=repeat' + sfx + '" target="_top">' +
         '<span class="ricon">🔁</span><span class="rname">リピート入力</span></a>') : '';
   var menu =
@@ -6357,6 +6365,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★リピート入力：REP＝この画面をリピート入力として開いた／RB＝🔁を書く予約（事務所パソコンが決める）／
        RFROM＝🔁の画面の前の画面（2＝今日のお客様一覧・22＝番号の画面）／RPRE・RDIG＝入れた番号。 */
     'var REP=' + (REP ? 'true' : 'false') + ',RB=null,RFROM=2,RPRE="M",RDIG="";' +
+    /* ★2026-10-07：TT記入漏れのカードから来た時＝お客様番号(num)と書く人の印(mk)が住所に付いている。 */
+    'var RNUM=(location.search.match(/[?&]num=([MF][0-9]{1,4})(&|$)/)||[])[1]||"";' +
+    'var RMK="";try{RMK=decodeURIComponent((location.search.match(/[?&]mk=([^&]*)/)||[])[1]||"");}catch(e){}' +
     /* 今日の日付（事務所パソコンが今日の予約の払い方を見るために使う）。 */
     'var TODAY="";' +
     /* 空き状況の材料。画面を開いた時に予約と**同時に**取りに行く（並びで待つので待ち時間は増えない）。 */
@@ -6673,6 +6684,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var RLOADED=false;' +
     'function repStart(){var d=new Date(),p2=function(n){return (n<10?"0":"")+n;};' +
       'TODAY=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());' +
+      'if(pick===null&&RMK){for(var q=0;q<SG.STAFF.length;q++){if(SG.STAFF[q].mark===RMK)pick=RMK;}}' +
       'if(pick===null){var my=SG.markOfWho(WHO);pick=my||null;}' +
       'var h="";for(var i=0;i<SG.STAFF.length;i++){var x=SG.STAFF[i];' +
         'h+="<button type=\\"button\\" class=\\"sgbtn"+(pick===x.mark?" sel":"")+"\\" data-mk=\\""+esc(x.mark)+"\\">"+' +
@@ -6682,7 +6694,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgstaff").innerHTML=h;$("sgpickhead").style.display="";$("sgstatus").textContent="";' +
       'var bs=$("sgstaff").getElementsByClassName("sgbtn");' +
       'for(var b=0;b<bs.length;b++){bs[b].onclick=function(){if(!tapOK())return;' +
-        'pick=this.getAttribute("data-mk");goRChoose();};}}' +
+        'pick=this.getAttribute("data-mk");' +
+        /* カードから来た時は、お客様の選び方を飛ばして、その番号の🔁の画面へ直接（戻ると番号の画面）。 */
+        'if(RNUM){var nn=RNUM;RNUM="";RPRE=nn.charAt(0);RDIG=nn.slice(1);' +
+          'var sg2=$("sgrseg").querySelectorAll("button");for(var j=0;j<sg2.length;j++)sg2[j].className=(sg2[j].getAttribute("data-v")===RPRE?"on":"");' +
+          'RFROM=22;repOpen("number",nn,"");return;}' +
+        'goRChoose();};}}' +
     /* 【今日の予約のお客様】を押した時だけ今日の予約を読む（2回目からは読んだ物を使う）。 */
     'function repLoadToday(cb){if(RLOADED){cb();return;}' +
       'szOvShow_(szBusyHtml_("今日の予約を読んでいます"),"#2C7A99");' +
