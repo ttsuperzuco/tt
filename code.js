@@ -2044,11 +2044,11 @@ function ltKaeshiSection_(k, base, staff, dev) {
       // ★2026-10-07 まるちゃん決定：押すとそのお客様の🔁の画面へ直接（施術者だけ選ぶ・番号は打たない）。
       (u.code ? '<a class="lkaeshigo" href="' + base + '?view=yoyaku_sejutsugo&mode=repeat&num=' +
         encodeURIComponent(u.code) + '&mk=' + encodeURIComponent(u.staff || '') + roleSfx_(staff, dev) +
-        '" target="_top">🔁 リピート入力</a>' : '') +
+        '" target="_top">🔁 リピート入力へ飛ぶ →</a>' : '') +
     '</article>';
   }).join('\n');
-  return '<style>.lkaeshigo{display:block;margin:12px 0 2px;padding:14px;border-radius:14px;background:#2C7A99;' +
-         'color:#fff;font-weight:800;font-size:17px;text-align:center;text-decoration:none}</style>' +
+  return '<style>.lkaeshigo{display:block;margin:12px 0 2px;padding:14px;border-radius:14px;background:#fff;' +
+         'color:#2C7A99;box-shadow:0 3px 0 #0b3a4c;font-weight:800;font-size:17px;text-align:center;text-decoration:none}</style>' +
          '<h1>⚠️ 🔁記入漏れ（おまとめ最終回） <span class="lcnt">' + list.length + '件</span></h1>' +
          '<div class="lcards">' + cardsHtml + '</div>';
 }
