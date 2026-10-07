@@ -6657,14 +6657,16 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
       'if(!m&&pick&&pick!==SG.ALL)m=pick;return m||"";}' +
     'function kDecide(list){' +
       /* ★判断ファイルが古い（🔁の判断が無い）時は今までどおりすぐ登録する＝画面を止めない */
-      'if(typeof SG.kaeshiLineOf!=="function"||typeof SG.kaeshiLine!=="function"){sendMemo();return;}' +
+      'if(typeof SG.kaeshiLineOf!=="function"||typeof SG.kaeshiSetLine!=="function"){sendMemo();return;}' +
       'var tx=$("sgmtext").value||"";KT=[];' +
       'for(var i=0;i<(list||[]).length;i++){if(SG.kaeshiLineOf(tx,list[i])!==null)KT.push(list[i]);}' +
       'if(!KT.length){sendMemo();return;}' +
       'step=8;show();drawKaeshi();window.scrollTo(0,0);}' +
-    /* ★2026-10-07 まるちゃん「複数部位あるときは、別々に選択させる」＝1行に部位が2つ以上ある施術は、
-       部位ごとにボタンを出す（部位の言葉は事務所パソコンが読み戻しを確かめた物＝KT[k].parts）。
-       選んだ答えは KPICK に覚え、全部そろった時だけ🔁の行を入れる（共通の判断 SG.kaeshiLine／kaeshiPutLine）。 */
+    /* ★2026-10-07 まるちゃん決定：1行に部位が2つ以上ある施術（セット）は、まず
+       【全部位が同じおすすめ】【部位によっておすすめが違う】の2つ。同じ＝答えを1つ／違う＝部位ごとに答え（なしも選べる）。
+       部位が1つの施術は今までどおり1列のボタン。答えから🔁の行を組むのは共通の判断（SG.kaeshiSetLine）。
+       部位の言葉は事務所パソコンがお知らせ側で読み戻しを確かめた物（KT[k].parts）。選んだ答えは KPICK に覚える。
+       ★お知らせは「違う」を選んだセットを1部位ずつの単品で案内する（auto_gen._memo_split_parts）。 */
     'var KPICK={};' +
     'function kPick(t){var key=t.head||"";if(!KPICK[key])KPICK[key]={};return KPICK[key];}' +
     'function kOpts(k,pw,cur){var h="<div class=\\"ktopts\\">";' +
@@ -6672,23 +6674,32 @@ function renderAfterTreatmentPage_(base, staff, dev, who) {
         'h+="<button type=\\"button\\" data-k=\\""+k+"\\" data-p=\\""+esc(pw)+"\\" data-v=\\""+esc(w)+"\\" class=\\""+' +
           '(cur===w?"on":"")+"\\">"+esc(SG.KAESHI_OPTS[o][0])+"</button>";}' +
       'return h+"</div>";}' +
+    'function kApply(t){var line=SG.kaeshiSetLine(t,kPick(t),kMark());' +
+      '$("sgmtext").value=line?SG.kaeshiPutLine($("sgmtext").value||"",t,line):SG.kaeshiRemove($("sgmtext").value||"",t);}' +
     'function drawKaeshi(){var tx=$("sgmtext").value||"",h="";' +
       'for(var k=0;k<KT.length;k++){var ln=SG.kaeshiLineOf(tx,KT[k]);if(ln===null)continue;' +
         'var pk=kPick(KT[k]),ps=SG.kaeshiParts(KT[k]);' +
         'h+="<div class=\\"ktcard"+(ln?" done":"")+"\\"><div class=\\"ktlast\\">⚠️ 次が最終回です</div>"+' +
           '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめは？</div>";' +
-        'if(ps.length){for(var q=0;q<ps.length;q++){' +
-          'h+="<div class=\\"pl\\">"+esc(ps[q].word)+"</div>"+kOpts(k,ps[q].word,pk[ps[q].word]||"");}}' +
-        'else{h+=kOpts(k,"_",pk._||"");}' +
+        'if(!ps.length){h+=kOpts(k,"__all",pk.all||"");}' +
+        'else{h+="<div class=\\"ktmode\\"><button type=\\"button\\" data-k=\\""+k+"\\" data-mode=\\"same\\" class=\\""+' +
+            '(pk.mode==="same"?"on":"")+"\\">全部位が<br>同じおすすめ</button><button type=\\"button\\" data-k=\\""+k+' +
+            '"\\" data-mode=\\"diff\\" class=\\""+(pk.mode==="diff"?"on":"")+"\\">部位によって<br>おすすめが違う</button></div>";' +
+          'if(pk.mode==="same"){h+=kOpts(k,"__all",pk.all||"");}' +
+          'else if(pk.mode==="diff"){var ea=pk.each||{};for(var q=0;q<ps.length;q++){' +
+            'h+="<div class=\\"pl\\">"+esc(ps[q].word)+"</div>"+kOpts(k,ps[q].word,ea[ps[q].word]||"");}}}' +
         'h+="<div class=\\"ktline\\">"+(ln?"入っている行： "+esc(ln):"")+"</div></div>";}' +
       '$("sgkcards").innerHTML=h;$("sgkpre").textContent=tx;' +
+      'var mb=$("sgkcards").querySelectorAll(".ktmode button");' +
+      'for(var m=0;m<mb.length;m++)mb[m].onclick=function(){if(sending)return;' +
+        'var t=KT[parseInt(this.getAttribute("data-k"),10)],md=this.getAttribute("data-mode");' +
+        'if(kPick(t).mode===md)return;KPICK[t.head||""]={mode:md,all:"",each:{}};kApply(t);drawKaeshi();};' +
       'var bs=$("sgkcards").querySelectorAll(".ktopts button");' +
       'for(var j=0;j<bs.length;j++)bs[j].onclick=function(){if(sending)return;' +
-        'var t=KT[parseInt(this.getAttribute("data-k"),10)],pk=kPick(t);' +
-        'pk[this.getAttribute("data-p")]=this.getAttribute("data-v");' +
-        'var line=SG.kaeshiLine(t,pk,kMark());' +
-        'if(line)$("sgmtext").value=SG.kaeshiPutLine($("sgmtext").value||"",t,line);' +
-        'drawKaeshi();};' +
+        'var t=KT[parseInt(this.getAttribute("data-k"),10)],pk=kPick(t),pw=this.getAttribute("data-p");' +
+        'if(pw==="__all"){pk.all=this.getAttribute("data-v");if(!pk.mode)pk.mode="same";}' +
+        'else{pk.each=pk.each||{};pk.each[pw]=this.getAttribute("data-v");}' +
+        'kApply(t);drawKaeshi();};' +
       'var n=SG.kaeshiMissing(tx,KT);$("sgkgo").disabled=n>0||sending;' +
       '$("sgkwarn").textContent=n>0?"🔁をえらんでいない施術があと"+n+"つあります":"";}' +
     /* 7枚目の確定。★人がメモを直していなければ、下書きと一緒にもらった答え（FINALS）をそのまま使う＝待ち時間なし。
@@ -9954,6 +9965,9 @@ var KAESHITEST_CASES_ = [
   { name: 'ダミー次郎 様', code: 'M998', title: '🇫🇷🍅預約M998ダミー次郎',
     memo: '⭐️現在進行中\n◉2026ピカピカＡプラン（VIO＋髭）：全9回の9回目あり\n\n💰お支払い状況\n◉4/5:ピカピカＡ 8回おまとめ購入済み',
     parts: {}, sets: { 'ピカピカＡプラン': ['VIO', '髭'] } },
+  { name: 'ダミー三郎 様', code: 'M997', title: '🇫🇷🫒預約M997ダミー三郎',
+    memo: '⭐️現在進行中\n◉2026ピカピカＥプラン（VIO＋髭＋脚全部）：全9回の9回目あり\n\n💰お支払い状況\n◉4/5:ピカピカＥ 8回おまとめ購入済み',
+    parts: {}, sets: { 'ピカピカＥプラン': ['VIO', '髭', '脚全部'] } },
   { name: 'ダミー美咲 様', code: 'F998', title: '🇫🇷🥭預約F998ダミー美咲',
     memo: '⭐️現在進行中\n◉脇脱毛 8回おまとめ：全9回の6回目あり\n\n💰お支払い状況\n◉6/1:8回おまとめ購入済み',
     parts: {} }
@@ -9986,6 +10000,9 @@ var KAESHITESTCSS_ =
   '.ktopts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}' +
   '.ktopts button{background:#f1f5f9;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 2px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
   '.ktopts button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
+  '.ktmode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 12px;}' +
+  '.ktmode button{background:#e2e8f0;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 4px;font:inherit;font-size:15px;font-weight:900;line-height:1.35;cursor:pointer;}' +
+  '.ktmode button.on{background:#2C7A99;color:#fff;border-color:#1e5a73;}' +
   '.ktline{margin-top:10px;font-size:16px;font-weight:900;color:#15803d;min-height:1.3em;}' +
   '.ktnone{background:#fff;color:#0f172a;border-radius:14px;padding:14px;font-weight:800;font-size:16px;margin:10px 0;}' +
   '.ktmemo{width:100%;box-sizing:border-box;min-height:220px;border-radius:12px;border:0;padding:12px;font:inherit;font-size:16px;line-height:1.5;}' +
@@ -10086,14 +10103,17 @@ function kaeshiTestScript_(C) {
     drawCards();
     show('ktMemo');
   }
-  function optsHtml(k, pw, cur) {
+  function optsHtml(k, pw, cur, list) {
     var h = '<div class="ktopts">';
-    for (var o = 0; o < SG.KAESHI_OPTS.length; o++) {
-      var w = SG.KAESHI_OPTS[o][1];
-      h += '<button type="button" data-k="' + k + '" data-p="' + esc(pw) + '" data-v="' + esc(w) + '" class="' + (cur === w ? 'on' : '') + '">' + esc(SG.KAESHI_OPTS[o][0]) + '</button>';
+    for (var o = 0; o < list.length; o++) {
+      var w = list[o][1];
+      h += '<button type="button" data-k="' + k + '" data-p="' + esc(pw) + '" data-v="' + esc(w) + '" class="' + (cur === w ? 'on' : '') + '">' + esc(list[o][0]) + '</button>';
     }
     return h + '</div>';
   }
+  /* ★2026-10-07 まるちゃん：セット（1行に部位が2つ以上）は、まず【全部位が同じおすすめ】【部位によっておすすめが違う】。
+     同じ＝答えを1つ／違う＝部位ごとに答え（なしも選べる）。部位が1つの施術は今までどおり1列のボタン。
+     答えから🔁の行を組むのは共通の判断（SG.kaeshiSetLine）。 */
   function drawCards() {
     var tx = text(), h = '';
     if (!finals.length) {
@@ -10103,23 +10123,44 @@ function kaeshiTestScript_(C) {
       var t = finals[k], ln = SG.kaeshiLineOf(tx, t), pk = picks[k] || {}, ps = SG.kaeshiParts(t);
       h += '<div class="ktcard' + (ln ? ' done' : '') + '"><div class="ktlast">⚠️ 次が最終回です</div>' +
         '<h4>' + esc(t.name) + '</h4><div class="q">お知らせのおすすめは？</div>';
-      if (ps.length) {
-        for (var q = 0; q < ps.length; q++) h += '<div class="pl">' + esc(ps[q].word) + '</div>' + optsHtml(k, ps[q].word, pk[ps[q].word] || '');
+      if (!ps.length) {
+        h += optsHtml(k, '__all', pk.all || '', SG.KAESHI_OPTS);
       } else {
-        h += optsHtml(k, '_', pk._ || '');
+        h += '<div class="ktmode">' +
+          '<button type="button" data-k="' + k + '" data-mode="same" class="' + (pk.mode === 'same' ? 'on' : '') + '">全部位が<br>同じおすすめ</button>' +
+          '<button type="button" data-k="' + k + '" data-mode="diff" class="' + (pk.mode === 'diff' ? 'on' : '') + '">部位によって<br>おすすめが違う</button></div>';
+        if (pk.mode === 'same') {
+          h += optsHtml(k, '__all', pk.all || '', SG.KAESHI_OPTS);
+        } else if (pk.mode === 'diff') {
+          var each = pk.each || {};
+          for (var c = 0; c < ps.length; c++) {
+            h += '<div class="pl">' + esc(ps[c].word) + '</div>' + optsHtml(k, ps[c].word, each[ps[c].word] || '', SG.KAESHI_OPTS);
+          }
+        }
       }
       var msg = ln === null ? 'メモの中にこの施術の行が見つかりません' : (ln ? '入っている行： ' + ln : '');
       h += '<div class="ktline">' + esc(msg) + '</div></div>';
     }
     $('ktCards').innerHTML = h;
-    var ob = $('ktCards').querySelectorAll('.ktopts button');
-    for (var j = 0; j < ob.length; j++) ob[j].onclick = function () {
-      var k2 = parseInt(this.getAttribute('data-k'), 10);
-      picks[k2] = picks[k2] || {};
-      picks[k2][this.getAttribute('data-p')] = this.getAttribute('data-v');
-      var line = SG.kaeshiLine(finals[k2], picks[k2], mark);
-      if (line) $('ktText').value = SG.kaeshiPutLine(text(), finals[k2], line);
+    function apply(k2) {
+      var line = SG.kaeshiSetLine(finals[k2], picks[k2], mark);
+      $('ktText').value = line ? SG.kaeshiPutLine(text(), finals[k2], line) : SG.kaeshiRemove(text(), finals[k2]);
       drawCards();
+    }
+    var mb = $('ktCards').querySelectorAll('.ktmode button');
+    for (var m = 0; m < mb.length; m++) mb[m].onclick = function () {
+      var k2 = parseInt(this.getAttribute('data-k'), 10), md = this.getAttribute('data-mode');
+      if ((picks[k2] || {}).mode === md) return;
+      picks[k2] = { mode: md, all: '', each: {} };     /* 切り替えたら選び直し */
+      apply(k2);
+    };
+    var ob = $('ktCards').querySelectorAll('.ktopts button[data-v]');
+    for (var j = 0; j < ob.length; j++) ob[j].onclick = function () {
+      var k2 = parseInt(this.getAttribute('data-k'), 10), p = this.getAttribute('data-p'), v = this.getAttribute('data-v');
+      var pk2 = picks[k2] || {};
+      if (p === '__all') { pk2.all = v; if (!pk2.mode) pk2.mode = 'same'; }
+      else { pk2.each = pk2.each || {}; pk2.each[p] = v; }
+      picks[k2] = pk2; apply(k2);
     };
     var n = SG.kaeshiMissing(tx, finals);
     $('ktGo').disabled = n > 0;
