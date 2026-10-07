@@ -187,6 +187,9 @@
   window.__PF_ = window.__PF_ || {};
 
   var action = VIEWS[view];
+  // ★2026-10-07 まるちゃん「番号検索の場合は今日の予約は要らない。必要な所で読むように」＝
+  //   リピート入力（施術後の予約を mode=repeat で開いた時）は、入口で今日の予約を先読みしない（画面が必要な時に読む）。
+  if (view === 'yoyaku_sejutsugo' && /[?&]mode=repeat(&|$)/.test(location.search)) action = null;
   if (action) {
     var entry = window.__PF_[view] = { payload: undefined, waiter: null, cached: null, done: false };
     // ホーム画面滞在中に裏取りできていた分があれば使い切りで受け取る（無ければ null のまま）。
@@ -227,7 +230,7 @@
 <script src="bigsend.js?v=1e2776a38e"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=f6e9b9c5cf"></script>
+<script src="code.js?v=f0551c6675"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
