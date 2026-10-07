@@ -1769,7 +1769,8 @@ var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   uriage: 'kanri', procell: 'kanri', shophist: 'kanri',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', sejutsugo: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu'
+  // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
 var ROLE_DEFS_ = [
   { id: 'kanri', icon: '🛠️', title: '管理者用' },
