@@ -230,7 +230,7 @@
 <script src="bigsend.js?v=1e2776a38e"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=f2cc067f8d"></script>
+<script src="code.js?v=51941759f9"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -981,7 +981,7 @@
     }).join('');
     root.innerHTML = '<div class="pkwrap"><div class="pktitle">あなたは誰ですか？</div>' +
       '<div class="pkgrid">' + btns + '</div>' +
-      '<div class="pknote">すでに他の人が選んだ名前は出ません。自分の名前が無い時は、事務所の自動監視システムから新しく作ってもらってください。</div></div>';
+      '<div class="pknote">すでに他の人が選んだ名前は出ません。自分の名前が無い時は、自動監視システムから新しく作ってもらってください。</div></div>';
     var bs = root.querySelectorAll('.pk');
     for (var i = 0; i < bs.length; i++) {
       bs[i].addEventListener('click', function () {

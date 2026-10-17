@@ -361,7 +361,7 @@ function kanshiGate_(device) {
     }
     if (cur.device === device) return { ok: true };
     return { ok: false, error: 'この画面は、登録したスマホからだけ開けます。'
-      + '（機種変した時は、事務所PCの自動監視で「登録し直す」を押してください）' };
+      + '（機種変した時は、自宅PCの自動監視で「登録し直す」を押してください）' };
   } finally {
     try { lock.releaseLock(); } catch (ig2) {}
   }
@@ -378,7 +378,7 @@ function _kanshiDevResetJsonp_(p) {
     var byPw = String(p.pw || '') === getStaffPassword_();
     var byOwner = !!(cur && cur.device && cur.device === String(p.device || '').trim());
     if (!byPw && !byOwner) {
-      out = { ok: false, error: '解除できません（事務所PCか、いま登録中のスマホから押してください）。' };
+      out = { ok: false, error: '解除できません（自宅PCか、いま登録中のスマホから押してください）。' };
     } else {
       PropertiesService.getScriptProperties().deleteProperty(KANSHI_DEV_PROP_);
       out = { ok: true, msg: '登録を解除しました。次に自動監視を開いたスマホが持ち主になります。' };
@@ -393,7 +393,7 @@ function _kanshiDevInfoJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
   var out;
   if (!_pwRateOk_() || String(p.pw || '') !== getStaffPassword_()) {
-    out = { ok: false, error: 'この情報は事務所PCからだけ見られます。' };
+    out = { ok: false, error: 'この情報は自宅PCからだけ見られます。' };
   } else {
     var cur = kanshiOwner_();
     out = { ok: true, device: cur ? cur.device : '', at: cur ? cur.at : '' };
@@ -774,7 +774,7 @@ function getEventsFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('events.json がドライブに見つかりません。事務所PCで export_events.py を実行し、Googleドライブの同期を待ってください。');
+    throw new Error('events.json がドライブに見つかりません。自宅PCで export_events.py を実行し、Googleドライブの同期を待ってください。');
   }
   props.setProperty('EVENTS_FILE_ID', newest.getId());
   return newest;
@@ -791,7 +791,7 @@ function getNoticeFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('notice_compare.json がドライブに見つかりません。事務所PCから書き出してください。');
+    throw new Error('notice_compare.json がドライブに見つかりません。自宅PCから書き出してください。');
   }
   return newest;
 }
@@ -811,7 +811,7 @@ function getLtFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('lt_match.json がドライブに見つかりません。事務所PCで「予約照合」を実行（export_lt_super.py）し、Googleドライブの同期を待ってください。');
+    throw new Error('lt_match.json がドライブに見つかりません。自宅PCで「予約照合」を実行（export_lt_super.py）し、Googleドライブの同期を待ってください。');
   }
   props.setProperty('LT_FILE_ID', newest.getId());
   return newest;
@@ -832,7 +832,7 @@ function getUriageFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('uriage.json がドライブに見つかりません。事務所PCで export_uriage.py を実行し、Googleドライブの同期を待ってください。');
+    throw new Error('uriage.json がドライブに見つかりません。自宅PCで export_uriage.py を実行し、Googleドライブの同期を待ってください。');
   }
   props.setProperty('URIAGE_FILE_ID', newest.getId());
   return newest;
@@ -854,7 +854,7 @@ function getUnansweredFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('unanswered.json がドライブに見つかりません。事務所PCで export_unanswered_super.py を実行し、Googleドライブの同期を待ってください。');
+    throw new Error('unanswered.json がドライブに見つかりません。自宅PCで export_unanswered_super.py を実行し、Googleドライブの同期を待ってください。');
   }
   props.setProperty('UNANSWERED_FILE_ID', newest.getId());
   return newest;
@@ -877,7 +877,7 @@ function getProcellFile_() {
     var f = it.next();
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
-  if (!newest) throw new Error(PROCELL_FILENAME + ' が見つかりません（事務所PCで書き出してください）。');
+  if (!newest) throw new Error(PROCELL_FILENAME + ' が見つかりません（自宅PCで書き出してください）。');
   props.setProperty('PROCELL_FILE_ID', newest.getId());
   return newest;
 }
@@ -896,7 +896,7 @@ function getPcStatusFile_() {
     var f = it.next();
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
-  if (!newest) throw new Error(PCSTATUS_FILENAME + ' が見つかりません（事務所PCで書き出してください）。');
+  if (!newest) throw new Error(PCSTATUS_FILENAME + ' が見つかりません（自宅PCで書き出してください）。');
   props.setProperty('PCSTATUS_FILE_ID', newest.getId());
   return newest;
 }
@@ -914,7 +914,7 @@ function getAkijikanFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('akijikan.json がドライブに見つかりません。事務所PCで export_akijikan_super.py を実行し、Googleドライブの同期を待ってください。');
+    throw new Error('akijikan.json がドライブに見つかりません。自宅PCで export_akijikan_super.py を実行し、Googleドライブの同期を待ってください。');
   }
   props.setProperty('AKIJIKAN_FILE_ID', newest.getId());
   return newest;
@@ -943,7 +943,7 @@ function getMonitorFile_(createIfMissing) {
     newest = folder.createFile(MONITOR_FILENAME, '{}', 'application/json');
   }
   if (!newest) {
-    throw new Error('monitor.json がドライブに見つかりません。事務所PCで export_monitor_super.py を実行してください。');
+    throw new Error('monitor.json がドライブに見つかりません。自宅PCで export_monitor_super.py を実行してください。');
   }
   props.setProperty('MONITOR_FILE_ID', newest.getId());
   return newest;
@@ -1237,11 +1237,11 @@ function szOvShow_(html, bg) {
 }
 function szOvHide_() { var ov = document.getElementById('szBusyOv'); if (ov && ov.parentNode) ov.parentNode.removeChild(ov); }
 function szBusyHtml_(title, sub) {
-  // sub＝下の説明文。書かなければ今まで通りタイムツリー書き込み用の文（部屋移動・担当異動など）。
+  // sub＝下の説明文。書かなければ今まで通りタイムツリー書き込み用の文（部屋移動・担当異動など）。false＝説明の行を出さない。
   return "<div style='font-size:66px;margin-bottom:20px;'>⏳</div>" +
     "<div style='color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;'>" + title + "</div>" +
-    "<div style='color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;'>" +
-    (sub || "タイムツリーへの書き込みが完了したら自動で切り替わりますので、しばらくお待ちください。") + "</div>";
+    (sub === false ? "" : "<div style='color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;'>" +
+    (sub || "タイムツリーへの書き込みが完了したら自動で切り替わりますので、しばらくお待ちください。") + "</div>");
 }
 function szDoneHtml_(title, backLabel, openUrl) {
   // ★openUrl＝あれば「タイムツリーを確認」ボタンを戻るの下に出す（2026-08-23 まるちゃん）。
@@ -2317,7 +2317,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   //   前は「1.3秒×160回＝208秒」と手で書いており、事務所側を伸ばしても画面が先にあきらめる形だった。
   //   （元の数字は2026-08-24に「お知らせ作りは実データで最長45秒」の前提で決めた物。
   //     その後8/25に下ごしらえ（最新化＋やること一覧の作り直し）が入って中身が重くなっている。）
-  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("zenjitsu",1300)){setSt("時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。","err");lock(false);return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("zenjitsu",1300)){setSt("時間切れです。もう一度お試しください。","err");lock(false);return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");lock(false);return;}' +
   /* ★待っている間、何秒たったかを出す（パソコンの窓と同じ）。長くかかる時に固まったように見えないため。 */
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){' +
@@ -2331,7 +2331,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var waitMsg="",startedAt=0;' +
   'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選んでください。","err");return;}' +
   'zjCurDate=date;' +
-  'waitMsg=(mode==="unsent")?"まだ送っていない人の分を事務所PCで作成中…":"全員分を事務所PCで作成中…";startedAt=Date.now();' +
+  'waitMsg=(mode==="unsent")?"まだ送っていない人の分を作成中…":"全員分を作成中…";startedAt=Date.now();' +
   'lock(true);setSt(waitMsg+"（通常、数十秒かかります）","wait");' +
   'resEl.innerHTML="";polls=0;' +
   'jsonp({action:"submit",key:KEY,op:"zenjitsu",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:date,slot:slot,mode:mode})},' +
@@ -2368,7 +2368,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'fields:ft},function(r){' +
   /* ★2026-09-08：ここで「送れませんでした」と**言い切らない**。事務所パソコンは受け取って
      やり終えているのに、返事だけが戻ってこないことがあるため（9/8に実際に発生）。 */
-  'if(!r||!r.ok||!r.id){(onFail||function(){})("事務所のパソコンとつながりませんでした。");return;}' +
+  'if(!r||!r.ok||!r.id){(onFail||function(){})("つながりませんでした。もう一度お試しください。");return;}' +
   'var n=0;(function poll(){n++;if(n>LIMITS.tries("zenjitsu_act",700)){(onFail||function(){})("時間がかかりすぎました。");return;}' +
   'jsonp({action:"status",key:KEY,id:r.id},function(s){if(!s||!s.ok){(onFail||function(){})("通信に失敗しました。");return;}' +
   'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
@@ -2772,7 +2772,7 @@ function renderCostPage_(base, staff, dev) {
     'if(!d||!d.ok||!d.body_html){st.textContent="出せませんでした："+((d&&d.error)||"中身が空です");return;}' +
     'st.textContent="";show(d.body_html);});});}' +
     'if(b){b.addEventListener("click",function(){b.disabled=true;res.innerHTML="";' +
-    'st.textContent="事務所パソコンで計算しています…（少し待ってください）";polls=0;' +
+    'st.textContent="計算しています…（少し待ってください）";polls=0;' +
     'jsonp({action:"submit",key:KEY,op:"cost",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({part:"cost",slot:slot})},' +
     'function(r){if(!r||!r.ok||!r.id){st.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");b.disabled=false;return;}' +
     'setTimeout(function(){poll(r.id);},1000);});});}' +
@@ -2787,7 +2787,7 @@ function renderCostPage_(base, staff, dev) {
       '<div class="hsub" style="color:#fff;text-align:center;font-weight:700;margin:0 0 6px;letter-spacing:.06em;">売上・コスト</div>' +
       '<div class="ctwrap">' +
         '<div class="cbtnrow"><button id="cgo" type="button">月間コスト計算</button></div>' +
-        '<div class="cstatus" id="cstatus">ボタンを押すと、事務所パソコンが今の数字で計算します。</div>' +
+        '<div class="cstatus" id="cstatus">ボタンを押すと、今の数字で計算します。</div>' +
         '<div id="cres"></div>' +
       '</div>' +
     '</div>' + script;
@@ -3039,7 +3039,7 @@ function renderInstaDmPage_(d, base, staff, dev) {
   }
   var body = '';
   if (!accounts.length) {
-    body = '<div class="idmempty">まだ読み取っていません。<br>事務所PCの読み取りを待ってください。</div>';
+    body = '<div class="idmempty">まだ読み取っていません。<br>少し待ってから開き直してください。</div>';
   } else {
     for (var i = 0; i < accounts.length; i++) {
       var a = accounts[i], threads = a.threads || [], reqs = a.requests || [];
@@ -3424,7 +3424,7 @@ function renderIgdmHome_(d, base, staff, dev) {
       '<span class="igdmaccsub">@' + esc_(a.handle || '') + '　' + ((a.threads || []).length) + '会話' +
       ((a.requests || []).length ? '・初めての人' + a.requests.length : '') + '</span></button>';
   }
-  if (!btns) btns = '<div class="idmempty">まだ読み取っていません。事務所PCの読み取りを待ってください。</div>';
+  if (!btns) btns = '<div class="idmempty">まだ読み取っていません。少し待ってから開き直してください。</div>';
   return '<style>' + INSTADM_CSS_ + IGDM_CSS_ + '</style>' +
     backBar_(base, staff, dev) +
     '<div class="idmwrap"><h1>📱 DM再現<span class="idmgen">インスタのDMをそのまま表示（読むだけ）</span>' +
@@ -4062,13 +4062,13 @@ function renderRirekiPage_(base, staff, dev) {
   'stEl.textContent=cs.length+" 人ヒット";resEl.innerHTML=cs.map(custHtml).join("");toTop();}' +
   // ★2026-08-24：あきらめるまでを 36秒 → 210秒（1.2秒×175回）。事務所パソコンが混んでいる時に
   //   出来ているのに「時間切れ」と出ていた。
-  'var polls=0;function poll(id){polls++;if(polls>175){stEl.textContent="時間切れです。事務所PCが動いているかご確認のうえ、もう一度お試しください。";return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>175){stEl.textContent="時間切れです。もう一度お試しください。";return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1200);return;}' +
   'if(r.status!=="done"){stEl.textContent="検索に失敗しました："+esc(r.result||r.status);return;}' +
   'jsonp({action:"data",name:"custsearch_"+slot+".json"},function(d){render(d);});});}' +
   'function doSearch(q){q=(q||qEl.value||"").trim();if(!q){stEl.textContent="番号か氏名を入れてください。";return;}' +
-  'stEl.textContent="事務所PCで検索中…（数秒）";resEl.innerHTML="";polls=0;' +
+  'stEl.textContent="検索中…（数秒）";resEl.innerHTML="";polls=0;' +
   'jsonp({action:"submit",key:KEY,op:"cust_search",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({q:q,slot:slot})},' +
   'function(r){if(!r||!r.ok||!r.id){stEl.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){poll(r.id);},1000);});}' +
   'goEl.addEventListener("click",function(){doSearch();});' +
@@ -4191,7 +4191,7 @@ function renderHonyakuPage_(base, staff, dev) {
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");btn.disabled=false;return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollSub(id,btn);},600);return;}' +
   'btn.disabled=false;setSt(String(r.result||""),(r.status==="done")?"ok":"err");});}' +
-  'function ask(fields,btn){btn.disabled=true;setSt("事務所パソコンに伝えています…","wait");sPolls=0;' +
+  'function ask(fields,btn){btn.disabled=true;setSt("伝えています…","wait");sPolls=0;' +
   'jsonp({action:"submit",key:KEY,op:"translate",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},' +
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした。","err");btn.disabled=false;return;}' +
   'setTimeout(function(){pollSub(r.id,btn);},900);});}' +
@@ -4276,7 +4276,7 @@ function renderTimedSendPage_(base, staff, dev) {
   'groupEl.addEventListener("focus",function(){setMode("group");});' +
   'jsonp({action:"data",name:"timedsend_groups.json"},function(d){' +
   'if(d&&d.groups){var o="";for(var i=0;i<d.groups.length;i++){GROUPS[d.groups[i].id]=d.groups[i];o+="<option value=\\""+esc(d.groups[i].id)+"\\">"+esc(d.groups[i].name)+"（"+d.groups[i].count+"人）</option>";}groupEl.innerHTML=o;}' +
-  'if(d&&d.enabled===false){banEl.style.background="#f8d7da";banEl.textContent="いま送信はOFFです。事務所PCの自動監視でONにするまで、予約しても送られません。";}' +
+  'if(d&&d.enabled===false){banEl.style.background="#f8d7da";banEl.textContent="いま送信はOFFです。自動監視でONにするまで、予約しても送られません。";}' +
   'else if(d&&d.practice){banEl.style.background="#fff3cd";banEl.textContent="いまは練習モードです。誰を選んでも、実際にはオーナー本人にしか送りません。";}' +
   /* ★2026-09-09まるちゃん決定：本番の時は帯を出さない（当たり前のことを毎回出さない）。 */
   'else if(d){banEl.style.display="none";banEl.textContent="";}});' +
@@ -8051,7 +8051,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function jsonp(params,onR){var cb="__ck"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
     // ★2026-08-24：あきらめるまでを 24秒 → 210秒（0.6秒×350回）。事務所パソコンが混んでいる時に
     //   出来ているのに「時間切れ」と出ていた。
-    'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>350){document.getElementById("expickst").textContent="時間切れです。事務所パソコンが動いているかご確認ください。";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},600);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
+    'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>350){document.getElementById("expickst").textContent="時間切れです。もう一度お試しください。";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},600);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
     'function loadPicks(){isNewCust=false;document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="「"+disp()+"」の予約";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="予約をさがしています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp()})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
     'function renderPicks(list){var el=document.getElementById("expicklist");document.getElementById("expickst").textContent=list.length?"":(isNewCust?"番号なしの新規のお客様の予約が見つかりません。":"この番号の予約が見つかりません。");document.getElementById("expickwho").textContent=isNewCust?"新規のお客様（番号なし）":("「"+disp()+"」"+((list.length&&list[0].name)?list[0].name+"様":"の予約"));var h="";var dayCnt={};for(var q=0;q<list.length;q++){if(!list[q].is_past){dayCnt[list[q].date]=(dayCnt[list[q].date]||0)+1;}}for(var i=0;i<list.length;i++){var r=list[i];var pm=(r.parts||[]).join("・")||"—";var past=r.is_past?"（過去）":"";var rk=roomVal(r.room);var rc=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var nameLine=isNewCust?("<span class=\\"pname\\" style=\\"font-weight:900\\">お名前："+esc(r.name||"?")+"</span>"):"";var btn="<button class=\\"expickrow\\" data-i=\\""+i+"\\">"+nameLine+"<span class=\\"pd\\">"+past+r.date+" "+r.start_hm+" "+(r.dur_min||"")+"分</span><span class=\\"pm\\">担当 "+esc(r.staff_emoji||"?")+"　<span class=\\"proom\\" style=\\"background:"+rc+"\\">"+esc(rn)+"</span></span><span class=\\"ppart\\">施術部位："+esc(pm)+"</span></button>";h+=btn;}el.innerHTML=h;window.__PICKS=list;MSEL=[];MULTI_=null;MMODE=false;MOK=[];var anyM=false;for(var z=0;z<list.length;z++){MOK[z]=(!list[z].is_past&&dayCnt[list[z].date]>=2);if(MOK[z])anyM=true;}document.getElementById("expickmode").style.display=anyM?"":"none";MMODE=anyM;exMultiPre_();exMultiDraw();var rows=el.querySelectorAll(".expickrow");for(var j=0;j<rows.length;j++){(function(k){rows[k].addEventListener("click",function(){if(MMODE&&MOK[k]){exMultiToggle(k);return;}MULTI_=null;chosen=window.__PICKS[k];showMenu();});})(j);}}' +
     /* ★2026-09-30 まるちゃん決定：同じ日の予約をまとめて選ぶ（別の日の予約を選んだら、前に選んだ分は外す）。
@@ -8902,7 +8902,7 @@ var URIAGESCRIPT_ =
 '      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",(r.result)||""); allBtn.disabled=false; enableUriageBtns();' +
 '        try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }' +
 '      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",(r.result)||s); allBtn.disabled=false; enableUriageBtns(); }' +
-'      else if(tries>=120){ clearInterval(timer); szOverlayResult_(false,"時間切れです","事務所PCの見張りが動いているか確認してください。"); allBtn.disabled=false; enableUriageBtns(); }' +
+'      else if(tries>=120){ clearInterval(timer); szOverlayResult_(false,"時間切れです","もう一度お試しください。"); allBtn.disabled=false; enableUriageBtns(); }' +
 '    });' +
 '  },3000);' +
 '}' +
@@ -9190,7 +9190,7 @@ var UNASCRIPT_ =
 '        unaCall_({action:"status",id:r.id},function(st){' +
 '          if(st&&st.status==="done"){ if(zt){ zt.value=st.result||""; unaGrow(zt); } return; }' +
 '          if(st&&st.status==="error"){ if(zt){ zt.value=st.result||"翻訳できませんでした。"; unaGrow(zt); } return; }' +
-'          if(tries>60){ if(zt){ zt.value="事務所のパソコンから返事がありません。"; unaGrow(zt); } return; }' +
+'          if(tries>60){ if(zt){ zt.value="返事がありません。もう一度お試しください。"; unaGrow(zt); } return; }' +
 '          setTimeout(poll,1200); }); })();' +
 '    });' +
 '});' +
@@ -9316,7 +9316,7 @@ var UNASCRIPT_ =
 '            if(st&&st.status==="error"){' +
 '              if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } mark("送れませんでした","unafail"); return; }' +
 '            if(tries>60){' +
-'              if(note){ note.className="unarnote ng"; note.textContent="事務所のパソコンから返事がありません（見張りが動いているか確認してください）。"; } mark("未確認","unafail"); return; }' +
+'              if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度お試しください。"; } mark("未確認","unafail"); return; }' +
 '            setTimeout(poll,1200);' +
 '          });' +
 '        })();' +
@@ -9385,7 +9385,7 @@ var UNASCRIPT_ =
 '          unaCall_({action:"status",id:r.id},function(st){' +
 '            if(st&&st.status==="done"){ if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } return; }' +
 '            if(st&&st.status==="error"){ if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
-'            if(tries>40){ if(note){ note.className="unarnote ng"; note.textContent="事務所のパソコンから返事がありません。"; } return; }' +
+'            if(tries>40){ if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度お試しください。"; } return; }' +
 '            setTimeout(poll,3000);' +
 '          });' +
 '        })();' +
@@ -9469,7 +9469,7 @@ var UNASCRIPT_ =
 '          unaCall_({action:"status",id:r.id},function(st){' +
 '            if(st&&st.status==="done"){ if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } return; }' +
 '            if(st&&st.status==="error"){ if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
-'            if(tries>60){ if(note){ note.className="unarnote ng"; note.textContent="事務所のパソコンから返事がありません。"; } return; }' +
+'            if(tries>60){ if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度お試しください。"; } return; }' +
 '            setTimeout(poll,3000);' +
 '          });' +
 '        })();' +
@@ -9769,7 +9769,7 @@ function renderProcampPage_(list, choice, base, staff, dev) {
   'var q="callback="+n;for(var k in p)q+="&"+k+"="+encodeURIComponent(p[k]);' +
   'var s=document.createElement("script");s.src=EXEC+"?"+q+"&cb="+Date.now();s.onerror=function(){cb({ok:false,error:"通信エラーです"});};document.body.appendChild(s);}' +
   'function fail(msg){btn.disabled=false;setSt("");if(typeof szPopup_==="function")szPopup_(msg);else setSt(msg,"err");}' +
-  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("procamp_save",1000)){fail("時間切れです。事務所PCが動いているかご確認のうえ、もう一度登録してください。");return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("procamp_save",1000)){fail("時間切れです。もう一度登録してください。");return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){fail("登録できませんでした："+((r&&r.error)||"不明"));return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1000);return;}' +
   'if(r.status!=="done"){fail("登録できませんでした："+(r.result||r.status));return;}' +
@@ -9950,7 +9950,7 @@ function procStockScript_(C) {
   var polls = 0, doneAt = '';
   function poll(id) {
     polls++;
-    if (polls > LIMITS.tries('procell_stock_save', 1000)) { fail('時間切れです。事務所PCが動いているかご確認のうえ、もう一度「これで在庫を登録」を押してください。'); return; }
+    if (polls > LIMITS.tries('procell_stock_save', 1000)) { fail('時間切れです。もう一度「これで在庫を登録」を押してください。'); return; }
     jsonp({ action: 'status', key: C.key, id: id }, function (r) {
       if (!r || !r.ok) { fail('登録できませんでした：' + ((r && r.error) || '不明')); return; }
       if (r.status === 'pending' || r.status === 'running' || r.status === 'queued' || r.status === '') { setTimeout(function () { poll(id); }, 1000); return; }
@@ -10218,7 +10218,7 @@ function hanbaiScript_(C) {
     s.onerror = function () { cb({ ok: false, error: '通信エラーです' }); }; document.body.appendChild(s);
   }
   function ask(fields, busy, done) {
-    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, '事務所のパソコンの返事を待っています。<br>終わったら自動で切り替わります。'), '#2C7A99');
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
     var end = function (err, d) { if (typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     jsonp({ action: 'submit', key: C.key, op: 'hanbai',
             who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '',
@@ -10227,7 +10227,7 @@ function hanbaiScript_(C) {
         if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました'); return; }
         var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('hanbai', 800) : 200;
         var poll = function () {
-          n++; if (n > max) { end('時間切れです。事務所PCが動いているかご確認ください。'); return; }
+          n++; if (n > max) { end('時間切れです。もう一度お試しください。'); return; }
           jsonp({ action: 'status', key: C.key, id: r.id }, function (x) {
             if (!x || !x.ok) { end((x && x.error) || '通信に失敗しました'); return; }
             if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(poll, 800); return; }
@@ -10708,7 +10708,7 @@ function renderProcellPage_(d, base, staff, dev) {
 //   ②立ち上がり直した時 … PCがWindowsの日記を読んで確定させ、last_end に入れて送ってくる。
 function renderPcStatusPage_(d, base, staff, dev) {
   d = d || {};
-  var err = d.error || (!d.sent_at ? 'まだ事務所PCから届いていません。' : '');
+  var err = d.error || (!d.sent_at ? 'まだ自宅PCから届いていません。' : '');
   if (err) {
     return '<style>' + HOMECSS_ + PCSTCSS_ + '</style>' +
       '<div class="home">' + backBar_(base, staff, dev) +
@@ -10778,7 +10778,7 @@ function renderPcStatusPage_(d, base, staff, dev) {
         '<div class="pcstWhyS">' + whySub + '</div>' +
       '</div>') +
     '<div class="pcstTable">' + rows + '</div>' +
-    '<div class="pcFoot">事務所PCが1分ごとに合図を送っています。この画面は開くたびに最新を取り直します。</div>' +
+    '<div class="pcFoot">自宅PCが1分ごとに合図を送っています。この画面は開くたびに最新を取り直します。</div>' +
   '</div>';
 }
 
@@ -12982,7 +12982,7 @@ var MOVESCRIPT_ =
 '      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showDoneOverlay_(room);' +
 '        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
-'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした（時間切れ）：事務所のパソコンの見張りが動いているか確認して、もう一度お試しください。", false); }' +
+'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした（時間切れ）：もう一度お試しください。", false); }' +
 '      else { setTimeout(chk,250); } });' +
 '  }' +
 '  setTimeout(chk,250); }' +
@@ -13032,7 +13032,7 @@ var MOVESCRIPT_ =
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
 '      if(s==="done"){ mvToastDone_("✓ "+(who?who+"を":"")+"「"+room+"」へ移動しました"); }' +
 '      else if(s==="error"||s==="failed"){ rollbackMove_(evid,(r.result)||s,side,who,room); }' +
-'      else if(tries>=60){ rollbackMove_(evid,"時間切れ（事務所PCの見張りを確認）",side,who,room); }' +
+'      else if(tries>=60){ rollbackMove_(evid,"時間切れ（もう一度お試しください）",side,who,room); }' +
 '      else { setTimeout(chk,400); } });' +
 '  }' +
 '  setTimeout(chk,400); }' +
@@ -13058,7 +13058,7 @@ var MOVESCRIPT_ =
 '      var s=(r&&r.status)||"";' +
 '      if(s==="done"){ st.className="mvstatus ok"; try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e0){} doneRefreshFast_(); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
-'      else if(tries>=60){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。事務所PCの見張りが動いているか確認してください。"; }' +
+'      else if(tries>=60){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。もう一度お試しください。"; }' +
 '      else { setTimeout(chk,400); }' +
 '    });' +
 '  }' +
@@ -13579,9 +13579,9 @@ function renderKanshiPage_(d, base, staff, dev) {
     '<div id="kList"></div>' +
     '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
       'カードの「⚙ 設定」で中身の一覧へ、さらに各行の「詳細」でその項目の画面へ進みます' +
-      '（上の「← 戻る」で戻れます）。入切や実行はいちばん奥の画面にあります（事務所PCと同じ場所）。' +
+      '（上の「← 戻る」で戻れます）。入切や実行はいちばん奥の画面にあります（自宅PCの自動監視と同じ場所）。' +
       'この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
-      'この画面は事務所PCが1分ごとに送ってきた状態を見ています。</div>' +
+      'この画面は自宅PCが1分ごとに送ってきた状態を見ています。</div>' +
   '</div>' +
   '<script>window.__KANSHI_DATA__=' + JSON.stringify(d) + ';<' + '/script>' +
   KANSHISCRIPT_;
@@ -13735,7 +13735,7 @@ var KANSHISCRIPT_ =
 '  var sec=agoSec_(data_.generated_at);' +
 '  if(sec===null||sec>STALE_SEC_){' +
 '    el.className="kfresh old";' +
-'    el.textContent="⚠ 事務所PCから状態が届いていません（最後に届いたのは "+(data_.generated_at||"不明")+"）。下の表示は古い可能性があります。";' +
+'    el.textContent="⚠ 自宅PCから状態が届いていません（最後に届いたのは "+(data_.generated_at||"不明")+"）。下の表示は古い可能性があります。";' +
 '  } else {' +
 '    el.className="kfresh"; el.textContent="最終更新 "+(data_.generated_at||"");' +
 '  }' +
@@ -13806,7 +13806,7 @@ var KANSHISCRIPT_ =
 '  renderFresh_();' +
 '  var list=document.getElementById("kList"); if(!list) return;' +
 '  var gs=data_.groups||[];' +
-'  if(!gs.length){ list.innerHTML="<div class=\\"kcard\\">状態が空です。事務所PCをご確認ください。</div>"; return; }' +
+'  if(!gs.length){ list.innerHTML="<div class=\\"kcard\\">状態が空です。自宅PCをご確認ください。</div>"; return; }' +
 /* いま1つの枠の中を見ている＝その中身だけの画面（上に「← 戻る」） */
 '  if(cur_!==null && gs[cur_]){' +
 '    var g=gs[cur_];' +
@@ -13880,8 +13880,8 @@ var KANSHISCRIPT_ =
 '      return;' +
 '    }' +
 '    if(tries<=0){' +
-'      if(busy){ szOvHide_(); szPopup_("時間切れです。事務所PCの状態をご確認ください。"); }' +
-'      else { toast_("時間切れです。事務所PCの状態をご確認ください。"); }' +
+'      if(busy){ szOvHide_(); szPopup_("時間切れです。自宅PCの状態をご確認ください。"); }' +
+'      else { toast_("時間切れです。自宅PCの状態をご確認ください。"); }' +
 '      return;' +
 '    }' +
 '    setTimeout(function(){ poll_(id, tries-1, busy); }, 5000);' +
@@ -13974,7 +13974,7 @@ var KANSHISCRIPT_ =
 '    return "<button type=\\"button\\" class=\\"kchip\\" data-reset=\\""+esc(pid)+"\\">"+esc(ELAB_[pid]||pid)+"</button>";' +
 '  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠ 全員</button>";' +
 '  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
-'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください（事務所PCが受け取ってから反映まで最大1分）。</div>"+' +
+'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください（反映まで最大1分）。</div>"+' +
 '    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
 '    "<div class=\\"ksec\\">新しいユーザーを追加</div>"+' +
 '    "<div class=\\"knote\\">新しいスタッフや、同じ人の別の名前（例：りんご2）を足します。</div>"+' +
@@ -14059,8 +14059,8 @@ var KANSHISCRIPT_ =
 '}' +
 // 依頼を送る。合言葉は無い＝**登録した1台のスマホ**であることをサーバー側が見る（kanshiGate_）。
 'function send_(key, act, val, busy){' +
-'  if(busy){ szOvShow_(szBusyHtml_(busy.title, "事務所のパソコンが受け取って書き終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99"); }' +
-'  else { toast_("受け付けました。事務所PCが実行します（最大1分）…"); }' +
+'  if(busy){ szOvShow_(szBusyHtml_(busy.title, "書き終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99"); }' +
+'  else { toast_("受け付けました。自宅PCが実行します（最大1分）…"); }' +
 '  jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", device:DEV_,' +
 '    fields:JSON.stringify({ctl_key:key, ctl_act:act, ctl_val:(val||"")})},' +
 '    function(r){' +
