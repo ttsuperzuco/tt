@@ -10734,11 +10734,11 @@ function renderHanbaiPage_(base, staff, dev) {
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="hb">' +
       '<div id="hbWho" style="display:none">' + head('🙋', 'No.31 販売管理') +
-        '<div class="hbbighint">入力する人を<br>えらんでください</div>' +
+        '<div class="hbbighint">販売した人の名前を<br>選んでください</div>' +
         '<div class="pspeople" id="hbWhoBtns"></div>' +
       '</div>' +
       '<div id="hbMenu">' + head('🛒', 'No.31 販売管理') +
-        '<div class="hbwho" id="hbWhoLine" style="display:none">入力する人：<b id="hbWhoName"></b>' +
+        '<div class="hbwho" id="hbWhoLine" style="display:none">販売した人：<b id="hbWhoName"></b>' +
           '<button type="button" id="hbWhoChange">変える</button></div>' +
         '<div class="hbok" id="hbMenuMsg" style="display:none"></div>' +
         '<button type="button" class="hbbig" id="hbGoTW"><span class="i">🇹🇼</span>台湾販売入力</button>' +
