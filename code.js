@@ -173,6 +173,9 @@ function doGet(e) {
   } else if (view === 'procstock') {
     title = 'プロセル在庫';                             // ★品物ごとの今ある数を入れる（純JS・登録は受付係）
     html = renderProcStockPage_(base, staff, dev);
+  } else if (view === 'hanbai') {
+    title = '販売管理';                                 // ★日本・台湾の販売を入れる／一覧（純JS・登録は受付係）
+    html = renderHanbaiPage_(base, staff, dev);
   } else if (view === 'procamp') {
     title = 'プロセル頭キャリスト';                     // ★社長版と開発版。静的アプリが一覧を取って描く（ここは中身なし）
     html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてください。' }, {}, base, staff, dev);
@@ -1021,7 +1024,11 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★プロセル在庫＝品物ごとの今ある数を入れる（2026-10-02 まるちゃん依頼・実務者用）。
   //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝
   //   自動監視の人ごとの表示でスタッフにONにできる（まるちゃん「完成したらスタッフにも」）。
-  procstock:  { exec: false, staff: false }
+  procstock:  { exec: false, staff: false },
+  // ★販売管理＝日本・台湾の販売の入力と一覧（2026-10-17 まるちゃん依頼）。
+  //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝
+  //   自動監視の人ごとの表示でスタッフにONにできる（初期値OFF）。
+  hanbai:     { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1029,7 +1036,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1753,7 +1760,11 @@ var TILE_DEFS_ = [
   // ★プロセル在庫＝品物を1つずつ数字ボタンで入れて、最後に一覧で確かめて登録（2026-10-02・実務者用）。
   //   登録は事務所PCの記録に残すだけ（受付係 op=procell_stock_save）。
   { id: 'procstock', cls: 'procstock', view: 'procstock',
-    icon: '<span class="ticon">📦</span>', label: 'プロセル\n在庫' }
+    icon: '<span class="ticon">📦</span>', label: 'プロセル\n在庫' },
+  // ★販売管理＝台湾販売入力／日本販売入力／販売管理表（2026-10-17・実務者用）。
+  //   登録・候補・一覧は事務所PCの記録（受付係 op=hanbai → 販売管理\programs\hanbai.py）。
+  { id: 'hanbai', cls: 'hanbai', view: 'hanbai',
+    icon: '<span class="ticon">🛒</span>', label: '販売\n管理' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -10067,6 +10078,552 @@ function renderProcStockPage_(base, staff, dev) {
     '<script>(' + procStockScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
 
+// ========== 販売管理（2026-10-17 まるちゃん依頼） ==========
+// ホームの「販売管理」→【台湾販売入力】【日本販売入力】【販売管理表】。
+//  日本：日付 →【新規お客様】氏・名を入れる／【🔁お客様】苗字の最初のひらがな→前に買った方から選ぶ
+//        → 購入本数（1〜10のボタン・10本以上は数字で）→ 販売金額（円）→ 備考（空欄でも可）→ 確認 → 登録
+//  台湾：日付 →【本日予約のお客様】／【お客様番号検索】→ 購入本数 → 販売金額（元）→ 備考 → 確認 → 登録
+//  販売管理表：日本・台湾ごとに、月ごとの一覧と合計。
+// 記録・候補・お名前・一覧は全部 受付係(op=hanbai) → 事務所PC 販売管理\programs\hanbai.py（共有DB hanbai_sales）。
+// ★新規の方で氏がひらがな・カタカナでない時だけ「苗字の最初のひらがな」を1つ押してもらう
+//   （🔁お客様をひらがなで探せるようにするため。漢字から読みは機械で決められない）。
+var HANBAI_KANA_ = ['あいうえお', 'かきくけこ', 'さしすせそ', 'たちつてと', 'なにぬねの', 'はひふへほ',
+  'まみむめも', 'や　ゆ　よ', 'らりるれろ', 'わ　　　　'];
+var HANBAICSS_ =
+  '.hb{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+  '.hbbig{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:12px 0;padding:22px 18px;border:0;border-radius:18px;background:#fff;color:#0f172a;font:inherit;font-size:24px;font-weight:900;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+  '.hbbig .i{font-size:30px;}' +
+  '.hbhint{color:#eaf6fb;font-weight:800;font-size:17px;line-height:1.5;margin:6px 4px 10px;}' +
+  '.hbsum{background:rgba(255,255,255,.16);color:#fff;border-radius:12px;padding:8px 12px;margin:2px 0 12px;font-weight:800;font-size:16px;line-height:1.5;}' +
+  '.hbsum:empty{display:none;}' +
+  '.hbdate{background:#fff;color:#0f172a;border-radius:16px;text-align:center;font-size:34px;font-weight:900;padding:16px 8px;margin:6px 0 14px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+  '.hb3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:0 0 6px;}' +
+  '.hb3 button,.hbqty button,.hbseg button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:16px 4px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.hb3 button.on,.hbqty button.on,.hbseg button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
+  '.hbcal{position:relative;overflow:hidden;}' +
+  '.hbcal input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;}' +
+  '.hbin{display:block;width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:16px;font:inherit;font-size:26px;font-weight:800;color:#0f172a;margin:4px 0 12px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+  '.hblb{color:#fff;font-weight:900;font-size:20px;margin:8px 4px 2px;}' +
+  'textarea.hbin{font-size:20px;min-height:130px;resize:vertical;}' +
+  '.hbkana{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:6px 0 10px;}' +
+  '.hbkana button{background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 0;font:inherit;font-size:26px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.hbkana span{display:block;}' +
+  '.hbqty{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin:6px 0 12px;}' +
+  '.hbqty button{font-size:28px;padding:14px 0;}' +
+  '.hbqty button.wide{grid-column:1 / -1;font-size:20px;}' +
+  '.hbrows{background:#fff;border-radius:14px;overflow:hidden;margin:6px 0 4px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+  '.hbrows button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:#fff;color:#0f172a;border:0;border-top:1px solid #e2e8f0;padding:14px 16px;font:inherit;font-size:21px;font-weight:900;cursor:pointer;text-align:left;}' +
+  '.hbrows button:first-child{border-top:0;}' +
+  '.hbrows button:nth-child(even){background:#f4f8f9;}' +
+  '.hbrows .s{font-size:14px;font-weight:700;color:#475569;white-space:nowrap;}' +
+  '.hbseg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 12px;}' +
+  '.hbconf{background:#fff;color:#0f172a;border-radius:14px;overflow:hidden;margin:6px 0;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+  '.hbconf div{display:flex;gap:10px;padding:12px 14px;border-top:1px solid #e2e8f0;font-size:19px;font-weight:900;}' +
+  '.hbconf div:first-child{border-top:0;}' +
+  '.hbconf b{flex:0 0 5.2em;color:#475569;font-size:15px;font-weight:800;padding-top:3px;}' +
+  '.hbconf span{flex:1;word-break:break-all;white-space:pre-wrap;}' +
+  '.hbq{color:#fff;font-weight:900;font-size:24px;text-align:center;margin:16px 4px 4px;}' +
+  '.hbst{color:#eaf6fb;font-weight:800;font-size:16px;margin:8px 4px;min-height:1.4em;}' +
+  '.hbdone{background:#fff;color:#0f172a;border-radius:16px;padding:22px 16px;text-align:center;font-weight:900;font-size:24px;line-height:1.5;margin:10px 0;}' +
+  '.hbmon{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin:4px 0 10px;}' +
+  '.hbmon button{background:#fff;color:#0f172a;border:0;border-radius:12px;padding:10px 14px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;}' +
+  '.hbmon button:disabled{opacity:.35;}' +
+  '.hbmon div{color:#fff;text-align:center;font-weight:900;font-size:22px;}' +
+  '.hbtot{background:#fff;color:#0f172a;border-radius:14px;padding:12px 14px;margin:0 0 10px;font-weight:900;font-size:18px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px;}' +
+  '.hbtbl{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+  '.hbtbl table{width:100%;border-collapse:collapse;color:#0f172a;font-size:14px;}' +
+  '.hbtbl th{background:#2C7A99;color:#fff;font-weight:800;font-size:13px;padding:7px 4px;}' +
+  '.hbtbl td{border-top:1px solid #e2e8f0;padding:8px 5px;font-weight:700;vertical-align:top;}' +
+  '.hbtbl td.r{text-align:right;white-space:nowrap;}' +
+  '.hbtbl td.d{white-space:nowrap;}' +
+  '.hbtbl .nt{display:block;font-size:12px;color:#475569;font-weight:600;word-break:break-all;}' +
+  '.hbempty{color:#eaf6fb;font-weight:800;font-size:18px;text-align:center;margin:20px 0;}';
+
+// 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
+function hanbaiScript_(C) {
+  function $(id) { return document.getElementById(id); }
+  var SECS = ['hbMenu', 'hbDate', 'hbJKind', 'hbJNew', 'hbKana', 'hbCands', 'hbTKind', 'hbToday', 'hbNum',
+    'hbQty', 'hbAmt', 'hbNote', 'hbConf', 'hbDone', 'hbList'];
+  var hist = [], cur = 'hbMenu';
+  function show(id, noPush) {
+    if (!noPush && cur && cur !== id) hist.push(cur);
+    cur = id;
+    for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none';
+    var sm = document.querySelectorAll('.hbsum');
+    for (var j = 0; j < sm.length; j++) sm[j].innerHTML = summary(id);
+    window.scrollTo(0, 0);
+  }
+  function back() {
+    if (sending) return;
+    show(hist.pop() || 'hbMenu', true);
+  }
+  var bb = document.querySelectorAll('.hbback');
+  for (var b0 = 0; b0 < bb.length; b0++) bb[b0].addEventListener('click', function (e) { e.preventDefault(); back(); });
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function popup(msg) { if (typeof szPopup_ === 'function') szPopup_(msg); else alert(msg); }
+  function two(n) { return ('0' + n).slice(-2); }
+  function ymd(d) { return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()); }
+  function stamp(d) { return ymd(d) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds()); }
+  function jpDate(s) {
+    var p = String(s || '').split('-'); if (p.length !== 3) return s || '';
+    var w = '日月火水木金土'.charAt(new Date(+p[0], +p[1] - 1, +p[2]).getDay());
+    return (+p[1]) + '月' + (+p[2]) + '日（' + w + '）';
+  }
+  function yen(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function unit() { return S.country === 'JP' ? '円' : '元'; }
+
+  // 入力中の中身（1件ぶん）
+  var S = {};
+  function reset(country) {
+    S = { country: country, date: ymd(new Date()), kind: '', sei: '', mei: '', yomi: '', fnum: '', name: '',
+          qty: 0, amount: '', note: '', kanaMode: '' };
+  }
+  function custText() {
+    if (S.country === 'JP') return (S.sei || S.mei) ? (S.sei + ' ' + S.mei).trim() + ' 様' : '';
+    return S.fnum ? (S.name || '') + '（' + S.fnum + '）' : '';
+  }
+  // 各画面の上に、ここまでに決めた事を小さく出す（どの日・どの方の入力中か分かるように）。
+  function summary(id) {
+    if (id === 'hbMenu' || id === 'hbList' || id === 'hbDone' || id === 'hbConf' || id === 'hbDate' || !S.country) return '';
+    var h = (S.country === 'JP' ? '🇯🇵 日本販売' : '🇹🇼 台湾販売') + '　' + esc(jpDate(S.date));
+    var c = custText();
+    if (c && id !== 'hbJNew') h += '<br>' + esc(c);
+    if (S.qty && (id === 'hbAmt' || id === 'hbNote')) h += '　' + S.qty + '本';
+    if (S.amount !== '' && id === 'hbNote') h += '　' + yen(S.amount) + unit();
+    return h;
+  }
+  function who() {
+    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = {};
+    try { L = (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : {}; } catch (e) {}
+    if (w && L[w]) return L[w];
+    if (r === '社長(幹部)') return L.kanbu || '🍅トマト';
+    if (r === '開発') return window.pywebview ? 'パソコン版' : 'Ryu';
+    return r || '不明';
+  }
+
+  // ── 事務所PCへ頼む（op=hanbai）→ 済んだら答えを受け取る ──
+  function jsonp(p, cb) {
+    var n = '__hb' + Date.now() + Math.floor(Math.random() * 1000);
+    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+    var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
+    s.onerror = function () { cb({ ok: false, error: '通信エラーです' }); }; document.body.appendChild(s);
+  }
+  function ask(fields, busy, done) {
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy), '#2C7A99');
+    var end = function (err, d) { if (typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
+    jsonp({ action: 'submit', key: C.key, op: 'hanbai',
+            who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '',
+            fields: JSON.stringify(fields) },
+      function (r) {
+        if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました'); return; }
+        var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('hanbai', 800) : 200;
+        var poll = function () {
+          n++; if (n > max) { end('時間切れです。事務所PCが動いているかご確認ください。'); return; }
+          jsonp({ action: 'status', key: C.key, id: r.id }, function (x) {
+            if (!x || !x.ok) { end((x && x.error) || '通信に失敗しました'); return; }
+            if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(poll, 800); return; }
+            if (x.status !== 'done') { end(x.result || 'エラーが発生しました'); return; }
+            var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
+            end(null, d || {});
+          });
+        };
+        setTimeout(poll, 900);
+      });
+  }
+
+  // ── はじめ（3つのボタン） ──
+  $('hbGoTW').addEventListener('click', function () { reset('TW'); openDate(); });
+  $('hbGoJP').addEventListener('click', function () { reset('JP'); openDate(); });
+  $('hbGoList').addEventListener('click', function () { openList('JP', ''); });
+
+  // ── 日付 ──
+  function drawDate() {
+    $('hbDateBox').textContent = jpDate(S.date);
+    var t = new Date(), y = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 1), o = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 2);
+    $('hbYest').className = (S.date === ymd(y)) ? 'on' : '';
+    $('hbOto').className = (S.date === ymd(o)) ? 'on' : '';
+    $('hbCalBtn').className = 'hbcal' + ((S.date !== ymd(t) && S.date !== ymd(y) && S.date !== ymd(o)) ? ' on' : '');
+    $('hbDateHead').textContent = (S.country === 'JP' ? '🇯🇵 日本販売入力' : '🇹🇼 台湾販売入力');
+  }
+  function openDate() { drawDate(); show('hbDate'); }
+  function dayBack(n) { var t = new Date(); return ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate() - n)); }
+  $('hbYest').addEventListener('click', function () { S.date = (S.date === dayBack(1)) ? dayBack(0) : dayBack(1); drawDate(); });
+  $('hbOto').addEventListener('click', function () { S.date = (S.date === dayBack(2)) ? dayBack(0) : dayBack(2); drawDate(); });
+  $('hbCal').addEventListener('change', function () {
+    var v = this.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+    if (v > dayBack(0)) { popup('先の日付はえらべません'); this.value = ''; return; }
+    S.date = v; drawDate();
+  });
+  $('hbCal').addEventListener('click', function () { try { if (this.showPicker) this.showPicker(); } catch (e) {} });
+  $('hbDateGo').addEventListener('click', function () { show(S.country === 'JP' ? 'hbJKind' : 'hbTKind'); });
+
+  // ── 日本：新規／🔁 ──
+  $('hbJNewBtn').addEventListener('click', function () { S.kind = 'new'; S.sei = ''; S.mei = ''; S.yomi = ''; $('hbSei').value = ''; $('hbMei').value = ''; show('hbJNew'); });
+  $('hbJRepBtn').addEventListener('click', function () { S.kind = 'repeat'; openKana('find'); });
+  function kanaHead(s) {
+    var c = String(s || '').normalize ? String(s || '').normalize('NFKC').trim().charAt(0) : String(s || '').trim().charAt(0);
+    if (!c) return '';
+    var k = c.charCodeAt(0);
+    if (k >= 0x30A1 && k <= 0x30F6) c = String.fromCharCode(k - 0x60);
+    if (!(c >= 'ぁ' && c <= 'ゖ')) return '';
+    if (c.normalize) c = c.normalize('NFD').charAt(0);
+    var sm = 'ぁぃぅぇぉっゃゅょゎゕゖ', bg = 'あいうえおつやゆよわかけ', i = sm.indexOf(c);
+    if (i >= 0) c = bg.charAt(i);
+    return c === 'ゔ' ? 'う' : c;
+  }
+  $('hbJNewGo').addEventListener('click', function () {
+    S.sei = $('hbSei').value.replace(/\s+/g, ' ').trim(); S.mei = $('hbMei').value.replace(/\s+/g, ' ').trim();
+    if (!S.sei) { popup('氏を入れてください'); return; }
+    S.yomi = kanaHead(S.sei);
+    if (S.yomi) openQty(); else openKana('yomi');
+  });
+
+  // ── ひらがな（🔁の探し方／新規の苗字の最初の字） ──
+  function openKana(mode) {
+    S.kanaMode = mode;
+    $('hbKanaHead').textContent = mode === 'find' ? '🔁 お客様' : '苗字の最初の文字';
+    $('hbKanaHint').innerHTML = mode === 'find'
+      ? '苗字の最初の文字をえらんでください<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます</small>'
+      : esc(S.sei) + ' 様の苗字の<b>最初の文字</b>をえらんでください<br><small>次から🔁お客様で探す時に使います（「ご」は「こ」）</small>';
+    show('hbKana');
+  }
+  $('hbKanaGrid').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var k = b.getAttribute('data-k'); if (!k) return;
+    if (S.kanaMode === 'yomi') { S.yomi = k; openQty(); return; }
+    ask({ kind: 'cands', head: k }, '前に買った方をさがしています', function (err, d) {
+      if (err || !d || !d.ok) { popup('さがせませんでした：' + (err || (d && d.reason) || '不明')); return; }
+      drawCands(k, d.list || []);
+    });
+  });
+  function drawCands(k, list) {
+    $('hbCandHead').textContent = '「' + k + '」の お客様';
+    var h = '';
+    for (var i = 0; i < list.length; i++) {
+      var x = list[i], ld = String(x.last || '').split('-');
+      h += '<button type="button" data-i="' + i + '"><span>' + esc((x.sei + ' ' + x.mei).trim()) + ' 様</span>' +
+        '<span class="s">' + x.n + '回・最後 ' + (ld.length === 3 ? (+ld[1]) + '/' + (+ld[2]) : '') + '</span></button>';
+    }
+    $('hbCandRows').innerHTML = h;
+    $('hbCandRows').style.display = list.length ? '' : 'none';
+    $('hbCandNone').style.display = list.length ? 'none' : '';
+    $('hbCandRows').onclick = function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var x = list[parseInt(b.getAttribute('data-i'), 10)];
+      S.sei = x.sei; S.mei = x.mei; S.yomi = x.yomi || k; openQty();
+    };
+    show('hbCands');
+  }
+  $('hbCandNew').addEventListener('click', function () { $('hbJNewBtn').click(); });
+
+  // ── 台湾：本日予約／番号検索 ──
+  var TODAY = null;
+  $('hbTodayBtn').addEventListener('click', function () {
+    S.kind = 'today';
+    if (TODAY) { drawToday(); return; }
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('本日の予約を読んでいます'), '#2C7A99');
+    var n = '__hbev' + Date.now();
+    var fin = function (p) {
+      try { delete window[n]; } catch (e) {}
+      if (typeof szOvHide_ === 'function') szOvHide_();
+      if (!p || p.error || !p.events) { popup('本日の予約を読めませんでした。通信環境をご確認ください。'); return; }
+      var day = p.date_from || ymd(new Date()), seen = {}, out = [];
+      for (var i = 0; i < p.events.length; i++) {
+        var e = p.events[i]; if (e.date !== day) continue;
+        var cd = (typeof codeOf === 'function') ? codeOf(e.title || '') : '';
+        if (!cd || seen[cd]) continue;
+        seen[cd] = 1;
+        var nm = (typeof customerLine === 'function') ? (customerLine(e.note || '').name || '') : '';
+        out.push({ fnum: cd, name: nm, st: e.start_time || '', ms: e.start_at_ms || 0 });
+      }
+      out.sort(function (a, b) { return a.ms - b.ms; });
+      TODAY = out; drawToday();
+    };
+    window[n] = fin;
+    var s = document.createElement('script');
+    s.src = C.exec + '?action=data&name=events.json&callback=' + n + '&cb=' + Date.now();
+    s.onerror = function () { fin({ error: 'net' }); };
+    document.body.appendChild(s);
+  });
+  function drawToday() {
+    var h = '';
+    for (var i = 0; i < TODAY.length; i++) {
+      var x = TODAY[i];
+      h += '<button type="button" data-i="' + i + '"><span>' + esc(x.name || 'お名前なし') + '</span>' +
+        '<span class="s">' + esc(x.st) + '　' + esc(x.fnum) + '</span></button>';
+    }
+    $('hbTodayRows').innerHTML = h;
+    $('hbTodayRows').style.display = TODAY.length ? '' : 'none';
+    $('hbTodayNone').style.display = TODAY.length ? 'none' : '';
+    show('hbToday');
+  }
+  $('hbTodayRows').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var x = TODAY[parseInt(b.getAttribute('data-i'), 10)];
+    S.fnum = x.fnum; S.name = x.name; openQty();
+  });
+  var NPRE = 'F', NDIG = '';
+  function numDraw() { $('hbNumBox').textContent = NDIG ? NPRE + NDIG : 'お客様番号を入れてください'; }
+  $('hbNumBtn').addEventListener('click', function () { S.kind = 'number'; NDIG = ''; numDraw(); show('hbNum'); });
+  var segs = $('hbNumSeg').querySelectorAll('button');
+  for (var s0 = 0; s0 < segs.length; s0++) segs[s0].addEventListener('click', function () {
+    for (var j = 0; j < segs.length; j++) segs[j].className = (segs[j] === this) ? 'on' : '';
+    NPRE = this.getAttribute('data-v'); numDraw();
+  });
+  $('hbNumPad').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var k = b.getAttribute('data-k') || b.textContent;
+    if (k === 'clr') NDIG = ''; else if (k === 'del') NDIG = NDIG.slice(0, -1);
+    else if (/^[0-9]$/.test(k) && NDIG.length < 4) NDIG += k;
+    numDraw();
+  });
+  $('hbNumGo').addEventListener('click', function () {
+    if (!NDIG) { popup('お客様番号を入れてください'); return; }
+    ask({ kind: 'lookup', fnum: NPRE + NDIG }, 'お客様をさがしています', function (err, d) {
+      if (err) { popup('さがせませんでした：' + err); return; }
+      if (!d || !d.ok) { popup((d && d.reason) || 'お客様が見つかりません'); return; }
+      S.fnum = d.fnum; S.name = d.name; openQty();
+    });
+  });
+
+  // ── 購入本数 ──
+  var QDIG = '';
+  function openQty() {
+    var h = '';
+    for (var i = 1; i <= 10; i++) h += '<button type="button" data-q="' + i + '"' + (S.qty === i ? ' class="on"' : '') + '>' + i + '</button>';
+    h += '<button type="button" class="wide' + (S.qty > 10 ? ' on' : '') + '" data-q="more">10本以上（数字で入れる）</button>';
+    $('hbQtyBtns').innerHTML = h;
+    QDIG = S.qty > 10 ? String(S.qty) : '';
+    $('hbQtyMore').style.display = S.qty > 10 ? '' : 'none';
+    qDraw();
+    show('hbQty');
+  }
+  function qDraw() { $('hbQtyBox').innerHTML = QDIG ? esc(QDIG) + '<span class="u">本</span>' : '<span class="ph">本数を入れてください</span>'; }
+  $('hbQtyBtns').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var q = b.getAttribute('data-q');
+    if (q === 'more') { $('hbQtyMore').style.display = ''; QDIG = ''; qDraw(); return; }
+    S.qty = parseInt(q, 10); openAmt();
+  });
+  $('hbQtyPad').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var k = b.getAttribute('data-k') || b.textContent;
+    if (k === 'clr') QDIG = ''; else if (k === 'del') QDIG = QDIG.slice(0, -1);
+    else if (/^[0-9]$/.test(k) && QDIG.length < 3) QDIG = (QDIG === '0') ? k : QDIG + k;
+    qDraw();
+  });
+  $('hbQtyGo').addEventListener('click', function () {
+    var q = parseInt(QDIG || '0', 10);
+    if (!q) { popup('本数を入れてください'); return; }
+    S.qty = q; openAmt();
+  });
+
+  // ── 販売金額 ──
+  var ADIG = '';
+  function openAmt() {
+    ADIG = (S.amount === '' ? '' : String(S.amount));
+    $('hbAmtHead').textContent = '販売金額（' + unit() + '）';
+    aDraw(); show('hbAmt');
+  }
+  function aDraw() { $('hbAmtBox').innerHTML = ADIG ? esc(yen(ADIG)) + '<span class="u">' + unit() + '</span>' : '<span class="ph">金額を入れてください</span>'; }
+  $('hbAmtPad').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var k = b.getAttribute('data-k') || b.textContent;
+    if (k === 'clr') ADIG = ''; else if (k === 'del') ADIG = ADIG.slice(0, -1);
+    else if (/^[0-9]$/.test(k) && ADIG.length < 8) ADIG = (ADIG === '0') ? k : ADIG + k;
+    aDraw();
+  });
+  $('hbAmtGo').addEventListener('click', function () {
+    if (ADIG === '') { popup('金額を入れてください'); return; }
+    S.amount = parseInt(ADIG, 10); $('hbNoteIn').value = S.note || ''; show('hbNote');
+  });
+
+  // パソコンはキーボードの数字・Enter・BackSpaceでも入れられる（番号・本数・金額）。
+  document.addEventListener('keydown', function (e) {
+    var pad = cur === 'hbNum' ? 'hbNumPad' : cur === 'hbAmt' ? 'hbAmtPad' : (cur === 'hbQty' && $('hbQtyMore').style.display !== 'none') ? 'hbQtyPad' : '';
+    if (!pad) return;
+    var go = cur === 'hbNum' ? 'hbNumGo' : cur === 'hbAmt' ? 'hbAmtGo' : 'hbQtyGo';
+    var hit = function (k) { var bs = $(pad).querySelectorAll('button'); for (var i = 0; i < bs.length; i++) if ((bs[i].getAttribute('data-k') || bs[i].textContent) === k) { bs[i].click(); return; } };
+    if (/^[0-9]$/.test(e.key)) { hit(e.key); e.preventDefault(); }
+    else if (e.key === 'Backspace') { hit('del'); e.preventDefault(); }
+    else if (e.key === 'Enter') { $(go).click(); e.preventDefault(); }
+  });
+
+  // ── 備考 → 確認 ──
+  $('hbNoteGo').addEventListener('click', function () {
+    S.note = $('hbNoteIn').value.trim();
+    var rows = [['販売', S.country === 'JP' ? '🇯🇵 日本' : '🇹🇼 台湾'], ['販売日', jpDate(S.date)],
+      ['お客様', (S.country === 'JP' ? (S.kind === 'new' ? '【新規】' : '【🔁】') : '') + custText()],
+      ['購入本数', S.qty + ' 本'], ['販売金額', yen(S.amount) + ' ' + unit()], ['備考', S.note || '（なし）']];
+    var h = '';
+    for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
+    $('hbConfRows').innerHTML = h; $('hbSt').textContent = ''; $('hbSend').disabled = false;
+    show('hbConf');
+  });
+
+  // ── 登録 ──
+  var sending = false;
+  $('hbSend').addEventListener('click', function () {
+    if (sending) return;
+    sending = true; $('hbSend').disabled = true; $('hbSt').textContent = '登録しています…';
+    ask({ kind: 'save', country: S.country, date: S.date, cust_kind: S.kind, sei: S.sei, mei: S.mei, yomi: S.yomi,
+          fnum: S.fnum, name: S.name, qty: S.qty, amount: S.amount, note: S.note, staff: who(), at: stamp(new Date()) },
+      '登録しています', function (err, d) {
+        sending = false; $('hbSend').disabled = false; $('hbSt').textContent = '';
+        if (err || !d || !d.ok) { popup('登録できませんでした：' + (err || (d && d.reason) || '不明')); return; }
+        $('hbDoneMsg').innerHTML = '登録しました<br><small style="font-size:17px">' + esc(custText()) + '　' + S.qty + '本　' + esc(yen(S.amount)) + unit() + '</small>';
+        hist = []; show('hbDone', true);
+      });
+  });
+  // 登録の後は、戻ると「販売管理」のはじめに戻るようにする（登録済みの画面へは戻さない）。
+  $('hbAgain').addEventListener('click', function () { var c = S.country; reset(c); hist = ['hbMenu']; cur = ''; openDate(); });
+  $('hbDoneList').addEventListener('click', function () { var c = S.country, m = S.date.slice(0, 7); hist = ['hbMenu']; cur = ''; openList(c, m); });
+  $('hbDoneMenu').addEventListener('click', function () { hist = []; show('hbMenu', true); });
+
+  // ── 販売管理表 ──
+  var LC = 'JP', LM = '', LMONTHS = [];
+  function thisMonth() { return ymd(new Date()).slice(0, 7); }
+  function shiftMonth(m, d) { var p = m.split('-'), x = new Date(+p[0], +p[1] - 1 + d, 1); return x.getFullYear() + '-' + two(x.getMonth() + 1); }
+  function openList(country, month) {
+    LC = country; LM = month || thisMonth();
+    var sg = $('hbListSeg').querySelectorAll('button');
+    for (var i = 0; i < sg.length; i++) sg[i].className = (sg[i].getAttribute('data-v') === LC) ? 'on' : '';
+    if (cur !== 'hbList') show('hbList');
+    loadList();
+  }
+  function loadList() {
+    var p = LM.split('-');
+    $('hbMonTxt').textContent = (+p[0]) + '年' + (+p[1]) + '月';
+    $('hbMonNext').disabled = LM >= thisMonth();
+    $('hbListBody').innerHTML = '';
+    ask({ kind: 'list', country: LC, month: LM }, '一覧を読んでいます', function (err, d) {
+      if (err || !d || !d.ok) { $('hbListBody').innerHTML = '<div class="hbempty">読めませんでした：' + esc(err || '不明') + '</div>'; return; }
+      LMONTHS = d.months || [];
+      var u = LC === 'JP' ? '円' : '元';
+      var h = '<div class="hbtot"><span>' + d.count + '件</span><span>' + d.total_qty + '本</span><span>' + yen(d.total_amount) + u + '</span></div>';
+      if (!d.rows || !d.rows.length) h += '<div class="hbempty">この月の記録はありません</div>';
+      else {
+        h += '<div class="hbtbl"><table><thead><tr><th>日付</th><th>お客様</th><th>本数</th><th>金額（' + u + '）</th></tr></thead><tbody>';
+        for (var i = 0; i < d.rows.length; i++) {
+          var r = d.rows[i], dp = String(r[0]).split('-');
+          h += '<tr><td class="d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td>' + esc(r[2] || '') + (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
+            (r[5] ? '<span class="nt">備考：' + esc(r[5]) + '</span>' : '') + '<span class="nt">入力：' + esc(r[6] || '') + '</span></td>' +
+            '<td class="r">' + r[3] + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
+        }
+        h += '</tbody></table></div>';
+        if (d.cut) h += '<div class="hbempty" style="font-size:14px">※多いので、新しい物から入るぶんだけ出しています（合計は全部の分です）</div>';
+      }
+      $('hbListBody').innerHTML = h;
+    });
+  }
+  var lsg = $('hbListSeg').querySelectorAll('button');
+  for (var l0 = 0; l0 < lsg.length; l0++) lsg[l0].addEventListener('click', function () { openList(this.getAttribute('data-v'), LM); });
+  $('hbMonPrev').addEventListener('click', function () { LM = shiftMonth(LM, -1); loadList(); });
+  $('hbMonNext').addEventListener('click', function () { if (LM < thisMonth()) { LM = shiftMonth(LM, 1); loadList(); } });
+}
+
+function renderHanbaiPage_(base, staff, dev) {
+  var head = function (icon, name, id) {
+    return '<div class="hhead"><span class="bmark">' + icon + '</span><span class="bname"' + (id ? ' id="' + id + '"' : '') + '>' + name + '</span></div>';
+  };
+  var inBack = '<div class="ubar"><a class="uhome hbback" href="javascript:void(0)">← 戻る</a></div>';
+  var sum = '<div class="hbsum"></div>';
+  var pad = function (id) { return '<div class="expad" id="' + id + '">' + EXPADHTML_ + '</div>'; };
+  var kana = '';
+  for (var r = 0; r < HANBAI_KANA_.length; r++) {
+    for (var c = 0; c < 5; c++) {
+      var ch = HANBAI_KANA_[r].charAt(c);
+      kana += (ch && ch !== '　') ? '<button type="button" data-k="' + ch + '">' + ch + '</button>' : '<span></span>';
+    }
+  }
+  var C = {
+    exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
+    key: 'kx7Q2p9mVt4Zr8'
+  };
+  return '<style>' + HOMECSS_ + EXPADCSS_ + PROCSTOCKCSS_ + HANBAICSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="hb">' +
+      '<div id="hbMenu">' + head('🛒', '販売管理') +
+        '<button type="button" class="hbbig" id="hbGoTW"><span class="i">🇹🇼</span>台湾販売入力</button>' +
+        '<button type="button" class="hbbig" id="hbGoJP"><span class="i">🇯🇵</span>日本販売入力</button>' +
+        '<button type="button" class="hbbig" id="hbGoList"><span class="i">📋</span>販売管理表</button>' +
+      '</div>' +
+      '<div id="hbDate" style="display:none">' + inBack + head('📅', '', 'hbDateHead') +
+        '<div class="hbhint">販売日（いつもは今日のまま）</div>' +
+        '<div class="hbdate" id="hbDateBox"></div>' +
+        '<div class="hb3"><button type="button" id="hbYest">昨日</button><button type="button" id="hbOto">おととい</button>' +
+          '<button type="button" id="hbCalBtn" class="hbcal">カレンダー<br>選択<input type="date" id="hbCal"></button></div>' +
+        '<button type="button" class="exgo" id="hbDateGo">この日で次へ</button>' +
+      '</div>' +
+      '<div id="hbJKind" style="display:none">' + inBack + head('🇯🇵', '日本販売入力') + sum +
+        '<button type="button" class="hbbig" id="hbJNewBtn"><span class="i">🆕</span>新規お客様</button>' +
+        '<button type="button" class="hbbig" id="hbJRepBtn"><span class="i">🔁</span>お客様</button>' +
+      '</div>' +
+      '<div id="hbJNew" style="display:none">' + inBack + head('🆕', 'お客様氏名入力') + sum +
+        '<div class="hblb">氏</div><input class="hbin" id="hbSei" autocomplete="off" placeholder="例：山田">' +
+        '<div class="hblb">名</div><input class="hbin" id="hbMei" autocomplete="off" placeholder="例：花子">' +
+        '<button type="button" class="exgo" id="hbJNewGo">次へ</button>' +
+      '</div>' +
+      '<div id="hbKana" style="display:none">' + inBack + head('🔁', '', 'hbKanaHead') + sum +
+        '<div class="hbhint" id="hbKanaHint"></div>' +
+        '<div class="hbkana" id="hbKanaGrid">' + kana + '</div>' +
+      '</div>' +
+      '<div id="hbCands" style="display:none">' + inBack + head('🔁', '', 'hbCandHead') + sum +
+        '<div class="hbhint">お客様をえらんでください</div>' +
+        '<div class="hbrows" id="hbCandRows"></div>' +
+        '<div class="hbempty" id="hbCandNone">前に買ったお客様が見つかりません</div>' +
+        '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕</span>新規お客様として入力</button>' +
+      '</div>' +
+      '<div id="hbTKind" style="display:none">' + inBack + head('🇹🇼', '台湾販売入力') + sum +
+        '<button type="button" class="hbbig" id="hbTodayBtn"><span class="i">📅</span>本日予約のお客様</button>' +
+        '<button type="button" class="hbbig" id="hbNumBtn"><span class="i">🔢</span>お客様番号検索</button>' +
+      '</div>' +
+      '<div id="hbToday" style="display:none">' + inBack + head('📅', '本日予約のお客様') + sum +
+        '<div class="hbrows" id="hbTodayRows"></div>' +
+        '<div class="hbempty" id="hbTodayNone">本日の予約はありません</div>' +
+      '</div>' +
+      '<div id="hbNum" style="display:none">' + inBack + head('🔢', 'お客様番号検索') + sum +
+        '<div class="hbseg" id="hbNumSeg"><button type="button" class="on" data-v="F">F（女性）</button><button type="button" data-v="M">M（男性）</button></div>' +
+        '<div class="exbox" id="hbNumBox"></div>' + pad('hbNumPad') +
+        '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
+      '</div>' +
+      '<div id="hbQty" style="display:none">' + inBack + head('🧴', '購入本数') + sum +
+        '<div class="hbqty" id="hbQtyBtns"></div>' +
+        '<div id="hbQtyMore" style="display:none"><div class="exbox psbox" id="hbQtyBox"></div>' + pad('hbQtyPad') +
+          '<button type="button" class="exgo" id="hbQtyGo">これでOK → 次へ</button></div>' +
+      '</div>' +
+      '<div id="hbAmt" style="display:none">' + inBack + head('💴', '', 'hbAmtHead') + sum +
+        '<div class="exbox psbox" id="hbAmtBox"></div>' + pad('hbAmtPad') +
+        '<button type="button" class="exgo" id="hbAmtGo">これでOK → 次へ</button>' +
+      '</div>' +
+      '<div id="hbNote" style="display:none">' + inBack + head('📝', '備考入力') + sum +
+        '<div class="hbhint">空欄でも可</div>' +
+        '<textarea class="hbin" id="hbNoteIn" maxlength="200"></textarea>' +
+        '<button type="button" class="exgo" id="hbNoteGo">次へ</button>' +
+      '</div>' +
+      '<div id="hbConf" style="display:none">' + inBack + head('✅', '確認') +
+        '<div class="hbconf" id="hbConfRows"></div>' +
+        '<div class="hbq">以上の内容で登録しますか？</div>' +
+        '<button type="button" class="exgo" id="hbSend">登録する</button>' +
+        '<div class="hbst" id="hbSt"></div>' +
+      '</div>' +
+      '<div id="hbDone" style="display:none">' + head('✅', '販売管理') +
+        '<div class="hbdone" id="hbDoneMsg"></div>' +
+        '<button type="button" class="exgo" id="hbAgain">続けて入力する</button>' +
+        '<button type="button" class="hbbig" id="hbDoneList"><span class="i">📋</span>販売管理表を見る</button>' +
+        '<button type="button" class="hbbig" id="hbDoneMenu"><span class="i">🛒</span>販売管理のはじめに戻る</button>' +
+      '</div>' +
+      '<div id="hbList" style="display:none">' + inBack + head('📋', '販売管理表') +
+        '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="JP">🇯🇵 日本（円）</button><button type="button" data-v="TW">🇹🇼 台湾（元）</button></div>' +
+        '<div class="hbmon"><button type="button" id="hbMonPrev">◀</button><div id="hbMonTxt"></div><button type="button" id="hbMonNext">▶</button></div>' +
+        '<div id="hbListBody"></div>' +
+      '</div>' +
+    '</div></div>' +
+    '<script>(' + hanbaiScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
+
 // ========== 🔁（施術後の予約の8枚目「お知らせのおすすめ」）の見た目 ==========
 // ★2026-10-06〜07 まるちゃん決定。次が最終回の時だけ出る8枚目のカード・ボタンの見た目（renderSejutsugo の8枚目が使う）。
 //   ダミーで試す「🔁テスト」の画面とボタンは 2026-10-07 まるちゃん指示で消した（本番に組み込み済み）。
@@ -12736,6 +13293,7 @@ var HOMECSS_ =
 '  .tile.shophist::before { background:#22707f; }' +
 '  .tile.procamp::before { background:#9333ea; }' +
 '  .tile.procstock::before { background:#7a5c2e; }' +
+'  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
@@ -12760,6 +13318,7 @@ var HOMECSS_ =
 '  .tile.shophist .ticon { background:rgba(34,112,127,.16); }' +
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
 '  .tile.procstock .ticon { background:rgba(122,92,46,.16); }' +
+'  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
 '  .lt2 svg { height:16px; width:16px; flex:none; }' +
