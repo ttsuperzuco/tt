@@ -10121,6 +10121,12 @@ var HANBAICSS_ =
   '.hbrows button:first-child{border-top:0;}' +
   '.hbrows button:nth-child(even){background:#f4f8f9;}' +
   '.hbrows .s{font-size:14px;font-weight:700;color:#475569;white-space:nowrap;}' +
+  '.hbcards{background:none;box-shadow:none;border-radius:0;overflow:visible;}' +
+  '.hbcards button,.hbcards button:nth-child(even){background:#fff;border:0;border-radius:14px;margin:0 0 10px;padding:16px;box-shadow:0 3px 10px rgba(0,0,0,.18);}' +
+  '.hbcards button:first-child{border-top:0;}' +
+  '.hbcards .mk{flex:0 0 auto;font-size:28px;line-height:1;min-width:1.1em;}' +
+  '.hbcards .nm{flex:1;min-width:0;word-break:break-all;}' +
+  '.hbcards .s{text-align:right;line-height:1.4;font-size:15px;}' +
   '.hbseg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 12px;}' +
   '.hbconf{background:#fff;color:#0f172a;border-radius:14px;overflow:hidden;margin:6px 0;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hbconf div{display:flex;gap:10px;padding:12px 14px;border-top:1px solid #e2e8f0;font-size:19px;font-weight:900;}' +
@@ -10328,7 +10334,8 @@ function hanbaiScript_(C) {
         if (!cd || seen[cd]) continue;
         seen[cd] = 1;
         var nm = (typeof customerLine === 'function') ? (customerLine(e.note || '').name || '') : '';
-        out.push({ fnum: cd, name: nm, st: e.start_time || '', ms: e.start_at_ms || 0 });
+        var mk = (typeof staffOf === 'function') ? (staffOf(e.title || '') || '') : '';
+        out.push({ fnum: cd, name: nm, mark: mk, st: e.start_time || '', ms: e.start_at_ms || 0 });
       }
       out.sort(function (a, b) { return a.ms - b.ms; });
       TODAY = out; drawToday();
@@ -10343,8 +10350,9 @@ function hanbaiScript_(C) {
     var h = '';
     for (var i = 0; i < TODAY.length; i++) {
       var x = TODAY[i];
-      h += '<button type="button" data-i="' + i + '"><span>' + esc(x.name || 'お名前なし') + '</span>' +
-        '<span class="s">' + esc(x.st) + '　' + esc(x.fnum) + '</span></button>';
+      h += '<button type="button" data-i="' + i + '"><span class="mk">' + esc(x.mark || '') + '</span>' +
+        '<span class="nm">' + esc(x.name || 'お名前なし') + '</span>' +
+        '<span class="s">' + esc(x.st) + '<br>' + esc(x.fnum) + '</span></button>';
     }
     $('hbTodayRows').innerHTML = h;
     $('hbTodayRows').style.display = TODAY.length ? '' : 'none';
@@ -10628,7 +10636,7 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       '<div id="hbCands" style="display:none">' + inBack + head('🔁', '', 'hbCandHead') + sum +
         '<div class="hbhint">お客様をえらんでください</div>' +
-        '<div class="hbrows" id="hbCandRows"></div>' +
+        '<div class="hbrows hbcards" id="hbCandRows"></div>' +
         '<div class="hbempty" id="hbCandNone">前に買ったお客様が見つかりません</div>' +
         '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕</span>新規お客様として入力</button>' +
       '</div>' +
@@ -10637,7 +10645,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="hbbig" id="hbNumBtn"><span class="i">🔢</span>お客様番号検索</button>' +
       '</div>' +
       '<div id="hbToday" style="display:none">' + inBack + head('📅', '本日予約のお客様') + sum +
-        '<div class="hbrows" id="hbTodayRows"></div>' +
+        '<div class="hbrows hbcards" id="hbTodayRows"></div>' +
         '<div class="hbempty" id="hbTodayNone">本日の予約はありません</div>' +
       '</div>' +
       '<div id="hbNum" style="display:none">' + inBack + head('🔢', 'お客様番号検索') + sum +
