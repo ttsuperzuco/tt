@@ -10088,7 +10088,7 @@ function renderProcStockPage_(base, staff, dev) {
 // ★新規の方で氏がひらがな・カタカナでない時だけ「苗字の最初のひらがな」を1つ押してもらう
 //   （🔁お客様をひらがなで探せるようにするため。漢字から読みは機械で決められない）。
 var HANBAI_KANA_ = ['あいうえお', 'かきくけこ', 'さしすせそ', 'たちつてと', 'なにぬねの', 'はひふへほ',
-  'まみむめも', 'や　ゆ　よ', 'らりるれろ', 'わ　　　　'];
+  'まみむめも', 'や　ゆ　よ', 'らりるれろ', 'わ　　　他'];
 var HANBAICSS_ =
   '.hb{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
   '.hbbig{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:12px 0;padding:22px 18px;border:0;border-radius:18px;background:#fff;color:#0f172a;font:inherit;font-size:24px;font-weight:900;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
@@ -10100,6 +10100,8 @@ var HANBAICSS_ =
   '.hb3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:0 0 6px;}' +
   '.hb3 button,.hbqty button,.hbseg button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:16px 4px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.hb3 button.on,.hbqty button.on,.hbseg button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
+  '.hb4{grid-template-columns:repeat(4,1fr);gap:8px;}' +
+  '.hb4 button{font-size:17px;padding:16px 2px;}' +
   '.hbcal{position:relative;overflow:hidden;}' +
   '.hbcal input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;}' +
   '.hbin{display:block;width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:16px;font:inherit;font-size:26px;font-weight:800;color:#0f172a;margin:4px 0 12px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
@@ -10111,6 +10113,7 @@ var HANBAICSS_ =
   '.hbqty{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin:6px 0 12px;}' +
   '.hbqty button{font-size:28px;padding:14px 0;}' +
   '.hbqty button.wide{grid-column:1 / -1;font-size:20px;}' +
+  '.hbqty button.wide .qn{font-size:34px;}' +
   '.hbrows{background:#fff;border-radius:14px;overflow:hidden;margin:6px 0 4px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hbrows button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:#fff;color:#0f172a;border:0;border-top:1px solid #e2e8f0;padding:14px 16px;font:inherit;font-size:21px;font-weight:900;cursor:pointer;text-align:left;}' +
   '.hbrows button:first-child{border-top:0;}' +
@@ -10177,7 +10180,7 @@ function hanbaiScript_(C) {
   var S = {};
   function reset(country) {
     S = { country: country, date: ymd(new Date()), kind: '', sei: '', mei: '', yomi: '', fnum: '', name: '',
-          qty: 0, amount: '', note: '', kanaMode: '' };
+          qty: 0, amount: '', note: '' };
   }
   function custText() {
     if (S.country === 'JP') return (S.sei || S.mei) ? (S.sei + ' ' + S.mei).trim() + ' 様' : '';
@@ -10211,7 +10214,7 @@ function hanbaiScript_(C) {
     s.onerror = function () { cb({ ok: false, error: '通信エラーです' }); }; document.body.appendChild(s);
   }
   function ask(fields, busy, done) {
-    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy), '#2C7A99');
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, '事務所のパソコンの返事を待っています。<br>終わったら自動で切り替わります。'), '#2C7A99');
     var end = function (err, d) { if (typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     jsonp({ action: 'submit', key: C.key, op: 'hanbai',
             who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '',
@@ -10241,19 +10244,21 @@ function hanbaiScript_(C) {
   // ── 日付 ──
   function drawDate() {
     $('hbDateBox').textContent = jpDate(S.date);
-    var t = new Date(), y = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 1), o = new Date(t.getFullYear(), t.getMonth(), t.getDate() - 2);
-    $('hbYest').className = (S.date === ymd(y)) ? 'on' : '';
-    $('hbOto').className = (S.date === ymd(o)) ? 'on' : '';
-    $('hbCalBtn').className = 'hbcal' + ((S.date !== ymd(t) && S.date !== ymd(y) && S.date !== ymd(o)) ? ' on' : '');
+    var t = dayBack(0), y = dayBack(1), o = dayBack(2);
+    $('hbToday0').className = (S.date === t) ? 'on' : '';
+    $('hbYest').className = (S.date === y) ? 'on' : '';
+    $('hbOto').className = (S.date === o) ? 'on' : '';
+    $('hbCalBtn').className = 'hbcal' + ((S.date !== t && S.date !== y && S.date !== o) ? ' on' : '');
     $('hbDateHead').textContent = (S.country === 'JP' ? '🇯🇵 日本販売入力' : '🇹🇼 台湾販売入力');
   }
   function openDate() { drawDate(); show('hbDate'); }
   function dayBack(n) { var t = new Date(); return ymd(new Date(t.getFullYear(), t.getMonth(), t.getDate() - n)); }
-  $('hbYest').addEventListener('click', function () { S.date = (S.date === dayBack(1)) ? dayBack(0) : dayBack(1); drawDate(); });
-  $('hbOto').addEventListener('click', function () { S.date = (S.date === dayBack(2)) ? dayBack(0) : dayBack(2); drawDate(); });
+  $('hbToday0').addEventListener('click', function () { S.date = dayBack(0); drawDate(); });
+  $('hbYest').addEventListener('click', function () { S.date = dayBack(1); drawDate(); });
+  $('hbOto').addEventListener('click', function () { S.date = dayBack(2); drawDate(); });
+  // カレンダーは先の日もえらべる（まるちゃん指定）。
   $('hbCal').addEventListener('change', function () {
     var v = this.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
-    if (v > dayBack(0)) { popup('先の日付はえらべません'); this.value = ''; return; }
     S.date = v; drawDate();
   });
   $('hbCal').addEventListener('click', function () { try { if (this.showPicker) this.showPicker(); } catch (e) {} });
@@ -10261,38 +10266,18 @@ function hanbaiScript_(C) {
 
   // ── 日本：新規／🔁 ──
   $('hbJNewBtn').addEventListener('click', function () { S.kind = 'new'; S.sei = ''; S.mei = ''; S.yomi = ''; $('hbSei').value = ''; $('hbMei').value = ''; show('hbJNew'); });
-  $('hbJRepBtn').addEventListener('click', function () { S.kind = 'repeat'; openKana('find'); });
-  function kanaHead(s) {
-    var c = String(s || '').normalize ? String(s || '').normalize('NFKC').trim().charAt(0) : String(s || '').trim().charAt(0);
-    if (!c) return '';
-    var k = c.charCodeAt(0);
-    if (k >= 0x30A1 && k <= 0x30F6) c = String.fromCharCode(k - 0x60);
-    if (!(c >= 'ぁ' && c <= 'ゖ')) return '';
-    if (c.normalize) c = c.normalize('NFD').charAt(0);
-    var sm = 'ぁぃぅぇぉっゃゅょゎゕゖ', bg = 'あいうえおつやゆよわかけ', i = sm.indexOf(c);
-    if (i >= 0) c = bg.charAt(i);
-    return c === 'ゔ' ? 'う' : c;
-  }
+  $('hbJRepBtn').addEventListener('click', function () { S.kind = 'repeat'; show('hbKana'); });
   $('hbJNewGo').addEventListener('click', function () {
     S.sei = $('hbSei').value.replace(/\s+/g, ' ').trim(); S.mei = $('hbMei').value.replace(/\s+/g, ' ').trim();
     if (!S.sei) { popup('氏を入れてください'); return; }
-    S.yomi = kanaHead(S.sei);
-    if (S.yomi) openQty(); else openKana('yomi');
+    // 苗字の最初のひらがな（🔁お客様で探す手がかり）は、事務所のパソコンが漢字から自動で付ける。
+    S.yomi = ''; openQty();
   });
 
-  // ── ひらがな（🔁の探し方／新規の苗字の最初の字） ──
-  function openKana(mode) {
-    S.kanaMode = mode;
-    $('hbKanaHead').textContent = mode === 'find' ? '🔁 お客様' : '苗字の最初の文字';
-    $('hbKanaHint').innerHTML = mode === 'find'
-      ? '苗字の最初の文字をえらんでください<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます</small>'
-      : esc(S.sei) + ' 様の苗字の<b>最初の文字</b>をえらんでください<br><small>次から🔁お客様で探す時に使います（「ご」は「こ」）</small>';
-    show('hbKana');
-  }
+  // ── 🔁お客様：苗字の最初のひらがなで、前に買った方をさがす ──
   $('hbKanaGrid').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     var k = b.getAttribute('data-k'); if (!k) return;
-    if (S.kanaMode === 'yomi') { S.yomi = k; openQty(); return; }
     ask({ kind: 'cands', head: k }, '前に買った方をさがしています', function (err, d) {
       if (err || !d || !d.ok) { popup('さがせませんでした：' + (err || (d && d.reason) || '不明')); return; }
       drawCands(k, d.list || []);
@@ -10323,7 +10308,7 @@ function hanbaiScript_(C) {
   $('hbTodayBtn').addEventListener('click', function () {
     S.kind = 'today';
     if (TODAY) { drawToday(); return; }
-    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('本日の予約を読んでいます'), '#2C7A99');
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('本日の予約を読んでいます', 'しばらくお待ちください。'), '#2C7A99');
     var n = '__hbev' + Date.now();
     var fin = function (p) {
       try { delete window[n]; } catch (e) {}
@@ -10393,14 +10378,20 @@ function hanbaiScript_(C) {
   function openQty() {
     var h = '';
     for (var i = 1; i <= 10; i++) h += '<button type="button" data-q="' + i + '"' + (S.qty === i ? ' class="on"' : '') + '>' + i + '</button>';
-    h += '<button type="button" class="wide' + (S.qty > 10 ? ' on' : '') + '" data-q="more">10本以上（数字で入れる）</button>';
+    h += '<button type="button" class="wide' + (S.qty > 10 ? ' on' : '') + '" data-q="more" id="hbQtyMoreBtn">10本以上（数字で入れる）</button>';
     $('hbQtyBtns').innerHTML = h;
     QDIG = S.qty > 10 ? String(S.qty) : '';
     $('hbQtyMore').style.display = S.qty > 10 ? '' : 'none';
     qDraw();
     show('hbQty');
   }
-  function qDraw() { $('hbQtyBox').innerHTML = QDIG ? esc(QDIG) + '<span class="u">本</span>' : '<span class="ph">本数を入れてください</span>'; }
+  // 10本以上は、入れた数をボタンの中に出す（下に別の箱は出さない）。
+  function qDraw() {
+    var b = $('hbQtyMoreBtn'); if (!b) return;
+    var open = $('hbQtyMore').style.display !== 'none';
+    b.className = 'wide' + (open ? ' on' : '');
+    b.innerHTML = !open ? '10本以上（数字で入れる）' : (QDIG ? '<span class="qn">' + esc(QDIG) + '</span> 本' : '数字ボタンで本数を入れてください');
+  }
   $('hbQtyBtns').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     var q = b.getAttribute('data-q');
@@ -10551,9 +10542,9 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="hbbig" id="hbGoList"><span class="i">📋</span>販売管理表</button>' +
       '</div>' +
       '<div id="hbDate" style="display:none">' + inBack + head('📅', '', 'hbDateHead') +
-        '<div class="hbhint">販売日（いつもは今日のまま）</div>' +
+        '<div class="hbhint">販売日</div>' +
         '<div class="hbdate" id="hbDateBox"></div>' +
-        '<div class="hb3"><button type="button" id="hbYest">昨日</button><button type="button" id="hbOto">おととい</button>' +
+        '<div class="hb3 hb4"><button type="button" id="hbToday0">今日</button><button type="button" id="hbYest">昨日</button><button type="button" id="hbOto">おととい</button>' +
           '<button type="button" id="hbCalBtn" class="hbcal">カレンダー<br>選択<input type="date" id="hbCal"></button></div>' +
         '<button type="button" class="exgo" id="hbDateGo">この日で次へ</button>' +
       '</div>' +
@@ -10566,8 +10557,8 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="hblb">名</div><input class="hbin" id="hbMei" autocomplete="off" placeholder="例：花子">' +
         '<button type="button" class="exgo" id="hbJNewGo">次へ</button>' +
       '</div>' +
-      '<div id="hbKana" style="display:none">' + inBack + head('🔁', '', 'hbKanaHead') + sum +
-        '<div class="hbhint" id="hbKanaHint"></div>' +
+      '<div id="hbKana" style="display:none">' + inBack + head('🔁', 'お客様') + sum +
+        '<div class="hbhint">苗字の最初の文字をえらんでください<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます。英字などは「他」</small></div>' +
         '<div class="hbkana" id="hbKanaGrid">' + kana + '</div>' +
       '</div>' +
       '<div id="hbCands" style="display:none">' + inBack + head('🔁', '', 'hbCandHead') + sum +
@@ -10591,7 +10582,7 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       '<div id="hbQty" style="display:none">' + inBack + head('🧴', '購入本数') + sum +
         '<div class="hbqty" id="hbQtyBtns"></div>' +
-        '<div id="hbQtyMore" style="display:none"><div class="exbox psbox" id="hbQtyBox"></div>' + pad('hbQtyPad') +
+        '<div id="hbQtyMore" style="display:none">' + pad('hbQtyPad') +
           '<button type="button" class="exgo" id="hbQtyGo">これでOK → 次へ</button></div>' +
       '</div>' +
       '<div id="hbAmt" style="display:none">' + inBack + head('💴', '', 'hbAmtHead') + sum +
