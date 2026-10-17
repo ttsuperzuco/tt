@@ -10096,6 +10096,8 @@ var HANBAICSS_ =
   '.hbhint{color:#eaf6fb;font-weight:800;font-size:17px;line-height:1.5;margin:6px 4px 10px;}' +
   '.hbsum{background:rgba(255,255,255,.16);color:#fff;border-radius:12px;padding:8px 12px;margin:2px 0 12px;font-weight:800;font-size:16px;line-height:1.5;}' +
   '.hbsum:empty{display:none;}' +
+  '.hbcust{color:#fde047;font-size:28px;font-weight:900;line-height:1.3;margin:4px 0 2px;word-break:break-all;text-shadow:0 2px 6px rgba(0,0,0,.3);}' +
+  '.hbcust .no{display:inline-block;background:#fde047;color:#0f172a;border-radius:10px;padding:1px 10px;margin-right:10px;text-shadow:none;}' +
   '.hbdate{background:#fff;color:#0f172a;border-radius:16px;text-align:center;font-size:34px;font-weight:900;padding:16px 8px;margin:6px 0 14px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hb3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:0 0 6px;}' +
   '.hb3 button,.hbqty button,.hbseg button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:16px 4px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
@@ -10203,11 +10205,18 @@ function hanbaiScript_(C) {
   function summary(id) {
     if (id === 'hbMenu' || id === 'hbList' || id === 'hbConf' || id === 'hbDate' || !S.country) return '';
     var h = (S.country === 'JP' ? '🇯🇵 日本販売' : '🇹🇼 台湾販売') + '　' + esc(jpDate(S.date));
-    var c = custText();
-    if (c && id !== 'hbJNew') h += '<br>' + esc(c);
-    if (S.qty && (id === 'hbGift' || id === 'hbAmt' || id === 'hbNote')) h += '　' + S.qty + '本';
-    if (id === 'hbAmt' || id === 'hbNote') h += S.gift ? '（🎁' + S.gift + '本）' : '（🎁なし）';
-    if (S.amount !== '' && id === 'hbNote') h += '　' + yen(S.amount) + unit();
+    // ★2026-10-17 まるちゃん「お客様番号と氏名は大きく目立つように」＝お客様は1行で大きな黄色の字。
+    var c = '';
+    if (id !== 'hbJNew') {
+      if (S.country === 'JP' && (S.sei || S.mei)) c = esc((S.sei + ' ' + S.mei).trim()) + ' 様';
+      if (S.country === 'TW' && S.fnum) c = '<span class="no">' + esc(S.fnum) + '</span>' + esc(S.name || '');
+    }
+    if (c) h += '<div class="hbcust">' + c + '</div>';
+    var t = '';
+    if (S.qty && (id === 'hbGift' || id === 'hbAmt' || id === 'hbNote')) t += S.qty + '本';
+    if (id === 'hbAmt' || id === 'hbNote') t += S.gift ? '（🎁' + S.gift + '本）' : '（🎁なし）';
+    if (S.amount !== '' && id === 'hbNote') t += '　' + yen(S.amount) + unit();
+    if (t) h += '<div>' + t + '</div>';
     return h;
   }
   function who() {
