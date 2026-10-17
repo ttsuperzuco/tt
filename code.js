@@ -10096,6 +10096,8 @@ var HANBAICSS_ =
   '.hbhint{color:#eaf6fb;font-weight:800;font-size:17px;line-height:1.5;margin:6px 4px 10px;}' +
   '.hbsum{background:rgba(255,255,255,.16);color:#fff;border-radius:12px;padding:8px 12px;margin:2px 0 12px;font-weight:800;font-size:16px;line-height:1.5;}' +
   '.hbsum:empty{display:none;}' +
+  '.hbpay .hbbig{justify-content:center;font-size:28px;padding:26px 18px;}' +
+  '.hbpay .hbbig.on{background:#16a34a;color:#fff;}' +
   '.hbwho{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:17px;margin:0 4px 8px;}' +
   '.hbwho b{font-size:22px;color:#fde047;}' +
   '.hbwho button{margin-left:auto;background:#fff;color:#0f172a;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
@@ -10169,7 +10171,7 @@ var HANBAICSS_ =
 function hanbaiScript_(C) {
   function $(id) { return document.getElementById(id); }
   var SECS = ['hbMenu', 'hbDate', 'hbJKind', 'hbJNew', 'hbKana', 'hbCands', 'hbTKind', 'hbToday', 'hbNum',
-    'hbQty', 'hbGift', 'hbAmt', 'hbNote', 'hbConf', 'hbList', 'hbWho'];
+    'hbQty', 'hbGift', 'hbPay', 'hbAmt', 'hbNote', 'hbConf', 'hbList', 'hbWho'];
   var hist = [], cur = 'hbMenu';
   function show(id, noPush) {
     if (!noPush && cur && cur !== id) hist.push(cur);
@@ -10205,7 +10207,7 @@ function hanbaiScript_(C) {
   var S = {};
   function reset(country) {
     S = { country: country, date: ymd(new Date()), kind: '', sei: '', mei: '', yomi: '', fnum: '', name: '',
-          qty: 0, gift: 0, amount: '', note: '' };
+          qty: 0, gift: 0, pay: '', amount: '', note: '' };
   }
   function custText() {
     if (S.country === 'JP') return (S.sei || S.mei) ? (S.sei + ' ' + S.mei).trim() + ' 様' : '';
@@ -10225,6 +10227,7 @@ function hanbaiScript_(C) {
     var t = '';
     if (S.qty && (id === 'hbGift' || id === 'hbAmt' || id === 'hbNote')) t += S.qty + '本';
     if (id === 'hbAmt' || id === 'hbNote') t += S.gift ? '（🎁' + S.gift + '本）' : '（🎁なし）';
+    if (S.pay && (id === 'hbAmt' || id === 'hbNote')) t += '　' + esc(S.pay);
     if (S.amount !== '' && id === 'hbNote') t += '　' + yen(S.amount) + unit();
     if (t) h += '<div>' + t + '</div>';
     return h;
@@ -10523,7 +10526,18 @@ function hanbaiScript_(C) {
     return CNT[sec];
   }
   var QTY = counter('hbQty', 'qty', false, function () { GIFT.open(); });
-  var GIFT = counter('hbGift', 'gift', true, function () { openAmt(); });
+  var GIFT = counter('hbGift', 'gift', true, function () { openPay(); });
+  // ── 支払方法（2026-10-17 まるちゃん依頼）：台湾＝LinePay／街口／現金／振込、日本＝現金／振込 ──
+  var PAYS = { TW: ['LinePay', '街口', '現金', '振込'], JP: ['現金', '振込'] };
+  function openPay() {
+    var list = PAYS[S.country] || [], h = '';
+    for (var i = 0; i < list.length; i++) h += '<button type="button" class="hbbig' + (S.pay === list[i] ? ' on' : '') + '" data-p="' + esc(list[i]) + '">' + esc(list[i]) + '</button>';
+    $('hbPayBtns').innerHTML = h; show('hbPay');
+  }
+  $('hbPayBtns').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    S.pay = b.getAttribute('data-p'); openAmt();
+  });
   function openQty() { QTY.open(); }
 
   // ── 販売金額 ──
@@ -10563,7 +10577,7 @@ function hanbaiScript_(C) {
     var rows = [['販売', S.country === 'JP' ? '🇯🇵 日本' : '🇹🇼 台湾'], ['販売日', jpDate(S.date)],
       // 🔁の方は「🔁〇回 計〇本」（今回を入れた回数と本数）＝まるちゃん指定の書き方
       ['お客様', (S.country === 'JP' ? (S.kind === 'new' ? '【新規】' : '【🔁' + ((S.prevN || 0) + 1) + '回 計' + ((S.prevQ || 0) + S.qty) + '本】') : '') + custText()],
-      ['購入本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['販売金額', yen(S.amount) + ' ' + unit()], ['備考', S.note || '（なし）']];
+      ['購入本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['支払方法', S.pay], ['販売金額', yen(S.amount) + ' ' + unit()], ['備考', S.note || '（なし）']];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
     $('hbConfRows').innerHTML = h; $('hbSt').textContent = ''; $('hbSend').disabled = false;
@@ -10576,7 +10590,7 @@ function hanbaiScript_(C) {
     if (sending) return;
     sending = true; $('hbSend').disabled = true; $('hbSt').textContent = '登録しています…';
     ask({ kind: 'save', country: S.country, date: S.date, cust_kind: S.kind, sei: S.sei, mei: S.mei, yomi: S.yomi,
-          fnum: S.fnum, name: S.name, qty: S.qty, gift: S.gift, amount: S.amount, note: S.note, staff: who(), at: stamp(new Date()) },
+          fnum: S.fnum, name: S.name, qty: S.qty, gift: S.gift, pay: S.pay, amount: S.amount, note: S.note, staff: who(), at: stamp(new Date()) },
       '登録しています', function (err, d) {
         sending = false; $('hbSend').disabled = false; $('hbSt').textContent = '';
         if (err || !d || !d.ok) { popup('登録できませんでした：' + (err || (d && d.reason) || '不明')); return; }
@@ -10677,7 +10691,7 @@ function hanbaiScript_(C) {
     var dp = String(r[0]).split('-'), u = LC === 'JP' ? '円' : '元';
     popup((+dp[1]) + '/' + (+dp[2]) + '　' + (r[2] || '') + (r[1] ? '（' + r[1] + '）' : '') +
       (r[8] > 1 ? '\n🔁' + r[8] + '回 計' + r[9] + '本' : '') +
-      '\n' + r[3] + '本' + (r[7] ? '（🎁' + r[7] + '本）' : '') + '　' + yen(r[4]) + u +
+      '\n' + r[3] + '本' + (r[7] ? '（🎁' + r[7] + '本）' : '') + '　' + yen(r[4]) + u + (r[10] ? '（' + r[10] + '）' : '') +
       '\n担当：' + (r[6] || '－') + (r[5] ? '\n備考：' + r[5] : ''));
   });
   var lsg = $('hbListSeg').querySelectorAll('button');
@@ -10772,6 +10786,9 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       count('hbQty', '🧴', '購入本数', '') +
       count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>えらんでください') +
+      '<div id="hbPay" style="display:none">' + inBack + head('💳', '支払方法') + sum +
+        '<div class="hbpay" id="hbPayBtns"></div>' +
+      '</div>' +
       '<div id="hbAmt" style="display:none">' + inBack + head('💴', '', 'hbAmtHead') + sum +
         '<div class="exbox psbox" id="hbAmtBox"></div>' + pad('hbAmtPad') +
         '<button type="button" class="exgo" id="hbAmtGo">これでOK → 次へ</button>' +
