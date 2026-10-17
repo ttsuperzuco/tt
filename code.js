@@ -10233,15 +10233,15 @@ function hanbaiScript_(C) {
     return h;
   }
   // ★2026-10-17 まるちゃん「お店のパソコンやスマホなら、スタッフを選ばせる画面を、販売管理ボタンを押した次の画面に」
-  //   ＝お店受付PC・お店スマホ・パソコン版のズコは「入力する人」をえらぶ（プロセル在庫と同じ見分け）。
-  //   自分のスマホは誰か分かるのでえらばない（社長版＝🍅トマト、開発版＝🐉Ryu）。
+  //   ＝お店受付PC・お店スマホは「販売した人」をえらぶ。自分のスマホは誰か分かるのでえらばない
+  //   （社長版＝🍅トマト、開発版＝🐉Ryu）。★パソコン版のズコはまるちゃん本人＝🐉Ryu（2026-10-17「パソコン版のズコはりゅうだよ」）。
   var PICKED = '';
   function labels() {
     try { return (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : {}; } catch (e) { return {}; }
   }
   function needPick() {
     var w = window.__SZ_WHO_ || '';
-    return !!window.pywebview || w === 'reception' || w === 'reception_sp';
+    return w === 'reception' || w === 'reception_sp';
   }
   function who() {
     if (needPick()) return PICKED || '不明';
