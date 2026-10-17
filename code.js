@@ -10100,7 +10100,10 @@ var HANBAICSS_ =
   '.hbwho b{font-size:22px;color:#fde047;}' +
   '.hbwho button{margin-left:auto;background:#fff;color:#0f172a;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
   '.hbtbl td.wm{font-size:20px;color:#94a3b8;}' +
-  '.hbtbl .rp{display:block;font-size:12px;font-weight:800;color:#0e7490;white-space:nowrap;}' +
+  '.hbtbl .rp{font-size:12px;font-weight:800;color:#0e7490;}' +
+  '.hbtbl td.one{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;word-break:normal;}' +
+  '.hbtbl .gf{font-size:12px;margin-left:2px;}' +
+  '.hbtbl tbody tr{cursor:pointer;}' +
   '.hbcust{color:#fde047;font-size:28px;font-weight:900;line-height:1.3;margin:4px 0 2px;word-break:break-all;text-shadow:0 2px 6px rgba(0,0,0,.3);}' +
   '.hbcust .no{display:inline-block;background:#fde047;color:#0f172a;border-radius:10px;padding:1px 10px;margin-right:10px;text-shadow:none;}' +
   '.hbdate{background:#fff;color:#0f172a;border-radius:16px;text-align:center;font-size:34px;font-weight:900;padding:16px 8px;margin:6px 0 14px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
@@ -10153,13 +10156,13 @@ var HANBAICSS_ =
   '.hbtot{background:#fff;color:#0f172a;border-radius:14px;padding:12px 14px;margin:0 0 10px;font-weight:900;font-size:18px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px;}' +
   '.hbtbl{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hbtbl table{width:100%;border-collapse:collapse;table-layout:fixed;color:#0f172a;font-size:15px;}' +
-  '.hbtbl col.c1{width:3.4em;}.hbtbl col.c3{width:2.8em;}.hbtbl col.c4{width:3.4em;}.hbtbl col.c5{width:5.6em;}' +
+  '.hbtbl col.c1{width:3.4em;}.hbtbl col.c3{width:2.8em;}.hbtbl col.c4{width:4.4em;}.hbtbl col.c5{width:5.6em;}' +
   '.hbtbl th{background:#2C7A99;color:#fff;font-weight:800;font-size:13px;line-height:1.25;padding:8px 6px;vertical-align:middle;}' +
   '.hbtbl td{border-top:1px solid #e2e8f0;padding:10px 6px;font-weight:700;vertical-align:middle;word-break:break-all;}' +
   '.hbtbl tbody tr:nth-child(even) td{background:#eef6f9;}' +
   '.hbtbl .l{text-align:left;}.hbtbl .c{text-align:center;}.hbtbl .r{text-align:right;white-space:nowrap;}' +
   '.hbtbl td.d{white-space:nowrap;}' +
-  '.hbtbl .nt{display:block;font-size:12px;color:#475569;font-weight:600;word-break:break-all;}' +
+  '.hbtbl .nt{font-size:12px;color:#475569;font-weight:600;}' +
   '.hbempty{color:#eaf6fb;font-weight:800;font-size:18px;text-align:center;margin:20px 0;}';
 
 // 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
@@ -10654,17 +10657,29 @@ function hanbaiScript_(C) {
       for (var j = 0; j < d.rows.length; j++) {
         var r = d.rows[j], dp = String(r[0]).split('-');
         // ★2026-10-17 まるちゃん「入力：パソコン版はいらない。氏名の右にスタッフのマーク（二行はスペースがもったいない）」
-        h += '<tr><td class="l d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td class="l">' + esc(r[2] || '') + (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
-          (r[8] > 1 ? '<span class="rp">🔁' + r[8] + '回 計' + r[9] + '本</span>' : '') +
-          (r[5] ? '<span class="nt">備考：' + esc(r[5]) + '</span>' : '') + '</td>' +
+        // ★2026-10-17 まるちゃん「複数行にしないで」＝1件は必ず1行。お客様の欄は横に並べ、入りきらない分は「…」。
+        //   行を押すと、その行の中身（備考の全文など）を小窓で出す。
+        h += '<tr data-i="' + j + '"><td class="l d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td class="l one">' + esc(r[2] || '') +
+          (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
+          (r[8] > 1 ? ' <span class="rp">🔁' + r[8] + '回計' + r[9] + '本</span>' : '') +
+          (r[5] ? ' <span class="nt">📝' + esc(r[5]) + '</span>' : '') + '</td>' +
           '<td class="c wm">' + (markOf(r[6]) || '－') + '</td>' +
-          '<td class="r">' + r[3] + (r[7] ? '<span class="nt">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
+          '<td class="r">' + r[3] + (r[7] ? '<span class="gf">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
       }
       h += '</tbody></table></div>';
       if (d.cut) h += '<div class="hbempty" style="font-size:14px">※多いので、新しい物から入るぶんだけ出しています（合計は全部の分です）</div>';
     }
     $('hbListBody').innerHTML = h;
   }
+  $('hbListBody').addEventListener('click', function (e) {
+    var tr = e.target.closest('tr[data-i]'); if (!tr) return;
+    var all = LCACHE[LM], d = all && all[LC], r = d && d.rows[parseInt(tr.getAttribute('data-i'), 10)]; if (!r) return;
+    var dp = String(r[0]).split('-'), u = LC === 'JP' ? '円' : '元';
+    popup((+dp[1]) + '/' + (+dp[2]) + '　' + (r[2] || '') + (r[1] ? '（' + r[1] + '）' : '') +
+      (r[8] > 1 ? '\n🔁' + r[8] + '回 計' + r[9] + '本' : '') +
+      '\n' + r[3] + '本' + (r[7] ? '（🎁' + r[7] + '本）' : '') + '　' + yen(r[4]) + u +
+      '\n担当：' + (r[6] || '－') + (r[5] ? '\n備考：' + r[5] : ''));
+  });
   var lsg = $('hbListSeg').querySelectorAll('button');
   for (var l0 = 0; l0 < lsg.length; l0++) lsg[l0].addEventListener('click', function () { LC = this.getAttribute('data-v'); drawList(); });
   $('hbMonPrev').addEventListener('click', function () { LM = shiftMonth(LM, -1); drawList(); });
