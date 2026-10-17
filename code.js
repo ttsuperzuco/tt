@@ -10660,7 +10660,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
       '</div>' +
       count('hbQty', '🧴', '購入本数', '') +
-      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数をえらんでください') +
+      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>えらんでください') +
       '<div id="hbAmt" style="display:none">' + inBack + head('💴', '', 'hbAmtHead') + sum +
         '<div class="exbox psbox" id="hbAmtBox"></div>' + pad('hbAmtPad') +
         '<button type="button" class="exgo" id="hbAmtGo">これでOK → 次へ</button>' +
