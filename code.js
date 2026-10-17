@@ -10096,6 +10096,11 @@ var HANBAICSS_ =
   '.hbhint{color:#eaf6fb;font-weight:800;font-size:17px;line-height:1.5;margin:6px 4px 10px;}' +
   '.hbsum{background:rgba(255,255,255,.16);color:#fff;border-radius:12px;padding:8px 12px;margin:2px 0 12px;font-weight:800;font-size:16px;line-height:1.5;}' +
   '.hbsum:empty{display:none;}' +
+  '.hbwho{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:17px;margin:0 4px 8px;}' +
+  '.hbwho b{font-size:22px;color:#fde047;}' +
+  '.hbwho button{margin-left:auto;background:#fff;color:#0f172a;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
+  '.hbtbl .wm{font-size:16px;}' +
+  '.hbtbl .rp{font-size:12px;font-weight:800;color:#0e7490;white-space:nowrap;}' +
   '.hbcust{color:#fde047;font-size:28px;font-weight:900;line-height:1.3;margin:4px 0 2px;word-break:break-all;text-shadow:0 2px 6px rgba(0,0,0,.3);}' +
   '.hbcust .no{display:inline-block;background:#fde047;color:#0f172a;border-radius:10px;padding:1px 10px;margin-right:10px;text-shadow:none;}' +
   '.hbdate{background:#fff;color:#0f172a;border-radius:16px;text-align:center;font-size:34px;font-weight:900;padding:16px 8px;margin:6px 0 14px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
@@ -10159,7 +10164,7 @@ var HANBAICSS_ =
 function hanbaiScript_(C) {
   function $(id) { return document.getElementById(id); }
   var SECS = ['hbMenu', 'hbDate', 'hbJKind', 'hbJNew', 'hbKana', 'hbCands', 'hbTKind', 'hbToday', 'hbNum',
-    'hbQty', 'hbGift', 'hbAmt', 'hbNote', 'hbConf', 'hbList'];
+    'hbQty', 'hbGift', 'hbAmt', 'hbNote', 'hbConf', 'hbList', 'hbWho'];
   var hist = [], cur = 'hbMenu';
   function show(id, noPush) {
     if (!noPush && cur && cur !== id) hist.push(cur);
@@ -10219,13 +10224,44 @@ function hanbaiScript_(C) {
     if (t) h += '<div>' + t + '</div>';
     return h;
   }
+  // ★2026-10-17 まるちゃん「お店のパソコンやスマホなら、スタッフを選ばせる画面を、販売管理ボタンを押した次の画面に」
+  //   ＝お店受付PC・お店スマホ・パソコン版のズコは「入力する人」をえらぶ（プロセル在庫と同じ見分け）。
+  //   自分のスマホは誰か分かるのでえらばない（社長版＝🍅トマト、開発版＝🐉Ryu）。
+  var PICKED = '';
+  function labels() {
+    try { return (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : {}; } catch (e) { return {}; }
+  }
+  function needPick() {
+    var w = window.__SZ_WHO_ || '';
+    return !!window.pywebview || w === 'reception' || w === 'reception_sp';
+  }
   function who() {
-    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = {};
-    try { L = (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : {}; } catch (e) {}
+    if (needPick()) return PICKED || '不明';
+    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = labels();
     if (w && L[w]) return L[w];
     if (r === '社長(幹部)') return L.kanbu || '🍅トマト';
-    if (r === '開発') return window.pywebview ? 'パソコン版' : 'Ryu';
+    if (r === '開発') return '🐉Ryu';
     return r || '不明';
+  }
+  // 入力した人のマーク（「🍊みかん」→「🍊」）。昔の記録で絵文字が無い時は空。
+  function markOf(label) {
+    var m = String(label || '').match(/^(\p{Extended_Pictographic}\uFE0F?)/u);
+    return m ? m[1] : '';
+  }
+  function drawWho() {
+    var ids = (typeof _peopleFromCfg_ === 'function') ? _peopleFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : [];
+    var L = labels(), h = '';
+    for (var i = 0; i < ids.length; i++) {
+      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
+      var lb = L[ids[i]] || ids[i];
+      h += '<button type="button" data-lb="' + esc(lb) + '">' + esc(lb) + '</button>';
+    }
+    h += '<button type="button" data-lb="🐉Ryu">🐉Ryu</button>';
+    $('hbWhoBtns').innerHTML = h;
+  }
+  function drawWhoLine() {
+    $('hbWhoLine').style.display = needPick() ? '' : 'none';
+    $('hbWhoName').textContent = PICKED;
   }
 
   // ── 事務所PCへ頼む（op=hanbai）→ 済んだら答えを受け取る ──
@@ -10262,6 +10298,11 @@ function hanbaiScript_(C) {
 
   // ── はじめ（3つのボタン） ──
   function clearMsg() { $('hbMenuMsg').style.display = 'none'; }
+  $('hbWhoBtns').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    PICKED = b.getAttribute('data-lb'); drawWhoLine(); hist = []; show('hbMenu', true);
+  });
+  $('hbWhoChange').addEventListener('click', function () { clearMsg(); show('hbWho'); });
   $('hbGoTW').addEventListener('click', function () { clearMsg(); reset('TW'); openDate(); });
   $('hbGoJP').addEventListener('click', function () { clearMsg(); reset('JP'); openDate(); });
   $('hbGoList').addEventListener('click', function () { clearMsg(); openList('JP', ''); });
@@ -10326,7 +10367,7 @@ function hanbaiScript_(C) {
     $('hbCandRows').onclick = function (e) {
       var b = e.target.closest('button'); if (!b) return;
       var x = list[parseInt(b.getAttribute('data-i'), 10)];
-      S.sei = x.sei; S.mei = x.mei; S.yomi = x.yomi || k; openQty();
+      S.sei = x.sei; S.mei = x.mei; S.yomi = x.yomi || k; S.prevN = x.n || 0; S.prevQ = x.q || 0; openQty();
     };
     show('hbCands');
   }
@@ -10515,7 +10556,8 @@ function hanbaiScript_(C) {
   $('hbNoteGo').addEventListener('click', function () {
     S.note = $('hbNoteIn').value.trim();
     var rows = [['販売', S.country === 'JP' ? '🇯🇵 日本' : '🇹🇼 台湾'], ['販売日', jpDate(S.date)],
-      ['お客様', (S.country === 'JP' ? (S.kind === 'new' ? '【新規】' : '【🔁】') : '') + custText()],
+      // 🔁の方は「🔁〇回 計〇本」（今回を入れた回数と本数）＝まるちゃん指定の書き方
+      ['お客様', (S.country === 'JP' ? (S.kind === 'new' ? '【新規】' : '【🔁' + ((S.prevN || 0) + 1) + '回 計' + ((S.prevQ || 0) + S.qty) + '本】') : '') + custText()],
       ['購入本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['販売金額', yen(S.amount) + ' ' + unit()], ['備考', S.note || '（なし）']];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
@@ -10606,8 +10648,11 @@ function hanbaiScript_(C) {
       h += '<div class="hbtbl"><table><thead><tr><th>日付</th><th>お客様</th><th>本数</th><th>金額（' + u + '）</th></tr></thead><tbody>';
       for (var j = 0; j < d.rows.length; j++) {
         var r = d.rows[j], dp = String(r[0]).split('-');
+        // ★2026-10-17 まるちゃん「入力：パソコン版はいらない。氏名の右にスタッフのマーク（二行はスペースがもったいない）」
         h += '<tr><td class="d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td>' + esc(r[2] || '') + (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
-          (r[5] ? '<span class="nt">備考：' + esc(r[5]) + '</span>' : '') + '<span class="nt">入力：' + esc(r[6] || '') + '</span></td>' +
+          (markOf(r[6]) ? ' <span class="wm">' + markOf(r[6]) + '</span>' : '') +
+          (r[8] > 1 ? ' <span class="rp">🔁' + r[8] + '回 計' + r[9] + '本</span>' : '') +
+          (r[5] ? '<span class="nt">備考：' + esc(r[5]) + '</span>' : '') + '</td>' +
           '<td class="r">' + r[3] + (r[7] ? '<span class="nt">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
       }
       h += '</tbody></table></div>';
@@ -10620,6 +10665,7 @@ function hanbaiScript_(C) {
   $('hbMonPrev').addEventListener('click', function () { LM = shiftMonth(LM, -1); drawList(); });
   $('hbMonNext').addEventListener('click', function () { if (LM < thisMonth()) { LM = shiftMonth(LM, 1); drawList(); } });
   prefetch(thisMonth());
+  if (needPick()) { drawWho(); hist = []; show('hbWho', true); }
 }
 
 function renderHanbaiPage_(base, staff, dev) {
@@ -10652,7 +10698,13 @@ function renderHanbaiPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + EXPADCSS_ + PROCSTOCKCSS_ + HANBAICSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="hb">' +
+      '<div id="hbWho" style="display:none">' + head('🙋', 'No.31 販売管理') +
+        '<div class="hbbighint">入力する人を<br>えらんでください</div>' +
+        '<div class="pspeople" id="hbWhoBtns"></div>' +
+      '</div>' +
       '<div id="hbMenu">' + head('🛒', 'No.31 販売管理') +
+        '<div class="hbwho" id="hbWhoLine" style="display:none">入力する人：<b id="hbWhoName"></b>' +
+          '<button type="button" id="hbWhoChange">変える</button></div>' +
         '<div class="hbok" id="hbMenuMsg" style="display:none"></div>' +
         '<button type="button" class="hbbig" id="hbGoTW"><span class="i">🇹🇼</span>台湾販売入力</button>' +
         '<button type="button" class="hbbig" id="hbGoJP"><span class="i">🇯🇵</span>日本販売入力</button>' +
