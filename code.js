@@ -10156,7 +10156,7 @@ var HANBAICSS_ =
   '.hbtot{background:#fff;color:#0f172a;border-radius:14px;padding:12px 14px;margin:0 0 10px;font-weight:900;font-size:18px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px;}' +
   '.hbtbl{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hbtbl table{width:100%;border-collapse:collapse;table-layout:fixed;color:#0f172a;font-size:15px;}' +
-  '.hbtbl col.c1{width:3.1em;}.hbtbl col.c3{width:2.2em;}.hbtbl col.c4{width:3.6em;}.hbtbl col.c5{width:4.6em;}' +
+  '.hbtbl col.c1{width:2.6em;}.hbtbl col.c3{width:2.2em;}.hbtbl col.c4{width:3.6em;}.hbtbl col.c5{width:4.6em;}' +
   '.hbtbl th{background:#2C7A99;color:#fff;font-weight:800;font-size:13px;line-height:1.25;padding:8px 4px;vertical-align:middle;white-space:nowrap;}' +
   '.hbtbl td{border-top:1px solid #e2e8f0;padding:10px 4px;font-weight:700;vertical-align:middle;word-break:break-all;}' +
   '.hbtbl tbody tr:nth-child(even) td{background:#eef6f9;}' +
@@ -10652,18 +10652,18 @@ function hanbaiScript_(C) {
     else {
       // ★2026-10-17 まるちゃん「項目名と下のデータが合ってない・見にくい」＝列の幅と寄せ方を項目名と中身でそろえ、1行おきに色を変える。
       //   担当＝入力した人のマーク（氏名のすぐ右の列）。入力する人をえらぶ前の古い記録は「－」。
-      h += '<div class="hbtbl"><table><colgroup><col class="c1"><col><col class="c3"><col class="c4"><col class="c5"></colgroup>' +
-        '<thead><tr><th class="l">日付</th><th class="l">お客様</th><th class="c">担当</th><th class="r">本数</th><th class="r">金額' + u + '</th></tr></thead><tbody>';
+      h += '<div class="hbtbl"><table><colgroup><col class="c1"><col><col class="c4"><col class="c5"></colgroup>' +
+        '<thead><tr><th class="l">日</th><th class="l">お客様・担当</th><th class="r">本数</th><th class="r">金額' + u + '</th></tr></thead><tbody>';
       for (var j = 0; j < d.rows.length; j++) {
         var r = d.rows[j], dp = String(r[0]).split('-');
         // ★2026-10-17 まるちゃん「入力：パソコン版はいらない。氏名の右にスタッフのマーク（二行はスペースがもったいない）」
         // ★2026-10-17 まるちゃん「複数行にしないで」＝1件は必ず1行。お客様の欄は横に並べ、入りきらない分は「…」。
         //   行を押すと、その行の中身（備考の全文など）を小窓で出す。
-        h += '<tr data-i="' + j + '"><td class="l d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td class="l one">' + esc(r[2] || '') +
-          (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
+        //   ★日は「20日」だけ（月は上に出ている）。担当のマークは氏名のすぐ右（まるちゃんの最初の指定）＝列を減らして幅をあける。
+        h += '<tr data-i="' + j + '"><td class="l d">' + (+dp[2]) + '日</td><td class="l one">' + esc(r[2] || '') +
+          (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') + (markOf(r[6]) ? ' ' + markOf(r[6]) : '') +
           (r[8] > 1 ? ' <span class="rp">🔁' + r[8] + '回計' + r[9] + '本</span>' : '') +
           (r[5] ? ' <span class="nt">📝' + esc(r[5]) + '</span>' : '') + '</td>' +
-          '<td class="c wm">' + (markOf(r[6]) || '－') + '</td>' +
           '<td class="r">' + r[3] + (r[7] ? '<span class="gf">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
       }
       h += '</tbody></table></div>';
