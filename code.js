@@ -1027,8 +1027,8 @@ var DEFAULT_TILE_SETTINGS_ = {
   procstock:  { exec: false, staff: false },
   // ★販売管理＝日本・台湾の販売の入力と一覧（2026-10-17 まるちゃん依頼）。
   //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝
-  //   自動監視の人ごとの表示でスタッフにONにできる（初期値OFF）。
-  hanbai:     { exec: false, staff: false }
+  //   ★2026-10-17 まるちゃん「このボタン、スタッフ全員にだして」＝全員ON（人ごとの表示で入切できる）。
+  hanbai:     { exec: true, staff: true }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1073,7 +1073,7 @@ function defaultPerms_(people) {
     // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
     //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
     // ★★2026-09-17 まるちゃん決定「施術後の予約ボタンをスタッフにもだす」＝全員ON（tile_settings.py と一致）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, procstock: false };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, procstock: false, hanbai: true };
   }
   return perms;
 }
