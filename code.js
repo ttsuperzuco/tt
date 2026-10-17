@@ -10121,6 +10121,8 @@ var HANBAICSS_ =
   '.hbrows button:first-child{border-top:0;}' +
   '.hbrows button:nth-child(even){background:#f4f8f9;}' +
   '.hbrows .s{font-size:14px;font-weight:700;color:#475569;white-space:nowrap;}' +
+  /* ★2026-10-17 まるちゃん「無料であげたの文字を大きく目立つ色に」 */
+  '.hbbighint{color:#fde047;font-weight:900;font-size:26px;line-height:1.4;text-align:center;margin:8px 4px 14px;text-shadow:0 2px 6px rgba(0,0,0,.35);}' +
   '.hbcards{background:none;box-shadow:none;border-radius:0;overflow:visible;}' +
   '.hbcards button,.hbcards button:nth-child(even){background:#fff;border:0;border-radius:14px;margin:0 0 10px;padding:16px;box-shadow:0 3px 10px rgba(0,0,0,.18);}' +
   '.hbcards button:first-child{border-top:0;}' +
@@ -10225,8 +10227,9 @@ function hanbaiScript_(C) {
     var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
     s.onerror = function () { cb({ ok: false, error: '通信エラーです' }); }; document.body.appendChild(s);
   }
-  function ask(fields, busy, done) {
-    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
+  // sub＝待ち画面の説明の行（書かなければ説明の行なし）。
+  function ask(fields, busy, done, sub) {
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, sub || false), '#2C7A99');
     var end = function (err, d) { if (typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     jsonp({ action: 'submit', key: C.key, op: 'hanbai',
             who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '',
@@ -10331,10 +10334,13 @@ function hanbaiScript_(C) {
       for (var i = 0; i < p.events.length; i++) {
         var e = p.events[i]; if (e.date !== day) continue;
         var cd = (typeof codeOf === 'function') ? codeOf(e.title || '') : '';
+        var mk = (typeof staffOf === 'function') ? (staffOf(e.title || '') || '') : '';
+        // ★2026-10-17 まるちゃん「キウイの客はいれない。全部の共通ルール」＝うちの施術者の印の予約だけ
+        //   （施術後の予約と同じ共通の判断 SG.nameOfMark。🥝などお店の外の予約は出さない）。
+        if (typeof SG !== 'undefined' && SG.nameOfMark && !SG.nameOfMark(mk)) continue;
         if (!cd || seen[cd]) continue;
         seen[cd] = 1;
         var nm = (typeof customerLine === 'function') ? (customerLine(e.note || '').name || '') : '';
-        var mk = (typeof staffOf === 'function') ? (staffOf(e.title || '') || '') : '';
         out.push({ fnum: cd, name: nm, mark: mk, st: e.start_time || '', ms: e.start_at_ms || 0 });
       }
       out.sort(function (a, b) { return a.ms - b.ms; });
@@ -10495,7 +10501,7 @@ function hanbaiScript_(C) {
         $('hbMenuMsg').style.display = '';
         hist = []; show('hbMenu', true);
         delete LCACHE[S.date.slice(0, 7)]; prefetch(thisMonth());   // 一覧の覚えを新しくしておく
-      });
+      }, '登録が終わったら自動で画面が切り替わりますので、しばらくお待ちください。');   // ★2026-10-17 まるちゃん指定の文
   });
 
   // ── 販売管理表 ──
@@ -10588,7 +10594,7 @@ function renderHanbaiPage_(base, staff, dev) {
   // 本数の画面とプレゼントの画面（同じ作り）
   var count = function (id, icon, title, hint) {
     return '<div id="' + id + '" style="display:none">' + inBack + head(icon, title) + sum +
-      (hint ? '<div class="hbhint">' + hint + '</div>' : '') +
+      (hint ? '<div class="hbbighint">' + hint + '</div>' : '') +
       '<div class="hbqty" id="' + id + 'Btns"></div>' +
       '<div id="' + id + 'More" style="display:none">' + pad(id + 'Pad') +
         '<button type="button" class="exgo" id="' + id + 'Go">これでOK → 次へ</button></div>' +
