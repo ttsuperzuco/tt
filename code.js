@@ -10227,8 +10227,8 @@ function hanbaiScript_(C) {
     var t = '';
     if (S.qty && (id === 'hbGift' || id === 'hbPay' || id === 'hbAmt' || id === 'hbNote')) t += S.qty + '本';
     if (id === 'hbPay' || id === 'hbAmt' || id === 'hbNote') t += S.gift ? '（🎁' + S.gift + '本）' : '（🎁なし）';
-    if (S.pay && (id === 'hbAmt' || id === 'hbNote')) t += '　' + esc(S.pay);
-    if (S.amount !== '' && id === 'hbNote') t += '　' + yen(S.amount) + unit();
+    if (S.amount !== '' && (id === 'hbPay' || id === 'hbNote')) t += '　' + yen(S.amount) + unit();
+    if (S.pay && id === 'hbNote') t += '　' + esc(S.pay);
     if (t) h += '<div>' + t + '</div>';
     return h;
   }
@@ -10526,7 +10526,8 @@ function hanbaiScript_(C) {
     return CNT[sec];
   }
   var QTY = counter('hbQty', 'qty', false, function () { GIFT.open(); });
-  var GIFT = counter('hbGift', 'gift', true, function () { openPay(); });
+  // ★2026-10-17 まるちゃん「金額の後の画面にして」＝本数→プレゼント→金額→支払方法→備考。
+  var GIFT = counter('hbGift', 'gift', true, function () { openAmt(); });
   // ── 支払方法（2026-10-17 まるちゃん依頼）：台湾＝LinePay／街口／現金／振込、日本＝現金／振込 ──
   var PAYS = { TW: ['LinePay', '街口', '現金', '振込'], JP: ['現金', '振込'] };
   function openPay() {
@@ -10536,7 +10537,7 @@ function hanbaiScript_(C) {
   }
   $('hbPayBtns').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    S.pay = b.getAttribute('data-p'); openAmt();
+    S.pay = b.getAttribute('data-p'); $('hbNoteIn').value = S.note || ''; show('hbNote');
   });
   function openQty() { QTY.open(); }
 
@@ -10557,7 +10558,7 @@ function hanbaiScript_(C) {
   });
   $('hbAmtGo').addEventListener('click', function () {
     if (ADIG === '') { popup('金額を入れてください'); return; }
-    S.amount = parseInt(ADIG, 10); $('hbNoteIn').value = S.note || ''; show('hbNote');
+    S.amount = parseInt(ADIG, 10); openPay();
   });
 
   // パソコンはキーボードの数字・Enter・BackSpaceでも入れられる（番号・本数・金額）。
@@ -10577,7 +10578,7 @@ function hanbaiScript_(C) {
     var rows = [['販売', S.country === 'JP' ? '🇯🇵 日本' : '🇹🇼 台湾'], ['販売日', jpDate(S.date)],
       // 🔁の方は「🔁〇回 計〇本」（今回を入れた回数と本数）＝まるちゃん指定の書き方
       ['お客様', (S.country === 'JP' ? (S.kind === 'new' ? '【新規】' : '【🔁' + ((S.prevN || 0) + 1) + '回 計' + ((S.prevQ || 0) + S.qty) + '本】') : '') + custText()],
-      ['購入本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['支払方法', S.pay], ['販売金額', yen(S.amount) + ' ' + unit()], ['備考', S.note || '（なし）']];
+      ['購入本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['販売金額', yen(S.amount) + ' ' + unit()], ['支払方法', S.pay], ['備考', S.note || '（なし）']];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
     $('hbConfRows').innerHTML = h; $('hbSt').textContent = ''; $('hbSend').disabled = false;
