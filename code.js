@@ -10225,8 +10225,8 @@ function hanbaiScript_(C) {
     }
     if (c) h += '<div class="hbcust">' + c + '</div>';
     var t = '';
-    if (S.qty && (id === 'hbGift' || id === 'hbAmt' || id === 'hbNote')) t += S.qty + '本';
-    if (id === 'hbAmt' || id === 'hbNote') t += S.gift ? '（🎁' + S.gift + '本）' : '（🎁なし）';
+    if (S.qty && (id === 'hbGift' || id === 'hbPay' || id === 'hbAmt' || id === 'hbNote')) t += S.qty + '本';
+    if (id === 'hbPay' || id === 'hbAmt' || id === 'hbNote') t += S.gift ? '（🎁' + S.gift + '本）' : '（🎁なし）';
     if (S.pay && (id === 'hbAmt' || id === 'hbNote')) t += '　' + esc(S.pay);
     if (S.amount !== '' && id === 'hbNote') t += '　' + yen(S.amount) + unit();
     if (t) h += '<div>' + t + '</div>';
