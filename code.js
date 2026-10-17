@@ -10114,6 +10114,7 @@ var HANBAICSS_ =
   '.hbqty button{font-size:28px;padding:14px 0;}' +
   '.hbqty button.wide{grid-column:1 / -1;font-size:20px;}' +
   '.hbqty button.wide .qn{font-size:34px;}' +
+  '.hbqty.more button:not(.wide){display:none;}' +
   '.hbrows{background:#fff;border-radius:14px;overflow:hidden;margin:6px 0 4px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hbrows button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:#fff;color:#0f172a;border:0;border-top:1px solid #e2e8f0;padding:14px 16px;font:inherit;font-size:21px;font-weight:900;cursor:pointer;text-align:left;}' +
   '.hbrows button:first-child{border-top:0;}' +
@@ -10159,6 +10160,8 @@ function hanbaiScript_(C) {
   }
   function back() {
     if (sending) return;
+    // 本数を数字で入れている時の「← 戻る」は、1〜10のボタンに戻すだけ（前の画面へは行かない）。
+    if (cur === 'hbQty' && $('hbQtyMore').style.display !== 'none') { $('hbQtyMore').style.display = 'none'; QDIG = ''; qDraw(); window.scrollTo(0, 0); return; }
     show(hist.pop() || 'hbMenu', true);
   }
   var bb = document.querySelectorAll('.hbback');
@@ -10391,13 +10394,15 @@ function hanbaiScript_(C) {
   function qDraw() {
     var b = $('hbQtyMoreBtn'); if (!b) return;
     var open = $('hbQtyMore').style.display !== 'none';
+    // ★2026-10-17 まるちゃん「10本以上押したら上の数字ボタン消して。わかりにくい」＝数字で入れる間は1〜10を隠す。
+    $('hbQtyBtns').className = 'hbqty' + (open ? ' more' : '');
     b.className = 'wide' + (open ? ' on' : '');
     b.innerHTML = !open ? '10本以上（数字で入れる）' : (QDIG ? '<span class="qn">' + esc(QDIG) + '</span> 本' : '数字ボタンで本数を入れてください');
   }
   $('hbQtyBtns').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     var q = b.getAttribute('data-q');
-    if (q === 'more') { $('hbQtyMore').style.display = ''; QDIG = ''; qDraw(); return; }
+    if (q === 'more') { if ($('hbQtyMore').style.display === 'none') { $('hbQtyMore').style.display = ''; QDIG = ''; qDraw(); } return; }
     S.qty = parseInt(q, 10); openAmt();
   });
   $('hbQtyPad').addEventListener('click', function (e) {
