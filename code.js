@@ -10278,7 +10278,11 @@ function hanbaiScript_(C) {
     S.date = v; drawDate();
   });
   $('hbCal').addEventListener('click', function () { try { if (this.showPicker) this.showPicker(); } catch (e) {} });
-  $('hbDateGo').addEventListener('click', function () { show(S.country === 'JP' ? 'hbJKind' : 'hbTKind'); });
+  $('hbDateGo').addEventListener('click', function () {
+    // 台湾のボタンの名前を、えらんだ日に合わせる（今日＝本日予約のお客様／ほか＝10月16日の予約のお客様）
+    $('hbTodayBtnTx').textContent = dayWord() + '予約のお客様';
+    show(S.country === 'JP' ? 'hbJKind' : 'hbTKind');
+  });
 
   // ── 日本：新規／🔁 ──
   $('hbJNewBtn').addEventListener('click', function () { S.kind = 'new'; S.sei = ''; S.mei = ''; S.yomi = ''; $('hbSei').value = ''; $('hbMei').value = ''; show('hbJNew'); });
@@ -10319,32 +10323,50 @@ function hanbaiScript_(C) {
   }
   $('hbCandNew').addEventListener('click', function () { $('hbJNewBtn').click(); });
 
-  // ── 台湾：本日予約／番号検索 ──
-  var TODAY = null;
+  // ── 台湾：えらんだ日の予約のお客様／番号検索 ──
+  // ★2026-10-17 まるちゃん「昨日やおとといの人がでてない。カレンダーならそのカレンダーの予約の人」＝
+  //   えらんだ販売日の予約のお客様を出す。今日＝最新の予定表（events.json）、それ以外の日＝予約台帳（op=hanbai day）。
+  //   どちらも🥝などお店の外の予約は出さない（共通の判断 SG.nameOfMark）。同じ方は1回だけ（早い時刻の方）。
+  var TODAY = null, DAYS = {};
+  function isToday() { return S.date === ymd(new Date()); }
+  function dayWord() { var p = S.date.split('-'); return isToday() ? '本日' : (+p[1]) + '月' + (+p[2]) + '日の'; }
+  function ours(list) {
+    var seen = {}, out = [];
+    for (var i = 0; i < list.length; i++) {
+      var x = list[i];
+      if (typeof SG !== 'undefined' && SG.nameOfMark && !SG.nameOfMark(x.mark)) continue;
+      if (!x.fnum || seen[x.fnum]) continue;
+      seen[x.fnum] = 1; out.push(x);
+    }
+    return out;
+  }
   $('hbTodayBtn').addEventListener('click', function () {
     S.kind = 'today';
-    if (TODAY) { drawToday(); return; }
+    var d = S.date;
+    if (DAYS[d]) { TODAY = DAYS[d]; drawToday(); return; }
+    if (!isToday()) {
+      ask({ kind: 'day', date: d }, dayWord() + '予約を読んでいます', function (err, r) {
+        if (err || !r || !r.ok) { popup('予約を読めませんでした：' + (err || '不明')); return; }
+        DAYS[d] = TODAY = ours(r.list || []); drawToday();
+      }, 'しばらくお待ちください。');
+      return;
+    }
     if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('本日の予約を読んでいます', 'しばらくお待ちください。'), '#2C7A99');
     var n = '__hbev' + Date.now();
     var fin = function (p) {
       try { delete window[n]; } catch (e) {}
       if (typeof szOvHide_ === 'function') szOvHide_();
       if (!p || p.error || !p.events) { popup('本日の予約を読めませんでした。通信環境をご確認ください。'); return; }
-      var day = p.date_from || ymd(new Date()), seen = {}, out = [];
+      var day = p.date_from || ymd(new Date()), out = [];
       for (var i = 0; i < p.events.length; i++) {
         var e = p.events[i]; if (e.date !== day) continue;
-        var cd = (typeof codeOf === 'function') ? codeOf(e.title || '') : '';
-        var mk = (typeof staffOf === 'function') ? (staffOf(e.title || '') || '') : '';
-        // ★2026-10-17 まるちゃん「キウイの客はいれない。全部の共通ルール」＝うちの施術者の印の予約だけ
-        //   （施術後の予約と同じ共通の判断 SG.nameOfMark。🥝などお店の外の予約は出さない）。
-        if (typeof SG !== 'undefined' && SG.nameOfMark && !SG.nameOfMark(mk)) continue;
-        if (!cd || seen[cd]) continue;
-        seen[cd] = 1;
-        var nm = (typeof customerLine === 'function') ? (customerLine(e.note || '').name || '') : '';
-        out.push({ fnum: cd, name: nm, mark: mk, st: e.start_time || '', ms: e.start_at_ms || 0 });
+        out.push({ fnum: (typeof codeOf === 'function') ? codeOf(e.title || '') : '',
+                   name: (typeof customerLine === 'function') ? (customerLine(e.note || '').name || '') : '',
+                   mark: (typeof staffOf === 'function') ? (staffOf(e.title || '') || '') : '',
+                   st: e.start_time || '', ms: e.start_at_ms || 0 });
       }
       out.sort(function (a, b) { return a.ms - b.ms; });
-      TODAY = out; drawToday();
+      DAYS[d] = TODAY = ours(out); drawToday();
     };
     window[n] = fin;
     var s = document.createElement('script');
@@ -10363,6 +10385,8 @@ function hanbaiScript_(C) {
     $('hbTodayRows').innerHTML = h;
     $('hbTodayRows').style.display = TODAY.length ? '' : 'none';
     $('hbTodayNone').style.display = TODAY.length ? 'none' : '';
+    $('hbTodayNone').textContent = dayWord().replace(/の$/, '') + 'の予約はありません';
+    $('hbTodayHead').textContent = dayWord() + (isToday() ? '予約' : '予約') + 'のお客様';
     show('hbToday');
   }
   $('hbTodayRows').addEventListener('click', function (e) {
@@ -10370,12 +10394,16 @@ function hanbaiScript_(C) {
     var x = TODAY[parseInt(b.getAttribute('data-i'), 10)];
     S.fnum = x.fnum; S.name = x.name; openQty();
   });
-  var NPRE = 'F', NDIG = '';
-  function numDraw() { $('hbNumBox').textContent = NDIG ? NPRE + NDIG : 'お客様番号を入れてください'; }
-  $('hbNumBtn').addEventListener('click', function () { S.kind = 'number'; NDIG = ''; numDraw(); show('hbNum'); });
+  // ★2026-10-17 まるちゃん「F M ははじめ押されてない。欄の下に置かないと」＝はじめはどちらも押されていない。
+  var NPRE = '', NDIG = '';
+  function numDraw() {
+    $('hbNumBox').innerHTML = (NPRE || NDIG) ? esc(NPRE + NDIG) : '<span class="ph">お客様番号を入れてください</span>';
+    var sg = $('hbNumSeg').querySelectorAll('button');
+    for (var j = 0; j < sg.length; j++) sg[j].className = (sg[j].getAttribute('data-v') === NPRE) ? 'on' : '';
+  }
+  $('hbNumBtn').addEventListener('click', function () { S.kind = 'number'; NPRE = ''; NDIG = ''; numDraw(); show('hbNum'); });
   var segs = $('hbNumSeg').querySelectorAll('button');
   for (var s0 = 0; s0 < segs.length; s0++) segs[s0].addEventListener('click', function () {
-    for (var j = 0; j < segs.length; j++) segs[j].className = (segs[j] === this) ? 'on' : '';
     NPRE = this.getAttribute('data-v'); numDraw();
   });
   $('hbNumPad').addEventListener('click', function (e) {
@@ -10386,6 +10414,7 @@ function hanbaiScript_(C) {
     numDraw();
   });
   $('hbNumGo').addEventListener('click', function () {
+    if (!NPRE) { popup('F（女性）か M（男性）を押してください'); return; }
     if (!NDIG) { popup('お客様番号を入れてください'); return; }
     ask({ kind: 'lookup', fnum: NPRE + NDIG }, 'お客様をさがしています', function (err, d) {
       if (err) { popup('さがせませんでした：' + err); return; }
@@ -10647,16 +10676,17 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕</span>新規お客様として入力</button>' +
       '</div>' +
       '<div id="hbTKind" style="display:none">' + inBack + head('🇹🇼', '台湾販売入力') + sum +
-        '<button type="button" class="hbbig" id="hbTodayBtn"><span class="i">📅</span>本日予約のお客様</button>' +
+        '<button type="button" class="hbbig" id="hbTodayBtn"><span class="i">📅</span><span id="hbTodayBtnTx">本日予約のお客様</span></button>' +
         '<button type="button" class="hbbig" id="hbNumBtn"><span class="i">🔢</span>お客様番号検索</button>' +
       '</div>' +
-      '<div id="hbToday" style="display:none">' + inBack + head('📅', '本日予約のお客様') + sum +
+      '<div id="hbToday" style="display:none">' + inBack + head('📅', '本日予約のお客様', 'hbTodayHead') + sum +
         '<div class="hbrows hbcards" id="hbTodayRows"></div>' +
         '<div class="hbempty" id="hbTodayNone">本日の予約はありません</div>' +
       '</div>' +
       '<div id="hbNum" style="display:none">' + inBack + head('🔢', 'お客様番号検索') + sum +
-        '<div class="hbseg" id="hbNumSeg"><button type="button" class="on" data-v="F">F（女性）</button><button type="button" data-v="M">M（男性）</button></div>' +
-        '<div class="exbox" id="hbNumBox"></div>' + pad('hbNumPad') +
+        '<div class="exbox psbox" id="hbNumBox"></div>' +
+        '<div class="hbseg" id="hbNumSeg"><button type="button" data-v="F">F（女性）</button><button type="button" data-v="M">M（男性）</button></div>' +
+        pad('hbNumPad') +
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
       '</div>' +
       count('hbQty', '🧴', '購入本数', '') +
