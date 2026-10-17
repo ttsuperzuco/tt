@@ -10099,8 +10099,8 @@ var HANBAICSS_ =
   '.hbwho{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:17px;margin:0 4px 8px;}' +
   '.hbwho b{font-size:22px;color:#fde047;}' +
   '.hbwho button{margin-left:auto;background:#fff;color:#0f172a;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
-  '.hbtbl .wm{font-size:16px;}' +
-  '.hbtbl .rp{font-size:12px;font-weight:800;color:#0e7490;white-space:nowrap;}' +
+  '.hbtbl td.wm{font-size:20px;color:#94a3b8;}' +
+  '.hbtbl .rp{display:block;font-size:12px;font-weight:800;color:#0e7490;white-space:nowrap;}' +
   '.hbcust{color:#fde047;font-size:28px;font-weight:900;line-height:1.3;margin:4px 0 2px;word-break:break-all;text-shadow:0 2px 6px rgba(0,0,0,.3);}' +
   '.hbcust .no{display:inline-block;background:#fde047;color:#0f172a;border-radius:10px;padding:1px 10px;margin-right:10px;text-shadow:none;}' +
   '.hbdate{background:#fff;color:#0f172a;border-radius:16px;text-align:center;font-size:34px;font-weight:900;padding:16px 8px;margin:6px 0 14px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
@@ -10152,10 +10152,12 @@ var HANBAICSS_ =
   '.hbmon div{color:#fff;text-align:center;font-weight:900;font-size:22px;}' +
   '.hbtot{background:#fff;color:#0f172a;border-radius:14px;padding:12px 14px;margin:0 0 10px;font-weight:900;font-size:18px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px;}' +
   '.hbtbl{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
-  '.hbtbl table{width:100%;border-collapse:collapse;color:#0f172a;font-size:14px;}' +
-  '.hbtbl th{background:#2C7A99;color:#fff;font-weight:800;font-size:13px;padding:7px 4px;}' +
-  '.hbtbl td{border-top:1px solid #e2e8f0;padding:8px 5px;font-weight:700;vertical-align:top;}' +
-  '.hbtbl td.r{text-align:right;white-space:nowrap;}' +
+  '.hbtbl table{width:100%;border-collapse:collapse;table-layout:fixed;color:#0f172a;font-size:15px;}' +
+  '.hbtbl col.c1{width:3.4em;}.hbtbl col.c3{width:2.8em;}.hbtbl col.c4{width:3.4em;}.hbtbl col.c5{width:5.6em;}' +
+  '.hbtbl th{background:#2C7A99;color:#fff;font-weight:800;font-size:13px;line-height:1.25;padding:8px 6px;vertical-align:middle;}' +
+  '.hbtbl td{border-top:1px solid #e2e8f0;padding:10px 6px;font-weight:700;vertical-align:middle;word-break:break-all;}' +
+  '.hbtbl tbody tr:nth-child(even) td{background:#eef6f9;}' +
+  '.hbtbl .l{text-align:left;}.hbtbl .c{text-align:center;}.hbtbl .r{text-align:right;white-space:nowrap;}' +
   '.hbtbl td.d{white-space:nowrap;}' +
   '.hbtbl .nt{display:block;font-size:12px;color:#475569;font-weight:600;word-break:break-all;}' +
   '.hbempty{color:#eaf6fb;font-weight:800;font-size:18px;text-align:center;margin:20px 0;}';
@@ -10645,14 +10647,17 @@ function hanbaiScript_(C) {
       (d.total_gift ? '（🎁' + d.total_gift + '本）' : '') + '</span><span>' + yen(d.total_amount) + u + '</span></div>';
     if (!d.rows || !d.rows.length) h += '<div class="hbempty">この月の記録はありません</div>';
     else {
-      h += '<div class="hbtbl"><table><thead><tr><th>日付</th><th>お客様</th><th>本数</th><th>金額（' + u + '）</th></tr></thead><tbody>';
+      // ★2026-10-17 まるちゃん「項目名と下のデータが合ってない・見にくい」＝列の幅と寄せ方を項目名と中身でそろえ、1行おきに色を変える。
+      //   担当＝入力した人のマーク（氏名のすぐ右の列）。入力する人をえらぶ前の古い記録は「－」。
+      h += '<div class="hbtbl"><table><colgroup><col class="c1"><col><col class="c3"><col class="c4"><col class="c5"></colgroup>' +
+        '<thead><tr><th class="l">日付</th><th class="l">お客様</th><th class="c">担当</th><th class="r">本数</th><th class="r">金額<br>（' + u + '）</th></tr></thead><tbody>';
       for (var j = 0; j < d.rows.length; j++) {
         var r = d.rows[j], dp = String(r[0]).split('-');
         // ★2026-10-17 まるちゃん「入力：パソコン版はいらない。氏名の右にスタッフのマーク（二行はスペースがもったいない）」
-        h += '<tr><td class="d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td>' + esc(r[2] || '') + (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
-          (markOf(r[6]) ? ' <span class="wm">' + markOf(r[6]) + '</span>' : '') +
-          (r[8] > 1 ? ' <span class="rp">🔁' + r[8] + '回 計' + r[9] + '本</span>' : '') +
+        h += '<tr><td class="l d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td class="l">' + esc(r[2] || '') + (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
+          (r[8] > 1 ? '<span class="rp">🔁' + r[8] + '回 計' + r[9] + '本</span>' : '') +
           (r[5] ? '<span class="nt">備考：' + esc(r[5]) + '</span>' : '') + '</td>' +
+          '<td class="c wm">' + (markOf(r[6]) || '－') + '</td>' +
           '<td class="r">' + r[3] + (r[7] ? '<span class="nt">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
       }
       h += '</tbody></table></div>';
