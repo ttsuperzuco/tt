@@ -174,7 +174,7 @@ function doGet(e) {
     title = 'プロセル在庫';                             // ★品物ごとの今ある数を入れる（純JS・登録は受付係）
     html = renderProcStockPage_(base, staff, dev);
   } else if (view === 'hanbai') {
-    title = '販売管理';                                 // ★日本・台湾の販売を入れる／一覧（純JS・登録は受付係）
+    title = 'No.31 販売管理';                                 // ★日本・台湾の販売を入れる／一覧（純JS・登録は受付係）
     html = renderHanbaiPage_(base, staff, dev);
   } else if (view === 'procamp') {
     title = 'プロセル頭キャリスト';                     // ★社長版と開発版。静的アプリが一覧を取って描く（ここは中身なし）
@@ -1764,7 +1764,7 @@ var TILE_DEFS_ = [
   // ★販売管理＝台湾販売入力／日本販売入力／販売管理表（2026-10-17・実務者用）。
   //   登録・候補・一覧は事務所PCの記録（受付係 op=hanbai → 販売管理\programs\hanbai.py）。
   { id: 'hanbai', cls: 'hanbai', view: 'hanbai',
-    icon: '<span class="ticon">🛒</span>', label: '販売\n管理' }
+    icon: '<span class="ticon">🛒</span>', label: 'No.31\n販売管理' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -10115,6 +10115,7 @@ var HANBAICSS_ =
   '.hbqty button.wide{grid-column:1 / -1;font-size:20px;}' +
   '.hbqty button.wide .qn{font-size:34px;}' +
   '.hbqty.more button:not(.wide){display:none;}' +
+  '.hbqty.more button.none{display:none;}' +
   '.hbrows{background:#fff;border-radius:14px;overflow:hidden;margin:6px 0 4px;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hbrows button{display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;background:#fff;color:#0f172a;border:0;border-top:1px solid #e2e8f0;padding:14px 16px;font:inherit;font-size:21px;font-weight:900;cursor:pointer;text-align:left;}' +
   '.hbrows button:first-child{border-top:0;}' +
@@ -10148,7 +10149,7 @@ var HANBAICSS_ =
 function hanbaiScript_(C) {
   function $(id) { return document.getElementById(id); }
   var SECS = ['hbMenu', 'hbDate', 'hbJKind', 'hbJNew', 'hbKana', 'hbCands', 'hbTKind', 'hbToday', 'hbNum',
-    'hbQty', 'hbAmt', 'hbNote', 'hbConf', 'hbList'];
+    'hbQty', 'hbGift', 'hbAmt', 'hbNote', 'hbConf', 'hbList'];
   var hist = [], cur = 'hbMenu';
   function show(id, noPush) {
     if (!noPush && cur && cur !== id) hist.push(cur);
@@ -10161,7 +10162,7 @@ function hanbaiScript_(C) {
   function back() {
     if (sending) return;
     // 本数を数字で入れている時の「← 戻る」は、1〜10のボタンに戻すだけ（前の画面へは行かない）。
-    if (cur === 'hbQty' && $('hbQtyMore').style.display !== 'none') { $('hbQtyMore').style.display = 'none'; QDIG = ''; qDraw(); window.scrollTo(0, 0); return; }
+    if (CNT[cur] && CNT[cur].isMore()) { CNT[cur].closeMore(); window.scrollTo(0, 0); return; }
     show(hist.pop() || 'hbMenu', true);
   }
   var bb = document.querySelectorAll('.hbback');
@@ -10184,7 +10185,7 @@ function hanbaiScript_(C) {
   var S = {};
   function reset(country) {
     S = { country: country, date: ymd(new Date()), kind: '', sei: '', mei: '', yomi: '', fnum: '', name: '',
-          qty: 0, amount: '', note: '' };
+          qty: 0, gift: 0, amount: '', note: '' };
   }
   function custText() {
     if (S.country === 'JP') return (S.sei || S.mei) ? (S.sei + ' ' + S.mei).trim() + ' 様' : '';
@@ -10196,7 +10197,8 @@ function hanbaiScript_(C) {
     var h = (S.country === 'JP' ? '🇯🇵 日本販売' : '🇹🇼 台湾販売') + '　' + esc(jpDate(S.date));
     var c = custText();
     if (c && id !== 'hbJNew') h += '<br>' + esc(c);
-    if (S.qty && (id === 'hbAmt' || id === 'hbNote')) h += '　' + S.qty + '本';
+    if (S.qty && (id === 'hbGift' || id === 'hbAmt' || id === 'hbNote')) h += '　' + S.qty + '本';
+    if (id === 'hbAmt' || id === 'hbNote') h += S.gift ? '（🎁' + S.gift + '本）' : '（🎁なし）';
     if (S.amount !== '' && id === 'hbNote') h += '　' + yen(S.amount) + unit();
     return h;
   }
@@ -10378,45 +10380,53 @@ function hanbaiScript_(C) {
     });
   });
 
-  // ── 購入本数 ──
-  var QDIG = '';
-  function openQty() {
-    var h = '';
-    for (var i = 1; i <= 10; i++) h += '<button type="button" data-q="' + i + '"' + (S.qty === i ? ' class="on"' : '') + '>' + i + '</button>';
-    h += '<button type="button" class="wide' + (S.qty > 10 ? ' on' : '') + '" data-q="more" id="hbQtyMoreBtn">10本以上（数字で入れる）</button>';
-    $('hbQtyBtns').innerHTML = h;
-    QDIG = S.qty > 10 ? String(S.qty) : '';
-    $('hbQtyMore').style.display = S.qty > 10 ? '' : 'none';
-    qDraw();
-    show('hbQty');
+  // ── 購入本数／プレゼント本数（同じ作り：1〜10のボタン＋10本以上は数字ボタン） ──
+  // ★10本以上を押したら1〜10のボタンを隠す（まるちゃん「わかりにくい」）。入れた数は「10本以上」のボタンの中に出す。
+  // ★プレゼント＝無料であげた本数（2026-10-17 まるちゃん依頼）。一番上に横長の「なし」。
+  var CNT = {};
+  function counter(sec, key, withNone, next) {
+    var btns = $(sec + 'Btns'), more = $(sec + 'More'), pad = $(sec + 'Pad'), go = $(sec + 'Go'), dig = '';
+    function isMore() { return more.style.display !== 'none'; }
+    function draw() {
+      var mb = btns.querySelector('[data-q="more"]'); if (!mb) return;
+      btns.className = 'hbqty' + (isMore() ? ' more' : '');
+      mb.className = 'wide' + (isMore() ? ' on' : '');
+      mb.innerHTML = !isMore() ? '10本以上（数字で入れる）' : (dig ? '<span class="qn">' + esc(dig) + '</span> 本' : '数字ボタンで本数を入れてください');
+    }
+    function open() {
+      var v = S[key], h = withNone ? '<button type="button" class="wide none' + (v === 0 && S[key + 'Set'] ? ' on' : '') + '" data-q="0">なし</button>' : '';
+      for (var i = 1; i <= 10; i++) h += '<button type="button" data-q="' + i + '"' + (v === i ? ' class="on"' : '') + '>' + i + '</button>';
+      h += '<button type="button" class="wide" data-q="more">10本以上（数字で入れる）</button>';
+      btns.innerHTML = h;
+      dig = v > 10 ? String(v) : '';
+      more.style.display = v > 10 ? '' : 'none';
+      draw(); show(sec);
+    }
+    function closeMore() { more.style.display = 'none'; dig = ''; draw(); }
+    btns.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var q = b.getAttribute('data-q');
+      if (q === 'more') { if (!isMore()) { more.style.display = ''; dig = ''; draw(); } return; }
+      S[key] = parseInt(q, 10); S[key + 'Set'] = true; next();
+    });
+    pad.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var k = b.getAttribute('data-k') || b.textContent;
+      if (k === 'clr') dig = ''; else if (k === 'del') dig = dig.slice(0, -1);
+      else if (/^[0-9]$/.test(k) && dig.length < 3) dig = (dig === '0') ? k : dig + k;
+      draw();
+    });
+    go.addEventListener('click', function () {
+      var q = parseInt(dig || '0', 10);
+      if (!q) { popup('本数を入れてください'); return; }
+      S[key] = q; S[key + 'Set'] = true; next();
+    });
+    CNT[sec] = { open: open, isMore: isMore, closeMore: closeMore, pad: sec + 'Pad', go: sec + 'Go' };
+    return CNT[sec];
   }
-  // 10本以上は、入れた数をボタンの中に出す（下に別の箱は出さない）。
-  function qDraw() {
-    var b = $('hbQtyMoreBtn'); if (!b) return;
-    var open = $('hbQtyMore').style.display !== 'none';
-    // ★2026-10-17 まるちゃん「10本以上押したら上の数字ボタン消して。わかりにくい」＝数字で入れる間は1〜10を隠す。
-    $('hbQtyBtns').className = 'hbqty' + (open ? ' more' : '');
-    b.className = 'wide' + (open ? ' on' : '');
-    b.innerHTML = !open ? '10本以上（数字で入れる）' : (QDIG ? '<span class="qn">' + esc(QDIG) + '</span> 本' : '数字ボタンで本数を入れてください');
-  }
-  $('hbQtyBtns').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    var q = b.getAttribute('data-q');
-    if (q === 'more') { if ($('hbQtyMore').style.display === 'none') { $('hbQtyMore').style.display = ''; QDIG = ''; qDraw(); } return; }
-    S.qty = parseInt(q, 10); openAmt();
-  });
-  $('hbQtyPad').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    var k = b.getAttribute('data-k') || b.textContent;
-    if (k === 'clr') QDIG = ''; else if (k === 'del') QDIG = QDIG.slice(0, -1);
-    else if (/^[0-9]$/.test(k) && QDIG.length < 3) QDIG = (QDIG === '0') ? k : QDIG + k;
-    qDraw();
-  });
-  $('hbQtyGo').addEventListener('click', function () {
-    var q = parseInt(QDIG || '0', 10);
-    if (!q) { popup('本数を入れてください'); return; }
-    S.qty = q; openAmt();
-  });
+  var QTY = counter('hbQty', 'qty', false, function () { GIFT.open(); });
+  var GIFT = counter('hbGift', 'gift', true, function () { openAmt(); });
+  function openQty() { QTY.open(); }
 
   // ── 販売金額 ──
   var ADIG = '';
@@ -10440,9 +10450,9 @@ function hanbaiScript_(C) {
 
   // パソコンはキーボードの数字・Enter・BackSpaceでも入れられる（番号・本数・金額）。
   document.addEventListener('keydown', function (e) {
-    var pad = cur === 'hbNum' ? 'hbNumPad' : cur === 'hbAmt' ? 'hbAmtPad' : (cur === 'hbQty' && $('hbQtyMore').style.display !== 'none') ? 'hbQtyPad' : '';
+    var pad = cur === 'hbNum' ? 'hbNumPad' : cur === 'hbAmt' ? 'hbAmtPad' : (CNT[cur] && CNT[cur].isMore()) ? CNT[cur].pad : '';
     if (!pad) return;
-    var go = cur === 'hbNum' ? 'hbNumGo' : cur === 'hbAmt' ? 'hbAmtGo' : 'hbQtyGo';
+    var go = cur === 'hbNum' ? 'hbNumGo' : cur === 'hbAmt' ? 'hbAmtGo' : CNT[cur].go;
     var hit = function (k) { var bs = $(pad).querySelectorAll('button'); for (var i = 0; i < bs.length; i++) if ((bs[i].getAttribute('data-k') || bs[i].textContent) === k) { bs[i].click(); return; } };
     if (/^[0-9]$/.test(e.key)) { hit(e.key); e.preventDefault(); }
     else if (e.key === 'Backspace') { hit('del'); e.preventDefault(); }
@@ -10454,7 +10464,7 @@ function hanbaiScript_(C) {
     S.note = $('hbNoteIn').value.trim();
     var rows = [['販売', S.country === 'JP' ? '🇯🇵 日本' : '🇹🇼 台湾'], ['販売日', jpDate(S.date)],
       ['お客様', (S.country === 'JP' ? (S.kind === 'new' ? '【新規】' : '【🔁】') : '') + custText()],
-      ['購入本数', S.qty + ' 本'], ['販売金額', yen(S.amount) + ' ' + unit()], ['備考', S.note || '（なし）']];
+      ['購入本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['販売金額', yen(S.amount) + ' ' + unit()], ['備考', S.note || '（なし）']];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
     $('hbConfRows').innerHTML = h; $('hbSt').textContent = ''; $('hbSend').disabled = false;
@@ -10467,58 +10477,97 @@ function hanbaiScript_(C) {
     if (sending) return;
     sending = true; $('hbSend').disabled = true; $('hbSt').textContent = '登録しています…';
     ask({ kind: 'save', country: S.country, date: S.date, cust_kind: S.kind, sei: S.sei, mei: S.mei, yomi: S.yomi,
-          fnum: S.fnum, name: S.name, qty: S.qty, amount: S.amount, note: S.note, staff: who(), at: stamp(new Date()) },
+          fnum: S.fnum, name: S.name, qty: S.qty, gift: S.gift, amount: S.amount, note: S.note, staff: who(), at: stamp(new Date()) },
       '登録しています', function (err, d) {
         sending = false; $('hbSend').disabled = false; $('hbSt').textContent = '';
         if (err || !d || !d.ok) { popup('登録できませんでした：' + (err || (d && d.reason) || '不明')); return; }
         // ★2026-10-17 まるちゃん「登録したらこの画面いらない。トップ画面にもどって」＝販売管理のはじめへすぐ戻す。
         //   登録できた事は、はじめの画面の上に小さく出す（次にボタンを押すと消える）。
-        $('hbMenuMsg').innerHTML = '✅ 登録しました　' + esc(custText()) + '　' + S.qty + '本　' + esc(yen(S.amount)) + unit();
+        $('hbMenuMsg').innerHTML = '✅ 登録しました　' + esc(custText()) + '　' + S.qty + '本' + (S.gift ? '（🎁' + S.gift + '本）' : '') + '　' + esc(yen(S.amount)) + unit();
         $('hbMenuMsg').style.display = '';
         hist = []; show('hbMenu', true);
+        delete LCACHE[S.date.slice(0, 7)]; prefetch(thisMonth());   // 一覧の覚えを新しくしておく
       });
   });
 
   // ── 販売管理表 ──
-  var LC = 'JP', LM = '', LMONTHS = [];
+  // ★2026-10-17 まるちゃん「台湾元をおしてからよみこむのはだめ。最初から両方よみこめ」＝
+  //   1回で日本と台湾の両方をもらい（LCACHE）、切り替えは待たずにその場で描く。
+  //   今月の分は、販売管理を開いた時に裏で先に読んでおく（一覧を押した時に待たない）。
+  var LC = 'JP', LM = '', LCACHE = {}, LWAIT = {};
   function thisMonth() { return ymd(new Date()).slice(0, 7); }
   function shiftMonth(m, d) { var p = m.split('-'), x = new Date(+p[0], +p[1] - 1 + d, 1); return x.getFullYear() + '-' + two(x.getMonth() + 1); }
+  // 裏で読む（待ち画面を出さない）。読み終わったら、その月を開いていれば描く。
+  function prefetch(month, cb) {
+    if (LWAIT[month]) { if (cb) LWAIT[month].push(cb); return; }
+    LWAIT[month] = cb ? [cb] : [];
+    jsonp({ action: 'submit', key: C.key, op: 'hanbai',
+            who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '',
+            fields: JSON.stringify({ kind: 'list', month: month }) },
+      function (r) {
+        var fin = function (err, d) {
+          var w = LWAIT[month] || []; delete LWAIT[month];
+          if (!err && d && d.ok) LCACHE[month] = d;
+          for (var i = 0; i < w.length; i++) w[i](err, d);
+          if (cur === 'hbList' && LM === month && LCACHE[month]) drawList();
+        };
+        if (!r || !r.ok || !r.id) { fin((r && r.error) || '通信に失敗しました'); return; }
+        var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('hanbai', 800) : 200;
+        var poll = function () {
+          n++; if (n > max) { fin('時間切れです。もう一度お試しください。'); return; }
+          jsonp({ action: 'status', key: C.key, id: r.id }, function (x) {
+            if (!x || !x.ok) { fin((x && x.error) || '通信に失敗しました'); return; }
+            if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(poll, 800); return; }
+            if (x.status !== 'done') { fin(x.result || 'エラーが発生しました'); return; }
+            var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
+            fin(null, d || {});
+          });
+        };
+        setTimeout(poll, 900);
+      });
+  }
   function openList(country, month) {
     LC = country; LM = month || thisMonth();
+    if (cur !== 'hbList') show('hbList');
+    drawList();
+  }
+  function drawList() {
     var sg = $('hbListSeg').querySelectorAll('button');
     for (var i = 0; i < sg.length; i++) sg[i].className = (sg[i].getAttribute('data-v') === LC) ? 'on' : '';
-    if (cur !== 'hbList') show('hbList');
-    loadList();
-  }
-  function loadList() {
     var p = LM.split('-');
     $('hbMonTxt').textContent = (+p[0]) + '年' + (+p[1]) + '月';
     $('hbMonNext').disabled = LM >= thisMonth();
-    $('hbListBody').innerHTML = '';
-    ask({ kind: 'list', country: LC, month: LM }, '一覧を読んでいます', function (err, d) {
-      if (err || !d || !d.ok) { $('hbListBody').innerHTML = '<div class="hbempty">読めませんでした：' + esc(err || '不明') + '</div>'; return; }
-      LMONTHS = d.months || [];
-      var u = LC === 'JP' ? '円' : '元';
-      var h = '<div class="hbtot"><span>' + d.count + '件</span><span>' + d.total_qty + '本</span><span>' + yen(d.total_amount) + u + '</span></div>';
-      if (!d.rows || !d.rows.length) h += '<div class="hbempty">この月の記録はありません</div>';
-      else {
-        h += '<div class="hbtbl"><table><thead><tr><th>日付</th><th>お客様</th><th>本数</th><th>金額（' + u + '）</th></tr></thead><tbody>';
-        for (var i = 0; i < d.rows.length; i++) {
-          var r = d.rows[i], dp = String(r[0]).split('-');
-          h += '<tr><td class="d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td>' + esc(r[2] || '') + (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
-            (r[5] ? '<span class="nt">備考：' + esc(r[5]) + '</span>' : '') + '<span class="nt">入力：' + esc(r[6] || '') + '</span></td>' +
-            '<td class="r">' + r[3] + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
-        }
-        h += '</tbody></table></div>';
-        if (d.cut) h += '<div class="hbempty" style="font-size:14px">※多いので、新しい物から入るぶんだけ出しています（合計は全部の分です）</div>';
+    var all = LCACHE[LM];
+    if (!all) {
+      $('hbListBody').innerHTML = '<div class="hbempty">読んでいます…</div>';
+      prefetch(LM, function (err) {
+        if (err && cur === 'hbList') $('hbListBody').innerHTML = '<div class="hbempty">読めませんでした：' + esc(err) + '</div>';
+      });
+      return;
+    }
+    var d = all[LC] || { rows: [], count: 0, total_qty: 0, total_gift: 0, total_amount: 0 };
+    var u = LC === 'JP' ? '円' : '元';
+    var h = '<div class="hbtot"><span>' + d.count + '件</span><span>' + d.total_qty + '本' +
+      (d.total_gift ? '（🎁' + d.total_gift + '本）' : '') + '</span><span>' + yen(d.total_amount) + u + '</span></div>';
+    if (!d.rows || !d.rows.length) h += '<div class="hbempty">この月の記録はありません</div>';
+    else {
+      h += '<div class="hbtbl"><table><thead><tr><th>日付</th><th>お客様</th><th>本数</th><th>金額（' + u + '）</th></tr></thead><tbody>';
+      for (var j = 0; j < d.rows.length; j++) {
+        var r = d.rows[j], dp = String(r[0]).split('-');
+        h += '<tr><td class="d">' + (+dp[1]) + '/' + (+dp[2]) + '</td><td>' + esc(r[2] || '') + (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') +
+          (r[5] ? '<span class="nt">備考：' + esc(r[5]) + '</span>' : '') + '<span class="nt">入力：' + esc(r[6] || '') + '</span></td>' +
+          '<td class="r">' + r[3] + (r[7] ? '<span class="nt">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
       }
-      $('hbListBody').innerHTML = h;
-    });
+      h += '</tbody></table></div>';
+      if (d.cut) h += '<div class="hbempty" style="font-size:14px">※多いので、新しい物から入るぶんだけ出しています（合計は全部の分です）</div>';
+    }
+    $('hbListBody').innerHTML = h;
   }
   var lsg = $('hbListSeg').querySelectorAll('button');
-  for (var l0 = 0; l0 < lsg.length; l0++) lsg[l0].addEventListener('click', function () { openList(this.getAttribute('data-v'), LM); });
-  $('hbMonPrev').addEventListener('click', function () { LM = shiftMonth(LM, -1); loadList(); });
-  $('hbMonNext').addEventListener('click', function () { if (LM < thisMonth()) { LM = shiftMonth(LM, 1); loadList(); } });
+  for (var l0 = 0; l0 < lsg.length; l0++) lsg[l0].addEventListener('click', function () { LC = this.getAttribute('data-v'); drawList(); });
+  $('hbMonPrev').addEventListener('click', function () { LM = shiftMonth(LM, -1); drawList(); });
+  $('hbMonNext').addEventListener('click', function () { if (LM < thisMonth()) { LM = shiftMonth(LM, 1); drawList(); } });
+  prefetch(thisMonth());
 }
 
 function renderHanbaiPage_(base, staff, dev) {
@@ -10528,6 +10577,15 @@ function renderHanbaiPage_(base, staff, dev) {
   var inBack = '<div class="ubar"><a class="uhome hbback" href="javascript:void(0)">← 戻る</a></div>';
   var sum = '<div class="hbsum"></div>';
   var pad = function (id) { return '<div class="expad" id="' + id + '">' + EXPADHTML_ + '</div>'; };
+  // 本数の画面とプレゼントの画面（同じ作り）
+  var count = function (id, icon, title, hint) {
+    return '<div id="' + id + '" style="display:none">' + inBack + head(icon, title) + sum +
+      (hint ? '<div class="hbhint">' + hint + '</div>' : '') +
+      '<div class="hbqty" id="' + id + 'Btns"></div>' +
+      '<div id="' + id + 'More" style="display:none">' + pad(id + 'Pad') +
+        '<button type="button" class="exgo" id="' + id + 'Go">これでOK → 次へ</button></div>' +
+    '</div>';
+  };
   var kana = '';
   for (var r = 0; r < HANBAI_KANA_.length; r++) {
     for (var c = 0; c < 5; c++) {
@@ -10542,7 +10600,7 @@ function renderHanbaiPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + EXPADCSS_ + PROCSTOCKCSS_ + HANBAICSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="hb">' +
-      '<div id="hbMenu">' + head('🛒', '販売管理') +
+      '<div id="hbMenu">' + head('🛒', 'No.31 販売管理') +
         '<div class="hbok" id="hbMenuMsg" style="display:none"></div>' +
         '<button type="button" class="hbbig" id="hbGoTW"><span class="i">🇹🇼</span>台湾販売入力</button>' +
         '<button type="button" class="hbbig" id="hbGoJP"><span class="i">🇯🇵</span>日本販売入力</button>' +
@@ -10587,11 +10645,8 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="exbox" id="hbNumBox"></div>' + pad('hbNumPad') +
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
       '</div>' +
-      '<div id="hbQty" style="display:none">' + inBack + head('🧴', '購入本数') + sum +
-        '<div class="hbqty" id="hbQtyBtns"></div>' +
-        '<div id="hbQtyMore" style="display:none">' + pad('hbQtyPad') +
-          '<button type="button" class="exgo" id="hbQtyGo">これでOK → 次へ</button></div>' +
-      '</div>' +
+      count('hbQty', '🧴', '購入本数', '') +
+      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数をえらんでください') +
       '<div id="hbAmt" style="display:none">' + inBack + head('💴', '', 'hbAmtHead') + sum +
         '<div class="exbox psbox" id="hbAmtBox"></div>' + pad('hbAmtPad') +
         '<button type="button" class="exgo" id="hbAmtGo">これでOK → 次へ</button>' +
