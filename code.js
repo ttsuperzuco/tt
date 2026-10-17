@@ -10127,6 +10127,7 @@ var HANBAICSS_ =
   '.hbconf span{flex:1;word-break:break-all;white-space:pre-wrap;}' +
   '.hbq{color:#fff;font-weight:900;font-size:24px;text-align:center;margin:16px 4px 4px;}' +
   '.hbst{color:#eaf6fb;font-weight:800;font-size:16px;margin:8px 4px;min-height:1.4em;}' +
+  '.hbok{background:#16a34a;color:#fff;border-radius:14px;padding:12px 14px;margin:4px 0 6px;font-weight:900;font-size:18px;line-height:1.5;box-shadow:0 4px 12px rgba(0,0,0,.15);}' +
   '.hbdone{background:#fff;color:#0f172a;border-radius:16px;padding:22px 16px;text-align:center;font-weight:900;font-size:24px;line-height:1.5;margin:10px 0;}' +
   '.hbmon{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin:4px 0 10px;}' +
   '.hbmon button{background:#fff;color:#0f172a;border:0;border-radius:12px;padding:10px 14px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;}' +
@@ -10146,7 +10147,7 @@ var HANBAICSS_ =
 function hanbaiScript_(C) {
   function $(id) { return document.getElementById(id); }
   var SECS = ['hbMenu', 'hbDate', 'hbJKind', 'hbJNew', 'hbKana', 'hbCands', 'hbTKind', 'hbToday', 'hbNum',
-    'hbQty', 'hbAmt', 'hbNote', 'hbConf', 'hbDone', 'hbList'];
+    'hbQty', 'hbAmt', 'hbNote', 'hbConf', 'hbList'];
   var hist = [], cur = 'hbMenu';
   function show(id, noPush) {
     if (!noPush && cur && cur !== id) hist.push(cur);
@@ -10188,7 +10189,7 @@ function hanbaiScript_(C) {
   }
   // 各画面の上に、ここまでに決めた事を小さく出す（どの日・どの方の入力中か分かるように）。
   function summary(id) {
-    if (id === 'hbMenu' || id === 'hbList' || id === 'hbDone' || id === 'hbConf' || id === 'hbDate' || !S.country) return '';
+    if (id === 'hbMenu' || id === 'hbList' || id === 'hbConf' || id === 'hbDate' || !S.country) return '';
     var h = (S.country === 'JP' ? '🇯🇵 日本販売' : '🇹🇼 台湾販売') + '　' + esc(jpDate(S.date));
     var c = custText();
     if (c && id !== 'hbJNew') h += '<br>' + esc(c);
@@ -10237,9 +10238,10 @@ function hanbaiScript_(C) {
   }
 
   // ── はじめ（3つのボタン） ──
-  $('hbGoTW').addEventListener('click', function () { reset('TW'); openDate(); });
-  $('hbGoJP').addEventListener('click', function () { reset('JP'); openDate(); });
-  $('hbGoList').addEventListener('click', function () { openList('JP', ''); });
+  function clearMsg() { $('hbMenuMsg').style.display = 'none'; }
+  $('hbGoTW').addEventListener('click', function () { clearMsg(); reset('TW'); openDate(); });
+  $('hbGoJP').addEventListener('click', function () { clearMsg(); reset('JP'); openDate(); });
+  $('hbGoList').addEventListener('click', function () { clearMsg(); openList('JP', ''); });
 
   // ── 日付 ──
   function drawDate() {
@@ -10464,14 +10466,13 @@ function hanbaiScript_(C) {
       '登録しています', function (err, d) {
         sending = false; $('hbSend').disabled = false; $('hbSt').textContent = '';
         if (err || !d || !d.ok) { popup('登録できませんでした：' + (err || (d && d.reason) || '不明')); return; }
-        $('hbDoneMsg').innerHTML = '登録しました<br><small style="font-size:17px">' + esc(custText()) + '　' + S.qty + '本　' + esc(yen(S.amount)) + unit() + '</small>';
-        hist = []; show('hbDone', true);
+        // ★2026-10-17 まるちゃん「登録したらこの画面いらない。トップ画面にもどって」＝販売管理のはじめへすぐ戻す。
+        //   登録できた事は、はじめの画面の上に小さく出す（次にボタンを押すと消える）。
+        $('hbMenuMsg').innerHTML = '✅ 登録しました　' + esc(custText()) + '　' + S.qty + '本　' + esc(yen(S.amount)) + unit();
+        $('hbMenuMsg').style.display = '';
+        hist = []; show('hbMenu', true);
       });
   });
-  // 登録の後は、戻ると「販売管理」のはじめに戻るようにする（登録済みの画面へは戻さない）。
-  $('hbAgain').addEventListener('click', function () { var c = S.country; reset(c); hist = ['hbMenu']; cur = ''; openDate(); });
-  $('hbDoneList').addEventListener('click', function () { var c = S.country, m = S.date.slice(0, 7); hist = ['hbMenu']; cur = ''; openList(c, m); });
-  $('hbDoneMenu').addEventListener('click', function () { hist = []; show('hbMenu', true); });
 
   // ── 販売管理表 ──
   var LC = 'JP', LM = '', LMONTHS = [];
@@ -10537,6 +10538,7 @@ function renderHanbaiPage_(base, staff, dev) {
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="hb">' +
       '<div id="hbMenu">' + head('🛒', '販売管理') +
+        '<div class="hbok" id="hbMenuMsg" style="display:none"></div>' +
         '<button type="button" class="hbbig" id="hbGoTW"><span class="i">🇹🇼</span>台湾販売入力</button>' +
         '<button type="button" class="hbbig" id="hbGoJP"><span class="i">🇯🇵</span>日本販売入力</button>' +
         '<button type="button" class="hbbig" id="hbGoList"><span class="i">📋</span>販売管理表</button>' +
@@ -10599,12 +10601,6 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="hbq">以上の内容で登録しますか？</div>' +
         '<button type="button" class="exgo" id="hbSend">登録する</button>' +
         '<div class="hbst" id="hbSt"></div>' +
-      '</div>' +
-      '<div id="hbDone" style="display:none">' + head('✅', '販売管理') +
-        '<div class="hbdone" id="hbDoneMsg"></div>' +
-        '<button type="button" class="exgo" id="hbAgain">続けて入力する</button>' +
-        '<button type="button" class="hbbig" id="hbDoneList"><span class="i">📋</span>販売管理表を見る</button>' +
-        '<button type="button" class="hbbig" id="hbDoneMenu"><span class="i">🛒</span>販売管理のはじめに戻る</button>' +
       '</div>' +
       '<div id="hbList" style="display:none">' + inBack + head('📋', '販売管理表') +
         '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="JP">🇯🇵 日本（円）</button><button type="button" data-v="TW">🇹🇼 台湾（元）</button></div>' +
