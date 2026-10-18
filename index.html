@@ -49,28 +49,109 @@
 //   ・印＝合言葉から計算した文字（合言葉そのものは送らない・この端末に覚える）。
 //   ・パソコン版ズコは開く住所に印を付けて渡してくる（?zk=…）。
 //   ・合言葉が変わって印が古くなったら、窓口がそう返す→印を消してもう一度合言葉を聞く。
+// ★★2026-10-18 午後 まるちゃん「スタッフはもう名前でスマホに入っているから合言葉はいらない。データを渡す道に
+//   すごい鍵を」→ スマホ1台ごとの鍵に変えた。
+//   ・この端末の番号（zk_dv）と鍵（zk_dk）を窓口からもらって覚え、問い合わせ全部に添える。
+//   ・初めてのスマホは、りゅうさんが許可するまで「許可待ち」の画面だけを出す（合言葉は聞かない）。
+//   ・パソコン版ズコは開く住所に、このPC用の鍵（?zdv=…&zdk=…）を付けて渡してくる。
+//   ・合言葉の印（zk_tk）は切り替えの間だけ一緒に添える（窓口で受け付けを止めたら使われなくなる）。
 (function () {
-  var LS_TK = 'zk_tk';
+  var LS_TK = 'zk_tk', LS_DV = 'zk_dv', LS_DK = 'zk_dk';
+  var EXEC_URL = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   function g(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
   function s(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function rm(k) { try { localStorage.removeItem(k); } catch (e) {} }
+  function newDv() {
+    var a = new Uint8Array(12);
+    try { crypto.getRandomValues(a); } catch (e) { for (var i = 0; i < 12; i++) a[i] = Math.floor(Math.random() * 256); }
+    var h = Array.prototype.map.call(a, function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+    s(LS_DV, h); return h;
+  }
   try {
-    var zk = (new URLSearchParams(location.search)).get('zk');
+    var q = new URLSearchParams(location.search);
+    var zk = q.get('zk'), zdv = q.get('zdv'), zdk = q.get('zdk');
     if (zk && /^[0-9a-f]{32}$/.test(zk)) { s(LS_TK, zk); s('sz_pw_ok', '1'); }
+    if (zdv && zdk && /^[0-9a-f]{24}$/.test(zdv) && /^[0-9a-f]{32}$/.test(zdk)) { s(LS_DV, zdv); s(LS_DK, zdk); }
   } catch (e) {}
+  if (!/^[0-9a-f]{24}$/.test(g(LS_DV))) { newDv(); rm(LS_DK); }
   var EXEC_RE = /^https:\/\/script\.google\.com\/macros\/s\/AKfycbzSxho3e4CH[^\/?]*\/exec/;
   function add(u) {
     u = String(u);
-    var t = g(LS_TK);
-    if (!t || !EXEC_RE.test(u) || /[?&]tk=/.test(u)) return u;
-    return u + (u.indexOf('?') < 0 ? '?' : '&') + 'tk=' + t;
+    if (!EXEC_RE.test(u)) return u;
+    var dk = g(LS_DK), t = g(LS_TK);
+    if (dk && !/[?&]dk=/.test(u)) u += (u.indexOf('?') < 0 ? '?' : '&') + 'dv=' + g(LS_DV) + '&dk=' + dk;
+    if (t && !/[?&]tk=/.test(u)) u += (u.indexOf('?') < 0 ? '?' : '&') + 'tk=' + t;
+    return u;
   }
   window.__zkAddTk = add;
-  window.__ZK_NEED_PW = !g(LS_TK);
+  window.__ZK_NEED_PW = false;
+  // 状態：ok＝鍵あり／tk＝合言葉の印だけ（切り替えの間）／need＝まだ何も無い（確認中）／pending＝許可待ち
+  var st = g(LS_DK) ? 'ok' : (g(LS_TK) ? 'tk' : 'need');
+  var code = g(LS_DV).slice(-4).toUpperCase();
+  window.__zkBlocked = function () { return st === 'need' || st === 'pending'; };
+
+  function ask(cb) {
+    var name = '__zkDev' + Date.now();
+    window[name] = function (r) { try { delete window[name]; } catch (e) {} cb(r || {}); };
+    var ua = navigator.userAgent || '';
+    var kind = /iPhone|iPad|iPod/.test(ua) ? 'iPhone' : (/Android/.test(ua) ? 'Android' : 'PC');
+    var sp = new URLSearchParams(location.search);
+    var role = g('sz_role') || (sp.get('staff') === '1' ? 'スタッフ' : (sp.get('dev') === '1' ? '開発' : '社長(幹部)'));
+    var u = EXEC_URL + '?action=devkey&dv=' + g(LS_DV) + (g(LS_DK) ? '&dk=' + g(LS_DK) : '')
+      + '&device=' + encodeURIComponent(g('sz_device')) + '&who=' + encodeURIComponent(g('sz_who'))
+      + '&role=' + encodeURIComponent(role) + '&kind=' + kind
+      + (g(LS_TK) ? '&tk=' + g(LS_TK) : '') + '&callback=' + name + '&cb=' + Date.now();
+    var el = document.createElement('script');
+    el.onerror = function () { cb({ ok: false, error: 'net' }); };
+    el.src = u;
+    (document.head || document.documentElement).appendChild(el);
+  }
+  var polling = false;
+  function poll() {
+    if (polling) return; polling = true;
+    (function tick() {
+      setTimeout(function () {
+        ask(function (r) {
+          if (r.dk) s(LS_DK, r.dk);
+          if (r.state === 'ok') { location.reload(); return; }
+          tick();
+        });
+      }, 15000);
+    })();
+  }
+  window.__zkShowWait = function () {
+    var root = document.getElementById('root');
+    if (!root) return;
+    try { window.__btDone && window.__btDone('許可待ち'); } catch (e) {}
+    root.innerHTML = '<div class="pkwrap" style="text-align:center"><div class="pktitle">'
+      + (st === 'need' ? '確認しています…' : 'このスマホは、まだ<br>ズコに登録されていません')
+      + '</div>'
+      + (st === 'need' ? '' : '<div style="color:#fff;font-size:18px;line-height:1.7;margin-top:12px">'
+        + 'りゅうさんが許可すると、自動で開きます。<br>このままお待ちください。</div>'
+        + '<div style="color:#fff;font-size:22px;font-weight:700;margin-top:18px">画面の番号：' + code + '</div>')
+      + '</div>';
+    if (st === 'pending') poll();
+  };
+  function settle(r, prev) {
+    if (r.dk) s(LS_DK, r.dk);
+    if (r.state === 'ok') { st = 'ok'; if (prev === 'need' || prev === 'pending') location.reload(); return; }
+    if (r.state === 'pending') { st = (prev === 'tk') ? 'tk' : 'pending'; if (st === 'pending') window.__zkShowWait(); return; }
+    if (r.state === 'taken') { newDv(); rm(LS_DK); code = g(LS_DV).slice(-4).toUpperCase(); ask(function (r2) { settle(r2, prev); }); return; }
+    if (prev === 'need') { st = 'pending'; window.__zkShowWait(); }   // 通信に失敗＝許可待ちの画面で待つ
+  }
+  if (st !== 'ok') { var prev0 = st; ask(function (r) { settle(r, prev0); }); }
+
   window.__zkAuthFail = function () {
-    if (!g(LS_TK)) return;                       // 印が無い時は合言葉の画面が出るので何もしない
+    if (st === 'need' || st === 'pending') return;      // 確認中・許可待ちの画面が出ている
     try { if (sessionStorage.getItem('zk_fail_once')) return; sessionStorage.setItem('zk_fail_once', '1'); } catch (e) {}
-    try { localStorage.removeItem(LS_TK); localStorage.removeItem('sz_pw_ok'); } catch (e) {}
-    location.reload();
+    rm(LS_TK); rm('sz_pw_ok');
+    if (!g(LS_DK)) { location.reload(); return; }
+    ask(function (r) {
+      if (r.dk) s(LS_DK, r.dk);
+      if (r.state === 'ok') { location.reload(); return; }
+      if (r.state === 'taken') { newDv(); rm(LS_DK); location.reload(); return; }
+      st = 'pending'; window.__zkShowWait();
+    });
   };
   try {
     var d = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
@@ -1230,8 +1311,9 @@
   //   tilesettings が届いていれば即 boot、まだなら届き次第 boot する。events は showConflict が
   //   __prefetchedEvents を使い切りで拾う（初回のみ／部屋移動後などのリフレッシュは新規取得で新鮮）。
   function bootOrGate(cfg) {
-    // ★2026-10-18：合言葉の印が無い端末は、スタッフ・社長・開発のどの入口でも先に合言葉を聞く。
-    if ((staff && !lsGet(LS_PWOK)) || window.__ZK_NEED_PW) { showPwGate(cfg); } else { boot(cfg); }
+    // ★2026-10-18 午後：合言葉はやめた。まだ許可していないスマホは、どの入口でも「許可待ち」の画面だけ出す。
+    if (window.__zkBlocked && window.__zkBlocked()) { window.__zkShowWait(); return; }
+    boot(cfg);
   }
 
   // ★★初期表示の最速化（2026-07-17・ユーザー要望「ホーム画面から開いてトップが出るまでを極限まで短く」）
