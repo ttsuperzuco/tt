@@ -42,6 +42,64 @@
 <body>
 <div id="root"></div>
 <script>
+// ★★2026-10-18 まるちゃん「すぐやって」：グーグルの窓口への問い合わせ全部に「合言葉から作った印」を自動で添える。
+//   それまでは、このページの中身（誰でも見られる公開の置き場）に窓口の住所と鍵が書いてあり、
+//   合言葉なしで予約一覧・未回答のLINE・売上を誰でも取れた。窓口が印を確かめるようにしたので、
+//   ここで全部の問い合わせ（画面の数に関係なく1か所）に印を付ける。印は合言葉を入れた端末にだけある。
+//   ・印＝合言葉から計算した文字（合言葉そのものは送らない・この端末に覚える）。
+//   ・パソコン版ズコは開く住所に印を付けて渡してくる（?zk=…）。
+//   ・合言葉が変わって印が古くなったら、窓口がそう返す→印を消してもう一度合言葉を聞く。
+(function () {
+  var LS_TK = 'zk_tk';
+  function g(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+  function s(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  try {
+    var zk = (new URLSearchParams(location.search)).get('zk');
+    if (zk && /^[0-9a-f]{32}$/.test(zk)) { s(LS_TK, zk); s('sz_pw_ok', '1'); }
+  } catch (e) {}
+  var EXEC_RE = /^https:\/\/script\.google\.com\/macros\/s\/AKfycbzSxho3e4CH[^\/?]*\/exec/;
+  function add(u) {
+    u = String(u);
+    var t = g(LS_TK);
+    if (!t || !EXEC_RE.test(u) || /[?&]tk=/.test(u)) return u;
+    return u + (u.indexOf('?') < 0 ? '?' : '&') + 'tk=' + t;
+  }
+  window.__zkAddTk = add;
+  window.__ZK_NEED_PW = !g(LS_TK);
+  window.__zkAuthFail = function () {
+    if (!g(LS_TK)) return;                       // 印が無い時は合言葉の画面が出るので何もしない
+    try { if (sessionStorage.getItem('zk_fail_once')) return; sessionStorage.setItem('zk_fail_once', '1'); } catch (e) {}
+    try { localStorage.removeItem(LS_TK); localStorage.removeItem('sz_pw_ok'); } catch (e) {}
+    location.reload();
+  };
+  try {
+    var d = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
+    Object.defineProperty(HTMLScriptElement.prototype, 'src', {
+      configurable: true, enumerable: d.enumerable,
+      get: function () { return d.get.call(this); },
+      set: function (v) { d.set.call(this, add(v)); }
+    });
+    var sa = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function (n, v) {
+      if (this instanceof HTMLScriptElement && String(n).toLowerCase() === 'src') v = add(v);
+      return sa.call(this, n, v);
+    };
+  } catch (e) {}
+  if (window.fetch) {
+    var f0 = window.fetch;
+    window.fetch = function (i, o) { if (typeof i === 'string') i = add(i); return f0.call(this, i, o); };
+  }
+  // 合言葉から印を作る（端末の中だけで計算）。
+  window.__zkMakeTk = function (pw) {
+    var b = new TextEncoder().encode('zuko|' + pw);
+    return crypto.subtle.digest('SHA-256', b).then(function (h) {
+      return Array.prototype.map.call(new Uint8Array(h), function (x) { return ('0' + x.toString(16)).slice(-2); })
+        .join('').slice(0, 32);
+    });
+  };
+})();
+</script>
+<script>
 // ★2026-09-14 まるちゃん依頼：「開いてから画面が出るまで何秒・どこで待ったか」を人ごとに記録する。
 //   きっかけ＝TOMATOさんのiPhoneだけ「ズコは少し遠出かも...」が長く出る（開発者のAndroidは速い）。
 //   ここで開き始めを控え、段階ごとに端末へ書き足す。画面が出たら1件の記録にして貯め、
@@ -1043,7 +1101,14 @@
       btn.disabled = true; err.textContent = '';
       window.__ttCheckPw = function (r) {
         btn.disabled = false;
-        if (r && r.ok) { lsSet(LS_PWOK, '1'); boot(cfg); }
+        if (r && r.ok) {
+          // ★2026-10-18：合言葉から印を作ってこの端末に覚え、読み直す（以後の問い合わせ全部に印が付く）。
+          window.__zkMakeTk(v).then(function (tk) {
+            lsSet('zk_tk', tk); lsSet(LS_PWOK, '1');
+            try { sessionStorage.removeItem('zk_fail_once'); } catch (e) {}
+            location.reload();
+          })['catch'](function () { err.textContent = 'この端末では合言葉を確かめられませんでした。'; });
+        }
         else { err.textContent = (r && r.error) || '合言葉が違います。もう一度お試しください。'; input.value=''; input.focus(); }
       };
       var s = document.createElement('script');
@@ -1165,7 +1230,8 @@
   //   tilesettings が届いていれば即 boot、まだなら届き次第 boot する。events は showConflict が
   //   __prefetchedEvents を使い切りで拾う（初回のみ／部屋移動後などのリフレッシュは新規取得で新鮮）。
   function bootOrGate(cfg) {
-    if (staff && !lsGet(LS_PWOK)) { showPwGate(cfg); } else { boot(cfg); }
+    // ★2026-10-18：合言葉の印が無い端末は、スタッフ・社長・開発のどの入口でも先に合言葉を聞く。
+    if ((staff && !lsGet(LS_PWOK)) || window.__ZK_NEED_PW) { showPwGate(cfg); } else { boot(cfg); }
   }
 
   // ★★初期表示の最速化（2026-07-17・ユーザー要望「ホーム画面から開いてトップが出るまでを極限まで短く」）
