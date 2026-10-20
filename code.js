@@ -10159,6 +10159,8 @@ var HANBAICSS_ =
   '.hbtbl{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hbtbl table{width:100%;border-collapse:collapse;table-layout:fixed;color:#0f172a;font-size:15px;}' +
   '.hbseg.sm button{padding:10px 4px;font-size:16px;}' +
+  '.hbtbl .py{font-size:11px;font-weight:700;color:#64748b;line-height:1.1;}' +
+  '.hbtbl small.sp{color:#ea580c;font-weight:900;}' +
   '.hbtbl.all col.c1{width:3.4em;}' +
   '.hbtbl col.c1{width:2.6em;}.hbtbl col.c3{width:2.2em;}.hbtbl col.c4{width:3.6em;}.hbtbl col.c5{width:4.6em;}' +
   '.hbtbl th{background:#2C7A99;color:#fff;font-weight:800;font-size:13px;line-height:1.25;padding:8px 4px;vertical-align:middle;white-space:nowrap;}' +
@@ -10627,6 +10629,7 @@ function hanbaiScript_(C) {
   // ★2026-10-20 まるちゃん「全期間をみれるボタンつくりたい」＝LM が 'ALL' の時は全期間（月の行は隠す）。
   //   LMM＝全期間へ切り替える前に見ていた月（月ごとへ戻した時にその月へ戻す）。
   var LC = 'JP', LM = '', LMM = '', LCACHE = {}, LWAIT = {};
+  var SRC = { shop: true, shopee: true };   // 台湾の表で出す方（お店購入／蝦皮購入）。両方とも消えないようにする
   function thisMonth() { return ymd(new Date()).slice(0, 7); }
   function shiftMonth(m, d) { var p = m.split('-'), x = new Date(+p[0], +p[1] - 1 + d, 1); return x.getFullYear() + '-' + two(x.getMonth() + 1); }
   // 裏で読む（待ち画面を出さない）。読み終わったら、その月を開いていれば描く。
@@ -10684,17 +10687,29 @@ function hanbaiScript_(C) {
     }
     var d = all[LC] || { rows: [], count: 0, total_qty: 0, total_gift: 0, total_amount: 0 };
     var u = LC === 'JP' ? '円' : '元';
-    var h = '<div class="hbtot"><span>' + d.count + '件</span><span>' + d.total_qty + '本' +
-      (d.total_gift ? '（🎁' + d.total_gift + '本）' : '') + '</span><span>' + yen(d.total_amount) + u + '</span></div>';
-    if (!d.rows || !d.rows.length) h += '<div class="hbempty">' + (isAll ? 'まだ記録はありません' : 'この月の記録はありません') + '</div>';
+    // ★2026-10-20 まるちゃん「お店の購入者か蝦皮かを一目でわけたい（両方おせる、片方だけもおせる）」＝台湾だけ出す。
+    //   片方だけの時は、合計もそちらだけ（全件から数えた合計を受け取り側からもらう）。
+    var src = $('hbSrcSeg').querySelectorAll('button');
+    for (var s1 = 0; s1 < src.length; s1++) src[s1].className = SRC[src[s1].getAttribute('data-v')] ? 'on' : '';
+    $('hbSrcSeg').style.display = LC === 'TW' ? '' : 'none';
+    var one = LC === 'TW' && SRC.shop !== SRC.shopee;
+    var tt = (one && d.by) ? d.by[SRC.shop ? 'shop' : 'shopee'] : d;
+    var h = '<div class="hbtot"><span>' + tt.count + '件</span><span>' + tt.total_qty + '本' +
+      (tt.total_gift ? '（🎁' + tt.total_gift + '本）' : '') + '</span><span>' + yen(tt.total_amount) + u + '</span></div>';
+    var shown = [];
+    for (var j0 = 0; j0 < (d.rows || []).length; j0++) {
+      var sp = d.rows[j0][11] === 'shopee';
+      if (!one || (sp ? SRC.shopee : SRC.shop)) shown.push(j0);
+    }
+    if (!shown.length) h += '<div class="hbempty">' + (isAll ? 'まだ記録はありません' : 'この月の記録はありません') + '</div>';
     else {
       // ★2026-10-17 まるちゃん「項目名と下のデータが合ってない・見にくい」＝列の幅と寄せ方を項目名と中身でそろえ、1行おきに色を変える。
       //   担当＝入力した人のマーク（氏名のすぐ右の列）。入力する人をえらぶ前の古い記録は「－」。
       var thisY = thisMonth().slice(0, 4);
       h += '<div class="hbtbl' + (isAll ? ' all' : '') + '"><table><colgroup><col class="c1"><col><col class="c4"><col class="c5"></colgroup>' +
         '<thead><tr><th class="l">日</th><th class="l">お客様・担当</th><th class="r">本数</th><th class="r">金額' + u + '</th></tr></thead><tbody>';
-      for (var j = 0; j < d.rows.length; j++) {
-        var r = d.rows[j], dp = String(r[0]).split('-');
+      for (var k = 0; k < shown.length; k++) {
+        var j = shown[k], r = d.rows[j], dp = String(r[0]).split('-');
         // ★2026-10-17 まるちゃん「入力：パソコン版はいらない。氏名の右にスタッフのマーク（二行はスペースがもったいない）」
         // ★2026-10-17 まるちゃん「複数行にしないで」＝1件は必ず1行。お客様の欄は横に並べ、入りきらない分は「…」。
         //   行を押すと、その行の中身（備考の全文など）を小窓で出す。
@@ -10702,10 +10717,12 @@ function hanbaiScript_(C) {
         //   全期間の時は月が上に無いので「10/20」（去年より前は「25/10/20」）。
         var dTxt = !isAll ? (+dp[2]) + '日' : (dp[0] !== thisY ? dp[0].slice(2) + '/' : '') + (+dp[1]) + '/' + (+dp[2]);
         h += '<tr data-i="' + j + '"><td class="l d">' + dTxt + '</td><td class="l one">' + esc(r[2] || '') +
-          (r[1] ? ' <small>' + esc(r[1]) + '</small>' : (r[11] === 'shopee' ? ' <small>蝦皮</small>' : '')) + (markOf(r[6]) ? ' ' + markOf(r[6]) : '') +
+          (r[1] ? ' <small>' + esc(r[1]) + '</small>' : (r[11] === 'shopee' ? ' <small class="sp">蝦皮</small>' : '')) + (markOf(r[6]) ? ' ' + markOf(r[6]) : '') +
           (r[8] > 1 ? ' <span class="rp">🔁' + r[8] + '回計' + r[9] + '本</span>' : '') +
           (r[5] ? ' <span class="nt">📝' + esc(r[5]) + '</span>' : '') + '</td>' +
-          '<td class="r">' + r[3] + (r[7] ? '<span class="gf">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
+          '<td class="r">' + r[3] + (r[7] ? '<span class="gf">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) +
+          // ★2026-10-20 まるちゃん「支払方法を表に出す」＝金額の下に小さく（1件1行のまま）
+          (r[10] ? '<div class="py">' + esc(r[10]) + '</div>' : '') + '</td></tr>';
       }
       h += '</tbody></table></div>';
       if (d.cut) h += '<div class="hbempty" style="font-size:14px">※多いので、新しい物から入るぶんだけ出しています（合計は全部の分です）</div>';
@@ -10723,6 +10740,12 @@ function hanbaiScript_(C) {
   });
   var lsg = $('hbListSeg').querySelectorAll('button');
   for (var l0 = 0; l0 < lsg.length; l0++) lsg[l0].addEventListener('click', function () { LC = this.getAttribute('data-v'); drawList(); });
+  var srb = $('hbSrcSeg').querySelectorAll('button');
+  for (var s2 = 0; s2 < srb.length; s2++) srb[s2].addEventListener('click', function () {
+    var v = this.getAttribute('data-v'), o = v === 'shop' ? 'shopee' : 'shop';
+    if (SRC[v] && !SRC[o]) return;   // 最後の1つは消さない（何も出ない表にしない）
+    SRC[v] = !SRC[v]; drawList();
+  });
   var ssg = $('hbSpanSeg').querySelectorAll('button');
   for (var s1 = 0; s1 < ssg.length; s1++) ssg[s1].addEventListener('click', function () {
     if (this.getAttribute('data-v') === 'ALL') { if (LM !== 'ALL') { LMM = LM; LM = 'ALL'; } }
@@ -10845,6 +10868,7 @@ function renderHanbaiPage_(base, staff, dev) {
       '<div id="hbList" style="display:none">' + inBack + head('📋', '販売管理表') +
         '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="JP">🇯🇵 日本（円）</button><button type="button" data-v="TW">🇹🇼 台湾（元）</button></div>' +
         '<div class="hbseg sm" id="hbSpanSeg"><button type="button" class="on" data-v="M">📅 月ごと</button><button type="button" data-v="ALL">🗂 全期間</button></div>' +
+        '<div class="hbseg sm" id="hbSrcSeg"><button type="button" class="on" data-v="shop">🏪 お店購入</button><button type="button" class="on" data-v="shopee">🛍️ 蝦皮購入</button></div>' +
         '<div class="hbmon" id="hbMonRow"><button type="button" id="hbMonPrev">◀</button><div id="hbMonTxt"></div><button type="button" id="hbMonNext">▶</button></div>' +
         '<div id="hbListBody"></div>' +
       '</div>' +
