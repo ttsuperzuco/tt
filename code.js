@@ -10158,6 +10158,8 @@ var HANBAICSS_ =
   '.hbtot{background:#fff;color:#0f172a;border-radius:14px;padding:12px 14px;margin:0 0 10px;font-weight:900;font-size:18px;display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px;}' +
   '.hbtbl{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
   '.hbtbl table{width:100%;border-collapse:collapse;table-layout:fixed;color:#0f172a;font-size:15px;}' +
+  '.hbseg.sm button{padding:10px 4px;font-size:16px;}' +
+  '.hbtbl.all col.c1{width:3.4em;}' +
   '.hbtbl col.c1{width:2.6em;}.hbtbl col.c3{width:2.2em;}.hbtbl col.c4{width:3.6em;}.hbtbl col.c5{width:4.6em;}' +
   '.hbtbl th{background:#2C7A99;color:#fff;font-weight:800;font-size:13px;line-height:1.25;padding:8px 4px;vertical-align:middle;white-space:nowrap;}' +
   '.hbtbl td{border-top:1px solid #e2e8f0;padding:10px 4px;font-weight:700;vertical-align:middle;word-break:break-all;}' +
@@ -10600,7 +10602,7 @@ function hanbaiScript_(C) {
         $('hbMenuMsg').innerHTML = '✅ 登録しました　' + esc(custText()) + '　' + S.qty + '本' + (S.gift ? '（🎁' + S.gift + '本）' : '') + '　' + esc(yen(S.amount)) + unit();
         $('hbMenuMsg').style.display = '';
         hist = []; show('hbMenu', true);
-        delete LCACHE[S.date.slice(0, 7)]; prefetch(thisMonth());   // 一覧の覚えを新しくしておく
+        delete LCACHE[S.date.slice(0, 7)]; delete LCACHE.ALL; prefetch(thisMonth());   // 一覧の覚えを新しくしておく（全期間も読み直す）
       }, '登録が終わったら自動で画面が切り替わりますので、しばらくお待ちください。');   // ★2026-10-17 まるちゃん指定の文
   });
 
@@ -10608,7 +10610,9 @@ function hanbaiScript_(C) {
   // ★2026-10-17 まるちゃん「台湾元をおしてからよみこむのはだめ。最初から両方よみこめ」＝
   //   1回で日本と台湾の両方をもらい（LCACHE）、切り替えは待たずにその場で描く。
   //   今月の分は、販売管理を開いた時に裏で先に読んでおく（一覧を押した時に待たない）。
-  var LC = 'JP', LM = '', LCACHE = {}, LWAIT = {};
+  // ★2026-10-20 まるちゃん「全期間をみれるボタンつくりたい」＝LM が 'ALL' の時は全期間（月の行は隠す）。
+  //   LMM＝全期間へ切り替える前に見ていた月（月ごとへ戻した時にその月へ戻す）。
+  var LC = 'JP', LM = '', LMM = '', LCACHE = {}, LWAIT = {};
   function thisMonth() { return ymd(new Date()).slice(0, 7); }
   function shiftMonth(m, d) { var p = m.split('-'), x = new Date(+p[0], +p[1] - 1 + d, 1); return x.getFullYear() + '-' + two(x.getMonth() + 1); }
   // 裏で読む（待ち画面を出さない）。読み終わったら、その月を開いていれば描く。
@@ -10648,9 +10652,14 @@ function hanbaiScript_(C) {
   function drawList() {
     var sg = $('hbListSeg').querySelectorAll('button');
     for (var i = 0; i < sg.length; i++) sg[i].className = (sg[i].getAttribute('data-v') === LC) ? 'on' : '';
-    var p = LM.split('-');
-    $('hbMonTxt').textContent = (+p[0]) + '年' + (+p[1]) + '月';
-    $('hbMonNext').disabled = LM >= thisMonth();
+    var isAll = LM === 'ALL', ss = $('hbSpanSeg').querySelectorAll('button');
+    for (var s0 = 0; s0 < ss.length; s0++) ss[s0].className = (ss[s0].getAttribute('data-v') === (isAll ? 'ALL' : 'M')) ? 'on' : '';
+    $('hbMonRow').style.display = isAll ? 'none' : '';
+    if (!isAll) {
+      var p = LM.split('-');
+      $('hbMonTxt').textContent = (+p[0]) + '年' + (+p[1]) + '月';
+      $('hbMonNext').disabled = LM >= thisMonth();
+    }
     var all = LCACHE[LM];
     if (!all) {
       $('hbListBody').innerHTML = '<div class="hbempty">読んでいます…</div>';
@@ -10663,11 +10672,12 @@ function hanbaiScript_(C) {
     var u = LC === 'JP' ? '円' : '元';
     var h = '<div class="hbtot"><span>' + d.count + '件</span><span>' + d.total_qty + '本' +
       (d.total_gift ? '（🎁' + d.total_gift + '本）' : '') + '</span><span>' + yen(d.total_amount) + u + '</span></div>';
-    if (!d.rows || !d.rows.length) h += '<div class="hbempty">この月の記録はありません</div>';
+    if (!d.rows || !d.rows.length) h += '<div class="hbempty">' + (isAll ? 'まだ記録はありません' : 'この月の記録はありません') + '</div>';
     else {
       // ★2026-10-17 まるちゃん「項目名と下のデータが合ってない・見にくい」＝列の幅と寄せ方を項目名と中身でそろえ、1行おきに色を変える。
       //   担当＝入力した人のマーク（氏名のすぐ右の列）。入力する人をえらぶ前の古い記録は「－」。
-      h += '<div class="hbtbl"><table><colgroup><col class="c1"><col><col class="c4"><col class="c5"></colgroup>' +
+      var thisY = thisMonth().slice(0, 4);
+      h += '<div class="hbtbl' + (isAll ? ' all' : '') + '"><table><colgroup><col class="c1"><col><col class="c4"><col class="c5"></colgroup>' +
         '<thead><tr><th class="l">日</th><th class="l">お客様・担当</th><th class="r">本数</th><th class="r">金額' + u + '</th></tr></thead><tbody>';
       for (var j = 0; j < d.rows.length; j++) {
         var r = d.rows[j], dp = String(r[0]).split('-');
@@ -10675,7 +10685,9 @@ function hanbaiScript_(C) {
         // ★2026-10-17 まるちゃん「複数行にしないで」＝1件は必ず1行。お客様の欄は横に並べ、入りきらない分は「…」。
         //   行を押すと、その行の中身（備考の全文など）を小窓で出す。
         //   ★日は「20日」だけ（月は上に出ている）。担当のマークは氏名のすぐ右（まるちゃんの最初の指定）＝列を減らして幅をあける。
-        h += '<tr data-i="' + j + '"><td class="l d">' + (+dp[2]) + '日</td><td class="l one">' + esc(r[2] || '') +
+        //   全期間の時は月が上に無いので「10/20」（去年より前は「25/10/20」）。
+        var dTxt = !isAll ? (+dp[2]) + '日' : (dp[0] !== thisY ? dp[0].slice(2) + '/' : '') + (+dp[1]) + '/' + (+dp[2]);
+        h += '<tr data-i="' + j + '"><td class="l d">' + dTxt + '</td><td class="l one">' + esc(r[2] || '') +
           (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') + (markOf(r[6]) ? ' ' + markOf(r[6]) : '') +
           (r[8] > 1 ? ' <span class="rp">🔁' + r[8] + '回計' + r[9] + '本</span>' : '') +
           (r[5] ? ' <span class="nt">📝' + esc(r[5]) + '</span>' : '') + '</td>' +
@@ -10697,6 +10709,12 @@ function hanbaiScript_(C) {
   });
   var lsg = $('hbListSeg').querySelectorAll('button');
   for (var l0 = 0; l0 < lsg.length; l0++) lsg[l0].addEventListener('click', function () { LC = this.getAttribute('data-v'); drawList(); });
+  var ssg = $('hbSpanSeg').querySelectorAll('button');
+  for (var s1 = 0; s1 < ssg.length; s1++) ssg[s1].addEventListener('click', function () {
+    if (this.getAttribute('data-v') === 'ALL') { if (LM !== 'ALL') { LMM = LM; LM = 'ALL'; } }
+    else if (LM === 'ALL') LM = LMM || thisMonth();
+    drawList();
+  });
   $('hbMonPrev').addEventListener('click', function () { LM = shiftMonth(LM, -1); drawList(); });
   $('hbMonNext').addEventListener('click', function () { if (LM < thisMonth()) { LM = shiftMonth(LM, 1); drawList(); } });
   prefetch(thisMonth());
@@ -10807,7 +10825,8 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       '<div id="hbList" style="display:none">' + inBack + head('📋', '販売管理表') +
         '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="JP">🇯🇵 日本（円）</button><button type="button" data-v="TW">🇹🇼 台湾（元）</button></div>' +
-        '<div class="hbmon"><button type="button" id="hbMonPrev">◀</button><div id="hbMonTxt"></div><button type="button" id="hbMonNext">▶</button></div>' +
+        '<div class="hbseg sm" id="hbSpanSeg"><button type="button" class="on" data-v="M">📅 月ごと</button><button type="button" data-v="ALL">🗂 全期間</button></div>' +
+        '<div class="hbmon" id="hbMonRow"><button type="button" id="hbMonPrev">◀</button><div id="hbMonTxt"></div><button type="button" id="hbMonNext">▶</button></div>' +
         '<div id="hbListBody"></div>' +
       '</div>' +
     '</div></div>' +
