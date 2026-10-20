@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>ズコ 許可の確認</title>
+<style>
+  /* ★2026-10-21 まるちゃん「①②やって」：LINEの知らせの「許可する／外す」は、開いただけでは何も変わらない。
+     LINEは届いたリンクの先を自動で読みに行くことがあり、前は読まれた瞬間に許可されていた（10/20 778E）。
+     この画面はボタンを押した時だけ窓口へ行く＝自動で読みに来ても何も起きない。 */
+  body{margin:0;background:#2C7A99;font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;color:#0f172a}
+  .card{max-width:420px;margin:48px auto;background:#fff;border-radius:18px;padding:28px 20px;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+  h1{font-size:20px;margin:0 0 14px}
+  .code{font-size:34px;font-weight:800;letter-spacing:4px;margin:10px 0 18px}
+  p{font-size:16px;line-height:1.6;margin:0 0 18px}
+  button{width:100%;padding:18px 14px;border:0;border-radius:999px;font-size:19px;font-weight:700;color:#fff;background:#16a34a;cursor:pointer}
+  button.rm{background:#dc2626}
+  .ng{color:#dc2626;font-weight:700}
+</style>
+</head>
+<body>
+<div class="card" id="box"></div>
+<script>
+(function(){
+  var EXEC = "https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";
+  var q = new URLSearchParams(location.search);
+  var op = q.get('op') || '', dv = q.get('dv') || '', sig = q.get('sig') || '';
+  var box = document.getElementById('box');
+  if (!/^(approve|remove)$/.test(op) || !/^[0-9a-f]{24}$/.test(dv) || !/^[0-9a-f]{32}$/.test(sig)) {
+    box.innerHTML = '<p class="ng">このリンクは使えません。</p>';
+    return;
+  }
+  var code = dv.slice(-4).toUpperCase();
+  var approve = op === 'approve';
+  box.innerHTML = '<h1>' + (approve ? 'このスマホを許可しますか？' : 'このスマホを外しますか？') + '</h1>'
+    + '<div>画面の番号</div><div class="code">' + code + '</div>'
+    + '<p>' + (approve ? '心当たりがある時だけ押してください。<br>押さなければ、何も見られないままです。'
+                       : '押すと、そのスマホではズコのデータが見られなくなります。') + '</p>'
+    + '<button id="go" class="' + (approve ? '' : 'rm') + '">' + (approve ? '許可する' : '外す') + '</button>';
+  document.getElementById('go').onclick = function(){
+    this.disabled = true;
+    this.textContent = '少しお待ちください…';
+    location.href = EXEC + '?action=devlink&op=' + op + '&dv=' + dv + '&sig=' + sig;
+  };
+})();
+</script>
+</body>
+</html>
