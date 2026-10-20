@@ -10172,7 +10172,7 @@ var HANBAICSS_ =
 // 画面の動き（文字列に組み立てず、この関数をそのまま画面へ差し込む＝引用符の書き違いが起きない）。
 function hanbaiScript_(C) {
   function $(id) { return document.getElementById(id); }
-  var SECS = ['hbMenu', 'hbDate', 'hbJKind', 'hbJNew', 'hbKana', 'hbCands', 'hbTKind', 'hbToday', 'hbNum',
+  var SECS = ['hbMenu', 'hbDate', 'hbJKind', 'hbJNew', 'hbKana', 'hbCands', 'hbTKind', 'hbToday', 'hbNum', 'hbShop',
     'hbQty', 'hbGift', 'hbPay', 'hbAmt', 'hbNote', 'hbConf', 'hbList', 'hbWho'];
   var hist = [], cur = 'hbMenu';
   function show(id, noPush) {
@@ -10213,6 +10213,7 @@ function hanbaiScript_(C) {
   }
   function custText() {
     if (S.country === 'JP') return (S.sei || S.mei) ? (S.sei + ' ' + S.mei).trim() + ' 様' : '';
+    if (S.kind === 'shopee') return S.name ? S.name + '（蝦皮）' : '';
     return S.fnum ? (S.name || '') + '（' + S.fnum + '）' : '';
   }
   // 各画面の上に、ここまでに決めた事を小さく出す（どの日・どの方の入力中か分かるように）。
@@ -10221,9 +10222,10 @@ function hanbaiScript_(C) {
     var h = (S.country === 'JP' ? '🇯🇵 日本販売' : '🇹🇼 台湾販売') + '　' + esc(jpDate(S.date));
     // ★2026-10-17 まるちゃん「お客様番号と氏名は大きく目立つように」＝お客様は1行で大きな黄色の字。
     var c = '';
-    if (id !== 'hbJNew') {
+    if (id !== 'hbJNew' && id !== 'hbShop') {
       if (S.country === 'JP' && (S.sei || S.mei)) c = esc((S.sei + ' ' + S.mei).trim()) + ' 様';
-      if (S.country === 'TW' && S.fnum) c = '<span class="no">' + esc(S.fnum) + '</span>' + esc(S.name || '');
+      if (S.country === 'TW' && S.kind === 'shopee' && S.name) c = '<span class="no">蝦皮</span>' + esc(S.name);
+      else if (S.country === 'TW' && S.fnum) c = '<span class="no">' + esc(S.fnum) + '</span>' + esc(S.name || '');
     }
     if (c) h += '<div class="hbcust">' + c + '</div>';
     var t = '';
@@ -10462,6 +10464,16 @@ function hanbaiScript_(C) {
     for (var j = 0; j < sg.length; j++) sg[j].className = (sg[j].getAttribute('data-v') === NPRE) ? 'on' : '';
   }
   $('hbNumBtn').addEventListener('click', function () { S.kind = 'number'; NPRE = ''; NDIG = ''; numDraw(); show('hbNum'); });
+  // ★2026-10-20 まるちゃん「蝦皮で販売ボタンを付けたい。次は名前入力画面」＝お客様番号は無く、お名前だけ入れる。
+  //   お金は蝦皮の中で払われるので支払方法は「蝦皮」に決まり、支払方法の画面は飛ばす（金額→備考）。
+  $('hbShopBtn').addEventListener('click', function () {
+    S.kind = 'shopee'; S.fnum = ''; S.name = ''; S.pay = ''; $('hbShopName').value = ''; show('hbShop');
+  });
+  $('hbShopGo').addEventListener('click', function () {
+    S.name = $('hbShopName').value.replace(/\s+/g, ' ').trim();
+    if (!S.name) { popup('お名前を入れてください'); return; }
+    S.fnum = ''; S.pay = '蝦皮'; openQty();
+  });
   var segs = $('hbNumSeg').querySelectorAll('button');
   for (var s0 = 0; s0 < segs.length; s0++) segs[s0].addEventListener('click', function () {
     NPRE = this.getAttribute('data-v'); numDraw();
@@ -10560,7 +10572,9 @@ function hanbaiScript_(C) {
   });
   $('hbAmtGo').addEventListener('click', function () {
     if (ADIG === '') { popup('金額を入れてください'); return; }
-    S.amount = parseInt(ADIG, 10); openPay();
+    S.amount = parseInt(ADIG, 10);
+    if (S.kind === 'shopee') { S.pay = '蝦皮'; $('hbNoteIn').value = S.note || ''; show('hbNote'); return; }   // 蝦皮は支払方法をえらばない
+    openPay();
   });
 
   // パソコンはキーボードの数字・Enter・BackSpaceでも入れられる（番号・本数・金額）。
@@ -10688,7 +10702,7 @@ function hanbaiScript_(C) {
         //   全期間の時は月が上に無いので「10/20」（去年より前は「25/10/20」）。
         var dTxt = !isAll ? (+dp[2]) + '日' : (dp[0] !== thisY ? dp[0].slice(2) + '/' : '') + (+dp[1]) + '/' + (+dp[2]);
         h += '<tr data-i="' + j + '"><td class="l d">' + dTxt + '</td><td class="l one">' + esc(r[2] || '') +
-          (r[1] ? ' <small>' + esc(r[1]) + '</small>' : '') + (markOf(r[6]) ? ' ' + markOf(r[6]) : '') +
+          (r[1] ? ' <small>' + esc(r[1]) + '</small>' : (r[11] === 'shopee' ? ' <small>蝦皮</small>' : '')) + (markOf(r[6]) ? ' ' + markOf(r[6]) : '') +
           (r[8] > 1 ? ' <span class="rp">🔁' + r[8] + '回計' + r[9] + '本</span>' : '') +
           (r[5] ? ' <span class="nt">📝' + esc(r[5]) + '</span>' : '') + '</td>' +
           '<td class="r">' + r[3] + (r[7] ? '<span class="gf">🎁' + r[7] + '</span>' : '') + '</td><td class="r">' + yen(r[4]) + '</td></tr>';
@@ -10702,7 +10716,7 @@ function hanbaiScript_(C) {
     var tr = e.target.closest('tr[data-i]'); if (!tr) return;
     var all = LCACHE[LM], d = all && all[LC], r = d && d.rows[parseInt(tr.getAttribute('data-i'), 10)]; if (!r) return;
     var dp = String(r[0]).split('-'), u = LC === 'JP' ? '円' : '元';
-    popup((+dp[1]) + '/' + (+dp[2]) + '　' + (r[2] || '') + (r[1] ? '（' + r[1] + '）' : '') +
+    popup((+dp[1]) + '/' + (+dp[2]) + '　' + (r[2] || '') + (r[1] ? '（' + r[1] + '）' : (r[11] === 'shopee' ? '（蝦皮）' : '')) +
       (r[8] > 1 ? '\n🔁' + r[8] + '回 計' + r[9] + '本' : '') +
       '\n' + r[3] + '本' + (r[7] ? '（🎁' + r[7] + '本）' : '') + '　' + yen(r[4]) + u + (r[10] ? '（' + r[10] + '）' : '') +
       '\n担当：' + (r[6] || '－') + (r[5] ? '\n備考：' + r[5] : ''));
@@ -10792,6 +10806,11 @@ function renderHanbaiPage_(base, staff, dev) {
       '<div id="hbTKind" style="display:none">' + inBack + head('🇹🇼', '台湾販売入力') + sum +
         '<button type="button" class="hbbig" id="hbTodayBtn"><span class="i">📅</span><span id="hbTodayBtnTx">本日予約のお客様</span></button>' +
         '<button type="button" class="hbbig" id="hbNumBtn"><span class="i">🔢</span>お客様番号検索</button>' +
+        '<button type="button" class="hbbig" id="hbShopBtn"><span class="i">🛍️</span>蝦皮で販売</button>' +
+      '</div>' +
+      '<div id="hbShop" style="display:none">' + inBack + head('🛍️', '蝦皮のお客様') + sum +
+        '<div class="hblb">お名前</div><input class="hbin" id="hbShopName" autocomplete="off" placeholder="例：王小明">' +
+        '<button type="button" class="exgo" id="hbShopGo">次へ</button>' +
       '</div>' +
       '<div id="hbToday" style="display:none">' + inBack + head('📅', '本日予約のお客様', 'hbTodayHead') + sum +
         '<div class="hbrows hbcards" id="hbTodayRows"></div>' +
