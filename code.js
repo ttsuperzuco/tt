@@ -174,7 +174,7 @@ function doGet(e) {
     title = 'プロセル在庫';                             // ★品物ごとの今ある数を入れる（純JS・登録は受付係）
     html = renderProcStockPage_(base, staff, dev);
   } else if (view === 'hanbai') {
-    title = 'No.31 販売管理';                                 // ★日本・台湾の販売を入れる／一覧（純JS・登録は受付係）
+    title = 'No31 販売管理';                                 // ★日本・台湾の販売を入れる／一覧（純JS・登録は受付係）
     html = renderHanbaiPage_(base, staff, dev);
   } else if (view === 'procamp') {
     title = 'プロセル頭キャリスト';                     // ★社長版と開発版。静的アプリが一覧を取って描く（ここは中身なし）
@@ -1764,7 +1764,7 @@ var TILE_DEFS_ = [
   // ★販売管理＝台湾販売入力／日本販売入力／販売管理表（2026-10-17・実務者用）。
   //   登録・候補・一覧は事務所PCの記録（受付係 op=hanbai → 販売管理\programs\hanbai.py）。
   { id: 'hanbai', cls: 'hanbai', view: 'hanbai',
-    icon: '<span class="ticon">🛒</span>', label: 'No.31\n販売管理' }
+    icon: '<span class="ticon">🛒</span>', label: 'No31\n販売管理' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -10330,7 +10330,7 @@ function hanbaiScript_(C) {
   $('hbGoJP').addEventListener('click', function () { clearMsg(); reset('JP'); openDate(); });
   $('hbGoList').addEventListener('click', function () { clearMsg(); openList('TW', ''); });   // ★2026-10-21 まるちゃん「台湾元デフォルト」
 
-  // ── No.31 お店在庫入力（2026-10-21）＝今お店にある本数を数字で入れて登録する ──
+  // ── No31 お店在庫入力（2026-10-21）＝今お店にある本数を数字で入れて登録する ──
   var stDigits = '', stSending = false;
   function stDraw() {
     $('hbStBox').innerHTML = stDigits ? esc(stDigits) + '<span class="u">本</span>' : '<span class="ph">数字を入れてください</span>';
@@ -10350,7 +10350,7 @@ function hanbaiScript_(C) {
   });
   $('hbStOk').addEventListener('click', function () {
     if (stDigits === '') { popup('本数を入れてください（無い時は 0）'); return; }
-    var rows = [['品物', 'No.31（50ml）'], ['今お店にある本数', parseInt(stDigits, 10) + ' 本'], ['入力する人', who()]];
+    var rows = [['品物', 'ホホバエッセンスNo31（50ml）'], ['今お店にある本数', parseInt(stDigits, 10) + ' 本'], ['入力する人', who()]];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
     $('hbStRows').innerHTML = h; $('hbStSt').textContent = ''; $('hbStSend').disabled = false;
@@ -10363,7 +10363,7 @@ function hanbaiScript_(C) {
     ask({ kind: 'stock', qty: n, staff: who(), at: stamp(new Date()) }, '登録しています', function (err, d) {
       stSending = false; $('hbStSend').disabled = false; $('hbStSt').textContent = '';
       if (err || !d || !d.ok) { popup('登録できませんでした：' + (err || (d && d.reason) || '不明')); return; }
-      $('hbMenuMsg').innerHTML = '✅ お店の在庫を登録しました　No.31　' + n + '本';
+      $('hbMenuMsg').innerHTML = '✅ お店の在庫を登録しました　No31　' + n + '本';
       $('hbMenuMsg').style.display = '';
       hist = []; show('hbMenu', true);
     }, '登録が終わったら自動で画面が切り替わりますので、しばらくお待ちください。');
@@ -10847,18 +10847,18 @@ function renderHanbaiPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + EXPADCSS_ + PROCSTOCKCSS_ + HANBAICSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="hb">' +
-      '<div id="hbWho" style="display:none">' + head('🙋', 'No.31 販売管理') +
+      '<div id="hbWho" style="display:none">' + head('🙋', 'No31 販売管理') +
         '<div class="hbbighint">販売した人の名前を<br>選んでください</div>' +
         '<div class="pspeople" id="hbWhoBtns"></div>' +
       '</div>' +
-      '<div id="hbMenu">' + head('🛒', 'No.31 販売管理') +
+      '<div id="hbMenu">' + head('🛒', 'No31 販売管理') +
         '<div class="hbwho" id="hbWhoLine" style="display:none">販売した人：<b id="hbWhoName"></b>' +
           '<button type="button" id="hbWhoChange">変える</button></div>' +
         '<div class="hbok" id="hbMenuMsg" style="display:none"></div>' +
         '<button type="button" class="hbbig" id="hbGoTW"><span class="i">🇹🇼</span>台湾販売入力</button>' +
         '<button type="button" class="hbbig" id="hbGoJP"><span class="i">🇯🇵</span>日本販売入力</button>' +
         // ★2026-10-21 まるちゃん「三つ目に No31お店在庫入力 ボタンを付けたい。内容はプロセルの在庫入力と同じ」
-        '<button type="button" class="hbbig" id="hbGoStock"><span class="i">📦</span>No.31 お店在庫入力</button>' +
+        '<button type="button" class="hbbig" id="hbGoStock"><span class="i">📦</span>No31 お店在庫入力</button>' +
         '<button type="button" class="hbbig" id="hbGoList"><span class="i">📋</span>販売管理表</button>' +
       '</div>' +
       '<div id="hbDate" style="display:none">' + inBack + head('📅', '', 'hbDateHead') +
@@ -10926,9 +10926,9 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbSend">登録する</button>' +
         '<div class="hbst" id="hbSt"></div>' +
       '</div>' +
-      // ★2026-10-21 No.31 お店在庫入力＝今お店にある本数を数字で入れて登録する（プロセル在庫と同じ形）
-      '<div id="hbStock" style="display:none">' + inBack + head('📦', 'No.31 お店在庫入力') +
-        '<div class="psname">今お店にある<br>No.31 の本数</div>' +
+      // ★2026-10-21 No31 お店在庫入力＝今お店にある本数を数字で入れて登録する（プロセル在庫と同じ形）
+      '<div id="hbStock" style="display:none">' + inBack + head('📦', 'No31 お店在庫入力') +
+        '<div class="psname">今お店にある<br>ホホバエッセンスNo31<br>の本数</div>' +
         '<div class="exbox psbox" id="hbStBox"></div>' +
         '<div class="expad" id="hbStPad">' + EXPADHTML_ + '</div>' +
         '<button type="button" class="exgo" id="hbStOk">これでOK → 確認へ</button>' +
