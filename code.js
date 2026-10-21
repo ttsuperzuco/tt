@@ -10319,7 +10319,7 @@ function hanbaiScript_(C) {
   $('hbWhoChange').addEventListener('click', function () { clearMsg(); show('hbWho'); });
   $('hbGoTW').addEventListener('click', function () { clearMsg(); reset('TW'); openDate(); });
   $('hbGoJP').addEventListener('click', function () { clearMsg(); reset('JP'); openDate(); });
-  $('hbGoList').addEventListener('click', function () { clearMsg(); openList('JP', ''); });
+  $('hbGoList').addEventListener('click', function () { clearMsg(); openList('TW', ''); });   // ★2026-10-21 まるちゃん「台湾元デフォルト」
 
   // ── 日付 ──
   function drawDate() {
@@ -10628,7 +10628,7 @@ function hanbaiScript_(C) {
   //   今月の分は、販売管理を開いた時に裏で先に読んでおく（一覧を押した時に待たない）。
   // ★2026-10-20 まるちゃん「全期間をみれるボタンつくりたい」＝LM が 'ALL' の時は全期間（月の行は隠す）。
   //   LMM＝全期間へ切り替える前に見ていた月（月ごとへ戻した時にその月へ戻す）。
-  var LC = 'JP', LM = '', LMM = '', LCACHE = {}, LWAIT = {};
+  var LC = 'TW', LM = '', LMM = '', LCACHE = {}, LWAIT = {};
   var SRC = { shop: true, shopee: true };   // 台湾の表で出す方（お店購入／蝦皮購入）。両方とも消えないようにする
   function thisMonth() { return ymd(new Date()).slice(0, 7); }
   function shiftMonth(m, d) { var p = m.split('-'), x = new Date(+p[0], +p[1] - 1 + d, 1); return x.getFullYear() + '-' + two(x.getMonth() + 1); }
@@ -10866,7 +10866,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="hbst" id="hbSt"></div>' +
       '</div>' +
       '<div id="hbList" style="display:none">' + inBack + head('📋', '販売管理表') +
-        '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="JP">🇯🇵 日本（円）</button><button type="button" data-v="TW">🇹🇼 台湾（元）</button></div>' +
+        '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="TW">🇹🇼 台湾（元）</button><button type="button" data-v="JP">🇯🇵 日本（円）</button></div>' +
         '<div class="hbseg sm" id="hbSpanSeg"><button type="button" class="on" data-v="M">📅 月ごと</button><button type="button" data-v="ALL">🗂 全期間</button></div>' +
         '<div class="hbseg sm" id="hbSrcSeg"><button type="button" class="on" data-v="shop">🏪 お店購入</button><button type="button" class="on" data-v="shopee">🛍️ 蝦皮購入</button></div>' +
         '<div class="hbmon" id="hbMonRow"><button type="button" id="hbMonPrev">◀</button><div id="hbMonTxt"></div><button type="button" id="hbMonNext">▶</button></div>' +
