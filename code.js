@@ -1792,6 +1792,9 @@ var ROLE_DEFS_ = [
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発者用' }
 ];
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
+// ★部屋の中で、そのボタンの右（次のマス）を空白にする（2026-10-21 まるちゃん「空き時間の右は空白」）。
+//   PC版 super_pc.py の BLANK_AFTER と同じ（片方直したら両方）。
+var BLANK_AFTER_ = { jitsumu: ['akijikan'] };
 
 // 3つの大ボタン⇔仲間の切り替え（差し込んだ<script>はrunScriptsで実行される）。
 var ROLEMENU_SCRIPT_ =
@@ -1892,7 +1895,9 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button></div>' +
         '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
-        '<div class="tiles">' + list.map(tileA_).join('') + '</div></div>';
+        '<div class="tiles">' + list.map(function (t) {
+          return tileA_(t) + ((BLANK_AFTER_[R.id] || []).indexOf(t.id) >= 0 ? '<div class="tilegap"></div>' : '');
+        }).join('') + '</div></div>';
     }
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="home">' + head +
