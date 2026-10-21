@@ -10168,12 +10168,10 @@ var HANBAICSS_ =
   '.hbtbl tbody tr:nth-child(even) td{background:#eef6f9;}' +
   // ★2026-10-21 まるちゃん「蝦皮でかった行は背景色を少し変えるのはどう？ ボタンの色もそれにあわせて」
   '.hbtbl tbody tr.sp td{background:#fff4ea;}' +
-  '.hbtbl tbody tr.sp:nth-child(even) td{background:#ffeada;}' +
   '.hbtbl tbody tr.sp td.d{box-shadow:inset 4px 0 0 #ea580c;}' +
   // ★2026-10-21 まるちゃん「お店で購入も緑はやめて違う色。下の背景も色つける」
   //   ＝お店購入はズコの地の色（青緑）にそろえ、行の背景も薄い青緑にする。
   '.hbtbl tbody tr.sh td{background:#e8edff;}' +
-  '.hbtbl tbody tr.sh:nth-child(even) td{background:#d8e1ff;}' +
   '.hbtbl tbody tr.sh td.d{box-shadow:inset 4px 0 0 #1d4ed8;}' +
   '.hbseg.sm button.on[data-v="shopee"]{background:#ea580c;border-color:#c2410c;}' +
   '.hbseg.sm button.on[data-v="shop"]{background:#1d4ed8;border-color:#1e3a8a;}' +
