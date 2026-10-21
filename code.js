@@ -1907,7 +1907,10 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' + head +
-    '<div class="tiles">' + shown.map(tileA_).join('') + '</div>' +
+    // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
+    '<div class="tiles">' + shown.map(function (t) {
+      return tileA_(t) + ((staff && (BLANK_AFTER_.jitsumu || []).indexOf(t.id) >= 0) ? '<div class="tilegap"></div>' : '');
+    }).join('') + '</div>' +
   '</div>' + EXTLINK_SCRIPT_;
 }
 
