@@ -10170,7 +10170,13 @@ var HANBAICSS_ =
   '.hbtbl tbody tr.sp td{background:#fff4ea;}' +
   '.hbtbl tbody tr.sp:nth-child(even) td{background:#ffeada;}' +
   '.hbtbl tbody tr.sp td.d{box-shadow:inset 4px 0 0 #ea580c;}' +
+  // ★2026-10-21 まるちゃん「お店で購入も緑はやめて違う色。下の背景も色つける」
+  //   ＝お店購入はズコの地の色（青緑）にそろえ、行の背景も薄い青緑にする。
+  '.hbtbl tbody tr.sh td{background:#e9f3f8;}' +
+  '.hbtbl tbody tr.sh:nth-child(even) td{background:#dceaf2;}' +
+  '.hbtbl tbody tr.sh td.d{box-shadow:inset 4px 0 0 #2C7A99;}' +
   '.hbseg.sm button.on[data-v="shopee"]{background:#ea580c;border-color:#c2410c;}' +
+  '.hbseg.sm button.on[data-v="shop"]{background:#2C7A99;border-color:#1f5a72;}' +
   '.hbtbl .l{text-align:left;}.hbtbl .c{text-align:center;}.hbtbl .r{text-align:right;white-space:nowrap;}' +
   '.hbtbl td.d{white-space:nowrap;}' +
   '.hbtbl .nt{font-size:12px;color:#475569;font-weight:600;}' +
@@ -10721,7 +10727,7 @@ function hanbaiScript_(C) {
         //   ★日は「20日」だけ（月は上に出ている）。担当のマークは氏名のすぐ右（まるちゃんの最初の指定）＝列を減らして幅をあける。
         //   全期間の時は月が上に無いので「10/20」（去年より前は「25/10/20」）。
         var dTxt = !isAll ? (+dp[2]) + '日' : (dp[0] !== thisY ? dp[0].slice(2) + '/' : '') + (+dp[1]) + '/' + (+dp[2]);
-        h += '<tr data-i="' + j + '"' + (r[11] === 'shopee' ? ' class="sp"' : '') + '><td class="l d">' + dTxt + '</td><td class="l one">' + esc(r[2] || '') +
+        h += '<tr data-i="' + j + '"' + (r[11] === 'shopee' ? ' class="sp"' : ' class="sh"') + '><td class="l d">' + dTxt + '</td><td class="l one">' + esc(r[2] || '') +
           (r[1] ? ' <small>' + esc(r[1]) + '</small>' : (r[11] === 'shopee' ? ' <small class="sp">蝦皮</small>' : '')) + (markOf(r[6]) ? ' ' + markOf(r[6]) : '') +
           (r[8] > 1 ? ' <span class="rp">🔁' + r[8] + '回計' + r[9] + '本</span>' : '') +
           (r[5] ? ' <span class="nt">📝' + esc(r[5]) + '</span>' : '') + '</td>' +
