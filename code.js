@@ -10593,7 +10593,12 @@ function hanbaiScript_(C) {
   }
   var QTY = counter('hbQty', 'qty', '0本（プレゼントだけ）', function () { GIFT.open(); });
   // ★2026-10-17 まるちゃん「金額の後の画面にして」＝本数→プレゼント→金額→支払方法→備考。
-  var GIFT = counter('hbGift', 'gift', 'なし', function () { openAmt(); });
+  // ★2026-10-21 まるちゃん「無料0本の場合は、これおかしいだろ」＝売っていないのに金額を聞くのは変。
+  //   販売本数が0本の時は、金額も支払方法も無いので、どちらの画面も飛ばして備考へ進む。
+  var GIFT = counter('hbGift', 'gift', 'なし', function () {
+    if (S.qty === 0) { S.amount = 0; S.pay = ''; $('hbNoteIn').value = S.note || ''; show('hbNote'); return; }
+    openAmt();
+  });
   // ── 支払方法（2026-10-17 まるちゃん依頼）：台湾＝LinePay／街口／現金／振込、日本＝現金／振込 ──
   var PAYS = { TW: ['LinePay', '街口', '現金', '振込'], JP: ['現金', '振込'] };
   function openPay() {
@@ -10646,7 +10651,11 @@ function hanbaiScript_(C) {
     var rows = [['販売', S.country === 'JP' ? '🇯🇵 日本' : '🇹🇼 台湾'], ['販売日', jpDate(S.date)],
       // 🔁の方は「🔁〇回 計〇本」（今回を入れた回数と本数）＝まるちゃん指定の書き方
       ['お客様', (S.country === 'JP' ? (S.kind === 'new' ? '【新規】' : '【🔁' + ((S.prevN || 0) + 1) + '回 計' + ((S.prevQ || 0) + S.qty) + '本】') : '') + custText()],
-      ['販売本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['販売金額', yen(S.amount) + ' ' + unit()], ['支払方法', S.pay], ['備考', S.note || '（なし）']];
+      ['販売本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし']];
+    // ★0本（プレゼントだけ）の時は、お金のやりとりが無いので金額と支払方法を出さない。
+    if (S.qty === 0) rows.push(['お支払い', 'なし（プレゼントだけ）']);
+    else rows.push(['販売金額', yen(S.amount) + ' ' + unit()], ['支払方法', S.pay]);
+    rows.push(['備考', S.note || '（なし）']);
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
     $('hbConfRows').innerHTML = h; $('hbSt').textContent = ''; $('hbSend').disabled = false;
