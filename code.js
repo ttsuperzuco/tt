@@ -1780,12 +1780,15 @@ var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   uriage: 'kanri', procell: 'kanri', shophist: 'kanri',
+  // ★2026-10-21 まるちゃん決定：「実務者用」を「スタッフ画面」に改名し、中身をみかんさんの画面と同じにした。
+  //   みかんさんに出ないボタンは、開発中なら開発者用・それ以外は管理者用へ（PC版 super_pc.py の GROUP_OF と同じ）。
+  unanswered: 'kanri', rireki: 'kanri', timetree: 'kanri', kizon: 'kaihatsu',
   formconv: 'kaihatsu', honyaku: 'kaihatsu'
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
 var ROLE_DEFS_ = [
   { id: 'kanri', icon: '🛠️', title: '管理者用' },
-  { id: 'jitsumu', icon: '💼', title: '実務者用' },
+  { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発者用' }
 ];
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
@@ -14286,7 +14289,7 @@ var KANSHISCRIPT_ =
 '  }' +
 '  var groups={kanri:[],jitsumu:[],kaihatsu:[]};' +
 '  for(var k=0;k<order.length;k++){ var g=tileGrp_(order[k]); (groups[g]||groups.jitsumu).push(order[k]); }' +
-'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_:[{id:"kanri",icon:"🛠️",title:"管理者用"},{id:"jitsumu",icon:"💼",title:"実務者用"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発者用"}];' +
+'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_:[{id:"kanri",icon:"🛠️",title:"管理者用"},{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発者用"}];' +
 '  var out="";' +
 '  for(var r=0;r<roles.length;r++){ var R=roles[r], ids=groups[R.id]||[]; if(!ids.length) continue;' +
 '    out+="<div class=\\"kroom\\">"+R.icon+" "+R.title+"</div>"+ids.map(rowH_).join(""); }' +
