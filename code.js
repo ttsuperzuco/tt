@@ -10081,8 +10081,8 @@ function renderProcStockPage_(base, staff, dev) {
 // ========== 販売管理（2026-10-17 まるちゃん依頼） ==========
 // ホームの「販売管理」→【台湾販売入力】【日本販売入力】【販売管理表】。
 //  日本：日付 →【新規お客様】氏・名を入れる／【🔁お客様】苗字の最初のひらがな→前に買った方から選ぶ
-//        → 購入本数（1〜10のボタン・10本以上は数字で）→ 販売金額（円）→ 備考（空欄でも可）→ 確認 → 登録
-//  台湾：日付 →【本日予約のお客様】／【お客様番号検索】→ 購入本数 → 販売金額（元）→ 備考 → 確認 → 登録
+//        → 販売本数（0〜10のボタン・10本以上は数字で）→ 販売金額（円）→ 備考（空欄でも可）→ 確認 → 登録
+//  台湾：日付 →【本日予約のお客様】／【お客様番号検索】→ 販売本数 → 販売金額（元）→ 備考 → 確認 → 登録
 //  販売管理表：日本・台湾ごとに、月ごとの一覧と合計。
 // 記録・候補・お名前・一覧は全部 受付係(op=hanbai) → 事務所PC 販売管理\programs\hanbai.py（共有DB hanbai_sales）。
 // ★新規の方で氏がひらがな・カタカナでない時だけ「苗字の最初のひらがな」を1つ押してもらう
@@ -10545,11 +10545,13 @@ function hanbaiScript_(C) {
     });
   });
 
-  // ── 購入本数／プレゼント本数（同じ作り：1〜10のボタン＋10本以上は数字ボタン） ──
+  // ── 販売本数／プレゼント本数（同じ作り：1〜10のボタン＋10本以上は数字ボタン） ──
+  // ★2026-10-21 まるちゃん「購入本数じゃなくて販売本数にして。あと0本も入れて。
+  //   つまり売ってないけど、プレゼントだけも入れられるように」
   // ★10本以上を押したら1〜10のボタンを隠す（まるちゃん「わかりにくい」）。入れた数は「10本以上」のボタンの中に出す。
   // ★プレゼント＝無料であげた本数（2026-10-17 まるちゃん依頼）。一番上に横長の「なし」。
   var CNT = {};
-  function counter(sec, key, withNone, next) {
+  function counter(sec, key, noneLabel, next) {
     var btns = $(sec + 'Btns'), more = $(sec + 'More'), pad = $(sec + 'Pad'), go = $(sec + 'Go'), dig = '';
     function isMore() { return more.style.display !== 'none'; }
     function draw() {
@@ -10559,7 +10561,7 @@ function hanbaiScript_(C) {
       mb.innerHTML = !isMore() ? '10本以上（数字で入れる）' : (dig ? '<span class="qn">' + esc(dig) + '</span> 本' : '数字ボタンで本数を入れてください');
     }
     function open() {
-      var v = S[key], h = withNone ? '<button type="button" class="wide none' + (v === 0 && S[key + 'Set'] ? ' on' : '') + '" data-q="0">なし</button>' : '';
+      var v = S[key], h = noneLabel ? '<button type="button" class="wide none' + (v === 0 && S[key + 'Set'] ? ' on' : '') + '" data-q="0">' + noneLabel + '</button>' : '';
       for (var i = 1; i <= 10; i++) h += '<button type="button" data-q="' + i + '"' + (v === i ? ' class="on"' : '') + '>' + i + '</button>';
       h += '<button type="button" class="wide" data-q="more">10本以上（数字で入れる）</button>';
       btns.innerHTML = h;
@@ -10582,16 +10584,16 @@ function hanbaiScript_(C) {
       draw();
     });
     go.addEventListener('click', function () {
-      var q = parseInt(dig || '0', 10);
-      if (!q) { popup('本数を入れてください'); return; }
+      if (dig === '') { popup('本数を入れてください（無い時は 0）'); return; }
+      var q = parseInt(dig, 10);
       S[key] = q; S[key + 'Set'] = true; next();
     });
     CNT[sec] = { open: open, isMore: isMore, closeMore: closeMore, pad: sec + 'Pad', go: sec + 'Go' };
     return CNT[sec];
   }
-  var QTY = counter('hbQty', 'qty', false, function () { GIFT.open(); });
+  var QTY = counter('hbQty', 'qty', '0本（プレゼントだけ）', function () { GIFT.open(); });
   // ★2026-10-17 まるちゃん「金額の後の画面にして」＝本数→プレゼント→金額→支払方法→備考。
-  var GIFT = counter('hbGift', 'gift', true, function () { openAmt(); });
+  var GIFT = counter('hbGift', 'gift', 'なし', function () { openAmt(); });
   // ── 支払方法（2026-10-17 まるちゃん依頼）：台湾＝LinePay／街口／現金／振込、日本＝現金／振込 ──
   var PAYS = { TW: ['LinePay', '街口', '現金', '振込'], JP: ['現金', '振込'] };
   function openPay() {
@@ -10644,7 +10646,7 @@ function hanbaiScript_(C) {
     var rows = [['販売', S.country === 'JP' ? '🇯🇵 日本' : '🇹🇼 台湾'], ['販売日', jpDate(S.date)],
       // 🔁の方は「🔁〇回 計〇本」（今回を入れた回数と本数）＝まるちゃん指定の書き方
       ['お客様', (S.country === 'JP' ? (S.kind === 'new' ? '【新規】' : '【🔁' + ((S.prevN || 0) + 1) + '回 計' + ((S.prevQ || 0) + S.qty) + '本】') : '') + custText()],
-      ['購入本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['販売金額', yen(S.amount) + ' ' + unit()], ['支払方法', S.pay], ['備考', S.note || '（なし）']];
+      ['販売本数', S.qty + ' 本'], ['プレゼント', S.gift ? S.gift + ' 本' : 'なし'], ['販売金額', yen(S.amount) + ' ' + unit()], ['支払方法', S.pay], ['備考', S.note || '（なし）']];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
     $('hbConfRows').innerHTML = h; $('hbSt').textContent = ''; $('hbSend').disabled = false;
@@ -10895,7 +10897,7 @@ function renderHanbaiPage_(base, staff, dev) {
         pad('hbNumPad') +
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
       '</div>' +
-      count('hbQty', '🧴', '購入本数', '') +
+      count('hbQty', '🧴', '販売本数', '') +
       count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>えらんでください') +
       '<div id="hbPay" style="display:none">' + inBack + head('💳', '支払方法') + sum +
         '<div class="hbpay" id="hbPayBtns"></div>' +
