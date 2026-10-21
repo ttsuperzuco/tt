@@ -10184,7 +10184,7 @@ var HANBAICSS_ =
 function hanbaiScript_(C) {
   function $(id) { return document.getElementById(id); }
   var SECS = ['hbMenu', 'hbDate', 'hbJKind', 'hbJNew', 'hbKana', 'hbCands', 'hbTKind', 'hbToday', 'hbNum', 'hbShop',
-    'hbQty', 'hbGift', 'hbPay', 'hbAmt', 'hbNote', 'hbConf', 'hbList', 'hbWho'];
+    'hbQty', 'hbGift', 'hbPay', 'hbAmt', 'hbNote', 'hbConf', 'hbList', 'hbWho', 'hbStock', 'hbStockConf'];
   var hist = [], cur = 'hbMenu';
   function show(id, noPush) {
     if (!noPush && cur && cur !== id) hist.push(cur);
@@ -10329,6 +10329,45 @@ function hanbaiScript_(C) {
   $('hbGoTW').addEventListener('click', function () { clearMsg(); reset('TW'); openDate(); });
   $('hbGoJP').addEventListener('click', function () { clearMsg(); reset('JP'); openDate(); });
   $('hbGoList').addEventListener('click', function () { clearMsg(); openList('TW', ''); });   // ★2026-10-21 まるちゃん「台湾元デフォルト」
+
+  // ── No.31 お店在庫入力（2026-10-21）＝今お店にある本数を数字で入れて登録する ──
+  var stDigits = '', stSending = false;
+  function stDraw() {
+    $('hbStBox').innerHTML = stDigits ? esc(stDigits) + '<span class="u">本</span>' : '<span class="ph">数字を入れてください</span>';
+  }
+  $('hbGoStock').addEventListener('click', function () {
+    clearMsg();
+    if (needPick() && !PICKED) { drawWho(); show('hbWho'); return; }   // 人をえらんでから、もう一度押してもらう
+    stDigits = ''; stDraw(); $('hbStWho').textContent = '入力する人：' + who(); show('hbStock');
+  });
+  $('hbStPad').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var k = b.getAttribute('data-k') || b.textContent;
+    if (k === 'clr') stDigits = '';
+    else if (k === 'del') stDigits = stDigits.slice(0, -1);
+    else if (/^[0-9]$/.test(k) && stDigits.length < 4) stDigits = (stDigits === '0') ? k : stDigits + k;
+    stDraw();
+  });
+  $('hbStOk').addEventListener('click', function () {
+    if (stDigits === '') { popup('本数を入れてください（無い時は 0）'); return; }
+    var rows = [['品物', 'No.31（50ml）'], ['今お店にある本数', parseInt(stDigits, 10) + ' 本'], ['入力する人', who()]];
+    var h = '';
+    for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
+    $('hbStRows').innerHTML = h; $('hbStSt').textContent = ''; $('hbStSend').disabled = false;
+    show('hbStockConf');
+  });
+  $('hbStSend').addEventListener('click', function () {
+    if (stSending) return;
+    stSending = true; $('hbStSend').disabled = true; $('hbStSt').textContent = '登録しています…';
+    var n = parseInt(stDigits, 10);
+    ask({ kind: 'stock', qty: n, staff: who(), at: stamp(new Date()) }, '登録しています', function (err, d) {
+      stSending = false; $('hbStSend').disabled = false; $('hbStSt').textContent = '';
+      if (err || !d || !d.ok) { popup('登録できませんでした：' + (err || (d && d.reason) || '不明')); return; }
+      $('hbMenuMsg').innerHTML = '✅ お店の在庫を登録しました　No.31　' + n + '本';
+      $('hbMenuMsg').style.display = '';
+      hist = []; show('hbMenu', true);
+    }, '登録が終わったら自動で画面が切り替わりますので、しばらくお待ちください。');
+  });
 
   // ── 日付 ──
   function drawDate() {
@@ -10807,6 +10846,8 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="hbok" id="hbMenuMsg" style="display:none"></div>' +
         '<button type="button" class="hbbig" id="hbGoTW"><span class="i">🇹🇼</span>台湾販売入力</button>' +
         '<button type="button" class="hbbig" id="hbGoJP"><span class="i">🇯🇵</span>日本販売入力</button>' +
+        // ★2026-10-21 まるちゃん「三つ目に No31お店在庫入力 ボタンを付けたい。内容はプロセルの在庫入力と同じ」
+        '<button type="button" class="hbbig" id="hbGoStock"><span class="i">📦</span>No.31 お店在庫入力</button>' +
         '<button type="button" class="hbbig" id="hbGoList"><span class="i">📋</span>販売管理表</button>' +
       '</div>' +
       '<div id="hbDate" style="display:none">' + inBack + head('📅', '', 'hbDateHead') +
@@ -10873,6 +10914,19 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="hbq">以上の内容で登録しますか？</div>' +
         '<button type="button" class="exgo" id="hbSend">登録する</button>' +
         '<div class="hbst" id="hbSt"></div>' +
+      '</div>' +
+      // ★2026-10-21 No.31 お店在庫入力＝今お店にある本数を数字で入れて登録する（プロセル在庫と同じ形）
+      '<div id="hbStock" style="display:none">' + inBack + head('📦', 'No.31 お店在庫入力') +
+        '<div class="psname">今お店にある<br>No.31 の本数</div>' +
+        '<div class="exbox psbox" id="hbStBox"></div>' +
+        '<div class="expad" id="hbStPad">' + EXPADHTML_ + '</div>' +
+        '<button type="button" class="exgo" id="hbStOk">これでOK → 確認へ</button>' +
+        '<div class="pswho" id="hbStWho"></div>' +
+      '</div>' +
+      '<div id="hbStockConf" style="display:none">' + inBack + head('📦', 'この内容で登録します') +
+        '<div class="hbconf" id="hbStRows"></div>' +
+        '<button type="button" class="exgo" id="hbStSend">これで在庫を登録</button>' +
+        '<div class="psst" id="hbStSt"></div>' +
       '</div>' +
       '<div id="hbList" style="display:none">' + inBack + head('📋', '販売管理表') +
         '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="TW">🇹🇼 台湾（元）</button><button type="button" data-v="JP">🇯🇵 日本（円）</button></div>' +
