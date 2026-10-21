@@ -10172,11 +10172,11 @@ var HANBAICSS_ =
   '.hbtbl tbody tr.sp td.d{box-shadow:inset 4px 0 0 #ea580c;}' +
   // ★2026-10-21 まるちゃん「お店で購入も緑はやめて違う色。下の背景も色つける」
   //   ＝お店購入はズコの地の色（青緑）にそろえ、行の背景も薄い青緑にする。
-  '.hbtbl tbody tr.sh td{background:#e9f3f8;}' +
-  '.hbtbl tbody tr.sh:nth-child(even) td{background:#dceaf2;}' +
-  '.hbtbl tbody tr.sh td.d{box-shadow:inset 4px 0 0 #2C7A99;}' +
+  '.hbtbl tbody tr.sh td{background:#e8edff;}' +
+  '.hbtbl tbody tr.sh:nth-child(even) td{background:#d8e1ff;}' +
+  '.hbtbl tbody tr.sh td.d{box-shadow:inset 4px 0 0 #1d4ed8;}' +
   '.hbseg.sm button.on[data-v="shopee"]{background:#ea580c;border-color:#c2410c;}' +
-  '.hbseg.sm button.on[data-v="shop"]{background:#2C7A99;border-color:#1f5a72;}' +
+  '.hbseg.sm button.on[data-v="shop"]{background:#1d4ed8;border-color:#1e3a8a;}' +
   '.hbtbl .l{text-align:left;}.hbtbl .c{text-align:center;}.hbtbl .r{text-align:right;white-space:nowrap;}' +
   '.hbtbl td.d{white-space:nowrap;}' +
   '.hbtbl .nt{font-size:12px;color:#475569;font-weight:600;}' +
