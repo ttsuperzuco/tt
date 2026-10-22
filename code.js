@@ -10339,7 +10339,11 @@ function hanbaiScript_(C) {
   $('hbWhoChange').addEventListener('click', function () { clearMsg(); show('hbWho'); });
   $('hbGoTW').addEventListener('click', function () { clearMsg(); reset('TW'); openDate(); });
   $('hbGoJP').addEventListener('click', function () { clearMsg(); reset('JP'); openDate(); });
-  $('hbGoList').addEventListener('click', function () { clearMsg(); openList('TW', ''); });   // ★2026-10-21 まるちゃん「台湾元デフォルト」
+  $('hbGoList').addEventListener('click', function () { clearMsg(); if (CANLIST) openList('TW', ''); });   // ★2026-10-21 まるちゃん「台湾元デフォルト」
+  // ★2026-10-22 まるちゃん「販売管理表は、幹部（トマト）とRYUだけにみせる」
+  //   ＝社長版（🍅トマト）と開発版（🐉Ryu・パソコン版も開発版で開く）だけ。スタッフ版・お店の端末は出さない（裏で先に読むのもしない）。
+  var CANLIST = (window.__SZ_ROLE_ === '社長(幹部)' || window.__SZ_ROLE_ === '開発');
+  $('hbGoList').style.display = CANLIST ? '' : 'none';
 
   // ── No31 お店在庫入力（2026-10-21）＝今お店にある本数を数字で入れて登録する ──
   var stDigits = '', stSending = false;
@@ -10704,6 +10708,7 @@ function hanbaiScript_(C) {
   function shiftMonth(m, d) { var p = m.split('-'), x = new Date(+p[0], +p[1] - 1 + d, 1); return x.getFullYear() + '-' + two(x.getMonth() + 1); }
   // 裏で読む（待ち画面を出さない）。読み終わったら、その月を開いていれば描く。
   function prefetch(month, cb) {
+    if (!CANLIST) return;   // 販売管理表を見せない人は読まない
     if (LWAIT[month]) { if (cb) LWAIT[month].push(cb); return; }
     LWAIT[month] = cb ? [cb] : [];
     jsonp({ action: 'submit', key: C.key, op: 'hanbai',
