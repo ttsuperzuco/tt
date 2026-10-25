@@ -6191,6 +6191,21 @@ var SG_STEPS_JS_ =
         'SLOT={s:8*60,e:22*60,kind:"staff",who:this.getAttribute("data-e")+" "+this.getAttribute("data-n"),' +
           'emoji:this.getAttribute("data-e"),toku:true};' +
         'goTime();TS=11*60;TE=TS+(NEEDMIN||30);drawTime();};}}' +
+    /* 特例の時の施術室＝お店が開いている時間（どこかの部屋に空きがある一番早い時刻〜一番遅い時刻）の中だけで、
+       まるごと空いている部屋（コスモスは出さない）。開く前・閉まった後の分は予約が無いので空きとみなす。 */
+    'function sgRoomsToku(a,b){' +
+      'var lo=24*60,hi=0,i,j;' +
+      'for(i=0;i<DAYROOMS.length;i++){for(j=0;j<(DAYROOMS[i].slots||[]).length;j++){' +
+        'lo=Math.min(lo,hm2m(DAYROOMS[i].slots[j].s));hi=Math.max(hi,hm2m(DAYROOMS[i].slots[j].e));}}' +
+      'var a2=Math.max(a,lo),b2=Math.min(b,hi);' +
+      'var out=[];' +
+      'for(i=0;i<DAYROOMS.length;i++){var r=DAYROOMS[i],ok=(a2>=b2);' +
+        'if(String(r.room||"").toUpperCase().indexOf("COSMOS")>=0)continue;' +
+        'for(j=0;!ok&&j<(r.slots||[]).length;j++){if(hm2m(r.slots[j].s)<=a2&&b2<=hm2m(r.slots[j].e))ok=true;}' +
+        'if(ok)out.push(r.room);}' +
+      'out.sort(function(x,y){var ix=AKI_ROOM_ORDER_.indexOf(x),iy=AKI_ROOM_ORDER_.indexOf(y);' +
+        'if(ix<0)ix=99;if(iy<0)iy=99;return ix-iy;});' +
+      'return out;}' +
     /* 特例の時、その施術者がその時間まるごと空いているか（空きの区間から見る） */
     'function sgStaffFree(emoji,a,b){' +
       'for(var i=0;i<DAYSTAFF.length;i++){var s=DAYSTAFF[i];if(String(s.emoji||"")!==emoji)continue;' +
@@ -6272,16 +6287,15 @@ var SG_STEPS_JS_ =
         'TE=TS+parseInt(this.getAttribute("data-m"),10);drawTime();};}' +
       /* ★施術室＝この時間に空いている部屋だけ。時間を変えるとその場で作り直す。 */
       'var fr=freeRooms(TS,TE);' +
-      /* ★特例の時は全部の施術室を出す（コスモスは今までどおり出さない）。空いていない部屋は「（空きの外）」と書く。 */
-      'var frFree=fr;' +
-      'if(SLOT.toku){fr=[];for(var q=0;q<AKI_ROOM_ORDER_.length;q++){if(AKI_ROOM_ORDER_[q]!=="COSMOS")fr.push(AKI_ROOM_ORDER_[q]);}}' +
+      /* ★特例でも**部屋に例外は無い**＝空いている部屋だけ出す（2026-10-25 まるちゃん「部屋はあきの例外はないよ。あいてないとだしてはだめ」）。
+         お店が開く前・閉まった後の時間は予約が無いので、開いている時間の中だけで空きを見る（10:40開始＝11:00からの分だけ見る）。 */
+      'if(SLOT.toku)fr=sgRoomsToku(TS,TE);' +
       'if(ROOM&&fr.indexOf(ROOM)<0&&fr.indexOf(shortRoomName_(ROOM))<0)ROOM=null;' +
       'var rh="";' +
       'for(var k=0;k<fr.length;k++){' +
         'var nm=shortRoomName_(fr[k]);' +
-        'var busyR=SLOT.toku&&frFree.indexOf(fr[k])<0;' +
         'rh+="<button type=\\"button\\" class=\\"sgroomb"+((ROOM===fr[k]||ROOM===nm)?" sel":"")+"\\"" +' +
-          '" data-r=\\""+esc(fr[k])+"\\" style=\\"background:"+roomColor_(fr[k])+"\\">"+esc(nm)+(busyR?"<br>（空きの外）":"")+"</button>";}' +
+          '" data-r=\\""+esc(fr[k])+"\\" style=\\"background:"+roomColor_(fr[k])+"\\">"+esc(nm)+"</button>";}' +
       '$("sgrooms").innerHTML=rh;' +
       'var rs=$("sgrooms").getElementsByClassName("sgroomb");' +
       'for(var m=0;m<rs.length;m++){rs[m].onclick=function(){' +
@@ -6299,7 +6313,6 @@ var SG_STEPS_JS_ =
       /* ★特例の時は止めずに、重なっている中身を赤字で出す（その旨を出したうえで選べる）。 */
       'if(SLOT.toku){var w=[];' +
         'if(!sgStaffFree(SLOT.emoji,TS,TE))w.push(SLOT.who+"さんは、この時間に空きがありません（予約か勤務の外と重なります）。");' +
-        'if(ROOM&&frFree.indexOf(ROOM)<0&&frFree.indexOf(shortRoomName_(ROOM))<0)w.push(shortRoomName_(ROOM)+"は、この時間の空きの外です（お店が開く前か、予約と重なります）。");' +
         'if(w.length){er.style.display="block";er.innerHTML="⚠️ 特例<br>"+w.map(esc).join("<br>");}}' +
       '$("sgtgo").textContent=SLOT.toku?"特例でこの時間と部屋で決定":"この時間と部屋で決定";' +
       /* ★はい／いいえの見た目。答えていないと決定は押せない（メモに書く物だから）。 */
