@@ -1777,18 +1777,21 @@ var TILE_DEFS_ = [
 //   LINE一斉配信(bcast)は実務者用へ移した（ここに書かない＝実務者用）。bcastが見えるのは
 //   開発者だけのまま＝部屋(管理/実務/開発)と「誰に見せるか」は別の話（人ごとの表示で決まる）。
 var TILE_GROUP_ = {
-  kanshi: 'kanri', mushitori: 'kanri', cost: 'kanri', koukoku: 'kanri', imglink: 'kanri',
+  // ★2026-10-25 まるちゃん決定：管理者用を「りゅう（経営管理ツール）」(keiei) と「りゅう（便利ツール）」(kanri) に分けた（PC版と同じ）。
+  kanshi: 'kanri', mushitori: 'kanri', cost: 'keiei', koukoku: 'keiei', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
-  uriage: 'kanri', procell: 'kanri', shophist: 'kanri',
+  uriage: 'kanri', procell: 'keiei', shophist: 'keiei',
   // ★2026-10-21 まるちゃん決定：「実務者用」を「スタッフ画面」に改名し、中身をみかんさんの画面と同じにした。
   //   みかんさんに出ないボタンは、開発中なら開発者用・それ以外は管理者用へ（PC版 super_pc.py の GROUP_OF と同じ）。
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
-  unanswered: 'kanri', rireki: 'kanri', timetree: 'kaihatsu', kizon: 'kaihatsu',
+  //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
+  unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
   formconv: 'kaihatsu', honyaku: 'kaihatsu'
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
 var ROLE_DEFS_ = [
-  { id: 'kanri', icon: '🛠️', title: '管理者用' },
+  { id: 'keiei', icon: '📊', title: 'りゅう（経営管理ツール）' },
+  { id: 'kanri', icon: '🛠️', title: 'りゅう（便利ツール）' },
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
@@ -1885,7 +1888,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     '<div class="hsub">' + subtitle + '</div>';
   // 開発版(?dev=1)＝まず3つの大ボタン、押すとその仲間だけ表示（PC版と同じ見せ方）。それ以外は今まで通り一覧。
   if (dev) {
-    var byG = { kanri: [], jitsumu: [], kaihatsu: [] };
+    var byG = { keiei: [], kanri: [], jitsumu: [], kaihatsu: [] };
     for (var gi = 0; gi < shown.length; gi++) { (byG[tileGroup_(shown[gi].id)] || byG.jitsumu).push(shown[gi]); }
     var menuHtml = '', groupsHtml = '';
     for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
@@ -13646,6 +13649,7 @@ var HOMECSS_ =
 '    border-radius:18px; padding:22px 18px; box-shadow:0 6px 18px rgba(0,0,0,.09); position:relative;' +
 '    overflow:hidden; width:100%; transition:transform .12s ease, box-shadow .12s ease; }' +
 '  .rolebtn::before { content:""; position:absolute; left:0; top:0; bottom:0; width:8px; }' +
+'  .rolebtn.keiei::before { background:#dc2626; }' +
 '  .rolebtn.kanri::before { background:#f59e0b; }' +
 '  .rolebtn.jitsumu::before { background:#16a34a; }' +
 '  .rolebtn.kaihatsu::before { background:#6366f1; }' +
@@ -13653,6 +13657,7 @@ var HOMECSS_ =
 '  .rolebtn:active { transform:translateY(2px); }' +
 '  @media (hover:hover){ .rolebtn:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.14); } }' +
 '  .ricon { flex:none; width:52px; height:52px; border-radius:13px; font-size:30px; display:grid; place-items:center; }' +
+'  .rolebtn.keiei .ricon { background:rgba(220,38,38,.14); }' +
 '  .rolebtn.kanri .ricon { background:rgba(245,158,11,.16); }' +
 '  .rolebtn.jitsumu .ricon { background:rgba(22,163,74,.15); }' +
 '  .rolebtn.kaihatsu .ricon { background:rgba(99,102,241,.15); }' +
@@ -14365,9 +14370,9 @@ var KANSHISCRIPT_ =
 '    }' +
 '    return h+"</div>";' +
 '  }' +
-'  var groups={kanri:[],jitsumu:[],kaihatsu:[]};' +
+'  var groups={keiei:[],kanri:[],jitsumu:[],kaihatsu:[]};' +
 '  for(var k=0;k<order.length;k++){ var g=tileGrp_(order[k]); (groups[g]||groups.jitsumu).push(order[k]); }' +
-'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_:[{id:"kanri",icon:"🛠️",title:"管理者用"},{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
+'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_:[{id:"keiei",icon:"📊",title:"りゅう（経営管理ツール）"},{id:"kanri",icon:"🛠️",title:"りゅう（便利ツール）"},{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
 '  var out="";' +
 '  for(var r=0;r<roles.length;r++){ var R=roles[r], ids=groups[R.id]||[]; if(!ids.length) continue;' +
 '    out+="<div class=\\"kroom\\">"+R.icon+" "+R.title+"</div>"+ids.map(rowH_).join(""); }' +
