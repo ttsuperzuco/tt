@@ -1789,10 +1789,11 @@ var TILE_GROUP_ = {
   formconv: 'kaihatsu', honyaku: 'kaihatsu'
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
+// ★2026-10-25 まるちゃん「スタッフ画面を一番上にしたい」＝スタッフ画面を先頭へ（PC版 super_pc.py の ROLES と同じ順）。
 var ROLE_DEFS_ = [
+  { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
   { id: 'keiei', icon: '📊', title: 'りゅう（経営管理ツール）' },
   { id: 'kanri', icon: '🛠️', title: 'りゅう（便利ツール）' },
-  { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
@@ -14372,7 +14373,7 @@ var KANSHISCRIPT_ =
 '  }' +
 '  var groups={keiei:[],kanri:[],jitsumu:[],kaihatsu:[]};' +
 '  for(var k=0;k<order.length;k++){ var g=tileGrp_(order[k]); (groups[g]||groups.jitsumu).push(order[k]); }' +
-'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_:[{id:"keiei",icon:"📊",title:"りゅう（経営管理ツール）"},{id:"kanri",icon:"🛠️",title:"りゅう（便利ツール）"},{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
+'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_:[{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"keiei",icon:"📊",title:"りゅう（経営管理ツール）"},{id:"kanri",icon:"🛠️",title:"りゅう（便利ツール）"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
 '  var out="";' +
 '  for(var r=0;r<roles.length;r++){ var R=roles[r], ids=groups[R.id]||[]; if(!ids.length) continue;' +
 '    out+="<div class=\\"kroom\\">"+R.icon+" "+R.title+"</div>"+ids.map(rowH_).join(""); }' +
