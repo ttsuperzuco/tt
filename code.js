@@ -6001,7 +6001,14 @@ function sgCss_() {
     '.sgday.sat{color:#1d6fb8;}.sgday.sun{color:#c0392b;}' +
     '.sgday.today{outline:2px solid #fb8c44;outline-offset:-2px;}' +
     '.sgday.blank{visibility:hidden;box-shadow:none;background:transparent;}' +
-    '.sgday.past{opacity:.35;pointer-events:none;}');
+    '.sgday.past{opacity:.35;pointer-events:none;}' +
+    /* ── 特例の入口（空き状況の表の下・2026-10-25） ── */
+    '.sgtoku{margin:16px 2px 0;}' +
+    '.sgtokub{display:block;width:100%;background:#fff;color:#991b1b;border:0;border-radius:16px;padding:16px;' +
+      'font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}' +
+    '.sgtokunote{color:#eaf6fb;font-weight:800;font-size:15px;line-height:1.7;margin:12px 4px 8px;}' +
+    '.sgtokup{display:block;width:100%;margin:0 0 10px;background:#fff;color:#0f172a;border:0;border-radius:14px;' +
+      'padding:16px;font-size:20px;font-weight:900;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}');
 }
 function sgStepsHtml_() {
   return '' +
@@ -6164,7 +6171,31 @@ var SG_STEPS_JS_ =
         'if(!tapOK())return;' +
         'SLOT={s:hm2m(this.getAttribute("data-s")),e:hm2m(this.getAttribute("data-e")),' +
           'kind:this.getAttribute("data-kind"),who:this.getAttribute("data-who")};' +
-        'goTime();};}}' +
+        'goTime();};}' +
+      /* ★2026-10-25 まるちゃん「特例で入れるためにどうしたらこの予約システムが機能するか」＝空きの外で入れる入口。
+         既存の予約だけ（呼び元が SG_TOKU を立てる）。施術者を選ぶと、空きの外・重なる時間でも時間を決められる。 */
+      'if(typeof SG_TOKU!=="undefined"&&SG_TOKU)sgTokuUi();}' +
+    /* ★特例の入口（空き状況の表の下）。決まり＝「どうしても埋まっている人にせざるを得ない時だけ、
+       その旨を出したうえで選べるようにする（ふだんは絞る）」（AI自動プログラム\CLAUDE.md）。 */
+    'function sgTokuUi(){' +
+      'var box=document.createElement("div");box.className="sgtoku";' +
+      'var L=[["🫒","オリーブ"],["🍊","みかん"],["🍅","トマト"]];' +
+      'var h="<button type=\\"button\\" class=\\"sgtokub\\" id=\\"sgtokuopen\\">⚠️ 空きの外で入れる（特例）</button>"+' +
+        '"<div id=\\"sgtokulist\\" style=\\"display:none\\"><div class=\\"sgtokunote\\">施術者を選ぶと、空きの外の時間や、予約と重なる時間でも入れられます。</div>";' +
+      'for(var i=0;i<L.length;i++){h+="<button type=\\"button\\" class=\\"sgtokup\\" data-e=\\""+L[i][0]+"\\" data-n=\\""+L[i][1]+"\\">"+L[i][0]+" "+L[i][1]+"</button>";}' +
+      'h+="</div>";box.innerHTML=h;$("sgfree").appendChild(box);' +
+      '$("sgtokuopen").onclick=function(){if(!tapOK())return;var l=$("sgtokulist");l.style.display=(l.style.display==="none")?"":"none";};' +
+      'var ps=box.getElementsByClassName("sgtokup");' +
+      'for(var k=0;k<ps.length;k++){ps[k].onclick=function(){' +
+        'if(!tapOK())return;' +
+        'SLOT={s:8*60,e:22*60,kind:"staff",who:this.getAttribute("data-e")+" "+this.getAttribute("data-n"),' +
+          'emoji:this.getAttribute("data-e"),toku:true};' +
+        'goTime();TS=11*60;TE=TS+(NEEDMIN||30);drawTime();};}}' +
+    /* 特例の時、その施術者がその時間まるごと空いているか（空きの区間から見る） */
+    'function sgStaffFree(emoji,a,b){' +
+      'for(var i=0;i<DAYSTAFF.length;i++){var s=DAYSTAFF[i];if(String(s.emoji||"")!==emoji)continue;' +
+        'for(var j=0;j<(s.slots||[]).length;j++){if(hm2m(s.slots[j].s)<=a&&b<=hm2m(s.slots[j].e))return true;}}' +
+      'return false;}' +
     /* ── 6枚目：予約時間設定 ── */
     'function hm2m(t){var p=String(t||"").split(":");' +
       'return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0);}' +
@@ -6227,8 +6258,9 @@ var SG_STEPS_JS_ =
       'if(TS>SLOT.e-5)TS=SLOT.e-5;' +
       'if(TE<TS+5)TE=TS+5;' +
       '$("sgtS").textContent=m2hm(TS);$("sgtE").textContent=m2hm(TE);' +
-      '$("sgtwho").textContent=(SLOT.kind==="staff"?"施術者 ":"施術室 ")+SLOT.who+"　"+SGDAYTXT+"　空き "+' +
-        'm2hm(SLOT.s)+"〜"+m2hm(SLOT.e);' +
+      '$("sgtwho").textContent=SLOT.toku?("特例　施術者 "+SLOT.who+"　"+SGDAYTXT):' +
+        '((SLOT.kind==="staff"?"施術者 ":"施術室 ")+SLOT.who+"　"+SGDAYTXT+"　空き "+' +
+        'm2hm(SLOT.s)+"〜"+m2hm(SLOT.e));' +
       'fitLine($("sgtwho"),26,13);' +
       'var h="";' +
       'for(var i=0;i<DURS.length;i++){' +
@@ -6240,12 +6272,16 @@ var SG_STEPS_JS_ =
         'TE=TS+parseInt(this.getAttribute("data-m"),10);drawTime();};}' +
       /* ★施術室＝この時間に空いている部屋だけ。時間を変えるとその場で作り直す。 */
       'var fr=freeRooms(TS,TE);' +
+      /* ★特例の時は全部の施術室を出す（コスモスは今までどおり出さない）。埋まっている部屋は「（埋まり）」と書く。 */
+      'var frFree=fr;' +
+      'if(SLOT.toku){fr=[];for(var q=0;q<AKI_ROOM_ORDER_.length;q++){if(AKI_ROOM_ORDER_[q]!=="COSMOS")fr.push(AKI_ROOM_ORDER_[q]);}}' +
       'if(ROOM&&fr.indexOf(ROOM)<0&&fr.indexOf(shortRoomName_(ROOM))<0)ROOM=null;' +
       'var rh="";' +
       'for(var k=0;k<fr.length;k++){' +
         'var nm=shortRoomName_(fr[k]);' +
+        'var busyR=SLOT.toku&&frFree.indexOf(fr[k])<0;' +
         'rh+="<button type=\\"button\\" class=\\"sgroomb"+((ROOM===fr[k]||ROOM===nm)?" sel":"")+"\\"" +' +
-          '" data-r=\\""+esc(fr[k])+"\\" style=\\"background:"+roomColor_(fr[k])+"\\">"+esc(nm)+"</button>";}' +
+          '" data-r=\\""+esc(fr[k])+"\\" style=\\"background:"+roomColor_(fr[k])+"\\">"+esc(nm)+(busyR?"<br>（埋まり）":"")+"</button>";}' +
       '$("sgrooms").innerHTML=rh;' +
       'var rs=$("sgrooms").getElementsByClassName("sgroomb");' +
       'for(var m=0;m<rs.length;m++){rs[m].onclick=function(){' +
@@ -6260,6 +6296,12 @@ var SG_STEPS_JS_ =
       'if(over){er.style.display="block";' +
         'er.innerHTML="その時間は空いていません。<br>入力し直してください。";}' +
       'else{er.style.display="none";er.textContent="";}' +
+      /* ★特例の時は止めずに、重なっている中身を赤字で出す（その旨を出したうえで選べる）。 */
+      'if(SLOT.toku){var w=[];' +
+        'if(!sgStaffFree(SLOT.emoji,TS,TE))w.push(SLOT.who+"さんは、この時間に空きがありません（予約か勤務の外と重なります）。");' +
+        'if(ROOM&&frFree.indexOf(ROOM)<0&&frFree.indexOf(shortRoomName_(ROOM))<0)w.push(shortRoomName_(ROOM)+"は、この時間に埋まっています。");' +
+        'if(w.length){er.style.display="block";er.innerHTML="⚠️ 特例<br>"+w.map(esc).join("<br>");}}' +
+      '$("sgtgo").textContent=SLOT.toku?"特例でこの時間と部屋で決定":"この時間と部屋で決定";' +
       /* ★はい／いいえの見た目。答えていないと決定は押せない（メモに書く物だから）。 */
       /* ★2026-09-25：施術時間を先に決めている時は「施術の長さ」を出さない（終了時間で細かく直せる）。 */
       'var _db=$("sgdurbox");if(_db)_db.style.display=NEEDMIN?"none":"";' +
@@ -8115,7 +8157,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function showResvEdit(){hideSteps();document.getElementById("exResv").style.display="";document.getElementById("exrvwho").innerHTML="「"+disp()+"」"+(rvctx.name?rvctx.name+"様":"")+"<br>"+rvctx._ymd+" "+rvctx._tm+" に予約";var _pe=document.getElementById("exrvprev");if(_pe){var _pn=rvctx.prev_note||"";_pe.innerHTML=_pn?("<div class=\\"exsec\\">前回の予約メモ"+(rvctx.prev_date?("（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）"):"")+"</div><div class=\\"rvprevmemo\\">"+esc(_pn)+"</div>"):"";}EXMENUBACK="exResv";' +
       /* ★2026-09-25：新しい流れで来た時は、手前の画面で決めた施術・枠をそのまま使う（作り直さない）。 */
       'if(!EXFLOW){rvitems=(rvctx.items||[]).map(function(it){return {line_no:it.line_no,name:it.name,arinashi:it.arinashi,count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||"",parts:(it.parts||[])};});rvMarkOv={};rvEyeOv=null;rvNewItems=[];rvSlotCfg={};rvTitleOv=null;rvMemoOv=null;rvDochi=rvDochiDefault();}' +
-      'drawRvItems();rvDrawSuggest();rvDrawNew();rvsel.staff=staffNum(rvctx.prev_staff||"");rvsel.room=roomVal(rvctx.prev_room||"");rvsel.dur=String(nearDur(rvctx.prev_dur||30));if(EXSEL){rvsel.staff=EXSEL.staff;rvsel.room=EXSEL.room;rvsel.dur=EXSEL.dur;}var _sw=document.getElementById("exrvstaffwrap"),_rw=document.getElementById("exrvroomdurwrap");if(_rw)_rw.style.display=EXSEL?"none":"";if(_sw)_sw.style.display=EXSEL?"none":"";rvSelPill("rvstaff",rvsel.staff);rvSelPill("rvroom",rvsel.room);rvSelPill("rvdur",rvsel.dur);rvDrawMarks();rvLoadAvail();if(EXSEL&&EXSEL.freeStaff){rvAvail={free_staff:EXSEL.freeStaff,free_rooms:[String(rvsel.room)]};rvFilterAvail();}window.scrollTo(0,0);}' +
+      'drawRvItems();rvDrawSuggest();rvDrawNew();rvsel.staff=staffNum(rvctx.prev_staff||"");rvsel.room=roomVal(rvctx.prev_room||"");rvsel.dur=String(nearDur(rvctx.prev_dur||30));if(EXSEL){rvsel.staff=EXSEL.staff;rvsel.room=EXSEL.room;rvsel.dur=EXSEL.dur;}var _sw=document.getElementById("exrvstaffwrap"),_rw=document.getElementById("exrvroomdurwrap");if(_rw)_rw.style.display=EXSEL?"none":"";if(_sw)_sw.style.display=EXSEL?"none":"";rvSelPill("rvstaff",rvsel.staff);rvSelPill("rvroom",rvsel.room);rvSelPill("rvdur",rvsel.dur);rvDrawMarks();if(!(EXSEL&&EXSEL.toku))rvLoadAvail();if(EXSEL&&EXSEL.freeStaff){rvAvail={free_staff:EXSEL.freeStaff,free_rooms:[String(rvsel.room)]};rvFilterAvail();}window.scrollTo(0,0);}' +
     'function rvDoingTexts(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}for(var k=0;k<rvNewItems.length;k++){var n=rvNewItems[k];a.push((n==="ハイドラ"&&!rvDidPart("hydra"))?"ハイドラ トライアル":n);}return a;}' +
     'function rvBookingTexts(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}for(var k=0;k<rvNewItems.length;k++){var n=rvNewItems[k];a.push((n==="ハイドラ"&&!rvDidPart("hydra"))?"ハイドラ トライアル":n);}return a;}' +
     'function rvDrawSuggest(){var sg=(rvctx.suggest||[]);var h="";for(var i=0;i<sg.length;i++){var nm=sg[i].name;if(rvNewItems.indexOf(nm)>=0)continue;h+="<button type=\\"button\\" class=\\"rvsug\\" data-sug=\\""+esc(nm)+"\\">＋ "+esc(nm)+"<span class=\\"rvwhy\\">LINE："+esc((sg[i].why||"").slice(0,40))+"</span></button>";}var el=document.getElementById("exrvsuggest");el.innerHTML=h?("<div class=\\"exsec\\">LINEでのご希望</div>"+h):"";}' +
@@ -8688,7 +8730,9 @@ function renderExistingPage_(base, staff, dev, mode) {
       'rvctx=JSON.parse(JSON.stringify(me.ctx));rvctx._ymd=st.date;rvctx._tm=exP2(Math.floor(st.ts/60))+":"+exP2(st.ts%60);' +
       /* 担当＝空き状況で担当の枠を押したらその担当、部屋の枠なら前回と同じ担当（まるちゃん決定）。 */
       'var stf=(st.slot&&st.slot.kind==="staff")?staffNum(st.slot.who):staffNum(rvctx.prev_staff||"");' +
-      'EXSEL={staff:stf,room:st.room,dur:String(st.te-st.ts),paid:st.paid,freeStaff:st.free||null};' +
+      /* ★特例（2026-10-25）＝空きの外で入れるので、選んだ担当・部屋を「空いている」扱いにして後の確認で止めない。 */
+      'var _tk=!!(st.slot&&st.slot.toku);' +
+      'EXSEL={staff:stf,room:st.room,dur:String(st.te-st.ts),paid:st.paid,freeStaff:_tk?[stf]:(st.free||null),toku:_tk};' +
       /* ★2026-10-04 まるちゃん「1件目もう選んだのに、次のがまた出てる」＝この画面で決めた
          部屋・担当・長さを**1枠目にそのまま入れる**。次の画面は2枠目から。 */
       'if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length){var _k0=EXFLOW.groups[0].key;' +
@@ -8712,12 +8756,19 @@ function renderExistingPage_(base, staff, dev, mode) {
          （取り直すと、時間を決めた時にまだ終わっておらず『前回の予約を読み込み中です』が出る）。 */
       'function sgOnDate(d){PAID=null;PAIDAUTO="";if(!(EXFLOW&&PREF&&PREF.ctx))exPrefetch(d);ASK=false;' +
         'AHEAD=(PREF&&PREF.ctx&&PREF.ctx.paid_ahead)||{};}' +
+      /* ★2026-10-25：空き状況の下に「空きの外で入れる（特例）」を出す（既存の予約だけ）。 */
+      'var SG_TOKU=true;' +
       SG_STEPS_JS_ +
       'function back(){if(step===6){goFree();}else if(step===5){goDay();}else if(step===4){goMonth();}' +
         'else{step=0;hideSteps();$("exNum").style.display="";window.scrollTo(0,0);}}' +
       '$("sgback").onclick=function(){if(!tapOK())return;back();};' +
       'sgBindSteps();' +
-      '$("sgtgo").onclick=function(){if(!tapOK())return;exGoMemo({date:PICKDATE,ts:TS,te:TE,room:ROOM,slot:SLOT,paid:PAID,free:freeStaffAt(TS,TE)});};' +
+      '$("sgtgo").onclick=function(){if(!tapOK())return;' +
+        'var _go=function(){exGoMemo({date:PICKDATE,ts:TS,te:TE,room:ROOM,slot:SLOT,paid:PAID,free:freeStaffAt(TS,TE)});};' +
+        /* ★特例は押す前に確かめる（押し間違いで重なった予約を作らないため）。 */
+        'if(SLOT&&SLOT.toku){szPopup_("特例で入れます。\\n"+SLOT.who+"さん　"+m2hm(TS)+"〜"+m2hm(TE)+"　"+shortRoomName_(ROOM)+"\\n\\n空きの外や、予約と重なる時間でも入ります。よろしいですか？",' +
+          '{cancel:true,yesLabel:"特例で入れる",onYes:_go});return;}' +
+        '_go();};' +
       'window.addEventListener("resize",function(){if(step===6)fitLine($("sgtwho"),26,13);});' +
       /* ★2026-09-25：新しい流れでは番号のすぐ後に材料を取ってあるので、ここで捨てない
          （捨てると、時間を決めたあとに取り直して『前回の予約を読み込み中です』が出る）。 */
