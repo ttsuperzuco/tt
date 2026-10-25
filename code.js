@@ -6180,7 +6180,7 @@ var SG_STEPS_JS_ =
     'function sgTokuUi(){' +
       'var box=document.createElement("div");box.className="sgtoku";' +
       'var L=[["🫒","オリーブ"],["🍊","みかん"],["🍅","トマト"]];' +
-      'var h="<button type=\\"button\\" class=\\"sgtokub\\" id=\\"sgtokuopen\\">⚠️ 空きの外で入れる（特例）</button>"+' +
+      'var h="<button type=\\"button\\" class=\\"sgtokub\\" id=\\"sgtokuopen\\">⚠️ 上の空き時間以外の枠に入れる（特例）</button>"+' +
         '"<div id=\\"sgtokulist\\" style=\\"display:none\\"><div class=\\"sgtokunote\\">施術者を選ぶと、空きの外の時間や、予約と重なる時間でも入れられます。</div>";' +
       'for(var i=0;i<L.length;i++){h+="<button type=\\"button\\" class=\\"sgtokup\\" data-e=\\""+L[i][0]+"\\" data-n=\\""+L[i][1]+"\\">"+L[i][0]+" "+L[i][1]+"</button>";}' +
       'h+="</div>";box.innerHTML=h;$("sgfree").appendChild(box);' +
