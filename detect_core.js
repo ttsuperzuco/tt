@@ -59,6 +59,21 @@ function staffOf(title) {
   return m ? m[1] : '';
 }
 
+// ★2026-10-26まるちゃん決定：パインの部屋おさえは、先頭に🍍が無くても「🍍パイン」として出す
+//   （「デザ眉使用中」「エクステ使用中」が被りの画面で「A」と出ていた）。部屋かぶりの画面に出す
+//   担当だけに使う＝担当かぶりの判定には使わない。共通/reservation_text.py の room_hold_staff と対。
+var PINE_HOLD_WORDS = ['眉', 'エクステ', 'マツエク', 'まつエク'];
+function roomHoldStaff(title) {
+  var s = staffOf(title);
+  if (s) return s;
+  var t = title || '';
+  if (t.indexOf('使用') === -1) return '';
+  for (var i = 0; i < PINE_HOLD_WORDS.length; i++) {
+    if (t.indexOf(PINE_HOLD_WORDS[i]) !== -1) return '🍍';
+  }
+  return '';
+}
+
 function codeOf(title) {
   var m = norm(title).match(CODE_RE);
   return m ? (m[1] + String(parseInt(m[2], 10))) : '';
@@ -203,12 +218,12 @@ function detect(events, withNail, dateFrom) {
             a_time: a.start_time + '-' + a.end_time, a_cal: a.calendar_name,
             a_cal_id: (a.calendar_id != null ? a.calendar_id : null),
             a_event_id: (a.event_id != null ? a.event_id : null),
-            a_staff: staffOf(a.title), a_code: ca, a_name: na.name,
+            a_staff: roomHoldStaff(a.title), a_code: ca, a_name: na.name,
             a_phone: na.phone, a_menu: (a.treatment_db || treatmentOf(a.note)), a_title: (a.title || '').trim(),
             b_time: b.start_time + '-' + b.end_time, b_cal: b.calendar_name,
             b_cal_id: (b.calendar_id != null ? b.calendar_id : null),
             b_event_id: (b.event_id != null ? b.event_id : null),
-            b_staff: staffOf(b.title), b_code: cb, b_name: nb.name,
+            b_staff: roomHoldStaff(b.title), b_code: cb, b_name: nb.name,
             b_phone: nb.phone, b_menu: (b.treatment_db || treatmentOf(b.note)), b_title: (b.title || '').trim(),
             overlap_min: ovMin, overlap_time: ovStart + '-' + ovEnd
           });
