@@ -8060,8 +8060,11 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="exmh">今回やる施術を選んでください</div>' +
       '<div id="expkitems"></div>' +
       '<div id="expknew"></div>' +
-      '<button type="button" class="exgo" id="expkAdd" style="background:#2563eb;margin:8px 0 4px">＋ メニューから足す</button>' +
+      /* ★2026-10-27 まるちゃん「1個追加した後に『追加メニューはこれだけ』『＋メニューから足す』の
+         ボタンつけないと」＝足した直後に、もう足さないのか・まだ足すのかをその場で選べるようにする。
+         上が「これだけ」、下が「まだ足す」（『ない／ある』を聞く画面と同じ並び）。 */
       '<button type="button" class="exgo" id="expkGo">これで決定→</button>' +
+      '<button type="button" class="exgo" id="expkAdd" style="background:#2563eb;margin-top:8px">＋ メニューから足す</button>' +
     '</div>';
   var addSec =
     '<div id="exAdd" style="display:none">' +
@@ -8376,7 +8379,9 @@ function renderExistingPage_(base, staff, dev, mode) {
       'for(var i=0;i<rvitems.length;i++){h+="<button type=\\"button\\" class=\\"exp pick"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exShort(rvitems[i].name))+"</button>";}' +
       'exEl("expkitems").innerHTML=h||"<div class=\\"exnone\\">前回の施術がありません</div>";' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-expknew=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
-      'exEl("expknew").innerHTML=n;}' +
+      'exEl("expknew").innerHTML=n;' +
+      /* 何か足したあとは「追加メニューはこれだけ」に言い換える（まだ足せることが分かるように）。 */
+      'exEl("expkGo").textContent=rvNewItems.length?"追加メニューはこれだけ":"これで決定→";}' +
     /* 2枚目＝〇〇以外にやるメニューはありますか？ */
     'function exShowAdd(){exOpen("exAdd");var ns=exChosen();' +
       'exEl("exaddq").textContent="「"+ns.map(exShort).join("＋")+"」以外にやるメニューはありますか？";' +
