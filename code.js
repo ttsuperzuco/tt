@@ -7515,8 +7515,17 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★cb＝タイトルの答えが出た（または出せなかった）時に必ず1回呼ぶ後始末。読み取り直後は
     //   これで「まとめて1回だけ画面に出す」＝タイトルが後から出てこない（2026-08-24 まるちゃん）。
     //   どの終わり方（返事なし・失敗・待ちすぎ）でも呼ぶこと。呼び忘れると画面が出ないままになる。
-    'var tpolls=0;function pollTitles(id,myReq,cb){tpolls++;if(tpolls>LIMITS.tries("preview_new_titles",400)){if(cb)cb();return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(cb)cb();return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb);},400);return;}if(r.status!=="done"){if(cb)cb();return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){_titleErr=(d&&d.error)?String(d.error):"わけが分かりません";titleStale=false;nrGoCheck();if(cb)cb();return;}if(myReq!==titleReq||titleEdited){if(cb)cb();return;}fillTitles(d.titles||[],d.disps||[]);if(cb)cb();});}' +
-    'function refreshTitles(cb){if(titleEdited){if(cb)cb();return;}var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim()){if(cb)cb();return;}var myReq=++titleReq;tpolls=0;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id){if(cb)cb();return;}setTimeout(function(){pollTitles(r.id,myReq,cb);},400);});}' +
+    // ★★2026-10-26 まるちゃん「とまってる」（タイトルを作っています…のまま）：
+    //   ①画面を確かめるたびに「タイトルがまだ無い＝取りに行く」が走り、返事を待っている間にも同じ依頼を
+    //     何度も送っていた（8:10に同じ依頼が10秒で5つ）。サーバーで取り合いになり5つとも2分で時間切れ。
+    //   ②待つ回数(tpolls)を5つで共有していたので、すぐ使い切って**エラーも出さずに黙って止まっていた**。
+    //   → 待っている間は送らない（担当・部屋を変えた時だけ、今の返事を捨てて終わり次第取り直す）／
+    //     待つ回数は依頼ごとに数える／時間切れ・送れない時は理由を出す。古い依頼の失敗は画面に出さない。
+    'var _titleBusy=false,_titleAgain=false,_titleCbs=[];' +
+    'function _titleDone(cb){_titleBusy=false;if(cb)cb();var cs=_titleCbs;_titleCbs=[];for(var i=0;i<cs.length;i++){try{cs[i]();}catch(e){}}if(_titleAgain){_titleAgain=false;refreshTitles();}}' +
+    'function _titleFail(myReq,msg){if(myReq===titleReq&&!titleEdited){_titleErr=msg;titleStale=false;nrGoCheck();}}' +
+    'function pollTitles(id,myReq,cb,n){n=(n||0)+1;if(n>LIMITS.tries("preview_new_titles",400)){_titleFail(myReq,"時間がかかりすぎました");_titleDone(cb);return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok||r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb,n);},400);return;}if(r.status!=="done"){_titleFail(myReq,"事務所パソコンで止まりました");_titleDone(cb);return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){_titleFail(myReq,(d&&d.error)?String(d.error):"わけが分かりません");_titleDone(cb);return;}if(myReq!==titleReq||titleEdited){_titleDone(cb);return;}fillTitles(d.titles||[],d.disps||[]);_titleDone(cb);});}' +
+    'function refreshTitles(cb,force){if(titleEdited){if(cb)cb();return;}var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim()){if(cb)cb();return;}if(_titleBusy){if(cb)_titleCbs.push(cb);if(force){_titleAgain=true;++titleReq;}return;}_titleBusy=true;var myReq=++titleReq;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id){_titleFail(myReq,"送れませんでした");_titleDone(cb);return;}setTimeout(function(){pollTitles(r.id,myReq,cb,0);},400);});}' +
     // ★★2026-09-22 まるちゃん指摘：「女で進んで、戻って男にしてまた進むとタイトルがFのまま」。
     //   原因＝タイトルは事務所パソコンに聞いて作るので数秒かかるのに、その間**古いタイトルが
     //   そのまま画面に残り、しかも登録ボタンが押せた**（＝古い性別のまま登録できてしまう）。
@@ -7530,7 +7539,7 @@ function renderNewReservationPage_(base, staff, dev) {
     //   前は名前がそのまま一致する物だけだったので、枠ごとに選ぶ方はここを素通りしていた。
     'function scheduleTitleRefresh(g){var k=String(g||"").split("#")[0];' +
     'if(["staff","counsel","gender","tw","room"].indexOf(k)<0)return;markTitleStale();' +
-    'if(_titleTimer)clearTimeout(_titleTimer);_titleTimer=setTimeout(function(){refreshTitles();},350);}' +
+    'if(_titleTimer)clearTimeout(_titleTimer);_titleTimer=setTimeout(function(){refreshTitles(null,true);},350);}' +
     'window.__nrSchedTitle=scheduleTitleRefresh;' +
     // 登録＝画面に出ている（人が直せる）タイトルをそのまま使う。
     'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼ってください。",true);return;}' +
