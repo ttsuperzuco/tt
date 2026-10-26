@@ -7185,21 +7185,23 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★枠ごとの「始まる時刻」の積み上げは共通の1本（NR）に聞く＝パソコン版と必ず同じ答えになる。
     'var durs=[];for(var q=0;q<S.length;q++){durs.push(sel["dur#"+q]);}' +
     'var PLAN=NR.slotStarts(S,durs,Number(d.hh)*60+Number(d.mi),sel.needc);' +
-    'window.__nrAvPending=true;nrGoCheck();nrAvailWaitSync();' +          // ★答えが揃うまでは押させない
+    'window.__nrAvFailSlot="";window.__nrAvPending=true;nrGoCheck();nrAvailWaitSync();' +          // ★答えが揃うまでは押させない
 
     'function hhmm(m){var h=Math.floor(m/60),i2=m%60;return h+"時"+(i2<10?"0":"")+i2+"分";}' +
-    'function step(i,pos){if(i>=S.length){window.__nrAvPending=false;nrGoCheck();nrAvailWaitSync();return;}' +
+    'function step(i,pos){if(i>=S.length){window.__nrAvPending=false;nrGoCheck();nrAvailWaitSync();if(window.__nrAvFailSlot)nrAvRetry();return;}' +
     'var pp=PLAN[i];var isC=pp.isCounsel,du=pp.dur;pos=pp.startMin;' +
     'if(pp.skip){step(i+1,pos);return;}' +
     'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
     'fields:JSON.stringify({date:window.__nrDate,start_min:pos,dur:du,need_counsel:(isC?"1":"0")})},function(r){' +
-    'if(!r||!r.ok||!r.id){step(i+1,pos+du);return;}var n=0;' +
+    'if(!r||!r.ok||!r.id){window.__nrAvFailSlot="送れませんでした";step(i+1,pos+du);return;}var n=0;' +
     // ★2026-08-24 まるちゃん：あきらめるまでを 30回(約54秒)→100回(約3分)に伸ばした。
     //   事務所パソコン側は空きの計算に120秒まで許しているので、30回で先にあきらめると
     //   答えが出ているのにその枠だけ「埋まっている担当・部屋を消す」処理が抜け落ちる（黙って抜ける）。
     //   ★片方だけ短いままにしないこと（8/24の「変換中のまま止まる」と同じ種類の穴）。
-    '(function pw(){n++;if(n>100){step(i+1,pos+du);return;}' +
-    'jsonp({action:"status",key:KEY,id:r.id},function(x){if(!x||!x.ok){step(i+1,pos+du);return;}' +
+    // ★★2026-10-26 まるちゃん「１」：確かめに失敗しても黙って先へ進まない。通信が一瞬切れた時は聞き直し、
+    //   それでもだめなら理由を残して登録を止める（共通の判断 NR.canRegister の avFail）。1回だけ自動で確かめ直す。
+    '(function pw(){n++;if(n>LIMITS.tries("new_availability",700)){window.__nrAvFailSlot="時間がかかりすぎました";step(i+1,pos+du);return;}' +
+    'jsonp({action:"status",key:KEY,id:r.id},function(x){if(!x||!x.ok){setTimeout(pw,700);return;}' +
     'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(pw,700);return;}' +
     'if(x.status==="done"){var av={};try{av=JSON.parse(x.result||"{}");}catch(e){}' +
     'if(av&&av.ok){if(isC){var bx=document.querySelectorAll("#nrSlotWrap .nrslot")[i],w=document.getElementById("cosWarn"+i);' +
@@ -7209,7 +7211,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'nrHideBusy("staff#"+i,av.busy_counsel_staff);nrShowNone("staff#"+i,"noneStaff"+i);}' +
     'else{nrHideBusy("room#"+i,av.occ_rooms);nrHideBusy("staff#"+i,av.busy_staff);' +
     'nrShowNone("staff#"+i,"noneStaff"+i);nrShowNone("room#"+i,"noneRoom"+i);}}nrGoCheck();}' +
-    'step(i+1,pos+du);});})();});}' +
+    'if(x.status!=="done"||!(av&&av.ok))window.__nrAvFailSlot="空きの答えが来ませんでした";step(i+1,pos+du);});})();});}' +
     'step(0,0);}' +
     // ★カウンセリングの必要（④）で、カウンセリング担当（⑤）の出し入れをする。
     // ★判断は共通の1本（NR）に聞く。ここは答えを画面に当てはめるだけ（2026-08-24）。
@@ -7237,10 +7239,10 @@ function renderNewReservationPage_(base, staff, dev) {
     'else{var needC=(window.__nrNeedCounsel&&sel.needc!=="no");' +
     'if(needC)rows.push({name:"カウンセリング",locked:false,staffOk:nrAnySel("counsel"),roomNeeded:false,roomOk:true});' +
     'rows.push({name:"施術",locked:false,staffOk:nrAnySel("staff"),roomNeeded:!window.__nrMayu,roomOk:nrAnySel("room")});}' +
-    'var r=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:!sel.gender,tw:!sel.tw});window.__nrCanReg=r;btn.disabled=!r.ok;' +
+    'var r=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:!sel.gender,tw:!sel.tw,avFail:(window.__nrAvFailMain||window.__nrAvFailSlot||"")});window.__nrCanReg=r;btn.disabled=!r.ok;' +
     'if(ngbox){ngbox.textContent=r.msg;ngbox.style.display=r.ok?"none":"";}' +
     // ★担当・部屋の画面の「これでOK」＝性別・国籍は次の画面で選ぶので、ここでは見ない（2026-09-22）。
-    'var rRest=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:false,tw:false});' +
+    'var rRest=NR.canRegister(rows,!!window.__nrAvPending,!!window.__nrTimeMissing,(prevEl?prevEl.value:""),{gender:false,tw:false,avFail:(window.__nrAvFailMain||window.__nrAvFailSlot||"")});' +
     'var _rb=document.getElementById("nrRestOk");if(_rb)_rb.disabled=!rRest.ok;' +
     'var _rng=document.getElementById("nrRestNg");if(_rng){_rng.textContent=rRest.msg;_rng.style.display=rRest.ok?"none":"";}' +
     // ★2026-09-23 まるちゃん：施術ごとの担当・部屋の画面＝その枠が決まるまで次へ進ませない。
@@ -7290,24 +7292,26 @@ function renderNewReservationPage_(base, staff, dev) {
     'else if(titleStale){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作っています。少しお待ちください。";ngbox.style.display="";}}}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
-    'var nrAvTimer=null;function nrScheduleAvail(){if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
+    'var nrAvTimer=null;function nrScheduleAvail(){nrAvRetried=0;if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
+    'var nrAvRetried=0;function nrAvRetry(){if(nrAvRetried>=1){nrGoCheck();return;}nrAvRetried++;setTimeout(function(){nrRecheckAvail();},3000);}' +
+    'function nrAvFailMain(msg){window.__nrAvFailMain=msg;nrGoCheck();nrAvRetry();}' +
     'var nrAvPolls=0;function nrRecheckAvail(done){var d=window.__rvdt;if(!d||!window.__nrDate){if(done)done();return;}' +
     'var need=(!!window.__nrNeedCounsel&&sel.needc!=="no")?"1":"0";' +
     'jsonp({action:"submit",key:KEY,op:"new_availability",who:idn.who,role:idn.role,device:idn.device,' +
     'fields:JSON.stringify({date:window.__nrDate,start_min:(Number(d.hh)*60+Number(d.mi)),dur:Number(sel.dur||60),need_counsel:need})},' +
-    'function(r){if(!r||!r.ok||!r.id){if(done)done();return;}nrAvPolls=0;setTimeout(function(){nrAvPoll(r.id,done);},700);});}' +
+    'function(r){if(!r||!r.ok||!r.id){if(done)done();nrAvFailMain("送れませんでした");return;}nrAvPolls=0;setTimeout(function(){nrAvPoll(r.id,done);},700);});}' +
         // ★2026-08-24（再点検で見つけた穴）：30回×0.7秒＝約54秒であきらめていたが、
     //   事務所パソコンは空きの計算に120秒まで許している＝**答えが出ているのに先にあきらめ**、
     //   その枠の「埋まっている担当・部屋を消す」が黙って抜け落ちていた（＝埋まっている人を選べる）。
     //   200回×0.7秒＝約6分に伸ばして、事務所パソコンより先にあきらめないようにした。
     //   ★事務所パソコン側の制限を伸ばす時は、ここも必ず一緒に伸ばすこと。
-    'function nrAvPoll(id,done){nrAvPolls++;if(nrAvPolls>LIMITS.tries("new_availability",700)){if(done)done();return;}' +
-    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){if(done)done();return;}' +
+    'function nrAvPoll(id,done){nrAvPolls++;if(nrAvPolls>LIMITS.tries("new_availability",700)){if(done)done();nrAvFailMain("時間がかかりすぎました");return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setTimeout(function(){nrAvPoll(id,done);},700);return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){nrAvPoll(id,done);},700);return;}' +
-    'if(r.status!=="done"){if(done)done();return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
+    'if(r.status!=="done"){if(done)done();nrAvFailMain("事務所パソコンで止まりました");return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
     // ★2026-09-22：空きを取り直すと、ふさがっている担当・部屋が消えて**別の人・別の部屋が
     //   自動で選ばれる**ことがある。その時タイトルの担当の印が古いままになるので、必ず作り直す。
-    'if(av&&av.ok){applyAvail(av);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");}if(done)done();nrAvailWaitSync();});}' +
+    'if(av&&av.ok){window.__nrAvFailMain="";applyAvail(av);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");}else{nrAvFailMain("空きの答えが来ませんでした");}if(done)done();nrAvailWaitSync();});}' +
     // ★開始時間の「修正」＝月日時分を直して、空きと登録日時をやり直す。
     'function nrStartEditInit(){var row=document.getElementById("nrStartRow"),ed=document.getElementById("nrStartEdit");' +
     'var bFix=document.getElementById("btnStartFix"),bOk=document.getElementById("btnStartOk"),bNo=document.getElementById("btnStartCancel");' +
