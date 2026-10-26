@@ -7317,7 +7317,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'function nrAvPoll(id,done){nrAvPolls++;if(nrAvPolls>LIMITS.tries("new_availability",700)){if(done)done();nrAvFailMain("時間がかかりすぎました");return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setTimeout(function(){nrAvPoll(id,done);},700);return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){nrAvPoll(id,done);},700);return;}' +
-    'if(r.status!=="done"){if(done)done();nrAvFailMain("事務所パソコンで止まりました");return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
+    'if(r.status!=="done"){if(done)done();nrAvFailMain("途中で止まりました");return;}var av={};try{av=JSON.parse(r.result||"{}");}catch(e){}' +
     // ★2026-09-22：空きを取り直すと、ふさがっている担当・部屋が消えて**別の人・別の部屋が
     //   自動で選ばれる**ことがある。その時タイトルの担当の印が古いままになるので、必ず作り直す。
     'if(av&&av.ok){window.__nrAvFailMain="";applyAvail(av);if(window.__nrSchedTitle)window.__nrSchedTitle("staff");}else{nrAvFailMain("空きの答えが来ませんでした");}if(done)done();nrAvailWaitSync();});}' +
@@ -7537,7 +7537,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var _titleBusy=false,_titleAgain=false,_titleCbs=[];' +
     'function _titleDone(cb){_titleBusy=false;if(cb)cb();var cs=_titleCbs;_titleCbs=[];for(var i=0;i<cs.length;i++){try{cs[i]();}catch(e){}}if(_titleAgain){_titleAgain=false;refreshTitles();}}' +
     'function _titleFail(myReq,msg){if(myReq===titleReq&&!titleEdited){_titleErr=msg;titleStale=false;nrGoCheck();}}' +
-    'function pollTitles(id,myReq,cb,n){n=(n||0)+1;if(n>LIMITS.tries("preview_new_titles",400)){_titleFail(myReq,"時間がかかりすぎました");_titleDone(cb);return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok||r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb,n);},400);return;}if(r.status!=="done"){_titleFail(myReq,"事務所パソコンで止まりました");_titleDone(cb);return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){_titleFail(myReq,(d&&d.error)?String(d.error):"わけが分かりません");_titleDone(cb);return;}if(myReq!==titleReq||titleEdited){_titleDone(cb);return;}window.__nrPlanPrev=d;fillTitles(d.titles||[],d.disps||[]);_titleDone(cb);});}' +
+    'function pollTitles(id,myReq,cb,n){n=(n||0)+1;if(n>LIMITS.tries("preview_new_titles",400)){_titleFail(myReq,"時間がかかりすぎました");_titleDone(cb);return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok||r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb,n);},400);return;}if(r.status!=="done"){_titleFail(myReq,"途中で止まりました");_titleDone(cb);return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){_titleFail(myReq,(d&&d.error)?String(d.error):"わけが分かりません");_titleDone(cb);return;}if(myReq!==titleReq||titleEdited){_titleDone(cb);return;}window.__nrPlanPrev=d;fillTitles(d.titles||[],d.disps||[]);_titleDone(cb);});}' +
     'function refreshTitles(cb,force){if(titleEdited){if(cb)cb();return;}var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim()){if(cb)cb();return;}if(_titleBusy){if(cb)_titleCbs.push(cb);if(force){_titleAgain=true;++titleReq;}return;}_titleBusy=true;var myReq=++titleReq;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id){_titleFail(myReq,"送れませんでした");_titleDone(cb);return;}setTimeout(function(){pollTitles(r.id,myReq,cb,0);},400);});}' +
     // ★★2026-09-22 まるちゃん指摘：「女で進んで、戻って男にしてまた進むとタイトルがFのまま」。
     //   原因＝タイトルは事務所パソコンに聞いて作るので数秒かかるのに、その間**古いタイトルが
@@ -7592,7 +7592,7 @@ function renderNewReservationPage_(base, staff, dev) {
     '(function pp(){n++;if(n>LIMITS.tries("preview_new_titles",700)){szOvHide_();szPopup_("登録する内容を確かめられませんでした（時間がかかりすぎました）。もう一度お試しください。");return;}' +
     'jsonp({action:"status",key:KEY,id:r.id},function(x){if(!x||!x.ok||x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(pp,700);return;}' +
     'var d={};try{d=JSON.parse(x.result||"{}");}catch(e){}szOvHide_();' +
-    'if(x.status!=="done"||!d||!d.ok){szPopup_("登録する内容を確かめられませんでした（"+esch((d&&d.error)||"事務所パソコンで止まりました")+"）。もう一度お試しください。");return;}' +
+    'if(x.status!=="done"||!d||!d.ok){szPopup_("登録する内容を確かめられませんでした（"+esch((d&&d.error)||"途中で止まりました")+"）。もう一度お試しください。");return;}' +
     'window.__nrPlanPrev=d;nrConfirm(d);});})();});}' +
     'goEl.addEventListener("click",function(){var d=window.__nrPlanPrev;' +
     'if(d&&d.slots&&!titleStale){nrConfirm(d);return;}nrAskPlan();});' +
