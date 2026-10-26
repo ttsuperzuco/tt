@@ -143,6 +143,32 @@ function overlaps(aStart, aEnd, bStart, bEnd) {
  * withNail : true で NAIL(7) も部屋対象に含める
  * dateFrom : 'YYYY-MM-DD'。この日以降だけ。falsy なら全期間。
  */
+// ★2026-10-26まるちゃん「施術内容・客情報いれられないの？」：メモが空の部屋おさえ（「デザ眉使用中」等）は、
+//   同じ日・時間が重なるデザイン眉カレンダーの予約から 番号・氏名・電話・施術内容 を借りて札に出す。
+//   重なる予約が2人以上（8/12 HAPPY）なら「・」でつなぐ。画面に出す中身だけ＝被りの判断には使わない。
+//   detect_core.py の _hold_guest と対（run_parity で照合）。
+function holdGuest(r, mayuByDate) {
+  var t = r.title || '';
+  if (t.indexOf('使用') === -1 || (r.note || '').trim()) return null;
+  if (String(r.calendar_id) === DESIGN_MAYU_CAL) return null;
+  var s0 = Number(r.start_at_ms), e0 = Number(r.end_at_ms);
+  var hits = (mayuByDate[r.date] || []).filter(function (m) {
+    return Number(m.start_at_ms) < e0 && s0 < Number(m.end_at_ms);
+  });
+  if (!hits.length) return null;
+  hits.sort(function (x, y) { return Number(x.start_at_ms) - Number(y.start_at_ms); });
+  var codes = [], names = [], phones = [], menus = [];
+  hits.forEach(function (m) {
+    var cl = customerLine(m.note), c = codeOf(m.title);
+    var mn = m.treatment_db || treatmentOf(m.note);
+    if (c) codes.push(c);
+    if (cl.name) names.push(cl.name);
+    if (cl.phone) phones.push(cl.phone);
+    if (mn) menus.push(mn);
+  });
+  return { code: codes.join('・'), name: names.join('・'), phone: phones.join('・'), menu: menus.join('／') };
+}
+
 function detect(events, withNail, dateFrom) {
   var rooms = {};
   for (var k in ROOM_LABELS) rooms[k] = ROOM_LABELS[k];
@@ -150,6 +176,13 @@ function detect(events, withNail, dateFrom) {
 
   // --- 対象の絞り込み（detect_core.py と同じ順序・条件）---
   // ★“実際の部屋ラベル”＝roomLabelOf（デザイン眉は番号でなくタイトルの部屋名／専用スペースは null）。
+  // 題名に「預約」が無い予約もある（例＝「🍍🥸F新規」）ので、デザイン眉カレンダーの予定は全部集める。
+  var mayuByDate = {};
+  for (var mi = 0; mi < events.length; mi++) {
+    var me = events[mi];
+    if (String(me.calendar_id) !== DESIGN_MAYU_CAL) continue;
+    (mayuByDate[me.date] = mayuByDate[me.date] || []).push(me);
+  }
   var target = [];
   for (var i = 0; i < events.length; i++) {
     var r = events[i];
@@ -209,6 +242,12 @@ function detect(events, withNail, dateFrom) {
                                   - Math.max(a.start_at_ms, b.start_at_ms)) / 60000);
           var ovStart = ((a.start_time || '') > (b.start_time || '')) ? a.start_time : b.start_time;
           var ovEnd = ((a.end_time || '') < (b.end_time || '')) ? a.end_time : b.end_time;
+          // ★部屋おさえ側は、デザイン眉の本予約のお客様と施術を札に出す（判断の後なので被り判定は変わらない）。
+          var ma = holdGuest(a, mayuByDate), mb = holdGuest(b, mayuByDate);
+          var maMenu = ma ? ma.menu : (a.treatment_db || treatmentOf(a.note));
+          var mbMenu = mb ? mb.menu : (b.treatment_db || treatmentOf(b.note));
+          if (ma) { ca = ma.code; na = { name: ma.name, phone: ma.phone }; }
+          if (mb) { cb = mb.code; nb = { name: mb.name, phone: mb.phone }; }
           conflicts.push({
             kind: '施術室被り',
             dup_suspect: dupSuspect,
@@ -219,12 +258,12 @@ function detect(events, withNail, dateFrom) {
             a_cal_id: (a.calendar_id != null ? a.calendar_id : null),
             a_event_id: (a.event_id != null ? a.event_id : null),
             a_staff: roomHoldStaff(a.title), a_code: ca, a_name: na.name,
-            a_phone: na.phone, a_menu: (a.treatment_db || treatmentOf(a.note)), a_title: (a.title || '').trim(),
+            a_phone: na.phone, a_menu: maMenu, a_title: (a.title || '').trim(),
             b_time: b.start_time + '-' + b.end_time, b_cal: b.calendar_name,
             b_cal_id: (b.calendar_id != null ? b.calendar_id : null),
             b_event_id: (b.event_id != null ? b.event_id : null),
             b_staff: roomHoldStaff(b.title), b_code: cb, b_name: nb.name,
-            b_phone: nb.phone, b_menu: (b.treatment_db || treatmentOf(b.note)), b_title: (b.title || '').trim(),
+            b_phone: nb.phone, b_menu: mbMenu, b_title: (b.title || '').trim(),
             overlap_min: ovMin, overlap_time: ovStart + '-' + ovEnd
           });
         }
