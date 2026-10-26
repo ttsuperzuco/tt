@@ -1780,7 +1780,9 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：管理者用を「りゅう（経営管理ツール）」(keiei) と「りゅう（便利ツール）」(kanri) に分けた（PC版と同じ）。
   kanshi: 'kanri', mushitori: 'kanri', cost: 'keiei', koukoku: 'keiei', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
-  uriage: 'kanri', procell: 'keiei', shophist: 'keiei',
+  procell: 'keiei', shophist: 'keiei',
+  // ★2026-10-26 まるちゃん決定：幹部(🍅トマト)にだけ出すボタンはスタッフ画面の下の「TOMATO画面」（PC版 super_pc.py と同じ）。
+  uriage: 'tomato',
   // ★2026-10-21 まるちゃん決定：「実務者用」を「スタッフ画面」に改名し、中身をみかんさんの画面と同じにした。
   //   みかんさんに出ないボタンは、開発中なら開発者用・それ以外は管理者用へ（PC版 super_pc.py の GROUP_OF と同じ）。
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
@@ -1800,6 +1802,8 @@ function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
 // ★部屋の中で、そのボタンの右（次のマス）を空白にする（2026-10-21 まるちゃん「空き時間の右は空白」）。
 //   PC版 super_pc.py の BLANK_AFTER と同じ（片方直したら両方）。
 var BLANK_AFTER_ = { jitsumu: ['akijikan'] };
+// ★部屋の中の下側に見出し付きで出す小部屋（2026-10-26 まるちゃん「スタッフ画面の下側に TOMATO画面」）。PC版 SUB_ROLES と同じ。
+var SUB_ROLES_ = { jitsumu: [{ id: 'tomato', icon: '🍅', title: 'TOMATO画面' }] };
 
 // 3つの大ボタン⇔仲間の切り替え（差し込んだ<script>はrunScriptsで実行される）。
 var ROLEMENU_SCRIPT_ =
@@ -1889,20 +1893,25 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     '<div class="hsub">' + subtitle + '</div>';
   // 開発版(?dev=1)＝まず3つの大ボタン、押すとその仲間だけ表示（PC版と同じ見せ方）。それ以外は今まで通り一覧。
   if (dev) {
-    var byG = { keiei: [], kanri: [], jitsumu: [], kaihatsu: [] };
+    var byG = { keiei: [], kanri: [], jitsumu: [], kaihatsu: [], tomato: [] };
     for (var gi = 0; gi < shown.length; gi++) { (byG[tileGroup_(shown[gi].id)] || byG.jitsumu).push(shown[gi]); }
     var menuHtml = '', groupsHtml = '';
     for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
-      var R = ROLE_DEFS_[ri], list = byG[R.id] || [];
+      var R = ROLE_DEFS_[ri], list = byG[R.id] || [], subs = SUB_ROLES_[R.id] || [], nsub = 0;
+      for (var si = 0; si < subs.length; si++) nsub += (byG[subs[si].id] || []).length;
       menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
-        '<span class="rcount">' + list.length + '個</span></button>';
+        '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button></div>' +
         '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
         '<div class="tiles">' + list.map(function (t) {
           return tileA_(t) + ((BLANK_AFTER_[R.id] || []).indexOf(t.id) >= 0 ? '<div class="tilegap"></div>' : '');
-        }).join('') + '</div></div>';
+        }).join('') + '</div>' + subs.map(function (S) {
+          var sl = byG[S.id] || [];
+          return sl.length ? ('<div class="grouptitle" style="margin-top:22px">' + S.icon + ' ' + S.title + '</div>' +
+            '<div class="tiles">' + sl.map(tileA_).join('') + '</div>') : '';
+        }).join('') + '</div>';
     }
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="home">' + head +
@@ -14377,9 +14386,9 @@ var KANSHISCRIPT_ =
 '    }' +
 '    return h+"</div>";' +
 '  }' +
-'  var groups={keiei:[],kanri:[],jitsumu:[],kaihatsu:[]};' +
+'  var groups={keiei:[],kanri:[],jitsumu:[],kaihatsu:[],tomato:[]};' +
 '  for(var k=0;k<order.length;k++){ var g=tileGrp_(order[k]); (groups[g]||groups.jitsumu).push(order[k]); }' +
-'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_:[{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"keiei",icon:"📊",title:"りゅう（経営管理ツール）"},{id:"kanri",icon:"🛠️",title:"りゅう（便利ツール）"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
+'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_.slice(0,1).concat([{id:"tomato",icon:"🍅",title:"TOMATO画面"}],ROLE_DEFS_.slice(1)):[{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"keiei",icon:"📊",title:"りゅう（経営管理ツール）"},{id:"kanri",icon:"🛠️",title:"りゅう（便利ツール）"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
 '  var out="";' +
 '  for(var r=0;r<roles.length;r++){ var R=roles[r], ids=groups[R.id]||[]; if(!ids.length) continue;' +
 '    out+="<div class=\\"kroom\\">"+R.icon+" "+R.title+"</div>"+ids.map(rowH_).join(""); }' +
