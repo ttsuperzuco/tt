@@ -7034,7 +7034,7 @@ function renderNewReservationPage_(base, staff, dev) {
   var script = '<script>(function(){' +
     'var EXEC="' + EXEC + '",KEY="' + KEY + '";' +
     'var idn=(window.__SZ_WHO_!==undefined)?{who:window.__SZ_WHO_||"",role:window.__SZ_ROLE_||"",device:window.__SZ_DEVICE_||""}:{who:"",role:"",device:""};' +
-    'var sel={dur:"60",staff:"2",counsel:"1",needc:"yes",room:"FREEDOM",gender:"",tw:""};' +
+    'var sel={dur:"60",staff:"2",counsel:"2",needc:"yes",room:"FREEDOM",gender:"",tw:""};' +   // ★2026-10-26 カウンセリングの最初はみかん（まるちゃん決定）
     'var stEl=document.getElementById("nrstatus"),goEl=document.getElementById("nrgo"),txtEl=document.getElementById("nrtext");' +
     'var prevEl=document.getElementById("nrprev"),prevWrap=document.getElementById("nrprevwrap"),readEl=document.getElementById("nrread");' +
     // ★1つずつ画面を進める（2026-09-22 まるちゃん「画面をいっしょにすんな」）。
@@ -7696,7 +7696,7 @@ function renderNewReservationPage_(base, staff, dev) {
         '<div class="nrsec" id="nrRestHead"></div>' +
         '<div id="secCounsel" style="display:none"><div class="nrsec">カウンセリング担当' +
           '<span id="noneCounsel" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div>' +
-          '<div class="nrpills">' + staffPills('counsel', '1', ['1', '2']) + '</div></div>' +
+          '<div class="nrpills">' + staffPills('counsel', '2', ['1', '2']) + '</div></div>' +
         '<div id="cosmosWarn" style="display:none;background:#fde2e4;color:#9b1c31;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:2px 0 6px;white-space:pre-line"></div>' +
         '<div id="secStaffWrap"><div class="nrsec">施術担当<span id="noneStaff" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は担当者が空いていません</span></div><div class="nrpills">' + staffPills('staff', '2') + '</div></div>' +
         '<div id="nrRoomWrap"><div class="nrsec">部屋<span id="noneRoom" style="display:none;margin-left:12px;color:#ff9b9b;font-weight:900;font-size:15px">その時間は部屋が空いていません</span></div><div class="nrpills">' + roomPills + '</div></div>' +
