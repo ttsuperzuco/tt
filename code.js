@@ -7528,14 +7528,14 @@ function renderNewReservationPage_(base, staff, dev) {
     'var _titleBusy=false,_titleAgain=false,_titleCbs=[];' +
     'function _titleDone(cb){_titleBusy=false;if(cb)cb();var cs=_titleCbs;_titleCbs=[];for(var i=0;i<cs.length;i++){try{cs[i]();}catch(e){}}if(_titleAgain){_titleAgain=false;refreshTitles();}}' +
     'function _titleFail(myReq,msg){if(myReq===titleReq&&!titleEdited){_titleErr=msg;titleStale=false;nrGoCheck();}}' +
-    'function pollTitles(id,myReq,cb,n){n=(n||0)+1;if(n>LIMITS.tries("preview_new_titles",400)){_titleFail(myReq,"時間がかかりすぎました");_titleDone(cb);return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok||r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb,n);},400);return;}if(r.status!=="done"){_titleFail(myReq,"事務所パソコンで止まりました");_titleDone(cb);return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){_titleFail(myReq,(d&&d.error)?String(d.error):"わけが分かりません");_titleDone(cb);return;}if(myReq!==titleReq||titleEdited){_titleDone(cb);return;}fillTitles(d.titles||[],d.disps||[]);_titleDone(cb);});}' +
+    'function pollTitles(id,myReq,cb,n){n=(n||0)+1;if(n>LIMITS.tries("preview_new_titles",400)){_titleFail(myReq,"時間がかかりすぎました");_titleDone(cb);return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok||r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollTitles(id,myReq,cb,n);},400);return;}if(r.status!=="done"){_titleFail(myReq,"事務所パソコンで止まりました");_titleDone(cb);return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(!d||!d.ok){_titleFail(myReq,(d&&d.error)?String(d.error):"わけが分かりません");_titleDone(cb);return;}if(myReq!==titleReq||titleEdited){_titleDone(cb);return;}window.__nrPlanPrev=d;fillTitles(d.titles||[],d.disps||[]);_titleDone(cb);});}' +
     'function refreshTitles(cb,force){if(titleEdited){if(cb)cb();return;}var text=(txtEl.value||"").trim();if(!text&&!(prevEl.value||"").trim()){if(cb)cb();return;}if(_titleBusy){if(cb)_titleCbs.push(cb);if(force){_titleAgain=true;++titleReq;}return;}_titleBusy=true;var myReq=++titleReq;jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){if(!r||!r.ok||!r.id){_titleFail(myReq,"送れませんでした");_titleDone(cb);return;}setTimeout(function(){pollTitles(r.id,myReq,cb,0);},400);});}' +
     // ★★2026-09-22 まるちゃん指摘：「女で進んで、戻って男にしてまた進むとタイトルがFのまま」。
     //   原因＝タイトルは事務所パソコンに聞いて作るので数秒かかるのに、その間**古いタイトルが
     //   そのまま画面に残り、しかも登録ボタンが押せた**（＝古い性別のまま登録できてしまう）。
     //   → 性別・国籍・担当・部屋を変えた瞬間に**古いタイトルを消して「作っています」にし、
     //     新しい答えが返るまで登録ボタンを押させない**。
-    'function markTitleStale(){titleStale=true;_titleKeep=null;_titleErr="";var w=document.getElementById("nrTitleWrap");' +
+    'function markTitleStale(){titleStale=true;_titleKeep=null;_titleErr="";window.__nrPlanPrev=null;var w=document.getElementById("nrTitleWrap");' +
     'if(w)w.innerHTML=\'<div class="nrnote2">タイトルを作っています…</div>\';' +
     'var s=document.getElementById("secTitle");if(s&&NR.titleView(window.__nrCanReg).shown)s.style.display="";' +
     'nrGoCheck();}' +
@@ -7557,43 +7557,36 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★★2026-09-22 まるちゃん指摘：「3つとも別々に登録するんでしょ？ なら一つ一つに開始時間を
     //   見せないとだめじゃないの？」＝そのとおり。枠は1つずつ別の予約になり、開始時刻も積み上がる
     //   （18:30カウンセリング30分 → 19:00施術 …）。上には日付だけ、時刻は枠ごとの見出しに出す。
-    'function nrSummaryText(){var S=window.__nrSlots||[];' +
-    'var out=[NR.dateText(window.__rvdt,window.__nrWd)];' +
-    'var ins=document.querySelectorAll(".nrTitleIn");' +
-    'var wrap=document.getElementById("nrTitleWrap");' +
-    'var lbls=wrap?wrap.getElementsByTagName("div"):[];' +
-    // 画面に出ている枠だけ、開始時刻・担当・部屋・所要時間を順に拾う。
-    'var rows=[];' +
-    'if(NR.perSlot(S)){var bx=document.querySelectorAll("#nrSlotWrap .nrslot");' +
-    'var durs=[];for(var q=0;q<S.length;q++)durs.push(sel["dur#"+q]);' +
-    'var d0=window.__rvdt||{},base=(Number(d0.hh)*60+Number(d0.mi));' +
-    'var ps=NR.slotStarts(S,durs,base,sel.needc);' +
-    'for(var i=0;i<S.length;i++){if(ps[i]&&ps[i].skip)continue;' +
-    'if(bx[i]&&bx[i].style.display==="none")continue;' +
-    'rows.push({start:(ps[i]?NR.hhmm(ps[i].startMin):""),staff:sel["staff#"+i],' +
-    'room:(S[i].kind==="counsel")?"コスモス":sel["room#"+i],dur:sel["dur#"+i]});}}' +
-    'else{var d1=window.__rvdt||{},b1=(Number(d1.hh)*60+Number(d1.mi));' +
-    'if(window.__nrNeedCounsel&&sel.needc!=="no"){rows.push({start:NR.hhmm(b1),staff:sel.counsel,room:"コスモス",dur:""});}' +
-    'rows.push({start:NR.hhmm(b1),staff:sel.staff,room:(window.__nrMayu?"":sel.room),dur:sel.dur});}' +
-    // 枠の数と題名の数が合う時だけ、時刻・部屋を添える（取り違えて見せないため）。
-    // ★担当は書かない（2026-09-22 まるちゃん指定）＝題名の頭の印（🍅🍊…）で分かるため。
-    'var ok=(rows.length===ins.length);' +
-    'for(var j=0;j<ins.length;j++){out.push("");' +
-    'var nm=((lbls[j]&&lbls[j].textContent)||("枠"+(j+1)));' +
-    'out.push("■ "+(ok&&rows[j].start?(rows[j].start+"～　"):"")+nm);' +
-    'out.push("タイトル："+ins[j].value);' +
-    'if(ok){var r=rows[j],b=[];' +
-    'if(r.room)b.push("部屋："+r.room);if(r.dur)b.push(r.dur+"分");' +
-    'if(b.length)out.push(b.join("／"));}}' +
-    'return out.join("\\n");}' +
-    // ★聞く一言は大きく、登録する中身はひとまわり小さく左寄せ＝スマホでもスクロールせずに読める
-    //   （そのままの大きさだと「カウンセリング」の行までしか見えなかった）。
+    // ★★2026-10-26 まるちゃん「これ、タイムツリーに記入される内容じゃない。色々不足してる」：
+    //   前は画面で選んだ担当・部屋を拾い直して組み立てていたので、枠の数とタイトルの数が合わないと
+    //   時刻・部屋・所要時間が全部抜け、予約メモの本文も出ていなかった。
+    //   → **受付係が登録に使う予定リストそのもの**（枠ごとの開始～終了・部屋）と予約メモを見せる。
+    //     タイトルは人が直した欄の字を使う（登録もその字を使う）。担当はタイトルの頭の印で分かるので書かない（2026-09-22の決まり）。
     'function esch(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}' +
-    'goEl.addEventListener("click",function(){' +
+    'function nrRoomName(k){if(!k)return "";if(String(k).toUpperCase()==="COSMOS")return "コスモス";' +
+    'var b=document.querySelector(".nrpill[data-grp=\\"room\\"][data-val=\\""+k+"\\"]");return b?b.textContent:k;}' +
+    'function nrConfirm(d){var ins=document.querySelectorAll(".nrTitleIn"),sl=d.slots||[],out=[NR.dateText(window.__rvdt,window.__nrWd)];' +
+    'if(!sl.length){for(var q=0;q<(d.titles||[]).length;q++)sl.push({disp:(d.disps||[])[q]});}' +   // 受付係が古い時の保険（時刻・部屋は出せない）
+    'for(var j=0;j<sl.length;j++){var x=sl[j];out.push("");' +
+    'out.push("■ "+(x.start?(x.start+"～"+(x.end||"")+"　"):"")+(x.disp||("枠"+(j+1))));' +
+    'out.push("タイトル："+(ins[j]?ins[j].value:((d.titles||[])[j]||"")));' +
+    'var rn=nrRoomName(x.room);if(rn)out.push("部屋："+rn);}' +
     'szPopup_("<div style=\\"font-size:1.15rem;line-height:1.5;font-weight:800\\">以下の内容を、タイムツリーに登録してよろしいですか？</div>"' +
-    '+"<div style=\\"font-size:.95rem;line-height:1.6;text-align:left;margin-top:14px;white-space:pre-wrap;font-weight:700\\">"' +
-    '+esch(nrSummaryText())+"</div>",' +
-    '{icon:"",isHtml:true,yesLabel:"OK",noLabel:"やめる",cancel:true,onYes:go});});' +
+    '+"<div style=\\"font-size:.95rem;line-height:1.6;text-align:left;margin-top:14px;white-space:pre-wrap;font-weight:700\\">"+esch(out.join("\\n"))+"</div>"' +
+    '+(d.memo?("<div style=\\"font-size:.9rem;text-align:left;margin-top:12px;font-weight:800\\">■ 予約メモ（タイムツリーのメモ欄に入ります）</div>"' +
+    '+"<div style=\\"font-size:.85rem;line-height:1.5;text-align:left;margin-top:4px;white-space:pre-wrap;max-height:32vh;overflow:auto;background:rgba(255,255,255,.08);border-radius:8px;padding:8px 10px\\">"+esch(d.memo)+"</div>"):""),' +
+    '{icon:"",isHtml:true,yesLabel:"OK",noLabel:"やめる",cancel:true,onYes:go});}' +
+    // ★確かめの中身は「今の選び方で受付係が作った予定リスト」。手元に新しい物が無ければ、その場で聞いてから出す。
+    'function nrAskPlan(){szOvShow_(szBusyHtml_("登録する内容を確かめています"),"#2C7A99");' +
+    'jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){' +
+    'if(!r||!r.ok||!r.id){szOvHide_();szPopup_("登録する内容を確かめられませんでした（送れませんでした）。もう一度お試しください。");return;}var n=0;' +
+    '(function pp(){n++;if(n>LIMITS.tries("preview_new_titles",700)){szOvHide_();szPopup_("登録する内容を確かめられませんでした（時間がかかりすぎました）。もう一度お試しください。");return;}' +
+    'jsonp({action:"status",key:KEY,id:r.id},function(x){if(!x||!x.ok||x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(pp,700);return;}' +
+    'var d={};try{d=JSON.parse(x.result||"{}");}catch(e){}szOvHide_();' +
+    'if(x.status!=="done"||!d||!d.ok){szPopup_("登録する内容を確かめられませんでした（"+esch((d&&d.error)||"事務所パソコンで止まりました")+"）。もう一度お試しください。");return;}' +
+    'window.__nrPlanPrev=d;nrConfirm(d);});})();});}' +
+    'goEl.addEventListener("click",function(){var d=window.__nrPlanPrev;' +
+    'if(d&&d.slots&&!titleStale){nrConfirm(d);return;}nrAskPlan();});' +
     '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
     '<div class="home">' +
