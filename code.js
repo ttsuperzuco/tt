@@ -8434,10 +8434,11 @@ function renderExistingPage_(base, staff, dev, mode) {
       '_q="今回も「"+_t.join("　")+"」を、"+_k+"やりますか？";}' +
       'exEl("exaskq").textContent=_q;' +
       'exEl("exaskyes").style.display=ns.length?"":"none";}' +
-    /* いいえ＝今回やる施術を選び直す */
+    /* いいえ＝今回やる施術を選び直す。
+       ★2026-10-27 まるちゃん「候補が部位の名前じゃなくなってる」＝ここの名前も「やりますか？」と同じ部位だけ（exAskName）にそろえた。 */
     'function exShowPick(){exOpen("exPickItems");exDrawPick();}' +
     'function exDrawPick(){var h="",hid=0;' +
-      'for(var i=0;i<rvitems.length;i++){if(EXHIDE[i]){hid++;continue;}h+="<button type=\\"button\\" class=\\"exp pick"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exShort(rvitems[i].name))+"</button>";}' +
+      'for(var i=0;i<rvitems.length;i++){if(EXHIDE[i]){hid++;continue;}h+="<button type=\\"button\\" class=\\"exp pick"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exAskName(rvitems[i].name))+"</button>";}' +
       'exEl("expkitems").innerHTML=h||(hid?"":"<div class=\\"exnone\\">前回の施術がありません</div>");' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-expknew=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("expknew").innerHTML=n;' +
