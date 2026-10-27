@@ -8345,6 +8345,8 @@ function renderExistingPage_(base, staff, dev, mode) {
         'for(var j=0;j<gs.length;j++){if(t.substr(i,gs[j][0].length)===gs[j][0]){hit=gs[j][0];' +
           'if(!seen[gs[j][1]]){seen[gs[j][1]]=1;n++;last=gs[j][1];}break;}}' +
         'if(hit)i+=hit.length;else i++;}' +
+      /* ★2026-10-27「ハイドラ+ナノカレント」は1つの施術（事務所PCの数え方 treat_duration.groups_in と同じ）。 */
+      'if(seen["ハイドラ"]&&seen["ナノカレント"]){n--;last="ハイドラ";}' +
       'return (n===1)?last:"";}' +
     'function exDurOf(ns){var t=ns.join(" ").toUpperCase();var best=0;' +
       'var sv=(rvctx.dur_solo||{})[exDurGroup(t)];' +
@@ -8447,7 +8449,9 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exEl("exstflist").innerHTML=h;}' +
     'function exApplyStaff(sn){EXSTAFF=sn;var g=(EXFLOW&&EXFLOW.groups)||[];' +
       'for(var j=0;j<g.length;j++){g[j].dur=g[j].baseDur;rvSlotCfg_(g[j].key).staff=sn;}' +
-      'var v=exStaffDur(sn);if(g.length===1&&v&&exSameAsPrev())g[0].dur=nearDur(v.dur);}' +
+      /* ★2026-10-27 お店が決めた分数（ハイドラ60分・お尻30分）の施術だけの枠は、担当の前回の分数を使わない。 */
+      'var _fx=(rvctx.dur_fixed||{})[g.length===1?exDurGroup(g[0].names.join(" ").toUpperCase()):""];' +
+      'var v=exStaffDur(sn);if(g.length===1&&v&&!_fx&&exSameAsPrev())g[0].dur=nearDur(v.dur);}' +
     /* 空き状況で押せるのは、選んだ担当の空きだけ（ほかの担当は薄く出す）。共通の空き状況の画面がこれを聞く。 */
     'function sgStaffOK(who){return !EXSTAFF||staffNum(who)===EXSTAFF;}' +
     'function sgStaffNote(){return EXSTAFF?("押せるのは "+SEMO_[EXSTAFF]+SNM_[EXSTAFF]+" の空きだけです"):"";}' +
