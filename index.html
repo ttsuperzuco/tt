@@ -369,7 +369,7 @@
 <script src="bigsend.js?v=1e2776a38e"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=ab5c1db032"></script>
+<script src="code.js?v=b199372168"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -871,6 +871,9 @@
   // ★販売管理（2026-10-17・実務者用）。取ってくるデータは無い＝描くだけ。登録・一覧は画面の中から受付係へ頼む。
   function showHanbai() { mount(renderHanbaiPage_(base, staff, dev)); }
 
+  // ★Claudeに聞く（2026-10-27・開発中の機能）。会話の控えは画面の中から窓口(action=data)で読む＝ここでは描くだけ。
+  function showClaudeChat() { mount(renderClaudeChatPage_(base, staff, dev)); }
+
   // ★プロセル頭キャリスト（2026-09-17・社長版と開発版）。一覧と前回の選択を窓口(action=data)から
   //   同時に取り、両方そろったら描く（前回の選択が無い・取れない時は空で描く＝一覧さえあれば出す）。
   function showProcamp() {
@@ -1289,6 +1292,7 @@
     else if (v === 'procamp') showProcamp();
     else if (v === 'procstock') showProcStock();
     else if (v === 'hanbai') showHanbai();
+    else if (v === 'claudechat') showClaudeChat();
     else if (v === 'instadm') showInstaDm();
     else if (v === 'igdm') showIgdm();
     else if (v === 'claudetools') showClaudeTools();
