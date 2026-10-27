@@ -8442,6 +8442,8 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exMd(d){var p=String(d||"").split("-");return p.length===3?(parseInt(p[1],10)+"/"+parseInt(p[2],10)):"";}' +
     'function exShowStaff(){exOpen("exStaffSel");if(!EXSTAFF)EXSTAFF=staffNum(rvctx.prev_staff||"");exDrawStaff();}' +
     'function exDrawStaff(){var SC={"1":"#d1443c","2":"#e08a1e","3":"#4b8b3b"};var SORD=["2","3","1"];var h="";' +
+      /* ★2026-10-27 まるちゃん「担当はデフォルトのやつが一番上にしてよ」＝最初に光っている担当（前回の担当）を一番上に。残りはいつもの並び。 */
+      'var _si=SORD.indexOf(EXSTAFF);if(_si>0){SORD.splice(_si,1);SORD.unshift(EXSTAFF);}' +
       'for(var q=0;q<SORD.length;q++){var sn=SORD[q];var v=exStaffDur(sn);' +
         'var sub=v?("前回 "+v.dur+"分（"+exMd(v.date)+"）"):"前回の担当なし";' +
         'h+="<button type=\\"button\\" class=\\"exp"+((sn===EXSTAFF)?" sel":"")+"\\" data-exstf=\\""+sn+"\\" style=\\"display:block;width:100%;margin:10px 0;padding:16px 12px;font-size:21px;background:"+SC[sn]+"\\">"' +
