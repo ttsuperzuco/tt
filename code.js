@@ -8271,7 +8271,7 @@ function renderExistingPage_(base, staff, dev, mode) {
    次の回にやられたのは17%だけ（1,116件はまたやらない）。
    選び直す画面には今までどおり並ぶので、やる時は押せばよい。 */
       'count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||"",parts:(it.parts||[])};});' +
-      'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;' +
+      'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;EXASKSNAP=null;EXADDFROM="exAsk";' +
       /* ★2026-09-25 まるちゃん決定（「②い」）＝**メモに「都度」の行が1つでもあれば
          タイトルに「都度」を付ける**（コースの行が一緒にあっても付ける）。
          これまでは前回のタイトルを写すだけだった。実データでは都度とコースが両方ある予約153件のうち
@@ -8484,17 +8484,25 @@ function renderExistingPage_(base, staff, dev, mode) {
     /* ★2026-09-30 「はい」＝**聞いた施術をやる**。ここで全部を『やる』に戻すと、
    前回やっていない施術まで今回やることになり、1つしか聞いていないのに
    『担当者・部屋を分けますか？』が出てしまう（まるちゃん指摘）。今の状態のまま進む。 */
-    'exEl("exaskyes").onclick=function(){exShowAdd();};' +
-    'exEl("exaskno").onclick=function(){for(var i=0;i<rvitems.length;i++)rvitems[i].do=false;exShowPick();};' +
+    /* ★2026-10-27 まるちゃん「なんでいいえボタンしかでない？」（黄培潔様F514）＝
+       「いいえ」で選択を全部外したまま「← 戻る」で聞く画面に戻ると、聞く施術が無くなって
+       「はい」が消えていた。→「いいえ」を押す前の選択を覚えておき、戻る時に元どおりにする。
+       次の画面からの「← 戻る」も、選び直し画面から来た時は選び直し画面へ（1つ前に戻る）。 */
+    'var EXASKSNAP=null,EXADDFROM="exAsk";' +
+    'exEl("exaskyes").onclick=function(){EXADDFROM="exAsk";exShowAdd();};' +
+    'exEl("exaskno").onclick=function(){EXASKSNAP={d:rvitems.map(function(x){return x.do;}),n:rvNewItems.slice()};' +
+      'for(var i=0;i<rvitems.length;i++)rvitems[i].do=false;exShowPick();};' +
     'exEl("exbackAsk").onclick=function(){hideSteps();exEl("exNum").style.display="";window.scrollTo(0,0);};' +
-    'exEl("exbackPickItems").onclick=function(){exShowAsk();};' +
+    'exEl("exbackPickItems").onclick=function(){if(EXASKSNAP&&EXASKSNAP.d.length===rvitems.length){' +
+      'for(var i=0;i<rvitems.length;i++)rvitems[i].do=EXASKSNAP.d[i];rvNewItems=EXASKSNAP.n.slice();}' +
+      'EXASKSNAP=null;exShowAsk();};' +
     'exEl("expkitems").addEventListener("click",function(e){var b=e.target.closest("[data-expk]");if(!b)return;' +
       'var i=parseInt(b.getAttribute("data-expk"),10);rvitems[i].do=!rvitems[i].do;exDrawPick();});' +
     'exEl("expknew").addEventListener("click",function(e){var b=e.target.closest("[data-expknew]");if(!b)return;' +
       'rvNewItems.splice(parseInt(b.getAttribute("data-expknew"),10),1);exDrawPick();});' +
     'exEl("expkAdd").onclick=function(){EXMENUBACK="exPickItems";showRvMenu("");};' +
-    'exEl("expkGo").onclick=function(){if(!exChosen().length){szPopup_("今回やる施術を1つ以上選んでください。");return;}exShowAdd();};' +
-    'exEl("exbackAdd").onclick=function(){exShowAsk();};' +
+    'exEl("expkGo").onclick=function(){if(!exChosen().length){szPopup_("今回やる施術を1つ以上選んでください。");return;}EXADDFROM="exPickItems";exShowAdd();};' +
+    'exEl("exbackAdd").onclick=function(){if(EXADDFROM==="exPickItems")exShowPick();else exShowAsk();};' +
     'exEl("exaddlist").addEventListener("click",function(e){var b=e.target.closest("[data-exaddel]");if(!b)return;' +
       'rvNewItems.splice(parseInt(b.getAttribute("data-exaddel"),10),1);exShowAdd();});' +
     'exEl("exaddyes").onclick=function(){EXMENUBACK="exAdd";showRvMenu("");};' +
