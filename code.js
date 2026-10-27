@@ -5953,6 +5953,7 @@ function sgCss_() {
     /* ── 6枚目：予約時間設定（まるちゃん指示 2026-09-11） ── */
     '.sgtimebox{background:rgba(255,255,255,.14);border-radius:16px;padding:14px 16px;margin:0 2px 14px;}' +
     '.sgtlab{color:#eaf6fb;font-weight:800;font-size:15px;margin-bottom:6px;}' +
+    '.sgroomtip{color:#fff;font-weight:800;font-size:15px;line-height:1.6;margin-top:12px;}' +
     /* ★左右に「1時間」「5分」を縦2つずつ（まるちゃん 2026-09-11）。
        1行に4つ並べると時刻の字が小さくなり、下に段を足すと画面が縦に伸びるので、この形にした。 */
     /* ★2026-10-02：同じ見た目を「予約変更の時刻入力」でも使うので、共通の1か所（stepTimeCss_）にした。 */
@@ -6089,6 +6090,9 @@ function sgStepsHtml_() {
         '<div class="sgtlab">施術室（この時間に空いている部屋だけ出ます）</div>' +
         '<div class="sgrooms" id="sgrooms"></div>' +
         '<div class="sgroomnone" id="sgroomnone" style="display:none"></div>' +
+        /* ★2026-10-27 まるちゃん「通常この施術の際に多い部屋などをアドバイスでだす　部屋の下のところに」。
+           中身は使う側（既存の予約）が SGX.setRoomTip で渡す。渡さない画面（施術後の予約）は出ない。 */
+        '<div class="sgroomtip" id="sgroomtip" style="display:none"></div>' +
       '</div>' +
       /* ★次の回のぶんを先に払っていただいたか（まるちゃん 2026-09-12）。
          答えは予約メモのお支払いの欄に「◉10/10分: 未払い／支払い済み」の形で入る。 */
@@ -6110,6 +6114,8 @@ var SG_STEPS_JS_ =
        押せなくする（薄く出す）＝「そうすれば空き時間が正確になる」。0＝長さが決まっていない（今までどおり）。
        施術後の予約は0のままなので、あちらの動きは変わらない。 */
     'var NEEDMIN=0;' +
+    /* ★2026-10-27 部屋の下に出すアドバイス（使う側が渡す・空なら出さない）。 */
+    'var ROOMTIP="";' +
     'function goMonth(){step=3;show();drawMonths();window.scrollTo(0,0);}' +
     'function goDay(){step=4;show();drawCal();window.scrollTo(0,0);}' +
     /* ── 3枚目：月をえらぶ（今月から6か月ぶん・縦に並べる。2026-09-11は3か月、2026-09-24まるちゃん決定で6か月＝
@@ -6320,6 +6326,7 @@ var SG_STEPS_JS_ =
       'for(var m=0;m<rs.length;m++){rs[m].onclick=function(){' +
         'if(!tapOK())return;' +
         'ROOM=this.getAttribute("data-r");drawTime();};}' +
+      'var _rt=$("sgroomtip");if(_rt){_rt.innerHTML=ROOMTIP;_rt.style.display=ROOMTIP?"":"none";}' +
       'var none=$("sgroomnone");' +
       'if(fr.length){none.style.display="none";none.textContent="";}' +
       'else{none.style.display="block";none.textContent="この時間に空いている施術室がありません。";}' +
@@ -8135,6 +8142,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="sgtslot" id="exspkhead"></div>' +
       '<div class="exsec">担当</div><div class="expills" id="exspkstaff"></div>' +
       '<div class="exsec">部屋</div><div class="expills" id="exspkroom"></div>' +
+      '<div class="sgroomtip" id="exspktip" style="display:none"></div>' +
       '<button type="button" class="exgo" id="exspkGo">次へ→</button>' +
     '</div>';
   // 「別の施術を足す」で開く、決まったメニュー一覧から選ぶ画面。
@@ -8183,7 +8191,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'document.getElementById("exToDate").addEventListener("click",function(){if(!digits){szPopup_("お客様番号を入れてください");return;}' +
       'if(ISCHANGE){loadPicks();return;}' +
       /* ★2026-09-25：番号のつぎは日付ではなく「今回も〇〇をやりますか？」（施術を先に決める）。 */
-      'PREF=null;EXSEL=null;EXFLOW=null;EXSTAFF="";SGX.setNeed(0);exWaitCtx(exShowAsk);});' +
+      'PREF=null;EXSEL=null;EXFLOW=null;EXSTAFF="";SGX.setNeed(0);SGX.setRoomTip("");exWaitCtx(exShowAsk);});' +
     '(function(){var _nc=document.getElementById("exNewCust");if(_nc)_nc.addEventListener("click",function(){loadNewPicks();});})();' +
     'document.getElementById("exbackPick").addEventListener("click",function(){document.getElementById("exPick").style.display="none";document.getElementById("exNum").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exbackDate").addEventListener("click",function(){document.getElementById("exDate").style.display="none";document.getElementById(ISCHANGE?"exMenu":"exNum").style.display="";window.scrollTo(0,0);});' +
@@ -8340,6 +8348,26 @@ function renderExistingPage_(base, staff, dev, mode) {
        長さを混ぜない）。2つ以上の時は今までの表のほうが当たるのでそのまま。 */
     /* この枠でやる施術が1つだけなら、そのまとめ名（2つ以上・0なら空）。
        長い言葉から先に見て食べていく＝「大小腿」を「小腿」とも数えて2つに見せない。 */
+    /* ★2026-10-27 まるちゃん決定：部屋の下に「この施術（〇〇）は〇の使用が最も多い、〇も使うことがある」。
+       回数は事務所パソコンが数えた物（treat_duration.room_use_by_group＝直近1年）。ここは今回の施術のぶんを足して並べるだけ。
+       2番目より後は、全体の15%以上ある部屋だけ「も使うことがある」に出す。数が10回より少ない時は出さない。 */
+    'function exGroupsOf(t){var gs=rvctx.dur_groups||[];var seen={},out=[],i=0;t=String(t||"").toUpperCase();' +
+      'while(i<t.length){var hit="";' +
+        'for(var j=0;j<gs.length;j++){if(t.substr(i,gs[j][0].length)===gs[j][0]){hit=gs[j][0];' +
+          'if(!seen[gs[j][1]]){seen[gs[j][1]]=1;out.push(gs[j][1]);}break;}}' +
+        'if(hit)i+=hit.length;else i++;}' +
+      'if(seen["ハイドラ"]&&seen["ナノカレント"])out=out.filter(function(x){return x!=="ナノカレント";});' +
+      'return out;}' +
+    'function exRoomTip(names){var ru=rvctx.room_use||{};var gs=exGroupsOf((names||[]).join(" "));' +
+      'var cnt={},tot=0;for(var i=0;i<gs.length;i++){var m=ru[gs[i]]||{};' +
+        'for(var r in m){cnt[r]=(cnt[r]||0)+m[r];tot+=m[r];}}' +
+      'if(tot<10)return "";' +
+      'var rs=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];});' +
+      'var pc=function(r){return Math.round(cnt[r]*100/tot);};' +
+      'var h="💡 この施術（"+esc(gs.join("・"))+"）は "+esc(shortRoomName_(rs[0]))+" の使用が最も多い（"+pc(rs[0])+"%）";' +
+      'var al=[];for(var k=1;k<rs.length;k++){if(pc(rs[k])>=15)al.push(esc(shortRoomName_(rs[k]))+"（"+pc(rs[k])+"%）");}' +
+      'if(al.length)h+="、"+al.join("・")+"も使うことがある";' +
+      'return h;}' +
     'function exDurGroup(t){var gs=rvctx.dur_groups||[];var seen={},n=0,last="",i=0;' +
       'while(i<t.length){var hit="";' +
         'for(var j=0;j<gs.length;j++){if(t.substr(i,gs[j][0].length)===gs[j][0]){hit=gs[j][0];' +
@@ -8492,6 +8520,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'var rh="";for(var r=0;r<RORD.length;r++){var rk=RORD[r];' +
         'rh+="<button type=\\"button\\" class=\\"exp"+((rk===cf.room)?" sel":"")+"\\" data-spkr=\\""+esc(rk)+"\\" style=\\"background:"+roomColor_(rk)+"\\">"+esc(shortRoomName_(rk))+"</button>";}' +
       'exEl("exspkroom").innerHTML=rh;' +
+      'var _tp=exRoomTip(g[i].names);var _te=exEl("exspktip");_te.innerHTML=_tp;_te.style.display=_tp?"":"none";' +
       'var sh="";for(var q=0;q<SORD.length;q++){var sn=SORD[q];' +
         'sh+="<button type=\\"button\\" class=\\"exp"+((sn===cf.staff)?" sel":"")+"\\" data-spks=\\""+sn+"\\" style=\\"background:"+SC[sn]+"\\">"+SEMO_[sn]+" "+SNM_[sn]+"</button>";}' +
       'exEl("exspkstaff").innerHTML=sh;}' +
@@ -8512,6 +8541,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(g.length===1)rvsel.dur=String(g[0].dur);' +
       'var _g=(EXFLOW&&EXFLOW.groups)||[];' +
       'SGX.setSlot1(_g.length>=2?("1枠目　"+_g[0].names.map(exShort).join("＋")):"");' +
+      'SGX.setRoomTip(_g.length?exRoomTip(_g[0].names):"");' +
       'SGX.setNeed(exTotalMin());SGX.goMonth();}' +
     /* 枠のキー＝人が決めた組み合わせがあればそれ、無ければ今までどおり印ごと。 */
     'function exSlotKeys(){if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length>=2){var a=[];for(var i=0;i<EXFLOW.groups.length;i++)a.push(EXFLOW.groups[i].key);return a;}return rvEffMarks();}' +
@@ -8873,6 +8903,7 @@ function renderExistingPage_(base, staff, dev, mode) {
         'setAsk:function(a){ASK=!!a;if(step===6)drawTime();},' +
         /* ★2026-09-25：先に決めた施術時間を渡す＝その長さが入らない空きは押せなくする。 */
         'setNeed:function(m){NEEDMIN=parseInt(m,10)||0;},' +
+        'setRoomTip:function(t){ROOMTIP=t||"";if(step===6)drawTime();},' +
         'setSlot1:function(t){var el=$("sgtslot");if(!el)return;'+
           'el.textContent=t||"";el.style.display=t?"":"none";},' +
         'setAhead:function(a){AHEAD=a||{};if(step===6)drawTime();},' +
