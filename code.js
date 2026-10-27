@@ -143,6 +143,9 @@ function doGet(e) {
   } else if (view === 'pcstatus') {
     title = '自宅PC';                                   // ★開発URL(?dev=1)専用。事務所PCの生き死にと止まった理由
     html = renderPcStatus_(base, staff, dev);
+  } else if (view === 'claudechat') {
+    title = 'Claudeに聞く';                            // ★開発URL(?dev=1)専用。静的アプリの中で動く
+    html = renderClaudeChatPage_(base, staff, dev);
   } else if (view === 'shophist') {
     title = 'T＆Tショップ履歴';                        // ★開発URL(?dev=1)専用。静的アプリが shop_history.json を取って描く
     html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてください。' }, base, staff, dev);
@@ -1028,7 +1031,11 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★販売管理＝日本・台湾の販売の入力と一覧（2026-10-17 まるちゃん依頼）。
   //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝
   //   ★2026-10-17 まるちゃん「このボタン、スタッフ全員にだして」＝全員ON（人ごとの表示で入切できる）。
-  hanbai:     { exec: true, staff: true }
+  hanbai:     { exec: true, staff: true },
+  // ★Claudeに聞く＝ズコで打った文を、事務所PCで動いている会話のClaudeへ届けて返事を受け取る（2026-10-27 まるちゃん依頼）。
+  //   既定は開発者だけ（共通ルール16）。まるちゃん「スタッフ全員に触らせる」＝試して大丈夫なら tile_settings.py の
+  //   STAFF_ASSIGNABLE に入れて、自動監視の人ごとの表示でONにする。
+  claudechat: { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1036,7 +1043,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1764,7 +1771,10 @@ var TILE_DEFS_ = [
   // ★販売管理＝台湾販売入力／日本販売入力／販売管理表（2026-10-17・実務者用）。
   //   登録・候補・一覧は事務所PCの記録（受付係 op=hanbai → 販売管理\programs\hanbai.py）。
   { id: 'hanbai', cls: 'hanbai', view: 'hanbai',
-    icon: '<span class="ticon">🛒</span>', label: 'No31\n販売管理' }
+    icon: '<span class="ticon">🛒</span>', label: 'No31\n販売管理' },
+  // ★Claudeに聞く（2026-10-27）＝打った文を会話のClaudeへ届け、返事を出す（op=claude_chat・共通\ズコからClaude.py）。
+  { id: 'claudechat', cls: 'claudechat', view: 'claudechat',
+    icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -1788,7 +1798,7 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu'
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
 // ★2026-10-25 まるちゃん「スタッフ画面を一番上にしたい」＝スタッフ画面を先頭へ（PC版 super_pc.py の ROLES と同じ順）。
@@ -10354,6 +10364,100 @@ function renderProcStockPage_(base, staff, dev) {
     '<script>(' + procStockScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
 
+// ========== Claudeに聞く（2026-10-27 まるちゃん依頼） ==========
+// ズコで打った文を、事務所PCで動いている「会話のClaude」へ届けて、返事をこの画面に出す。
+//  送る＝依頼置き場へ op=claude_chat（fields＝{text}）。受付係は手を付けない（素通り）。
+//  受け取って答えるのは会話のClaude（AI自動プログラム\共通\ズコからClaude.py）。
+//  返事＝依頼に「済み」が付いたら、その人の会話の控え claude_chat_<人>.json を窓口(action=data)から読み直して並べる。
+//  ★会話が閉じている時は、会話側が10分で「時間切れ」を付ける＝この画面はそれを待つ（少し長めの12分で自分も切る）。
+var CLAUDECHATCSS_ =
+  '.cc{width:100%;box-sizing:border-box;max-width:620px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+  '.cclog{display:flex;flex-direction:column;gap:10px;margin:6px 0 14px;}' +
+  '.ccq,.cca{border-radius:16px;padding:12px 14px;font-size:17px;line-height:1.6;white-space:pre-wrap;word-break:break-word;box-shadow:0 3px 10px rgba(0,0,0,.15);}' +
+  '.ccq{align-self:flex-end;max-width:85%;background:#fde047;color:#0f172a;font-weight:700;}' +
+  '.cca{align-self:flex-start;max-width:92%;background:#fff;color:#0f172a;}' +
+  '.cct{font-size:12px;color:#64748b;font-weight:700;margin-top:4px;}' +
+  '.ccnone{color:#eaf6fb;font-weight:800;font-size:17px;text-align:center;margin:14px 0;}' +
+  '.ccin{display:block;width:100%;box-sizing:border-box;border:0;border-radius:14px;padding:14px;font:inherit;font-size:19px;color:#0f172a;min-height:120px;resize:vertical;margin:4px 0 10px;box-shadow:0 4px 14px rgba(0,0,0,.15);}';
+
+function claudeChatScript_(C) {
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function popup(msg) { if (typeof szPopup_ === 'function') szPopup_(msg); else alert(msg); }
+  var who = String(window.__SZ_WHO_ || '').replace(/[^a-z]/g, '') || 'dev';
+  var sending = false;
+  function jsonp(p, cb) {
+    var n = '__cchat' + Date.now() + Math.floor(Math.random() * 1000);
+    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+    var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
+    s.onerror = function () { cb({ ok: false, error: '通信エラーです' }); }; document.body.appendChild(s);
+  }
+  function draw(h) {
+    var items = (h && h.items) || [], out = '';
+    if (!items.length) { $('ccLog').innerHTML = '<div class="ccnone">聞きたいことを下に書いて「送る」を押してください</div>'; return; }
+    for (var i = 0; i < items.length; i++) {
+      out += '<div class="ccq">' + esc(items[i].q || '') + '</div>' +
+        '<div class="cca">' + esc(items[i].a || '') + '<div class="cct">' + esc(items[i].at || '') + '</div></div>';
+    }
+    $('ccLog').innerHTML = out;
+  }
+  function load(after) {
+    jsonp({ action: 'data', name: 'claude_chat_' + who + '.json' }, function (r) {
+      draw(r && r.items ? r : null);
+      if (after) after();
+    });
+  }
+  function fail(msg) { sending = false; if (typeof szOvHide_ === 'function') szOvHide_(); $('ccSend').disabled = false; popup(msg); }
+  var polls = 0, MAX = Math.ceil(12 * 60 * 1000 / (3000 + 1100));
+  function poll(id) {
+    polls++;
+    if (polls > MAX) { fail('時間切れです。もう一度お試しください。'); return; }
+    jsonp({ action: 'status', key: C.key, id: id }, function (r) {
+      if (!r || !r.ok) { setTimeout(function () { poll(id); }, 3000); return; }   // 一時的な不通は待ち続ける
+      if (r.status === 'pending' || r.status === 'running' || r.status === 'queued' || r.status === '') { setTimeout(function () { poll(id); }, 3000); return; }
+      if (r.status !== 'done') { fail(r.result || '時間切れです。もう一度お試しください。'); return; }
+      load(function () {
+        sending = false; $('ccText').value = ''; $('ccSend').disabled = false;
+        if (typeof szOvHide_ === 'function') szOvHide_();
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+    });
+  }
+  $('ccSend').addEventListener('click', function () {
+    if (sending) return;
+    var t = $('ccText').value.replace(/^\s+|\s+$/g, '');
+    if (!t) { popup('聞きたいことを書いてください'); return; }
+    if (t.length > 2000) { popup('長すぎます。2000文字までにしてください'); return; }
+    sending = true; polls = 0; $('ccSend').disabled = true;
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('考え中…', false), '#2C7A99');
+    jsonp({ action: 'submit', key: C.key, op: 'claude_chat',
+            who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '',
+            fields: JSON.stringify({ text: t }) },
+      function (r) {
+        if (!r || !r.ok || !r.id) { fail('送れませんでした。もう一度お試しください。'); return; }
+        setTimeout(function () { poll(r.id); }, 3000);
+      });
+  });
+  load();
+}
+
+function renderClaudeChatPage_(base, staff, dev) {
+  var C = {
+    exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
+    key: 'kx7Q2p9mVt4Zr8'
+  };
+  return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="cc">' +
+      '<div class="hhead"><span class="bmark">💬</span><span class="bname">Claudeに聞く</span></div>' +
+      '<div class="cclog" id="ccLog"><div class="ccnone">読み込み中…</div></div>' +
+      '<textarea class="ccin" id="ccText" placeholder="聞きたいことを書いてください"></textarea>' +
+      '<button type="button" class="exgo" id="ccSend">送る</button>' +
+    '</div></div>' +
+    '<script>(' + claudeChatScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
+
 // ========== 販売管理（2026-10-17 まるちゃん依頼） ==========
 // ホームの「販売管理」→【台湾販売入力】【日本販売入力】【販売管理表】。
 //  日本：日付 →【新規お客様】氏・名を入れる／【🔁お客様】苗字の最初のひらがな→前に買った方から選ぶ
@@ -13895,6 +13999,7 @@ var HOMECSS_ =
 '  .tile.instadm::before { background:#e1306c; }' +
 '  .tile.igdm::before { background:#c13584; }' +
 '  .tile.claudetools::before { background:#7c3aed; }' +
+'  .tile.claudechat::before { background:#d97757; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile.kizon::before { background:#7c3aed; }' +
