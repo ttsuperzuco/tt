@@ -2881,13 +2881,27 @@ var KOUKOKUCSS_ =
   '  .kkpseg { display:flex; flex-wrap:wrap; gap:6px; margin:8px 2px; }' +
   '  .kkpseg button { border:0; background:var(--card,#fff); color:var(--sub,#64748b); font-size:.9rem; font-weight:800; padding:8px 14px; border-radius:999px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.12); }' +
   '  .kkpseg button.on { background:#e0533d; color:#fff; }' +
-  '  table.kkmt { width:100%; border-collapse:collapse; font-size:.82rem; margin-top:4px; }' +
-  '  table.kkmt th, table.kkmt td { padding:5px 4px; text-align:right; border-bottom:1px solid var(--line,#e2e8f0); white-space:nowrap; font-variant-numeric:tabular-nums; }' +
-  '  table.kkmt thead th { color:var(--sub,#64748b); font-size:.7rem; font-weight:700; }' +
+  '  table.kkmt { width:100%; border-collapse:collapse; font-size:.76rem; margin-top:4px; }' +
+  '  table.kkmt th, table.kkmt td { padding:5px 3px; text-align:right; border-bottom:1px solid var(--line,#e2e8f0); font-variant-numeric:tabular-nums; }' +
+  '  table.kkmt td { white-space:nowrap; }' +
+  '  table.kkmt thead th { color:var(--sub,#64748b); font-size:.66rem; font-weight:700; }' +
+  '  .kkmc { flex-wrap:wrap; }' +
   '  table.kkmt tbody th { text-align:left; font-weight:800; }' +
   '  table.kkmt thead th:first-child { text-align:left; }' +
   '  table.kkmt tr.kkmsum th, table.kkmt tr.kkmsum td { font-weight:900; border-bottom:0; }' +
   '  .kkmnone { color:var(--sub,#64748b); font-size:.8rem; padding:4px 0; }' +
+  '  .kkmbtn { margin-top:8px; border:1px solid var(--line,#e2e8f0); background:var(--card,#fff); color:#0ea5e9; font-weight:800; font-size:.85rem; padding:7px 14px; border-radius:999px; cursor:pointer; }' +
+  '  .kkmdet { flex-basis:100%; min-width:0; margin-top:2px; border-top:1px dashed var(--line,#e2e8f0); padding-top:2px; }' +
+  '  .kkmh { font-size:.82rem; font-weight:800; color:var(--ink,#0f172a); margin:12px 0 4px; }' +
+  '  .kkmh b { color:#16a34a; }' +
+  '  .kkmchips { display:flex; flex-wrap:wrap; gap:6px; }' +
+  '  .kkmchips span { background:rgba(148,163,184,.14); border-radius:999px; padding:3px 10px; font-size:.78rem; }' +
+  '  .kkmchips b { color:#16a34a; }' +
+  '  .kkmday div { display:flex; align-items:center; gap:6px; font-size:.72rem; margin:2px 0; }' +
+  '  .kkmday span { width:38px; flex:none; color:var(--sub,#64748b); font-variant-numeric:tabular-nums; }' +
+  '  .kkmday em { flex:1; min-width:0; }' +
+  '  .kkmday i { display:block; height:10px; background:#0ea5e9; border-radius:4px; min-width:2px; }' +
+  '  .kkmday b { flex:none; font-weight:700; color:var(--ink,#0f172a); font-variant-numeric:tabular-nums; }' +
   '  .kkpnote { color:rgba(255,255,255,.82); font-size:.74rem; margin:0 2px 10px; }' +
   '  .kkpc { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:14px; padding:12px; margin-bottom:12px; display:flex; gap:12px; box-shadow:0 4px 14px rgba(0,0,0,.12); }' +
   '  .kkpth { width:96px; height:96px; border-radius:10px; object-fit:cover; flex:none; }' +
@@ -3713,13 +3727,15 @@ function _kkPlaces_(d) {
       var dest = r.dest === 'line' ? '公式LINE' : (r.dest === 'profile' ? 'インスタのプロフィール' : 'ウェブ');
       var lang = r.lang === 'ja' ? '日本語のみ' : (r.lang === 'zh' ? '中国語のみ' : '言語の指定なし');
       var img = r.thumb ? '<img class="kkpth" src="' + r.thumb + '" alt="">' : '<div class="kkpth ph">画像</div>';
-      body += '<div class="kkpc kkmc" data-st="' + esc_(JSON.stringify(r.stats || {})) + '">' + img +
+      body += '<div class="kkpc kkmc" data-st="' + esc_(JSON.stringify(r.stats || {})) + '"' +
+          (r.detail ? ' data-dt="' + esc_(JSON.stringify(r.detail)) + '"' : '') + '>' + img +
         '<div class="kkpbody">' +
           '<div class="kkptitle">' + (r.day_budget ? '<span class="kkpbudget">1日 ' + esc_(_costYen_(r.day_budget)) + '</span>' : '') +
             esc_(where) + '</div>' +
           '<div class="kkpgoal">押した先：' + esc_(dest) + '　／　' + esc_(lang) + '</div>' +
           '<div class="kkmtab"></div>' +
-        '</div></div>';
+          (r.detail ? '<button type="button" class="kkmbtn">詳しく見る ▼</button>' : '') +
+        '</div>' + (r.detail ? '<div class="kkmdet" style="display:none"></div>' : '') + '</div>';
     });
   });
   var seg = pers.map(function (p) {
@@ -3735,8 +3751,40 @@ function _kkPlaces_(d) {
       'for(key in p){var v=p[key];n++;ts+=v.spend;ti+=v.imp;tc+=v.clicks;' +
         'h+="<tr><th>"+(NM[key]||key)+"</th><td>"+nf(v.spend)+" 元</td><td>"+nf(v.imp)+"</td><td>"+nf(v.clicks)+"</td><td>"+(v.clicks>0?(Math.round(v.spend/v.clicks*10)/10)+" 元":"—")+"</td></tr>";}' +
       'if(n>1)h+="<tr class=\\"kkmsum\\"><th>合計</th><td>"+nf(ts)+" 元</td><td>"+nf(ti)+"</td><td>"+nf(tc)+"</td><td>"+(tc>0?(Math.round(ts/tc*10)/10)+" 元":"—")+"</td></tr>";' +
-      'var box=cs[k].querySelector(".kkmtab");if(box)box.innerHTML=n?("<table class=\\"kkmt\\"><thead><tr><th>出た場所</th><th>使った額</th><th>表示</th><th>押された</th><th>1回あたり</th></tr></thead><tbody>"+h+"</tbody></table>"):"<div class=\\"kkmnone\\">この期間はまだ表示されていません。</div>";}' +
+      'var box=cs[k].querySelector(".kkmtab");if(box)box.innerHTML=n?("<table class=\\"kkmt\\"><thead><tr><th>出た場所</th><th>使った額</th><th>表示</th><th>押された</th><th>1回あたり</th></tr></thead><tbody>"+h+"</tbody></table>"):"<div class=\\"kkmnone\\">この期間はまだ表示されていません。</div>";' +
+      'var dt=cs[k].querySelector(".kkmdet");if(dt&&dt.style.display!=="none")dt.innerHTML=det(cs[k]);}' +
       'for(k=0;k<bs.length;k++){bs[k].className=(bs[k].getAttribute("data-p")===period?"on":"");}}' +
+    /* 詳しく見る（細かい分析）：期間ごとの 画面の場所・年齢×男女・地域・見た機械・行動＋直近30日の日ごと */
+    'var POS={feed:"フィード",instagram_stories:"ストーリー",instagram_reels:"リール",instagram_explore:"発見",instagram_explore_grid_home:"発見の一覧",facebook_stories:"ストーリー",facebook_reels:"リール"};' +
+    'var RG={"Taipei":"台北市","Taipei City":"台北市","New Taipei City":"新北市","Taoyuan City":"桃園市","Hsinchu":"新竹県","Hsinchu City":"新竹市","Unknown":"不明"};' +
+    'var DEV={mobile_app:"スマホのアプリ",mobile_web:"スマホのブラウザ",desktop:"パソコン"},GEN={male:"男性",female:"女性",unknown:"不明"};' +
+    'function cpc(s,c){return c>0?(Math.round(s/c*10)/10)+" 元":"—";}' +
+    'function tb(hd,rows){if(!rows.length)return "<div class=\\"kkmnone\\">数字がありません。</div>";var h="<table class=\\"kkmt\\"><thead><tr>",x,y;' +
+      'for(x=0;x<hd.length;x++)h+="<th>"+hd[x]+"</th>";h+="</tr></thead><tbody>";' +
+      'for(x=0;x<rows.length;x++){h+="<tr>";for(y=0;y<rows[x].length;y++)h+=(y===0?"<th>":"<td>")+rows[x][y]+(y===0?"</th>":"</td>");h+="</tr>";}return h+"</tbody></table>";}' +
+    'function det(card){var D={};try{D=JSON.parse(card.getAttribute("data-dt")||"{}");}catch(e){}var d=D[period]||{},h="",x;' +
+      'var bySp=function(a,b){return b[b.length-3]-a[a.length-3];};' +
+      'h+="<div class=\\"kkmh\\">届いた人 <b>"+nf(d.reach)+"人</b>　同じ人に平均 <b>"+(d.freq||0)+"回</b></div>";' +
+      'var ac=d.act||{},ak=Object.keys(ac);h+="<div class=\\"kkmh\\">押された後の行動</div>";' +
+      'h+=ak.length?("<div class=\\"kkmchips\\">"+ak.map(function(a){return "<span>"+a+" <b>"+nf(ac[a])+"</b></span>";}).join("")+"</div>"):"<div class=\\"kkmnone\\">この期間はまだありません。</div>";' +
+      'var ps=(d.pos||[]).slice().sort(function(a,b){return b[2]-a[2];});' +
+      'h+="<div class=\\"kkmh\\">出た画面</div>"+tb(["画面","使った額","表示","押された","1回あたり"],ps.map(function(p){return [(NM[p[0]]||p[0])+"の"+(POS[p[1]]||p[1]),nf(p[2])+" 元",nf(p[3]),nf(p[4]),cpc(p[2],p[4])];}));' +
+      'var ag=(d.ag||[]).slice().sort(function(a,b){return b[2]-a[2];});' +
+      'h+="<div class=\\"kkmh\\">年齢×男女</div>"+tb(["年齢","男女","使った額","押された","1回あたり"],ag.map(function(a){return [(a[0]==="Unknown"?"不明":a[0]),(GEN[a[1]]||a[1]),nf(a[2])+" 元",nf(a[3]),cpc(a[2],a[3])];}));' +
+      'var rg=(d.rg||[]).slice().sort(function(a,b){return b[1]-a[1];});' +
+      'h+="<div class=\\"kkmh\\">地域</div>"+tb(["地域","使った額","押された","1回あたり"],rg.map(function(a){return [(RG[a[0]]||a[0]),nf(a[1])+" 元",nf(a[2]),cpc(a[1],a[2])];}));' +
+      'var dv=(d.dev||[]).slice().sort(function(a,b){return b[1]-a[1];});' +
+      'h+="<div class=\\"kkmh\\">見た機械</div>"+tb(["機械","使った額","表示","押された"],dv.map(function(a){return [(DEV[a[0]]||a[0]),nf(a[1])+" 元",nf(a[2]),nf(a[3])];}));' +
+      'var dy=D.daily||[],mx=0;for(x=0;x<dy.length;x++)mx=Math.max(mx,dy[x][2]);' +
+      'h+="<div class=\\"kkmh\\">日ごとの推移（直近30日・押された回数）</div>";' +
+      'if(!dy.length){h+="<div class=\\"kkmnone\\">まだありません。</div>";}else{h+="<div class=\\"kkmday\\">";' +
+        'for(x=0;x<dy.length;x++){var w=mx>0?Math.round(dy[x][2]/mx*100):0;' +
+          'h+="<div><span>"+dy[x][0].slice(5).replace("-","/")+"</span><em><i style=\\"width:"+w+"%\\"></i></em><b>"+nf(dy[x][2])+"回・"+nf(dy[x][1])+"元</b></div>";}h+="</div>";}' +
+      'return h;}' +
+    'var mb=document.querySelectorAll(".kkmbtn");for(i=0;i<mb.length;i++){mb[i].addEventListener("click",function(){' +
+      'var card=this.parentNode.parentNode,dt=card.querySelector(".kkmdet");if(!dt)return;' +
+      'if(dt.style.display==="none"){dt.innerHTML=det(card);dt.style.display="block";this.textContent="閉じる ▲";}' +
+      'else{dt.style.display="none";this.textContent="詳しく見る ▼";}});}' +
     'for(i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){period=this.getAttribute("data-p");apply();});}apply();})();</script>';
   return '<div class="kkacc" style="border-left-color:#0ea5e9;">出す場所ごとの内訳' +
       '<small>今 動いている広告 ' + rows.length + '本・1日 合計 ' + esc_(_costYen_(total)) + '</small></div>' +
