@@ -7826,8 +7826,9 @@ function renderExistingPage_(base, staff, dev, mode) {
     /* ★2026-09-25 まるちゃん「mienai」＝「今回やる施術を選んでください」のボタンは
        背景の色を付けていなかったので、白い文字が下地に溶けて読めなかった。
        ここだけ白いボタン＋濃い文字にする（選ぶとオレンジの枠＝他の選ぶ画面と同じ）。 */
-    '.exp.pick{background:#fff;color:#0f172a;opacity:1;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
-    '.exp.pick.sel{background:#fff7ed;color:#0f172a;outline:3px solid #fb8c44;outline-offset:-3px;}' +
+    /* ★2026-10-27 まるちゃん決定：選んでいない施術は薄く出す（白くはっきり出ると、選ばれているように見えた）。 */
+    '.exp.pick{background:#fff;color:#0f172a;opacity:.45;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
+    '.exp.pick.sel{background:#fff7ed;color:#0f172a;opacity:1;outline:3px solid #fb8c44;outline-offset:-3px;}' +
     '.exdur .exp{flex:0 0 calc((100% - 40px)/6);padding:12px 2px;text-align:center;box-sizing:border-box;}' +
     '.exmlist{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}' +
     '.exmbtn{display:block;width:100%;text-align:center;background:#fff;color:#0f172a;border:0;border-radius:14px;padding:16px 8px;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);}' +
@@ -8271,7 +8272,7 @@ function renderExistingPage_(base, staff, dev, mode) {
    次の回にやられたのは17%だけ（1,116件はまたやらない）。
    選び直す画面には今までどおり並ぶので、やる時は押せばよい。 */
       'count:(it.proposed!=null?it.proposed:it.count),orig:it.count,do:(String(it.arinashi||"")!=="なし"),finish:false,mark:it.mark||"",parts:(it.parts||[])};});' +
-      'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;EXASKSNAP=null;EXADDFROM="exAsk";' +
+      'rvNewItems=[];rvSlotCfg={};rvMarkOv={};rvEyeOv=null;rvTitleOv=null;rvMemoOv=null;EXASKSNAP=null;EXADDFROM="exAsk";EXHIDE={};' +
       /* ★2026-09-25 まるちゃん決定（「②い」）＝**メモに「都度」の行が1つでもあれば
          タイトルに「都度」を付ける**（コースの行が一緒にあっても付ける）。
          これまでは前回のタイトルを写すだけだった。実データでは都度とコースが両方ある予約153件のうち
@@ -8375,9 +8376,9 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exEl("exaskyes").style.display=ns.length?"":"none";}' +
     /* いいえ＝今回やる施術を選び直す */
     'function exShowPick(){exOpen("exPickItems");exDrawPick();}' +
-    'function exDrawPick(){var h="";' +
-      'for(var i=0;i<rvitems.length;i++){h+="<button type=\\"button\\" class=\\"exp pick"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exShort(rvitems[i].name))+"</button>";}' +
-      'exEl("expkitems").innerHTML=h||"<div class=\\"exnone\\">前回の施術がありません</div>";' +
+    'function exDrawPick(){var h="",hid=0;' +
+      'for(var i=0;i<rvitems.length;i++){if(EXHIDE[i]){hid++;continue;}h+="<button type=\\"button\\" class=\\"exp pick"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exShort(rvitems[i].name))+"</button>";}' +
+      'exEl("expkitems").innerHTML=h||(hid?"":"<div class=\\"exnone\\">前回の施術がありません</div>");' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-expknew=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("expknew").innerHTML=n;' +
       /* 何か足したあとは「追加メニューはこれだけ」に言い換える（まだ足せることが分かるように）。 */
@@ -8488,14 +8489,19 @@ function renderExistingPage_(base, staff, dev, mode) {
        「いいえ」で選択を全部外したまま「← 戻る」で聞く画面に戻ると、聞く施術が無くなって
        「はい」が消えていた。→「いいえ」を押す前の選択を覚えておき、戻る時に元どおりにする。
        次の画面からの「← 戻る」も、選び直し画面から来た時は選び直し画面へ（1つ前に戻る）。 */
-    'var EXASKSNAP=null,EXADDFROM="exAsk";' +
+    /* ★2026-10-27 まるちゃん決定：聞いた施術が1つだけで「いいえ」なら、その施術はやらないと分かっている
+       ので選び直し画面に出さない（前回やっていない施術は今までどおり出す）。
+       2つ以上聞いた時の「いいえ」は「全部ではない」なので、どれをやるか選べるよう並べる。 */
+    'var EXASKSNAP=null,EXADDFROM="exAsk",EXHIDE={};' +
     'exEl("exaskyes").onclick=function(){EXADDFROM="exAsk";exShowAdd();};' +
     'exEl("exaskno").onclick=function(){EXASKSNAP={d:rvitems.map(function(x){return x.do;}),n:rvNewItems.slice()};' +
+      'var asked=[];EXHIDE={};for(var j=0;j<rvitems.length;j++){if(!rvitems[j].do)continue;var an=exAskName(rvitems[j].name);if(an&&asked.indexOf(an)<0)asked.push(an);}' +
+      'if(asked.length===1){for(var k=0;k<rvitems.length;k++){if(rvitems[k].do)EXHIDE[k]=1;}}' +
       'for(var i=0;i<rvitems.length;i++)rvitems[i].do=false;exShowPick();};' +
     'exEl("exbackAsk").onclick=function(){hideSteps();exEl("exNum").style.display="";window.scrollTo(0,0);};' +
     'exEl("exbackPickItems").onclick=function(){if(EXASKSNAP&&EXASKSNAP.d.length===rvitems.length){' +
       'for(var i=0;i<rvitems.length;i++)rvitems[i].do=EXASKSNAP.d[i];rvNewItems=EXASKSNAP.n.slice();}' +
-      'EXASKSNAP=null;exShowAsk();};' +
+      'EXASKSNAP=null;EXHIDE={};exShowAsk();};' +
     'exEl("expkitems").addEventListener("click",function(e){var b=e.target.closest("[data-expk]");if(!b)return;' +
       'var i=parseInt(b.getAttribute("data-expk"),10);rvitems[i].do=!rvitems[i].do;exDrawPick();});' +
     'exEl("expknew").addEventListener("click",function(e){var b=e.target.closest("[data-expknew]");if(!b)return;' +
