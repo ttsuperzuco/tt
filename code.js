@@ -8111,6 +8111,9 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" id="exbackStaffSel" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="exmh">担当を選んでください</div>' +
       '<div id="exstflist"></div>' +
+      /* ★2026-10-27 まるちゃん「分けたなら、それごとに担当えらばないと」＝枠を分けた時だけ、
+         枠ごとに選んでからこのボタンで進む（枠が1つの時は担当を押すとすぐ進むので出さない）。 */
+      '<button type="button" class="exgo" id="exstfGo" style="display:none">これで決定→</button>' +
     '</div>';
   var durSec =
     '<div id="exDur" style="display:none">' +
@@ -8140,7 +8143,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       /* ★2026-10-04 まるちゃん「2件目以降も1件目と同じ背景にしないと。3件目4件目があればそれも」
          ＝1枠目の画面と同じ薄い黄色の帯にする（枠が何枚でもこの画面を使い回すので全部そろう）。 */
       '<div class="sgtslot" id="exspkhead"></div>' +
-      '<div class="exsec">担当</div><div class="expills" id="exspkstaff"></div>' +
+      '<div class="exsec">担当</div><div class="expills" id="exspkstaff"></div><div id="exspkng"></div>' +
       '<div class="exsec">部屋</div><div class="expills" id="exspkroom"></div>' +
       '<div class="sgroomtip" id="exspktip" style="display:none"></div>' +
       '<button type="button" class="exgo" id="exspkGo">次へ→</button>' +
@@ -8469,7 +8472,17 @@ function renderExistingPage_(base, staff, dev, mode) {
       'return (v&&parseInt(v.dur,10)>0)?v:null;}' +
     'function exMd(d){var p=String(d||"").split("-");return p.length===3?(parseInt(p[1],10)+"/"+parseInt(p[2],10)):"";}' +
     'function exShowStaff(){exOpen("exStaffSel");if(!EXSTAFF)EXSTAFF=staffNum(rvctx.prev_staff||"");exDrawStaff();}' +
+    /* ★2026-10-27 まるちゃん「二つ、三つや複数にわけたらなら、それごとに担当えらばないと」＝
+       枠を分けた時は、枠ごとに担当を選ぶ（最初は前回の担当）。1枠目の担当が空き状況で押せる担当になる。 */
+    'function exSplitStaff(){var g=(EXFLOW&&EXFLOW.groups)||[];return g.length>=2;}' +
     'function exDrawStaff(){var SC={"1":"#d1443c","2":"#e08a1e","3":"#4b8b3b"};var SORD=["2","3","1"];var h="";' +
+      'exEl("exstfGo").style.display=exSplitStaff()?"":"none";' +
+      'if(exSplitStaff()){var g=EXFLOW.groups;' +
+        'for(var gi=0;gi<g.length;gi++){var cs=rvSlotCfg_(g[gi].key).staff;var b="";' +
+          'for(var q2=0;q2<SORD.length;q2++){var s2=SORD[q2];' +
+            'b+="<button type=\\"button\\" class=\\"exp"+((s2===cs)?" sel":"")+"\\" data-exstfi=\\""+gi+"\\" data-exstfn=\\""+s2+"\\" style=\\"background:"+SC[s2]+"\\">"+SEMO_[s2]+" "+SNM_[s2]+"</button>";}' +
+          'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(gi+1)+"枠目　"+esc(g[gi].names.map(exShort).join("＋"))+"</div><div class=\\"expills\\">"+b+"</div></div>";}' +
+        'exEl("exstflist").innerHTML=h;return;}' +
       /* ★2026-10-27 まるちゃん「担当はデフォルトのやつが一番上にしてよ」＝最初に光っている担当（前回の担当）を一番上に。残りはいつもの並び。 */
       'var _si=SORD.indexOf(EXSTAFF);if(_si>0){SORD.splice(_si,1);SORD.unshift(EXSTAFF);}' +
       'for(var q=0;q<SORD.length;q++){var sn=SORD[q];var v=exStaffDur(sn);' +
@@ -8521,9 +8534,19 @@ function renderExistingPage_(base, staff, dev, mode) {
         'rh+="<button type=\\"button\\" class=\\"exp"+((rk===cf.room)?" sel":"")+"\\" data-spkr=\\""+esc(rk)+"\\" style=\\"background:"+roomColor_(rk)+"\\">"+esc(shortRoomName_(rk))+"</button>";}' +
       'exEl("exspkroom").innerHTML=rh;' +
       'var _tp=exRoomTip(g[i].names);var _te=exEl("exspktip");_te.innerHTML=_tp;_te.style.display=_tp?"":"none";' +
-      'var sh="";for(var q=0;q<SORD.length;q++){var sn=SORD[q];' +
-        'sh+="<button type=\\"button\\" class=\\"exp"+((sn===cf.staff)?" sel":"")+"\\" data-spks=\\""+sn+"\\" style=\\"background:"+SC[sn]+"\\">"+SEMO_[sn]+" "+SNM_[sn]+"</button>";}' +
-      'exEl("exspkstaff").innerHTML=sh;}' +
+      /* ★2026-10-27 その枠の時間に空いていない担当は薄くして押せなくする（特例で入れた時は絞らない）。 */
+      'var fr=exSlotFree(i);' +
+      'var sh="";for(var q=0;q<SORD.length;q++){var sn=SORD[q];var ng=fr&&fr.indexOf(sn)<0;' +
+        'sh+="<button type=\\"button\\" class=\\"exp"+((sn===cf.staff)?" sel":"")+"\\" data-spks=\\""+sn+"\\""+(ng?" data-spkng=\\"1\\"":"")+" style=\\"background:"+SC[sn]+(ng?";opacity:0.3;cursor:default":"")+"\\">"+SEMO_[sn]+" "+SNM_[sn]+"</button>";}' +
+      'var nt="";' +
+      'if(fr&&fr.indexOf(cf.staff)<0)nt="<div class=\\"sgtokunote\\">"+esc(SEMO_[cf.staff]||"")+esc(SNM_[cf.staff]||"")+"さんはこの時間に予約があります。空いている担当を選ぶか、← 戻るで時間を選び直してください。</div>";' +
+      'else if(fr)nt="<div class=\\"exmhsub\\" style=\\"white-space:normal\\">薄い担当はこの時間に予約があるので選べません</div>";' +
+      'exEl("exspkstaff").innerHTML=sh;exEl("exspkng").innerHTML=nt;}' +
+    /* その枠の時間（前の枠の続き〜自分の長さ）に空いている担当の番号。分からない時・特例の時は null＝絞らない。 */
+    'function exSlotFree(i){if(EXSEL&&EXSEL.toku)return null;var g=(EXFLOW&&EXFLOW.groups)||[];if(!g[i])return null;' +
+      'var p=exSlotStart(i).split(":");var a=parseInt(p[0],10)*60+parseInt(p[1],10);' +
+      'var b=a+(parseInt(rvSlotCfg_(g[i].key).dur,10)||30);' +
+      'var f=SGX.freeAt(a,b);return Array.isArray(f)?f:null;}' +
     'function exShowDur(){exOpen("exDur");' +
       'var pv=document.getElementById("exdurprev");' +
       'var pv2=EXSTAFF?exStaffDur(EXSTAFF):null;' +
@@ -8542,7 +8565,13 @@ function renderExistingPage_(base, staff, dev, mode) {
       'var _g=(EXFLOW&&EXFLOW.groups)||[];' +
       'SGX.setSlot1(_g.length>=2?("1枠目　"+_g[0].names.map(exShort).join("＋")):"");' +
       'SGX.setRoomTip(_g.length?exRoomTip(_g[0].names):"");' +
-      'SGX.setNeed(exTotalMin());SGX.goMonth();}' +
+      'SGX.setNeed(exNeed1());SGX.goMonth();}' +
+    /* ★2026-10-27 空き状況で1枠目の担当に要る長さ＝1枠目から続けて同じ担当がやる枠の合計
+       （2枠目が別の担当なら、1枠目の担当は自分の分だけ空いていれば入れられる）。 */
+    'function exNeed1(){var g=(EXFLOW&&EXFLOW.groups)||[];if(!g.length)return exTotalMin();' +
+      'var s0=rvSlotCfg_(g[0].key).staff,t=0;' +
+      'for(var i=0;i<g.length;i++){if(i>0&&rvSlotCfg_(g[i].key).staff!==s0)break;t+=(parseInt(g[i].dur,10)||30);}' +
+      'return t;}' +
     /* 枠のキー＝人が決めた組み合わせがあればそれ、無ければ今までどおり印ごと。 */
     'function exSlotKeys(){if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length>=2){var a=[];for(var i=0;i<EXFLOW.groups.length;i++)a.push(EXFLOW.groups[i].key);return a;}return rvEffMarks();}' +
     'function exSlotGroup(k){var g=(EXFLOW&&EXFLOW.groups)||[];for(var i=0;i<g.length;i++){if(g[i].key===k)return g[i];}return null;}' +
@@ -8601,9 +8630,11 @@ function renderExistingPage_(base, staff, dev, mode) {
     'exEl("exbackSlotPick").onclick=function(){if(EXSLOTI>1){exShowSlotPick(EXSLOTI-1);return;}SGX.toTime();};' +
     'exEl("exspkroom").addEventListener("click",function(e){var b=e.target.closest("[data-spkr]");if(!b)return;' +
       'var g=EXFLOW.groups;rvSlotCfg_(g[EXSLOTI].key).room=b.getAttribute("data-spkr");exDrawSlotPick();});' +
-    'exEl("exspkstaff").addEventListener("click",function(e){var b=e.target.closest("[data-spks]");if(!b)return;' +
+    'exEl("exspkstaff").addEventListener("click",function(e){var b=e.target.closest("[data-spks]");if(!b||b.getAttribute("data-spkng"))return;' +
       'var g=EXFLOW.groups;rvSlotCfg_(g[EXSLOTI].key).staff=b.getAttribute("data-spks");exDrawSlotPick();});' +
-    'exEl("exspkGo").onclick=function(){exShowSlotPick(EXSLOTI+1);};' +
+    'exEl("exspkGo").onclick=function(){var fr=exSlotFree(EXSLOTI);var cs=rvSlotCfg_(EXFLOW.groups[EXSLOTI].key).staff;' +
+      'if(fr&&fr.indexOf(cs)<0){szPopup_(SEMO_[cs]+SNM_[cs]+"さんはこの時間に予約があります。\\n空いている担当を選ぶか、← 戻るで時間を選び直してください。");return;}' +
+      'exShowSlotPick(EXSLOTI+1);};' +
     'exEl("exgrplist").addEventListener("click",function(e){var b=e.target.closest("[data-exgi]");if(!b)return;' +
       'EXGRP[parseInt(b.getAttribute("data-exgi"),10)]=parseInt(b.getAttribute("data-exgn"),10);exDrawGroup();});' +
     'exEl("exgrpGo").onclick=function(){var ns=exUnits();var mp={},ord=[];' +
@@ -8611,8 +8642,15 @@ function renderExistingPage_(base, staff, dev, mode) {
       'ord.sort(function(a,b){return a-b;});var list=[];for(var k=0;k<ord.length;k++)list.push(mp[ord[k]]);' +
       'exSetGroups(list);exShowOrder();};' +
     'exEl("exbackDur").onclick=function(){exShowStaff();};' +
-    'exEl("exstflist").addEventListener("click",function(e){var b=e.target.closest("[data-exstf]");if(!b)return;' +
+    'exEl("exstflist").addEventListener("click",function(e){' +
+      'var bs=e.target.closest("[data-exstfi]");' +
+      'if(bs){rvSlotCfg_(EXFLOW.groups[parseInt(bs.getAttribute("data-exstfi"),10)].key).staff=bs.getAttribute("data-exstfn");exDrawStaff();return;}' +
+      'var b=e.target.closest("[data-exstf]");if(!b)return;' +
       'exApplyStaff(b.getAttribute("data-exstf"));exShowDur();});' +
+    /* 枠を分けた時の「これで決定→」＝枠ごとの担当はそのまま残し、1枠目の担当を空き状況で押せる担当にする。 */
+    'exEl("exstfGo").onclick=function(){var g=EXFLOW.groups;' +
+      'for(var i=0;i<g.length;i++){if(!SEMO_[rvSlotCfg_(g[i].key).staff]||rvSlotCfg_(g[i].key).staff==="4"){szPopup_((i+1)+"枠目の担当を選んでください。");return;}g[i].dur=g[i].baseDur;}' +
+      'EXSTAFF=rvSlotCfg_(g[0].key).staff;exShowDur();};' +
     'exEl("exbackStaffSel").onclick=function(){var ns=exUnits();if(ns.length<2){exBackToItems();return;}' +
       'if(EXFLOW&&EXFLOW.groups.length>=2&&ns.length>=3){exShowGroup();return;}exAfterItems();};' +
     'exEl("exdurlist").addEventListener("click",function(e){var b=e.target.closest("[data-exdi]");if(!b)return;' +
@@ -8868,7 +8906,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length>=2){exShowSlotPick(1);return;}' +
       'if(EXFLOW)exShowTitle();}' +
     'var SGX=(function(){' +
-      'if(!document.getElementById("sgMonth"))return {goMonth:function(){},toTime:function(){},setAsk:function(){},setAhead:function(){},setNeed:function(){},state:function(){return {};}};' +
+      'if(!document.getElementById("sgMonth"))return {goMonth:function(){},toTime:function(){},setAsk:function(){},setAhead:function(){},setNeed:function(){},state:function(){return {};},freeAt:function(){return null;}};' +
       'var step=0,SWAP=0,MY=null,AKI=null,AKIERR=false,AKIWAIT=null,PICKDATE=null,SLOT=null,TS=0,TE=0,ROOM=null,DAYROOMS=[],ASK=false,PAID=null,AHEAD={},PAIDAUTO="";' +
       'function tapOK(){return (Date.now()-SWAP)>450;}' +
       'function $(i){return document.getElementById(i);}' +
@@ -8907,7 +8945,9 @@ function renderExistingPage_(base, staff, dev, mode) {
         'setSlot1:function(t){var el=$("sgtslot");if(!el)return;'+
           'el.textContent=t||"";el.style.display=t?"":"none";},' +
         'setAhead:function(a){AHEAD=a||{};if(step===6)drawTime();},' +
-        'state:function(){return {date:PICKDATE,ts:TS,te:TE,room:ROOM,slot:SLOT,paid:PAID,free:freeStaffAt(TS,TE)};}};' +
+        'state:function(){return {date:PICKDATE,ts:TS,te:TE,room:ROOM,slot:SLOT,paid:PAID,free:freeStaffAt(TS,TE)};},' +
+        /* ★2026-10-27 2枠目から先の画面が「その時間に空いている担当」を聞く（空いている人だけ選ばせる決まり）。 */
+        'freeAt:function(a,b){return freeStaffAt(a,b);}};' +
     '})();' +
     '})();</script>';
   // ★共通の部品（施術後の予約と同じ画面）は .ex の外に置く＝この画面のボタンの見た目が混ざらない。
