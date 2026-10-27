@@ -8043,6 +8043,9 @@ function renderExistingPage_(base, staff, dev, mode) {
         '<button type="button" class="exp" data-suf="dochi" style="background:#475569">都度</button>' +
         '<button type="button" class="exp" data-suf="eyelight" style="background:#475569">イーライト</button>' +
       '</div></div>' +
+      /* ★2026-10-27 まるちゃん「末尾の下に、何月何日は支払い済みあるいは未払いを表示しよう。そうすれば、なしにするか都度にするか分かる」
+         ＝今回のメモに入るお支払いの行（事務所パソコンが帳簿を見て決めた物）をそのまま見せる。ここで別に判定しない。 */
+      '<div id="exrvpaynow" style="display:none;margin:10px 2px 0;font-size:16px;line-height:1.6;border-radius:12px;padding:10px 12px;font-weight:700"></div>' +
       '<div id="exrvslots" style="display:none"></div>' +
       '<div class="exsec" id="exrvtitleh">タイトル（修正可能）</div><textarea class="exrvtitle exrvtitleedit" id="exrvtitle"></textarea>' +
       '<button class="exgo" id="exToConfirm" style="display:none">確認画面へ→</button>' +
@@ -8684,7 +8687,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var EXSTEP="";' +
     'exEl("exToConfirm").onclick=function(){exShowConfirm();};' +
     /* ★新しい流れ（ここまで）────────────────────────────────────── */
-    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx){exGoBusy_(false);return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[])};jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exGoBusy_(false);return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度お試しください）";exGoBusy_(false);return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok){exGoBusy_(false);return;}if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done"){exGoBusy_(false);return;}var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exGrowMemo();setTimeout(exGrowMemo,0);setTimeout(exGrowMemo,300);exPayRemovedNote(el2,(d&&d.memo)||"");exPaidNote(el2,(d&&d.paid_note)||"");exGoBusy_(false);});})();});}' +
+    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx){exGoBusy_(false);return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[])};exPayNow("","",true);jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exGoBusy_(false);return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度お試しください）";exGoBusy_(false);return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok){exGoBusy_(false);return;}if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done"){exGoBusy_(false);return;}var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exGrowMemo();setTimeout(exGrowMemo,0);setTimeout(exGrowMemo,300);exPayRemovedNote(el2,(d&&d.memo)||"");exPaidNote(el2,(d&&d.paid_note)||"");exPayNow((rvMemoOv!=null&&el2)?el2.value:((d&&d.memo)||""),(d&&d.paid_note)||"");exGoBusy_(false);});})();});}' +
     // ★複数枠：印が2つ以上なら印ごとに1枠。枠ごとに部屋・担当・分を選び、時間は続けて自動で並べる。
     'var rvSlotCfg={},rvLastSlotCount=0;' +
     'function rvSlotCfg_(mk){if(!rvSlotCfg[mk])rvSlotCfg[mk]={room:rvsel.room,staff:rvsel.staff,dur:rvsel.dur};return rvSlotCfg[mk];}' +
@@ -8866,6 +8869,26 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(!box){box=document.createElement("div");box.id="exrvpaidnote";box.style.cssText="margin:8px 2px 0;font-size:15px;line-height:1.65;color:#14532d;background:#eaf7ee;border:1px solid #bfe3ca;border-radius:12px;padding:10px 12px;";' +
         'el.parentNode.insertBefore(box,el.nextSibling);}' +
       'box.textContent=why;}' +
+    /* ★2026-10-27 末尾の下の「◯/◯分：支払い済み／未払い」。今回のメモから予約日のお支払いの行を拾うだけ
+       （行の書き方＝「◉ 12/17分: 支払い済み」「◉脚全部:12/17分 未払い」＝treatment_memo.set_next_payment_line）。
+       色は既にある2つ（帳簿の根拠の緑・変えた所の黄）を使う。 */
+    'function exPayNow(memo,why,busy){var b=document.getElementById("exrvpaynow");if(!b)return;' +
+      'var ymd=String((rvctx&&rvctx._ymd)||"").split("-");' +
+      'if(ymd.length!==3){b.style.display="none";return;}' +
+      'var m=parseInt(ymd[1],10),d=parseInt(ymd[2],10);var md=m+"/"+d;' +
+      'var G="color:#14532d;background:#eaf7ee;border:1px solid #bfe3ca",Y="color:#5b4a00;background:#fff3cd;border:1px solid #f1dc9c";' +
+      'b.style.display="";' +
+      'if(busy){b.style.cssText+=";"+Y;b.textContent="💰 "+md+"分のお支払い：調べています…";return;}' +
+      'var re=new RegExp("(^|[^0-9])0?"+m+"/0?"+d+"分");var ls=String(memo||"").split("\\n"),hit=[],paid=0,unpaid=0;' +
+      'for(var i=0;i<ls.length;i++){var t=ls[i];if(!re.test(t))continue;' +
+        'if(t.indexOf("未払い")>=0)unpaid++;else if(t.indexOf("支払い済")>=0)paid++;else continue;' +
+        'hit.push(t.replace(/^[\\s◉・]+/,"").trim());}' +
+      'if(!hit.length){b.style.cssText+=";"+Y;b.textContent="💰 "+md+"分のお支払い：メモに書いてありません";return;}' +
+      'b.style.cssText+=";"+(unpaid?Y:G);' +
+      'var h="";for(var k=0;k<hit.length;k++)h+="<div>💰 "+exHtml_(hit[k])+"</div>";' +
+      'if(why)h+="<div style=\\"font-size:13px;font-weight:600;margin-top:2px\\">"+exHtml_(why)+"</div>";' +
+      'b.innerHTML=h;}' +
+    'function exHtml_(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
     'function exP2(n){return ("0"+n).slice(-2);}' +
     /* 日にちを押した瞬間から、前回の予約を裏で読み始める（時間を決めている間に読み終わる）。 */
     'function exPrefetch(date){if(PREF&&PREF.date===date&&!PREF.err)return;var me={date:date,ctx:null,err:"",wait:null};PREF=me;' +
