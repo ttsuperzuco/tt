@@ -8883,15 +8883,17 @@ function renderExistingPage_(base, staff, dev, mode) {
       'for(var i=0;i<ls.length;i++){var t=ls[i];if(!re.test(t))continue;' +
         'if(t.indexOf("未払い")>=0)unpaid++;else if(t.indexOf("支払い済")>=0)paid++;else continue;' +
         'hit.push(t.replace(/^[\\s◉・]+/,"").trim());}' +
-      'var h="";' +
-      'if(!hit.length){h+="<div>💰 "+md+"分のお支払い：メモに書いてありません</div>";unpaid=1;}' +
+      'var h="";var cs=exCourseNow(memo);' +
+      /* ★2026-10-27 コースで払ってある回は「未払い」を書かない（事務所パソコン existing_ctx）。その時は
+         末尾の「都度」を初めから選ばない回と同じ見分け（rvDochiDefault）で「コースで払い済み」と出す。 */
+      'if(!hit.length){if(cs.length&&!rvDochiDefault())h+="<div>💰 "+md+"分：コースで払い済み（その日のお支払いはありません）</div>";' +
+        'else{h+="<div>💰 "+md+"分のお支払い：メモに書いてありません</div>";unpaid=1;}}' +
       'b.style.cssText+=";"+(unpaid?Y:G);' +
       'for(var k=0;k<hit.length;k++)h+="<div>💰 "+exHtml_(hit[k])+"</div>";' +
       'if(why)h+="<div style=\\"font-size:13px;font-weight:600;margin-top:2px\\">"+exHtml_(why)+"</div>";' +
       /* ★2026-10-27 まるちゃん「末尾の下に、コースの残り回数（全◯回の◯回目）も一緒に出して」
          ＝今回のメモの『⭐️現在進行中』で、今回やる（あり）行の「全N回のM回目」を出す。
          名前と回数が2行に分かれた書き方（次の行が「全◯回…」で始まる）は直前の名前の続き（必読5-7）。 */
-      'var cs=exCourseNow(memo);' +
       'if(cs.length){for(var c=0;c<cs.length;c++)h+="<div>📋 "+exHtml_(cs[c])+"</div>";}' +
       'else h+="<div>📋 今回やる施術に「全◯回の◯回目」の書き方はありません</div>";' +
       'b.innerHTML=h;}' +
