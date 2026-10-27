@@ -2881,6 +2881,13 @@ var KOUKOKUCSS_ =
   '  .kkpseg { display:flex; flex-wrap:wrap; gap:6px; margin:8px 2px; }' +
   '  .kkpseg button { border:0; background:var(--card,#fff); color:var(--sub,#64748b); font-size:.9rem; font-weight:800; padding:8px 14px; border-radius:999px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.12); }' +
   '  .kkpseg button.on { background:#e0533d; color:#fff; }' +
+  '  table.kkmt { width:100%; border-collapse:collapse; font-size:.82rem; margin-top:4px; }' +
+  '  table.kkmt th, table.kkmt td { padding:5px 4px; text-align:right; border-bottom:1px solid var(--line,#e2e8f0); white-space:nowrap; font-variant-numeric:tabular-nums; }' +
+  '  table.kkmt thead th { color:var(--sub,#64748b); font-size:.7rem; font-weight:700; }' +
+  '  table.kkmt tbody th { text-align:left; font-weight:800; }' +
+  '  table.kkmt thead th:first-child { text-align:left; }' +
+  '  table.kkmt tr.kkmsum th, table.kkmt tr.kkmsum td { font-weight:900; border-bottom:0; }' +
+  '  .kkmnone { color:var(--sub,#64748b); font-size:.8rem; padding:4px 0; }' +
   '  .kkpnote { color:rgba(255,255,255,.82); font-size:.74rem; margin:0 2px 10px; }' +
   '  .kkpc { background:var(--card,#fff); color:var(--ink,#0f172a); border-radius:14px; padding:12px; margin-bottom:12px; display:flex; gap:12px; box-shadow:0 4px 14px rgba(0,0,0,.12); }' +
   '  .kkpth { width:96px; height:96px; border-radius:10px; object-fit:cover; flex:none; }' +
@@ -3676,6 +3683,68 @@ function _kkTot_(v, id, cls) {
 
 /** 広告費管理（オーナー専用・開発URL専用）。国籍×性別の4マス（今出している広告の1日予算合計）＋
  *  アカウントごとの広告明細を出す。データは自動読み取りの koukoku.json（d.accounts）。 */
+// ★出す場所ごとの内訳（2026-10-27 まるちゃん依頼）：インスタだけ／フェイスブック＋スレッズ等に分けた広告を、
+//   国籍×性別ごとに並べ、選んだ期間の「使った額・表示・押された回数・1回あたり」を出す場所ごとに出す。
+//   データは事務所PC側の read_ads.py が広告マネージャから読んで koukoku.json の各アカウントの manager に入れる。
+var KK_PLACE_ = { instagram: 'インスタ', facebook: 'フェイスブック', threads: 'スレッズ', messenger: 'メッセンジャー', audience_network: 'その他' };
+function _kkPlaces_(d) {
+  var accs = (d && d.accounts) || [];
+  var rows = [];
+  accs.forEach(function (acc) {
+    (acc.manager || []).forEach(function (r) {
+      var sex = r.sex || (acc.key === 'tw_women' ? 'f' : (acc.key === 'tw_men' ? 'm' : null));
+      rows.push({ r: r, nat: acc.key === 'jp' ? 'j' : 't', sex: sex, at: acc.manager_at });
+    });
+  });
+  if (!rows.length) return '';
+  var pers = (d.mgr_periods && d.mgr_periods.length) ? d.mgr_periods : [{ key: '1w', label: '1週間' }];
+  var total = 0; rows.forEach(function (x) { total += Number(x.r.day_budget) || 0; });
+  var GROUPS = [['j', 'm', '🇯🇵 日本人 男性'], ['j', 'f', '🇯🇵 日本人 女性'], ['t', 'm', '🇹🇼 台湾人 男性'], ['t', 'f', '🇹🇼 台湾人 女性']];
+  var body = '';
+  GROUPS.forEach(function (g) {
+    var gs = rows.filter(function (x) { return x.nat === g[0] && x.sex === g[1]; });
+    if (!gs.length) return;
+    var day = 0; gs.forEach(function (x) { day += Number(x.r.day_budget) || 0; });
+    body += '<div class="kksub">' + esc_(g[2]) + '<small>' + gs.length + '本・1日 ' + esc_(_costYen_(day)) + '</small></div>';
+    gs.forEach(function (x) {
+      var r = x.r;
+      var places = (r.places || []).map(function (p) { return KK_PLACE_[p] || p; });
+      var where = places.length === 1 ? places[0] + 'だけ' : places.join('＋');
+      var dest = r.dest === 'line' ? '公式LINE' : (r.dest === 'profile' ? 'インスタのプロフィール' : 'ウェブ');
+      var lang = r.lang === 'ja' ? '日本語のみ' : (r.lang === 'zh' ? '中国語のみ' : '言語の指定なし');
+      var img = r.thumb ? '<img class="kkpth" src="' + r.thumb + '" alt="">' : '<div class="kkpth ph">画像</div>';
+      body += '<div class="kkpc kkmc" data-st="' + esc_(JSON.stringify(r.stats || {})) + '">' + img +
+        '<div class="kkpbody">' +
+          '<div class="kkptitle">' + (r.day_budget ? '<span class="kkpbudget">1日 ' + esc_(_costYen_(r.day_budget)) + '</span>' : '') +
+            esc_(where) + '</div>' +
+          '<div class="kkpgoal">押した先：' + esc_(dest) + '　／　' + esc_(lang) + '</div>' +
+          '<div class="kkmtab"></div>' +
+        '</div></div>';
+    });
+  });
+  var seg = pers.map(function (p) {
+    return '<button type="button" data-p="' + esc_(p.key) + '"' + (p.key === '1w' ? ' class="on"' : '') + '>' + esc_(p.label) + '</button>';
+  }).join('');
+  var at = rows[0].at ? '<div class="kkpnote">広告マネージャから読んだ日時：' + esc_(rows[0].at) + '</div>' : '';
+  var script = '<script>(function(){' +
+    'var seg=document.getElementById("kkm-seg");if(!seg)return;var bs=seg.querySelectorAll("button"),i,period="1w";' +
+    'var NM={instagram:"インスタ",facebook:"フェイスブック",threads:"スレッズ",messenger:"メッセンジャー",audience_network:"その他"};' +
+    'function nf(n){n=Math.round(Number(n)||0);var s=""+n,o="",c=0,j;for(j=s.length-1;j>=0;j--){o=s.charAt(j)+o;if(++c%3===0&&j>0)o=","+o;}return o;}' +
+    'function apply(){var cs=document.querySelectorAll(".kkmc"),k;for(k=0;k<cs.length;k++){var st={};' +
+      'try{st=JSON.parse(cs[k].getAttribute("data-st")||"{}");}catch(e){}var p=st[period]||{},h="",ts=0,ti=0,tc=0,n=0,key;' +
+      'for(key in p){var v=p[key];n++;ts+=v.spend;ti+=v.imp;tc+=v.clicks;' +
+        'h+="<tr><th>"+(NM[key]||key)+"</th><td>"+nf(v.spend)+" 元</td><td>"+nf(v.imp)+"</td><td>"+nf(v.clicks)+"</td><td>"+(v.clicks>0?(Math.round(v.spend/v.clicks*10)/10)+" 元":"—")+"</td></tr>";}' +
+      'if(n>1)h+="<tr class=\\"kkmsum\\"><th>合計</th><td>"+nf(ts)+" 元</td><td>"+nf(ti)+"</td><td>"+nf(tc)+"</td><td>"+(tc>0?(Math.round(ts/tc*10)/10)+" 元":"—")+"</td></tr>";' +
+      'var box=cs[k].querySelector(".kkmtab");if(box)box.innerHTML=n?("<table class=\\"kkmt\\"><thead><tr><th>出た場所</th><th>使った額</th><th>表示</th><th>押された</th><th>1回あたり</th></tr></thead><tbody>"+h+"</tbody></table>"):"<div class=\\"kkmnone\\">この期間はまだ表示されていません。</div>";}' +
+      'for(k=0;k<bs.length;k++){bs[k].className=(bs[k].getAttribute("data-p")===period?"on":"");}}' +
+    'for(i=0;i<bs.length;i++){bs[i].addEventListener("click",function(){period=this.getAttribute("data-p");apply();});}apply();})();</script>';
+  return '<div class="kkacc" style="border-left-color:#0ea5e9;">出す場所ごとの内訳' +
+      '<small>今 動いている広告 ' + rows.length + '本・1日 合計 ' + esc_(_costYen_(total)) + '</small></div>' +
+    '<div class="kkpseg" id="kkm-seg">' + seg + '</div>' +
+    '<div class="kkpnote">インスタだけ・フェイスブック＋スレッズなど、分けた広告ごとに、選んだ期間に出た場所の数字を出しています。</div>' +
+    body + at + script;
+}
+
 function renderKoukokuPage_(d, base, staff, dev) {
   d = d || {};
   function fig(n) {
@@ -3930,6 +3999,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
         '<div class="kkseg"><button id="kk-day" class="on" type="button">1日あたり</button>' +
           '<button id="kk-month" type="button">1か月あたり</button></div>' +
         table +
+        _kkPlaces_(d) +
         '<div class="kkacc" style="border-left-color:#7c3aed;">広告ごとの明細</div>' +
         list +
         '<div class="kknote">4マスは「今 配信中の広告の1日予算」を国籍×性別で合算。男女は各広告を見た人の割合から自動判定。金額は台湾ドル（元）。</div>' +
