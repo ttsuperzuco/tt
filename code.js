@@ -8883,11 +8883,33 @@ function renderExistingPage_(base, staff, dev, mode) {
       'for(var i=0;i<ls.length;i++){var t=ls[i];if(!re.test(t))continue;' +
         'if(t.indexOf("未払い")>=0)unpaid++;else if(t.indexOf("支払い済")>=0)paid++;else continue;' +
         'hit.push(t.replace(/^[\\s◉・]+/,"").trim());}' +
-      'if(!hit.length){b.style.cssText+=";"+Y;b.textContent="💰 "+md+"分のお支払い：メモに書いてありません";return;}' +
+      'var h="";' +
+      'if(!hit.length){h+="<div>💰 "+md+"分のお支払い：メモに書いてありません</div>";unpaid=1;}' +
       'b.style.cssText+=";"+(unpaid?Y:G);' +
-      'var h="";for(var k=0;k<hit.length;k++)h+="<div>💰 "+exHtml_(hit[k])+"</div>";' +
+      'for(var k=0;k<hit.length;k++)h+="<div>💰 "+exHtml_(hit[k])+"</div>";' +
       'if(why)h+="<div style=\\"font-size:13px;font-weight:600;margin-top:2px\\">"+exHtml_(why)+"</div>";' +
+      /* ★2026-10-27 まるちゃん「末尾の下に、コースの残り回数（全◯回の◯回目）も一緒に出して」
+         ＝今回のメモの『⭐️現在進行中』で、今回やる（あり）行の「全N回のM回目」を出す。
+         名前と回数が2行に分かれた書き方（次の行が「全◯回…」で始まる）は直前の名前の続き（必読5-7）。 */
+      'var cs=exCourseNow(memo);' +
+      'if(cs.length){for(var c=0;c<cs.length;c++)h+="<div>📋 "+exHtml_(cs[c])+"</div>";}' +
+      'else h+="<div>📋 今回やる施術に「全◯回の◯回目」の書き方はありません</div>";' +
       'b.innerHTML=h;}' +
+    'function exCourseNow(memo){var s=String(memo||"");var i=s.indexOf("現在進行中");if(i<0)return [];' +
+      'var ls=s.slice(i).split("\\n").slice(1),blk=[];' +
+      'for(var k=0;k<ls.length;k++){var t=ls[k];' +
+        'if(t.indexOf("お支払い状況")>=0||t.indexOf("終了")>=0||t.replace(/\\s/g,"").indexOf("ーー")===0)break;blk.push(t);}' +
+      'var anyAri=blk.some(function(t){return /あり\\s*$/.test(t);});' +
+      'var out=[],last="";' +
+      'for(var j=0;j<blk.length;j++){var t2=String(blk[j]).trim();if(!t2)continue;' +
+        'var m=t2.match(/全\\s*([0-9]+)\\s*回の\\s*([0-9]+)\\s*回目/);' +
+        'var nm=t2.replace(/^[◉・\\s]+/,"");' +
+        'if(!m){last=nm.replace(/[\\s:：]+$/,"");continue;}' +
+        'if(anyAri&&!/あり\\s*$/.test(t2))continue;' +
+        'var pre=nm.slice(0,nm.indexOf(m[0])).replace(/[\\s:：]+$/,"");' +
+        'var n=parseInt(m[1],10),c=parseInt(m[2],10);' +
+        'out.push((pre||last)+"：全"+n+"回の"+c+"回目"+(n>=c?"（このあと残り"+(n-c)+"回）":""));}' +
+      'return out;}' +
     'function exHtml_(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
     'function exP2(n){return ("0"+n).slice(-2);}' +
     /* 日にちを押した瞬間から、前回の予約を裏で読み始める（時間を決めている間に読み終わる）。 */
