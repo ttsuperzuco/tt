@@ -8501,13 +8501,17 @@ function renderExistingPage_(base, staff, dev, mode) {
     'exEl("expknew").addEventListener("click",function(e){var b=e.target.closest("[data-expknew]");if(!b)return;' +
       'rvNewItems.splice(parseInt(b.getAttribute("data-expknew"),10),1);exDrawPick();});' +
     'exEl("expkAdd").onclick=function(){EXMENUBACK="exPickItems";showRvMenu("");};' +
-    'exEl("expkGo").onclick=function(){if(!exChosen().length){szPopup_("今回やる施術を1つ以上選んでください。");return;}EXADDFROM="exPickItems";exShowAdd();};' +
+    /* ★2026-10-27 まるちゃん「追加メニューこれだけにしたのに、次の画面でまた選ばせられる」＝
+       選び直し画面の下の2つのボタンが『ない／ある』の答えそのもの。だから押したら
+       「〇〇以外にやるメニューはありますか？」を聞き直さずに先へ進む。戻る時はこの画面へ。 */
+    'function exBackToItems(){if(EXADDFROM==="exPickItems")exShowPick();else exShowAdd();}' +
+    'exEl("expkGo").onclick=function(){if(!exChosen().length){szPopup_("今回やる施術を1つ以上選んでください。");return;}EXADDFROM="exPickItems";exAfterItems();};' +
     'exEl("exbackAdd").onclick=function(){if(EXADDFROM==="exPickItems")exShowPick();else exShowAsk();};' +
     'exEl("exaddlist").addEventListener("click",function(e){var b=e.target.closest("[data-exaddel]");if(!b)return;' +
       'rvNewItems.splice(parseInt(b.getAttribute("data-exaddel"),10),1);exShowAdd();});' +
     'exEl("exaddyes").onclick=function(){EXMENUBACK="exAdd";showRvMenu("");};' +
     'exEl("exaddno").onclick=function(){exAfterItems();};' +
-    'exEl("exbackSplit").onclick=function(){exShowAdd();};' +
+    'exEl("exbackSplit").onclick=function(){exBackToItems();};' +
     'exEl("exsplitsame").onclick=function(){exSetGroups([exChosen()]);exShowDur();};' +
     'exEl("exsplitdiv").onclick=function(){var ns=exUnits();' +
       'if(ns.length===2){exSetGroups([[ns[0]],[ns[1]]]);exShowOrder();return;}exShowGroup();};' +
@@ -8533,7 +8537,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'for(var i=0;i<ns.length;i++){var n=EXGRP[i]||1;if(!mp[n]){mp[n]=[];ord.push(n);}mp[n].push(ns[i]);}' +
       'ord.sort(function(a,b){return a-b;});var list=[];for(var k=0;k<ord.length;k++)list.push(mp[ord[k]]);' +
       'exSetGroups(list);exShowOrder();};' +
-    'exEl("exbackDur").onclick=function(){var ns=exUnits();if(ns.length<2){exShowAdd();return;}' +
+    'exEl("exbackDur").onclick=function(){var ns=exUnits();if(ns.length<2){exBackToItems();return;}' +
       'if(EXFLOW&&EXFLOW.groups.length>=2&&ns.length>=3){exShowGroup();return;}exAfterItems();};' +
     'exEl("exdurlist").addEventListener("click",function(e){var b=e.target.closest("[data-exdi]");if(!b)return;' +
       'EXFLOW.groups[parseInt(b.getAttribute("data-exdi"),10)].dur=parseInt(b.getAttribute("data-exdv"),10);exDrawDur();});' +
