@@ -3766,13 +3766,37 @@ function renderKoukokuPage_(d, base, staff, dev) {
   } else { allads = d.ads || []; }
 
   // 4マス：今出している(配信中)広告の「1日の予算」を国籍×性別ごとに合算。
+  //   ★2026-10-27 まるちゃん決定：広告マネージャの数字（manager）が読めているアカウントは、そちらで数える
+  //   （公式LINEへ飛ばすフェイスブックの広告など、インスタの一覧に出ない広告も入る）。読めていないアカウントだけ従来どおり。
   var S = { jm: 0, jf: 0, tm: 0, tf: 0 }, unknown = 0;
-  allads.forEach(function (a) {
-    if (a.status !== '配信中') return;                 // 停止中・未配信は「今の1日支出」に入れない
-    var day = Number(a.day_budget) || 0;
-    if (!a.sex) { unknown += day; return; }            // 男女が読めなかった分は別に注記
-    S[(a.nat === 'jp' ? 'j' : 't') + (a.sex === 'f' ? 'f' : 'm')] += day;
+  var mgrKeys = {};
+  accounts.forEach(function (acc) {
+    if (!acc.manager) return;
+    mgrKeys[acc.key] = 1;
+    acc.manager.forEach(function (r) {
+      var day = Number(r.day_budget) || 0;
+      var sx = r.sex || (acc.key === 'tw_women' ? 'f' : (acc.key === 'tw_men' ? 'm' : null));
+      if (!sx) { unknown += day; return; }
+      S[(acc.key === 'jp' ? 'j' : 't') + (sx === 'f' ? 'f' : 'm')] += day;
+    });
   });
+  accounts.forEach(function (acc) {
+    if (mgrKeys[acc.key]) return;
+    (acc.ads || []).forEach(function (a) {
+      if (a.status !== '配信中') return;               // 停止中・未配信は「今の1日支出」に入れない
+      var day = Number(a.day_budget) || 0;
+      if (!a.sex) { unknown += day; return; }          // 男女が読めなかった分は別に注記
+      S[(a.nat === 'jp' ? 'j' : 't') + (a.sex === 'f' ? 'f' : 'm')] += day;
+    });
+  });
+  if (!accounts.length) {
+    allads.forEach(function (a) {
+      if (a.status !== '配信中') return;
+      var day = Number(a.day_budget) || 0;
+      if (!a.sex) { unknown += day; return; }
+      S[(a.nat === 'jp' ? 'j' : 't') + (a.sex === 'f' ? 'f' : 'm')] += day;
+    });
+  }
   var mx = Math.max(S.jm, S.jf, S.tm, S.tf);
   var grand = S.jm + S.jf + S.tm + S.tf;
   var table =
@@ -4002,7 +4026,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
         _kkPlaces_(d) +
         '<div class="kkacc" style="border-left-color:#7c3aed;">広告ごとの明細</div>' +
         list +
-        '<div class="kknote">4マスは「今 配信中の広告の1日予算」を国籍×性別で合算。男女は各広告を見た人の割合から自動判定。金額は台湾ドル（元）。</div>' +
+        '<div class="kknote">4マスは「今 動いている広告の1日予算」を国籍×性別で合算（広告マネージャから読めた分は、公式LINEへ飛ばす広告も含む）。金額は台湾ドル（元）。</div>' +
       '</div>' +
     '</div>' + script + pscript;
 }
