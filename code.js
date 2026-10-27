@@ -8338,6 +8338,10 @@ function renderExistingPage_(base, staff, dev, mode) {
       's=s.replace(/[ 　]*(?:おまとめ|まとめ買い)/g,"");' +
       's=s.replace(/[ 　]*都度(?:払い)?/g,"");' +
       's=s.replace(/[ 　]*購入(?:済み|済)?/g,"");' +
+      /* ★2026-10-27 まるちゃん「キャ は部位のなまえじゃない」＝キャンペーンの印（キャ・メンキャ・キャンペーン）と
+         何本目の契約かの丸数字（②）も落とす。「キャンセル」は残す。
+         ★事務所パソコン側の ask_name は予約メモの新しい行の名前にも使うので、ここ（聞く・選ぶ画面の見た目）だけで落とす。 */
+      's=s.replace(/メンキャ|キャンペーン/g,"").replace(/キャ(?!ンセル)/g,"").replace(/[①-⑳]/g,"");' +
       's=s.replace(new RegExp("[ 　]*[0-9０-９"+K+"]+回(?![目])","g"),"");' +
       's=s.replace(/[ 　]*[（(][ 　]*[)）]/g,"");' +
       'function cnt(x,ch){return x.split(ch).length-1;}' +
@@ -8446,7 +8450,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exEl("expkGo").textContent=rvNewItems.length?"追加メニューはこれだけ":"これで決定→";}' +
     /* 2枚目＝〇〇以外にやるメニューはありますか？ */
     'function exShowAdd(){exOpen("exAdd");var ns=exChosen();' +
-      'exEl("exaddq").textContent="「"+ns.map(exShort).join("＋")+"」以外にやるメニューはありますか？";' +
+      'exEl("exaddq").textContent="「"+ns.map(exAskName).join("＋")+"」以外にやるメニューはありますか？";' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-exaddel=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("exaddlist").innerHTML=n;}' +
     /* 施術が決まったあと＝1つなら施術時間へ、2つ以上なら分けるか聞く */
@@ -8454,7 +8458,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(!ns.length){szPopup_("今回やる施術を1つ以上選んでください。");return;}' +
       'if(us.length<2){exSetGroups([ns]);exShowStaff();return;}' +
       'exOpen("exSplit");' +
-      'var h="";for(var i=0;i<us.length;i++)h+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(exShort(us[i]))+"</div></div>";' +
+      'var h="";for(var i=0;i<us.length;i++)h+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(exAskName(us[i]))+"</div></div>";' +
       'exEl("exspunits").innerHTML=h;}' +
     /* ★2026-10-04 まるちゃん「前回と同じものをやるって選んでるんだよ？」＝この画面は最初に
        『今回も〇〇をやりますか？』で前回と同じ施術を選んでいる。だから文字で見比べる必要はなく、
@@ -8495,7 +8499,7 @@ function renderExistingPage_(base, staff, dev, mode) {
         'for(var gi=0;gi<g.length;gi++){var cs=rvSlotCfg_(g[gi].key).staff;var b="";' +
           'for(var q2=0;q2<SORD.length;q2++){var s2=SORD[q2];' +
             'b+="<button type=\\"button\\" class=\\"exp"+((s2===cs)?" sel":"")+"\\" data-exstfi=\\""+gi+"\\" data-exstfn=\\""+s2+"\\" style=\\"background:"+SC[s2]+"\\">"+SEMO_[s2]+" "+SNM_[s2]+"</button>";}' +
-          'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(gi+1)+"枠目　"+esc(g[gi].names.map(exShort).join("＋"))+"</div><div class=\\"expills\\">"+b+"</div></div>";}' +
+          'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(gi+1)+"枠目　"+esc(g[gi].names.map(exAskName).join("＋"))+"</div><div class=\\"expills\\">"+b+"</div></div>";}' +
         'exEl("exstflist").innerHTML=h;return;}' +
       /* ★2026-10-27 まるちゃん「担当はデフォルトのやつが一番上にしてよ」＝最初に光っている担当（前回の担当）を一番上に。残りはいつもの並び。 */
       'var _si=SORD.indexOf(EXSTAFF);if(_si>0){SORD.splice(_si,1);SORD.unshift(EXSTAFF);}' +
@@ -8519,7 +8523,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exDrawGroup(){var ns=exUnits();var h="";' +
       'for(var i=0;i<ns.length;i++){var b="";' +
         'for(var n=1;n<=ns.length;n++){b+="<button type=\\"button\\" class=\\"exp plain"+(EXGRP[i]===n?" sel":"")+"\\" data-exgi=\\""+i+"\\" data-exgn=\\""+n+"\\">"+n+"</button>";}' +
-        'h+="<div class=\\"rvslot\\"><div class=\\"rvname\\">◉ "+esc(exShort(ns[i]))+"</div><div class=\\"expills\\">"+b+"</div></div>";}' +
+        'h+="<div class=\\"rvslot\\"><div class=\\"rvname\\">◉ "+esc(exAskName(ns[i]))+"</div><div class=\\"expills\\">"+b+"</div></div>";}' +
       'exEl("exgrplist").innerHTML=h;}' +
     /* 施術時間を選ぶ（枠ごと・おすすめを最初から選んでおく） */
     /* ★2026-10-04 やる順番＝枠を分けたら、どれから先にやるかを決める（まるちゃん指示）。 */
@@ -8527,7 +8531,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(g.length<2){exShowStaff();return;}exOpen("exOrder");exDrawOrder();}' +
     'function exDrawOrder(){var g=(EXFLOW&&EXFLOW.groups)||[];var h="";' +
       'for(var i=0;i<g.length;i++){' +
-        'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(i+1)+"枠目　"+esc(g[i].names.map(exShort).join("＋"))+"</div>"' +
+        'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(i+1)+"枠目　"+esc(g[i].names.map(exAskName).join("＋"))+"</div>"' +
         '+(i>0?("<button type=\\"button\\" class=\\"exp plain\\" data-exup=\\""+i+"\\">↑ 上へ</button>"):"")+"</div>";}' +
       'exEl("exorderlist").innerHTML=h;}' +
     /* ★2026-10-04 2枠目から先は1枠ずつ別の画面で部屋と担当を選ぶ（まるちゃん指示）。 */
@@ -8569,7 +8573,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exDrawDur(){var g=(EXFLOW&&EXFLOW.groups)||[];var h="";' +
       'for(var i=0;i<g.length;i++){var p="";' +
         'for(var d=0;d<EXDURS.length;d++){p+="<button type=\\"button\\" class=\\"exp plain"+(String(EXDURS[d])===String(g[i].dur)?" sel":"")+"\\" data-exdi=\\""+i+"\\" data-exdv=\\""+EXDURS[d]+"\\">"+EXDURS[d]+"</button>";}' +
-        'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(g.length>1?((i+1)+"枠目　"):"")+esc(g[i].names.map(exShort).join("＋"))+"</div><div class=\\"expills exdur\\">"+p+"</div></div>";}' +
+        'h+="<div class=\\"rvslot\\"><div class=\\"rvslottop\\">"+(g.length>1?((i+1)+"枠目　"):"")+esc(g[i].names.map(exAskName).join("＋"))+"</div><div class=\\"expills exdur\\">"+p+"</div></div>";}' +
       'var tot=exTotalMin();h+="<div class=\\"exsec\\">合計 "+tot+"分</div>";' +
       'exEl("exdurlist").innerHTML=h;}' +
     'function exTotalMin(){var g=(EXFLOW&&EXFLOW.groups)||[];var t=0;for(var i=0;i<g.length;i++)t+=(parseInt(g[i].dur,10)||30);return t;}' +
@@ -8577,7 +8581,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'for(var i=0;i<g.length;i++){rvSlotCfg[g[i].key]=rvSlotCfg[g[i].key]||{};rvSlotCfg[g[i].key].dur=String(g[i].dur);}' +
       'if(g.length===1)rvsel.dur=String(g[0].dur);' +
       'var _g=(EXFLOW&&EXFLOW.groups)||[];' +
-      'SGX.setSlot1(_g.length>=2?("1枠目　"+_g[0].names.map(exShort).join("＋")):"");' +
+      'SGX.setSlot1(_g.length>=2?("1枠目　"+_g[0].names.map(exAskName).join("＋")):"");' +
       'SGX.setRoomTip(_g.length?exRoomTip(_g[0].names):"");' +
       'SGX.setNeed(exNeed1());SGX.goMonth();}' +
     /* ★2026-10-27 空き状況で1枠目の担当に要る長さ＝1枠目から続けて同じ担当がやる枠の合計
@@ -8590,7 +8594,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exSlotKeys(){if(EXFLOW&&EXFLOW.groups&&EXFLOW.groups.length>=2){var a=[];for(var i=0;i<EXFLOW.groups.length;i++)a.push(EXFLOW.groups[i].key);return a;}return rvEffMarks();}' +
     'function exSlotGroup(k){var g=(EXFLOW&&EXFLOW.groups)||[];for(var i=0;i<g.length;i++){if(g[i].key===k)return g[i];}return null;}' +
     'function exSlotMark(k){var g=exSlotGroup(k);return g?g.mark:k;}' +
-    'function exSlotLabel(k){var g=exSlotGroup(k);return g?g.names.map(exShort).join("＋"):("印「"+k+"」");}' +
+    'function exSlotLabel(k){var g=exSlotGroup(k);return g?g.names.map(exAskName).join("＋"):("印「"+k+"」");}' +
     /* ボタンの受け口（新しい画面ぶん） */
     /* ★2026-09-30 「はい」＝**聞いた施術をやる**。ここで全部を『やる』に戻すと、
    前回やっていない施術まで今回やることになり、1つしか聞いていないのに
