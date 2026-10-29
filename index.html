@@ -6,6 +6,10 @@
 <title>TTスーパーズコApp</title>
 <style>
   html, body { margin:0; background:#2C7A99; }
+  /* ★2026-10-29 トマトさん報告「No31で金額を入力中、画面がどんどん大きくなる（iPhone）」。
+     iPhoneは同じ所を素早く2回たたくと拡大する＝数字ボタンで「00」などを打つと拡大していた。
+     ボタン類だけ2回たたきの拡大を止める（指2本で広げる拡大はそのまま使える）。全画面共通。 */
+  button, a, input, select, textarea, label { touch-action: manipulation; }
   #root { min-height:100vh; }
   .boot { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
     color:#fff; opacity:.85; font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; }
