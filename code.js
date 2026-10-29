@@ -10911,6 +10911,9 @@ function hanbaiScript_(C) {
     $('hbYest').className = (S.date === y) ? 'on' : '';
     $('hbOto').className = (S.date === o) ? 'on' : '';
     $('hbCalBtn').className = 'hbcal' + ((S.date !== t && S.date !== y && S.date !== o) ? ' on' : '');
+    // ★2026-10-29 トマトさん報告：カレンダーの中身を今えらんでいる日にそろえる（そろえないと前に選んだ月が出る・
+    //   同じ日をえらび直しても変化なしで無視される）。
+    $('hbCal').value = S.date;
     $('hbDateHead').textContent = (S.country === 'JP' ? '🇯🇵 日本販売入力' : '🇹🇼 台湾販売入力');
   }
   function openDate() { drawDate(); show('hbDate'); }
@@ -10919,10 +10922,14 @@ function hanbaiScript_(C) {
   $('hbYest').addEventListener('click', function () { S.date = dayBack(1); drawDate(); });
   $('hbOto').addEventListener('click', function () { S.date = dayBack(2); drawDate(); });
   // カレンダーは先の日もえらべる（まるちゃん指定）。
-  $('hbCal').addEventListener('change', function () {
-    var v = this.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+  // ★2026-10-29 iPhoneは選んだ時に知らせる合図が機種で違うので3つとも聞く。左下の「リセット」（中身が空になる）は今日に戻す。
+  function calPicked() {
+    var v = this.value;
+    if (!v) { S.date = dayBack(0); drawDate(); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || v === S.date) return;
     S.date = v; drawDate();
-  });
+  }
+  ['input', 'change', 'blur'].forEach(function (ev) { $('hbCal').addEventListener(ev, calPicked); });
   $('hbCal').addEventListener('click', function () { try { if (this.showPicker) this.showPicker(); } catch (e) {} });
   $('hbDateGo').addEventListener('click', function () {
     // 台湾のボタンの名前を、えらんだ日に合わせる（今日＝本日予約のお客様／ほか＝10月16日の予約のお客様）
