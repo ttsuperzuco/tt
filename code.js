@@ -11407,7 +11407,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="hbhint">販売日</div>' +
         '<div class="hbdate" id="hbDateBox"></div>' +
         '<div class="hb3 hb4"><button type="button" id="hbToday0">今日</button><button type="button" id="hbYest">昨日</button><button type="button" id="hbOto">おととい</button>' +
-          '<button type="button" id="hbCalBtn" class="hbcal">カレンダー<br>選択<input type="date" id="hbCal"></button></div>' +
+          '<button type="button" id="hbCalBtn" class="hbcal">カレンダー<br>選択<input type="date" id="hbCal" data-own-reset></button></div>' +
         '<button type="button" class="exgo" id="hbDateGo">この日で次へ</button>' +
       '</div>' +
       '<div id="hbJKind" style="display:none">' + inBack + head('🇯🇵', '日本販売入力') + sum +

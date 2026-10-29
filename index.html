@@ -9,7 +9,8 @@
   /* ★2026-10-29 トマトさん報告「No31で金額を入力中、画面がどんどん大きくなる（iPhone）」。
      iPhoneは同じ所を素早く2回たたくと拡大する＝数字ボタンで「00」などを打つと拡大していた。
      ボタン類だけ2回たたきの拡大を止める（指2本で広げる拡大はそのまま使える）。全画面共通。 */
-  button, a, input, select, textarea, label { touch-action: manipulation; }
+  /* ★同日まるちゃん「ズコアプリのすべてに適用して」＝ボタンだけでなく表の行・カードなど押せる所すべてに広げた。 */
+  * { touch-action: manipulation; }
   #root { min-height:100vh; }
   .boot { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
     color:#fff; opacity:.85; font-family:"Segoe UI","Hiragino Sans",system-ui,sans-serif; }
@@ -373,7 +374,7 @@
 <script src="bigsend.js?v=1e2776a38e"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=829fd7a8f6"></script>
+<script src="code.js?v=b410ad7969"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -1407,6 +1408,19 @@
   }
   new MutationObserver(function () { if (!queued) { queued = true; setTimeout(sync, 0); } })
     .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'hidden', 'class'] });
+})();
+</script>
+<script>
+/* ★2026-10-29 まるちゃん「ズコアプリのすべてに適用して」（販売管理のカレンダー直しを全画面へ）。
+   iPhoneのカレンダーの左下「リセット」は中身を空にするだけで、画面によっては「日付を選んで」と止まる。
+   どの画面のカレンダーでも、空にされたら最初に入っていた日付へ戻す（自分で戻し方を決めている画面＝data-own-reset は除く）。 */
+(function(){
+  function first(e){var t=e.target;if(!t||t.type!=="date"||t.hasAttribute("data-own-reset"))return;
+    if(!t.hasAttribute("data-first")&&t.value)t.setAttribute("data-first",t.value);}
+  function back(e){var t=e.target;if(!t||t.type!=="date"||t.hasAttribute("data-own-reset"))return;
+    if(!t.value&&t.getAttribute("data-first")){t.value=t.getAttribute("data-first");}}
+  ["focusin","pointerdown","touchstart"].forEach(function(ev){document.addEventListener(ev,first,true);});
+  ["input","change","blur"].forEach(function(ev){document.addEventListener(ev,back,true);});
 })();
 </script>
 </body>
