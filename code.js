@@ -7133,7 +7133,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgel1").onclick=function(){if(!tapOK())return;' +
         'if(/イーライト/.test((CUST&&CUST.title)||"")){ELIGHT=true;goMemo();return;}' +
         '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
-          '{cancel:true,noLabel:"NO（やってない）",yesLabel:"YES（やりました）",' +
+          '{cancel:true,noLabel:"NO<br>（やってない）",yesLabel:"YES<br>（やりました）",' +
           'onNo:function(){ELIGHT=false;goMemo();},onYes:function(){ELIGHT=true;goMemo();}});};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
