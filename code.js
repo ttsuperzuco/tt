@@ -6569,8 +6569,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<div class="sgmnote" id="sgelparts"></div>' +
       '<div class="sgtimebox">' +
         '<div class="sgyesno">' +
-          '<button type="button" class="sgyn" id="sgel0">NO（やってない）</button>' +
-          '<button type="button" class="sgyn" id="sgel1">YES（やりました）</button>' +
+          /* ★スマホの幅だと「NO（やって／ない）」と途中で折れるので、2行に分ける（2026-10-30） */
+          '<button type="button" class="sgyn" id="sgel0">NO<br>（やってない）</button>' +
+          '<button type="button" class="sgyn" id="sgel1">YES<br>（やりました）</button>' +
         '</div>' +
       '</div>' +
     '</div>' +
