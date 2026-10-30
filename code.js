@@ -6647,7 +6647,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ASK＝「次回の費用は支払済みですか？」を出すか。事務所パソコンが決める（毎回払いの方だけ）。 */
     'var ASK=false;' +
     /* ★イーライト：ELASK＝9枚目を出したか／ELIGHT＝答え（null＝まだ・true＝やった・false＝やっていない）。 */
-    'var ELASK=false,ELIGHT=null;' +
+    'var ELASK=false,ELIGHT=null,ELPARTS=[];' +
     /* 次回の費用を先に払っていただいたか。null＝まだ選んでいない。 */
     'var PAID=null;' +
     /* 先の日付の答え（{"10/01":"1"}）と、自動で入れた答えの日付。消した『払った／未払い』の行。 */
@@ -6792,6 +6792,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(!tapOK())return;' +
         'CUST=LIST[parseInt(this.getAttribute("data-id"),10)];' +
         'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];' +
+        'ELASK=false;ELIGHT=null;ELPARTS=[];' +
         'if(REP){RFROM=2;repOpen("today",(typeof codeOf==="function")?(codeOf(CUST.title)||""):"",CUST.id||"");return;}' +
         'askNextMemo();goMonth();};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
@@ -6907,7 +6908,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'w.textContent="次回用の下書きを作れませんでした。回数とお支払いは手で直してください。";' +
         '$("sgmgo").disabled=false;}},25000);}' +
     /* ── 9枚目：本日イーライトをやりましたか？（6枚目と7枚目の間・イーライトの部位がある日だけ） ── */
-    'function goElight(ej){step=9;show();' +
+    'function goElight(ej){step=9;show();ELPARTS=(ej&&ej.parts)||[];' +
       '$("sgelparts").textContent="本日の部位："+((ej&&ej.parts)||[]).join("・");' +
       '$("sgel0").className="sgyn"+(ELIGHT===false?" sel":"");' +
       '$("sgel1").className="sgyn"+(ELIGHT===true?" sel":"");window.scrollTo(0,0);}' +
@@ -6932,6 +6933,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(!ti){szPopup_("予約メモのタイトルを入れてください。");return;}' +
       'if(!PICKDATE||!ROOM){szPopup_("予約の日時と施術室が決まっていません。前に戻ってやり直してください。");return;}' +
       'var f={date:PICKDATE,start:m2hm(TS),end:m2hm(TE),room:ROOM,title:ti,memo:$("sgmtext").value||""};' +
+      /* ★2026-10-30：イーライトの答え（YES＝注意事項も送る）と、今日の部位・今日の予約の題名を一緒に渡す。
+         聞いていない時（部位が無い日・スタッフ版）は何も足さない＝受付係は今までどおり。 */
+      'if(ELASK&&ELIGHT!==null){f.elight=ELIGHT?1:0;f.el_parts=ELPARTS.join(",");f.today_title=(CUST&&CUST.title)||"";}' +
       'sending=true;mpolls=0;$("sgmgo").disabled=true;$("sgkgo").disabled=true;' +
       'szOvShow_(szBusyHtml_("次回の予約を登録中です"),"#2C7A99");' +
       /* ★予約メモは長いことがあるので、住所に入りきらない時は別の入口へ預ける（共通のBIG）。 */
