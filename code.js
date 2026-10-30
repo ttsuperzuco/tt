@@ -6733,7 +6733,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     /* ★7枚目から戻る時は、せっかく決めた時間と部屋をそのまま残す（goTimeだと選び直しになる）。 */
     'function back(){if(REP&&repBack())return;if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
-      'else if(step===7&&ELASK){step=9;show();window.scrollTo(0,0);}' +
+      'else if(step===7&&ELASK){step=9;show();' +
+        '$("sgel0").className="sgyn"+(ELIGHT===false?" sel":"");$("sgel1").className="sgyn"+(ELIGHT===true?" sel":"");' +
+        'window.scrollTo(0,0);}' +
       'else if(step===7||step===9){step=6;show();drawTime();window.scrollTo(0,0);}' +
       'else if(step===6){goFree();}else if(step===5){goDay();}' +
       'else if(step===4){goMonth();}else if(step===3){goList();}else{goPick();}}' +
