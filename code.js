@@ -6563,7 +6563,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '</div>' : '') +
     sgStepsHtml_() +
     /* 9枚目＝本日イーライトをやりましたか？（2026-10-30 まるちゃん依頼）。2枚目（お客様の選択）のすぐ次に、
-       イーライトの部位（男女：VIO・脇・全身／男性：髭・胸＝社長決定）がある日だけ出す。今は開発版だけ。 */
+       イーライトの部位（男女：VIO・脇・全身／男性：髭・胸＝社長決定）がある日だけ出す。2026-10-30 まるちゃん「公開して」でスタッフにも出した。 */
     '<div class="sg" id="sgElight" style="display:none">' +
       '<div class="sgwho">本日イーライトをやりましたか？</div>' +
       '<div class="sgmnote" id="sgelparts"></div>' +
@@ -6797,8 +6797,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(REP){RFROM=2;repOpen("today",(typeof codeOf==="function")?(codeOf(CUST.title)||""):"",CUST.id||"");return;}' +
         'askNextMemo();' +
         /* ★2026-10-30：イーライトの部位がある日だけ、お客様の選択のすぐ次に「本日イーライトをやりましたか？」（9枚目）。
-           部位の判断は共通の1本（SG.elightAsk）。★今は開発版だけ（まるちゃん「まだスタッフにはださない」）。 */
-        'var ej=(DEVMODE&&!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false};' +
+           部位の判断は共通の1本（SG.elightAsk）。★2026-10-30 まるちゃん「公開して」＝スタッフ版にも出す。 */
+        'var ej=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false};' +
         'ELASK=!!ej.ask;if(ELASK){goElight(ej);return;}goMonth();};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
