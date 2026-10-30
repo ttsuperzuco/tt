@@ -6562,6 +6562,18 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="exgo" id="sgrgo">🔁 リピート入力へ →</button>' +
     '</div>' : '') +
     sgStepsHtml_() +
+    /* 9枚目＝本日イーライトをやりましたか？（2026-10-30 まるちゃん依頼）。6枚目と7枚目の間に、
+       イーライトの部位（男女：VIO・脇・全身／男性：髭・胸＝社長決定）がある日だけ出す。今は開発版だけ。 */
+    '<div class="sg" id="sgElight" style="display:none">' +
+      '<div class="sgwho">本日イーライトをやりましたか？</div>' +
+      '<div class="sgmnote" id="sgelparts"></div>' +
+      '<div class="sgtimebox">' +
+        '<div class="sgyesno">' +
+          '<button type="button" class="sgyn" id="sgel0">いいえ</button>' +
+          '<button type="button" class="sgyn" id="sgel1">はい</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
     /* 7枚目＝予約メモの修正。今日の予約メモをそのまま出し、次回用に直してもらう
        （そのままタイムツリーの次回の予約メモになる・まるちゃん 2026-09-12）。 */
     '<div class="sg" id="sgMemo" style="display:none">' +
@@ -6633,6 +6645,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var FINALS=null,KT=[],kchk=0;' +
     /* ASK＝「次回の費用は支払済みですか？」を出すか。事務所パソコンが決める（毎回払いの方だけ）。 */
     'var ASK=false;' +
+    /* ★イーライト：ELASK＝9枚目を出したか／ELIGHT＝答え（null＝まだ・true＝やった・false＝やっていない）。 */
+    'var ELASK=false,ELIGHT=null;' +
     /* 次回の費用を先に払っていただいたか。null＝まだ選んでいない。 */
     'var PAID=null;' +
     /* 先の日付の答え（{"10/01":"1"}）と、自動で入れた答えの日付。消した『払った／未払い』の行。 */
@@ -6710,6 +6724,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgTime").style.display=step===6?"":"none";' +
       '$("sgMemo").style.display=step===7?"":"none";' +
       '$("sgKaeshi").style.display=step===8?"":"none";' +
+      '$("sgElight").style.display=step===9?"":"none";' +
       'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
@@ -6718,7 +6733,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     /* ★7枚目から戻る時は、せっかく決めた時間と部屋をそのまま残す（goTimeだと選び直しになる）。 */
     'function back(){if(REP&&repBack())return;if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
-      'else if(step===7){step=6;show();drawTime();window.scrollTo(0,0);}' +
+      'else if(step===7&&ELASK){step=9;show();window.scrollTo(0,0);}' +
+      'else if(step===7||step===9){step=6;show();drawTime();window.scrollTo(0,0);}' +
       'else if(step===6){goFree();}else if(step===5){goDay();}' +
       'else if(step===4){goMonth();}else if(step===3){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
@@ -6887,6 +6903,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'setTimeout(function(){if(step===7&&!NEXTMEMO){' +
         'w.textContent="次回用の下書きを作れませんでした。回数とお支払いは手で直してください。";' +
         '$("sgmgo").disabled=false;}},25000);}' +
+    /* ── 9枚目：本日イーライトをやりましたか？（6枚目と7枚目の間・イーライトの部位がある日だけ） ── */
+    'function goElight(ej){step=9;show();' +
+      '$("sgelparts").textContent="本日の部位："+((ej&&ej.parts)||[]).join("・");' +
+      '$("sgel0").className="sgyn"+(ELIGHT===false?" sel":"");' +
+      '$("sgel1").className="sgyn"+(ELIGHT===true?" sel":"");window.scrollTo(0,0);}' +
     'function goMemo(){step=7;show();' +
       '$("sgmtitle").value=(CUST&&CUST.title)||"";' +
       'MEMOTOUCHED=false;' +
@@ -7099,7 +7120,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     SG_STEPS_JS_ +
     '$("sgback").onclick=function(){if(!tapOK())return;back();};' +
     '(function(){sgBindSteps();' +
-      '$("sgtgo").onclick=function(){if(!tapOK())return;askNextMemo();goMemo();};' +
+      /* ★2026-10-30：イーライトの部位がある日だけ、7枚目の前に「本日イーライトをやりましたか？」（9枚目）を挟む。
+         部位の判断は共通の1本（SG.elightAsk）。★今は開発版だけ（まるちゃん「まだスタッフにはださない」）。 */
+      '$("sgtgo").onclick=function(){if(!tapOK())return;askNextMemo();' +
+        'var ej=(DEVMODE&&!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false};' +
+        'ELASK=!!ej.ask;if(ELASK){goElight(ej);return;}goMemo();};' +
+      '$("sgel0").onclick=function(){if(!tapOK())return;ELIGHT=false;goMemo();};' +
+      '$("sgel1").onclick=function(){if(!tapOK())return;ELIGHT=true;goMemo();};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
         'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +

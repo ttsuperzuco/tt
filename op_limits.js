@@ -39,6 +39,7 @@
     "timedsend_cancel": 180,
     "timedsend_list": 60,
     "translate": 120,
+    "uriage_fix": 600,
     "zenjitsu": 360,
     "zenjitsu_act": 120
   };
