@@ -6569,8 +6569,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<div class="sgmnote" id="sgelparts"></div>' +
       '<div class="sgtimebox">' +
         '<div class="sgyesno">' +
-          '<button type="button" class="sgyn" id="sgel0">いいえ</button>' +
-          '<button type="button" class="sgyn" id="sgel1">はい</button>' +
+          '<button type="button" class="sgyn" id="sgel0">NO（やってない）</button>' +
+          '<button type="button" class="sgyn" id="sgel1">YES（やりました）</button>' +
         '</div>' +
       '</div>' +
     '</div>' +
