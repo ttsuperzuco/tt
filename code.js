@@ -7129,7 +7129,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var ej=(DEVMODE&&!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false};' +
         'ELASK=!!ej.ask;if(ELASK){goElight(ej);return;}goMemo();};' +
       '$("sgel0").onclick=function(){if(!tapOK())return;ELIGHT=false;goMemo();};' +
-      '$("sgel1").onclick=function(){if(!tapOK())return;ELIGHT=true;goMemo();};' +
+      /* ★2026-10-30 まるちゃん：予約の題名に「イーライト」が無いのに YES を押した時は、確かめの小窓を出す。 */
+      '$("sgel1").onclick=function(){if(!tapOK())return;' +
+        'if(/イーライト/.test((CUST&&CUST.title)||"")){ELIGHT=true;goMemo();return;}' +
+        '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
+          '{cancel:true,noLabel:"NO（やってない）",yesLabel:"YES（やりました）",' +
+          'onNo:function(){ELIGHT=false;goMemo();},onYes:function(){ELIGHT=true;goMemo();}});};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
         'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
