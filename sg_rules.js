@@ -341,6 +341,47 @@
     return n;
   };
 
+  /* ── ★「本日イーライトをやりましたか？」を聞くか（2026-10-30 まるちゃん依頼・社長決定）──────────
+     イーライトをする部位＝男女：VIO・脇・全身／男性だけ：髭・胸（全身＝両脇・腕・足・胸腹・背中＝脇を含む）。
+     予約の題名に「イーライト」と書いていなくても当日イーライトになることがある（Wakoさん）ので、題名では決めない。
+     ・見る所＝今日の予約メモの「⭐️現在進行中」の◉の行（今日やる施術）。無い時はメモ全体。
+     ・男女＝題名の番号の頭（M＝男性）か「預約M」（番号がまだ無い新規）。
+     返す物＝{ask:聞くか, parts:[当たった部位], male:男性か}。 */
+  var EL_COMMON = [['VIO', /VIO|ＶＩＯ|VBO|V[\s・,、]*I[\s・,、]*O|チャ4|チャレンジ4|チャフォー|私密|比基尼/i],
+                   ['脇', /脇|ワキ|わき|腋/], ['全身', /全身/]];
+  var EL_MALE = [['髭', /髭|鬚|ひげ|ヒゲ|鬍/], ['胸', /胸/]];
+  /* ★プラン（平日A〜D・学生・夏夏・ピカピカ・メンズキャ等）は、お客様ごとに部位を選ぶ組み合わせ
+     （予約台帳で同じ「平日Bプラン」でも中身が人によって違う）＝プラン名だけでは脇・VIOが入るか決まらない。
+     聞きすぎても施術者が「いいえ」を押すだけ・聞き漏らすとお知らせが届かないので、部位の書いていない
+     脱毛のプランの行がある時は「聞く」側に倒す。プロセル・ハイドラ・マツヤニ・パリジェンヌ等の行は除く。 */
+  var EL_PLAN = /プラン|ピカ|夏夏|学生|平日|メンズキャ|コース|おまとめ/;
+  var EL_NOT_HAIR = /プロセル|プロ肌|プロ頭|ハイドラ|マツヤニ|🍯|パリ|👑|よもぎ|眉|まつ|ネイル|💅/;
+  function elToday(note) {
+    var L = String(note || '').replace(/\r\n/g, '\n').split('\n'), out = [], on = false;
+    for (var i = 0; i < L.length; i++) {
+      var t = L[i].replace(/^\s+/, '');
+      if (t.indexOf('⭐') === 0) { on = true; continue; }
+      if (on && (t.indexOf('💰') === 0 || t.indexOf('☑') === 0)) break;
+      if (on && /^[◉●⚫]/.test(t)) out.push(t);
+    }
+    return out.length ? out.join('\n') : String(note || '');
+  }
+  SG.elightAsk = function (title, note) {
+    var tt = String(title || '');
+    var code = (tt.match(/([MF])\d{2,4}/) || [])[1] || (/預約\s*M/.test(tt) ? 'M' : '');
+    /* 題名にだけ部位が書いてある予約（「脚、VIOイーライト脱毛」等）もあるので、題名も一緒に見る。 */
+    var male = code === 'M', body = elToday(note) + '\n' + tt, hit = [];
+    var rules = male ? EL_COMMON.concat(EL_MALE) : EL_COMMON;
+    for (var i = 0; i < rules.length; i++) if (rules[i][1].test(body)) hit.push(rules[i][0]);
+    if (!hit.length) {
+      var lines = body.split('\n');
+      for (var j = 0; j < lines.length; j++) {
+        if (EL_PLAN.test(lines[j]) && !EL_NOT_HAIR.test(lines[j])) { hit.push('プラン（部位の書き無し）'); break; }
+      }
+    }
+    return { ask: hit.length > 0, parts: hit, male: male };
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = SG;
   root.SG = SG;
 })(typeof window !== 'undefined' ? window : this);
