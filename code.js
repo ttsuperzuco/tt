@@ -6562,7 +6562,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="exgo" id="sgrgo">🔁 リピート入力へ →</button>' +
     '</div>' : '') +
     sgStepsHtml_() +
-    /* 9枚目＝本日イーライトをやりましたか？（2026-10-30 まるちゃん依頼）。6枚目と7枚目の間に、
+    /* 9枚目＝本日イーライトをやりましたか？（2026-10-30 まるちゃん依頼）。2枚目（お客様の選択）のすぐ次に、
        イーライトの部位（男女：VIO・脇・全身／男性：髭・胸＝社長決定）がある日だけ出す。今は開発版だけ。 */
     '<div class="sg" id="sgElight" style="display:none">' +
       '<div class="sgwho">本日イーライトをやりましたか？</div>' +
@@ -6734,12 +6734,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     /* ★7枚目から戻る時は、せっかく決めた時間と部屋をそのまま残す（goTimeだと選び直しになる）。 */
     'function back(){if(REP&&repBack())return;if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
-      'else if(step===7&&ELASK){step=9;show();' +
+      'else if(step===7){step=6;show();drawTime();window.scrollTo(0,0);}' +
+      'else if(step===6){goFree();}else if(step===5){goDay();}' +
+      /* ★イーライトの画面（9枚目）はお客様の選択のすぐ次（2026-10-30 まるちゃん）＝月の画面から戻るとそこへ、そこから戻るとお客様の選択へ。 */
+      'else if(step===4){goMonth();}else if(step===3&&ELASK){step=9;show();' +
         '$("sgel0").className="sgyn"+(ELIGHT===false?" sel":"");$("sgel1").className="sgyn"+(ELIGHT===true?" sel":"");' +
         'window.scrollTo(0,0);}' +
-      'else if(step===7||step===9){step=6;show();drawTime();window.scrollTo(0,0);}' +
-      'else if(step===6){goFree();}else if(step===5){goDay();}' +
-      'else if(step===4){goMonth();}else if(step===3){goList();}else{goPick();}}' +
+      'else if(step===3||step===9){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,NOW());' +
@@ -6794,7 +6795,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];' +
         'ELASK=false;ELIGHT=null;ELPARTS=[];' +
         'if(REP){RFROM=2;repOpen("today",(typeof codeOf==="function")?(codeOf(CUST.title)||""):"",CUST.id||"");return;}' +
-        'askNextMemo();goMonth();};}}' +
+        'askNextMemo();' +
+        /* ★2026-10-30：イーライトの部位がある日だけ、お客様の選択のすぐ次に「本日イーライトをやりましたか？」（9枚目）。
+           部位の判断は共通の1本（SG.elightAsk）。★今は開発版だけ（まるちゃん「まだスタッフにはださない」）。 */
+        'var ej=(DEVMODE&&!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false};' +
+        'ELASK=!!ej.ask;if(ELASK){goElight(ej);return;}goMonth();};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -7127,19 +7132,16 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     SG_STEPS_JS_ +
     '$("sgback").onclick=function(){if(!tapOK())return;back();};' +
     '(function(){sgBindSteps();' +
-      /* ★2026-10-30：イーライトの部位がある日だけ、7枚目の前に「本日イーライトをやりましたか？」（9枚目）を挟む。
-         部位の判断は共通の1本（SG.elightAsk）。★今は開発版だけ（まるちゃん「まだスタッフにはださない」）。 */
-      '$("sgtgo").onclick=function(){if(!tapOK())return;askNextMemo();' +
-        'var ej=(DEVMODE&&!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false};' +
-        'ELASK=!!ej.ask;if(ELASK){goElight(ej);return;}goMemo();};' +
-      '$("sgel0").onclick=function(){if(!tapOK())return;ELIGHT=false;goMemo();};' +
+      '$("sgtgo").onclick=function(){if(!tapOK())return;askNextMemo();goMemo();};' +
+      /* ★「本日イーライトをやりましたか？」（9枚目）の答え → 月の画面（3枚目）へ。 */
+      '$("sgel0").onclick=function(){if(!tapOK())return;ELIGHT=false;goMonth();};' +
       /* ★2026-10-30 まるちゃん：予約の題名に「イーライト」が無いのに YES を押した時は、確かめの小窓を出す。 */
       '$("sgel1").onclick=function(){if(!tapOK())return;' +
-        'if(/イーライト/.test((CUST&&CUST.title)||"")){ELIGHT=true;goMemo();return;}' +
+        'if(/イーライト/.test((CUST&&CUST.title)||"")){ELIGHT=true;goMonth();return;}' +
         '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
           '{cancel:true,noLabel:"NO<br><span style=white-space:nowrap;font-size:.8em>（やってない）</span>",' +
           'yesLabel:"YES<br><span style=white-space:nowrap;font-size:.8em>（やりました）</span>",' +
-          'onNo:function(){ELIGHT=false;goMemo();},onYes:function(){ELIGHT=true;goMemo();}});};' +
+          'onNo:function(){ELIGHT=false;goMonth();},onYes:function(){ELIGHT=true;goMonth();}});};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
         'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
