@@ -7026,7 +7026,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
             'var d=null;try{d=JSON.parse(x.result||"{}");}catch(e){}' +
             'if(!d||!d.ok){lnFail((d&&d.reason)||"送れませんでした。");return;}' +
             'lsending=false;' +
-            'szOvShow_(szDoneHtml_(d.practice?"練習として送ります（1分以内）":"1分以内に送ります","お客様の選択に戻る"),"#16a34a");' +
+            /* ★2026-10-31 まるちゃん「１分じゃなく、１５分後ね」＝事務所PCが決めた送る時刻をそのまま出す。 */
+            'var at=String(d.send_at||"").slice(11,16);' +
+            'szOvShow_(szDoneHtml_((d.practice?"練習として":"")+(at?at+"に送ります":"15分後に送ります"),"お客様の選択に戻る"),"#16a34a");' +
             'var bb=document.getElementById("szDoneBack");' +
             'if(bb)bb.addEventListener("click",function(){szOvHide_();goList();});});};' +
         'setTimeout(poll,900);});}' +
