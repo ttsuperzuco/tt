@@ -7038,9 +7038,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
             'lsending=false;' +
             /* ★2026-10-31 まるちゃん「１分じゃなく、１５分後ね」＝事務所PCが決めた送る時刻をそのまま出す。 */
             'var at=String(d.send_at||"").slice(11,16);' +
-            'szOvShow_(szDoneHtml_((d.practice?"練習として":"")+(at?at+"に送ります":"15分後に送ります"),"お客様の選択に戻る"),"#16a34a");' +
+            'szOvShow_(szDoneHtml_((d.practice?"練習として":"")+(at?at+"に送ります":"15分後に送ります"),"TOP画面に戻る"),"#16a34a");' +
+            /* ★2026-10-31 まるちゃん「TOP画面に戻るでいい」＝1枚目の上の「← 戻る」と同じ行き先（スーパーズコのトップ）へ。
+               その戻るを押したのと同じにする＝パソコン版の窓の中でも同じ動きになる。 */
             'var bb=document.getElementById("szDoneBack");' +
-            'if(bb)bb.addEventListener("click",function(){szOvHide_();goList();});});};' +
+            'if(bb)bb.addEventListener("click",function(){szOvHide_();var ta=document.querySelector("#sgtopbar a");' +
+              'if(ta){ta.click();}else{goPick();}});});};' +
         'setTimeout(poll,900);});}' +
     'function repStart(){var d=new Date(),p2=function(n){return (n<10?"0":"")+n;};' +
       'TODAY=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());' +
