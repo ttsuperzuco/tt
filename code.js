@@ -6807,6 +6807,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(LN&&DEVMODE){var dm=[["ja","M","RYU（日本語・男）"],["zh","F","RYU（中国語・女）"],["en","M","RYU（英語・男）"]];' +
         'for(var di=0;di<dm.length;di++){list.push({mark:pick===SG.ALL?"🍅":pick,start:0,end:0,title:"",note:"",room:"",' +
           'st:"ダミー",et:"",id:"DUMMY:"+dm[di][0]+":"+dm[di][1],dname:dm[di][2]});}}' +
+      /* ★施術後の予約の試し（2026-10-31 まるちゃん「今日テストするためのダミーを作って。実際のタイムツリーには書かずに」）：
+         開発者の画面だけ、一覧の最後にダミーのお客様を2人出す。登録を押してもタイムツリーには書かない（sendMemoで止める）。 */
+      'if(!LN&&!REP&&DEVMODE){var sm=pick===SG.ALL?"🍅":pick;' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg1",dname:"RYU（既存・イーライト＋パリジェンヌ）",dummy:true,' +
+          'title:sm+"🇫🇷預約M999イーライト",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIO 8回コース 3回目あり\\n◉🇫🇷パリジェンヌリペア あり\\n\\n💰お支払い状況\\n◉VIO：8回おまとめ購入済み\\n\\n☑️終了\\n◉VIOトライアル"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg2",dname:"RYU（新規・脱毛）",dummy:true,' +
+          'title:sm+"預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n\\n💰お支払い状況\\n◉VIOトライアル：支払い済み"});}' +
       'LIST=list;' +
       '$("sglisthead").textContent="お客様の選択";' +
       'if(!list.length){$("sglist").innerHTML="";' +
@@ -6984,6 +6991,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★2026-10-30：イーライトの答え（YES＝注意事項も送る）と、今日の部位・今日の予約の題名を一緒に渡す。
          聞いていない時（部位が無い日・スタッフ版）は何も足さない＝受付係は今までどおり。 */
       'if(ELASK&&ELIGHT!==null){f.elight=ELIGHT?1:0;f.el_parts=ELPARTS.join(",");f.today_title=(CUST&&CUST.title)||"";}' +
+      /* ★ダミーのお客様（開発者の試し）＝タイムツリーにもLINEにも何もしない。完了画面だけ出す（送る時刻は15分後の見込み）。 */
+      'if(CUST&&CUST.dummy){var dn=new Date(Date.now()+15*60000),dla=dn.getHours()+":"+("0"+dn.getMinutes()).slice(-2);' +
+        'szOvShow_(szDoneHtml_("次回の予約を登録しました"+"<div style=\\"font-size:22px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">サンキューLINEを"+dla+"に自動送信します</div>"+' +
+          '"<div style=\\"font-size:16px;line-height:1.6;margin-top:10px;color:#ecfdf5;\\">（ダミーの試し：タイムツリーには書いていません・LINEも送りません）</div>","TOP画面に戻る"),"#16a34a");' +
+        'var db=document.getElementById("szDoneBack");' +
+        'if(db)db.addEventListener("click",function(){szOvHide_();var ta=document.querySelector("#sgtopbar a");if(ta){ta.click();}else{goPick();}});return;}' +
       'sending=true;mpolls=0;$("sgmgo").disabled=true;$("sgkgo").disabled=true;' +
       'szOvShow_(szBusyHtml_("次回の予約を登録中です"),"#2C7A99");' +
       /* ★予約メモは長いことがあるので、住所に入りきらない時は別の入口へ預ける（共通のBIG）。 */
