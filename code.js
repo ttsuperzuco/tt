@@ -6581,7 +6581,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     (LN ?
     '<div class="sg" id="sgLKind" style="display:none">' +
       /* ★2026-10-31 まるちゃん「本日の施術内容という文字に変更」 */
-      '<div class="sgwho">本日の施術内容</div>' +
+      /* ★同日まるちゃん「本日の施術内容を選択してください（複数選択可）」に変更 */
+      '<div class="sgwho">本日の施術内容を選択してください（複数選択可）</div>' +
       '<div class="sgmnote" id="sglcust"></div>' +
       '<button type="button" class="sgrbig" data-k="new_nobook"><span class="sgrbi">🌱</span>新規脱毛（次回予約なし）</button>' +
       '<button type="button" class="sgrbig" data-k="lash"><span class="sgrbi">👁️</span>パリジェンヌ</button>' +
@@ -6589,7 +6590,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig" data-k="procell_scalp"><span class="sgrbi">💆</span>プロセル頭皮</button>' +
       /* ★2026-10-31 まるちゃん「二つ同時にやったひともいるかもだから、複数選択可能にして」＝押すと選んだ印が付くだけ。
          送るのはこのボタン（選んだ物を1通ずつ分けて送る）。 */
-      '<button type="button" class="sggo" id="sglgo" disabled>この内容で送る</button>' +
+      '<button type="button" class="sggo" id="sglgo" disabled>この内容で決定</button>' +
     '</div>' : '') +
     sgStepsHtml_() +
     /* 9枚目＝本日イーライトをやりましたか？（2026-10-30 まるちゃん依頼）。2枚目（お客様の選択）のすぐ次に、
@@ -7028,8 +7029,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 選んだ種類（画面の並び順＝送る順）。 */
     'function lnPicked(){var o=[],bs=$("sgLKind").getElementsByClassName("sgrbig");' +
       'for(var i=0;i<bs.length;i++)if(bs[i].classList.contains("sel"))o.push(bs[i].getAttribute("data-k"));return o;}' +
-    'function lnUpd(){var n=lnPicked().length;$("sglgo").disabled=!n;' +
-      '$("sglgo").textContent=n>1?"この内容で送る（"+n+"通に分けて送ります）":"この内容で送る";}' +
+    /* ★同日まるちゃん「この内容で決定に変更」 */
+    'function lnUpd(){var n=lnPicked().length;$("sglgo").disabled=!n;$("sglgo").textContent="この内容で決定";}' +
     'function lnBind(){var bs=$("sgLKind").getElementsByClassName("sgrbig");' +
       'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){if(!tapOK()||lsending)return;' +
         'this.classList.toggle("sel");lnUpd();};}' +
