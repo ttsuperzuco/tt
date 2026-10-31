@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>お給料のお知らせ</title>
+<!--
+  ★給料のお知らせの「送る」の承認ページ（2026-10-31 まるちゃん決定）。
+  ・事務所PCが受領書と給料のお知らせの中身を作り終えると、まるちゃんのLINEにこのページのリンクが届く。
+  ・「送る」を押した時だけ、窓口へ合図（action=hit・who=paysend・view=使い捨ての番号）を1つ飛ばす。
+    開いただけでは何も起きない（LINEはリンクを先読みするため・押していないのに送らないため）。
+  ・合図はサーバーの受付係が回収し（共通\superzuko_log の _pay_signal）、事務所PCが番号を確かめて送る。
+  ・このページには名前・金額を出さない（誰でも開ける場所にあるため）。中身はLINEの文で確かめる。
+-->
+<style>
+:root{--teal:#2C7A99}
+html,body{margin:0;background:var(--teal);color:#1f2937;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px;box-sizing:border-box}
+.card{background:#fff;border-radius:20px;padding:32px 22px;max-width:420px;width:100%;text-align:center;
+  box-shadow:0 6px 24px rgba(0,0,0,.18)}
+h1{font-size:22px;margin:0 0 12px;line-height:1.5}
+p{font-size:16px;line-height:1.8;color:#4b5563;margin:0 0 22px}
+button{width:100%;font-family:inherit;font-size:22px;font-weight:900;color:#fff;background:#16a34a;border:none;
+  border-radius:16px;padding:18px;box-shadow:0 6px 18px rgba(22,163,74,.35);cursor:pointer}
+button[disabled]{opacity:.5}
+.mark{width:72px;height:72px;border-radius:50%;background:#16a34a;color:#fff;font-size:40px;line-height:72px;margin:0 auto 18px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+  <div id="ask">
+    <h1 id="t">お給料を「TTお給料」に送りますか？</h1>
+    <p>スタッフ1人ずつ、お給料の文と写真2枚を送ります。<br>中身はLINEに届いた文で確かめてください。</p>
+    <button id="go">送る</button>
+  </div>
+  <div id="done" class="hide">
+    <div class="mark">✓</div>
+    <h1>受け付けました</h1>
+    <p>数分で「TTお給料」に送られます。<br>送り終わったらLINEでお知らせします。<br>このページは閉じて大丈夫です。</p>
+  </div>
+</div></div>
+<script>
+(function(){
+  var q = location.search;
+  function arg(n){ var m = new RegExp('[?&]' + n + '=([^&]*)').exec(q); return m ? decodeURIComponent(m[1]) : ''; }
+  var k = arg('k').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  var m = arg('m').replace(/[^0-9]/g, '').slice(0, 2);
+  if (m) document.getElementById('t').textContent = m + '月のお給料を「TTお給料」に送りますか？';
+  var PIPE = "https://script.google.com/macros/s/"
+    + "AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";
+  var b = document.getElementById('go');
+  if (!k) { b.disabled = true; b.textContent = 'リンクが正しくありません'; return; }
+  b.onclick = function(){
+    b.disabled = true; b.textContent = '受け付けています…';
+    fetch(PIPE + '?action=hit&who=paysend&device=page&role=' + encodeURIComponent(m) + '&view=' + encodeURIComponent(k),
+          { mode:'no-cors', cache:'no-store', keepalive:true })
+      .then(function(){ document.getElementById('ask').className = 'hide'; document.getElementById('done').className = ''; })
+      .catch(function(){ b.disabled = false; b.textContent = 'もう一度 送る'; });
+  };
+})();
+</script>
+</body>
+</html>
