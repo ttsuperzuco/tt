@@ -6796,6 +6796,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var now=NOW();' +
       'var list=ALLEV.filter(function(e){return pick===SG.ALL||e.mark===pick;});' +
       'list.sort(function(a,b){return a.start-b.start;});' +
+      /* ★施術後のLINE送信の試し（2026-10-31 まるちゃん「テストしたいからダミーでRYUという客をつくって」）：
+         開発者の画面だけ、一覧の最後にダミーのお客様を3人（言葉ちがい）出す。予定表には何も書かない。
+         送る時は事務所PCが「ダミー」と見分けて、練習（まるちゃん本人のLINE）だけに送る。 */
+      'if(LN&&DEVMODE){var dm=[["ja","M","RYU（日本語・男）"],["zh","F","RYU（中国語・女）"],["en","M","RYU（英語・男）"]];' +
+        'for(var di=0;di<dm.length;di++){list.push({mark:pick===SG.ALL?"🍅":pick,start:0,end:0,title:"",note:"",room:"",' +
+          'st:"ダミー",et:"",id:"DUMMY:"+dm[di][0]+":"+dm[di][1],dname:dm[di][2]});}}' +
       'LIST=list;' +
       '$("sglisthead").textContent="お客様の選択";' +
       'if(!list.length){$("sglist").innerHTML="";' +
@@ -6804,7 +6810,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var h="";' +
       'for(var i=0;i<list.length;i++){var e=list[i];' +
         'var cd=(typeof codeOf==="function")?codeOf(e.title):"";' +
-        'var nm=(typeof customerLine==="function")?(customerLine(e.note).name||""):"";' +
+        'var nm=e.dname||((typeof customerLine==="function")?(customerLine(e.note).name||""):"");' +
         'var col=(typeof roomColor_==="function")?roomColor_(e.room):"#64748b";' +
         'var rnm=(typeof shortRoomName_==="function")?shortRoomName_(e.room):e.room;' +
         'var live=(e.start<=now&&now<e.end)?"<span class=\\"sgnow\\">いま施術中</span>":"";' +
@@ -7004,13 +7010,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮"},lsending=false;' +
     'function goLKind(){' +
       'var cd=(typeof codeOf==="function")?(codeOf(CUST.title)||""):"";' +
-      'var nm=(typeof customerLine==="function")?(customerLine(CUST.note).name||""):"";' +
+      'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
       '$("sglcust").textContent=(nm||"お名前なし")+(cd?"（"+cd+"）":"")+"　"+(CUST.st||"")+"〜"+(CUST.et||"");' +
       'step=31;show();window.scrollTo(0,0);}' +
     'function lnBind(){var bs=$("sgLKind").getElementsByClassName("sgrbig");' +
       'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){if(!tapOK()||lsending)return;' +
         'var k=this.getAttribute("data-k");' +
-        'var nm=(typeof customerLine==="function")?(customerLine(CUST.note).name||""):"";' +
+        'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
         'szPopup_((nm||"このお客様")+"へ「"+LNNAME[k]+"」のLINEを送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(k);}});};}}' +
     'function lnFail(m){lsending=false;szOvHide_();szPopup_(m||"エラーが発生しました。りゅうさんに連絡しました。");}' +
     'function lnSend(k){if(lsending)return;lsending=true;' +
