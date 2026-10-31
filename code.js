@@ -6857,7 +6857,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var now=NOW(),idx=-1;' +
       'for(var i=0;i<LIST.length;i++){if(LIST[i].start<=now&&now<LIST[i].end){idx=i;break;}}' +
       'if(idx<0){var best=-1;' +
-        'for(var j=0;j<LIST.length;j++){if(LIST[j].end<=now&&(best<0||LIST[j].end>LIST[best].end))best=j;}' +
+        'for(var j=0;j<LIST.length;j++){if(!LIST[j].dname&&LIST[j].end<=now&&(best<0||LIST[j].end>LIST[best].end))best=j;}' +
         'idx=best;}' +
       'return idx;}' +
     /* ★いまのお客様の下に、カード1枚ぶんの空きを作る＝いまの予約が目立つ
@@ -6868,6 +6868,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var i=0;i<rows.length;i++)rows[i].style.marginBottom="";' +
       'var idx=nowIndex();' +
       'if(idx<0||idx>=rows.length-1)return;' +
+      /* ★ダミーのお客様（時刻なし・施術後のLINE送信の試し）の所では空けない（2026-10-31）。 */
+      'if(LIST[idx]&&LIST[idx].dname)return;' +
       'rows[idx].style.marginBottom=rows[idx].offsetHeight+"px";}' +
     'function scrollToNow(){' +
       'var rows=$("sglist").getElementsByClassName("sgrow");' +
