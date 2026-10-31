@@ -6580,7 +6580,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★施術後のLINE送信だけ：送る物の選択（31枚目）。 */
     (LN ?
     '<div class="sg" id="sgLKind" style="display:none">' +
-      '<div class="sgwho">送る物の選択</div>' +
+      /* ★2026-10-31 まるちゃん「本日の施術内容という文字に変更」 */
+      '<div class="sgwho">本日の施術内容</div>' +
       '<div class="sgmnote" id="sglcust"></div>' +
       '<button type="button" class="sgrbig" data-k="new_nobook"><span class="sgrbi">🌱</span>新規脱毛（次回予約なし）</button>' +
       '<button type="button" class="sgrbig" data-k="lash"><span class="sgrbi">👁️</span>パリジェンヌ</button>' +
