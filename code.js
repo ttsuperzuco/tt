@@ -1016,6 +1016,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★★2026-09-17（同日・後から）まるちゃん決定「施術後の予約ボタンをスタッフにもだす」＝全員ON。
   //   tile_settings.py の STAFF_ASSIGNABLE に入れた＝自動監視の人ごとの表示で入切できる。
   sejutsugo:  { exec: true, staff: true },
+  // ★施術後のLINE送信（2026-10-31 まるちゃん依頼）＝施術のあと、決まった文（新規脱毛の予約なし版・パリジェンヌ・
+  //   プロセル顔/頭皮のアフターケア）をそのお客様へ送る。既定は開発者だけ（共通ルール16）。
+  //   tile_settings.py の TILES に入れない＝試し終わるまで誰もONにできない。
+  sgline:     { exec: false, staff: false },
   // ★既存の予約＝作り替え中なので開発の住所だけ（共通ルール16）。
   kizon:      { exec: false, staff: false },
   // ★TimeTree＝ズコの中でタイムツリーの予定を見る（月→日→予定の中身・読むだけ）。2026-09-15。
@@ -1043,7 +1047,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1183,6 +1187,9 @@ function viewAllowed_(view, allow) {
   if (view === 'yoyaku' || view === 'yoyaku_new') return allow['yoyaku'] === true;
   // ★施術後の予約：ボタンのidは 'sejutsugo'、画面のviewは 'yoyaku_sejutsugo'。
   //   ボタンが出る人は画面も開ける、で合わせる（ここを書かないとボタンから飛んでも弾かれる）。
+  // ★施術後のLINE送信（同じ画面を mode=line で開く）は、ボタン 'sgline' が出る人だけ（2026-10-31）。
+  if (view === 'yoyaku_sejutsugo' && typeof location !== 'undefined' && /[?&]mode=line(&|$)/.test(location.search))
+    return allow['sgline'] === true;
   if (view === 'yoyaku_sejutsugo') return allow['sejutsugo'] === true;
   if (view === 'yoyaku_kizon') return allow['kizon'] === true;
   return allow[view] === true;
@@ -1751,6 +1758,10 @@ var TILE_DEFS_ = [
   //   （tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
     icon: '<span class="ticon">💆</span>', label: '施術後の\n予約' },
+  // ★施術後のLINE送信（2026-10-31）＝施術後の予約と同じ画面（施術者→今日のお客様）を mode=line で開き、
+  //   4つの送る物から選んで送る。開発中の機能の部屋だけ（開発者だけ）。
+  { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
+    icon: '<span class="ticon">💌</span>', label: '施術後の\nLINE送信' },
   // ★既存の予約＝LINEで予約を受けた時に使う入口（いま作り替え中）。
   //   まるちゃん依頼 2026-09-25「一番トップの画面に出して。開発中だからしょっちゅう押す」。
   //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発の住所(?dev=1)だけ。
@@ -1798,7 +1809,7 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', sgline: 'kaihatsu'
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
 // ★2026-10-25 まるちゃん「スタッフ画面を一番上にしたい」＝スタッフ画面を先頭へ（PC版 super_pc.py の ROLES と同じ順）。
@@ -6526,10 +6537,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
      1枚目（施術者）→【今日の予約のお客様】【お客様番号から検索】→ 🔁の画面（8枚目と同じ）→ その予約のメモに🔁を書き足す。
      施術者・今日のお客様一覧・🔁の画面は施術後の予約とまったく同じ物を使う（作りを2つに分けない）。 */
   var REP = (mode === 'repeat');
-  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  /* ★2026-10-31 まるちゃん依頼「施術後のLINE送信」＝この画面を mode='line' で開いた時だけ流れを変える。
+     1枚目（施術者）→2枚目（今日のお客様）→ 送る物の選択（新規脱毛（次回予約なし）／パリジェンヌ／プロセル顔／プロセル頭皮）
+     → 確かめて送る。文と送ってよいかの判断は事務所PC（施術後の次回予約LINE\programs\aftercare_line.py）だけが持つ。 */
+  var LN = (mode === 'line');
+  var EXEC ='https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
   /* ★2026-09-11 まるちゃん「ここのたいわんとまとの文字いらない」＝見出しの下の店名は出さない。 */
   var head = REP ? '<div class="hhead"><span class="bmark">🔁</span><span class="bname">リピート入力</span></div>'
+           : LN ? '<div class="hhead"><span class="bmark">💌</span><span class="bname">施術後のLINE送信</span></div>'
                  : '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>';
   var css = sgCss_();
   /* 4枚の画面。出すのは1枚だけ。 */
@@ -6560,6 +6576,16 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         '<button type="button" data-v="F">F（女）</button></div>' +
       '<div class="expad" id="sgrpad">' + EXPADHTML_ + '</div>' +
       '<button type="button" class="exgo" id="sgrgo">🔁 リピート入力へ →</button>' +
+    '</div>' : '') +
+    /* ★施術後のLINE送信だけ：送る物の選択（31枚目）。 */
+    (LN ?
+    '<div class="sg" id="sgLKind" style="display:none">' +
+      '<div class="sgwho">送る物の選択</div>' +
+      '<div class="sgmnote" id="sglcust"></div>' +
+      '<button type="button" class="sgrbig" data-k="new_nobook"><span class="sgrbi">🌱</span>新規脱毛（次回予約なし）</button>' +
+      '<button type="button" class="sgrbig" data-k="lash"><span class="sgrbi">👁️</span>パリジェンヌ</button>' +
+      '<button type="button" class="sgrbig" data-k="procell_face"><span class="sgrbi">✨</span>プロセル顔</button>' +
+      '<button type="button" class="sgrbig" data-k="procell_scalp"><span class="sgrbi">💆</span>プロセル頭皮</button>' +
     '</div>' : '') +
     sgStepsHtml_() +
     /* 9枚目＝本日イーライトをやりましたか？（2026-10-30 まるちゃん依頼）。2枚目（お客様の選択）のすぐ次に、
@@ -6633,6 +6659,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★リピート入力：REP＝この画面をリピート入力として開いた／RB＝🔁を書く予約（事務所パソコンが決める）／
        RFROM＝🔁の画面の前の画面（2＝今日のお客様一覧・22＝番号の画面）／RPRE・RDIG＝入れた番号。 */
     'var REP=' + (REP ? 'true' : 'false') + ',RB=null,RFROM=2,RPRE="M",RDIG="";' +
+    /* ★施術後のLINE送信：LN＝この画面を施術後のLINE送信として開いた。 */
+    'var LN=' + (LN ? 'true' : 'false') + ';' +
     /* ★2026-10-07：TT記入漏れのカードから来た時＝お客様番号(num)と書く人の印(mk)が住所に付いている。 */
     'var RNUM=(location.search.match(/[?&]num=([MF][0-9]{1,4})(&|$)/)||[])[1]||"";' +
     'var RMK="";try{RMK=decodeURIComponent((location.search.match(/[?&]mk=([^&]*)/)||[])[1]||"");}catch(e){}' +
@@ -6727,13 +6755,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgKaeshi").style.display=step===8?"":"none";' +
       '$("sgElight").style.display=step===9?"":"none";' +
       'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
+      'if(LN){$("sgLKind").style.display=step===31?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
       'var hd=$("sghead");if(hd)hd.style.display=step===1?"":"none";}' +
     'function goPick(){step=1;show();drawPick();window.scrollTo(0,0);}' +
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     /* ★7枚目から戻る時は、せっかく決めた時間と部屋をそのまま残す（goTimeだと選び直しになる）。 */
-    'function back(){if(REP&&repBack())return;if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
+    'function back(){if(REP&&repBack())return;if(LN&&step===31){goList();return;}if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
       'else if(step===7){step=6;show();drawTime();window.scrollTo(0,0);}' +
       'else if(step===6){goFree();}else if(step===5){goDay();}' +
       /* ★イーライトの画面（9枚目）はお客様の選択のすぐ次（2026-10-30 まるちゃん）＝月の画面から戻るとそこへ、そこから戻るとお客様の選択へ。 */
@@ -6795,6 +6824,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];' +
         'ELASK=false;ELIGHT=null;ELPARTS=[];' +
         'if(REP){RFROM=2;repOpen("today",(typeof codeOf==="function")?(codeOf(CUST.title)||""):"",CUST.id||"");return;}' +
+        'if(LN){goLKind();return;}' +
         'askNextMemo();' +
         /* ★2026-10-30：イーライトの部位がある日だけ、お客様の選択のすぐ次に「本日イーライトをやりましたか？」（9枚目）。
            部位の判断は共通の1本（SG.elightAsk）。★2026-10-30 まるちゃん「公開して」＝スタッフ版にも出す。 */
@@ -6970,6 +7000,36 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function goRNum(){step=22;show();rUpd();window.scrollTo(0,0);}' +
     /* 1枚目＝施術者のボタンだけ（今日の予約を読まない＝番号検索では要らないため）。今日の日付はこの端末の日付。 */
     'var RLOADED=false;' +
+    /* ── 施術後のLINE送信（31枚目）：送る物を選ぶ→確かめる→事務所PCが文を作って「いま送る」で積む ── */
+    'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮"},lsending=false;' +
+    'function goLKind(){' +
+      'var cd=(typeof codeOf==="function")?(codeOf(CUST.title)||""):"";' +
+      'var nm=(typeof customerLine==="function")?(customerLine(CUST.note).name||""):"";' +
+      '$("sglcust").textContent=(nm||"お名前なし")+(cd?"（"+cd+"）":"")+"　"+(CUST.st||"")+"〜"+(CUST.et||"");' +
+      'step=31;show();window.scrollTo(0,0);}' +
+    'function lnBind(){var bs=$("sgLKind").getElementsByClassName("sgrbig");' +
+      'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){if(!tapOK()||lsending)return;' +
+        'var k=this.getAttribute("data-k");' +
+        'var nm=(typeof customerLine==="function")?(customerLine(CUST.note).name||""):"";' +
+        'szPopup_((nm||"このお客様")+"へ「"+LNNAME[k]+"」のLINEを送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(k);}});};}}' +
+    'function lnFail(m){lsending=false;szOvHide_();szPopup_(m||"エラーが発生しました。りゅうさんに連絡しました。");}' +
+    'function lnSend(k){if(lsending)return;lsending=true;' +
+      'szOvShow_(szBusyHtml_("LINEを送る準備をしています"),"#2C7A99");var n=0;' +
+      'jsonp({action:"submit",key:KEY,op:"sgline_send",who:idn.who,role:idn.role,device:idn.device,' +
+        'fields:JSON.stringify({event:CUST.id||"",title:CUST.title||"",kind:k,who:idn.who||WHO||""})},' +
+      'function(r){if(!r||!r.ok||!r.id){lnFail();return;}' +
+        'var poll=function(){n++;if(n>LIMITS.tries("sgline_send",600)){lnFail("時間切れです。もう一度お試しください。");return;}' +
+          'jsonp({action:"status",key:KEY,id:r.id},function(x){' +
+            'if(!x||!x.ok){lnFail();return;}' +
+            'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(poll,600);return;}' +
+            'if(x.status!=="done"){lnFail();return;}' +
+            'var d=null;try{d=JSON.parse(x.result||"{}");}catch(e){}' +
+            'if(!d||!d.ok){lnFail((d&&d.reason)||"送れませんでした。");return;}' +
+            'lsending=false;' +
+            'szOvShow_(szDoneHtml_(d.practice?"練習として送ります（1分以内）":"1分以内に送ります","お客様の選択に戻る"),"#16a34a");' +
+            'var bb=document.getElementById("szDoneBack");' +
+            'if(bb)bb.addEventListener("click",function(){szOvHide_();goList();});});};' +
+        'setTimeout(poll,900);});}' +
     'function repStart(){var d=new Date(),p2=function(n){return (n<10?"0":"")+n;};' +
       'TODAY=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());' +
       'if(pick===null&&RMK){for(var q=0;q<SG.STAFF.length;q++){if(SG.STAFF[q].mark===RMK)pick=RMK;}}' +
@@ -7153,9 +7213,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'showTestNote();' +
     /* ★2026-10-07 まるちゃん「番号検索の場合は今日の予約は要らない。必要な所で読むように」＝
        リピート入力は1枚目（施術者）を今日の予約を読まずにすぐ出し、【今日の予約のお客様】を押した時だけ読む。 */
+    'if(LN)lnBind();' +
     'if(REP){repStart();}else{need(build);}' +
     '})();<' + '/script>';
-  return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHICSS_ + (REP ? EXPADCSS_ +
+  /* ★大きい選ぶボタン(.sgrbig)は、リピート入力と施術後のLINE送信の両方で使う（数字ボタンはリピート入力だけ）。 */
+  return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHICSS_ + (REP ? EXPADCSS_ : '') + ((REP || LN) ?
     '.sgrbig{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:12px 0;padding:22px 18px;border:0;border-radius:18px;background:#fff;color:#0f172a;font:inherit;font-size:24px;font-weight:900;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
     '.sgrbig .sgrbi{font-size:30px;}' +
     '#sgrdisp{text-align:center;font-size:34px;font-weight:900;min-height:1.35em;}' : '') +
@@ -14202,6 +14264,7 @@ var HOMECSS_ =
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile.kizon::before { background:#7c3aed; }' +
+'  .tile.sgline::before { background:#06c755; }' +
 '  .tile.timetree::before { background:#2bad6f; }' +
 '  .tile.shophist::before { background:#22707f; }' +
 '  .tile.procamp::before { background:#9333ea; }' +
@@ -14227,6 +14290,7 @@ var HOMECSS_ =
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .tile.sejutsugo .ticon { background:rgba(14,165,233,.16); }' +
 '  .tile.kizon .ticon { background:rgba(124,58,237,.16); }' +
+'  .tile.sgline .ticon { background:rgba(6,199,85,.16); }' +
 '  .tile.timetree .ticon { background:rgba(43,173,111,.16); }' +
 '  .tile.shophist .ticon { background:rgba(34,112,127,.16); }' +
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
