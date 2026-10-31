@@ -7055,7 +7055,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
             'lsending=false;' +
             /* ★2026-10-31 まるちゃん「１分じゃなく、１５分後ね」＝事務所PCが決めた送る時刻をそのまま出す。 */
             'var at=String(d.send_at||"").slice(11,16);' +
-            'szOvShow_(szDoneHtml_((d.practice?"練習として":"")+(at?at+"に送ります":"15分後に送ります"),"TOP画面に戻る"),"#16a34a");' +
+            /* ★同日まるちゃん「自動送信をセットしました。10:58に送信されます。にかえて二行で表示」 */
+            'szOvShow_(szDoneHtml_("自動送信をセットしました。"+(d.practice?"（練習）":"")+"<br>"+(at?at+"に送信されます。":"15分後に送信されます。"),"TOP画面に戻る"),"#16a34a");' +
             /* ★2026-10-31 まるちゃん「TOP画面に戻るでいい」＝1枚目の上の「← 戻る」と同じ行き先（スーパーズコのトップ）へ。
                その戻るを押したのと同じにする＝パソコン版の窓の中でも同じ動きになる。 */
             'var bb=document.getElementById("szDoneBack");' +
