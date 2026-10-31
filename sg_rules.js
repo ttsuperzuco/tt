@@ -386,6 +386,26 @@
     return { ask: hit.length > 0, parts: hit, male: male };
   };
 
+  /* ── ★「本日パリジェンヌ／プロセル顔／プロセル頭皮をやりましたか？」を聞く種類（2026-10-31 まるちゃん依頼）──
+     決め手は予約の題名の印（🇫🇷＝パリジェンヌ・PF＝プロセル顔・PH＝プロセル頭皮。題名のどこにあってもよい）。
+     過去の来店2,654日で、スタッフが注意事項を送った日（パリ93日・プロセル42日）は全部この印があった＝印が無ければ聞かない。
+     👑だけでPF/PHの無い題名は、今日の◉の行で顔か頭皮かを見る（どちらも分からなければ両方聞く）。
+     返す物＝聞く順の並び（"lash"・"procell_face"・"procell_scalp"）。 */
+  SG.aftercareAsk = function (title, note) {
+    var tt = String(title || ''), out = [];
+    if (/🇫🇷/.test(tt)) out.push('lash');
+    var face = /PF/.test(tt), scalp = /PH/.test(tt);
+    if (/👑/.test(tt) && !face && !scalp) {
+      var td = elToday(note);
+      scalp = /頭皮|プロ頭|頭/.test(td);
+      face = /肌|顔|プロ肌|フェイシャル/.test(td);
+      if (!face && !scalp) { face = true; scalp = true; }
+    }
+    if (face) out.push('procell_face');
+    if (scalp) out.push('procell_scalp');
+    return out;
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = SG;
   root.SG = SG;
 })(typeof window !== 'undefined' ? window : this);
