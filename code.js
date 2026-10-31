@@ -6587,6 +6587,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig" data-k="lash"><span class="sgrbi">👁️</span>パリジェンヌ</button>' +
       '<button type="button" class="sgrbig" data-k="procell_face"><span class="sgrbi">✨</span>プロセル顔</button>' +
       '<button type="button" class="sgrbig" data-k="procell_scalp"><span class="sgrbi">💆</span>プロセル頭皮</button>' +
+      /* ★2026-10-31 まるちゃん「二つ同時にやったひともいるかもだから、複数選択可能にして」＝押すと選んだ印が付くだけ。
+         送るのはこのボタン（選んだ物を1通ずつ分けて送る）。 */
+      '<button type="button" class="sggo" id="sglgo" disabled>この内容で送る</button>' +
     '</div>' : '') +
     sgStepsHtml_() +
     /* 9枚目＝本日イーライトをやりましたか？（2026-10-30 まるちゃん依頼）。2枚目（お客様の選択）のすぐ次に、
@@ -7000,10 +7003,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'setTimeout(function(){pollMemo(id);},600);return;}' +
         'if(r.status!=="done"){memoFail(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}' +
         'var u=(String(r.result||"").match(/https?:\\/\\/\\S+/)||[""])[0];' +
+        /* ★2026-10-31 まるちゃん：事務所PCがお客様へのLINEを送る予定に入れた時だけ、送る時刻を1行出す。 */
+        'var la=(String(r.result||"").match(/LINE送信:(\\d{1,2}:\\d{2})/)||["",""])[1];' +
         'sending=false;$("sgmgo").disabled=false;$("sgkgo").disabled=false;' +
-        'szOvShow_(szDoneHtml_("次回の予約を登録しました","お客様の選択に戻る",u),"#16a34a");' +
+        'szOvShow_(szDoneHtml_("次回の予約を登録しました"+(la?"<div style=\\"font-size:22px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">サンキューLINEを"+la+"に自動送信します</div>":""),"TOP画面に戻る",u),"#16a34a");' +
+        /* ★2026-10-31 まるちゃん「お客様の選択に戻るじゃない」＝「TOP画面に戻る」（1枚目の上の「← 戻る」と同じ動き）。 */
         'var bb=document.getElementById("szDoneBack");' +
-        'if(bb)bb.addEventListener("click",function(){szOvHide_();goList();});});}' +
+        'if(bb)bb.addEventListener("click",function(){szOvHide_();var ta=document.querySelector("#sgtopbar a");' +
+          'if(ta){ta.click();}else{goPick();}});});}' +
     /* ── ★リピート入力（2026-10-07 まるちゃん決定）── */
     'function goRChoose(){step=21;show();$("sgrwho").textContent=((pick&&pick!==SG.ALL)?SG.labelOfMark(pick)+"　":"")+"お客様の選択";window.scrollTo(0,0);}' +
     'function goRNum(){step=22;show();rUpd();window.scrollTo(0,0);}' +
@@ -7015,18 +7022,27 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var cd=(typeof codeOf==="function")?(codeOf(CUST.title)||""):"";' +
       'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
       '$("sglcust").textContent=(nm||"お名前なし")+(cd?"（"+cd+"）":"")+"　"+(CUST.st||"")+"〜"+(CUST.et||"");' +
+      /* お客様を選び直したら、選んだ印は全部外す */
+      'var bs=$("sgLKind").getElementsByClassName("sgrbig");for(var i=0;i<bs.length;i++)bs[i].classList.remove("sel");lnUpd();' +
       'step=31;show();window.scrollTo(0,0);}' +
+    /* 選んだ種類（画面の並び順＝送る順）。 */
+    'function lnPicked(){var o=[],bs=$("sgLKind").getElementsByClassName("sgrbig");' +
+      'for(var i=0;i<bs.length;i++)if(bs[i].classList.contains("sel"))o.push(bs[i].getAttribute("data-k"));return o;}' +
+    'function lnUpd(){var n=lnPicked().length;$("sglgo").disabled=!n;' +
+      '$("sglgo").textContent=n>1?"この内容で送る（"+n+"通に分けて送ります）":"この内容で送る";}' +
     'function lnBind(){var bs=$("sgLKind").getElementsByClassName("sgrbig");' +
       'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){if(!tapOK()||lsending)return;' +
-        'var k=this.getAttribute("data-k");' +
+        'this.classList.toggle("sel");lnUpd();};}' +
+      '$("sglgo").onclick=function(){if(!tapOK()||lsending)return;var ks=lnPicked();if(!ks.length)return;' +
         'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
-        'szPopup_((nm||"このお客様")+"へ「"+LNNAME[k]+"」の施術後フォローLINE文を送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(k);}});};}}' +
+        'var names=ks.map(function(k){return "「"+LNNAME[k]+"」";}).join("");' +
+        'szPopup_((nm||"このお客様")+"へ"+names+"の施術後フォローLINE文を送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(ks);}});};}' +
     'function lnFail(m){lsending=false;szOvHide_();szPopup_(m||"エラーが発生しました。りゅうさんに連絡しました。");}' +
     'function lnSend(k){if(lsending)return;lsending=true;' +
       /* ★2026-10-31 まるちゃん「タイムツリーへの書き込みになってる」＝予定表には書かないので、説明をLINE向けにする。 */
       'szOvShow_(szBusyHtml_("LINEを送る準備をしています","準備が終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");var n=0;' +
       'jsonp({action:"submit",key:KEY,op:"sgline_send",who:idn.who,role:idn.role,device:idn.device,' +
-        'fields:JSON.stringify({event:CUST.id||"",title:CUST.title||"",kind:k,who:idn.who||WHO||""})},' +
+        'fields:JSON.stringify({event:CUST.id||"",title:CUST.title||"",kinds:k.join(","),who:idn.who||WHO||""})},' +
       'function(r){if(!r||!r.ok||!r.id){lnFail();return;}' +
         'var poll=function(){n++;if(n>LIMITS.tries("sgline_send",600)){lnFail("時間切れです。もう一度お試しください。");return;}' +
           'jsonp({action:"status",key:KEY,id:r.id},function(x){' +
@@ -7123,9 +7139,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
             'if(x.status!=="done"){memoFail("エラーが発生しました。りゅうさんに連絡しました。");return;}' +
             'var d=null;try{d=JSON.parse(x.result||"{}");}catch(e){}' +
             'if(d&&d.ok){sending=false;$("sgkgo").disabled=false;RB.note=note;' +
-              'szOvShow_(szDoneHtml_("🔁を書き込みました","お客様の選択に戻る"),"#16a34a");' +
+              /* ★2026-10-31 まるちゃん：緑の完了画面のボタンは「TOP画面に戻る」にそろえる。 */
+              'szOvShow_(szDoneHtml_("🔁を書き込みました","TOP画面に戻る"),"#16a34a");' +
               'var bb=document.getElementById("szDoneBack");' +
-              'if(bb)bb.addEventListener("click",function(){szOvHide_();goRChoose();});return;}' +
+              'if(bb)bb.addEventListener("click",function(){szOvHide_();var ta=document.querySelector("#sgtopbar a");' +
+                'if(ta){ta.click();}else{goPick();}});return;}' +
             'if(d&&d.conflict&&tries<1){var live=String(d.note||""),t2=live;' +
               'for(var i=0;i<KT.length;i++){var ln=SG.kaeshiSetLine(KT[i],kPick(KT[i]),kMark());if(ln)t2=SG.kaeshiPutLine(t2,KT[i],ln);}' +
               'RB.note=live;$("sgmtext").value=t2;repSubmit(t2,live,tries+1);return;}' +
@@ -7235,6 +7253,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
   return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHICSS_ + (REP ? EXPADCSS_ : '') + ((REP || LN) ?
     '.sgrbig{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:12px 0;padding:22px 18px;border:0;border-radius:18px;background:#fff;color:#0f172a;font:inherit;font-size:24px;font-weight:900;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
     '.sgrbig .sgrbi{font-size:30px;}' +
+    /* ★施術後のLINE送信の複数選択：選んだ物は施術者を選ぶボタンと同じ橙の枠＋右に✔（2026-10-31） */
+    '.sgrbig.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
+    '.sgrbig.sel::after{content:"✔";margin-left:auto;color:#fb8c44;font-size:28px;}' +
+    '#sglgo:disabled{opacity:.45;}' +
     '#sgrdisp{text-align:center;font-size:34px;font-weight:900;min-height:1.35em;}' : '') +
     '.sgkpre{white-space:pre-wrap;word-break:break-all;background:#fff;color:#0f172a;border-radius:12px;padding:12px;margin:0;font:inherit;font-size:15px;line-height:1.5;}' +
     '</style>' +
