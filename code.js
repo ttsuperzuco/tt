@@ -7020,10 +7020,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){if(!tapOK()||lsending)return;' +
         'var k=this.getAttribute("data-k");' +
         'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
-        'szPopup_((nm||"このお客様")+"へ「"+LNNAME[k]+"」のLINEを送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(k);}});};}}' +
+        'szPopup_((nm||"このお客様")+"へ「"+LNNAME[k]+"」の施術後フォローLINE文を送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(k);}});};}}' +
     'function lnFail(m){lsending=false;szOvHide_();szPopup_(m||"エラーが発生しました。りゅうさんに連絡しました。");}' +
     'function lnSend(k){if(lsending)return;lsending=true;' +
-      'szOvShow_(szBusyHtml_("LINEを送る準備をしています"),"#2C7A99");var n=0;' +
+      /* ★2026-10-31 まるちゃん「タイムツリーへの書き込みになってる」＝予定表には書かないので、説明をLINE向けにする。 */
+      'szOvShow_(szBusyHtml_("LINEを送る準備をしています","準備が終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");var n=0;' +
       'jsonp({action:"submit",key:KEY,op:"sgline_send",who:idn.who,role:idn.role,device:idn.device,' +
         'fields:JSON.stringify({event:CUST.id||"",title:CUST.title||"",kind:k,who:idn.who||WHO||""})},' +
       'function(r){if(!r||!r.ok||!r.id){lnFail();return;}' +
