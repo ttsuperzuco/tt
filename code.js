@@ -6726,7 +6726,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
     /* ★2026-11-01：11枚目（本日が当店はじめての脱毛ですか？）を出す日か（DT）と答え（FDANS＝null／"yes"／"no"）。 */
     /* FDASK＝記録で「はじめての脱毛」の画面を出すか（受付係の ask_first。null＝まだ届いていない＝出す）。 */
-    'var DT=false,FDANS=null,FDASK=null;' +
+    'var DT=false,FDANS=null,FDASK=null,FDMAP={};' +
     /* ★2026-11-01：お客様を選んだあとに出す画面の並び（SEQ）＝イーライト(9)→はじめての脱毛(11)→パリジェンヌ(12)→当てはまる物(10)。
        出さない画面は並びに入れない。次へ・戻るはこの並びだけで決める。LASHANS＝パリジェンヌの答え（null／"yes"／"no"）。 */
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null;' +
@@ -6782,7 +6782,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 受け取った予定から「今日・うちの施術者の分」だけ取り出す */
     'function build(p){' +
       'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読めませんでした。通信環境をご確認ください。";return;}' +
-      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];' +
+      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};' +
       'var day=[];' +
       'for(var i=0;i<p.events.length;i++){var e=p.events[i];if(e.date!==today)continue;' +
         'var mk=(typeof staffOf==="function")?staffOf(e.title||""):"";' +
@@ -6924,6 +6924,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'ELJ=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false,parts:[]};' +
         'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;' +
         'if(CUST&&CUST.dummy&&CUST.fdask!==undefined){FDASK=CUST.fdask;FIRSTDAT=CUST.firstdat;}' +
+        /* ★2026-11-01 まるちゃん「すぴーどがいのち」：記録の答えは今日の予定表と一緒に先に届いている＝選んだ瞬間に決まる。 */
+        'else if(FDASK==null&&CUST&&FDMAP[CUST.id]){FIRSTDAT=FDMAP[CUST.id][0];FDASK=FDMAP[CUST.id][1];}' +
         'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT)SEQ.push(11);' +
         'if(ACQ.indexOf("lash")>=0)SEQ.push(12);if(ACQ.indexOf("procell_face")>=0)SEQ.push(13);if(ACQ.indexOf("procell_scalp")>=0)SEQ.push(14);' +
         'if(seqv().length){goStep(seqv()[0]);}else{goMonth();}};}}' +
