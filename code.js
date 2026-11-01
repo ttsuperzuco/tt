@@ -6723,7 +6723,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★2026-10-31：9枚目で選んだ物（TA）と、機械の読み（ELJ＝イーライトの部位・FIRSTDAT＝当店で初めての脱毛か。null＝まだ分からない）。 */
     'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
     /* ★2026-11-01：11枚目（本日が当店はじめての脱毛ですか？）を出す日か（DT）と答え（FDANS＝null／"yes"／"no"）。 */
-    'var DT=false,FDANS=null;' +
+    /* FDASK＝記録で「はじめての脱毛」の画面を出すか（受付係の ask_first。null＝まだ届いていない＝出す）。 */
+    'var DT=false,FDANS=null,FDASK=null;' +
     /* ★2026-11-01：お客様を選んだあとに出す画面の並び（SEQ）＝イーライト(9)→はじめての脱毛(11)→パリジェンヌ(12)→当てはまる物(10)。
        出さない画面は並びに入れない。次へ・戻るはこの並びだけで決める。LASHANS＝パリジェンヌの答え（null／"yes"／"no"）。 */
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null;' +
@@ -6825,9 +6826,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'else if(step===6){goFree();}else if(step===5){goDay();}' +
       /* ★イーライトの画面（9枚目）はお客様の選択のすぐ次（2026-10-30 まるちゃん）＝月の画面から戻るとそこへ、そこから戻るとお客様の選択へ。 */
       /* ★10枚目（パリジェンヌ・プロセルの質問）：月の画面から戻ると最後の質問へ、質問から戻ると1つ前の質問→イーライト→お客様の選択。 */
-      'else if(step===4){goMonth();}else if(step===3&&!REP&&!LN&&SEQ.length){goStep(SEQ[SEQ.length-1]);}' +
+      'else if(step===4){goMonth();}else if(step===3&&!REP&&!LN&&seqv().length){goStep(seqv()[seqv().length-1]);}' +
       'else if(step===3&&!REP&&!LN){goList();}' +
-      'else if(SEQ.indexOf(step)>0){goStep(SEQ[SEQ.indexOf(step)-1]);}' +
+      'else if(SEQ.indexOf(step)>0&&prevOf(step)){}' +
       'else if(step===3||(step>=9&&step<=14)){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
@@ -6901,10 +6902,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         /* ★2026-10-31 まるちゃん決定：お客様の選択のすぐ次に、全員「このお客様は以下に当てはまりますか？」（9枚目）。
            イーライトの部位の読みは共通の1本（SG.elightAsk）。画面に小さく出すのと、食い違いの確かめに使うだけ。 */
         'ELJ=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false,parts:[]};' +
-        'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;FDANS=null;' +
+        'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;FDANS=null;FDASK=null;' +
         'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT)SEQ.push(11);' +
         'if(ACQ.indexOf("lash")>=0)SEQ.push(12);if(ACQ.indexOf("procell_face")>=0)SEQ.push(13);if(ACQ.indexOf("procell_scalp")>=0)SEQ.push(14);' +
-        'if(SEQ.length){goStep(SEQ[0]);}else{goMonth();}};}}' +
+        'if(seqv().length){goStep(seqv()[0]);}else{goMonth();}};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -6987,6 +6988,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'setTimeout(function(){pollNextMemo(id,mine,n+1);},600);return;}' +
         'if(r.status!=="done")return;' +
         'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
+        'if(d&&d.ok&&(d.ask_first===true||d.ask_first===false))FDASK=d.ask_first;' +
         'if(d&&d.ok&&(d.first_dat===true||d.first_dat===false)){FIRSTDAT=d.first_dat;if(step===11)fdHint();}' +
         'if(!d||!d.ok||!d.memo)return;' +
         'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];PAYLINE=d.payline||"";ASK=!!d.ask;' +
@@ -7038,7 +7040,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'else if(n===13)goYN(13,"sgPF","sgpf",PFANS);else if(n===14)goYN(14,"sgPH","sgph",PHANS);else goToday();}' +
     'function goYN(n,id,cls,ans){step=n;show();var bs=$(id).getElementsByClassName(cls);' +
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ans);window.scrollTo(0,0);}' +
-    'function nextOf(n){var i=SEQ.indexOf(n);if(i>=0&&i+1<SEQ.length)goStep(SEQ[i+1]);else goMonth();}' +
+    /* ★2026-11-01 まるちゃん「かこのきろくみるっていったじゃん？」＝はじめての脱毛の画面(11)は、記録で聞く日だけ出す
+       （受付係が ask_first=false と返した日は飛ばす。返事がまだ届いていない時は出す＝聞き漏らすより安全）。 */
+    'function seqShown(n){return n!==11||FDASK!==false;}' +
+    'function seqv(){return SEQ.filter(seqShown);}' +
+    'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}goMonth();}' +
+    'function prevOf(n){var i=SEQ.indexOf(n);for(var j=i-1;j>=0;j--){if(seqShown(SEQ[j])){goStep(SEQ[j]);return true;}}return false;}' +
     'function afterElight(){nextOf(9);}' +
     'function goLash(){step=12;show();' +
       'var bs=$("sgLash").getElementsByClassName("sglh");' +
