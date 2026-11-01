@@ -386,21 +386,52 @@
     return { ask: hit.length > 0, parts: hit, male: male };
   };
 
-  /* ── ★「本日パリジェンヌ／プロセル顔／プロセル頭皮をやりましたか？」を聞く種類（2026-10-31 まるちゃん依頼）──
-     決め手は予約の題名の印（🇫🇷＝パリジェンヌ・PF＝プロセル顔・PH＝プロセル頭皮。題名のどこにあってもよい）。
-     過去の来店2,654日で、スタッフが注意事項を送った日（パリ93日・プロセル42日）は全部この印があった＝印が無ければ聞かない。
-     👑だけでPF/PHの無い題名は、今日の◉の行で顔か頭皮かを見る（どちらも分からなければ両方聞く）。
-     返す物＝聞く順の並び（"lash"・"procell_face"・"procell_scalp"）。 */
-  SG.aftercareAsk = function (title, note) {
-    var tt = String(title || ''), out = [];
-    if (/🇫🇷/.test(tt)) out.push('lash');
-    var face = /PF/.test(tt), scalp = /PH/.test(tt);
-    if (/👑/.test(tt) && !face && !scalp) {
-      var td = elToday(note);
-      scalp = /頭皮|プロ頭|頭/.test(td);
-      face = /肌|顔|プロ肌|フェイシャル/.test(td);
-      if (!face && !scalp) { face = true; scalp = true; }
+  /* ── ★今日パリジェンヌ／顔プロセル／頭皮プロセルをやる予約か（2026-11-01 まるちゃん決定＝予約メモで読む）──
+     決め手は今日の予約メモの「⭐️現在進行中」の◉の行（前日お知らせを送る前に、次回の施術内容を毎回きちんと直しているため）。
+     9〜10月の来店368日で、スタッフが注意事項を送った日（パリ11・プロセル5）は全部この行にあった。
+     予約タイトルの印（🇫🇷・PF・PH）は付け忘れがある（F430様 9/16＝メモに「◉🇫🇷パリジェンヌリペア:あり」・タイトルに🇫🇷なし）。
+     ・「なし」と書いた行（今日はやらなかった）は数えない。
+     ・プロセルは行の言葉で顔か頭皮か（肌・顔・フェイシャル／頭・頭皮・発毛）。どちらも分からなければ両方。
+     ・⭐️の行が1つも無い予約メモだけ、前のとおり題名の印で読む。
+     返す物＝並び（"lash"・"procell_face"・"procell_scalp"）。施術後の予約の9枚目に小さく出す・食い違いの確かめに使う。 */
+  /* ⭐️現在進行中の施術を1つずつ取り出す。★書き方の揺れ（9〜10月の実データで見つけた物）：
+     ・「あり／なし」が次の行に続く（M191様「◉👑プロセル肌質MD :5回コース+1🎁」の次の行「全6回の4回目　なし」）
+     ・行の頭が◉でなく👑（M06様「👑PFプロセル肌質→男革命6回：」） → 続きの行もつなげて1つの施術として読む。 */
+  function todayLines(note) {
+    var L = String(note || '').replace(/\r\n/g, '\n').split('\n'), out = [], on = false, cur = -1;
+    for (var i = 0; i < L.length; i++) {
+      var t = L[i].replace(/^\s+/, '');
+      if (t.indexOf('⭐') === 0) { on = true; continue; }
+      if (!on) continue;
+      if (t.indexOf('💰') === 0 || t.indexOf('☑') === 0) break;
+      if (!t) { cur = -1; continue; }
+      if (/^[◉●⚫•·👑🇫🇷🍯]/.test(t)) { out.push(t); cur = out.length - 1; continue; }
+      if (cur >= 0 && !/^[※⚠＊*]/.test(t)) out[cur] += ' ' + t;
+      else cur = -1;
     }
+    return out;
+  }
+  SG.aftercareAsk = function (title, note) {
+    var L = todayLines(note), lash = false, face = false, scalp = false;
+    if (L.length) {
+      for (var i = 0; i < L.length; i++) {
+        var t = L[i];
+        if (/なし/.test(t)) continue;
+        if (/パリ|🇫🇷|ラッシュ/.test(t)) lash = true;
+        if (/プロセル|👑|プロ肌|プロ頭|キャプロ|プロキャ|キャPro/.test(t)) {
+          var f = /肌|顔|フェイシャル|フェイス/.test(t), h = /頭|発毛|育毛/.test(t);
+          if (f) face = true;
+          if (h) scalp = true;
+          if (!f && !h) { face = true; scalp = true; }
+        }
+      }
+    } else {
+      var tt = String(title || '');
+      lash = /🇫🇷/.test(tt); face = /PF/.test(tt); scalp = /PH/.test(tt);
+      if (/👑/.test(tt) && !face && !scalp) { face = true; scalp = true; }
+    }
+    var out = [];
+    if (lash) out.push('lash');
     if (face) out.push('procell_face');
     if (scalp) out.push('procell_scalp');
     return out;
