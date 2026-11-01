@@ -6621,7 +6621,20 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig sglh" data-k="yes"><span class="sgrbi">👁️</span>YES（やった）</button>' +
       '<button type="button" class="sgrbig sglh" data-k="no"><span class="sgrbi">🙅</span>NO（やっていない）</button>' +
     '</div>' +
-    /* 10枚目＝このお客様は以下に当てはまりますか？（複数選択可）（2026-10-31 まるちゃん決定・11-01 イーライトを9枚目へ分けた）。
+    /* 13枚目・14枚目＝本日、顔／頭皮のプロセルをやりましたか？（2026-11-01 まるちゃん決定）。今日の予約メモにある日だけ、
+       パリジェンヌの次に出す。押すとすぐ次へ。YES＝☆次回の文にプロセルのアフターケアの一文を入れ、紙を付ける。 */
+    '<div class="sg" id="sgPF" style="display:none">' +
+      '<div class="sgwho">本日、顔のプロセルをやりましたか？</div>' +
+      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span>YES（やった）</button>' +
+      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span>NO（やっていない）</button>' +
+    '</div>' +
+    '<div class="sg" id="sgPH" style="display:none">' +
+      '<div class="sgwho">本日、頭皮のプロセルをやりましたか？</div>' +
+      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span>YES（やった）</button>' +
+      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（やっていない）</button>' +
+    '</div>' +
+    /* （使わなくなった）10枚目＝このお客様は以下に当てはまりますか？（複数選択可）。2026-11-01 にイーライト・はじめての脱毛・
+       パリジェンヌ・顔プロセル・頭皮プロセルを1つずつの画面に分けたので、並び（SEQ）に入れない＝出さない。（2026-10-31 まるちゃん決定・11-01 イーライトを9枚目へ分けた）。
        全員に出す。「どれも当てはまらない」はすぐ次の画面へ。それ以外は選んで「上記の内容で確定」で次へ。
        予約メモから機械が読んだ答えは、当てはまる物がある時だけ小さく出す（印は付けない＝選ぶのはスタッフ）。 */
     '<div class="sg" id="sgAfter" style="display:none">' +
@@ -6713,7 +6726,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var DT=false,FDANS=null;' +
     /* ★2026-11-01：お客様を選んだあとに出す画面の並び（SEQ）＝イーライト(9)→はじめての脱毛(11)→パリジェンヌ(12)→当てはまる物(10)。
        出さない画面は並びに入れない。次へ・戻るはこの並びだけで決める。LASHANS＝パリジェンヌの答え（null／"yes"／"no"）。 */
-    'var SEQ=[],LASHANS=null;' +
+    'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null;' +
     /* ★2026-11-01：9枚目のイーライトの答え（null＝聞いていない・"vio"／"both"／"other"／"no"）。 */
     'var ELANS=null;' +
     /* 次回の費用を先に払っていただいたか。null＝まだ選んでいない。 */
@@ -6797,6 +6810,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgAfter").style.display=step===10?"":"none";' +
       '$("sgFirst").style.display=step===11?"":"none";' +
       '$("sgLash").style.display=step===12?"":"none";' +
+      '$("sgPF").style.display=step===13?"":"none";' +
+      '$("sgPH").style.display=step===14?"":"none";' +
       'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
       'if(LN){$("sgLKind").style.display=step===31?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
@@ -6811,8 +6826,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★イーライトの画面（9枚目）はお客様の選択のすぐ次（2026-10-30 まるちゃん）＝月の画面から戻るとそこへ、そこから戻るとお客様の選択へ。 */
       /* ★10枚目（パリジェンヌ・プロセルの質問）：月の画面から戻ると最後の質問へ、質問から戻ると1つ前の質問→イーライト→お客様の選択。 */
       'else if(step===4){goMonth();}else if(step===3&&!REP&&!LN&&SEQ.length){goStep(SEQ[SEQ.length-1]);}' +
+      'else if(step===3&&!REP&&!LN){goList();}' +
       'else if(SEQ.indexOf(step)>0){goStep(SEQ[SEQ.indexOf(step)-1]);}' +
-      'else if(step===3||step===9||step===10||step===11||step===12){goList();}else{goPick();}}' +
+      'else if(step===3||(step>=9&&step<=14)){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,NOW());' +
@@ -6886,8 +6902,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
            イーライトの部位の読みは共通の1本（SG.elightAsk）。画面に小さく出すのと、食い違いの確かめに使うだけ。 */
         'ELJ=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false,parts:[]};' +
         'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;FDANS=null;' +
-        'ELANS=null;LASHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT)SEQ.push(11);if(ACQ.indexOf("lash")>=0)SEQ.push(12);SEQ.push(10);' +
-        'goStep(SEQ[0]);};}}' +
+        'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT)SEQ.push(11);' +
+        'if(ACQ.indexOf("lash")>=0)SEQ.push(12);if(ACQ.indexOf("procell_face")>=0)SEQ.push(13);if(ACQ.indexOf("procell_scalp")>=0)SEQ.push(14);' +
+        'if(SEQ.length){goStep(SEQ[0]);}else{goMonth();}};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -7017,7 +7034,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ELANS);' +
       'window.scrollTo(0,0);}' +
     'function goToday(){step=10;show();taDraw();window.scrollTo(0,0);}' +
-    'function goStep(n){if(n===9)goElight();else if(n===11)goFirst();else if(n===12)goLash();else goToday();}' +
+    'function goStep(n){if(n===9)goElight();else if(n===11)goFirst();else if(n===12)goLash();' +
+      'else if(n===13)goYN(13,"sgPF","sgpf",PFANS);else if(n===14)goYN(14,"sgPH","sgph",PHANS);else goToday();}' +
+    'function goYN(n,id,cls,ans){step=n;show();var bs=$(id).getElementsByClassName(cls);' +
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ans);window.scrollTo(0,0);}' +
     'function nextOf(n){var i=SEQ.indexOf(n);if(i>=0&&i+1<SEQ.length)goStep(SEQ[i+1]);else goMonth();}' +
     'function afterElight(){nextOf(9);}' +
     'function goLash(){step=12;show();' +
@@ -7077,7 +7097,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'f.elight=(ELANS==="vio"||ELANS==="both"||ELANS==="other")?1:0;' +
         'f.el_parts=ELANS==="vio"?"VIO":(ELANS==="both"?"VIO,その他":(ELANS==="other"?"その他":""));' +
         'f.first_dat=FDANS==="yes"?1:0;' +
-        'f.after_kinds=(LASHANS==="yes"?["lash"]:[]).concat(["procell_face","procell_scalp"].filter(function(k){return TA[k]===true;})).join(",");}' +
+        'f.after_kinds=[LASHANS==="yes"?"lash":"",PFANS==="yes"?"procell_face":"",PHANS==="yes"?"procell_scalp":""].filter(function(x){return x;}).join(",");}' +
       /* ★ダミーのお客様（開発者の試し）＝タイムツリーにもLINEにも何もしない。完了画面だけ出す（送る時刻は15分後の見込み）。 */
       'if(CUST&&CUST.dummy){var dn=new Date(Date.now()+15*60000),dla=dn.getHours()+":"+("0"+dn.getMinutes()).slice(-2);' +
         'szOvShow_(szDoneHtml_("次回の予約を登録しました"+"<div style=\\"font-size:22px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">サンキューLINEを"+dla+"に自動送信します</div>"+' +
@@ -7354,7 +7374,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){FDANS=k;nextOf(11);}});};}' +
         /* ★12枚目：パリジェンヌ＝押すとすぐ次へ。 */
         'var lb=$("sgLash").getElementsByClassName("sglh");' +
-        'for(var li=0;li<lb.length;li++){lb[li].onclick=function(){if(!tapOK())return;LASHANS=this.getAttribute("data-k");nextOf(12);};}}' +
+        'for(var li=0;li<lb.length;li++){lb[li].onclick=function(){if(!tapOK())return;LASHANS=this.getAttribute("data-k");nextOf(12);};}' +
+        /* ★13枚目・14枚目：顔／頭皮プロセル＝押すとすぐ次へ。 */
+        'var pb=$("sgPF").getElementsByClassName("sgpf");' +
+        'for(var pi=0;pi<pb.length;pi++){pb[pi].onclick=function(){if(!tapOK())return;PFANS=this.getAttribute("data-k");nextOf(13);};}' +
+        'var hb=$("sgPH").getElementsByClassName("sgph");' +
+        'for(var hi=0;hi<hb.length;hi++){hb[hi].onclick=function(){if(!tapOK())return;PHANS=this.getAttribute("data-k");nextOf(14);};}}' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
         'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
