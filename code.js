@@ -6870,7 +6870,25 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg1",dname:"RYU（既存・イーライト＋パリジェンヌ＋プロセル顔）",dummy:true,' +
           'title:sm+"🇫🇷👑PF預約M999イーライト",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIO 8回コース 3回目あり\\n◉🇫🇷パリジェンヌリペア あり\\n◉👑プロセル肌質改善 2回目あり\\n\\n💰お支払い状況\\n◉VIO：8回おまとめ購入済み\\n\\n☑️終了\\n◉VIOトライアル"});' +
         'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg2",dname:"RYU（新規・脱毛）",dummy:true,' +
-          'title:sm+"預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n\\n💰お支払い状況\\n◉VIOトライアル：支払い済み"});}' +
+          'title:sm+"預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n\\n💰お支払い状況\\n◉VIOトライアル：支払い済み"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg3",dname:"RYU（既存・髭＋脇・脱毛歴あり）",dummy:true,fdask:false,firstdat:false,' +
+          'title:sm+"預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉髭全部 8回コース 5回目あり\\n◉脇 5回目あり\\n\\n💰お支払い状況"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg4",dname:"RYU（既存・VIO＋髭・脱毛歴あり）",dummy:true,fdask:false,firstdat:false,' +
+          'title:sm+"預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIO 8回コース 6回目あり\\n◉髭BD 3回目あり\\n\\n💰お支払い状況"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg5",dname:"RYU（既存・脚だけ・脱毛歴あり）",dummy:true,fdask:false,firstdat:false,' +
+          'title:sm+"預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉脚全部 4回目あり\\n\\n💰お支払い状況"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg6",dname:"RYU（既存・初めての脱毛＋顔プロセル）",dummy:true,fdask:true,firstdat:true,' +
+          'title:sm+"👑PF預約M999脱毛新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n◉👑プロセル肌質改善 3回目あり\\n\\n💰お支払い状況"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg7",dname:"RYU（既存・頭皮プロセルだけ）",dummy:true,fdask:false,firstdat:false,' +
+          'title:sm+"👑PH預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉👑プロセル頭皮 2回目あり\\n\\n💰お支払い状況"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg8",dname:"RYU（既存・顔＋頭皮プロセル）",dummy:true,fdask:false,firstdat:false,' +
+          'title:sm+"👑PFPH預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉👑プロ肌キャPro 2回目あり\\n◉👑プロ頭キャ 2回目あり\\n\\n💰お支払い状況"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg9",dname:"RYU（既存・ハイドラだけ＝質問なし）",dummy:true,fdask:false,firstdat:false,' +
+          'title:sm+"福:預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉ハイドラ 3回目あり\\n\\n💰お支払い状況"});' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg10",dname:"RYU（新規・カウンセリングだけ）",dummy:true,fdask:true,firstdat:true,' +
+          'title:sm+"預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉脱毛カウンセリング（脇・VIO）\\n\\n💰お支払い状況"});' +
+        /* ★2026-11-01 まるちゃん「テストしたいからダミーデータつくって」＝画面の出方が全部試せるように足した。 */
+        '}' +
       'LIST=list;' +
       '$("sglisthead").textContent="お客様の選択";' +
       'if(!list.length){$("sglist").innerHTML="";' +
@@ -6905,6 +6923,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
            イーライトの部位の読みは共通の1本（SG.elightAsk）。画面に小さく出すのと、食い違いの確かめに使うだけ。 */
         'ELJ=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false,parts:[]};' +
         'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;FDANS=null;FDASK=null;' +
+        'if(CUST&&CUST.dummy&&CUST.fdask!==undefined){FDASK=CUST.fdask;FIRSTDAT=CUST.firstdat;}' +
         'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT)SEQ.push(11);' +
         'if(ACQ.indexOf("lash")>=0)SEQ.push(12);if(ACQ.indexOf("procell_face")>=0)SEQ.push(13);if(ACQ.indexOf("procell_scalp")>=0)SEQ.push(14);' +
         'if(seqv().length){goStep(seqv()[0]);}else{goMonth();}};}}' +
@@ -6990,6 +7009,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'setTimeout(function(){pollNextMemo(id,mine,n+1);},600);return;}' +
         'if(r.status!=="done")return;' +
         'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
+        'if(CUST&&CUST.dummy&&CUST.fdask!==undefined)return;' +
         'if(d&&d.ok&&(d.ask_first===true||d.ask_first===false))FDASK=d.ask_first;' +
         'if(d&&d.ok&&(d.first_dat===true||d.first_dat===false)){FIRSTDAT=d.first_dat;if(step===11)fdHint();}' +
         'if(!d||!d.ok||!d.memo)return;' +
@@ -7045,6 +7065,19 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★2026-11-01 まるちゃん「かこのきろくみるっていったじゃん？」＝はじめての脱毛の画面(11)は、記録で聞く日だけ出す
        （受付係が ask_first=false と返した日は飛ばす。返事がまだ届いていない時は出す＝聞き漏らすより安全）。 */
     'function seqShown(n){return n!==11||FDASK!==false;}' +
+    /* ダミーの完了画面に出す「選んだ答え」と、それで送られるLINE（長いお礼文か☆次回の短い文か・付く注意事項）。 */
+    'function dummyAnswers(){var EN={vio:"YES（VIOのみ）",both:"YES（VIO＋髭等）",other:"YES（髭等）",no:"NO"},' +
+      'FN={yes:"YES（初回の脱毛施術を行った）",no:"NO（過去に当店脱毛歴がある）",counsel:"NO（カウンセリングだけ）"},' +
+      'YN={yes:"YES",no:"NO"},o=[];' +
+      'o.push("イーライト："+(SEQ.indexOf(9)>=0?(EN[ELANS]||"-"):"（聞いていない）"));' +
+      'o.push("はじめての脱毛："+(seqv().indexOf(11)>=0?(FN[FDANS]||"-"):"（聞いていない）"));' +
+      'o.push("パリジェンヌ："+(SEQ.indexOf(12)>=0?(YN[LASHANS]||"-"):"（聞いていない）"));' +
+      'o.push("顔プロセル："+(SEQ.indexOf(13)>=0?(YN[PFANS]||"-"):"（聞いていない）"));' +
+      'o.push("頭皮プロセル："+(SEQ.indexOf(14)>=0?(YN[PHANS]||"-"):"（聞いていない）"));' +
+      'var adds=[];if(ELANS&&ELANS!=="no")adds.push("イーライト");if(LASHANS==="yes")adds.push("パリジェンヌ");' +
+      'if(PFANS==="yes")adds.push("顔プロセル");if(PHANS==="yes")adds.push("頭皮プロセル");' +
+      'o.push("→ 送る文："+(FDANS==="yes"?"脱毛の長いお礼文（次回の日時入り）":"☆次回の短い文")+(adds.length?"＋"+adds.join("・")+"の注意事項":""));' +
+      'return o.join("<br>");}' +
     'function seqv(){return SEQ.filter(seqShown);}' +
     'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}goMonth();}' +
     'function prevOf(n){var i=SEQ.indexOf(n);for(var j=i-1;j>=0;j--){if(seqShown(SEQ[j])){goStep(SEQ[j]);return true;}}return false;}' +
@@ -7110,6 +7143,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★ダミーのお客様（開発者の試し）＝タイムツリーにもLINEにも何もしない。完了画面だけ出す（送る時刻は15分後の見込み）。 */
       'if(CUST&&CUST.dummy){var dn=new Date(Date.now()+15*60000),dla=dn.getHours()+":"+("0"+dn.getMinutes()).slice(-2);' +
         'szOvShow_(szDoneHtml_("次回の予約を登録しました"+"<div style=\\"font-size:22px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">サンキューLINEを"+dla+"に自動送信します</div>"+' +
+          '"<div style=\\"font-size:16px;line-height:1.7;margin-top:12px;color:#ecfdf5;text-align:left;\\">【選んだ答え】<br>"+dummyAnswers()+"</div>"+' +
           '"<div style=\\"font-size:16px;line-height:1.6;margin-top:10px;color:#ecfdf5;\\">（ダミーの試し：タイムツリーには書いていません・LINEも送りません）</div>","TOP画面に戻る"),"#16a34a");' +
         'var db=document.getElementById("szDoneBack");' +
         'if(db)db.addEventListener("click",function(){szOvHide_();var ta=document.querySelector("#sgtopbar a");if(ta){ta.click();}else{goPick();}});return;}' +
