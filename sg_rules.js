@@ -412,8 +412,9 @@
       if (!on) continue;
       if (t.indexOf('💰') === 0 || t.indexOf('☑') === 0) break;
       if (!t) { cur = -1; continue; }
-      if (/^[◉●⚫•·👑🇫🇷🍯]/.test(t)) { out.push(t); cur = out.length - 1; continue; }
-      if (cur >= 0 && !/^[※⚠＊*]/.test(t)) out[cur] += ' ' + t;
+      if (/^(◉|●|⚫|•|·|👑|🇫🇷|🍯)/.test(t)) { out.push(t); cur = out.length - 1; continue; }
+      /* 🔁・※・⚠ で始まる書き置き（「🔁なし」＝次回のおまとめ案内は無し）は施術の続きではない。 */
+      if (cur >= 0 && !/^(※|⚠|＊|\*|🔁)/.test(t)) out[cur] += ' ' + t;
       else cur = -1;
     }
     return out;
@@ -442,6 +443,38 @@
     if (face) out.push('procell_face');
     if (scalp) out.push('procell_scalp');
     return out;
+  };
+
+  /* ── ★今日は脱毛をする予約か（2026-11-01 まるちゃん「本日が当店はじめての脱毛ですか？」の画面を出す日）──
+     ⭐️現在進行中の施術（「なし」は除く）に、脱毛でない施術（プロセル・ハイドラ・マツヤニ・パリジェンヌ・よもぎ・眉・
+     アートメイク・マツエク等）以外の行が1つでもあれば脱毛（「脱毛カウンセリング」の行も脱毛＝聞く）。
+     ⭐️の行が無い予約メモは、題名に脱毛でない印（🇫🇷👑福🍯🍉）だけの時を除いて脱毛とみなす（聞き漏らすより聞く方が安全）。 */
+  var NOT_HAIR = /プロセル|プロ肌|プロ頭|プロ髪|キャプロ|プロキャ|キャPro|ハイドラ|福|マツヤニ|🍯|パリ|🇫🇷|👑|ラッシュ|よもぎ|眉|まつ|マツ|ネイル|アート|サブスク/;
+  /* ⭐️現在進行中の欄の行を全部（◉の付いていない書き方＝「平日ピカピカB@2000(髭全部+脇) あり」M308様 もあるため）。
+     ※・⚠・🔁で始まる注意書きの行と、【お母さま】のような見出しは除く。 */
+  function sectionLines(note) {
+    var L = String(note || '').replace(/\r\n/g, '\n').split('\n'), out = [], on = false;
+    for (var i = 0; i < L.length; i++) {
+      var t = L[i].replace(/^\s+/, '');
+      if (t.indexOf('⭐') === 0) { on = true; continue; }
+      if (!on) continue;
+      if (t.indexOf('💰') === 0 || t.indexOf('☑') === 0) break;
+      if (t && !/^[※⚠🔁【*＊(（]/.test(t)) out.push(t);
+    }
+    return out;
+  }
+  SG.datsumoToday = function (title, note) {
+    var L = todayLines(note);
+    if (!L.length) L = sectionLines(note);
+    if (L.length) {
+      for (var i = 0; i < L.length; i++) {
+        if (/なし/.test(L[i])) continue;
+        if (!NOT_HAIR.test(L[i])) return true;
+      }
+      return false;
+    }
+    var head = String(title || '').split('預約')[0];
+    return !/🇫🇷|👑|福|🍯|🍉/.test(head);
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = SG;
