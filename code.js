@@ -6604,6 +6604,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig sgel" data-k="other"><span class="sgrbi">⚡</span>YES（髭等のVIO以外の部位）</button>' +
       '<button type="button" class="sgrbig sgel" data-k="no"><span class="sgrbi">🙅</span>NO（イーライトはやってない）</button>' +
     '</div>' +
+    /* 11枚目＝本日が当店はじめての脱毛ですか？（2026-11-01 まるちゃん決定）。今日の予約メモが脱毛の日だけ（SG.datsumoToday）、
+       イーライトの画面の次に出す。押すとすぐ次へ。YES＝脱毛の長いお礼文（次回の日時入り）を送る。
+       記録（前の来店）から機械が読んだ答えは小さく出す。違う方を押した時は確かめの小窓。 */
+    '<div class="sg" id="sgFirst" style="display:none">' +
+      '<div class="sgwho">本日が当店はじめての脱毛ですか？</div>' +
+      '<div class="sgmnote" id="sgfdhint" style="display:none"></div>' +
+      '<button type="button" class="sgrbig sgfd" data-k="yes"><span class="sgrbi">🌱</span>YES（初回の脱毛です）</button>' +
+      '<button type="button" class="sgrbig sgfd" data-k="no"><span class="sgrbi">🔁</span>NO（過去に当店脱毛歴があります）</button>' +
+    '</div>' +
     /* 10枚目＝このお客様は以下に当てはまりますか？（複数選択可）（2026-10-31 まるちゃん決定・11-01 イーライトを9枚目へ分けた）。
        全員に出す。「どれも当てはまらない」はすぐ次の画面へ。それ以外は選んで「上記の内容で確定」で次へ。
        予約メモから機械が読んだ答えは、当てはまる物がある時だけ小さく出す（印は付けない＝選ぶのはスタッフ）。 */
@@ -6611,7 +6620,6 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<div class="sgwho">このお客様は以下に当てはまりますか？（複数選択可）</div>' +
       '<div class="sgmnote" id="sgtahint" style="display:none"></div>' +
       '<button type="button" class="sgrbig" id="sgtanone"><span class="sgrbi">🙅</span>どれも当てはまらない</button>' +
-      '<button type="button" class="sgrbig sgta" data-k="first_dat"><span class="sgrbi">🌱</span>当店での脱毛が初めて</button>' +
       '<button type="button" class="sgrbig sgta" data-k="lash"><span class="sgrbi">👁️</span>パリジェンヌを行った</button>' +
       '<button type="button" class="sgrbig sgta" data-k="procell_face"><span class="sgrbi">✨</span>顔プロセルを行った</button>' +
       '<button type="button" class="sgrbig sgta" data-k="procell_scalp"><span class="sgrbi">💆</span>頭皮プロセルを行った</button>' +
@@ -6693,7 +6701,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★パリジェンヌ・プロセル：ACQ＝予約タイトルの印から機械が読んだ種類（9枚目に小さく出す・食い違いの確かめ）。 */
     'var ACQ=[],ACNAME={lash:"パリジェンヌ",procell_face:"顔プロセル",procell_scalp:"頭皮プロセル"};' +
     /* ★2026-10-31：9枚目で選んだ物（TA）と、機械の読み（ELJ＝イーライトの部位・FIRSTDAT＝当店で初めての脱毛か。null＝まだ分からない）。 */
-    'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["first_dat","lash","procell_face","procell_scalp"];' +
+    'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
+    /* ★2026-11-01：11枚目（本日が当店はじめての脱毛ですか？）を出す日か（DT）と答え（FDANS＝null／"yes"／"no"）。 */
+    'var DT=false,FDANS=null;' +
     /* ★2026-11-01：9枚目のイーライトの答え（null＝聞いていない・"vio"／"both"／"other"／"no"）。 */
     'var ELANS=null;' +
     /* 次回の費用を先に払っていただいたか。null＝まだ選んでいない。 */
@@ -6775,6 +6785,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgKaeshi").style.display=step===8?"":"none";' +
       '$("sgElight").style.display=step===9?"":"none";' +
       '$("sgAfter").style.display=step===10?"":"none";' +
+      '$("sgFirst").style.display=step===11?"":"none";' +
       'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
       'if(LN){$("sgLKind").style.display=step===31?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
@@ -6789,8 +6800,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★イーライトの画面（9枚目）はお客様の選択のすぐ次（2026-10-30 まるちゃん）＝月の画面から戻るとそこへ、そこから戻るとお客様の選択へ。 */
       /* ★10枚目（パリジェンヌ・プロセルの質問）：月の画面から戻ると最後の質問へ、質問から戻ると1つ前の質問→イーライト→お客様の選択。 */
       'else if(step===4){goMonth();}else if(step===3&&!REP&&!LN){goToday();}' +
-      'else if(step===10&&ELJ&&ELJ.ask){goElight();}' +
-      'else if(step===3||step===9||step===10){goList();}else{goPick();}}' +
+      'else if(step===10&&DT){goFirst();}' +
+      'else if((step===10||step===11)&&ELJ&&ELJ.ask){goElight();}' +
+      'else if(step===3||step===9||step===10||step===11){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,NOW());' +
@@ -6863,7 +6875,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         /* ★2026-10-31 まるちゃん決定：お客様の選択のすぐ次に、全員「このお客様は以下に当てはまりますか？」（9枚目）。
            イーライトの部位の読みは共通の1本（SG.elightAsk）。画面に小さく出すのと、食い違いの確かめに使うだけ。 */
         'ELJ=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false,parts:[]};' +
-        'ELANS=null;if(ELJ.ask){goElight();}else{goToday();}};}}' +
+        'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;FDANS=null;' +
+        'ELANS=null;if(ELJ.ask){goElight();}else{afterElight();}};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -6946,7 +6959,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'setTimeout(function(){pollNextMemo(id,mine,n+1);},600);return;}' +
         'if(r.status!=="done")return;' +
         'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
-        'if(d&&d.ok&&(d.first_dat===true||d.first_dat===false)){FIRSTDAT=d.first_dat;if(step===9)taHint();}' +
+        'if(d&&d.ok&&(d.first_dat===true||d.first_dat===false)){FIRSTDAT=d.first_dat;if(step===11)fdHint();}' +
         'if(!d||!d.ok||!d.memo)return;' +
         'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];PAYLINE=d.payline||"";ASK=!!d.ask;' +
         'AHEAD=d.ahead||{};PAYREMOVED=d.removed||[];FINALS=d.finals||[];' +
@@ -6993,20 +7006,25 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ELANS);' +
       'window.scrollTo(0,0);}' +
     'function goToday(){step=10;show();taDraw();window.scrollTo(0,0);}' +
+    'function afterElight(){if(DT){goFirst();}else{goToday();}}' +
+    'function goFirst(){step=11;show();fdHint();' +
+      'var bs=$("sgFirst").getElementsByClassName("sgfd");' +
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===FDANS);' +
+      'window.scrollTo(0,0);}' +
+    'function fdHint(){var el=$("sgfdhint");' +
+      'var t=FIRSTDAT===true?"記録では：当店で初めての脱毛です":(FIRSTDAT===false?"記録では：過去に当店の脱毛歴があります":"");' +
+      'el.textContent=t;el.style.display=t?"":"none";}' +
     'function taPicked(){return TAORDER.filter(function(k){return TA[k]===true;});}' +
     'function taDraw(){var bs=$("sgAfter").getElementsByClassName("sgta");' +
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",TA[bs[i].getAttribute("data-k")]===true);' +
       '$("sgtago").disabled=!taPicked().length;taHint();}' +
     /* 機械の読み（予約メモ・題名・過去の来店）。当てはまる物がある時だけ出す（まるちゃん 2026-10-31）。 */
     'function taGuess(){var o=[];' +
-      'if(FIRSTDAT===true)o.push("当店での脱毛が初めて");' +
       'for(var i=0;i<ACQ.length;i++)o.push(ACNAME[ACQ[i]]);return o;}' +
     'function taHint(){var g=taGuess(),el=$("sgtahint");' +
       'el.textContent=g.length?"予約メモでは："+g.join("／"):"";el.style.display=g.length?"":"none";}' +
     /* 機械の読みと選んだ物の食い違い（まるちゃん 2026-10-31「出す」）。 */
     'function taDiff(){var d=[];' +
-      'if(TA.first_dat===true&&FIRSTDAT===false)d.push("このお客様は、前に当店で脱毛をしています");' +
-      'if(TA.first_dat!==true&&FIRSTDAT===true)d.push("このお客様は、当店で初めての脱毛のようです");' +
       'var ks=["lash","procell_face","procell_scalp"];' +
       'for(var i=0;i<ks.length;i++){var on=ACQ.indexOf(ks[i])>=0;' +
         'if(TA[ks[i]]===true&&!on)d.push("予約メモに"+ACNAME[ks[i]]+"がありません");' +
@@ -7041,7 +7059,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(!REP&&!LN){f.ta=1;f.today_title=(CUST&&CUST.title)||"";' +
         'f.elight=(ELANS==="vio"||ELANS==="both"||ELANS==="other")?1:0;' +
         'f.el_parts=ELANS==="vio"?"VIO":(ELANS==="both"?"VIO,その他":(ELANS==="other"?"その他":""));' +
-        'f.first_dat=TA.first_dat===true?1:0;' +
+        'f.first_dat=FDANS==="yes"?1:0;' +
         'f.after_kinds=["lash","procell_face","procell_scalp"].filter(function(k){return TA[k]===true;}).join(",");}' +
       /* ★ダミーのお客様（開発者の試し）＝タイムツリーにもLINEにも何もしない。完了画面だけ出す（送る時刻は15分後の見込み）。 */
       'if(CUST&&CUST.dummy){var dn=new Date(Date.now()+15*60000),dla=dn.getHours()+":"+("0"+dn.getMinutes()).slice(-2);' +
@@ -7304,11 +7322,19 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var eb=$("sgElight").getElementsByClassName("sgel");' +
         'for(var ei=0;ei<eb.length;ei++){eb[ei].onclick=function(){if(!tapOK())return;' +
           'var k=this.getAttribute("data-k");' +
-          'if(k==="no"||/イーライト/.test((CUST&&CUST.title)||"")){ELANS=k;goToday();return;}' +
+          'if(k==="no"||/イーライト/.test((CUST&&CUST.title)||"")){ELANS=k;afterElight();return;}' +
           '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
             '{cancel:true,noLabel:"NO<br><span style=white-space:nowrap;font-size:.8em>（やってない）</span>",' +
             'yesLabel:"YES<br><span style=white-space:nowrap;font-size:.8em>（やりました）</span>",' +
-            'onNo:function(){ELANS="no";goToday();},onYes:function(){ELANS=k;goToday();}});};}}' +
+            'onNo:function(){ELANS="no";afterElight();},onYes:function(){ELANS=k;afterElight();}});};}' +
+        /* ★11枚目：押すとすぐ次へ。記録の読みと違う方を押した時だけ確かめの小窓（2026-10-31 まるちゃん「出す」）。 */
+        'var fb=$("sgFirst").getElementsByClassName("sgfd");' +
+        'for(var fi=0;fi<fb.length;fi++){fb[fi].onclick=function(){if(!tapOK())return;' +
+          'var k=this.getAttribute("data-k"),m="";' +
+          'if(k==="yes"&&FIRSTDAT===false)m="記録では、このお客様は過去に当店で脱毛をしています。本日が当店はじめての脱毛で、本当によろしいですか？";' +
+          'if(k==="no"&&FIRSTDAT===true)m="記録では、このお客様は本日が当店はじめての脱毛のようです。過去に当店で脱毛をしたことがあるで、本当によろしいですか？";' +
+          'if(!m){FDANS=k;goToday();return;}' +
+          'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){FDANS=k;goToday();}});};}}' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
         'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
