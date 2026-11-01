@@ -6593,16 +6593,24 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sggo" id="sglgo" disabled>この内容で決定</button>' +
     '</div>' : '') +
     sgStepsHtml_() +
-    /* 9枚目＝このお客様は以下に当てはまりますか？（複数選択可）（2026-10-31 まるちゃん決定）。
-       前の「本日イーライトをやりましたか？」（9枚目）と「本日パリジェンヌ／プロセルをやりましたか？」（10枚目）を1枚にまとめた。
-       お客様の選択のすぐ次に、全員に出す。「どれも当てはまらない」はすぐ次の画面へ。それ以外は選んで「上記の内容で確定」で次へ。
-       予約メモから機械が読んだ答えは、当てはまる物がある時だけ小さく出す（印は付けない＝選ぶのはスタッフ）。 */
+    /* 9枚目＝本日イーライトをやりましたか？（2026-11-01 まるちゃん決定＝イーライトだけ別の画面に戻す・ボタンは4つ）。
+       今日の予約メモにイーライトの部位がある日だけ出す（部位の読み＝SG.elightAsk。9〜10月に画像を送った87日は全部拾える）。
+       押すとすぐ次の画面へ。YESの3つで送る画像が決まる（VIOのみ＝VIOの画像／VIO＋髭等＝両方／髭等＝一般の画像）。 */
     '<div class="sg" id="sgElight" style="display:none">' +
+      '<div class="sgwho">本日イーライトをやりましたか？</div>' +
+      '<div class="sgmnote" id="sgelparts"></div>' +
+      '<button type="button" class="sgrbig sgel" data-k="vio"><span class="sgrbi">⚡</span>YES（VIOのみ）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="both"><span class="sgrbi">⚡</span>YES（VIO＋髭等のVIO以外の部位）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="other"><span class="sgrbi">⚡</span>YES（髭等のVIO以外の部位）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="no"><span class="sgrbi">🙅</span>NO（イーライトはやってない）</button>' +
+    '</div>' +
+    /* 10枚目＝このお客様は以下に当てはまりますか？（複数選択可）（2026-10-31 まるちゃん決定・11-01 イーライトを9枚目へ分けた）。
+       全員に出す。「どれも当てはまらない」はすぐ次の画面へ。それ以外は選んで「上記の内容で確定」で次へ。
+       予約メモから機械が読んだ答えは、当てはまる物がある時だけ小さく出す（印は付けない＝選ぶのはスタッフ）。 */
+    '<div class="sg" id="sgAfter" style="display:none">' +
       '<div class="sgwho">このお客様は以下に当てはまりますか？（複数選択可）</div>' +
-      '<div class="sgmnote" id="sgelparts" style="display:none"></div>' +
+      '<div class="sgmnote" id="sgtahint" style="display:none"></div>' +
       '<button type="button" class="sgrbig" id="sgtanone"><span class="sgrbi">🙅</span>どれも当てはまらない</button>' +
-      '<button type="button" class="sgrbig sgta" data-k="el_vio"><span class="sgrbi">⚡</span>イーライトを行った（VIO）</button>' +
-      '<button type="button" class="sgrbig sgta" data-k="el_other"><span class="sgrbi">⚡</span>イーライトを行った（VIO以外の部位）</button>' +
       '<button type="button" class="sgrbig sgta" data-k="first_dat"><span class="sgrbi">🌱</span>当店での脱毛が初めて</button>' +
       '<button type="button" class="sgrbig sgta" data-k="lash"><span class="sgrbi">👁️</span>パリジェンヌを行った</button>' +
       '<button type="button" class="sgrbig sgta" data-k="procell_face"><span class="sgrbi">✨</span>顔プロセルを行った</button>' +
@@ -6685,7 +6693,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★パリジェンヌ・プロセル：ACQ＝予約タイトルの印から機械が読んだ種類（9枚目に小さく出す・食い違いの確かめ）。 */
     'var ACQ=[],ACNAME={lash:"パリジェンヌ",procell_face:"顔プロセル",procell_scalp:"頭皮プロセル"};' +
     /* ★2026-10-31：9枚目で選んだ物（TA）と、機械の読み（ELJ＝イーライトの部位・FIRSTDAT＝当店で初めての脱毛か。null＝まだ分からない）。 */
-    'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["el_vio","el_other","first_dat","lash","procell_face","procell_scalp"];' +
+    'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["first_dat","lash","procell_face","procell_scalp"];' +
+    /* ★2026-11-01：9枚目のイーライトの答え（null＝聞いていない・"vio"／"both"／"other"／"no"）。 */
+    'var ELANS=null;' +
     /* 次回の費用を先に払っていただいたか。null＝まだ選んでいない。 */
     'var PAID=null;' +
     /* 先の日付の答え（{"10/01":"1"}）と、自動で入れた答えの日付。消した『払った／未払い』の行。 */
@@ -6764,6 +6774,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgMemo").style.display=step===7?"":"none";' +
       '$("sgKaeshi").style.display=step===8?"":"none";' +
       '$("sgElight").style.display=step===9?"":"none";' +
+      '$("sgAfter").style.display=step===10?"":"none";' +
       'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
       'if(LN){$("sgLKind").style.display=step===31?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
@@ -6778,7 +6789,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★イーライトの画面（9枚目）はお客様の選択のすぐ次（2026-10-30 まるちゃん）＝月の画面から戻るとそこへ、そこから戻るとお客様の選択へ。 */
       /* ★10枚目（パリジェンヌ・プロセルの質問）：月の画面から戻ると最後の質問へ、質問から戻ると1つ前の質問→イーライト→お客様の選択。 */
       'else if(step===4){goMonth();}else if(step===3&&!REP&&!LN){goToday();}' +
-      'else if(step===3||step===9){goList();}else{goPick();}}' +
+      'else if(step===10&&ELJ&&ELJ.ask){goElight();}' +
+      'else if(step===3||step===9||step===10){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,NOW());' +
@@ -6851,7 +6863,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         /* ★2026-10-31 まるちゃん決定：お客様の選択のすぐ次に、全員「このお客様は以下に当てはまりますか？」（9枚目）。
            イーライトの部位の読みは共通の1本（SG.elightAsk）。画面に小さく出すのと、食い違いの確かめに使うだけ。 */
         'ELJ=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false,parts:[]};' +
-        'goToday();};}}' +
+        'ELANS=null;if(ELJ.ask){goElight();}else{goToday();}};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -6968,28 +6980,30 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'w.textContent="次回用の下書きを作れませんでした。回数とお支払いは手で直してください。";' +
         '$("sgmgo").disabled=false;}},25000);}' +
     /* ── 9枚目：このお客様は以下に当てはまりますか？（複数選択可・全員に出す） ── */
-    'function goToday(){step=9;show();taDraw();window.scrollTo(0,0);}' +
+    'function goElight(){step=9;show();' +
+      '$("sgelparts").textContent="本日の部位："+((ELJ&&ELJ.parts)||[]).join("・");' +
+      'var bs=$("sgElight").getElementsByClassName("sgel");' +
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ELANS);' +
+      'window.scrollTo(0,0);}' +
+    'function goToday(){step=10;show();taDraw();window.scrollTo(0,0);}' +
     'function taPicked(){return TAORDER.filter(function(k){return TA[k]===true;});}' +
-    'function taDraw(){var bs=$("sgElight").getElementsByClassName("sgta");' +
+    'function taDraw(){var bs=$("sgAfter").getElementsByClassName("sgta");' +
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",TA[bs[i].getAttribute("data-k")]===true);' +
       '$("sgtago").disabled=!taPicked().length;taHint();}' +
     /* 機械の読み（予約メモ・題名・過去の来店）。当てはまる物がある時だけ出す（まるちゃん 2026-10-31）。 */
     'function taGuess(){var o=[];' +
-      'if(ELJ&&ELJ.parts&&ELJ.parts.length)o.push("イーライトの部位（"+ELJ.parts.join("・")+"）");' +
       'if(FIRSTDAT===true)o.push("当店での脱毛が初めて");' +
       'for(var i=0;i<ACQ.length;i++)o.push(ACNAME[ACQ[i]]);return o;}' +
-    'function taHint(){var g=taGuess(),el=$("sgelparts");' +
+    'function taHint(){var g=taGuess(),el=$("sgtahint");' +
       'el.textContent=g.length?"予約メモでは："+g.join("／"):"";el.style.display=g.length?"":"none";}' +
     /* 機械の読みと選んだ物の食い違い（まるちゃん 2026-10-31「出す」）。 */
-    'function taDiff(){var d=[],ti=(CUST&&CUST.title)||"",el=TA.el_vio===true||TA.el_other===true;' +
-      'if(el&&!/イーライト/.test(ti))d.push("予約タイトルに「イーライト」の言葉が入っていません");' +
-      'if(!el&&/イーライト/.test(ti))d.push("予約タイトルに「イーライト」とあります");' +
+    'function taDiff(){var d=[];' +
       'if(TA.first_dat===true&&FIRSTDAT===false)d.push("このお客様は、前に当店で脱毛をしています");' +
       'if(TA.first_dat!==true&&FIRSTDAT===true)d.push("このお客様は、当店で初めての脱毛のようです");' +
       'var ks=["lash","procell_face","procell_scalp"];' +
       'for(var i=0;i<ks.length;i++){var on=ACQ.indexOf(ks[i])>=0;' +
-        'if(TA[ks[i]]===true&&!on)d.push("予約タイトルに"+ACNAME[ks[i]]+"の印がありません");' +
-        'if(TA[ks[i]]!==true&&on)d.push("予約タイトルに"+ACNAME[ks[i]]+"の印があります");}' +
+        'if(TA[ks[i]]===true&&!on)d.push("予約メモに"+ACNAME[ks[i]]+"がありません");' +
+        'if(TA[ks[i]]!==true&&on)d.push("予約メモに"+ACNAME[ks[i]]+"があります");}' +
       'return d;}' +
     'function taNext(){var d=taDiff();if(!d.length){goMonth();return;}' +
       'szPopup_("予約メモと違うところがあります。\\n\\n・"+d.join("\\n・")+"\\n\\nこの内容で確定しますか？",' +
@@ -7018,8 +7032,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★2026-10-31：9枚目「このお客様は以下に当てはまりますか？」の答えを全部渡す（ta=1＝この画面で選んだ印）。
          イーライト（VIO／VIO以外）・当店での脱毛が初めて・パリジェンヌ・顔プロセル・頭皮プロセル。 */
       'if(!REP&&!LN){f.ta=1;f.today_title=(CUST&&CUST.title)||"";' +
-        'f.elight=(TA.el_vio===true||TA.el_other===true)?1:0;' +
-        'f.el_parts=[TA.el_vio===true?"VIO":"",TA.el_other===true?"その他":""].filter(function(x){return x;}).join(",");' +
+        'f.elight=(ELANS==="vio"||ELANS==="both"||ELANS==="other")?1:0;' +
+        'f.el_parts=ELANS==="vio"?"VIO":(ELANS==="both"?"VIO,その他":(ELANS==="other"?"その他":""));' +
         'f.first_dat=TA.first_dat===true?1:0;' +
         'f.after_kinds=["lash","procell_face","procell_scalp"].filter(function(k){return TA[k]===true;}).join(",");}' +
       /* ★ダミーのお客様（開発者の試し）＝タイムツリーにもLINEにも何もしない。完了画面だけ出す（送る時刻は15分後の見込み）。 */
@@ -7275,10 +7289,19 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★9枚目：「どれも当てはまらない」はすぐ次へ（機械の読みと食い違う時だけ確かめる）。他は押すと選んだ印が付くだけ。 */
       'if(!REP&&!LN){' +
         '$("sgtanone").onclick=function(){if(!tapOK())return;TA={};taDraw();taNext();};' +
-        'var tb=$("sgElight").getElementsByClassName("sgta");' +
+        'var tb=$("sgAfter").getElementsByClassName("sgta");' +
         'for(var ti=0;ti<tb.length;ti++){tb[ti].onclick=function(){if(!tapOK())return;' +
           'var k=this.getAttribute("data-k");TA[k]=TA[k]!==true;taDraw();};}' +
-        '$("sgtago").onclick=function(){if(!tapOK())return;if(!taPicked().length)return;taNext();};}' +
+        '$("sgtago").onclick=function(){if(!tapOK())return;if(!taPicked().length)return;taNext();};' +
+        /* ★9枚目：イーライトの4つのボタン＝押すとすぐ次へ。題名に「イーライト」が無いのにYESの時は確かめの小窓（2026-10-30 まるちゃん）。 */
+        'var eb=$("sgElight").getElementsByClassName("sgel");' +
+        'for(var ei=0;ei<eb.length;ei++){eb[ei].onclick=function(){if(!tapOK())return;' +
+          'var k=this.getAttribute("data-k");' +
+          'if(k==="no"||/イーライト/.test((CUST&&CUST.title)||"")){ELANS=k;goToday();return;}' +
+          '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
+            '{cancel:true,noLabel:"NO<br><span style=white-space:nowrap;font-size:.8em>（やってない）</span>",' +
+            'yesLabel:"YES<br><span style=white-space:nowrap;font-size:.8em>（やりました）</span>",' +
+            'onNo:function(){ELANS="no";goToday();},onYes:function(){ELANS=k;goToday();}});};}}' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
         'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
