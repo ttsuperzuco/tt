@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>パスワード変更</title>
+<!--
+  ★発票システムのパスワード変更を、パソコンの受け口（127.0.0.1:8765）へつなぐだけのページ（2026-11-01）。
+  ・LINEは http://127.0.0.1:8765/… をリンクにしてくれないので、LINEにはこのページの住所を送り、ここから受け口へ飛ぶ。
+  ・パソコン（受け口が動いている機械）で開いた時だけ意味がある。番号の確かめは受け口が行う。
+-->
+<style>
+html,body{margin:0;background:#2C7A99;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+.c{max-width:420px;margin:15vh auto;background:#fff;border-radius:20px;padding:30px 22px;text-align:center}
+h1{font-size:21px;margin:0 0 12px}p{color:#4b5563;line-height:1.8}
+a.b{display:block;margin-top:18px;background:#16a34a;color:#fff;font-weight:900;font-size:20px;border-radius:16px;padding:16px;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>パスワード変更を始めます</h1>
+  <p>画面が変わらない時は、下のボタンを押してください。</p>
+  <a class="b" id="go" href="#">始める</a>
+</div>
+<script>
+(function(){
+  var m = /[?&]k=([A-Za-z0-9_-]{1,40})/.exec(location.search);
+  var u = 'http://127.0.0.1:8765/pw?k=' + (m ? m[1] : '');
+  document.getElementById('go').href = u;
+  if (m) location.replace(u);
+})();
+</script>
+</body>
+</html>
