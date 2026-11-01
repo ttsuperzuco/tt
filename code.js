@@ -6915,14 +6915,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(!tapOK())return;' +
         'CUST=LIST[parseInt(this.getAttribute("data-id"),10)];' +
         'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];' +
-        'ACQ=(!REP&&!LN&&SG.aftercareAsk)?SG.aftercareAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):[];TA={};FIRSTDAT=null;' +
+        'ACQ=(!REP&&!LN&&SG.aftercareAsk)?SG.aftercareAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):[];TA={};FIRSTDAT=null;FDANS=null;FDASK=null;' +
         'if(REP){RFROM=2;repOpen("today",(typeof codeOf==="function")?(codeOf(CUST.title)||""):"",CUST.id||"");return;}' +
         'if(LN){goLKind();return;}' +
         'askNextMemo();' +
         /* ★2026-10-31 まるちゃん決定：お客様の選択のすぐ次に、全員「このお客様は以下に当てはまりますか？」（9枚目）。
            イーライトの部位の読みは共通の1本（SG.elightAsk）。画面に小さく出すのと、食い違いの確かめに使うだけ。 */
         'ELJ=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false,parts:[]};' +
-        'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;FDANS=null;FDASK=null;' +
+        'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;' +
         'if(CUST&&CUST.dummy&&CUST.fdask!==undefined){FDASK=CUST.fdask;FIRSTDAT=CUST.firstdat;}' +
         'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT)SEQ.push(11);' +
         'if(ACQ.indexOf("lash")>=0)SEQ.push(12);if(ACQ.indexOf("procell_face")>=0)SEQ.push(13);if(ACQ.indexOf("procell_scalp")>=0)SEQ.push(14);' +
@@ -6994,7 +6994,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(MEMOCACHE[key]){NEXTMEMO=MEMOCACHE[key].memo;NEXTCHG=MEMOCACHE[key].changed;' +
         'PAYLINE=MEMOCACHE[key].payline||"";ASK=!!MEMOCACHE[key].ask;' +
         'AHEAD=MEMOCACHE[key].ahead||{};PAYREMOVED=MEMOCACHE[key].removed||[];' +
-        'FINALS=MEMOCACHE[key].finals||[];return;}' +
+        'FINALS=MEMOCACHE[key].finals||[];FDASK=MEMOCACHE[key].fdask;FIRSTDAT=MEMOCACHE[key].firstdat;return;}' +
       'var mine=key;' +
       'var cd=(typeof codeOf==="function"&&CUST)?(codeOf(CUST.title)||""):"";' +
       'jsonp({action:"submit",key:KEY,op:"sejutsugo_next_memo",who:idn.who,role:idn.role,' +
@@ -7012,10 +7012,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(CUST&&CUST.dummy&&CUST.fdask!==undefined)return;' +
         'if(d&&d.ok&&(d.ask_first===true||d.ask_first===false))FDASK=d.ask_first;' +
         'if(d&&d.ok&&(d.first_dat===true||d.first_dat===false)){FIRSTDAT=d.first_dat;if(step===11)goFirst();}' +
+        /* ★2026-11-01 まるちゃん「なんでりれきがあるのにこのがめんでてるの？」＝記録の答えが届く前に画面を出していた。
+           届いて「聞かなくてよい」と分かったら、まだ押していなければ次の画面へ進める。 */
+        'if(step===11&&FDASK===false&&!FDANS)nextOf(11);' +
         'if(!d||!d.ok||!d.memo)return;' +
         'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];PAYLINE=d.payline||"";ASK=!!d.ask;' +
         'AHEAD=d.ahead||{};PAYREMOVED=d.removed||[];FINALS=d.finals||[];' +
-        'MEMOCACHE[mine]={memo:d.memo,changed:NEXTCHG,payline:PAYLINE,ask:ASK,ahead:AHEAD,removed:PAYREMOVED,finals:FINALS};' +
+        'MEMOCACHE[mine]={memo:d.memo,changed:NEXTCHG,payline:PAYLINE,ask:ASK,ahead:AHEAD,removed:PAYREMOVED,finals:FINALS,fdask:FDASK,firstdat:FIRSTDAT};' +
         'if(step===6)drawTime();' +
         /* まだ画面に出ていない／人がまだ触っていなければ、出来上がった物に差し替える。 */
         'if(step===7&&!MEMOTOUCHED){$("sgmtext").value=NEXTMEMO;growMemo();}' +
