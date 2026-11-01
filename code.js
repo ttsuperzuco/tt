@@ -6608,10 +6608,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        イーライトの画面の次に出す。押すとすぐ次へ。YES＝脱毛の長いお礼文（次回の日時入り）を送る。
        記録（前の来店）から機械が読んだ答えは小さく出す。違う方を押した時は確かめの小窓。 */
     '<div class="sg" id="sgFirst" style="display:none">' +
-      '<div class="sgwho">本日が当店はじめての脱毛ですか？</div>' +
+      '<div class="sgwho">本日が当店はじめての脱毛の施術ですか？</div>' +
       '<div class="sgmnote" id="sgfdhint" style="display:none"></div>' +
-      '<button type="button" class="sgrbig sgfd" data-k="yes"><span class="sgrbi">🌱</span>YES（初回の脱毛です）</button>' +
-      '<button type="button" class="sgrbig sgfd" data-k="no"><span class="sgrbi">🔁</span>NO（過去に当店脱毛歴があります）</button>' +
+      '<button type="button" class="sgrbig sgfd" data-k="yes"><span class="sgrbi">🌱</span>YES（初回の脱毛施術を行った）</button>' +
+      '<button type="button" class="sgrbig sgfd" data-k="no"><span class="sgrbi">🔁</span>NO（過去に当店脱毛歴がある）</button>' +
+      /* ★2026-11-01 まるちゃん：カウンセリングだけの日＝長いお礼文は送らない（☆次回の短い文）。 */
+      '<button type="button" class="sgrbig sgfd" data-k="counsel"><span class="sgrbi">💬</span>NO（今日はカウンセリングだけで施術なし）</button>' +
     '</div>' +
     /* 12枚目＝本日パリジェンヌをやりましたか？（2026-11-01 まるちゃん決定）。今日の予約メモにパリジェンヌがある日だけ
        （SG.aftercareAsk＝⭐️の行。9〜10月に注意事項を送った11日は全部拾える）、はじめての脱毛の次に出す。押すとすぐ次へ。
@@ -7375,8 +7377,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var fb=$("sgFirst").getElementsByClassName("sgfd");' +
         'for(var fi=0;fi<fb.length;fi++){fb[fi].onclick=function(){if(!tapOK())return;' +
           'var k=this.getAttribute("data-k"),m="";' +
-          'if(k==="yes"&&FIRSTDAT===false)m="記録では、このお客様は過去に当店で脱毛をしています。本日が当店はじめての脱毛で、本当によろしいですか？";' +
-          'if(k==="no"&&FIRSTDAT===true)m="記録では、このお客様は本日が当店はじめての脱毛のようです。過去に当店で脱毛をしたことがあるで、本当によろしいですか？";' +
+          'if(k==="yes"&&FIRSTDAT===false)m="記録では、このお客様は過去に当店で脱毛をしています。本日が当店はじめての脱毛の施術で、本当によろしいですか？";' +
+          'if(k==="no"&&FIRSTDAT===true)m="記録では、このお客様は本日が当店はじめての脱毛のようです。過去に当店の脱毛歴があるで、本当によろしいですか？";' +
           'if(!m){FDANS=k;nextOf(11);return;}' +
           'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){FDANS=k;nextOf(11);}});};}' +
         /* ★12枚目：パリジェンヌ＝押すとすぐ次へ。 */
