@@ -6577,25 +6577,6 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<div class="expad" id="sgrpad">' + EXPADHTML_ + '</div>' +
       '<button type="button" class="exgo" id="sgrgo">🔁 リピート入力へ →</button>' +
     '</div>' : '') +
-    /* ★施術後のLINE送信だけ：送る物の選択（31枚目）。 */
-    (LN ?
-    '<div class="sg" id="sgLKind" style="display:none">' +
-      /* ★2026-10-31 まるちゃん「本日の施術内容という文字に変更」 */
-      /* ★同日まるちゃん「本日の施術内容を選択してください（複数選択可）」に変更 */
-      '<div class="sgwho">本日の施術内容を選択してください（複数選択可）</div>' +
-      '<div class="sgmnote" id="sglcust"></div>' +
-      '<button type="button" class="sgrbig" data-k="new_nobook"><span class="sgrbi">🌱</span>新規脱毛（次回予約なし）</button>' +
-      /* ★2026-11-02 まるちゃん「イーライトもいれるべき」＝施術後の予約の「本日イーライトをやりましたか？」と同じ3つ（1つだけ選べる）。 */
-      '<button type="button" class="sgrbig sglel" data-k="elight_vio"><span class="sgrbi">⚡</span>イーライト（VIOのみ）</button>' +
-      '<button type="button" class="sgrbig sglel" data-k="elight_both"><span class="sgrbi">⚡</span>イーライト（VIO＋髭等のVIO以外の部位）</button>' +
-      '<button type="button" class="sgrbig sglel" data-k="elight_other"><span class="sgrbi">⚡</span>イーライト（髭等のVIO以外の部位）</button>' +
-      '<button type="button" class="sgrbig" data-k="lash"><span class="sgrbi">👁️</span>パリジェンヌ</button>' +
-      '<button type="button" class="sgrbig" data-k="procell_face"><span class="sgrbi">✨</span>プロセル顔</button>' +
-      '<button type="button" class="sgrbig" data-k="procell_scalp"><span class="sgrbi">💆</span>プロセル頭皮</button>' +
-      /* ★2026-10-31 まるちゃん「二つ同時にやったひともいるかもだから、複数選択可能にして」＝押すと選んだ印が付くだけ。
-         送るのはこのボタン（選んだ物を1通ずつ分けて送る）。 */
-      '<button type="button" class="sggo" id="sglgo" disabled>この内容で決定</button>' +
-    '</div>' : '') +
     sgStepsHtml_() +
     /* 9枚目＝本日イーライトをやりましたか？（2026-11-01 まるちゃん決定＝イーライトだけ別の画面に戻す・ボタンは4つ）。
        今日の予約メモにイーライトの部位がある日だけ出す（部位の読み＝SG.elightAsk。9〜10月に画像を送った87日は全部拾える）。
@@ -6823,14 +6804,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgPF").style.display=step===13?"":"none";' +
       '$("sgPH").style.display=step===14?"":"none";' +
       'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
-      'if(LN){$("sgLKind").style.display=step===31?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
       'var hd=$("sghead");if(hd)hd.style.display=step===1?"":"none";}' +
     'function goPick(){step=1;show();drawPick();window.scrollTo(0,0);}' +
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     /* ★7枚目から戻る時は、せっかく決めた時間と部屋をそのまま残す（goTimeだと選び直しになる）。 */
-    'function back(){if(REP&&repBack())return;if(LN&&step===31){goList();return;}if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
+    'function back(){if(REP&&repBack())return;if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
       'else if(step===7){step=6;show();drawTime();window.scrollTo(0,0);}' +
       'else if(step===6){goFree();}else if(step===5){goDay();}' +
       /* ★イーライトの画面（9枚目）はお客様の選択のすぐ次（2026-10-30 まるちゃん）＝月の画面から戻るとそこへ、そこから戻るとお客様の選択へ。 */
@@ -6869,7 +6849,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
          開発者の画面だけ、一覧の最後にダミーのお客様を3人（言葉ちがい）出す。予定表には何も書かない。
          送る時は事務所PCが「ダミー」と見分けて、練習（まるちゃん本人のLINE）だけに送る。 */
       'if(LN&&DEVMODE){var dm=[["ja","M","RYU（日本語・男）"],["zh","F","RYU（中国語・女）"],["en","M","RYU（英語・男）"]];' +
-        'for(var di=0;di<dm.length;di++){list.push({mark:pick===SG.ALL?"🍅":pick,start:0,end:0,title:"",note:"",room:"",' +
+        'for(var di=0;di<dm.length;di++){list.push({mark:pick===SG.ALL?"🍅":pick,start:0,end:0,room:"",' +
+          /* ★2026-11-02：質問の画面が全部出るように、イーライト・脱毛・パリジェンヌ・プロセル顔／頭皮の予約メモを持たせる。 */
+          'title:"🇫🇷👑PFPH預約M999新規イーライト",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIO 8回コース 1回目あり\\n◉髭全部 あり\\n◉🇫🇷パリジェンヌリペア あり\\n◉👑プロ肌キャPro あり\\n◉👑プロ頭キャ あり",' +
+          'dummy:true,fdask:true,firstdat:true,' +
           'st:"ダミー",et:"",id:"DUMMY:"+dm[di][0]+":"+dm[di][1],dname:dm[di][2]});}}' +
       'LIST=list;' +
       '$("sglisthead").textContent="お客様の選択";' +
@@ -6897,20 +6880,21 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(!tapOK())return;' +
         'CUST=LIST[parseInt(this.getAttribute("data-id"),10)];' +
         'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];' +
-        'ACQ=(!REP&&!LN&&SG.aftercareAsk)?SG.aftercareAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):[];TA={};FIRSTDAT=null;FDANS=null;FDASK=null;' +
+        'ACQ=(!REP&&SG.aftercareAsk)?SG.aftercareAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):[];TA={};FIRSTDAT=null;FDANS=null;FDASK=null;' +
         'if(REP){RFROM=2;repOpen("today",(typeof codeOf==="function")?(codeOf(CUST.title)||""):"",CUST.id||"");return;}' +
-        'if(LN){goLKind();return;}' +
-        'askNextMemo();' +
+        /* ★2026-11-02 まるちゃん「施術後の予約とおなじロジックと画面遷移でいけるだろ」＝施術後のLINE送信も同じ質問の画面を
+           同じ順に出す（予約メモ・記録の読みも同じ）。次回の予約を作らないので、予約メモの問い合わせはしない。 */
+        'if(!LN)askNextMemo();' +
         /* ★2026-10-31 まるちゃん決定：お客様の選択のすぐ次に、全員「このお客様は以下に当てはまりますか？」（9枚目）。
            イーライトの部位の読みは共通の1本（SG.elightAsk）。画面に小さく出すのと、食い違いの確かめに使うだけ。 */
         'ELJ=(!REP&&SG.elightAsk)?SG.elightAsk((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):{ask:false,parts:[]};' +
-        'DT=!REP&&!LN&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;' +
+        'DT=!REP&&SG.datsumoToday?SG.datsumoToday((CUST&&CUST.title)||"",(CUST&&CUST.note)||""):false;' +
         'if(CUST&&CUST.dummy&&CUST.fdask!==undefined){FDASK=CUST.fdask;FIRSTDAT=CUST.firstdat;}' +
         /* ★2026-11-01 まるちゃん「すぴーどがいのち」：記録の答えは今日の予定表と一緒に先に届いている＝選んだ瞬間に決まる。 */
         'else if(FDASK==null&&CUST&&FDMAP[CUST.id]){FIRSTDAT=FDMAP[CUST.id][0];FDASK=FDMAP[CUST.id][1];}' +
-        'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT)SEQ.push(11);' +
+        'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT&&!(LN&&lnHasNext()))SEQ.push(11);' +
         'if(ACQ.indexOf("lash")>=0)SEQ.push(12);if(ACQ.indexOf("procell_face")>=0)SEQ.push(13);if(ACQ.indexOf("procell_scalp")>=0)SEQ.push(14);' +
-        'if(seqv().length){goStep(seqv()[0]);}else{goMonth();}};}}' +
+        'if(seqv().length){goStep(seqv()[0]);}else if(LN){lnFinish();}else{goMonth();}};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
        ふつうの長さ（実データの85%）はいちばん大きい34pxのまま。 */
     'function fitNames(){' +
@@ -7066,7 +7050,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'o.push("→ 送る文："+(FDANS==="yes"?"脱毛の長いお礼文（次回の日時入り）":"☆次回の短い文")+(adds.length?"＋"+adds.join("・")+"の注意事項":""));' +
       'return o.join("<br>");}' +
     'function seqv(){return SEQ.filter(seqShown);}' +
-    'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}goMonth();}' +
+    'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}if(LN){lnFinish();return;}goMonth();}' +
     'function prevOf(n){var i=SEQ.indexOf(n);for(var j=i-1;j>=0;j--){if(seqShown(SEQ[j])){goStep(SEQ[j]);return true;}}return false;}' +
     'function afterElight(){nextOf(9);}' +
     'function goLash(){step=12;show();' +
@@ -7169,33 +7153,21 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var RLOADED=false;' +
     /* ── 施術後のLINE送信（31枚目）：送る物を選ぶ→確かめる→事務所PCが文を作って「いま送る」で積む ── */
     'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",elight_vio:"イーライト（VIOのみ）",elight_both:"イーライト（VIO＋髭等）",elight_other:"イーライト（髭等）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮"},lsending=false;' +
-    'function goLKind(){' +
-      'var cd=(typeof codeOf==="function")?(codeOf(CUST.title)||""):"";' +
+    /* 今日より先に同じ番号の予約がある＝次回の予約がもう入っている（「はじめての脱毛」の質問を出さない＝予約なしの文は送らない）。 */
+    'function lnHasNext(){var c=(typeof codeOf==="function")?(codeOf((CUST&&CUST.title)||"")||""):"";return !!(c&&NXC[c]);}' +
+    /* 質問の答えから送る物を決める（施術後の予約の☆次回の文に足す物と同じ決め方）。 */
+    'function lnKinds(){var o=[];' +
+      'if(FDANS==="yes"&&seqv().indexOf(11)>=0)o.push("new_nobook");' +
+      'if(ELANS==="vio"||ELANS==="both"||ELANS==="other")o.push("elight_"+ELANS);' +
+      'if(LASHANS==="yes"&&SEQ.indexOf(12)>=0)o.push("lash");' +
+      'if(PFANS==="yes"&&SEQ.indexOf(13)>=0)o.push("procell_face");' +
+      'if(PHANS==="yes"&&SEQ.indexOf(14)>=0)o.push("procell_scalp");return o;}' +
+    /* 最後の質問のあと＝送る物を確かめて送る。送る物が無ければそう伝えてお客様の選択へ戻る。 */
+    'function lnFinish(){var ks=lnKinds();' +
       'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
-      '$("sglcust").textContent=(nm||"お名前なし")+(cd?"（"+cd+"）":"")+"　"+(CUST.st||"")+"〜"+(CUST.et||"");' +
-      /* お客様を選び直したら、選んだ印は全部外す */
-      /* ★2026-11-02 まるちゃん「予約メモからわかって、施術後予約とおなじロジックでいける」＝予約メモ・記録に合う物に最初から印を付ける
-         （判断は共通の1本＝SG.lineKindsPreset。印は見せるだけで、送る物はスタッフが押して決める）。 */
-      'var fd=FDMAP[CUST.id]?FDMAP[CUST.id][0]:null,cd0=(typeof codeOf==="function")?(codeOf(CUST.title||"")||""):"";' +
-      'var pre=(CUST.title||CUST.note)?SG.lineKindsPreset(CUST.title||"",CUST.note||"",fd,!!(cd0&&NXC[cd0])):[];' +
-      'var bs=$("sgLKind").getElementsByClassName("sgrbig");for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",pre.indexOf(bs[i].getAttribute("data-k"))>=0);lnUpd();' +
-      'step=31;show();window.scrollTo(0,0);}' +
-    /* 選んだ種類（画面の並び順＝送る順）。 */
-    'function lnPicked(){var o=[],bs=$("sgLKind").getElementsByClassName("sgrbig");' +
-      'for(var i=0;i<bs.length;i++)if(bs[i].classList.contains("sel"))o.push(bs[i].getAttribute("data-k"));return o;}' +
-    /* ★同日まるちゃん「この内容で決定に変更」 */
-    'function lnUpd(){var n=lnPicked().length;$("sglgo").disabled=!n;$("sglgo").textContent="この内容で決定";}' +
-    'function lnBind(){var bs=$("sgLKind").getElementsByClassName("sgrbig");' +
-      'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){if(!tapOK()||lsending)return;' +
-        'this.classList.toggle("sel");' +
-        /* イーライトの3つは1つだけ（押した物を選んだら、ほかの2つは外す） */
-        'if(this.classList.contains("sglel")&&this.classList.contains("sel")){var es=$("sgLKind").getElementsByClassName("sglel");' +
-          'for(var j=0;j<es.length;j++)if(es[j]!==this)es[j].classList.remove("sel");}' +
-        'lnUpd();};}' +
-      '$("sglgo").onclick=function(){if(!tapOK()||lsending)return;var ks=lnPicked();if(!ks.length)return;' +
-        'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
-        'var names=ks.map(function(k){return "「"+LNNAME[k]+"」";}).join("");' +
-        'szPopup_((nm||"このお客様")+"へ"+names+"の施術後フォローLINE文を送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(ks);}});};}' +
+      'if(!ks.length){szPopup_((nm||"このお客様")+"に送る施術後のLINEはありません。",{icon:"",onYes:function(){goList();}});return;}' +
+      'var names=ks.map(function(k){return "「"+LNNAME[k]+"」";}).join("");' +
+      'szPopup_((nm||"このお客様")+"へ"+names+"の施術後フォローLINE文を送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(ks);}});}' +
     'function lnFail(m){lsending=false;szOvHide_();szPopup_(m||"エラーが発生しました。りゅうさんに連絡しました。");}' +
     'function lnSend(k){if(lsending)return;lsending=true;' +
       /* ★2026-10-31 まるちゃん「タイムツリーへの書き込みになってる」＝予定表には書かないので、説明をLINE向けにする。 */
@@ -7387,7 +7359,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '(function(){sgBindSteps();' +
       '$("sgtgo").onclick=function(){if(!tapOK())return;askNextMemo();goMemo();};' +
       /* ★9枚目：「どれも当てはまらない」はすぐ次へ（機械の読みと食い違う時だけ確かめる）。他は押すと選んだ印が付くだけ。 */
-      'if(!REP&&!LN){' +
+      'if(!REP){' +
         '$("sgtanone").onclick=function(){if(!tapOK())return;TA={};taDraw();taNext();};' +
         'var tb=$("sgAfter").getElementsByClassName("sgta");' +
         'for(var ti=0;ti<tb.length;ti++){tb[ti].onclick=function(){if(!tapOK())return;' +
@@ -7429,7 +7401,6 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'showTestNote();' +
     /* ★2026-10-07 まるちゃん「番号検索の場合は今日の予約は要らない。必要な所で読むように」＝
        リピート入力は1枚目（施術者）を今日の予約を読まずにすぐ出し、【今日の予約のお客様】を押した時だけ読む。 */
-    'if(LN)lnBind();' +
     'if(REP){repStart();}else{need(build);}' +
     '})();<' + '/script>';
   /* ★大きい選ぶボタン(.sgrbig)は、リピート入力と施術後のLINE送信の両方で使う（数字ボタンはリピート入力だけ）。 */
