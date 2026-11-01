@@ -7011,7 +7011,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var d=null;try{d=JSON.parse(r.result||"{}");}catch(e){return;}' +
         'if(CUST&&CUST.dummy&&CUST.fdask!==undefined)return;' +
         'if(d&&d.ok&&(d.ask_first===true||d.ask_first===false))FDASK=d.ask_first;' +
-        'if(d&&d.ok&&(d.first_dat===true||d.first_dat===false)){FIRSTDAT=d.first_dat;if(step===11)fdHint();}' +
+        'if(d&&d.ok&&(d.first_dat===true||d.first_dat===false)){FIRSTDAT=d.first_dat;if(step===11)goFirst();}' +
         'if(!d||!d.ok||!d.memo)return;' +
         'NEXTMEMO=d.memo;NEXTCHG=d.changed||[];PAYLINE=d.payline||"";ASK=!!d.ask;' +
         'AHEAD=d.ahead||{};PAYREMOVED=d.removed||[];FINALS=d.finals||[];' +
@@ -7055,11 +7055,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(top)ord=[top].concat(ord.filter(function(k){return k!==top;}));' +
       'for(var j=0;j<ord.length;j++){var b=box.querySelector(".sgel[data-k=\\""+ord[j]+"\\"]");if(b)box.appendChild(b);}' +
       'var bs=$("sgElight").getElementsByClassName("sgel");' +
-      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ELANS);' +
+      /* ★2026-11-01 まるちゃん「デフォルトで選択されてるように」＝まだ押していない時は、予約メモに合うYESに選んだ印を付けておく。
+         選んだ印は見せるだけ。押すまで次へは進まない。 */
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===(ELANS||top));' +
       'window.scrollTo(0,0);}' +
     'function goToday(){step=10;show();taDraw();window.scrollTo(0,0);}' +
     'function goStep(n){if(n===9)goElight();else if(n===11)goFirst();else if(n===12)goLash();' +
-      'else if(n===13)goYN(13,"sgPF","sgpf",PFANS);else if(n===14)goYN(14,"sgPH","sgph",PHANS);else goToday();}' +
+      'else if(n===13)goYN(13,"sgPF","sgpf",PFANS||"yes");else if(n===14)goYN(14,"sgPH","sgph",PHANS||"yes");else goToday();}' +
     'function goYN(n,id,cls,ans){step=n;show();var bs=$(id).getElementsByClassName(cls);' +
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ans);window.scrollTo(0,0);}' +
     /* ★2026-11-01 まるちゃん「かこのきろくみるっていったじゃん？」＝はじめての脱毛の画面(11)は、記録で聞く日だけ出す
@@ -7084,11 +7086,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function afterElight(){nextOf(9);}' +
     'function goLash(){step=12;show();' +
       'var bs=$("sgLash").getElementsByClassName("sglh");' +
-      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===LASHANS);' +
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===(LASHANS||"yes"));' +
       'window.scrollTo(0,0);}' +
     'function goFirst(){step=11;show();fdHint();' +
       'var bs=$("sgFirst").getElementsByClassName("sgfd");' +
-      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===FDANS);' +
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===(FDANS||(FIRSTDAT===true?"yes":(FIRSTDAT===false?"no":""))));' +
       'window.scrollTo(0,0);}' +
     'function fdHint(){var el=$("sgfdhint");' +
       'var t=FIRSTDAT===true?"記録では：当店で初めての脱毛です":(FIRSTDAT===false?"記録では：過去に当店の脱毛歴があります":"");' +
