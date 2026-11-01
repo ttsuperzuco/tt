@@ -427,7 +427,7 @@
         if (/なし/.test(t)) continue;
         if (/パリ|🇫🇷|ラッシュ/.test(t)) lash = true;
         if (/プロセル|👑|プロ肌|プロ頭|キャプロ|プロキャ|キャPro/.test(t)) {
-          var f = /肌|顔|フェイシャル|フェイス/.test(t), h = /頭|発毛|育毛/.test(t);
+          var f = /肌|顔|フェイシャル|フェイス/.test(t), h = /頭|髪|発毛|育毛/.test(t);
           if (f) face = true;
           if (h) scalp = true;
           if (!f && !h) { face = true; scalp = true; }
