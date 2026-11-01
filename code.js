@@ -6982,6 +6982,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ── 9枚目：このお客様は以下に当てはまりますか？（複数選択可・全員に出す） ── */
     'function goElight(){step=9;show();' +
       '$("sgelparts").textContent="本日の部位："+((ELJ&&ELJ.parts)||[]).join("・");' +
+      /* ★2026-11-01 まるちゃん「予約メモをよんで正確なのを一番上にもってきて」＝今日の部位に合うYESを一番上に。
+         VIOだけ→VIOのみ／VIO＋ほか→VIO＋髭等／ほかだけ→髭等。部位の書き無しのプランだけの時は決められないので元の並び。 */
+      'var ps=((ELJ&&ELJ.parts)||[]).filter(function(p){return p.indexOf("プラン")<0;}),' +
+        'hv=ps.indexOf("VIO")>=0,ho=ps.some(function(p){return p!=="VIO";}),' +
+        'top=hv&&ho?"both":(hv?"vio":(ho?"other":"")),ord=["vio","both","other","no"],box=$("sgElight");' +
+      'if(top)ord=[top].concat(ord.filter(function(k){return k!==top;}));' +
+      'for(var j=0;j<ord.length;j++){var b=box.querySelector(".sgel[data-k=\\""+ord[j]+"\\"]");if(b)box.appendChild(b);}' +
       'var bs=$("sgElight").getElementsByClassName("sgel");' +
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ELANS);' +
       'window.scrollTo(0,0);}' +
