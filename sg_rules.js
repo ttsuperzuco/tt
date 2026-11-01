@@ -477,6 +477,29 @@
     return !/🇫🇷|👑|福|🍯|🍉/.test(head);
   };
 
+  /* ── ★イーライトの部位から、どのYESか（2026-11-01 施術後の予約の9枚目／2026-11-02 施術後のLINE送信）──
+     VIOだけ→"vio"／VIO＋ほか→"both"／ほかだけ→"other"。部位の書き無しのプランだけの時は決められないので ""。 */
+  SG.elightTop = function (parts) {
+    var ps = (parts || []).filter(function (p) { return p.indexOf('プラン') < 0; });
+    var hv = ps.indexOf('VIO') >= 0, ho = ps.some(function (p) { return p !== 'VIO'; });
+    return hv && ho ? 'both' : (hv ? 'vio' : (ho ? 'other' : ''));
+  };
+
+  /* ── ★施術後のLINE送信で、最初から選んだ印を付ける物（2026-11-02 まるちゃん「予約メモからわかって、施術後予約と同じロジックでいける」）──
+     施術後の予約と同じ読み方をそのまま使う：
+       ・イーライト＝SG.elightAsk の部位 → SG.elightTop（決められない時は付けない）
+       ・パリジェンヌ／プロセル顔／頭皮＝SG.aftercareAsk
+       ・新規脱毛（次回予約なし）＝今日が脱毛の日（SG.datsumoToday）で、記録で当店はじめての脱毛（firstDat===true。
+         記録が分からない時は題名の「新規」）、しかも次回の予約がまだ無い（hasNext＝今日より先の予約がある）。
+     印は見せるだけ。送る物はスタッフが押して決める。返す物＝選ぶボタンの並び（"new_nobook"・"elight_vio" 等）。 */
+  SG.lineKindsPreset = function (title, note, firstDat, hasNext) {
+    var out = [], tt = String(title || '');
+    if (!hasNext && SG.datsumoToday(tt, note) && (firstDat === true || (firstDat == null && /新規/.test(tt)))) out.push('new_nobook');
+    var el = SG.elightAsk(tt, note), top = el.ask ? SG.elightTop(el.parts) : '';
+    if (top) out.push('elight_' + top);
+    return out.concat(SG.aftercareAsk(tt, note));
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = SG;
   root.SG = SG;
 })(typeof window !== 'undefined' ? window : this);
