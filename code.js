@@ -6867,9 +6867,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★施術後の予約の試し（2026-10-31 まるちゃん「今日テストするためのダミーを作って。実際のタイムツリーには書かずに」）：
          開発者の画面だけ、一覧の最後にダミーのお客様を2人出す。登録を押してもタイムツリーには書かない（sendMemoで止める）。 */
       'if(!LN&&!REP&&DEVMODE){var sm=pick===SG.ALL?"🍅":pick;' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg1",dname:"RYU（既存・イーライト＋パリジェンヌ＋プロセル顔）",dummy:true,' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg1",dname:"RYU（既存・イーライト＋パリジェンヌ＋プロセル顔）",dummy:true,fdask:false,firstdat:false,' +
           'title:sm+"🇫🇷👑PF預約M999イーライト",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIO 8回コース 3回目あり\\n◉🇫🇷パリジェンヌリペア あり\\n◉👑プロセル肌質改善 2回目あり\\n\\n💰お支払い状況\\n◉VIO：8回おまとめ購入済み\\n\\n☑️終了\\n◉VIOトライアル"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg2",dname:"RYU（新規・脱毛）",dummy:true,' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg2",dname:"RYU（新規・脱毛）",dummy:true,fdask:true,firstdat:true,' +
           'title:sm+"預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n\\n💰お支払い状況\\n◉VIOトライアル：支払い済み"});' +
         'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg3",dname:"RYU（既存・髭＋脇・脱毛歴あり）",dummy:true,fdask:false,firstdat:false,' +
           'title:sm+"預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉髭全部 8回コース 5回目あり\\n◉脇 5回目あり\\n\\n💰お支払い状況"});' +
