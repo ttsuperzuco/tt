@@ -6864,31 +6864,6 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(LN&&DEVMODE){var dm=[["ja","M","RYU（日本語・男）"],["zh","F","RYU（中国語・女）"],["en","M","RYU（英語・男）"]];' +
         'for(var di=0;di<dm.length;di++){list.push({mark:pick===SG.ALL?"🍅":pick,start:0,end:0,title:"",note:"",room:"",' +
           'st:"ダミー",et:"",id:"DUMMY:"+dm[di][0]+":"+dm[di][1],dname:dm[di][2]});}}' +
-      /* ★施術後の予約の試し（2026-10-31 まるちゃん「今日テストするためのダミーを作って。実際のタイムツリーには書かずに」）：
-         開発者の画面だけ、一覧の最後にダミーのお客様を2人出す。登録を押してもタイムツリーには書かない（sendMemoで止める）。 */
-      'if(!LN&&!REP&&DEVMODE){var sm=pick===SG.ALL?"🍅":pick;' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg1",dname:"RYU（既存・イーライト＋パリジェンヌ＋プロセル顔）",dummy:true,fdask:false,firstdat:false,' +
-          'title:sm+"🇫🇷👑PF預約M999イーライト",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIO 8回コース 3回目あり\\n◉🇫🇷パリジェンヌリペア あり\\n◉👑プロセル肌質改善 2回目あり\\n\\n💰お支払い状況\\n◉VIO：8回おまとめ購入済み\\n\\n☑️終了\\n◉VIOトライアル"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg2",dname:"RYU（新規・脱毛）",dummy:true,fdask:true,firstdat:true,' +
-          'title:sm+"預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n\\n💰お支払い状況\\n◉VIOトライアル：支払い済み"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg3",dname:"RYU（既存・髭＋脇・脱毛歴あり）",dummy:true,fdask:false,firstdat:false,' +
-          'title:sm+"預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉髭全部 8回コース 5回目あり\\n◉脇 5回目あり\\n\\n💰お支払い状況"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg4",dname:"RYU（既存・VIO＋髭・脱毛歴あり）",dummy:true,fdask:false,firstdat:false,' +
-          'title:sm+"預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIO 8回コース 6回目あり\\n◉髭BD 3回目あり\\n\\n💰お支払い状況"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg5",dname:"RYU（既存・脚だけ・脱毛歴あり）",dummy:true,fdask:false,firstdat:false,' +
-          'title:sm+"預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉脚全部 4回目あり\\n\\n💰お支払い状況"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg6",dname:"RYU（既存・初めての脱毛＋顔プロセル）",dummy:true,fdask:true,firstdat:true,' +
-          'title:sm+"👑PF預約M999脱毛新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n◉👑プロセル肌質改善 3回目あり\\n\\n💰お支払い状況"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg7",dname:"RYU（既存・頭皮プロセルだけ）",dummy:true,fdask:false,firstdat:false,' +
-          'title:sm+"👑PH預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉👑プロセル頭皮 2回目あり\\n\\n💰お支払い状況"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg8",dname:"RYU（既存・顔＋頭皮プロセル）",dummy:true,fdask:false,firstdat:false,' +
-          'title:sm+"👑PFPH預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉👑プロ肌キャPro 2回目あり\\n◉👑プロ頭キャ 2回目あり\\n\\n💰お支払い状況"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg9",dname:"RYU（既存・ハイドラだけ＝質問なし）",dummy:true,fdask:false,firstdat:false,' +
-          'title:sm+"福:預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉ハイドラ 3回目あり\\n\\n💰お支払い状況"});' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg10",dname:"RYU（新規・カウンセリングだけ）",dummy:true,fdask:true,firstdat:true,' +
-          'title:sm+"預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉脱毛カウンセリング（脇・VIO）\\n\\n💰お支払い状況"});' +
-        /* ★2026-11-01 まるちゃん「テストしたいからダミーデータつくって」＝画面の出方が全部試せるように足した。 */
-        '}' +
       'LIST=list;' +
       '$("sglisthead").textContent="お客様の選択";' +
       'if(!list.length){$("sglist").innerHTML="";' +
