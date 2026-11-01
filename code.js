@@ -6585,6 +6585,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<div class="sgwho">本日の施術内容を選択してください（複数選択可）</div>' +
       '<div class="sgmnote" id="sglcust"></div>' +
       '<button type="button" class="sgrbig" data-k="new_nobook"><span class="sgrbi">🌱</span>新規脱毛（次回予約なし）</button>' +
+      /* ★2026-11-02 まるちゃん「イーライトもいれるべき」＝施術後の予約の「本日イーライトをやりましたか？」と同じ3つ（1つだけ選べる）。 */
+      '<button type="button" class="sgrbig sglel" data-k="elight_vio"><span class="sgrbi">⚡</span>イーライト（VIOのみ）</button>' +
+      '<button type="button" class="sgrbig sglel" data-k="elight_both"><span class="sgrbi">⚡</span>イーライト（VIO＋髭等のVIO以外の部位）</button>' +
+      '<button type="button" class="sgrbig sglel" data-k="elight_other"><span class="sgrbi">⚡</span>イーライト（髭等のVIO以外の部位）</button>' +
       '<button type="button" class="sgrbig" data-k="lash"><span class="sgrbi">👁️</span>パリジェンヌ</button>' +
       '<button type="button" class="sgrbig" data-k="procell_face"><span class="sgrbi">✨</span>プロセル顔</button>' +
       '<button type="button" class="sgrbig" data-k="procell_scalp"><span class="sgrbi">💆</span>プロセル頭皮</button>' +
@@ -6726,7 +6730,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
     /* ★2026-11-01：11枚目（本日が当店はじめての脱毛ですか？）を出す日か（DT）と答え（FDANS＝null／"yes"／"no"）。 */
     /* FDASK＝記録で「はじめての脱毛」の画面を出すか（受付係の ask_first。null＝まだ届いていない＝出す）。 */
-    'var DT=false,FDANS=null,FDASK=null,FDMAP={};' +
+    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={};' +
     /* ★2026-11-01：お客様を選んだあとに出す画面の並び（SEQ）＝イーライト(9)→はじめての脱毛(11)→パリジェンヌ(12)→当てはまる物(10)。
        出さない画面は並びに入れない。次へ・戻るはこの並びだけで決める。LASHANS＝パリジェンヌの答え（null／"yes"／"no"）。 */
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null;' +
@@ -6782,9 +6786,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 受け取った予定から「今日・うちの施術者の分」だけ取り出す */
     'function build(p){' +
       'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読めませんでした。通信環境をご確認ください。";return;}' +
-      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};' +
+      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};NXC={};' +
       'var day=[];' +
-      'for(var i=0;i<p.events.length;i++){var e=p.events[i];if(e.date!==today)continue;' +
+      /* ★2026-11-02：今日より先に同じ番号の予約がある方＝次回の予約がもう入っている（施術後のLINE送信の「新規脱毛（次回予約なし）」に印を付けない） */
+      'for(var i=0;i<p.events.length;i++){var e=p.events[i];' +
+        'if(e.date>today&&typeof codeOf==="function"){var c0=codeOf(e.title||"");if(c0)NXC[c0]=1;}' +
+        'if(e.date!==today)continue;' +
         'var mk=(typeof staffOf==="function")?staffOf(e.title||""):"";' +
         /* ★部屋は入れ物の名前でなく色（ラベル）で決まる＝被り検出と同じ共通のやり方に聞く。 */
         'var rm=(typeof roomLabelOf==="function")?' +
@@ -7029,9 +7036,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgelparts").textContent="本日の部位："+((ELJ&&ELJ.parts)||[]).join("・");' +
       /* ★2026-11-01 まるちゃん「予約メモをよんで正確なのを一番上にもってきて」＝今日の部位に合うYESを一番上に。
          VIOだけ→VIOのみ／VIO＋ほか→VIO＋髭等／ほかだけ→髭等。部位の書き無しのプランだけの時は決められないので元の並び。 */
-      'var ps=((ELJ&&ELJ.parts)||[]).filter(function(p){return p.indexOf("プラン")<0;}),' +
-        'hv=ps.indexOf("VIO")>=0,ho=ps.some(function(p){return p!=="VIO";}),' +
-        'top=hv&&ho?"both":(hv?"vio":(ho?"other":"")),ord=["vio","both","other","no"],box=$("sgElight");' +
+      'var top=SG.elightTop((ELJ&&ELJ.parts)||[]),ord=["vio","both","other","no"],box=$("sgElight");' +
       'if(top)ord=[top].concat(ord.filter(function(k){return k!==top;}));' +
       'for(var j=0;j<ord.length;j++){var b=box.querySelector(".sgel[data-k=\\""+ord[j]+"\\"]");if(b)box.appendChild(b);}' +
       'var bs=$("sgElight").getElementsByClassName("sgel");' +
@@ -7163,13 +7168,17 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 1枚目＝施術者のボタンだけ（今日の予約を読まない＝番号検索では要らないため）。今日の日付はこの端末の日付。 */
     'var RLOADED=false;' +
     /* ── 施術後のLINE送信（31枚目）：送る物を選ぶ→確かめる→事務所PCが文を作って「いま送る」で積む ── */
-    'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮"},lsending=false;' +
+    'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",elight_vio:"イーライト（VIOのみ）",elight_both:"イーライト（VIO＋髭等）",elight_other:"イーライト（髭等）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮"},lsending=false;' +
     'function goLKind(){' +
       'var cd=(typeof codeOf==="function")?(codeOf(CUST.title)||""):"";' +
       'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
       '$("sglcust").textContent=(nm||"お名前なし")+(cd?"（"+cd+"）":"")+"　"+(CUST.st||"")+"〜"+(CUST.et||"");' +
       /* お客様を選び直したら、選んだ印は全部外す */
-      'var bs=$("sgLKind").getElementsByClassName("sgrbig");for(var i=0;i<bs.length;i++)bs[i].classList.remove("sel");lnUpd();' +
+      /* ★2026-11-02 まるちゃん「予約メモからわかって、施術後予約とおなじロジックでいける」＝予約メモ・記録に合う物に最初から印を付ける
+         （判断は共通の1本＝SG.lineKindsPreset。印は見せるだけで、送る物はスタッフが押して決める）。 */
+      'var fd=FDMAP[CUST.id]?FDMAP[CUST.id][0]:null,cd0=(typeof codeOf==="function")?(codeOf(CUST.title||"")||""):"";' +
+      'var pre=(CUST.title||CUST.note)?SG.lineKindsPreset(CUST.title||"",CUST.note||"",fd,!!(cd0&&NXC[cd0])):[];' +
+      'var bs=$("sgLKind").getElementsByClassName("sgrbig");for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",pre.indexOf(bs[i].getAttribute("data-k"))>=0);lnUpd();' +
       'step=31;show();window.scrollTo(0,0);}' +
     /* 選んだ種類（画面の並び順＝送る順）。 */
     'function lnPicked(){var o=[],bs=$("sgLKind").getElementsByClassName("sgrbig");' +
@@ -7178,7 +7187,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function lnUpd(){var n=lnPicked().length;$("sglgo").disabled=!n;$("sglgo").textContent="この内容で決定";}' +
     'function lnBind(){var bs=$("sgLKind").getElementsByClassName("sgrbig");' +
       'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){if(!tapOK()||lsending)return;' +
-        'this.classList.toggle("sel");lnUpd();};}' +
+        'this.classList.toggle("sel");' +
+        /* イーライトの3つは1つだけ（押した物を選んだら、ほかの2つは外す） */
+        'if(this.classList.contains("sglel")&&this.classList.contains("sel")){var es=$("sgLKind").getElementsByClassName("sglel");' +
+          'for(var j=0;j<es.length;j++)if(es[j]!==this)es[j].classList.remove("sel");}' +
+        'lnUpd();};}' +
       '$("sglgo").onclick=function(){if(!tapOK()||lsending)return;var ks=lnPicked();if(!ks.length)return;' +
         'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
         'var names=ks.map(function(k){return "「"+LNNAME[k]+"」";}).join("");' +
