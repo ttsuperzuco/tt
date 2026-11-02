@@ -6584,9 +6584,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '<div class="sg" id="sgElight" style="display:none">' +
       '<div class="sgwho">本日イーライトをやりましたか？</div>' +
       '<div class="sgmnote" id="sgelparts"></div>' +
-      '<button type="button" class="sgrbig sgel" data-k="vio"><span class="sgrbi">⚡</span>YES（イーライトをやった・VIOのみ）</button>' +
-      '<button type="button" class="sgrbig sgel" data-k="both"><span class="sgrbi">⚡</span>YES（イーライトをやった・VIO＋髭等のVIO以外の部位）</button>' +
-      '<button type="button" class="sgrbig sgel" data-k="other"><span class="sgrbi">⚡</span>YES（イーライトをやった・髭等のVIO以外の部位）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="vio"><span class="sgrbi">⚡</span>YES（VIOのみイーライトをやった）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="both"><span class="sgrbi">⚡</span>YES（VIO＋髭等（VIO以外の部位）のイーライトをやった）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="other"><span class="sgrbi">⚡</span>YES（髭等（VIO以外の部位）のイーライトをやった）</button>' +
       '<button type="button" class="sgrbig sgel" data-k="no"><span class="sgrbi">🙅</span>NO（イーライトをやっていない）</button>' +
     '</div>' +
     /* 11枚目＝本日が当店はじめての脱毛ですか？（2026-11-01 まるちゃん決定）。今日の予約メモが脱毛の日だけ（SG.datsumoToday）、
