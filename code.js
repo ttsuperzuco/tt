@@ -7392,8 +7392,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'var k=this.getAttribute("data-k"),m="";' +
           'if(k==="yes"&&FIRSTDAT===false)m="記録では、このお客様は過去に当店で脱毛をしています。「初めての脱毛の施術でした」で、本当によろしいですか？";' +
           'if(k==="no"&&FIRSTDAT===true)m="記録では、このお客様は本日が当店はじめての脱毛のようです。「過去に当店で脱毛履歴がありました」で、本当によろしいですか？";' +
+          /* ★2026-11-02 試しで見つけた食い違い：イーライトを「やった」と答えたのに「カウンセリングだけで施術しなかった」を押した時も確かめる。
+             このまま進むなら、施術はしていない＝イーライトの注意事項は送らない。 */
+          'if(k==="counsel"&&(ELANS==="vio"||ELANS==="both"||ELANS==="other"))' +
+            'm="前の画面で、イーライトをやったと選んでいます。「今日はカウンセリングだけで施術しなかった」で、本当によろしいですか？";' +
           'if(!m){FDANS=k;nextOf(11);return;}' +
-          'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){FDANS=k;nextOf(11);}});};}' +
+          'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){if(k==="counsel")ELANS="no";FDANS=k;nextOf(11);}});};}' +
         /* ★12枚目：パリジェンヌ＝押すとすぐ次へ。 */
         'var lb=$("sgLash").getElementsByClassName("sglh");' +
         'for(var li=0;li<lb.length;li++){lb[li].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){LASHANS=k;nextOf(12);};' +
