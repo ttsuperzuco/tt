@@ -1761,7 +1761,7 @@ var TILE_DEFS_ = [
   // ★施術後のLINE送信（2026-10-31）＝施術後の予約と同じ画面（施術者→今日のお客様）を mode=line で開き、
   //   4つの送る物から選んで送る。開発中の機能の部屋だけ（開発者だけ）。
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
-    icon: '<span class="ticon">💌</span>', label: '施術後のLINE送信\n（次回予約なし）' },
+    icon: '<span class="ticon">💌</span>', label: '施術後の\nLINE送信' },
   // ★既存の予約＝LINEで予約を受けた時に使う入口（いま作り替え中）。
   //   まるちゃん依頼 2026-09-25「一番トップの画面に出して。開発中だからしょっちゅう押す」。
   //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発の住所(?dev=1)だけ。
@@ -6545,7 +6545,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
   var KEY = 'kx7Q2p9mVt4Zr8';
   /* ★2026-09-11 まるちゃん「ここのたいわんとまとの文字いらない」＝見出しの下の店名は出さない。 */
   var head = REP ? '<div class="hhead"><span class="bmark">🔁</span><span class="bname">リピート入力</span></div>'
-           : LN ? '<div class="hhead"><span class="bmark">💌</span><span class="bname">施術後のLINE送信（次回予約なし）</span></div>'
+           : LN ? '<div class="hhead"><span class="bmark">💌</span><span class="bname">施術後のLINE送信</span></div>'
                  : '<div class="hhead"><span class="bmark">💆</span><span class="bname">施術後の予約</span></div>';
   var css = sgCss_();
   /* 4枚の画面。出すのは1枚だけ。 */
