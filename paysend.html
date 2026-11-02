@@ -39,7 +39,7 @@ button[disabled]{opacity:.5}
   <div id="done" class="hide">
     <div class="mark">✓</div>
     <h1>受け付けました</h1>
-    <p>数分で「TTお給料」に送られます。<br>送り終わったらLINEでお知らせします。<br>このページは閉じて大丈夫です。</p>
+    <p>数分で「TTお給料」に送られます。<br>送り終わったらLINEでお知らせします。</p>
   </div>
 </div></div>
 <script>
@@ -57,7 +57,15 @@ button[disabled]{opacity:.5}
     b.disabled = true; b.textContent = '受け付けています…';
     fetch(PIPE + '?action=hit&who=paysend&device=page&role=' + encodeURIComponent(m) + '&view=' + encodeURIComponent(k),
           { mode:'no-cors', cache:'no-store', keepalive:true })
-      .then(function(){ document.getElementById('ask').className = 'hide'; document.getElementById('done').className = ''; })
+      .then(function(){
+        document.getElementById('ask').className = 'hide'; document.getElementById('done').className = '';
+        // ★2026-11-02 まるちゃん「閉じて大丈夫、じゃなく、自動で閉じるように」＝受け付けたのを2秒見せてから自動で閉じる。
+        //   パソコン（LINEから開いた新しいタブ）は window.close() で閉じる。LINEの中のブラウザは閉じられないので、LINEの画面へ戻す。
+        setTimeout(function(){
+          window.close();
+          setTimeout(function(){ if (/ Line\//i.test(navigator.userAgent)) location.href = 'https://line.me/R/nv/chat'; }, 400);
+        }, 2000);
+      })
       .catch(function(){ b.disabled = false; b.textContent = 'もう一度 送る'; });
   };
 })();
