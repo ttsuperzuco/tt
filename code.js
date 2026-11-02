@@ -7054,6 +7054,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        の文をだす。ほかもぜんぶ同様」＝予約メモに書いてあるのにNOを押した時は確かめる（施術後の予約・施術後のLINE送信の両方）。 */
     'function noCheck(what,go){szPopup_("予約メモには、"+what+"を施術する、と記入されています。今日本当に、"+what+"はやりませんでしたか？",' +
       '{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:go});}' +
+    /* ★2026-11-02 まるちゃん「まとめて」＝質問の答えから「何を送るか」を決めるのはここ1つだけ
+       （施術後の予約の登録の時も、施術後のLINE送信の最後も、これを使う）。答えはお客様を選び直すたびに空に戻る＝押した答えだけを数える（人の選択が答え）。 */
+    'function sgAns(){var el=(ELANS==="vio"||ELANS==="both"||ELANS==="other")?ELANS:"";' +
+      'return {el:el,el_parts:el==="vio"?"VIO":(el==="both"?"VIO,その他":(el==="other"?"その他":"")),' +
+        'first:FDANS==="yes",' +
+        'after:[LASHANS==="yes"?"lash":"",PFANS==="yes"?"procell_face":"",' +
+          'PHANS==="yes"?"procell_scalp":""].filter(function(x){return x;})};}' +
     'function seqv(){return SEQ.filter(seqShown);}' +
     'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}if(LN){lnFinish();return;}goMonth();}' +
     'function prevOf(n){var i=SEQ.indexOf(n);for(var j=i-1;j>=0;j--){if(seqShown(SEQ[j])){goStep(SEQ[j]);return true;}}return false;}' +
@@ -7114,10 +7121,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       /* ★2026-10-31：9枚目「このお客様は以下に当てはまりますか？」の答えを全部渡す（ta=1＝この画面で選んだ印）。
          イーライト（VIO／VIO以外）・当店での脱毛が初めて・パリジェンヌ・顔プロセル・頭皮プロセル。 */
       'if(!REP&&!LN){f.ta=1;f.today_title=(CUST&&CUST.title)||"";' +
-        'f.elight=(ELANS==="vio"||ELANS==="both"||ELANS==="other")?1:0;' +
-        'f.el_parts=ELANS==="vio"?"VIO":(ELANS==="both"?"VIO,その他":(ELANS==="other"?"その他":""));' +
-        'f.first_dat=FDANS==="yes"?1:0;' +
-        'f.after_kinds=[LASHANS==="yes"?"lash":"",PFANS==="yes"?"procell_face":"",PHANS==="yes"?"procell_scalp":""].filter(function(x){return x;}).join(",");}' +
+        'var a=sgAns();f.elight=a.el?1:0;f.el_parts=a.el_parts;f.first_dat=a.first?1:0;f.after_kinds=a.after.join(",");}' +
       /* ★ダミーのお客様（開発者の試し）＝タイムツリーにもLINEにも何もしない。完了画面だけ出す（送る時刻は15分後の見込み）。 */
       'if(CUST&&CUST.dummy){var dn=new Date(Date.now()+15*60000),dla=dn.getHours()+":"+("0"+dn.getMinutes()).slice(-2);' +
         'szOvShow_(szDoneHtml_("次回の予約を登録しました"+"<div style=\\"font-size:22px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">サンキューLINEを"+dla+"に自動送信します</div>"+' +
@@ -7163,12 +7167,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 今日より先に同じ番号の予約がある＝次回の予約がもう入っている（「はじめての脱毛」の質問を出さない＝予約なしの文は送らない）。 */
     'function lnHasNext(){var c=(typeof codeOf==="function")?(codeOf((CUST&&CUST.title)||"")||""):"";return !!(c&&NXC[c]);}' +
     /* 質問の答えから送る物を決める（施術後の予約の☆次回の文に足す物と同じ決め方）。 */
-    'function lnKinds(){var o=[];' +
-      'if(FDANS==="yes"&&seqv().indexOf(11)>=0)o.push("new_nobook");' +
-      'if(ELANS==="vio"||ELANS==="both"||ELANS==="other")o.push("elight_"+ELANS);' +
-      'if(LASHANS==="yes"&&SEQ.indexOf(12)>=0)o.push("lash");' +
-      'if(PFANS==="yes"&&SEQ.indexOf(13)>=0)o.push("procell_face");' +
-      'if(PHANS==="yes"&&SEQ.indexOf(14)>=0)o.push("procell_scalp");return o;}' +
+    'function lnKinds(){var a=sgAns(),o=[];if(a.first)o.push("new_nobook");if(a.el)o.push("elight_"+a.el);return o.concat(a.after);}' +
     /* 最後の質問のあと＝送る物を確かめて送る。送る物が無ければそう伝えてお客様の選択へ戻る。 */
     'function lnFinish(){var ks=lnKinds();' +
       'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
