@@ -7376,6 +7376,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'for(var ei=0;ei<eb.length;ei++){eb[ei].onclick=function(){if(!tapOK())return;' +
           'var k=this.getAttribute("data-k");' +
           'if(k==="no"){noCheck("イーライト",function(){ELANS="no";afterElight();});return;}' +
+          /* ★2026-11-02 まるちゃん「これ押したのにメッセージ出ない」＝予約メモの部位と違うYESを押した時も確かめる
+             （確かめたら、タイトルの言葉の確かめは出さない＝イーライトをやったことはもう確かめた）。 */
+          'var top=SG.elightTop((ELJ&&ELJ.parts)||[]),EN={vio:"VIOのみ",both:"VIO＋髭等【VIO以外の部位】",other:"髭等【VIO以外の部位】"};' +
+          'if(top&&k!==top){szPopup_("予約メモには、"+EN[top]+"のイーライトを施術する、と記入されています。今日本当に、"+EN[k]+"のイーライトをやりましたか？",' +
+            '{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){ELANS=k;afterElight();}});return;}' +
           'if(/イーライト/.test((CUST&&CUST.title)||"")){ELANS=k;afterElight();return;}' +
           '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
             '{cancel:true,noLabel:"NO<br><span style=white-space:nowrap;font-size:.8em>（やってない）</span>",' +
