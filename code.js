@@ -7053,7 +7053,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★2026-11-02 まるちゃん「予約メモには、顔のプロセルを施術する、と記入されています。今日本当に、顔のプロセルはやりませんでしたか？
        の文をだす。ほかもぜんぶ同様」＝予約メモに書いてあるのにNOを押した時は確かめる（施術後の予約・施術後のLINE送信の両方）。 */
     'function noCheck(what,go){szPopup_("予約メモには、"+what+"を施術する、と記入されています。今日本当に、"+what+"はやりませんでしたか？",' +
-      '{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:go});}' +
+      '{cancel:true,noLabel:"選び直す",yesLabel:"はい、やりませんでした",onYes:go});}' +
     /* ★2026-11-02 まるちゃん「まとめて」＝質問の答えから「何を送るか」を決めるのはここ1つだけ
        （施術後の予約の登録の時も、施術後のLINE送信の最後も、これを使う）。答えはお客様を選び直すたびに空に戻る＝押した答えだけを数える（人の選択が答え）。 */
     'function sgAns(){var el=(ELANS==="vio"||ELANS==="both"||ELANS==="other")?ELANS:"";' +
@@ -7380,7 +7380,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
              （確かめたら、タイトルの言葉の確かめは出さない＝イーライトをやったことはもう確かめた）。 */
           'var top=SG.elightTop((ELJ&&ELJ.parts)||[]),EN={vio:"VIOのみ",both:"VIO＋髭等【VIO以外の部位】",other:"髭等【VIO以外の部位】"};' +
           'if(top&&k!==top){szPopup_("予約メモには、"+EN[top]+"のイーライトを施術する、と記入されています。今日本当に、"+EN[k]+"のイーライトをやりましたか？",' +
-            '{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){ELANS=k;afterElight();}});return;}' +
+            '{cancel:true,noLabel:"選び直す",yesLabel:"はい、やりました",onYes:function(){ELANS=k;afterElight();}});return;}' +
           'if(/イーライト/.test((CUST&&CUST.title)||"")){ELANS=k;afterElight();return;}' +
           '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
             '{cancel:true,noLabel:"NO<br><span style=white-space:nowrap;font-size:.8em>（やってない）</span>",' +
@@ -7397,7 +7397,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'if(k==="counsel"&&(ELANS==="vio"||ELANS==="both"||ELANS==="other"))' +
             'm="前の画面で、イーライトをやったと選んでいます。「今日はカウンセリングだけで施術しなかった」で、本当によろしいですか？";' +
           'if(!m){FDANS=k;nextOf(11);return;}' +
-          'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){if(k==="counsel")ELANS="no";FDANS=k;nextOf(11);}});};}' +
+          'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"はい、大丈夫です",onYes:function(){if(k==="counsel")ELANS="no";FDANS=k;nextOf(11);}});};}' +
         /* ★12枚目：パリジェンヌ＝押すとすぐ次へ。 */
         'var lb=$("sgLash").getElementsByClassName("sglh");' +
         'for(var li=0;li<lb.length;li++){lb[li].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){LASHANS=k;nextOf(12);};' +
