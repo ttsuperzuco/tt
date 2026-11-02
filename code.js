@@ -7049,6 +7049,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(PFANS==="yes")adds.push("顔プロセル");if(PHANS==="yes")adds.push("頭皮プロセル");' +
       'o.push("→ 送る文："+(FDANS==="yes"?"脱毛の長いお礼文（次回の日時入り）":"☆次回の短い文")+(adds.length?"＋"+adds.join("・")+"の注意事項":""));' +
       'return o.join("<br>");}' +
+    /* ★2026-11-02 まるちゃん「予約メモには、顔のプロセルを施術する、と記入されています。今日本当に、顔のプロセルはやりませんでしたか？
+       の文をだす。ほかもぜんぶ同様」＝予約メモに書いてあるのにNOを押した時は確かめる（施術後の予約・施術後のLINE送信の両方）。 */
+    'function noCheck(what,go){szPopup_("予約メモには、"+what+"を施術する、と記入されています。今日本当に、"+what+"はやりませんでしたか？",' +
+      '{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:go});}' +
     'function seqv(){return SEQ.filter(seqShown);}' +
     'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}if(LN){lnFinish();return;}goMonth();}' +
     'function prevOf(n){var i=SEQ.indexOf(n);for(var j=i-1;j>=0;j--){if(seqShown(SEQ[j])){goStep(SEQ[j]);return true;}}return false;}' +
@@ -7369,7 +7373,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var eb=$("sgElight").getElementsByClassName("sgel");' +
         'for(var ei=0;ei<eb.length;ei++){eb[ei].onclick=function(){if(!tapOK())return;' +
           'var k=this.getAttribute("data-k");' +
-          'if(k==="no"||/イーライト/.test((CUST&&CUST.title)||"")){ELANS=k;afterElight();return;}' +
+          'if(k==="no"){noCheck("イーライト",function(){ELANS="no";afterElight();});return;}' +
+          'if(/イーライト/.test((CUST&&CUST.title)||"")){ELANS=k;afterElight();return;}' +
           '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
             '{cancel:true,noLabel:"NO<br><span style=white-space:nowrap;font-size:.8em>（やってない）</span>",' +
             'yesLabel:"YES<br><span style=white-space:nowrap;font-size:.8em>（やりました）</span>",' +
@@ -7378,18 +7383,21 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var fb=$("sgFirst").getElementsByClassName("sgfd");' +
         'for(var fi=0;fi<fb.length;fi++){fb[fi].onclick=function(){if(!tapOK())return;' +
           'var k=this.getAttribute("data-k"),m="";' +
-          'if(k==="yes"&&FIRSTDAT===false)m="記録では、このお客様は過去に当店で脱毛をしています。本日が当店はじめての脱毛の施術で、本当によろしいですか？";' +
-          'if(k==="no"&&FIRSTDAT===true)m="記録では、このお客様は本日が当店はじめての脱毛のようです。過去に当店の脱毛歴があるで、本当によろしいですか？";' +
+          'if(k==="yes"&&FIRSTDAT===false)m="記録では、このお客様は過去に当店で脱毛をしています。「本日が当店はじめての脱毛の施術」で、本当によろしいですか？";' +
+          'if(k==="no"&&FIRSTDAT===true)m="記録では、このお客様は本日が当店はじめての脱毛のようです。「過去に当店脱毛歴がある」で、本当によろしいですか？";' +
           'if(!m){FDANS=k;nextOf(11);return;}' +
           'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"このまま進む",onYes:function(){FDANS=k;nextOf(11);}});};}' +
         /* ★12枚目：パリジェンヌ＝押すとすぐ次へ。 */
         'var lb=$("sgLash").getElementsByClassName("sglh");' +
-        'for(var li=0;li<lb.length;li++){lb[li].onclick=function(){if(!tapOK())return;LASHANS=this.getAttribute("data-k");nextOf(12);};}' +
+        'for(var li=0;li<lb.length;li++){lb[li].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){LASHANS=k;nextOf(12);};' +
+          'if(k==="no"){noCheck("パリジェンヌ",go);return;}go();};}' +
         /* ★13枚目・14枚目：顔／頭皮プロセル＝押すとすぐ次へ。 */
         'var pb=$("sgPF").getElementsByClassName("sgpf");' +
-        'for(var pi=0;pi<pb.length;pi++){pb[pi].onclick=function(){if(!tapOK())return;PFANS=this.getAttribute("data-k");nextOf(13);};}' +
+        'for(var pi=0;pi<pb.length;pi++){pb[pi].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){PFANS=k;nextOf(13);};' +
+          'if(k==="no"){noCheck("顔のプロセル",go);return;}go();};}' +
         'var hb=$("sgPH").getElementsByClassName("sgph");' +
-        'for(var hi=0;hi<hb.length;hi++){hb[hi].onclick=function(){if(!tapOK())return;PHANS=this.getAttribute("data-k");nextOf(14);};}}' +
+        'for(var hi=0;hi<hb.length;hi++){hb[hi].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){PHANS=k;nextOf(14);};' +
+          'if(k==="no"){noCheck("頭皮のプロセル",go);return;}go();};}}' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
         'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
