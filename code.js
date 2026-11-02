@@ -6584,10 +6584,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '<div class="sg" id="sgElight" style="display:none">' +
       '<div class="sgwho">本日イーライトをやりましたか？</div>' +
       '<div class="sgmnote" id="sgelparts"></div>' +
-      '<button type="button" class="sgrbig sgel" data-k="vio"><span class="sgrbi">⚡</span>YES（VIOのみ）</button>' +
-      '<button type="button" class="sgrbig sgel" data-k="both"><span class="sgrbi">⚡</span>YES（VIO＋髭等のVIO以外の部位）</button>' +
-      '<button type="button" class="sgrbig sgel" data-k="other"><span class="sgrbi">⚡</span>YES（髭等のVIO以外の部位）</button>' +
-      '<button type="button" class="sgrbig sgel" data-k="no"><span class="sgrbi">🙅</span>NO（イーライトはやってない）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="vio"><span class="sgrbi">⚡</span>YES（イーライトをやった・VIOのみ）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="both"><span class="sgrbi">⚡</span>YES（イーライトをやった・VIO＋髭等のVIO以外の部位）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="other"><span class="sgrbi">⚡</span>YES（イーライトをやった・髭等のVIO以外の部位）</button>' +
+      '<button type="button" class="sgrbig sgel" data-k="no"><span class="sgrbi">🙅</span>NO（イーライトをやっていない）</button>' +
     '</div>' +
     /* 11枚目＝本日が当店はじめての脱毛ですか？（2026-11-01 まるちゃん決定）。今日の予約メモが脱毛の日だけ（SG.datsumoToday）、
        イーライトの画面の次に出す。押すとすぐ次へ。YES＝脱毛の長いお礼文（次回の日時入り）を送る。
@@ -6606,20 +6606,20 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        YES＝☆次回の文にパリジェンヌのアフターケアの一文を入れ、紙を付ける。 */
     '<div class="sg" id="sgLash" style="display:none">' +
       '<div class="sgwho">本日パリジェンヌをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sglh" data-k="yes"><span class="sgrbi">👁️</span>YES（やった）</button>' +
-      '<button type="button" class="sgrbig sglh" data-k="no"><span class="sgrbi">🙅</span>NO（やっていない）</button>' +
+      '<button type="button" class="sgrbig sglh" data-k="yes"><span class="sgrbi">👁️</span>YES（パリジェンヌをやった）</button>' +
+      '<button type="button" class="sgrbig sglh" data-k="no"><span class="sgrbi">🙅</span>NO（パリジェンヌをやっていない）</button>' +
     '</div>' +
     /* 13枚目・14枚目＝本日、顔／頭皮のプロセルをやりましたか？（2026-11-01 まるちゃん決定）。今日の予約メモにある日だけ、
        パリジェンヌの次に出す。押すとすぐ次へ。YES＝☆次回の文にプロセルのアフターケアの一文を入れ、紙を付ける。 */
     '<div class="sg" id="sgPF" style="display:none">' +
       '<div class="sgwho">本日、顔のプロセルをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span>YES（やった）</button>' +
-      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span>NO（やっていない）</button>' +
+      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span>YES（顔のプロセルをやった）</button>' +
+      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span>NO（顔のプロセルをやっていない）</button>' +
     '</div>' +
     '<div class="sg" id="sgPH" style="display:none">' +
       '<div class="sgwho">本日、頭皮のプロセルをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span>YES（やった）</button>' +
-      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（やっていない）</button>' +
+      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span>YES（頭皮のプロセルをやった）</button>' +
+      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（頭皮のプロセルをやっていない）</button>' +
     '</div>' +
     /* （使わなくなった）10枚目＝このお客様は以下に当てはまりますか？（複数選択可）。2026-11-01 にイーライト・はじめての脱毛・
        パリジェンヌ・顔プロセル・頭皮プロセルを1つずつの画面に分けたので、並び（SEQ）に入れない＝出さない。（2026-10-31 まるちゃん決定・11-01 イーライトを9枚目へ分けた）。
