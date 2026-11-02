@@ -1970,8 +1970,8 @@ function ltCard_(r) {
   var cls = esc_(r.cls || 'add');
   var name = r.name || '（名前不明）';
   var search = esc_(((name) + ' ' + (r.code || '')).toLowerCase());
-  // 氏名(display_name)は既に「F758廣田貴絵様」のように番号を含むことが多い。
-  // 含む時は番号チップを重ねて出さない（"F758 F758廣田様"の二重表示を防ぐ）。
+  // 氏名(display_name)は既に「F000山田花子様」のように番号を含むことが多い。
+  // 含む時は番号チップを重ねて出さない（"F000 F000山田様"の二重表示を防ぐ）。
   var codeHtml = (r.code && name.indexOf(r.code) < 0)
     ? '<span class="lcode">' + esc_(r.code) + '</span>' : '';
 
@@ -4280,7 +4280,7 @@ function renderRirekiPage_(base, staff, dev) {
     '<div class="rk">' +
       '<div class="rkstep">① 検索文字を入力</div>' +
       '<div class="rksearch">' +
-        '<input id="rkq" type="search" placeholder="F227 / 227 / 小森 …" autocomplete="off">' +
+        '<input id="rkq" type="search" placeholder="F227 / 227 / お名前 …" autocomplete="off">' +
         '<button id="rkgo" type="button">検索</button>' +
       '</div>' +
       '<div class="rkkp">' +
@@ -14136,7 +14136,7 @@ var MOVESCRIPT_ =
 '  }' +
 '});' +
 // 「移動中」の説明文＝何を動かしているか（担当者マーク＋番号＋名前 と 時刻の予約）を明示（2026-07-12
-//   ユーザー要望）。who="🍅 M375 蘇文宏様" 等、mtime="13:30-14:00" 等（開始時刻だけ使う）。
+//   ユーザー要望）。who="🍅 M000 山田様" 等、mtime="13:30-14:00" 等（開始時刻だけ使う）。
 'function mvDesc_(who,mtime,fromRoom,room){ var t=(mtime||"").split("-")[0];' +
 '  return (who?who+" ":"")+(t?t+"の予約を、":"")+"「"+fromRoom+"」から「"+room+"」へ移動中です"; }' +
 'function movingHtml_(who,mtime,fromRoom,room){ return "⏳ "+mvDesc_(who,mtime,fromRoom,room)+' +
