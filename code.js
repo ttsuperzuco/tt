@@ -1019,7 +1019,8 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★施術後のLINE送信（2026-10-31 まるちゃん依頼）＝施術のあと、決まった文（新規脱毛の予約なし版・パリジェンヌ・
   //   プロセル顔/頭皮のアフターケア）をそのお客様へ送る。既定は開発者だけ（共通ルール16）。
   //   tile_settings.py の TILES に入れない＝試し終わるまで誰もONにできない。
-  sgline:     { exec: false, staff: false },
+  // ★★2026-11-02 まるちゃん「施術後のLINE送信を本番にして、施術後の予約の右におく」＝全員ON（スタッフ画面）。
+  sgline:     { exec: true, staff: true },
   // ★既存の予約＝作り替え中なので開発の住所だけ（共通ルール16）。
   kizon:      { exec: false, staff: false },
   // ★TimeTree＝ズコの中でタイムツリーの予定を見る（月→日→予定の中身・読むだけ）。2026-09-15。
@@ -1084,7 +1085,7 @@ function defaultPerms_(people) {
     // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
     //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
     // ★★2026-09-17 まるちゃん決定「施術後の予約ボタンをスタッフにもだす」＝全員ON（tile_settings.py と一致）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, procstock: false, hanbai: true };
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, sgline: true, procstock: false, hanbai: true };
   }
   return perms;
 }
@@ -1809,7 +1810,8 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', sgline: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu'
+  // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
 // ★2026-10-25 まるちゃん「スタッフ画面を一番上にしたい」＝スタッフ画面を先頭へ（PC版 super_pc.py の ROLES と同じ順）。
