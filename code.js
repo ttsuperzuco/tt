@@ -1824,7 +1824,8 @@ var ROLE_DEFS_ = [
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
 // ★部屋の中で、そのボタンの右（次のマス）を空白にする（2026-10-21 まるちゃん「空き時間の右は空白」）。
 //   PC版 super_pc.py の BLANK_AFTER と同じ（片方直したら両方）。
-var BLANK_AFTER_ = { jitsumu: ['akijikan'] };
+//   ★2026-11-02 まるちゃん「予約入力は空き時間の右に配置」＝空白をやめた（10-21の決まりを上書き）。
+var BLANK_AFTER_ = { jitsumu: [] };
 // ★部屋の中の下側に見出し付きで出す小部屋（2026-10-26 まるちゃん「スタッフ画面の下側に TOMATO画面」）。PC版 SUB_ROLES と同じ。
 var SUB_ROLES_ = { jitsumu: [{ id: 'tomato', icon: '🍅', title: 'TOMATO画面' }] };
 
