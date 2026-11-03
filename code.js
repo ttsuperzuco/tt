@@ -6849,11 +6849,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var now=NOW();' +
       'var list=ALLEV.filter(function(e){return pick===SG.ALL||e.mark===pick;});' +
       'list.sort(function(a,b){return a.start-b.start;});' +
-      /* ★試し用のダミーのお客様（開発者の画面だけ・予定表には何も書かない）。
+      /* ★試し用のダミーのお客様（予定表には何も書かない）。2026-11-03 まるちゃん「staffにもみせたい」＝開発者だけ→全員の画面に出す。
          2026-10-31 施術後のLINE送信に3人（言葉ちがい）→2026-11-03 まるちゃん「施術後の予約、施術後のLINEで一つずつダミーデータをつくって。
          RYUという客。はじめての脱毛・パリジェンヌ・頭皮プロセル・顔プロセルぜんぶ予約の客という設定」＝両方の画面に1人ずつ。
          LINE送信＝事務所PCが「DUMMY:ja:M」を見分けて練習（まるちゃん本人のLINE）だけに送る。施術後の予約＝登録してもタイムツリーに書かない（sendMemoで止める）。 */
-      'if(DEVMODE&&(LN||!REP)){var sm=pick===SG.ALL?"🍅":pick;' +
+      'if(LN||!REP){var sm=pick===SG.ALL?"🍅":pick;' +
         'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:LN?"DUMMY:ja:M":"DUMMY:sg1",dname:"RYU（はじめての脱毛＋パリジェンヌ＋頭皮プロセル＋顔プロセル）",' +
           'dummy:true,fdask:true,firstdat:true,' +
           'title:sm+"🇫🇷👑PFPH預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n◉🇫🇷パリジェンヌリペア あり\\n◉👑プロ肌キャPro あり\\n◉👑プロ頭キャ あり\\n\\n💰お支払い状況\\n◉VIOトライアル：支払い済み"});}' +
