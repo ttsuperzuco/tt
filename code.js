@@ -6854,7 +6854,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
          RYUという客。はじめての脱毛・パリジェンヌ・頭皮プロセル・顔プロセルぜんぶ予約の客という設定」＝両方の画面に1人ずつ。
          LINE送信＝事務所PCが「DUMMY:ja:M」を見分けて練習（まるちゃん本人のLINE）だけに送る。施術後の予約＝登録してもタイムツリーに書かない（sendMemoで止める）。 */
       'if(LN||!REP){var sm=pick===SG.ALL?"🍅":pick;' +
-        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:LN?"DUMMY:ja:M":"DUMMY:sg1",dname:"RYU（はじめての脱毛＋パリジェンヌ＋頭皮プロセル＋顔プロセル）",' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:LN?"DUMMY:ja:M":"DUMMY:sg1",dname:"RYU（はじめての脱毛＋イーライト＋パリジェンヌ＋顔プロセル＋頭皮プロセル）",' +
           'dummy:true,fdask:true,firstdat:true,' +
           'title:sm+"🇫🇷👑PFPH預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n◉🇫🇷パリジェンヌリペア あり\\n◉👑プロ肌キャPro あり\\n◉👑プロ頭キャ あり\\n\\n💰お支払い状況\\n◉VIOトライアル：支払い済み"});}' +
       'LIST=list;' +
