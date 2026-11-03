@@ -6849,15 +6849,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var now=NOW();' +
       'var list=ALLEV.filter(function(e){return pick===SG.ALL||e.mark===pick;});' +
       'list.sort(function(a,b){return a.start-b.start;});' +
-      /* ★施術後のLINE送信の試し（2026-10-31 まるちゃん「テストしたいからダミーでRYUという客をつくって」）：
-         開発者の画面だけ、一覧の最後にダミーのお客様を3人（言葉ちがい）出す。予定表には何も書かない。
-         送る時は事務所PCが「ダミー」と見分けて、練習（まるちゃん本人のLINE）だけに送る。 */
-      'if(LN&&DEVMODE){var dm=[["ja","M","RYU（日本語・男）"],["zh","F","RYU（中国語・女）"],["en","M","RYU（英語・男）"]];' +
-        'for(var di=0;di<dm.length;di++){list.push({mark:pick===SG.ALL?"🍅":pick,start:0,end:0,room:"",' +
-          /* ★2026-11-02：質問の画面が全部出るように、イーライト・脱毛・パリジェンヌ・プロセル顔／頭皮の予約メモを持たせる。 */
-          'title:"🇫🇷👑PFPH預約M999新規イーライト",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIO 8回コース 1回目あり\\n◉髭全部 あり\\n◉🇫🇷パリジェンヌリペア あり\\n◉👑プロ肌キャPro あり\\n◉👑プロ頭キャ あり",' +
+      /* ★試し用のダミーのお客様（開発者の画面だけ・予定表には何も書かない）。
+         2026-10-31 施術後のLINE送信に3人（言葉ちがい）→2026-11-03 まるちゃん「施術後の予約、施術後のLINEで一つずつダミーデータをつくって。
+         RYUという客。はじめての脱毛・パリジェンヌ・頭皮プロセル・顔プロセルぜんぶ予約の客という設定」＝両方の画面に1人ずつ。
+         LINE送信＝事務所PCが「DUMMY:ja:M」を見分けて練習（まるちゃん本人のLINE）だけに送る。施術後の予約＝登録してもタイムツリーに書かない（sendMemoで止める）。 */
+      'if(DEVMODE&&(LN||!REP)){var sm=pick===SG.ALL?"🍅":pick;' +
+        'list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:LN?"DUMMY:ja:M":"DUMMY:sg1",dname:"RYU（はじめての脱毛＋パリジェンヌ＋頭皮プロセル＋顔プロセル）",' +
           'dummy:true,fdask:true,firstdat:true,' +
-          'st:"ダミー",et:"",id:"DUMMY:"+dm[di][0]+":"+dm[di][1],dname:dm[di][2]});}}' +
+          'title:sm+"🇫🇷👑PFPH預約M999新規",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉VIOトライアル あり\\n◉🇫🇷パリジェンヌリペア あり\\n◉👑プロ肌キャPro あり\\n◉👑プロ頭キャ あり\\n\\n💰お支払い状況\\n◉VIOトライアル：支払い済み"});}' +
       'LIST=list;' +
       '$("sglisthead").textContent="お客様の選択";' +
       'if(!list.length){$("sglist").innerHTML="";' +
