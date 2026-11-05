@@ -12299,6 +12299,8 @@ function threadsScript_(C) {
         '<div class="st"><span>👁 ' + (st.views || 0) + '</span><span>♡ ' + (st.likes || 0) + '</span><span>💬 ' + (st.replies || 0) + '</span>' +
         '<span>🔁 ' + (st.reposts || 0) + '</span>' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div>' +
         '<button type="button" class="cmb" data-cm="' + esc(p.id) + '">💬 コメントを見る・返信する</button>' +
+        // ★2026-11-05 まるちゃん決定：開発版だけ、アプリで出した投稿も含めてここから消せる（スタッフ版には出さない）。
+        ((window.__SZ_ROLE_ || '') === '開発' ? '<button type="button" class="cmb" style="margin-left:8px;background:#3f1d1d;border:1px solid #b91c1c" data-fdel="' + esc(p.id) + '">🗑 削除</button>' : '') +
         '<div class="cms" id="cm_' + esc(p.id) + '" style="display:none"></div>' +
         '</div></div>';
     });
@@ -12394,6 +12396,19 @@ function threadsScript_(C) {
       loadCm(g('data-cm')); return;
     }
     if (g('data-rp')) { openReply(g('data-rp')); return; }
+    if (g('data-fdel')) {
+      var dmid = g('data-fdel');
+      szPopup_('この投稿をThreadsから削除しますか？（元に戻せません）', { cancel: true, onYes: function () {
+        ask({ kind: 'delete', acct: CUR, media_id: dmid }, '削除中です', function (err) {
+          if (err) { warn(err); return; }
+          if (FEED) FEED.posts = FEED.posts.filter(function (x) { return x.id !== dmid; });
+          szOvShow_(szDoneHtml_('削除が完了しました'), '#16a34a');
+          var db = document.getElementById('szDoneBack');
+          if (db) db.addEventListener('click', function () { szOvHide_(); if (FEED) drawFeed(); loadAll(); });
+        });
+      } });
+      return;
+    }
     var mid = midOf(t);
     if (g('data-send')) {
       var to = g('data-send'), ta = $('rb_' + to).querySelector('textarea'), txt = ta.value.trim();
