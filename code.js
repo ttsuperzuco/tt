@@ -11885,7 +11885,21 @@ function threadsScript_(C) {
     s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度お試しください。' }); }; document.body.appendChild(s);
   }
   // 事務所PCへ頼む（op=threads）→ 済んだら答えを受け取る。写真つきの大きい依頼は共通のBIGで別に預ける。
+  // 開発版だけ：この窓の鍵の指紋を添える（パソコン版ズコの窓は端末番号が窓ごとにばらばらなので、受付係が鍵の指紋で見分ける）。
+  function devKey(cb) {
+    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    var dv = '', dk = '';
+    try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
+    if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(dk)).then(function (b) {
+      var h = Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      cb({ zdv: dv, zdh: h });
+    }, function () { cb({}); });
+  }
   function ask(fields, busy, done) {
+    devKey(function (ex) { for (var k in ex) fields[k] = ex[k]; ask0(fields, busy, done); });
+  }
+  function ask0(fields, busy, done) {
     if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
     var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     var me = idn();
