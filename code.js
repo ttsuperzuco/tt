@@ -14181,11 +14181,14 @@ function lkImgScript_(base) {
     'if(mn<99)for(k=0;k<a.length;k++)a[k].style.fontSize=mn+"px";}' +
     'window.addEventListener("resize",function(){if(curTopic>=0&&tblocks[curTopic]&&!tblocks[curTopic].hidden)fitSubs(tblocks[curTopic]);});' +
     'tbtns.forEach(function(b){b.addEventListener("click",function(){openTopic(+b.getAttribute("data-t"));});});' +
-    '[].slice.call(document.querySelectorAll(".lkgotopics")).forEach(function(b){b.addEventListener("click",function(){showUrl();showTopics(b.getAttribute("data-k"));});});' +
+    // ★2026-11-06（まるちゃん）：その種類の案内が1つだけ（オンラインショップ等）なら、一覧を飛ばしてすぐ言語ボタンの画面を出す。戻るは入口へ。
+    'var oneDirect=false;' +
+    '[].slice.call(document.querySelectorAll(".lkgotopics")).forEach(function(b){b.addEventListener("click",function(){var k=b.getAttribute("data-k");showUrl();showTopics(k);' +
+      'var only=tbtns.filter(function(x){return x.getAttribute("data-k")===k;});oneDirect=only.length===1;if(oneDirect)openTopic(+only[0].getAttribute("data-t"));});});' +
     'if(goImg)goImg.addEventListener("click",openImg);' +
     'loadImages();' +   // ★各種LINKを開いた瞬間に裏で先読み（押した時にはもう手元にある＝速い・失敗しにくい）
 
-    'if(urlBack)urlBack.addEventListener("click",function(){if(curTopic>=0){showTopics();}else{showHub();}});' +
+    'if(urlBack)urlBack.addEventListener("click",function(){if(curTopic>=0&&!oneDirect){showTopics();}else{oneDirect=false;showHub();}});' +
     'if(imgBack)imgBack.addEventListener("click",function(){' +
       'if(level==="image"){renderItems(curCat);}else if(level==="items"){if(curCat&&curCat.group){renderGroup(curCat.group);}else{renderCats();}}' +
       'else if(level==="group"){renderCats();}else{showHub();}' +
