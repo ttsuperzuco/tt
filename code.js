@@ -12423,6 +12423,12 @@ function threadsScript_(C) {
       var cnt4 = null;
       if (st) cnt4 = [st.likes || 0, st.replies || 0, (st.reposts || 0) + (st.quotes || 0), st.shares || 0];
       if (wp && wp.nums && wp.nums.length === 4) cnt4 = wp.nums.map(function (x) { return String(x); });
+      else if (wp && wp.nums && cnt4) {
+        // 本物の画面は0の数を出さない＝読めた数の個数で、どの欄の数かを合わせる（本物の数を正とする）
+        var nzi = []; cnt4.forEach(function (v, i) { if (v) nzi.push(i); });
+        if (wp.nums.length === nzi.length) { var c2 = [0, 0, 0, 0]; nzi.forEach(function (i, k) { c2[i] = String(wp.nums[k]); }); cnt4 = c2; }
+        else if (!wp.nums.length) cnt4 = [0, 0, 0, 0];
+      }
       var nz = function (v) { return (v && v !== '0' && v !== 0) ? esc(v) : ''; };
       var card = '';
       if (p.card) card = '<a class="lcard" href="' + esc(p.card.url) + '" target="_blank" rel="noopener">' + (p.card.img ? '<img src="' + esc(p.card.img) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
