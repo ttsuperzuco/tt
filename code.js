@@ -12090,6 +12090,7 @@ function threadsScript_(C) {
     }
     $('thAcct').innerHTML = h;
     $('thAcct').className = 'thacct' + (ACCTS.length === 1 ? ' one' : '');
+    $('thAcct').style.gridTemplateColumns = 'repeat(' + Math.max(1, ACCTS.length) + ',1fr)';   // ★日本人を足して3つ＝横に並べる数を数に合わせる
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
     $('thUser').textContent = a && a.username ? '@' + a.username : '';
   }
