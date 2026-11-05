@@ -11841,7 +11841,11 @@ var THREADSCSS_ =
   '.thpost .b a,.thpost .b button{flex:1;text-align:center;border-radius:10px;padding:10px 4px;font:inherit;font-size:16px;font-weight:900;text-decoration:none;cursor:pointer;}' +
   '.thpost .b a{background:#e0f2fe;color:#0369a1;}' +
   '.thpost .b button{background:#fee2e2;color:#b91c1c;border:0;}' +
-  '.thempty{color:#eaf6fb;font-weight:800;margin:4px;}';
+  '.thempty{color:#eaf6fb;font-weight:800;margin:4px;}' +
+  '.themo{display:inline-block;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:10px 16px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);margin:-2px 0 10px;}' +
+  '.themos{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;background:#fff;border-radius:14px;padding:10px;margin:0 0 12px;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.themos button{border:0;background:transparent;font-size:26px;line-height:1.3;padding:4px 0;cursor:pointer;border-radius:8px;}' +
+  '.themos button:active{background:#e2e8f0;}';
 
 function renderThreadsPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">Threads投稿</span></div>';
@@ -11860,6 +11864,8 @@ function renderThreadsPage_(base, staff, dev) {
         '<div class="hblb">文</div>' +
         '<textarea class="hbin" id="thText" placeholder="投稿する文を入れてください（500文字まで）"></textarea>' +
         '<div class="thcnt" id="thCnt">0 / 500</div>' +
+        '<button type="button" class="themo" id="thEmoBtn">😊 絵文字</button>' +
+        '<div class="themos" id="thEmos" style="display:none"></div>' +
         '<div class="hblb">写真（10枚まで・なくてもOK）</div>' +
         '<label class="thpick">📷 写真をえらぶ<input type="file" id="thFile" accept="image/*" multiple></label>' +
         '<div class="ththumbs" id="thThumbs"></div>' +
@@ -11947,12 +11953,32 @@ function threadsScript_(C) {
   });
 
   // ── 文 ──
+  // ★文字の数え方はThreadsと同じ（2026-11-05 実測：😊は1文字・肌の色つき👍🏻は2文字＝文字の部品の数）。
+  //   ふつうの数え方（.length）だと絵文字を2文字に数えてしまい、Threadsが受け付ける文を止めてしまう。
+  function tlen(t) { return Array.from(t).length; }
   function drawCnt() {
-    var n = $('thText').value.length;
+    var n = tlen($('thText').value);
     $('thCnt').textContent = n + ' / ' + MAXT;
     $('thCnt').className = 'thcnt' + (n > MAXT ? ' over' : '');
   }
   $('thText').addEventListener('input', drawCnt);
+
+  // ── 絵文字（本物のThreadsの😊ボタンと同じ役。押すと文の今の位置に入る） ──
+  var EMOS = ['😊','😍','🥰','😆','🤗','🥹','😂','🙏','✨','💖','💕','❤️','🩷','🌸','🌷','💐',
+              '🌿','🍀','🍅','🎉','🎁','🎀','🔥','👍','💯','✅','🆕','⚠️','📅','⏰','📍','📞',
+              '💬','👉','➡️','⭐','☀️','🌙','🌈','💆‍♀️','💅','🧖‍♀️','💄','👀','😳','🤩','😎','🫶'];
+  $('thEmos').innerHTML = EMOS.map(function (e) { return '<button type="button" data-e="' + e + '">' + e + '</button>'; }).join('');
+  $('thEmoBtn').addEventListener('click', function () {
+    var g = $('thEmos'); g.style.display = (g.style.display === 'none') ? '' : 'none';
+  });
+  $('thEmos').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var t = $('thText'), v = t.value, a = (t.selectionStart == null) ? v.length : t.selectionStart, z = (t.selectionEnd == null) ? a : t.selectionEnd;
+    var em = b.getAttribute('data-e');
+    t.value = v.slice(0, a) + em + v.slice(z);
+    var p = a + em.length; try { t.setSelectionRange(p, p); } catch (x) {}
+    drawCnt();
+  });
 
   // ── 写真（時間指定LINE送信と同じ縮め方） ──
   function drawThumbs() {
@@ -11993,7 +12019,7 @@ function threadsScript_(C) {
     var text = $('thText').value.trim();
     if (!CUR) { warn('投稿するアカウントをえらんでください。'); return; }
     if (!text && !IMGS.length) { warn('文か写真を入れてください。'); return; }
-    if (text.length > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
+    if (tlen(text) > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
     szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？', { icon: '', cancel: true, onYes: function () {
       ask({ kind: 'post', acct: CUR, text: text, imgs: IMGS }, 'Threadsに投稿中です', function (err, d) {
