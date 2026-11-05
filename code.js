@@ -176,6 +176,9 @@ function doGet(e) {
   } else if (view === 'procstock') {
     title = 'プロセル在庫';                             // ★品物ごとの今ある数を入れる（純JS・登録は受付係）
     html = renderProcStockPage_(base, staff, dev);
+  } else if (view === 'threads') {
+    title = 'Threads投稿';                                   // ★お店のThreadsに投稿・削除（純JS・投稿は受付係 op=threads）
+    html = renderThreadsPage_(base, staff, dev);
   } else if (view === 'hanbai') {
     title = 'No31 販売管理';                                 // ★日本・台湾の販売を入れる／一覧（純JS・登録は受付係）
     html = renderHanbaiPage_(base, staff, dev);
@@ -1040,7 +1043,8 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★Claudeに聞く＝ズコで打った文を、事務所PCで動いている会話のClaudeへ届けて返事を受け取る（2026-10-27 まるちゃん依頼）。
   //   既定は開発者だけ（共通ルール16）。まるちゃん「スタッフ全員に触らせる」＝試して大丈夫なら tile_settings.py の
   //   STAFF_ASSIGNABLE に入れて、自動監視の人ごとの表示でONにする。
-  claudechat: { exec: false, staff: false }
+  claudechat: { exec: false, staff: false },
+  threads:    { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1048,7 +1052,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1786,7 +1790,11 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🛒</span>', label: 'No31\n販売管理' },
   // ★Claudeに聞く（2026-10-27）＝打った文を会話のClaudeへ届け、返事を出す（op=claude_chat・共通\ズコからClaude.py）。
   { id: 'claudechat', cls: 'claudechat', view: 'claudechat',
-    icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' }
+    icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' },
+  // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
+  //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
+  { id: 'threads', cls: 'threads', view: 'threads',
+    icon: '<span class="ticon">🧵</span>', label: 'Threads\n投稿' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -1810,7 +1818,7 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu'
   // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
@@ -11802,6 +11810,229 @@ function renderHanbaiPage_(base, staff, dev) {
     '<script>(' + hanbaiScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除する画面。
+//   パスワードは渡さない。投稿・削除は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。
+//   だれがどれに出せるか（🫒オリーブ＝台湾女性／🍊みかん＝台湾男性／開発＝両方）と本人確認は受付係側で決める
+//   ＝この画面は「出せる」と返ってきたアカウントだけを出す。削除はズコから出した投稿だけ。
+//   写真は時間指定LINE送信と同じく、端末で長い辺1280pxのJPEGに縮めてから送る（大きい依頼は共通のBIG）。
+// ════════════════════════════════════════════════════════════════════════════
+var THREADSCSS_ =
+  '.thw{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+  '.thacct{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px;}' +
+  '.thacct button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:16px 4px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.thacct button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
+  '.thacct.one{grid-template-columns:1fr;}' +
+  '.thname{color:#fde047;font-size:15px;font-weight:800;margin:-4px 4px 10px;}' +
+  '.thcnt{color:#eaf6fb;font-weight:800;font-size:15px;text-align:right;margin:-6px 4px 10px;}' +
+  '.thcnt.over{color:#fca5a5;}' +
+  '.thpick{position:relative;overflow:hidden;display:block;width:100%;box-sizing:border-box;background:#fff;color:#0f172a;border-radius:14px;padding:16px;font-size:20px;font-weight:900;text-align:center;box-shadow:0 3px 8px rgba(0,0,0,.15);margin:4px 0 10px;cursor:pointer;}' +
+  '.thpick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;}' +
+  '.ththumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 12px;}' +
+  '.ththumbs div{position:relative;}' +
+  '.ththumbs img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;display:block;}' +
+  '.ththumbs button{position:absolute;top:-6px;right:-6px;width:28px;height:28px;border-radius:50%;border:0;background:#0f172a;color:#fff;font-size:16px;font-weight:900;cursor:pointer;}' +
+  '.thlist{margin:22px 0 0;}' +
+  '.thlh{color:#fff;font-weight:900;font-size:20px;margin:8px 4px 8px;}' +
+  '.thpost{background:#fff;color:#0f172a;border-radius:14px;padding:12px 14px;margin:0 0 10px;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.thpost .m{font-size:13px;color:#475569;font-weight:700;margin-bottom:4px;}' +
+  '.thpost .t{font-size:16px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}' +
+  '.thpost .b{display:flex;gap:10px;margin-top:10px;}' +
+  '.thpost .b a,.thpost .b button{flex:1;text-align:center;border-radius:10px;padding:10px 4px;font:inherit;font-size:16px;font-weight:900;text-decoration:none;cursor:pointer;}' +
+  '.thpost .b a{background:#e0f2fe;color:#0369a1;}' +
+  '.thpost .b button{background:#fee2e2;color:#b91c1c;border:0;}' +
+  '.thempty{color:#eaf6fb;font-weight:800;margin:4px;}';
+
+function renderThreadsPage_(base, staff, dev) {
+  var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">Threads投稿</span></div>';
+  var C = {
+    exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
+    key: 'kx7Q2p9mVt4Zr8'
+  };
+  return '<style>' + HOMECSS_ + EXPADCSS_ + HANBAICSS_ + THREADSCSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="thw">' + head +
+      '<div class="hbhint" id="thLoad">読み込み中です…</div>' +
+      '<div id="thMain" style="display:none">' +
+        '<div class="hblb">投稿するアカウント</div>' +
+        '<div class="thacct" id="thAcct"></div>' +
+        '<div class="thname" id="thUser"></div>' +
+        '<div class="hblb">文</div>' +
+        '<textarea class="hbin" id="thText" placeholder="投稿する文を入れてください（500文字まで）"></textarea>' +
+        '<div class="thcnt" id="thCnt">0 / 500</div>' +
+        '<div class="hblb">写真（10枚まで・なくてもOK）</div>' +
+        '<label class="thpick">📷 写真をえらぶ<input type="file" id="thFile" accept="image/*" multiple></label>' +
+        '<div class="ththumbs" id="thThumbs"></div>' +
+        '<button type="button" class="exgo" id="thGo">Threadsに投稿する</button>' +
+        '<div class="thlist"><div class="thlh">ズコから出した投稿</div><div id="thList"></div></div>' +
+      '</div>' +
+    '</div></div>' +
+    '<script>(' + threadsScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
+
+function threadsScript_(C) {
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var ACCTS = [], CUR = '', IMGS = [], MAXT = 500, MAXI = 10;
+  var idn = function () { return { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' }; };
+  var warn = function (m) { if (typeof szPopup_ === 'function') szPopup_(m); else alert(m); };
+
+  function jsonp(p, cb) {
+    var n = '__th' + Date.now() + Math.floor(Math.random() * 1000);
+    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+    var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
+    s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度お試しください。' }); }; document.body.appendChild(s);
+  }
+  // 事務所PCへ頼む（op=threads）→ 済んだら答えを受け取る。写真つきの大きい依頼は共通のBIGで別に預ける。
+  function ask(fields, busy, done) {
+    if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
+    var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
+    var me = idn();
+    var poll = function (id) {
+      var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('threads', 1000) : 200;
+      var tick = function () {
+        n++; if (n > max) { end('時間切れです。もう一度お試しください。'); return; }
+        jsonp({ action: 'status', key: C.key, id: id }, function (x) {
+          if (!x || !x.ok) { end((x && x.error) || '通信に失敗しました。もう一度お試しください。'); return; }
+          if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1000); return; }
+          if (x.status !== 'done') { end(x.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
+          var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
+          end(null, d || {});
+        });
+      };
+      setTimeout(tick, 1200);
+    };
+    var send = function (ft) {
+      jsonp({ action: 'submit', key: C.key, op: 'threads', who: me.who, role: me.role, device: me.device, fields: ft },
+        function (r) {
+          if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました。もう一度お試しください。'); return; }
+          poll(r.id);
+        });
+    };
+    if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
+    BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'threads', op: 'threads',
+                  who: me.who, role: me.role, device: me.device, fields: fields },
+      send, function () { end('写真を送れませんでした。枚数を減らしてもう一度お試しください。'); });
+  }
+
+  // ── アカウント ──
+  function drawAcct() {
+    var h = '';
+    for (var i = 0; i < ACCTS.length; i++) {
+      h += '<button type="button" data-a="' + esc(ACCTS[i].acct) + '"' + (ACCTS[i].acct === CUR ? ' class="on"' : '') + '>' + esc(ACCTS[i].label) + '</button>';
+    }
+    $('thAcct').innerHTML = h;
+    $('thAcct').className = 'thacct' + (ACCTS.length === 1 ? ' one' : '');
+    var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
+    $('thUser').textContent = a && a.username ? '@' + a.username : '';
+  }
+  $('thAcct').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    CUR = b.getAttribute('data-a'); drawAcct(); loadList();
+  });
+
+  // ── 文 ──
+  function drawCnt() {
+    var n = $('thText').value.length;
+    $('thCnt').textContent = n + ' / ' + MAXT;
+    $('thCnt').className = 'thcnt' + (n > MAXT ? ' over' : '');
+  }
+  $('thText').addEventListener('input', drawCnt);
+
+  // ── 写真（時間指定LINE送信と同じ縮め方） ──
+  function drawThumbs() {
+    $('thThumbs').innerHTML = IMGS.map(function (o, i) {
+      return '<div><img src="data:' + o.mime + ';base64,' + o.b64 + '"><button type="button" data-i="' + i + '">×</button></div>';
+    }).join('');
+  }
+  $('thThumbs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    IMGS.splice(Number(b.getAttribute('data-i')), 1); drawThumbs();
+  });
+  $('thFile').addEventListener('change', function () {
+    var files = Array.prototype.slice.call(this.files || []);
+    this.value = '';
+    files.forEach(function (f) {
+      if (!/^image\//.test(f.type)) return;
+      if (IMGS.length >= MAXI) { warn('写真は' + MAXI + '枚までです。'); return; }
+      var fr = new FileReader();
+      fr.onload = function () {
+        var im = new Image();
+        im.onload = function () {
+          var mx = 1280, w = im.width, h = im.height;
+          if (w > mx || h > mx) { if (w >= h) { h = Math.round(h * mx / w); w = mx; } else { w = Math.round(w * mx / h); h = mx; } }
+          var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          cv.getContext('2d').drawImage(im, 0, 0, w, h);
+          if (IMGS.length >= MAXI) return;
+          IMGS.push({ b64: cv.toDataURL('image/jpeg', 0.82).split(',')[1], mime: 'image/jpeg' });
+          drawThumbs();
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(f);
+    });
+  });
+
+  // ── 投稿 ──
+  $('thGo').addEventListener('click', function () {
+    var text = $('thText').value.trim();
+    if (!CUR) { warn('投稿するアカウントをえらんでください。'); return; }
+    if (!text && !IMGS.length) { warn('文か写真を入れてください。'); return; }
+    if (text.length > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
+    var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
+    szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？', { icon: '', cancel: true, onYes: function () {
+      ask({ kind: 'post', acct: CUR, text: text, imgs: IMGS }, 'Threadsに投稿中です', function (err, d) {
+        if (err) { warn(err); return; }
+        $('thText').value = ''; IMGS = []; drawThumbs(); drawCnt();
+        szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
+        var db = document.getElementById('szDoneBack');
+        if (db) db.addEventListener('click', function () { szOvHide_(); loadList(); });
+      });
+    } });
+  });
+
+  // ── ズコから出した投稿の一覧と削除 ──
+  function loadList() {
+    $('thList').innerHTML = '<div class="thempty">読み込み中です…</div>';
+    var want = CUR;
+    ask({ kind: 'list', acct: CUR }, '', function (err, d) {
+      if (want !== CUR) return;
+      if (err) { $('thList').innerHTML = '<div class="thempty">' + esc(err) + '</div>'; return; }
+      var ps = (d && d.posts) || [];
+      if (!ps.length) { $('thList').innerHTML = '<div class="thempty">まだありません</div>'; return; }
+      $('thList').innerHTML = ps.map(function (p) {
+        return '<div class="thpost"><div class="m">' + esc(String(p.at || '').slice(0, 16)) + '　' + esc(p.who || '') +
+          (p.n ? '　📷' + p.n + '枚' : '') + '</div><div class="t">' + esc(p.text || '（文なし）') + '</div>' +
+          '<div class="b">' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">開く</a>' : '') +
+          '<button type="button" data-id="' + esc(p.id) + '">削除</button></div></div>';
+      }).join('');
+    });
+  }
+  $('thList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-id]'); if (!b) return;
+    var mid = b.getAttribute('data-id');
+    szPopup_('この投稿をThreadsから削除しますか？', { cancel: true, onYes: function () {
+      ask({ kind: 'delete', acct: CUR, media_id: mid }, '削除中です', function (err) {
+        if (err) { warn(err); return; }
+        szOvShow_(szDoneHtml_('削除が完了しました'), '#16a34a');
+        var db = document.getElementById('szDoneBack');
+        if (db) db.addEventListener('click', function () { szOvHide_(); loadList(); });
+      });
+    } });
+  });
+
+  // ── はじめ：出せるアカウントを聞く ──
+  ask({ kind: 'accounts' }, '', function (err, d) {
+    if (err) { $('thLoad').textContent = err; return; }
+    ACCTS = (d && d.accounts) || [];
+    if (!ACCTS.length) { $('thLoad').textContent = 'この端末から投稿できるアカウントがありません。'; return; }
+    CUR = ACCTS[0].acct;
+    $('thLoad').style.display = 'none'; $('thMain').style.display = '';
+    drawAcct(); drawCnt(); loadList();
+  });
+}
+
 // ========== 🔁（施術後の予約の8枚目「お知らせのおすすめ」）の見た目 ==========
 // ★2026-10-06〜07 まるちゃん決定。次が最終回の時だけ出る8枚目のカード・ボタンの見た目（renderSejutsugo の8枚目が使う）。
 //   ダミーで試す「🔁テスト」の画面とボタンは 2026-10-07 まるちゃん指示で消した（本番に組み込み済み）。
@@ -14467,6 +14698,7 @@ var HOMECSS_ =
 '  .tile.igdm::before { background:#c13584; }' +
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.claudechat::before { background:#d97757; }' +
+'  .tile.threads::before { background:#101010; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile.kizon::before { background:#7c3aed; }' +

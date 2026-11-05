@@ -374,7 +374,7 @@
 <script src="bigsend.js?v=0a105a201c"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=dd98b8d223"></script>
+<script src="code.js?v=5113f8666c"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -876,6 +876,9 @@
   // ★販売管理（2026-10-17・実務者用）。取ってくるデータは無い＝描くだけ。登録・一覧は画面の中から受付係へ頼む。
   function showHanbai() { mount(renderHanbaiPage_(base, staff, dev)); }
 
+  // ★Threads投稿（2026-11-05）。出せるアカウント・一覧は画面の中から受付係に聞く＝ここでは描くだけ。
+  function showThreads() { mount(renderThreadsPage_(base, staff, dev)); }
+
   // ★Claudeに聞く（2026-10-27・開発中の機能）。会話の控えは画面の中から窓口(action=data)で読む＝ここでは描くだけ。
   function showClaudeChat() { mount(renderClaudeChatPage_(base, staff, dev)); }
 
@@ -1298,6 +1301,7 @@
     else if (v === 'procamp') showProcamp();
     else if (v === 'procstock') showProcStock();
     else if (v === 'hanbai') showHanbai();
+    else if (v === 'threads') showThreads();
     else if (v === 'claudechat') showClaudeChat();
     else if (v === 'instadm') showInstaDm();
     else if (v === 'igdm') showIgdm();
