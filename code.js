@@ -11856,7 +11856,34 @@ var THREADSCSS_ =
   '.thempty{color:#eaf6fb;font-weight:800;margin:4px;}' +
   '.themos{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;background:#fff;border-radius:14px;padding:10px;margin:0 0 12px;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.themos button{border:0;background:transparent;font-size:26px;line-height:1.3;padding:4px 0;cursor:pointer;border-radius:8px;}' +
-  '.themos button:active{background:#e2e8f0;}';
+  '.themos button:active{background:#e2e8f0;}' +
+  '.thshow{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;background:#101010;color:#fff;border:0;border-radius:14px;padding:14px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.2);margin:-2px 0 14px;}' +
+  '.thf{background:#101010;color:#f3f5f7;border-radius:18px;padding:16px 14px 6px;margin:4px 0 14px;box-shadow:0 4px 14px rgba(0,0,0,.25);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}' +
+  '.thf .ph{display:flex;gap:12px;align-items:flex-start;}' +
+  '.thf .ph .nm{flex:1;min-width:0;}' +
+  '.thf .ph .n{font-size:21px;font-weight:800;line-height:1.3;word-break:break-word;}' +
+  '.thf .ph .u{font-size:14px;color:#f3f5f7;margin-top:2px;}' +
+  '.thf .ph img{width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none;background:#333;}' +
+  '.thf .bio{white-space:pre-wrap;font-size:15px;line-height:1.5;margin:10px 0 6px;}' +
+  '.thf .fl{color:#999;font-size:14px;margin:6px 0 12px;}' +
+  '.thf .tabs{display:flex;border-bottom:1px solid #333;margin:0 -14px;}' +
+  '.thf .tabs div{flex:1;text-align:center;padding:10px 0;color:#777;font-weight:700;font-size:15px;}' +
+  '.thf .tabs div.on{color:#f3f5f7;border-bottom:2px solid #f3f5f7;}' +
+  '.thf .po{display:flex;gap:10px;padding:14px 0;border-bottom:1px solid #2a2a2a;}' +
+  '.thf .po:last-child{border-bottom:0;}' +
+  '.thf .po .av{width:36px;height:36px;border-radius:50%;object-fit:cover;flex:none;background:#333;}' +
+  '.thf .po .bd{flex:1;min-width:0;}' +
+  '.thf .po .hd{font-size:15px;}' +
+  '.thf .po .hd b{font-weight:700;}' +
+  '.thf .po .hd span{color:#777;margin-left:6px;}' +
+  '.thf .po .hd i{font-style:normal;margin-left:6px;background:#16a34a;color:#fff;border-radius:6px;padding:0 6px;font-size:12px;}' +
+  '.thf .po .tx{white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.55;margin:4px 0 6px;}' +
+  '.thf .po .md{display:flex;gap:6px;overflow-x:auto;margin:6px 0;}' +
+  '.thf .po .md img,.thf .po .md video{max-height:320px;max-width:100%;border-radius:10px;border:1px solid #333;flex:none;}' +
+  '.thf .po .md.many img,.thf .po .md.many video{height:220px;max-width:none;}' +
+  '.thf .po .st{display:flex;gap:16px;color:#ccc;font-size:14px;margin-top:6px;flex-wrap:wrap;}' +
+  '.thf .po .st a{color:#9bd3ff;text-decoration:none;margin-left:auto;}' +
+  '.thf .more{display:block;width:100%;background:#262626;color:#fff;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:800;margin:10px 0;cursor:pointer;}';
 
 function renderThreadsPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">Threads投稿</span></div>';
@@ -11872,6 +11899,7 @@ function renderThreadsPage_(base, staff, dev) {
         '<div class="hblb">投稿するアカウント</div>' +
         '<div class="thacct" id="thAcct"></div>' +
         '<div class="thname" id="thUser"></div>' +
+        '<button type="button" class="thshow" id="thShow">🧵 スレッズを表示</button>' +
         '<div class="hblb">文</div>' +
         '<textarea class="hbin" id="thText" placeholder="投稿する文を入れてください（500文字まで）"></textarea>' +
         '<div class="thcnt" id="thCnt">0 / 500</div>' +
@@ -11916,6 +11944,10 @@ function renderThreadsPage_(base, staff, dev) {
         '<button type="button" class="hbbig" id="thAddChain" style="padding:14px 18px;font-size:19px;"><span class="i">➕</span>スレッドに追加</button>' +
         '<button type="button" class="exgo" id="thGo">Threadsに投稿する</button>' +
         '<div class="thlist"><div class="thlh">ズコから出した投稿</div><div id="thList"></div></div>' +
+      '</div>' +
+      '<div id="thFeedWrap" style="display:none">' +
+        '<div class="ubar"><a class="uhome" id="thFeedBack" href="javascript:void(0)">← 戻る</a></div>' +
+        '<div class="thf" id="thFeed"></div>' +
       '</div>' +
     '</div></div>' +
     '<script>(' + threadsScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
@@ -11967,6 +11999,15 @@ function threadsScript_(C) {
           if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1000); return; }
           if (x.status !== 'done') { end(x.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
           var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
+          // 答えが長い時は、置き場に別に置いた場所だけが届く（受付係の共通の手当て）＝そこを読みに行く
+          if (d && d.__bigres) {
+            jsonp({ action: 'data', key: C.key, name: d.__bigres }, function (y) {
+              var v = null; try { v = JSON.parse(y && y.result); } catch (e) {}
+              if (!v) { end('答えを読み込めませんでした。もう一度お試しください。'); return; }
+              end(null, v);
+            });
+            return;
+          }
           end(null, d || {});
         });
       };
@@ -12158,6 +12199,65 @@ function threadsScript_(C) {
         });
       });
     } });
+  });
+
+  // ── スレッズを表示（お店のThreadsの画面をそのまま見る・読むだけ） ──
+  var FEED = null;
+  function ago(iso) {
+    var t = Date.parse(String(iso).replace(/\+0000$/, 'Z')); if (!t) return '';
+    var d = new Date(t), m = Math.floor((Date.now() - t) / 60000);
+    if (m < 60) return m + '分';
+    if (m < 1440) return Math.floor(m / 60) + '時間';
+    if (m < 10080) return Math.floor(m / 1440) + '日';
+    return d.getFullYear() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2);
+  }
+  function drawFeed() {
+    var pf = FEED.profile || {}, h = '';
+    h += '<div class="ph"><div class="nm"><div class="n">' + esc(pf.name || '') + '</div><div class="u">' + esc(pf.username || '') + '</div></div>' +
+      (pf.pic ? '<img src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '') + '</div>';
+    if (pf.bio) h += '<div class="bio">' + esc(pf.bio) + '</div>';
+    if (pf.followers != null) h += '<div class="fl">フォロワー' + esc(pf.followers) + '人</div>';
+    h += '<div class="tabs"><div class="on">スレッド</div></div>';
+    if (!FEED.posts.length) h += '<div class="fl" style="padding:16px 0">まだ投稿がありません</div>';
+    FEED.posts.forEach(function (p) {
+      var md = '';
+      if (p.media && p.media.length) {
+        md = '<div class="md' + (p.media.length > 1 ? ' many' : '') + '">' + p.media.map(function (m) {
+          return m.t === 'VIDEO'
+            ? '<video src="' + esc(m.u) + '" poster="' + esc(m.th) + '" controls playsinline preload="none"></video>'
+            : '<img src="' + esc(m.u) + '" loading="lazy" referrerpolicy="no-referrer">';
+        }).join('') + '</div>';
+      }
+      var st = p.st || {};
+      h += '<div class="po">' + (pf.pic ? '<img class="av" src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '<div class="av"></div>') +
+        '<div class="bd"><div class="hd"><b>' + esc(pf.username || '') + '</b><span>' + esc(ago(p.at)) + '</span>' + (p.zuko ? '<i>ズコから</i>' : '') + '</div>' +
+        (p.text ? '<div class="tx">' + esc(p.text) + '</div>' : '') + md +
+        '<div class="st"><span>👁 ' + (st.views || 0) + '</span><span>♡ ' + (st.likes || 0) + '</span><span>💬 ' + (st.replies || 0) + '</span>' +
+        '<span>🔁 ' + (st.reposts || 0) + '</span>' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div>' +
+        '</div></div>';
+    });
+    if (FEED.after) h += '<button type="button" class="more" id="thMore">もっと見る</button>';
+    $('thFeed').innerHTML = h;
+  }
+  function loadFeed(after) {
+    ask({ kind: 'feed', acct: CUR, after: after || '' }, after ? '' : '読み込み中です', function (err, d) {
+      if (err) { warn(err); return; }
+      if (after && FEED) { FEED.posts = FEED.posts.concat(d.posts || []); FEED.after = d.after || ''; }
+      else FEED = { profile: d.profile || {}, posts: d.posts || [], after: d.after || '' };
+      drawFeed();
+    });
+  }
+  $('thShow').addEventListener('click', function () {
+    if (!CUR) return;
+    FEED = null; $('thFeed').innerHTML = '';
+    $('thMain').style.display = 'none'; $('thFeedWrap').style.display = '';
+    window.scrollTo(0, 0); loadFeed('');
+  });
+  $('thFeedBack').addEventListener('click', function () {
+    $('thFeedWrap').style.display = 'none'; $('thMain').style.display = ''; window.scrollTo(0, 0);
+  });
+  $('thFeed').addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'thMore') { e.target.disabled = true; e.target.textContent = '読み込み中です…'; loadFeed(FEED.after); }
   });
 
   // ── ズコから出した投稿の一覧と削除 ──
