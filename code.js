@@ -12369,6 +12369,21 @@ function threadsScript_(C) {
       h += '<div class="cmp" data-compose="1">' + (pf.pic ? '<img src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '<div class="av0"></div>') +
         '<span>最近どう？</span><button type="button" data-compose="1">投稿</button></div>';
     }
+    // ★再投稿：公式の仕組みは「再投稿がある」としか返さない＝本物の画面から読んだ中身（web の reposts）で描く
+    if (TAB === 'rs' && wb && wb.reposts) {
+      if (!wb.reposts.length) h += '<div class="fl" style="padding:16px 0">まだ再投稿がありません</div>';
+      wb.reposts.forEach(function (r) {
+        var n = r.nums || [];
+        h += '<div class="fl" style="margin:12px 0 -6px 46px">🔁 ' + esc(pf.username || '') + 'さんが再投稿しました</div>' +
+          '<div class="po">' + (r.av ? '<img class="av" src="' + esc(r.av) + '" referrerpolicy="no-referrer">' : '<div class="av"></div>') +
+          '<div class="bd"><div class="hd"><b>' + esc(r.user) + '</b><span>' + esc(ago(r.at)) + '</span></div>' +
+          (r.text ? '<div class="tx">' + esc(r.text) + '</div>' : '') +
+          (r.imgs && r.imgs.length ? '<div class="md' + (r.imgs.length > 1 ? ' many' : '') + '">' + r.imgs.map(function (u) { return '<img src="' + esc(u) + '" loading="lazy" referrerpolicy="no-referrer">'; }).join('') + '</div>' : '') +
+          '<div class="st"><span>♡ ' + esc(n[0] || 0) + '</span><span>💬 ' + esc(n[1] || 0) + '</span><span>🔁 ' + esc(n[2] || 0) + '</span><span>➤ ' + esc(n[3] || 0) + '</span>' +
+          (r.link ? '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div></div></div>';
+      });
+      $('thFeed').innerHTML = h; return;
+    }
     var list = TAB === 'rp' ? (FEED.myreplies || []) :
       FEED.posts.filter(function (p) {
         if (TAB === 'th') return p.type !== 'REPOST_FACADE';
@@ -12392,7 +12407,7 @@ function threadsScript_(C) {
         '<div class="pmenu" id="pm_' + esc(p.id) + '" style="display:none">' +
           (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') +
           (canDel ? '<button type="button" class="del" data-fdel="' + esc(p.id) + '">削除</button>' : '') + '</div>' +
-        (p.text ? '<div class="tx">' + esc(p.text) + '</div>' : '') + md +
+        (p.text ? '<div class="tx">' + esc(p.text) + '</div>' : (p.type === 'REPOST_FACADE' ? '<div class="tx" style="color:#888">🔁 再投稿（中身はThreadsの画面から読んでいます…）</div>' : '')) + md +
         (st ? '<div class="st"><span>👁 ' + (st.views || 0) + '</span><span>♡ ' + (st.likes || 0) + '</span><span>💬 ' + (st.replies || 0) + '</span>' +
           '<span>🔁 ' + (st.reposts || 0) + '</span></div>' : '') +
         (TAB !== 'rp' ? '<button type="button" class="cmb" data-cm="' + esc(p.id) + '">💬 コメントを見る・返信する</button>' +
