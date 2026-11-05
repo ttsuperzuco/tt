@@ -11820,18 +11820,30 @@ function renderHanbaiPage_(base, staff, dev) {
 var THREADSCSS_ =
   '.thw{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
   '.thacct{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px;}' +
-  '.thacct button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:16px 4px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
-  '.thacct button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
+  '.thacct button,.thseg button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:14px 4px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.thacct button.on,.thseg button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.thacct.one{grid-template-columns:1fr;}' +
   '.thname{color:#fde047;font-size:15px;font-weight:800;margin:-4px 4px 10px;}' +
   '.thcnt{color:#eaf6fb;font-weight:800;font-size:15px;text-align:right;margin:-6px 4px 10px;}' +
   '.thcnt.over{color:#fca5a5;}' +
-  '.thpick{position:relative;overflow:hidden;display:block;width:100%;box-sizing:border-box;background:#fff;color:#0f172a;border-radius:14px;padding:16px;font-size:20px;font-weight:900;text-align:center;box-shadow:0 3px 8px rgba(0,0,0,.15);margin:4px 0 10px;cursor:pointer;}' +
-  '.thpick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;}' +
+  '.thtools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 12px;}' +
+  '.thtools button,.thtools label{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 4px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.thtools .on{background:#fde047;border-color:#eab308;}' +
+  '.thtools input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;}' +
+  '.thbox{background:rgba(255,255,255,.14);border-radius:14px;padding:10px 10px 4px;margin:0 0 12px;}' +
+  '.thbox .hblb{margin-top:0;}' +
+  '.thbox .hbin{font-size:18px;padding:12px;}' +
+  '.thseg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px;}' +
+  '.thseg button{font-size:15px;padding:12px 4px;}' +
+  '.thchk{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:17px;margin:6px 4px 10px;}' +
+  '.thchk input{width:24px;height:24px;}' +
   '.ththumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 12px;}' +
   '.ththumbs div{position:relative;}' +
-  '.ththumbs img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;display:block;}' +
+  '.ththumbs img,.ththumbs .v{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;display:block;}' +
+  '.ththumbs .v{background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;}' +
   '.ththumbs button{position:absolute;top:-6px;right:-6px;width:28px;height:28px;border-radius:50%;border:0;background:#0f172a;color:#fff;font-size:16px;font-weight:900;cursor:pointer;}' +
+  '.thchain{position:relative;}' +
+  '.thchain .x{position:absolute;top:2px;right:2px;border:0;background:#0f172a;color:#fff;border-radius:50%;width:28px;height:28px;font-weight:900;cursor:pointer;}' +
   '.thlist{margin:22px 0 0;}' +
   '.thlh{color:#fff;font-weight:900;font-size:20px;margin:8px 4px 8px;}' +
   '.thpost{background:#fff;color:#0f172a;border-radius:14px;padding:12px 14px;margin:0 0 10px;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
@@ -11842,7 +11854,6 @@ var THREADSCSS_ =
   '.thpost .b a{background:#e0f2fe;color:#0369a1;}' +
   '.thpost .b button{background:#fee2e2;color:#b91c1c;border:0;}' +
   '.thempty{color:#eaf6fb;font-weight:800;margin:4px;}' +
-  '.themo{display:inline-block;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:10px 16px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);margin:-2px 0 10px;}' +
   '.themos{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;background:#fff;border-radius:14px;padding:10px;margin:0 0 12px;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.themos button{border:0;background:transparent;font-size:26px;line-height:1.3;padding:4px 0;cursor:pointer;border-radius:8px;}' +
   '.themos button:active{background:#e2e8f0;}';
@@ -11864,11 +11875,45 @@ function renderThreadsPage_(base, staff, dev) {
         '<div class="hblb">文</div>' +
         '<textarea class="hbin" id="thText" placeholder="投稿する文を入れてください（500文字まで）"></textarea>' +
         '<div class="thcnt" id="thCnt">0 / 500</div>' +
-        '<button type="button" class="themo" id="thEmoBtn">😊 絵文字</button>' +
+        '<div class="thtools">' +
+          '<label id="thMediaBtn">📷 写真・動画<input type="file" id="thFile" accept="image/*,video/mp4,video/quicktime" multiple></label>' +
+          '<button type="button" id="thEmoBtn">😊 絵文字</button>' +
+          '<button type="button" id="thPollBtn">📊 投票</button>' +
+          '<button type="button" id="thLongBtn">📄 長い文</button>' +
+          '<button type="button" id="thTopicBtn">🏷 トピック</button>' +
+          '<button type="button" id="thOptBtn">⚙️ 投稿オプション</button>' +
+        '</div>' +
         '<div class="themos" id="thEmos" style="display:none"></div>' +
-        '<div class="hblb">写真（10枚まで・なくてもOK）</div>' +
-        '<label class="thpick">📷 写真をえらぶ<input type="file" id="thFile" accept="image/*" multiple></label>' +
         '<div class="ththumbs" id="thThumbs"></div>' +
+        '<div class="thbox" id="thPoll" style="display:none">' +
+          '<div class="hblb">📊 投票の選択肢（2〜4つ・1つ25文字まで）</div>' +
+          '<input class="hbin" id="thP1" maxlength="25" placeholder="選択肢1（必ず）">' +
+          '<input class="hbin" id="thP2" maxlength="25" placeholder="選択肢2（必ず）">' +
+          '<input class="hbin" id="thP3" maxlength="25" placeholder="選択肢3（なくてもOK）">' +
+          '<input class="hbin" id="thP4" maxlength="25" placeholder="選択肢4（なくてもOK）">' +
+        '</div>' +
+        '<div class="thbox" id="thLong" style="display:none">' +
+          '<div class="hblb">📄 長い文（10000文字まで・投稿の下に付きます）</div>' +
+          '<textarea class="hbin" id="thLongText" style="min-height:160px"></textarea>' +
+          '<div class="thcnt" id="thLongCnt">0 / 10000</div>' +
+        '</div>' +
+        '<div class="thbox" id="thTopic" style="display:none">' +
+          '<div class="hblb">🏷 トピック（50文字まで・「.」と「&」は使えません）</div>' +
+          '<input class="hbin" id="thTopicText" maxlength="50" placeholder="例：脱毛">' +
+        '</div>' +
+        '<div class="thbox" id="thOpt" style="display:none">' +
+          '<div class="hblb">⚙️ 返信できる人</div>' +
+          '<div class="thseg" id="thRc">' +
+            '<button type="button" class="on" data-v="everyone">全員</button>' +
+            '<button type="button" data-v="followers_only">フォロワー</button>' +
+            '<button type="button" data-v="accounts_you_follow">フォロー中の人</button>' +
+            '<button type="button" data-v="mentioned_only">@で書いた人だけ</button>' +
+          '</div>' +
+          '<label class="thchk"><input type="checkbox" id="thApprove">返信は承認してから出す</label>' +
+          '<label class="thchk"><input type="checkbox" id="thSpoiler">写真・動画をぼかす（ネタバレ）</label>' +
+        '</div>' +
+        '<div id="thChain"></div>' +
+        '<button type="button" class="hbbig" id="thAddChain" style="padding:14px 18px;font-size:19px;"><span class="i">➕</span>スレッドに追加</button>' +
         '<button type="button" class="exgo" id="thGo">Threadsに投稿する</button>' +
         '<div class="thlist"><div class="thlh">ズコから出した投稿</div><div id="thList"></div></div>' +
       '</div>' +
@@ -11879,9 +11924,12 @@ function renderThreadsPage_(base, staff, dev) {
 function threadsScript_(C) {
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var ACCTS = [], CUR = '', IMGS = [], MAXT = 500, MAXI = 10;
+  var ACCTS = [], CUR = '', MEDIA = [], MAXT = 500, MAXI = 10, MAXLONG = 10000, MAXCHAIN = 5, VIDEO_MB = 18, TOTAL_MB = 18;
+  var RC = 'everyone', LAST = null;
   var idn = function () { return { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' }; };
   var warn = function (m) { if (typeof szPopup_ === 'function') szPopup_(m); else alert(m); };
+  // ★文字の数え方はThreadsと同じ（2026-11-05 実測：😊は1文字・肌の色つき👍🏻は2文字＝文字の部品の数）。
+  function tlen(t) { return Array.from(t).length; }
 
   function jsonp(p, cb) {
     var n = '__th' + Date.now() + Math.floor(Math.random() * 1000);
@@ -11890,7 +11938,6 @@ function threadsScript_(C) {
     var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
     s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度お試しください。' }); }; document.body.appendChild(s);
   }
-  // 事務所PCへ頼む（op=threads）→ 済んだら答えを受け取る。写真つきの大きい依頼は共通のBIGで別に預ける。
   // 開発版だけ：この窓の鍵の指紋を添える（パソコン版ズコの窓は端末番号が窓ごとにばらばらなので、受付係が鍵の指紋で見分ける）。
   function devKey(cb) {
     if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
@@ -11905,12 +11952,14 @@ function threadsScript_(C) {
   function ask(fields, busy, done) {
     devKey(function (ex) { for (var k in ex) fields[k] = ex[k]; ask0(fields, busy, done); });
   }
+  // 事務所PCへ頼む（op=threads）→ 済んだら答えを受け取る。写真・動画つきの大きい依頼は共通のBIGで別に預ける。
   function ask0(fields, busy, done) {
     if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
     var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     var me = idn();
     var poll = function (id) {
-      var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('threads', 1000) : 200;
+      // 動画はThreadsの準備に数分かかることがある＝約10分まで待つ（受付係の待ちより長く）。
+      var n = 0, max = 300;
       var tick = function () {
         n++; if (n > max) { end('時間切れです。もう一度お試しください。'); return; }
         jsonp({ action: 'status', key: C.key, id: id }, function (x) {
@@ -11933,7 +11982,7 @@ function threadsScript_(C) {
     if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
     BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'threads', op: 'threads',
                   who: me.who, role: me.role, device: me.device, fields: fields },
-      send, function () { end('写真を送れませんでした。枚数を減らしてもう一度お試しください。'); });
+      send, function () { end('写真・動画を送れませんでした。数を減らしてもう一度お試しください。'); });
   }
 
   // ── アカウント ──
@@ -11952,50 +12001,79 @@ function threadsScript_(C) {
     CUR = b.getAttribute('data-a'); drawAcct(); loadList();
   });
 
-  // ── 文 ──
-  // ★文字の数え方はThreadsと同じ（2026-11-05 実測：😊は1文字・肌の色つき👍🏻は2文字＝文字の部品の数）。
-  //   ふつうの数え方（.length）だと絵文字を2文字に数えてしまい、Threadsが受け付ける文を止めてしまう。
-  function tlen(t) { return Array.from(t).length; }
-  function drawCnt() {
-    var n = tlen($('thText').value);
-    $('thCnt').textContent = n + ' / ' + MAXT;
-    $('thCnt').className = 'thcnt' + (n > MAXT ? ' over' : '');
+  // ── 文と数 ──
+  function cnt(el, out, max) {
+    var n = tlen(el.value);
+    out.textContent = n + ' / ' + max;
+    out.className = 'thcnt' + (n > max ? ' over' : '');
   }
+  function drawCnt() { cnt($('thText'), $('thCnt'), MAXT); }
   $('thText').addEventListener('input', drawCnt);
+  $('thText').addEventListener('focus', function () { LAST = this; });
+  $('thLongText').addEventListener('input', function () { cnt(this, $('thLongCnt'), MAXLONG); });
 
-  // ── 絵文字（本物のThreadsの😊ボタンと同じ役。押すと文の今の位置に入る） ──
+  // ── 道具ボタン（本物のThreadsの下の並びと同じ役） ──
+  function toggle(btn, box) {
+    var open = $(box).style.display === 'none';
+    $(box).style.display = open ? '' : 'none';
+    $(btn).classList.toggle('on', open);
+  }
+  $('thPollBtn').addEventListener('click', function () { toggle('thPollBtn', 'thPoll'); });
+  $('thLongBtn').addEventListener('click', function () { toggle('thLongBtn', 'thLong'); });
+  $('thTopicBtn').addEventListener('click', function () { toggle('thTopicBtn', 'thTopic'); });
+  $('thOptBtn').addEventListener('click', function () { toggle('thOptBtn', 'thOpt'); });
+  $('thRc').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    RC = b.getAttribute('data-v');
+    Array.prototype.forEach.call($('thRc').children, function (x) { x.classList.toggle('on', x === b); });
+  });
+
+  // ── 絵文字（押すと、最後に触った文の欄の今の位置に入る） ──
   var EMOS = ['😊','😍','🥰','😆','🤗','🥹','😂','🙏','✨','💖','💕','❤️','🩷','🌸','🌷','💐',
               '🌿','🍀','🍅','🎉','🎁','🎀','🔥','👍','💯','✅','🆕','⚠️','📅','⏰','📍','📞',
               '💬','👉','➡️','⭐','☀️','🌙','🌈','💆‍♀️','💅','🧖‍♀️','💄','👀','😳','🤩','😎','🫶'];
   $('thEmos').innerHTML = EMOS.map(function (e) { return '<button type="button" data-e="' + e + '">' + e + '</button>'; }).join('');
-  $('thEmoBtn').addEventListener('click', function () {
-    var g = $('thEmos'); g.style.display = (g.style.display === 'none') ? '' : 'none';
-  });
+  $('thEmoBtn').addEventListener('click', function () { toggle('thEmoBtn', 'thEmos'); });
   $('thEmos').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    var t = $('thText'), v = t.value, a = (t.selectionStart == null) ? v.length : t.selectionStart, z = (t.selectionEnd == null) ? a : t.selectionEnd;
+    var t = (LAST && document.body.contains(LAST)) ? LAST : $('thText');
+    var v = t.value, a = (t.selectionStart == null) ? v.length : t.selectionStart, z = (t.selectionEnd == null) ? a : t.selectionEnd;
     var em = b.getAttribute('data-e');
     t.value = v.slice(0, a) + em + v.slice(z);
     var p = a + em.length; try { t.setSelectionRange(p, p); } catch (x) {}
-    drawCnt();
+    t.dispatchEvent(new Event('input'));
   });
 
-  // ── 写真（時間指定LINE送信と同じ縮め方） ──
+  // ── 写真・動画（写真は時間指定LINE送信と同じ縮め方・動画はそのまま） ──
+  function totalMB() { return MEDIA.reduce(function (s, o) { return s + o.b64.length * 3 / 4; }, 0) / 1048576; }
   function drawThumbs() {
-    $('thThumbs').innerHTML = IMGS.map(function (o, i) {
-      return '<div><img src="data:' + o.mime + ';base64,' + o.b64 + '"><button type="button" data-i="' + i + '">×</button></div>';
+    $('thThumbs').innerHTML = MEDIA.map(function (o, i) {
+      var face = o.video ? '<div class="v">🎬</div>' : '<img src="data:image/jpeg;base64,' + o.b64 + '">';
+      return '<div>' + face + '<button type="button" data-i="' + i + '">×</button></div>';
     }).join('');
+    $('thMediaBtn').classList.toggle('on', MEDIA.length > 0);
   }
   $('thThumbs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    IMGS.splice(Number(b.getAttribute('data-i')), 1); drawThumbs();
+    MEDIA.splice(Number(b.getAttribute('data-i')), 1); drawThumbs();
   });
   $('thFile').addEventListener('change', function () {
     var files = Array.prototype.slice.call(this.files || []);
     this.value = '';
     files.forEach(function (f) {
+      if (MEDIA.length >= MAXI) { warn('写真・動画は合わせて' + MAXI + '個までです。'); return; }
+      if (/^video\//.test(f.type)) {
+        if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです（短い動画にしてください）。'); return; }
+        var vr = new FileReader();
+        vr.onload = function () {
+          var b64 = String(vr.result).split(',')[1] || '';
+          if (totalMB() + b64.length * 3 / 4 / 1048576 > TOTAL_MB) { warn('写真・動画は合わせて' + TOTAL_MB + 'MBまでです。'); return; }
+          MEDIA.push({ b64: b64, video: true }); drawThumbs();
+        };
+        vr.readAsDataURL(f);
+        return;
+      }
       if (!/^image\//.test(f.type)) return;
-      if (IMGS.length >= MAXI) { warn('写真は' + MAXI + '枚までです。'); return; }
       var fr = new FileReader();
       fr.onload = function () {
         var im = new Image();
@@ -12004,8 +12082,8 @@ function threadsScript_(C) {
           if (w > mx || h > mx) { if (w >= h) { h = Math.round(h * mx / w); w = mx; } else { w = Math.round(w * mx / h); h = mx; } }
           var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
           cv.getContext('2d').drawImage(im, 0, 0, w, h);
-          if (IMGS.length >= MAXI) return;
-          IMGS.push({ b64: cv.toDataURL('image/jpeg', 0.82).split(',')[1], mime: 'image/jpeg' });
+          if (MEDIA.length >= MAXI) return;
+          MEDIA.push({ b64: cv.toDataURL('image/jpeg', 0.82).split(',')[1] });
           drawThumbs();
         };
         im.src = fr.result;
@@ -12014,20 +12092,70 @@ function threadsScript_(C) {
     });
   });
 
+  // ── スレッドに追加（続きの投稿・5つまで） ──
+  function chainBoxes() { return Array.prototype.slice.call(document.querySelectorAll('#thChain textarea')); }
+  $('thAddChain').addEventListener('click', function () {
+    if (chainBoxes().length >= MAXCHAIN) { warn('続けて投稿できるのは' + MAXCHAIN + 'つまでです。'); return; }
+    var d = document.createElement('div');
+    d.className = 'thbox thchain';
+    var n = chainBoxes().length + 2;
+    d.innerHTML = '<div class="hblb">➕ 続き（' + n + 'つ目の投稿）</div><button type="button" class="x">×</button>' +
+      '<textarea class="hbin" placeholder="続きの文（500文字まで）"></textarea><div class="thcnt">0 / 500</div>';
+    $('thChain').appendChild(d);
+    var ta = d.querySelector('textarea'), ct = d.querySelector('.thcnt');
+    ta.addEventListener('input', function () { cnt(ta, ct, MAXT); });
+    ta.addEventListener('focus', function () { LAST = ta; });
+    d.querySelector('.x').addEventListener('click', function () { d.parentNode.removeChild(d); });
+    ta.focus();
+  });
+
   // ── 投稿 ──
+  function vals(ids) { return ids.map(function (i) { return $(i).value.trim(); }); }
+  function reset() {
+    ['thText', 'thLongText', 'thTopicText', 'thP1', 'thP2', 'thP3', 'thP4'].forEach(function (i) { $(i).value = ''; });
+    MEDIA = []; drawThumbs(); drawCnt(); $('thLongCnt').textContent = '0 / ' + MAXLONG;
+    $('thChain').innerHTML = ''; $('thApprove').checked = false; $('thSpoiler').checked = false;
+    RC = 'everyone'; Array.prototype.forEach.call($('thRc').children, function (x) { x.classList.toggle('on', x.getAttribute('data-v') === RC); });
+    ['thPoll', 'thLong', 'thTopic', 'thOpt', 'thEmos'].forEach(function (i) { $(i).style.display = 'none'; });
+    ['thPollBtn', 'thLongBtn', 'thTopicBtn', 'thOptBtn', 'thEmoBtn'].forEach(function (i) { $(i).classList.remove('on'); });
+  }
   $('thGo').addEventListener('click', function () {
     var text = $('thText').value.trim();
+    var pv = vals(['thP1', 'thP2', 'thP3', 'thP4']);
+    var usePoll = $('thPoll').style.display !== 'none' && pv.some(function (x) { return x; });
+    var longt = $('thLong').style.display !== 'none' ? $('thLongText').value.trim() : '';
+    var topic = $('thTopic').style.display !== 'none' ? $('thTopicText').value.trim().replace(/^#/, '') : '';
+    var chain = chainBoxes().map(function (t) { return t.value.trim(); }).filter(function (x) { return x; });
     if (!CUR) { warn('投稿するアカウントをえらんでください。'); return; }
-    if (!text && !IMGS.length) { warn('文か写真を入れてください。'); return; }
+    if (!text && !MEDIA.length) { warn('文か写真・動画を入れてください。'); return; }
     if (tlen(text) > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
+    if (usePoll) {
+      if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には出せません。'); return; }
+      if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入れてください。'); return; }
+      if (!text) { warn('投票には質問の文を入れてください。'); return; }
+    }
+    if (longt) {
+      if (MEDIA.length) { warn('長い文は、写真・動画と一緒には出せません。'); return; }
+      if (tlen(longt) > MAXLONG) { warn('長い文は' + MAXLONG + '文字までです。'); return; }
+      if (!text) { warn('長い文には、最初に見える文も入れてください。'); return; }
+    }
+    if (topic && (tlen(topic) > 50 || /[.&]/.test(topic))) { warn('トピックは50文字まで・「.」と「&」は使えません。'); return; }
+    if (chain.some(function (c) { return tlen(c) > MAXT; })) { warn('続きの文も1つ' + MAXT + '文字までです。'); return; }
+    var f = { kind: 'post', acct: CUR, text: text, media: MEDIA.map(function (o) { return { b64: o.b64 }; }),
+              topic: topic, long: longt, chain: chain, reply_control: RC,
+              approvals: $('thApprove').checked, spoiler: $('thSpoiler').checked };
+    if (usePoll) f.poll = { a: pv[0], b: pv[1], c: pv[2], d: pv[3] };
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
     szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？', { icon: '', cancel: true, onYes: function () {
-      ask({ kind: 'post', acct: CUR, text: text, imgs: IMGS }, 'Threadsに投稿中です', function (err, d) {
+      ask(f, MEDIA.some(function (o) { return o.video; }) ? 'Threadsに投稿中です（動画は数分かかります）' : 'Threadsに投稿中です', function (err, d) {
         if (err) { warn(err); return; }
-        $('thText').value = ''; IMGS = []; drawThumbs(); drawCnt();
+        reset();
         szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
         var db = document.getElementById('szDoneBack');
-        if (db) db.addEventListener('click', function () { szOvHide_(); loadList(); });
+        if (db) db.addEventListener('click', function () {
+          szOvHide_(); loadList();
+          if (d && d.chain_fail) warn('最初の投稿はできましたが、' + d.chain_fail);
+        });
       });
     } });
   });
@@ -12043,7 +12171,7 @@ function threadsScript_(C) {
       if (!ps.length) { $('thList').innerHTML = '<div class="thempty">まだありません</div>'; return; }
       $('thList').innerHTML = ps.map(function (p) {
         return '<div class="thpost"><div class="m">' + esc(String(p.at || '').slice(0, 16)) + '　' + esc(p.who || '') +
-          (p.n ? '　📷' + p.n + '枚' : '') + '</div><div class="t">' + esc(p.text || '（文なし）') + '</div>' +
+          (p.n ? '　📷' + p.n : '') + (p.chain ? '　➕続き' + p.chain : '') + '</div><div class="t">' + esc(p.text || '（文なし）') + '</div>' +
           '<div class="b">' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">開く</a>' : '') +
           '<button type="button" data-id="' + esc(p.id) + '">削除</button></div></div>';
       }).join('');
@@ -12052,7 +12180,7 @@ function threadsScript_(C) {
   $('thList').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-id]'); if (!b) return;
     var mid = b.getAttribute('data-id');
-    szPopup_('この投稿をThreadsから削除しますか？', { cancel: true, onYes: function () {
+    szPopup_('この投稿をThreadsから削除しますか？（続きの投稿も一緒に消えます）', { cancel: true, onYes: function () {
       ask({ kind: 'delete', acct: CUR, media_id: mid }, '削除中です', function (err) {
         if (err) { warn(err); return; }
         szOvShow_(szDoneHtml_('削除が完了しました'), '#16a34a');
