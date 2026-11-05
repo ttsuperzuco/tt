@@ -11939,13 +11939,65 @@ var THREADSCSS_ =
   '.thf .big{font-size:34px;font-weight:800;}' +
   '.thf .sub{color:#999;font-size:13px;margin:2px 0 10px;}' +
   '.thf svg text{fill:#888;font-size:10px;}' +
-  '.thf .note{color:#777;font-size:12px;margin:-6px 0 10px;}';
+  '.thf .note{color:#777;font-size:12px;margin:-6px 0 10px;}' +
+  '.thf .top{display:flex;align-items:center;gap:14px;font-weight:800;font-size:19px;margin:0 0 12px;}' +
+  '.thf .top span{flex:1;}' +
+  '.thf .top button{background:none;border:0;color:#f3f5f7;font:inherit;font-size:18px;cursor:pointer;padding:0;}' +
+  '.thf .pbtns button.off{color:#888;}' +
+  '.thf .tabs div{cursor:pointer;}' +
+  '.thf .cmp{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #2a2a2a;cursor:pointer;}' +
+  '.thf .cmp img,.thf .cmp .av0{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#333;}' +
+  '.thf .cmp span{flex:1;color:#777;font-size:15px;}' +
+  '.thf .cmp button{background:transparent;color:#f3f5f7;border:1px solid #444;border-radius:10px;padding:7px 14px;font:inherit;font-weight:800;cursor:pointer;}' +
+  '.thf .po .hd{display:flex;align-items:center;}' +
+  '.thf .po .hd .dots{margin-left:auto;background:none;border:0;color:#999;font-size:18px;cursor:pointer;padding:0 4px;}' +
+  '.thf .pmenu{background:#262626;border-radius:12px;padding:4px;margin:6px 0;}' +
+  '.thf .pmenu a,.thf .pmenu button{display:block;width:100%;text-align:left;background:none;border:0;color:#f3f5f7;font:inherit;font-size:15px;padding:10px 12px;text-decoration:none;cursor:pointer;border-radius:8px;}' +
+  '.thf .pmenu .del{color:#ff4d4f;font-weight:800;}' +
+  '.thcomp{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:60;overflow:auto;padding:24px 8px;box-sizing:border-box;}' +
+  '.thsheet{background:#181818;color:#f3f5f7;border:1px solid #333;border-radius:18px;max-width:640px;margin:0 auto;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}' +
+  '.thsheet .tsh{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #2a2a2a;}' +
+  '.thsheet .tsh button{background:none;border:0;color:#f3f5f7;font:inherit;font-size:16px;cursor:pointer;padding:0;}' +
+  '.thsheet .tsh b{flex:1;text-align:center;font-size:16px;}' +
+  '.thsheet .tsh span{width:70px;}' +
+  '.thsheet .tsb{padding:14px 16px 4px;}' +
+  '.thsheet .trow{display:flex;gap:12px;}' +
+  '.thsheet .trow.add{align-items:center;color:#777;cursor:pointer;margin:6px 0 12px;}' +
+  '.thsheet .tav{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#333;flex:none;}' +
+  '.thsheet .tav.sm{width:22px;height:22px;margin:0 9px;}' +
+  '.thsheet .tmain{flex:1;min-width:0;}' +
+  '.thsheet .tun{display:flex;align-items:center;gap:6px;font-size:15px;}' +
+  '.thsheet .tun button{background:none;border:0;color:#999;font:inherit;font-size:15px;cursor:pointer;padding:0;}' +
+  '.thsheet .tta{width:100%;box-sizing:border-box;background:transparent;border:0;color:#f3f5f7;font:inherit;font-size:16px;line-height:1.5;min-height:60px;resize:vertical;outline:none;padding:4px 0;}' +
+  '.thsheet .tta::placeholder{color:#777;}' +
+  '.thsheet .ticons{display:flex;gap:4px;flex-wrap:wrap;margin:4px 0;}' +
+  '.thsheet .tic{position:relative;overflow:hidden;background:none;border:0;color:#bbb;font:inherit;font-size:19px;min-width:34px;height:34px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}' +
+  '.thsheet .tic.on{background:#333;color:#fff;}' +
+  '.thsheet .tic.off{color:#555;}' +
+  '.thsheet .tic input{position:absolute;inset:0;opacity:0;cursor:pointer;}' +
+  '.thsheet .thbox{background:#222;border-radius:12px;padding:8px;margin:6px 0;}' +
+  '.thsheet .thbox .hbin{background:#2b2b2b;color:#fff;box-shadow:none;font-size:15px;padding:10px;margin:4px 0;}' +
+  '.thsheet .thbox .hblb{color:#ddd;font-size:14px;margin:2px 2px 6px;}' +
+  '.thsheet .thcnt{color:#888;font-size:13px;margin:0 2px 6px;}' +
+  '.thsheet .thchk{color:#ddd;font-size:15px;}' +
+  '.thsheet .thseg button{font-size:13px;padding:10px 4px;}' +
+  '.thsheet .thchain .hbin{background:transparent;color:#fff;box-shadow:none;border:0;font-size:15px;}' +
+  '.thsheet .themos{background:#222;box-shadow:none;}' +
+  '.thsheet .tsf{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid #2a2a2a;}' +
+  '.thsheet .tsf #thOptBtn{background:none;border:0;color:#bbb;font:inherit;font-size:15px;font-weight:700;cursor:pointer;}' +
+  '.thsheet .tsf #thOptBtn.on{color:#fff;}' +
+  '.thsheet .tsf #thGo{background:#f3f5f7;color:#101010;border:0;border-radius:10px;padding:9px 18px;font:inherit;font-weight:800;cursor:pointer;}';
 
 function renderThreadsPage_(base, staff, dev) {
+  // ★2026-11-05 まるちゃん「スレッズを表示の部分からは、本物のスレッズを再現したい。最近どうを押すと新しいスレッドが出る」
+  //   ＝アカウントのボタンの下は本物のThreadsのプロフィール画面そのもの。投稿の入力は「新しいスレッド」の小窓の中。
   var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">Threads投稿</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8'
+  };
+  var ic = function (id, label, title, off) {
+    return '<button type="button" class="tic' + (off ? ' off' : '') + '"' + (id ? ' id="' + id + '"' : '') + ' title="' + title + '"' + (off ? ' data-off="' + title + '"' : '') + '>' + label + '</button>';
   };
   return '<style>' + HOMECSS_ + EXPADCSS_ + HANBAICSS_ + THREADSCSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
@@ -11954,57 +12006,55 @@ function renderThreadsPage_(base, staff, dev) {
       '<div id="thMain" style="display:none">' +
         '<div class="hblb">投稿するアカウント</div>' +
         '<div class="thacct" id="thAcct"></div>' +
-        '<div class="thname" id="thUser"></div>' +
-        '<button type="button" class="thshow" id="thShow">🧵 スレッズを表示</button>' +
-        '<div class="hblb">文</div>' +
-        '<textarea class="hbin" id="thText" placeholder="投稿する文を入れてください（500文字まで）"></textarea>' +
-        '<div class="thcnt" id="thCnt">0 / 500</div>' +
-        '<div class="thtools">' +
-          '<label id="thMediaBtn">📷 写真・動画<input type="file" id="thFile" accept="image/*,video/mp4,video/quicktime" multiple></label>' +
-          '<button type="button" id="thEmoBtn">😊 絵文字</button>' +
-          '<button type="button" id="thPollBtn">📊 投票</button>' +
-          '<button type="button" id="thLongBtn">📄 長い文</button>' +
-          '<button type="button" id="thTopicBtn">🏷 トピック</button>' +
-          '<button type="button" id="thOptBtn">⚙️ 投稿オプション</button>' +
-        '</div>' +
-        '<div class="themos" id="thEmos" style="display:none"></div>' +
-        '<div class="ththumbs" id="thThumbs"></div>' +
-        '<div class="thbox" id="thPoll" style="display:none">' +
-          '<div class="hblb">📊 投票の選択肢（2〜4つ・1つ25文字まで）</div>' +
-          '<input class="hbin" id="thP1" maxlength="25" placeholder="選択肢1（必ず）">' +
-          '<input class="hbin" id="thP2" maxlength="25" placeholder="選択肢2（必ず）">' +
-          '<input class="hbin" id="thP3" maxlength="25" placeholder="選択肢3（なくてもOK）">' +
-          '<input class="hbin" id="thP4" maxlength="25" placeholder="選択肢4（なくてもOK）">' +
-        '</div>' +
-        '<div class="thbox" id="thLong" style="display:none">' +
-          '<div class="hblb">📄 長い文（10000文字まで・投稿の下に付きます）</div>' +
-          '<textarea class="hbin" id="thLongText" style="min-height:160px"></textarea>' +
-          '<div class="thcnt" id="thLongCnt">0 / 10000</div>' +
-        '</div>' +
-        '<div class="thbox" id="thTopic" style="display:none">' +
-          '<div class="hblb">🏷 トピック（50文字まで・「.」と「&」は使えません）</div>' +
-          '<input class="hbin" id="thTopicText" maxlength="50" placeholder="例：脱毛">' +
-        '</div>' +
-        '<div class="thbox" id="thOpt" style="display:none">' +
-          '<div class="hblb">⚙️ 返信できる人</div>' +
-          '<div class="thseg" id="thRc">' +
-            '<button type="button" class="on" data-v="everyone">全員</button>' +
-            '<button type="button" data-v="followers_only">フォロワー</button>' +
-            '<button type="button" data-v="accounts_you_follow">フォロー中の人</button>' +
-            '<button type="button" data-v="mentioned_only">@で書いた人だけ</button>' +
-          '</div>' +
-          '<label class="thchk"><input type="checkbox" id="thApprove">返信は承認してから出す</label>' +
-          '<label class="thchk"><input type="checkbox" id="thSpoiler">写真・動画をぼかす（ネタバレ）</label>' +
-        '</div>' +
-        '<div id="thChain"></div>' +
-        '<button type="button" class="hbbig" id="thAddChain" style="padding:14px 18px;font-size:19px;"><span class="i">➕</span>スレッドに追加</button>' +
-        '<button type="button" class="exgo" id="thGo">Threadsに投稿する</button>' +
-        '<div class="thlist"><div class="thlh">ズコから出した投稿</div><div id="thList"></div></div>' +
-      '</div>' +
-      '<div id="thFeedWrap" style="display:none">' +
-        '<div class="ubar"><a class="uhome" id="thFeedBack" href="javascript:void(0)">← 戻る</a></div>' +
+        '<div class="thname" id="thUser" style="display:none"></div>' +
         '<div class="thf" id="thFeed"></div>' +
       '</div>' +
+      // 昔の入口（残すが見せない）
+      '<button type="button" id="thShow" style="display:none"></button><div id="thFeedWrap" style="display:none"><a id="thFeedBack"></a></div><div id="thList" style="display:none"></div>' +
+    '</div></div>' +
+    // ── 新しいスレッド（本物と同じ並び） ──
+    '<div class="thcomp" id="thCompose" style="display:none"><div class="thsheet">' +
+      '<div class="tsh"><button type="button" id="thCancel">キャンセル</button><b>新しいスレッド</b><span></span></div>' +
+      '<div class="tsb">' +
+        '<div class="trow"><img class="tav" id="thCAv" referrerpolicy="no-referrer"><div class="tmain">' +
+          '<div class="tun"><b id="thCUser"></b><button type="button" id="thTopicBtn">›&nbsp;<span id="thTopicLbl">コミュニティまたはトピック</span></button></div>' +
+          '<div class="thbox" id="thTopic" style="display:none"><input class="hbin" id="thTopicText" maxlength="50" placeholder="トピック（50文字まで・「.」と「&」は使えません）"></div>' +
+          '<textarea class="tta" id="thText" placeholder="最近どう？"></textarea>' +
+          '<div class="ththumbs" id="thThumbs"></div>' +
+          '<div class="thbox" id="thPoll" style="display:none">' +
+            '<input class="hbin" id="thP1" maxlength="25" placeholder="選択肢1">' +
+            '<input class="hbin" id="thP2" maxlength="25" placeholder="選択肢2">' +
+            '<input class="hbin" id="thP3" maxlength="25" placeholder="選択肢を追加（なくてもOK）">' +
+            '<input class="hbin" id="thP4" maxlength="25" placeholder="選択肢を追加（なくてもOK）">' +
+          '</div>' +
+          '<div class="thbox" id="thLong" style="display:none">' +
+            '<textarea class="hbin" id="thLongText" style="min-height:140px" placeholder="長い文（10000文字まで・投稿の下に付きます）"></textarea>' +
+            '<div class="thcnt" id="thLongCnt">0 / 10000</div>' +
+          '</div>' +
+          '<div class="ticons">' +
+            '<label class="tic" id="thMediaBtn" title="写真・動画">🖼<input type="file" id="thFile" accept="image/*,video/mp4,video/quicktime" multiple></label>' +
+            ic('', 'GIF', 'GIF', true) + ic('thEmoBtn', '😊', '絵文字') + ic('', '▣', 'ステッカー', true) +
+            ic('thPollBtn', '≡', '投票') + ic('', '❝', '引用', true) + ic('thLongBtn', '📄', '長い文') +
+            ic('', '📍', '場所', true) + ic('', '♫', '音楽', true) +
+          '</div>' +
+          '<div class="themos" id="thEmos" style="display:none"></div>' +
+          '<div class="thcnt" id="thCnt">0 / 500</div>' +
+        '</div></div>' +
+        '<div id="thChain"></div>' +
+        '<div class="trow add" id="thAddChain"><img class="tav sm" id="thCAv2" referrerpolicy="no-referrer"><span>スレッドに追加</span></div>' +
+      '</div>' +
+      '<div class="thbox" id="thOpt" style="display:none;margin:0 14px 10px">' +
+        '<div class="hblb">返信できる人</div>' +
+        '<div class="thseg" id="thRc">' +
+          '<button type="button" class="on" data-v="everyone">全員</button>' +
+          '<button type="button" data-v="followers_only">フォロワー</button>' +
+          '<button type="button" data-v="accounts_you_follow">フォロー中の人</button>' +
+          '<button type="button" data-v="mentioned_only">@で書いた人だけ</button>' +
+        '</div>' +
+        '<label class="thchk"><input type="checkbox" id="thApprove">返信は承認してから出す</label>' +
+        '<label class="thchk"><input type="checkbox" id="thSpoiler">写真・動画をぼかす（ネタバレ）</label>' +
+      '</div>' +
+      '<div class="tsf"><button type="button" id="thOptBtn">⚙︎ 投稿オプション</button><button type="button" id="thGo">投稿</button></div>' +
     '</div></div>' +
     '<script>(' + threadsScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
@@ -12096,7 +12146,10 @@ function threadsScript_(C) {
   }
   $('thAcct').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    CUR = b.getAttribute('data-a'); drawAcct(); loadList();
+    CUR = b.getAttribute('data-a'); drawAcct();
+    VIEW = 'feed'; TAB = 'th'; FEED = null;
+    if (!showFeedFromData()) $('thFeed').innerHTML = '<div class="fl">読み込み中です…</div>';
+    loadWeb(CUR, 30, false);
     if (DATA) { DATA.cur = CUR; cacheSet(DATA); }
   });
 
@@ -12248,7 +12301,7 @@ function threadsScript_(C) {
     szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？', { icon: '', cancel: true, onYes: function () {
       ask(f, MEDIA.some(function (o) { return o.video; }) ? 'Threadsに投稿中です（動画は数分かかります）' : 'Threadsに投稿中です', function (err, d) {
         if (err) { warn(err); return; }
-        reset();
+        reset(); closeCompose();
         szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
         var db = document.getElementById('szDoneBack');
         if (db) db.addEventListener('click', function () {
@@ -12257,6 +12310,30 @@ function threadsScript_(C) {
         });
       });
     } });
+  });
+
+  // ── 「新しいスレッド」の小窓（本物と同じ）──
+  function hasDraft() {
+    return !!($('thText').value.trim() || MEDIA.length || chainBoxes().length || $('thLongText').value.trim() || $('thP1').value.trim());
+  }
+  function openCompose() {
+    var pf = (FEED && FEED.profile) || {}, a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
+    $('thCUser').textContent = pf.username || (a && a.username) || '';
+    ['thCAv', 'thCAv2'].forEach(function (i) { if (pf.pic) $(i).src = pf.pic; else $(i).removeAttribute('src'); });
+    $('thCompose').style.display = ''; document.body.style.overflow = 'hidden';
+    setTimeout(function () { try { $('thText').focus(); } catch (e) {} }, 50);
+  }
+  function closeCompose() { $('thCompose').style.display = 'none'; document.body.style.overflow = ''; }
+  $('thCancel').addEventListener('click', function () {
+    if (!hasDraft()) { closeCompose(); return; }
+    szPopup_('書きかけのスレッドを破棄しますか？', { cancel: true, onYes: function () { reset(); closeCompose(); } });
+  });
+  $('thTopicText').addEventListener('input', function () {
+    var v = this.value.trim(); $('thTopicLbl').textContent = v ? v : 'コミュニティまたはトピック';
+  });
+  $('thCompose').addEventListener('click', function (e) {
+    var off = e.target.closest && e.target.closest('[data-off]');
+    if (off) warn(off.getAttribute('data-off') + 'は、Threadsの公式の仕組みでは使えません（Threadsのアプリから行ってください）。');
   });
 
   // ── スレッズを表示（お店のThreadsの画面をそのまま見る・読むだけ） ──
@@ -12269,8 +12346,11 @@ function threadsScript_(C) {
     if (m < 10080) return Math.floor(m / 1440) + '日';
     return d.getFullYear() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2);
   }
+  var TAB = 'th';
+  function myRole() { return window.__SZ_ROLE_ || ''; }
   function drawFeed() {
-    var pf = FEED.profile || {}, h = '';
+    var pf = FEED.profile || {}, h = '', isDev = myRole() === '開発';
+    h += '<div class="top"><span>' + esc(pf.username || '') + '</span><button type="button" data-reload="1" title="最新にする">⟳</button></div>';
     h += '<div class="ph"><div class="nm"><div class="n">' + esc(pf.name || '') + '</div><div class="u">' + esc(pf.username || '') + '</div></div>' +
       (pf.pic ? '<img src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '') + '</div>';
     if (pf.bio) h += '<div class="bio">' + esc(pf.bio) + '</div>';
@@ -12281,10 +12361,22 @@ function threadsScript_(C) {
         '<span>フォロワー' + esc(pf.followers) + '人</span></div>' +
         '<a class="ig" href="https://www.instagram.com/' + esc(pf.username || '') + '/" target="_blank" rel="noopener" title="Instagram">◎</a></div>';
     }
-    h += '<div class="pbtns"><button type="button" id="thInsOpen">インサイトを見る</button></div>';
-    h += '<div class="tabs"><div class="on">スレッド</div></div>';
-    if (!FEED.posts.length) h += '<div class="fl" style="padding:16px 0">まだ投稿がありません</div>';
-    FEED.posts.forEach(function (p) {
+    h += '<div class="pbtns"><button type="button" class="off" data-off="プロフィールの編集はThreadsのアプリから行ってください（公式の仕組みでは変えられません）">プロフィールを編集</button>' +
+      '<button type="button" id="thInsOpen">インサイトを見る</button></div>';
+    var TABS = [['th', 'スレッド'], ['rp', '返信'], ['md', 'メディア'], ['rs', '再投稿']];
+    h += '<div class="tabs">' + TABS.map(function (t) { return '<div data-tab="' + t[0] + '"' + (t[0] === TAB ? ' class="on"' : '') + '>' + t[1] + '</div>'; }).join('') + '</div>';
+    if (TAB === 'th') {
+      h += '<div class="cmp" data-compose="1">' + (pf.pic ? '<img src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '<div class="av0"></div>') +
+        '<span>最近どう？</span><button type="button" data-compose="1">投稿</button></div>';
+    }
+    var list = TAB === 'rp' ? (FEED.myreplies || []) :
+      FEED.posts.filter(function (p) {
+        if (TAB === 'th') return p.type !== 'REPOST_FACADE';
+        if (TAB === 'md') return p.media && p.media.length;
+        return p.type === 'REPOST_FACADE';
+      });
+    if (!list.length) h += '<div class="fl" style="padding:16px 0">' + ({ th: 'まだスレッドがありません', rp: 'まだ返信がありません', md: 'まだメディアがありません', rs: 'まだ再投稿がありません' })[TAB] + '</div>';
+    list.forEach(function (p) {
       var md = '';
       if (p.media && p.media.length) {
         md = '<div class="md' + (p.media.length > 1 ? ' many' : '') + '">' + p.media.map(function (m) {
@@ -12293,19 +12385,21 @@ function threadsScript_(C) {
             : '<img src="' + esc(m.u) + '" loading="lazy" referrerpolicy="no-referrer">';
         }).join('') + '</div>';
       }
-      var st = p.st || {};
+      var st = p.st || null, canDel = TAB !== 'rp' && (p.zuko || isDev);
       h += '<div class="po">' + (pf.pic ? '<img class="av" src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '<div class="av"></div>') +
-        '<div class="bd"><div class="hd"><b>' + esc(pf.username || '') + '</b><span>' + esc(ago(p.at)) + '</span>' + (p.zuko ? '<i>ズコから</i>' : '') + '</div>' +
+        '<div class="bd"><div class="hd"><b>' + esc(pf.username || '') + '</b><span>' + esc(ago(p.at)) + '</span>' + (p.zuko ? '<i>ズコから</i>' : '') +
+        '<button type="button" class="dots" data-menu="' + esc(p.id) + '">⋯</button></div>' +
+        '<div class="pmenu" id="pm_' + esc(p.id) + '" style="display:none">' +
+          (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') +
+          (canDel ? '<button type="button" class="del" data-fdel="' + esc(p.id) + '">削除</button>' : '') + '</div>' +
         (p.text ? '<div class="tx">' + esc(p.text) + '</div>' : '') + md +
-        '<div class="st"><span>👁 ' + (st.views || 0) + '</span><span>♡ ' + (st.likes || 0) + '</span><span>💬 ' + (st.replies || 0) + '</span>' +
-        '<span>🔁 ' + (st.reposts || 0) + '</span>' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div>' +
-        '<button type="button" class="cmb" data-cm="' + esc(p.id) + '">💬 コメントを見る・返信する</button>' +
-        // ★2026-11-05 まるちゃん決定：開発版だけ、アプリで出した投稿も含めてここから消せる（スタッフ版には出さない）。
-        ((window.__SZ_ROLE_ || '') === '開発' ? '<button type="button" class="cmb" style="margin-left:8px;background:#3f1d1d;border:1px solid #b91c1c" data-fdel="' + esc(p.id) + '">🗑 削除</button>' : '') +
-        '<div class="cms" id="cm_' + esc(p.id) + '" style="display:none"></div>' +
+        (st ? '<div class="st"><span>👁 ' + (st.views || 0) + '</span><span>♡ ' + (st.likes || 0) + '</span><span>💬 ' + (st.replies || 0) + '</span>' +
+          '<span>🔁 ' + (st.reposts || 0) + '</span></div>' : '') +
+        (TAB !== 'rp' ? '<button type="button" class="cmb" data-cm="' + esc(p.id) + '">💬 コメントを見る・返信する</button>' +
+          '<div class="cms" id="cm_' + esc(p.id) + '" style="display:none"></div>' : '') +
         '</div></div>';
     });
-    if (FEED.after) h += '<button type="button" class="more" id="thMore">もっと見る</button>';
+    if (FEED.after && TAB !== 'rp') h += '<button type="button" class="more" id="thMore">もっと見る</button>';
     $('thFeed').innerHTML = h;
   }
   function loadFeed(after) {
@@ -12319,7 +12413,7 @@ function threadsScript_(C) {
   function showFeedFromData() {
     var fd = DATA && DATA.feeds && DATA.feeds[CUR];
     if (!fd || !fd.ok) return false;
-    FEED = { profile: fd.profile || {}, posts: (fd.posts || []).slice(), after: fd.after || '' };
+    FEED = { profile: fd.profile || {}, posts: (fd.posts || []).slice(), after: fd.after || '', myreplies: fd.myreplies || [] };
     drawFeed(); return true;
   }
   $('thShow').addEventListener('click', function () {
@@ -12464,7 +12558,6 @@ function threadsScript_(C) {
     });
   }
   function redraw() {
-    if ($('thFeedWrap').style.display === 'none') return;
     if (VIEW === 'feed' && FEED) drawFeed();
     else if (VIEW === 'fol') drawFol();
     else if (VIEW === 'ins') drawIns();
@@ -12481,7 +12574,7 @@ function threadsScript_(C) {
         '<div class="w"><a href="https://www.threads.com/@' + esc(f.user) + '" target="_blank" rel="noopener">' + esc(f.user) + '</a><div>' + esc(f.name || '') + '</div></div>' +
         (f.btn ? '<span class="b">' + esc(f.btn) + '</span>' : '') + '</div>';
     }).join('');
-    $('thFeed').innerHTML = h;
+    $('thFeed').innerHTML = '<div class="top"><button type="button" data-back="1">‹</button><span>フォロワー</span></div>' + h;
   }
   function chart(series) {
     if (!series || !series.length) return '';
@@ -12522,10 +12615,20 @@ function threadsScript_(C) {
       card('フォロワー', wi.type_f, wi.type_f_pct) + card('フォロワー以外', wi.type_nf, wi.type_nf_pct) + '</div></div>';
     if (!w) h += '<div class="note">閲覧者・純フォロワー・閲覧者タイプはThreadsの画面から読んでいます（30秒ほどかかります）</div>';
     else if (!wi.viewers && w.login && /止め|入れません/.test(w.login)) h += '<div class="note">閲覧者・純フォロワー・閲覧者タイプは、サーバーのThreadsのログインが済むと出ます</div>';
-    $('thFeed').innerHTML = h;
+    $('thFeed').innerHTML = '<div class="top"><button type="button" data-back="1">‹</button><span>インサイト</span></div>' + h;
   }
   $('thFeed').addEventListener('click', function (e) {
     var t = e.target;
+    var cl = function (sel) { return t.closest && t.closest(sel); };
+    if (cl('[data-compose]')) { openCompose(); return; }
+    if (cl('[data-back]')) { VIEW = 'feed'; if (FEED) drawFeed(); window.scrollTo(0, 0); return; }
+    if (cl('[data-reload]')) { loadAll(); loadWeb(CUR, 30, true); return; }
+    var tb = cl('[data-tab]');
+    if (tb) { TAB = tb.getAttribute('data-tab'); drawFeed(); return; }
+    var mn = cl('[data-menu]');
+    if (mn) { var pm = $('pm_' + mn.getAttribute('data-menu')); if (pm) pm.style.display = pm.style.display === 'none' ? '' : 'none'; return; }
+    var of = cl('[data-off]');
+    if (of && !cl('#thCompose')) { warn(of.getAttribute('data-off')); return; }
     if (t.closest && t.closest('#thFolOpen')) { VIEW = 'fol'; drawFol(); window.scrollTo(0, 0); loadWeb(CUR, 30, false); return; }
     if (t.id === 'thInsOpen') { VIEW = 'ins'; drawIns(); window.scrollTo(0, 0); loadIns(CUR, DAYS); loadWeb(CUR, DAYS, false); return; }
     var dd = t.getAttribute && t.getAttribute('data-days');
@@ -12534,6 +12637,7 @@ function threadsScript_(C) {
 
   // ── ズコから出した投稿の一覧と削除 ──
   function loadList() {
+    if (!$('thList') || $('thList').style.display === 'none') return;   // ★本物の画面にしたので一覧は出さない（削除は各投稿の「…」から）
     // ★2026-11-05 まるちゃん「極限まで短く」：一覧は画面を開いた時の「まとめて1回」の答え（DATA）から描く＝待たない。
     if (!DATA || !DATA.lists || !DATA.lists[CUR]) { $('thList').innerHTML = '<div class="thempty">読み込み中です…</div>'; return; }
     (function (d) {
@@ -12575,9 +12679,10 @@ function threadsScript_(C) {
       return;
     }
     if (!ACCTS.some(function (a) { return a.acct === CUR; })) CUR = (d.cur && ACCTS.some(function (a) { return a.acct === d.cur; })) ? d.cur : ACCTS[0].acct;
-    if ($('thFeedWrap').style.display === 'none') { $('thLoad').style.display = 'none'; $('thMain').style.display = ''; }
-    drawAcct(); drawCnt(); loadList();
-    if ($('thFeedWrap').style.display !== 'none' && VIEW === 'feed' && !(FEED && FEED.more)) showFeedFromData();
+    $('thLoad').style.display = 'none'; $('thMain').style.display = '';
+    drawAcct(); drawCnt();
+    if (VIEW === 'feed' && !(FEED && FEED.more)) { if (!showFeedFromData()) $('thFeed').innerHTML = '<div class="fl">読み込み中です…</div>'; }
+    loadWeb(CUR, 30, false);
   }
   function loadAll() {
     ask({ kind: 'open' }, '', function (err, d) {
