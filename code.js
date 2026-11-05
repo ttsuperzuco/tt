@@ -12355,18 +12355,30 @@ function threadsScript_(C) {
       (r.text ? '<div class="x">' + esc(r.text) + '</div>' : '') + (r.img ? '<img src="' + esc(r.img) + '" referrerpolicy="no-referrer">' : '') +
       '<div class="a">' + a + '</div><div class="rpbox" id="rb_' + esc(r.id) + '" style="display:none"></div></div>';
   }
-  function loadCm(mid) {
+  // ★2026-11-05 まるちゃん「コメントを見るの読み込みもおそすぎ」：コメントは表示の中身と一緒に先に届いている（p.cm）
+  //   ＝押した瞬間に出す。返信・非表示・承認のあとだけ、その投稿のコメントを聞き直す（fetch=true）。
+  function loadCm(mid, fetch) {
     var box = $('cm_' + mid); if (!box) return;
-    box.style.display = ''; box.innerHTML = '<div class="fl">読み込み中です…</div>';
+    box.style.display = '';
+    var post = FEED && FEED.posts.filter(function (x) { return x.id === mid; })[0];
+    if (!fetch && post && post.cm && !post.cm.err) { renderCm(mid, post.cm); return; }
+    box.innerHTML = '<div class="fl">読み込み中です…</div>';
     ask({ kind: 'replies', acct: CUR, media_id: mid }, '', function (err, d) {
       if (err) { box.innerHTML = '<div class="fl">' + esc(err) + '</div>'; return; }
+      if (post) post.cm = { replies: d.replies || [], pending: d.pending || [] };
+      renderCm(mid, d);
+    });
+  }
+  function renderCm(mid, d) {
+    var box = $('cm_' + mid); if (!box) return;
+    (function () {
       var rs = (d && d.replies) || [], pd = (d && d.pending) || [], h = '';
       if (pd.length) { h += '<div class="pd">承認待ちのコメント ' + pd.length + '件</div>' + pd.map(function (r) { return cmRow(r, false, true); }).join(''); }
       if (!rs.length && !pd.length) h += '<div class="fl">まだコメントはありません</div>';
       h += rs.map(function (r) { return cmRow(r, !!(r.to && r.to !== mid), false); }).join('');
       h += '<div class="cm"><div class="a"><button type="button" data-rp="' + esc(mid) + '">↩ この投稿に返信</button></div><div class="rpbox" id="rb_' + esc(mid) + '" style="display:none"></div></div>';
       box.innerHTML = h; box.setAttribute('data-mid', mid);
-    });
+    })();
   }
   function openReply(to) {
     var rb = $('rb_' + to); if (!rb) return;
@@ -12384,7 +12396,7 @@ function threadsScript_(C) {
       if (err) { warn(err); return; }
       szOvShow_(szDoneHtml_(doneTitle), '#16a34a');
       var db = document.getElementById('szDoneBack');
-      if (db) db.addEventListener('click', function () { szOvHide_(); loadCm(mid); });
+      if (db) db.addEventListener('click', function () { szOvHide_(); loadCm(mid, true); });
     });
   }
   $('thFeed').addEventListener('click', function (e) {
