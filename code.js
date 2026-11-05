@@ -11954,6 +11954,14 @@ var THREADSCSS_ =
   '.thf .pmenu{background:#262626;border-radius:12px;padding:4px;margin:6px 0;}' +
   '.thf .pmenu a,.thf .pmenu button{display:block;width:100%;text-align:left;background:none;border:0;color:#f3f5f7;font:inherit;font-size:15px;padding:10px 12px;text-decoration:none;cursor:pointer;border-radius:8px;}' +
   '.thf .pmenu .del{color:#ff4d4f;font-weight:800;}' +
+  '.thf .po .hd .tp{color:#f3f5f7;margin-left:4px;font-weight:600;}' +
+  '.thf .po .tx a{color:#5ea4ff;text-decoration:none;}' +
+  '.thf .lcard{display:block;border:1px solid #333;border-radius:12px;overflow:hidden;margin:6px 0;text-decoration:none;color:#f3f5f7;max-width:420px;}' +
+  '.thf .lcard img{display:block;width:100%;max-height:260px;object-fit:cover;}' +
+  '.thf .lcard .d{color:#999;font-size:13px;padding:8px 12px 0;}' +
+  '.thf .lcard .t{font-size:15px;font-weight:600;padding:2px 12px 10px;line-height:1.4;}' +
+  '.thf .po .st{gap:22px;color:#ccc;}' +
+  '.thf .po .st span{min-width:30px;}' +
   '.thcomp{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:60;overflow:auto;padding:24px 8px;box-sizing:border-box;}' +
   '.thsheet{background:#181818;color:#f3f5f7;border:1px solid #333;border-radius:18px;max-width:640px;margin:0 auto;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;}' +
   '.thsheet .tsh{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid #2a2a2a;}' +
@@ -12358,7 +12366,7 @@ function threadsScript_(C) {
     if (wb && wb.link) h += '<div class="lk"><a href="https://' + esc(wb.link.replace(/^https?:\/\//, '')) + '" target="_blank" rel="noopener">' + esc(wb.link) + '</a></div>';
     if (pf.followers != null) {
       h += '<div class="flrow"><div class="fc" id="thFolOpen">' + ((wb && wb.avatars) || []).map(function (u) { return '<img src="' + esc(u) + '" referrerpolicy="no-referrer">'; }).join('') +
-        '<span>フォロワー' + esc(pf.followers) + '人</span></div>' +
+        '<span>フォロワー' + esc((wb && wb.fcount) || pf.followers) + '人</span></div>' +
         '<a class="ig" href="https://www.instagram.com/' + esc(pf.username || '') + '/" target="_blank" rel="noopener" title="Instagram">◎</a></div>';
     }
     h += '<div class="pbtns"><button type="button" class="off" data-off="プロフィールの編集はThreadsのアプリから行ってください（公式の仕組みでは変えられません）">プロフィールを編集</button>' +
@@ -12401,15 +12409,39 @@ function threadsScript_(C) {
         }).join('') + '</div>';
       }
       var st = p.st || null, canDel = TAB !== 'rp' && (p.zuko || isDev);
+      // ★本物と見比べて直した（2026-11-05）：インスタから回した投稿は公式の仕組みが写真・動画を返さない＝本物の画面から読んだ物で補う。
+      var wp = wb && wb.posts && p.code ? wb.posts[p.code] : null;
+      if ((!p.media || !p.media.length) && !p.card && wp) {
+        var wm = (wp.vids && wp.vids.length) ? wp.vids.filter(function (v) { return v.u; }).map(function (v) { return { t: 'VIDEO', u: v.u, th: v.th }; })
+                                             : (wp.imgs || []).map(function (u) { return { t: 'IMAGE', u: u, th: '' }; });
+        if (wm.length) md = '<div class="md' + (wm.length > 1 ? ' many' : '') + '">' + wm.map(function (m) {
+          return m.t === 'VIDEO' ? '<video src="' + esc(m.u) + '" poster="' + esc(m.th) + '" controls playsinline preload="none"></video>'
+                                 : '<img src="' + esc(m.u) + '" loading="lazy" referrerpolicy="no-referrer">';
+        }).join('') + '</div>';
+      }
+      // 数は本物と同じ並び（♡いいね・💬返信・🔁再投稿＋引用・➤シェア）、0の時は数字を出さない。本物の画面の4つの数が読めていればそちらを使う。
+      var cnt4 = null;
+      if (st) cnt4 = [st.likes || 0, st.replies || 0, (st.reposts || 0) + (st.quotes || 0), st.shares || 0];
+      if (wp && wp.nums && wp.nums.length === 4) cnt4 = wp.nums.map(function (x) { return String(x); });
+      var nz = function (v) { return (v && v !== '0' && v !== 0) ? esc(v) : ''; };
+      var card = '';
+      if (p.card) card = '<a class="lcard" href="' + esc(p.card.url) + '" target="_blank" rel="noopener">' + (p.card.img ? '<img src="' + esc(p.card.img) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
+        '<div class="d">' + esc(p.card.domain || '') + '</div><div class="t">' + esc(p.card.title || p.card.url) + '</div></a>';
+      var linkify = function (t) {
+        return esc(t).replace(/https?:\/\/[^\s<]+/g, function (u) {
+          var raw = u.replace(/&amp;/g, '&'), show = raw.replace(/^https?:\/\/(www\.)?/, '');
+          if (show.length > 15) show = show.slice(0, 15) + '…';
+          return '<a href="' + esc(raw) + '" target="_blank" rel="noopener">' + esc(show) + '</a>';
+        });
+      };
       h += '<div class="po">' + (pf.pic ? '<img class="av" src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '<div class="av"></div>') +
-        '<div class="bd"><div class="hd"><b>' + esc(pf.username || '') + '</b><span>' + esc(ago(p.at)) + '</span>' + (p.zuko ? '<i>ズコから</i>' : '') +
+        '<div class="bd"><div class="hd"><b>' + esc(pf.username || '') + '</b>' + (p.topic ? '<span class="tp">› ' + esc(p.topic) + '</span>' : '') + '<span>' + esc(ago(p.at)) + '</span>' + (p.zuko ? '<i>ズコから</i>' : '') +
         '<button type="button" class="dots" data-menu="' + esc(p.id) + '">⋯</button></div>' +
         '<div class="pmenu" id="pm_' + esc(p.id) + '" style="display:none">' +
           (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') +
           (canDel ? '<button type="button" class="del" data-fdel="' + esc(p.id) + '">削除</button>' : '') + '</div>' +
-        (p.text ? '<div class="tx">' + esc(p.text) + '</div>' : (p.type === 'REPOST_FACADE' ? '<div class="tx" style="color:#888">🔁 再投稿（中身はThreadsの画面から読んでいます…）</div>' : '')) + md +
-        (st ? '<div class="st"><span>👁 ' + (st.views || 0) + '</span><span>♡ ' + (st.likes || 0) + '</span><span>💬 ' + (st.replies || 0) + '</span>' +
-          '<span>🔁 ' + (st.reposts || 0) + '</span></div>' : '') +
+        (p.text ? '<div class="tx">' + linkify(p.text) + '</div>' : (p.type === 'REPOST_FACADE' ? '<div class="tx" style="color:#888">🔁 再投稿（中身はThreadsの画面から読んでいます…）</div>' : '')) + md + card +
+        (cnt4 ? '<div class="st"><span>♡ ' + nz(cnt4[0]) + '</span><span>💬 ' + nz(cnt4[1]) + '</span><span>🔁 ' + nz(cnt4[2]) + '</span><span>➤ ' + nz(cnt4[3]) + '</span></div>' : '') +
         (TAB !== 'rp' ? '<button type="button" class="cmb" data-cm="' + esc(p.id) + '">💬 コメントを見る・返信する</button>' +
           '<div class="cms" id="cm_' + esc(p.id) + '" style="display:none"></div>' : '') +
         '</div></div>';
