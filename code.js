@@ -11883,7 +11883,28 @@ var THREADSCSS_ =
   '.thf .po .md.many img,.thf .po .md.many video{height:220px;max-width:none;}' +
   '.thf .po .st{display:flex;gap:16px;color:#ccc;font-size:14px;margin-top:6px;flex-wrap:wrap;}' +
   '.thf .po .st a{color:#9bd3ff;text-decoration:none;margin-left:auto;}' +
-  '.thf .more{display:block;width:100%;background:#262626;color:#fff;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:800;margin:10px 0;cursor:pointer;}';
+  '.thf .more{display:block;width:100%;background:#262626;color:#fff;border:0;border-radius:12px;padding:12px;font:inherit;font-weight:800;margin:10px 0;cursor:pointer;}' +
+  '.thf .cmb{background:#262626;color:#fff;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;margin-top:8px;}' +
+  '.thf .cms{margin-top:8px;border-left:2px solid #333;padding-left:10px;}' +
+  '.thf .cm{padding:8px 0;border-bottom:1px solid #222;}' +
+  '.thf .cm.sub{margin-left:18px;}' +
+  '.thf .cm.hid{opacity:.45;}' +
+  '.thf .cm .h{font-size:14px;}' +
+  '.thf .cm .h b{font-weight:700;}' +
+  '.thf .cm .h span{color:#777;margin-left:6px;}' +
+  '.thf .cm .h em{font-style:normal;margin-left:6px;background:#444;color:#fff;border-radius:6px;padding:0 6px;font-size:12px;}' +
+  '.thf .cm .x{white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.5;margin:2px 0 4px;}' +
+  '.thf .cm img{max-width:60%;border-radius:8px;margin:4px 0;}' +
+  '.thf .cm .a{display:flex;gap:8px;flex-wrap:wrap;}' +
+  '.thf .cm .a button{background:#1f2937;color:#e5e7eb;border:1px solid #374151;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;}' +
+  '.thf .cm .a button.ok{background:#14532d;border-color:#16a34a;}' +
+  '.thf .cm .a button.ng{background:#3f1d1d;border-color:#b91c1c;}' +
+  '.thf .rpbox{margin:6px 0;}' +
+  '.thf .rpbox textarea{width:100%;box-sizing:border-box;min-height:80px;border-radius:10px;border:1px solid #444;background:#181818;color:#fff;padding:10px;font:inherit;font-size:15px;}' +
+  '.thf .rpbox .r{display:flex;gap:8px;align-items:center;margin-top:6px;}' +
+  '.thf .rpbox .r span{color:#999;font-size:13px;margin-right:auto;}' +
+  '.thf .rpbox .r button{background:#fff;color:#000;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-weight:900;cursor:pointer;}' +
+  '.thf .pd{color:#fde047;font-weight:800;font-size:14px;margin:6px 0 2px;}';
 
 function renderThreadsPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">Threads投稿</span></div>';
@@ -12234,6 +12255,8 @@ function threadsScript_(C) {
         (p.text ? '<div class="tx">' + esc(p.text) + '</div>' : '') + md +
         '<div class="st"><span>👁 ' + (st.views || 0) + '</span><span>♡ ' + (st.likes || 0) + '</span><span>💬 ' + (st.replies || 0) + '</span>' +
         '<span>🔁 ' + (st.reposts || 0) + '</span>' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div>' +
+        '<button type="button" class="cmb" data-cm="' + esc(p.id) + '">💬 コメントを見る・返信する</button>' +
+        '<div class="cms" id="cm_' + esc(p.id) + '" style="display:none"></div>' +
         '</div></div>';
     });
     if (FEED.after) h += '<button type="button" class="more" id="thMore">もっと見る</button>';
@@ -12258,6 +12281,79 @@ function threadsScript_(C) {
   });
   $('thFeed').addEventListener('click', function (e) {
     if (e.target && e.target.id === 'thMore') { e.target.disabled = true; e.target.textContent = '読み込み中です…'; loadFeed(FEED.after); }
+  });
+
+  // ── コメント（見る・返信・非表示・承認）＝お店の投稿についたコメントだけ ──
+  function cmRow(r, sub, pending) {
+    var a = '';
+    if (pending) {
+      a = '<button type="button" class="ok" data-ap="' + esc(r.id) + '">承認する</button><button type="button" class="ng" data-ig="' + esc(r.id) + '">無視する</button>';
+    } else {
+      a = '<button type="button" data-rp="' + esc(r.id) + '">↩ 返信</button>';
+      if (!r.mine && !sub) a += r.hidden ? '<button type="button" data-un="' + esc(r.id) + '">表示に戻す</button>'
+                                         : '<button type="button" class="ng" data-hd="' + esc(r.id) + '">非表示にする</button>';
+    }
+    return '<div class="cm' + (sub ? ' sub' : '') + (r.hidden ? ' hid' : '') + '" id="cr_' + esc(r.id) + '">' +
+      '<div class="h"><b>' + esc(r.user || '') + '</b><span>' + esc(ago(r.at)) + '</span>' +
+      (r.mine ? '<em>お店</em>' : '') + (r.hidden ? '<em>非表示中</em>' : '') + '</div>' +
+      (r.text ? '<div class="x">' + esc(r.text) + '</div>' : '') + (r.img ? '<img src="' + esc(r.img) + '" referrerpolicy="no-referrer">' : '') +
+      '<div class="a">' + a + '</div><div class="rpbox" id="rb_' + esc(r.id) + '" style="display:none"></div></div>';
+  }
+  function loadCm(mid) {
+    var box = $('cm_' + mid); if (!box) return;
+    box.style.display = ''; box.innerHTML = '<div class="fl">読み込み中です…</div>';
+    ask({ kind: 'replies', acct: CUR, media_id: mid }, '', function (err, d) {
+      if (err) { box.innerHTML = '<div class="fl">' + esc(err) + '</div>'; return; }
+      var rs = (d && d.replies) || [], pd = (d && d.pending) || [], h = '';
+      if (pd.length) { h += '<div class="pd">承認待ちのコメント ' + pd.length + '件</div>' + pd.map(function (r) { return cmRow(r, false, true); }).join(''); }
+      if (!rs.length && !pd.length) h += '<div class="fl">まだコメントはありません</div>';
+      h += rs.map(function (r) { return cmRow(r, !!(r.to && r.to !== mid), false); }).join('');
+      h += '<div class="cm"><div class="a"><button type="button" data-rp="' + esc(mid) + '">↩ この投稿に返信</button></div><div class="rpbox" id="rb_' + esc(mid) + '" style="display:none"></div></div>';
+      box.innerHTML = h; box.setAttribute('data-mid', mid);
+    });
+  }
+  function openReply(to) {
+    var rb = $('rb_' + to); if (!rb) return;
+    if (rb.style.display !== 'none') { rb.style.display = 'none'; return; }
+    rb.style.display = '';
+    rb.innerHTML = '<textarea placeholder="返信の文（500文字まで）"></textarea><div class="r"><span>0 / 500</span><button type="button" data-send="' + esc(to) + '">返信する</button></div>';
+    var ta = rb.querySelector('textarea'), sp = rb.querySelector('span');
+    ta.addEventListener('input', function () { sp.textContent = tlen(ta.value) + ' / 500'; });
+    ta.addEventListener('focus', function () { LAST = ta; });
+    ta.focus();
+  }
+  function midOf(el) { var b = el.closest('.cms'); return b ? b.getAttribute('data-mid') : ''; }
+  function act(fields, busy, doneTitle, mid) {
+    ask(fields, busy, function (err) {
+      if (err) { warn(err); return; }
+      szOvShow_(szDoneHtml_(doneTitle), '#16a34a');
+      var db = document.getElementById('szDoneBack');
+      if (db) db.addEventListener('click', function () { szOvHide_(); loadCm(mid); });
+    });
+  }
+  $('thFeed').addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    var g = function (k) { return t.getAttribute(k); };
+    if (g('data-cm')) {
+      var box = $('cm_' + g('data-cm'));
+      if (box && box.style.display !== 'none') { box.style.display = 'none'; return; }
+      loadCm(g('data-cm')); return;
+    }
+    if (g('data-rp')) { openReply(g('data-rp')); return; }
+    var mid = midOf(t);
+    if (g('data-send')) {
+      var to = g('data-send'), ta = $('rb_' + to).querySelector('textarea'), txt = ta.value.trim();
+      if (!txt) { warn('返信の文を入れてください。'); return; }
+      if (tlen(txt) > 500) { warn('返信は500文字までです。'); return; }
+      szPopup_('お店として返信しますか？', { icon: '', cancel: true, onYes: function () {
+        act({ kind: 'reply', acct: CUR, to_id: to, text: txt }, '返信中です', '返信が完了しました', mid);
+      } });
+      return;
+    }
+    if (g('data-hd')) { var r1 = g('data-hd'); szPopup_('このコメントを非表示にしますか？（あとで戻せます）', { cancel: true, onYes: function () { act({ kind: 'hide', acct: CUR, reply_id: r1, hide: true }, '非表示にしています', '非表示にしました', mid); } }); return; }
+    if (g('data-un')) { var r2 = g('data-un'); act({ kind: 'hide', acct: CUR, reply_id: r2, hide: false }, '表示に戻しています', '表示に戻しました', mid); return; }
+    if (g('data-ap')) { var r3 = g('data-ap'); act({ kind: 'approve', acct: CUR, reply_id: r3, approve: true }, '承認しています', '承認しました', mid); return; }
+    if (g('data-ig')) { var r4 = g('data-ig'); szPopup_('このコメントを無視しますか？（出しません）', { cancel: true, onYes: function () { act({ kind: 'approve', acct: CUR, reply_id: r4, approve: false }, '処理中です', '無視しました', mid); } }); return; }
   });
 
   // ── ズコから出した投稿の一覧と削除 ──
