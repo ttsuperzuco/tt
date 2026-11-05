@@ -11904,7 +11904,42 @@ var THREADSCSS_ =
   '.thf .rpbox .r{display:flex;gap:8px;align-items:center;margin-top:6px;}' +
   '.thf .rpbox .r span{color:#999;font-size:13px;margin-right:auto;}' +
   '.thf .rpbox .r button{background:#fff;color:#000;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-weight:900;cursor:pointer;}' +
-  '.thf .pd{color:#fde047;font-weight:800;font-size:14px;margin:6px 0 2px;}';
+  '.thf .pd{color:#fde047;font-weight:800;font-size:14px;margin:6px 0 2px;}' +
+  '.thf .lk{font-weight:700;font-size:15px;margin:2px 0 8px;}' +
+  '.thf .lk a{color:#f3f5f7;text-decoration:none;}' +
+  '.thf .flrow{display:flex;align-items:center;gap:8px;margin:6px 0 12px;}' +
+  '.thf .flrow .fc{display:flex;cursor:pointer;align-items:center;gap:8px;}' +
+  '.thf .flrow .fc img{width:20px;height:20px;border-radius:50%;border:2px solid #101010;margin-left:-6px;object-fit:cover;}' +
+  '.thf .flrow .fc img:first-child{margin-left:0;}' +
+  '.thf .flrow .fc span{color:#999;font-size:15px;}' +
+  '.thf .flrow a.ig{margin-left:auto;color:#f3f5f7;font-size:22px;text-decoration:none;}' +
+  '.thf .pbtns{display:flex;gap:8px;margin:0 0 14px;}' +
+  '.thf .pbtns button{flex:1;background:transparent;color:#f3f5f7;border:1px solid #444;border-radius:10px;padding:9px 4px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;}' +
+  '.thf .ttl{font-size:20px;font-weight:800;margin:0 0 12px;}' +
+  '.thf .flh{display:flex;border-bottom:1px solid #333;margin:0 -14px 4px;}' +
+  '.thf .flh div{flex:1;text-align:center;padding:10px 0;font-weight:700;color:#777;}' +
+  '.thf .flh div.on{color:#f3f5f7;border-bottom:2px solid #f3f5f7;}' +
+  '.thf .flh b{display:block;font-size:13px;color:#999;font-weight:600;}' +
+  '.thf .fr{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #222;}' +
+  '.thf .fr img,.thf .fr .noimg{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#333;flex:none;}' +
+  '.thf .fr .w{flex:1;min-width:0;}' +
+  '.thf .fr .w a{color:#f3f5f7;font-weight:700;text-decoration:none;}' +
+  '.thf .fr .w div{color:#999;font-size:14px;}' +
+  '.thf .fr .b{border:1px solid #444;border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;color:#f3f5f7;}' +
+  '.thf .per{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;}' +
+  '.thf .per button{background:#1f1f1f;color:#ccc;border:1px solid #333;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;}' +
+  '.thf .per button.on{background:#f3f5f7;color:#101010;}' +
+  '.thf .sec{border:1px solid #2a2a2a;border-radius:14px;padding:14px;margin:0 0 14px;}' +
+  '.thf .sec h3{margin:0 0 10px;font-size:17px;}' +
+  '.thf .cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;}' +
+  '.thf .card{border:1px solid #333;border-radius:12px;padding:10px;}' +
+  '.thf .card .k{color:#999;font-size:13px;}' +
+  '.thf .card .v{font-size:22px;font-weight:800;margin-top:4px;}' +
+  '.thf .card .p{color:#999;font-size:12px;margin-top:2px;}' +
+  '.thf .big{font-size:34px;font-weight:800;}' +
+  '.thf .sub{color:#999;font-size:13px;margin:2px 0 10px;}' +
+  '.thf svg text{fill:#888;font-size:10px;}' +
+  '.thf .note{color:#777;font-size:12px;margin:-6px 0 10px;}';
 
 function renderThreadsPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">Threads投稿</span></div>';
@@ -12238,7 +12273,14 @@ function threadsScript_(C) {
     h += '<div class="ph"><div class="nm"><div class="n">' + esc(pf.name || '') + '</div><div class="u">' + esc(pf.username || '') + '</div></div>' +
       (pf.pic ? '<img src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '') + '</div>';
     if (pf.bio) h += '<div class="bio">' + esc(pf.bio) + '</div>';
-    if (pf.followers != null) h += '<div class="fl">フォロワー' + esc(pf.followers) + '人</div>';
+    var wb = webOf(CUR, 30);
+    if (wb && wb.link) h += '<div class="lk"><a href="https://' + esc(wb.link.replace(/^https?:\/\//, '')) + '" target="_blank" rel="noopener">' + esc(wb.link) + '</a></div>';
+    if (pf.followers != null) {
+      h += '<div class="flrow"><div class="fc" id="thFolOpen">' + ((wb && wb.avatars) || []).map(function (u) { return '<img src="' + esc(u) + '" referrerpolicy="no-referrer">'; }).join('') +
+        '<span>フォロワー' + esc(pf.followers) + '人</span></div>' +
+        '<a class="ig" href="https://www.instagram.com/' + esc(pf.username || '') + '/" target="_blank" rel="noopener" title="Instagram">◎</a></div>';
+    }
+    h += '<div class="pbtns"><button type="button" id="thInsOpen">インサイトを見る</button></div>';
     h += '<div class="tabs"><div class="on">スレッド</div></div>';
     if (!FEED.posts.length) h += '<div class="fl" style="padding:16px 0">まだ投稿がありません</div>';
     FEED.posts.forEach(function (p) {
@@ -12282,10 +12324,13 @@ function threadsScript_(C) {
     FEED = null;
     $('thMain').style.display = 'none'; $('thFeedWrap').style.display = '';
     window.scrollTo(0, 0);
+    VIEW = 'feed';
     // ★覚えている中身があれば0秒で出す（裏で新しい中身が届いたら描き直す）。無ければ「読み込み中」で待つ。
     if (!showFeedFromData()) $('thFeed').innerHTML = '<div class="fl">読み込み中です…</div>';
+    loadWeb(CUR, 30, false);
   });
   $('thFeedBack').addEventListener('click', function () {
+    if (VIEW !== 'feed') { VIEW = 'feed'; if (FEED) drawFeed(); window.scrollTo(0, 0); return; }   // 1つ前（スレッドの表示）に戻る
     $('thFeedWrap').style.display = 'none'; $('thMain').style.display = ''; window.scrollTo(0, 0);
   });
   $('thFeed').addEventListener('click', function (e) {
@@ -12365,6 +12410,96 @@ function threadsScript_(C) {
     if (g('data-ig')) { var r4 = g('data-ig'); szPopup_('このコメントを無視しますか？（出しません）', { cancel: true, onYes: function () { act({ kind: 'approve', acct: CUR, reply_id: r4, approve: false }, '処理中です', '無視しました', mid); } }); return; }
   });
 
+  // ── フォロワー一覧・インサイト（2026-11-05 まるちゃん「完全再現して」）──
+  //   公式の数字（閲覧数・インタラクション・フォロワー数・日ごとの閲覧数）＝ kind=insights（速い）。
+  //   公式に無い物（閲覧者・純フォロワー・閲覧者タイプ・フォロワー一覧・リンク）＝ kind=web（本物の画面を読む・30〜40秒）。
+  //   どちらも端末に覚えておき、まず覚えた物を出す（待たない）。本物の画面の数字が届いたら、そちらを優先（本物と完全に同じ）。
+  var WEB = {}, INS = {}, WEBBUSY = {}, VIEW = 'feed', DAYS = 30;
+  var WKEY = 'th_web_v1', IKEY = 'th_ins_v1';
+  try { WEB = JSON.parse(localStorage.getItem(WKEY) || '{}') || {}; INS = JSON.parse(localStorage.getItem(IKEY) || '{}') || {}; } catch (e) {}
+  function webOf(a, d) { return WEB[a + '_' + d] || (d === 30 ? null : null); }
+  function saveWI() { try { localStorage.setItem(WKEY, JSON.stringify(WEB)); localStorage.setItem(IKEY, JSON.stringify(INS)); } catch (e) {} }
+  function loadWeb(a, d, force) {
+    var k = a + '_' + d, w = WEB[k];
+    if (WEBBUSY[k] || (!force && w && Date.now() - (w._t || 0) < 30 * 60000)) return;   // 30分以内に読んだ物は読み直さない
+    WEBBUSY[k] = true;
+    ask({ kind: 'web', acct: a, days: d }, '', function (err, r) {
+      WEBBUSY[k] = false;
+      if (err || !r) return;
+      r._t = Date.now(); WEB[k] = r; saveWI(); redraw();
+    });
+  }
+  function loadIns(a, d) {
+    ask({ kind: 'insights', acct: a, days: d }, '', function (err, r) {
+      if (err || !r) return;
+      r._t = Date.now(); INS[a + '_' + d] = r; saveWI(); redraw();
+    });
+  }
+  function redraw() {
+    if ($('thFeedWrap').style.display === 'none') return;
+    if (VIEW === 'feed' && FEED) drawFeed();
+    else if (VIEW === 'fol') drawFol();
+    else if (VIEW === 'ins') drawIns();
+  }
+  function drawFol() {
+    var w = webOf(CUR, 30), pf = (FEED && FEED.profile) || {}, h = '';
+    var list = (w && w.followers) || null;
+    h += '<div class="ttl">' + esc(pf.username || '') + '</div>';
+    h += '<div class="flh"><div class="on">フォロワー<b>' + esc(pf.followers != null ? pf.followers : (list ? list.length : '')) + '</b></div></div>';
+    if (!list) h += '<div class="fl" style="padding:14px 0">読み込み中です…（30秒ほどかかります）</div>';
+    else if (!list.length) h += '<div class="fl" style="padding:14px 0">まだフォロワーがいません</div>';
+    else h += list.map(function (f) {
+      return '<div class="fr">' + (f.img ? '<img src="' + esc(f.img) + '" referrerpolicy="no-referrer">' : '<div class="noimg"></div>') +
+        '<div class="w"><a href="https://www.threads.com/@' + esc(f.user) + '" target="_blank" rel="noopener">' + esc(f.user) + '</a><div>' + esc(f.name || '') + '</div></div>' +
+        (f.btn ? '<span class="b">' + esc(f.btn) + '</span>' : '') + '</div>';
+    }).join('');
+    $('thFeed').innerHTML = h;
+  }
+  function chart(series) {
+    if (!series || !series.length) return '';
+    var W = 320, H = 150, L = 26, B = 18, T = 8, max = 0;
+    series.forEach(function (p) { if (p.v > max) max = p.v; });
+    var top = Math.max(2, Math.ceil(max / 2) * 2), step = top / 5;
+    var x = function (i) { return L + (W - L - 6) * (series.length === 1 ? 0 : i / (series.length - 1)); };
+    var y = function (v) { return T + (H - T - B) * (1 - v / top); };
+    var pts = series.map(function (p, i) { return x(i).toFixed(1) + ',' + y(p.v).toFixed(1); }).join(' ');
+    var g = '';
+    for (var k = 0; k <= 5; k++) {
+      var vv = Math.round(step * k * 10) / 10, yy = y(vv).toFixed(1);
+      g += '<line x1="' + L + '" x2="' + (W - 6) + '" y1="' + yy + '" y2="' + yy + '" stroke="#2a2a2a"/><text x="' + (L - 4) + '" y="' + (Number(yy) + 3) + '" text-anchor="end">' + vv + '</text>';
+    }
+    var area = x(0).toFixed(1) + ',' + y(0).toFixed(1) + ' ' + pts + ' ' + x(series.length - 1).toFixed(1) + ',' + y(0).toFixed(1);
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%">' + g +
+      '<polygon points="' + area + '" fill="rgba(255,255,255,.08)"/><polyline points="' + pts + '" fill="none" stroke="#f3f5f7" stroke-width="2"/>' +
+      '<text x="' + L + '" y="' + (H - 4) + '">' + esc(md(series[0].d)) + '</text><text x="' + (W - 6) + '" y="' + (H - 4) + '" text-anchor="end">' + esc(md(series[series.length - 1].d)) + '</text></svg>';
+  }
+  function md(d) { var m = String(d || '').match(/(\d+)\/(\d+)/); return m ? Number(m[1]) + '月' + Number(m[2]) + '日' : d; }
+  function drawIns() {
+    var k = CUR + '_' + DAYS, a = INS[k], w = WEB[k], wi = (w && w.ins) || {}, h = '';
+    var card = function (label, v, p) { return '<div class="card"><div class="k">' + label + '</div><div class="v">' + esc(v == null || v === '' ? '…' : v) + '</div><div class="p">' + esc(p || '') + '</div></div>'; };
+    h += '<div class="ttl">インサイト</div>';
+    h += '<div class="per">' + [7, 14, 30, 90].map(function (d) { return '<button type="button" data-days="' + d + '"' + (d === DAYS ? ' class="on"' : '') + '>過去' + d + '日間</button>'; }).join('') + '</div>';
+    if (a && a.from) h += '<div class="note">' + esc(md(a.from)) + ' – ' + esc(md(a.to)) + '</div>';
+    h += '<div class="sec"><h3>概要</h3><div class="cards">' +
+      card('閲覧数', wi.views_web || (a && a.views), wi.views_pct || (a && a.views_pct)) +
+      card('閲覧者', wi.viewers, wi.viewers_pct) +
+      card('純フォロワー', wi.net, wi.net_pct) +
+      card('インタラクション', wi.inter_web || (a && a.inter), wi.inter_pct || (a && a.inter_pct)) + '</div>' +
+      (a ? chart(a.series) : '<div class="fl">読み込み中です…</div>') + '</div>';
+    h += '<div class="sec"><h3>閲覧者</h3><div class="big">' + esc(wi.viewers || '…') + '</div><div class="sub">' + esc(wi.since ? (wi.viewers_pct || '') + ' ' + wi.since : '') + '</div>' +
+      '<h3 style="font-size:15px;margin-top:6px">閲覧者タイプ</h3><div class="cards">' +
+      card('フォロワー', wi.type_f, wi.type_f_pct) + card('フォロワー以外', wi.type_nf, wi.type_nf_pct) + '</div></div>';
+    if (!w) h += '<div class="note">閲覧者・純フォロワー・閲覧者タイプはThreadsの画面から読んでいます（30秒ほどかかります）</div>';
+    $('thFeed').innerHTML = h;
+  }
+  $('thFeed').addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.closest && t.closest('#thFolOpen')) { VIEW = 'fol'; drawFol(); window.scrollTo(0, 0); loadWeb(CUR, 30, false); return; }
+    if (t.id === 'thInsOpen') { VIEW = 'ins'; drawIns(); window.scrollTo(0, 0); loadIns(CUR, DAYS); loadWeb(CUR, DAYS, false); return; }
+    var dd = t.getAttribute && t.getAttribute('data-days');
+    if (dd) { DAYS = Number(dd); drawIns(); loadIns(CUR, DAYS); loadWeb(CUR, DAYS, false); }
+  });
+
   // ── ズコから出した投稿の一覧と削除 ──
   function loadList() {
     // ★2026-11-05 まるちゃん「極限まで短く」：一覧は画面を開いた時の「まとめて1回」の答え（DATA）から描く＝待たない。
@@ -12410,7 +12545,7 @@ function threadsScript_(C) {
     if (!ACCTS.some(function (a) { return a.acct === CUR; })) CUR = (d.cur && ACCTS.some(function (a) { return a.acct === d.cur; })) ? d.cur : ACCTS[0].acct;
     if ($('thFeedWrap').style.display === 'none') { $('thLoad').style.display = 'none'; $('thMain').style.display = ''; }
     drawAcct(); drawCnt(); loadList();
-    if ($('thFeedWrap').style.display !== 'none' && !(FEED && FEED.more)) showFeedFromData();
+    if ($('thFeedWrap').style.display !== 'none' && VIEW === 'feed' && !(FEED && FEED.more)) showFeedFromData();
   }
   function loadAll() {
     ask({ kind: 'open' }, '', function (err, d) {
