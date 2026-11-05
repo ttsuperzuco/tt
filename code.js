@@ -12446,7 +12446,7 @@ function threadsScript_(C) {
     var list = (w && w.followers) || null;
     h += '<div class="ttl">' + esc(pf.username || '') + '</div>';
     h += '<div class="flh"><div class="on">フォロワー<b>' + esc(pf.followers != null ? pf.followers : (list ? list.length : '')) + '</b></div></div>';
-    if (!list) h += '<div class="fl" style="padding:14px 0">読み込み中です…（30秒ほどかかります）</div>';
+    if (!list || (!list.length && w && w.login && /止め|入れません/.test(w.login))) h += '<div class="fl" style="padding:14px 0">' + (w && w.login && /止め|入れません/.test(w.login) ? 'フォロワーの一覧は、サーバーのThreadsのログインが済むと出ます' : '読み込み中です…（30秒ほどかかります）') + '</div>';
     else if (!list.length) h += '<div class="fl" style="padding:14px 0">まだフォロワーがいません</div>';
     else h += list.map(function (f) {
       return '<div class="fr">' + (f.img ? '<img src="' + esc(f.img) + '" referrerpolicy="no-referrer">' : '<div class="noimg"></div>') +
@@ -12459,7 +12459,10 @@ function threadsScript_(C) {
     if (!series || !series.length) return '';
     var W = 320, H = 150, L = 26, B = 18, T = 8, max = 0;
     series.forEach(function (p) { if (p.v > max) max = p.v; });
-    var top = Math.max(2, Math.ceil(max / 2) * 2), step = top / 5;
+    // 目盛りは本物と同じ「きりのいい数×5段」（例：最大8なら0,2,4,6,8,10）
+    var step = 1, cand = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+    for (var ci = 0; ci < cand.length; ci++) { step = cand[ci]; if (step * 5 >= max) break; }
+    var top = step * 5;
     var x = function (i) { return L + (W - L - 6) * (series.length === 1 ? 0 : i / (series.length - 1)); };
     var y = function (v) { return T + (H - T - B) * (1 - v / top); };
     var pts = series.map(function (p, i) { return x(i).toFixed(1) + ',' + y(p.v).toFixed(1); }).join(' ');
@@ -12490,6 +12493,7 @@ function threadsScript_(C) {
       '<h3 style="font-size:15px;margin-top:6px">閲覧者タイプ</h3><div class="cards">' +
       card('フォロワー', wi.type_f, wi.type_f_pct) + card('フォロワー以外', wi.type_nf, wi.type_nf_pct) + '</div></div>';
     if (!w) h += '<div class="note">閲覧者・純フォロワー・閲覧者タイプはThreadsの画面から読んでいます（30秒ほどかかります）</div>';
+    else if (!wi.viewers && w.login && /止め|入れません/.test(w.login)) h += '<div class="note">閲覧者・純フォロワー・閲覧者タイプは、サーバーのThreadsのログインが済むと出ます</div>';
     $('thFeed').innerHTML = h;
   }
   $('thFeed').addEventListener('click', function (e) {
