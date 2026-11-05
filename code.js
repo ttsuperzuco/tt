@@ -11978,7 +11978,7 @@ function threadsScript_(C) {
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var ACCTS = [], CUR = '', MEDIA = [], MAXT = 500, MAXI = 10, MAXLONG = 10000, MAXCHAIN = 5, VIDEO_MB = 18, TOTAL_MB = 18;
-  var RC = 'everyone', LAST = null;
+  var RC = 'everyone', LAST = null, DATA = null;
   var idn = function () { return { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' }; };
   var warn = function (m) { if (typeof szPopup_ === 'function') szPopup_(m); else alert(m); };
   // ★文字の数え方はThreadsと同じ（2026-11-05 実測：😊は1文字・肌の色つき👍🏻は2文字＝文字の部品の数）。
@@ -12061,6 +12061,7 @@ function threadsScript_(C) {
   $('thAcct').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     CUR = b.getAttribute('data-a'); drawAcct(); loadList();
+    if (DATA) { DATA.cur = CUR; cacheSet(DATA); }
   });
 
   // ── 文と数 ──
@@ -12215,7 +12216,7 @@ function threadsScript_(C) {
         szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
         var db = document.getElementById('szDoneBack');
         if (db) db.addEventListener('click', function () {
-          szOvHide_(); loadList();
+          szOvHide_(); loadAll();
           if (d && d.chain_fail) warn('最初の投稿はできましたが、' + d.chain_fail);
         });
       });
@@ -12265,16 +12266,24 @@ function threadsScript_(C) {
   function loadFeed(after) {
     ask({ kind: 'feed', acct: CUR, after: after || '' }, after ? '' : '読み込み中です', function (err, d) {
       if (err) { warn(err); return; }
-      if (after && FEED) { FEED.posts = FEED.posts.concat(d.posts || []); FEED.after = d.after || ''; }
+      if (after && FEED) { FEED.posts = FEED.posts.concat(d.posts || []); FEED.after = d.after || ''; FEED.more = true; }
       else FEED = { profile: d.profile || {}, posts: d.posts || [], after: d.after || '' };
       drawFeed();
     });
   }
+  function showFeedFromData() {
+    var fd = DATA && DATA.feeds && DATA.feeds[CUR];
+    if (!fd || !fd.ok) return false;
+    FEED = { profile: fd.profile || {}, posts: (fd.posts || []).slice(), after: fd.after || '' };
+    drawFeed(); return true;
+  }
   $('thShow').addEventListener('click', function () {
     if (!CUR) return;
-    FEED = null; $('thFeed').innerHTML = '';
+    FEED = null;
     $('thMain').style.display = 'none'; $('thFeedWrap').style.display = '';
-    window.scrollTo(0, 0); loadFeed('');
+    window.scrollTo(0, 0);
+    // ★覚えている中身があれば0秒で出す（裏で新しい中身が届いたら描き直す）。無ければ「読み込み中」で待つ。
+    if (!showFeedFromData()) $('thFeed').innerHTML = '<div class="fl">読み込み中です…</div>';
   });
   $('thFeedBack').addEventListener('click', function () {
     $('thFeedWrap').style.display = 'none'; $('thMain').style.display = ''; window.scrollTo(0, 0);
@@ -12358,11 +12367,9 @@ function threadsScript_(C) {
 
   // ── ズコから出した投稿の一覧と削除 ──
   function loadList() {
-    $('thList').innerHTML = '<div class="thempty">読み込み中です…</div>';
-    var want = CUR;
-    ask({ kind: 'list', acct: CUR }, '', function (err, d) {
-      if (want !== CUR) return;
-      if (err) { $('thList').innerHTML = '<div class="thempty">' + esc(err) + '</div>'; return; }
+    // ★2026-11-05 まるちゃん「極限まで短く」：一覧は画面を開いた時の「まとめて1回」の答え（DATA）から描く＝待たない。
+    if (!DATA || !DATA.lists || !DATA.lists[CUR]) { $('thList').innerHTML = '<div class="thempty">読み込み中です…</div>'; return; }
+    (function (d) {
       var ps = (d && d.posts) || [];
       if (!ps.length) { $('thList').innerHTML = '<div class="thempty">まだありません</div>'; return; }
       $('thList').innerHTML = ps.map(function (p) {
@@ -12371,7 +12378,7 @@ function threadsScript_(C) {
           '<div class="b">' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">開く</a>' : '') +
           '<button type="button" data-id="' + esc(p.id) + '">削除</button></div></div>';
       }).join('');
-    });
+    })({ posts: DATA.lists[CUR] });
   }
   $('thList').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-id]'); if (!b) return;
@@ -12381,20 +12388,39 @@ function threadsScript_(C) {
         if (err) { warn(err); return; }
         szOvShow_(szDoneHtml_('削除が完了しました'), '#16a34a');
         var db = document.getElementById('szDoneBack');
-        if (db) db.addEventListener('click', function () { szOvHide_(); loadList(); });
+        if (db) db.addEventListener('click', function () { szOvHide_(); loadAll(); });
       });
     } });
   });
 
-  // ── はじめ：出せるアカウントを聞く ──
-  ask({ kind: 'accounts' }, '', function (err, d) {
-    if (err) { $('thLoad').textContent = err; return; }
+  // ── はじめ（2026-11-05 まるちゃん「極限まで短く」）──
+  //   ①この端末が前回受け取った答えを覚えていれば、それで0秒で描く（待たない）。
+  //   ②裏で「まとめて1回」（アカウント・一覧・両方の表示の中身）を聞き、届いたら覚え直して描き直す。
+  //   ★実測：受付係への1回の問い合わせは中身に関係なく5〜9秒。前は3回続けて聞いていた（約20秒）。
+  var CKEY = 'th_cache_v1_' + (window.__SZ_ROLE_ || '') + '_' + (window.__SZ_WHO_ || '');
+  function cacheGet() { try { return JSON.parse(localStorage.getItem(CKEY) || 'null'); } catch (e) { return null; } }
+  function cacheSet(d) { try { localStorage.setItem(CKEY, JSON.stringify(d)); } catch (e) {} }
+  function apply(d, fresh) {
+    DATA = d;
     ACCTS = (d && d.accounts) || [];
-    if (!ACCTS.length) { $('thLoad').textContent = 'この端末から投稿できるアカウントがありません。'; return; }
-    CUR = ACCTS[0].acct;
-    $('thLoad').style.display = 'none'; $('thMain').style.display = '';
+    if (!ACCTS.length) {
+      if (fresh) { $('thMain').style.display = 'none'; $('thFeedWrap').style.display = 'none'; $('thLoad').style.display = ''; $('thLoad').textContent = 'この端末から投稿できるアカウントがありません。'; }
+      return;
+    }
+    if (!ACCTS.some(function (a) { return a.acct === CUR; })) CUR = (d.cur && ACCTS.some(function (a) { return a.acct === d.cur; })) ? d.cur : ACCTS[0].acct;
+    if ($('thFeedWrap').style.display === 'none') { $('thLoad').style.display = 'none'; $('thMain').style.display = ''; }
     drawAcct(); drawCnt(); loadList();
-  });
+    if ($('thFeedWrap').style.display !== 'none' && !(FEED && FEED.more)) showFeedFromData();
+  }
+  function loadAll() {
+    ask({ kind: 'open' }, '', function (err, d) {
+      if (err) { if (!DATA) $('thLoad').textContent = err; return; }
+      d.cur = CUR; cacheSet(d); apply(d, true);
+    });
+  }
+  var _c = cacheGet();
+  if (_c) apply(_c, false);
+  loadAll();
 }
 
 // ========== 🔁（施術後の予約の8枚目「お知らせのおすすめ」）の見た目 ==========
