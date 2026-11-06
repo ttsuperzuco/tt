@@ -1828,7 +1828,8 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', mita: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu'
+  // ★2026-11-06 まるちゃん「前日お知らせの右に見てくれた？」＝お知らせ見てくれた？(mita)はスタッフ画面（ここに書かない）
   // ★2026-11-06 まるちゃん「開発中の機能に戻す」＝Threads投稿は開発版では開発中の機能に置く（TOMATO・オリーブ・みかんのスマホには人ごとの表示で出る）。
   // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
@@ -1844,7 +1845,17 @@ function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
 // ★部屋の中で、そのボタンの右（次のマス）を空白にする（2026-10-21 まるちゃん「空き時間の右は空白」）。
 //   PC版 super_pc.py の BLANK_AFTER と同じ（片方直したら両方）。
 //   ★2026-11-02 まるちゃん「予約入力は空き時間の右に配置」＝空白をやめた（10-21の決まりを上書き）。
-var BLANK_AFTER_ = { jitsumu: [] };
+// ★2026-11-06 まるちゃん「LINE一斉配信は下の段に。その右は今のところ空」＝LINE一斉配信(bcast)の右を空ける。
+//   ★空けるのは、そのボタンが左の列に来た時だけ（右の列なら空けない＝人によってボタンの数が違っても穴が開かない）。
+var BLANK_AFTER_ = { jitsumu: ['bcast'] };
+function tilesGap_(list, gaps) {
+  var n = 0;
+  return list.map(function (t) {
+    var h = tileA_(t); n++;
+    if ((gaps || []).indexOf(t.id) >= 0 && n % 2 === 1) { h += '<div class="tilegap"></div>'; n++; }
+    return h;
+  }).join('');
+}
 // ★部屋の中の下側に見出し付きで出す小部屋（2026-10-26 まるちゃん「スタッフ画面の下側に TOMATO画面」）。PC版 SUB_ROLES と同じ。
 var SUB_ROLES_ = { jitsumu: [{ id: 'tomato', icon: '🍅', title: 'TOMATO画面' }] };
 
@@ -1948,9 +1959,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button></div>' +
         '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
-        '<div class="tiles">' + list.map(function (t) {
-          return tileA_(t) + ((BLANK_AFTER_[R.id] || []).indexOf(t.id) >= 0 ? '<div class="tilegap"></div>' : '');
-        }).join('') + '</div>' + subs.map(function (S) {
+        '<div class="tiles">' + tilesGap_(list, BLANK_AFTER_[R.id]) + '</div>' + subs.map(function (S) {
           var sl = byG[S.id] || [];
           return sl.length ? ('<div class="grouptitle" style="margin-top:22px">' + S.icon + ' ' + S.title + '</div>' +
             '<div class="tiles">' + sl.map(tileA_).join('') + '</div>') : '';
@@ -1965,9 +1974,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' + head +
     // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
-    '<div class="tiles">' + shown.map(function (t) {
-      return tileA_(t) + ((staff && (BLANK_AFTER_.jitsumu || []).indexOf(t.id) >= 0) ? '<div class="tilegap"></div>' : '');
-    }).join('') + '</div>' +
+    '<div class="tiles">' + tilesGap_(shown, staff ? BLANK_AFTER_.jitsumu : []) + '</div>' +
   '</div>' + EXTLINK_SCRIPT_;
 }
 
