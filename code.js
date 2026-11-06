@@ -13034,7 +13034,17 @@ var MITACSS_ = ''
 + '.mtDay summary{cursor:pointer;padding:10px 0;font-weight:800}'
 + '.mtDay summary small{font-weight:600;opacity:.8;margin-left:8px;font-size:.8rem}'
 + '.mtDay[open]{padding-bottom:6px}'
-+ '.mtFoot{font-size:.78rem;opacity:.85;margin:12px 4px;line-height:1.6;color:#fff}';
++ '.mtFoot{font-size:.78rem;opacity:.85;margin:12px 4px;line-height:1.6;color:#fff}'
+// ★2026-11-06 まるちゃん「左を まだ反応無し、右を リアクション済 のボタンにして、押すとそれぞれが出るように」
++ '.mtGs{display:flex;gap:8px;margin:0 0 12px}'
++ '.mtG{flex:1 1 0;min-width:0;background:var(--card);color:var(--ink);border:3px solid transparent;border-radius:14px;'
++   'padding:10px 8px;cursor:pointer;text-align:center;font-weight:800;font-size:1rem;opacity:.6}'
++ '.mtG b{display:block;font-size:1.7rem;line-height:1.15}'
++ '.mtG b small{font-size:.85rem;margin-left:2px}'
++ '.mtG.on{opacity:1}'
++ '.mtG.no.on{border-color:#dc2626}'
++ '.mtG.ok.on{border-color:#16a34a}'
++ '.mtSub{font-size:.8rem;color:#fff;opacity:.9;margin:14px 4px 6px;font-weight:700}';
 var MITA_CAT_ = {
   notice: { ic: '✅', t: 'お知らせで反応', c: '#16a34a' },
   r1:     { ic: '🔗', t: '1回目のリンクで確認', c: '#2C7A99' },
@@ -13068,6 +13078,30 @@ function mitaRow_(r) {
     '<div class="mtLn mtDim">' + sub + '</div>' +
     (r.why ? '<div class="mtLn mtDim">' + esc_(r.why) + '</div>' : '') + '</div>';
 }
+// 「まだ反応なし」（⏳まだ・⚠️なし）と「リアクション済」（✅・🔗・🌅）の2つのボタン。押した方だけ下に出す。
+// 対象外（取り消し・当日のご予約など）はどちらにも入れず、まだ反応なしの一番下に小さく出す（追いかけなくてよい方）。
+var MITA_NO_ = { wait: 1, none: 1 }, MITA_OK_ = { notice: 1, r1: 1, r2: 1 };
+function mitaGrp_(b) {
+  var box = b.parentNode.parentNode, g = b.getAttribute('data-g');
+  [].slice.call(box.querySelectorAll(':scope > .mtGs > .mtG')).forEach(function (x) { x.classList.toggle('on', x === b); });
+  [].slice.call(box.querySelectorAll(':scope > .mtGp')).forEach(function (x) { x.style.display = x.getAttribute('data-g') === g ? '' : 'none'; });
+}
+function mitaDay_(day) {
+  var rows = (day && day.rows) || [];
+  var no = rows.filter(function (r) { return MITA_NO_[r.cat]; });
+  var ok = rows.filter(function (r) { return MITA_OK_[r.cat]; });
+  var out = rows.filter(function (r) { return !MITA_NO_[r.cat] && !MITA_OK_[r.cat]; });
+  var first = no.length ? 'no' : 'ok';
+  function btn(g, t, n) {
+    return '<button type="button" class="mtG ' + g + (g === first ? ' on' : '') + '" data-g="' + g + '" onclick="mitaGrp_(this)">' +
+      '<b>' + n + '<small>人</small></b>' + t + '</button>';
+  }
+  function list(arr, empty) { return arr.length ? arr.map(mitaRow_).join('') : '<div class="mtR mtDim">' + empty + '</div>'; }
+  return '<div class="mtGs">' + btn('no', '⏳ まだ反応なし', no.length) + btn('ok', '✅ リアクション済', ok.length) + '</div>' +
+    '<div class="mtGp" data-g="no"' + (first === 'no' ? '' : ' style="display:none"') + '>' + list(no, 'まだ反応のない方はいません') +
+    (out.length ? '<div class="mtSub">対象外（取り消し・当日のご予約など）</div>' + out.map(mitaRow_).join('') : '') + '</div>' +
+    '<div class="mtGp" data-g="ok"' + (first === 'ok' ? '' : ' style="display:none"') + '>' + list(ok, 'まだリアクションのある方はいません') + '</div>';
+}
 function mitaSum_(cnt) {
   return '<div class="mtSum">' + MITA_ORDER_.filter(function (k) { return (cnt || {})[k]; }).map(function (k) {
     var c = MITA_CAT_[k];
@@ -13099,7 +13133,7 @@ function renderMitaPage_(d, base, staff, dev) {
     if (!day || !day.rows || !day.rows.length) {
       return '<div class="mtR mtDim">' + esc_(empty) + '</div>';
     }
-    return mitaSum_(day.count) + day.rows.map(mitaRow_).join('');
+    return '<div>' + mitaDay_(day) + '</div>';
   }
   // 最初に開くタブ＝今日に「まだ反応なし」が残っていれば今日、それ以外は明日（明日が無ければ今日）
   var first = ((today && (today.count || {}).wait) || !tomorrow) ? 'today' : 'tomorrow';
@@ -13121,7 +13155,7 @@ function renderMitaPage_(d, base, staff, dev) {
         var c = day.count || {};
         var mini = MITA_ORDER_.filter(function (k) { return c[k]; }).map(function (k) { return MITA_CAT_[k].ic + c[k]; }).join(' ');
         return '<details class="mtDay"><summary>' + esc_(day.label) + '<small>' + mitaCnt_(day) + '人　' + esc_(mini) + '</small></summary>' +
-          mitaSum_(c) + day.rows.map(mitaRow_).join('') + '</details>';
+          '<div>' + mitaDay_(day) + '</div></details>';
       }).join('') : '<div class="mtR mtDim">まだ履歴はありません</div>';
     } else {
       inner = pane(x[2], x[3]);
