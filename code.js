@@ -13073,6 +13073,12 @@ function mitaTab_(b) {
   [].slice.call(document.querySelectorAll('.mtTab')).forEach(function (x) { x.classList.toggle('on', x === b); });
   [].slice.call(document.querySelectorAll('.mtPane')).forEach(function (x) { x.style.display = x.getAttribute('data-t') === t ? '' : 'none'; });
 }
+function mitaSeenText_(r) {
+  var what = r.sent2 ? '当日朝の確認リンク' : (r.sent1 ? '1回目の確認リンク' : 'お知らせ');
+  var t = r.seen === '既読' ? what + 'を送り、既読になっていますが、まだ反応はありません'
+                           : what + 'を送りましたが、まだ既読になっていません';
+  return t + (r.seen_at ? '（この方が最後にメッセージを読んだ時間 ' + r.seen_at + '）' : '');
+}
 function mitaRow_(r) {
   var c = MITA_CAT_[r.cat] || MITA_CAT_.out;
   var ln = [];
@@ -13091,9 +13097,10 @@ function mitaRow_(r) {
     '<span class="mtBd" style="background:' + c.c + '">' + c.ic + ' ' + esc_(c.t) + '</span></div>' +
     '<div class="mtBody"><div class="mtMain">' +
     (ln.length ? '<div class="mtLn">' + ln.join('<br>') + '</div>' : '') +
-    (r.why ? '<div class="mtLn mtDim">' + esc_(r.why) + '</div>' : '') +
-    (r.seen ? '<div class="mtLn mtDim">👁 ' + (r.seen === '既読' ? 'お店が最後に送ったメッセージを読んでいます' : 'お店が最後に送ったメッセージをまだ読んでいません') +
-      (r.seen_at ? '（最後に読んだ ' + esc_(r.seen_at) + '）' : '') + '</div>' : '') +
+    // ★2026-11-06 まるちゃん「1回目の確認リンクを送りましたが、まだ既読になっていません（この方が最後にメッセージを読んだ時間 11/4 20:04）」
+    //   ＝待ちの文と既読・未読を1つの文にまとめる。
+    (r.seen ? '<div class="mtLn mtDim">' + esc_(mitaSeenText_(r)) + '</div>' :
+      (r.why ? '<div class="mtLn mtDim">' + esc_(r.why) + '</div>' : '')) +
     '</div><div class="mtSide">' + side.join('<br>') + '</div></div></div>';
 }
 // 「まだ反応なし」（⏳まだ・⚠️なし）と「リアクション済」（✅・🔗・🌅）の2つのボタン。押した方だけ下に出す。
