@@ -13044,6 +13044,9 @@ var MITACSS_ = ''
 + '.mtG.on{opacity:1}'
 + '.mtG.no.on{border-color:#dc2626}'
 + '.mtG.ok.on{border-color:#16a34a}'
++ '.mtRd{font-size:.8rem;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap}'
++ '.mtRd.y{background:#2563eb;color:#fff}'
++ '.mtRd.n{background:transparent;color:#f87171;border:2px solid #f87171}'
 + '.mtSub{font-size:.8rem;color:#fff;opacity:.9;margin:14px 4px 6px;font-weight:700}';
 var MITA_CAT_ = {
   notice: { ic: '✅', t: 'お知らせで反応', c: '#16a34a' },
@@ -13070,13 +13073,17 @@ function mitaRow_(r) {
   var sub = '<span class="k">🔔 お知らせ</span>' + esc_(r.notice || '') +
     (links.length ? '　<span class="k">🔗 リンク</span>' + links.join('・') : '');
   return '<div class="mtR' + (r.cat === 'out' ? ' mtOut' : '') + '" style="border-left-color:' + c.c + '">' +
-    '<div class="mtHd"><span class="mtTm">' + esc_(r.start || '--:--') + '</span>' +
+    // ★2026-11-06 まるちゃん「まだ反応なしの左に既読か未読か（こちらが最後に送ったメッセージを読んだか）」
+    '<div class="mtHd">' + (r.seen ? '<span class="mtRd ' + (r.seen === '既読' ? 'y' : 'n') + '">' + esc_(r.seen) + '</span>' : '') +
+    '<span class="mtTm">' + esc_(r.start || '--:--') + '</span>' +
     '<span class="mtNm">' + esc_(r.name || '') + '</span>' +
     (r.code ? '<span class="mtCd">' + esc_(r.code) + '</span>' : '') +
     '<span class="mtBd" style="background:' + c.c + '">' + c.ic + ' ' + esc_(c.t) + '</span></div>' +
     (ln.length ? '<div class="mtLn">' + ln.join('<br>') + '</div>' : '') +
     '<div class="mtLn mtDim">' + sub + '</div>' +
-    (r.why ? '<div class="mtLn mtDim">' + esc_(r.why) + '</div>' : '') + '</div>';
+    (r.why ? '<div class="mtLn mtDim">' + esc_(r.why) + '</div>' : '') +
+    (r.seen ? '<div class="mtLn mtDim">👁 ' + (r.seen === '既読' ? 'お店が最後に送ったメッセージを読んでいます' : 'お店が最後に送ったメッセージをまだ読んでいません') +
+      (r.seen_at ? '（最後に読んだ ' + esc_(r.seen_at) + '）' : '') + '</div>' : '') + '</div>';
 }
 // 「まだ反応なし」（⏳まだ・⚠️なし）と「リアクション済」（✅・🔗・🌅）の2つのボタン。押した方だけ下に出す。
 // 対象外（取り消し・当日のご予約など）はどちらにも入れず、まだ反応なしの一番下に小さく出す（追いかけなくてよい方）。
@@ -13164,6 +13171,7 @@ function renderMitaPage_(d, base, staff, dev) {
   }).join('');
   var foot = '<div class="mtFoot">' + (d.generated_at ? esc_(d.generated_at) + ' 時点（5分ごとに新しくなります）<br>' : '') +
     '✅ リンクを送る前に返事・スタンプが来た方／🔗 1回目のリンクのあと／🌅 当日朝のリンクのあと。<br>' +
+    (d.read_as_of ? '既読・未読は ' + esc_(d.read_as_of) + ' 時点のLINEの記録です（15〜20分ごとに新しくなります）。<br>' : '') +
     '👆 押した・💬 返事は、両方あれば両方出ます。スタッフが手でLINEから送ったお知らせはここに出ません。</div>';
   return head + tabs + panes + foot + '</div>';
 }
