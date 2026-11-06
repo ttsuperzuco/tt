@@ -13188,10 +13188,8 @@ function renderMitaPage_(d, base, staff, dev) {
     }
     return '<div class="mtPane" data-t="' + x[0] + '"' + (x[0] === first ? '' : ' style="display:none"') + '>' + inner + '</div>';
   }).join('');
-  var foot = '<div class="mtFoot">' + (d.generated_at ? esc_(d.generated_at) + ' 時点（5分ごとに新しくなります）<br>' : '') +
-    '✅ 確認リンクを送る前に返事・スタンプが来た方／🔗 1回目の確認リンクのあと／🌅 当日朝の確認リンクのあと。<br>' +
-    (d.read_as_of ? '既読・未読は ' + esc_(d.read_as_of) + ' 時点のLINEの記録です（15〜20分ごとに新しくなります）。<br>' : '') +
-    '👆 押した・💬 返事は、両方あれば両方出ます。スタッフが手でLINEから送ったお知らせはここに出ません。</div>';
+  // ★2026-11-06 まるちゃん「説明の3行（✅🔗🌅の意味・既読の時点・押した/返事の説明）はいらない」＝何時点かだけ残す。
+  var foot = d.generated_at ? '<div class="mtFoot">' + esc_(d.generated_at) + ' 時点（5分ごとに新しくなります）</div>' : '';
   return head + tabs + panes + foot + '</div>';
 }
 
