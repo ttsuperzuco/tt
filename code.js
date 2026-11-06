@@ -13149,12 +13149,13 @@ function renderMitaPage_(d, base, staff, dev) {
   var first = ((today && (today.count || {}).wait) || !tomorrow) ? 'today' : 'tomorrow';
   function wd(day) { return day ? ' ' + String(day.label || '').replace(/^\d+\/\d+/, '') : ''; }
   var TABS = [
-    ['today', '今日' + wd(today), today, '今日のご予約のお知らせはありません'],
-    ['tomorrow', '明日' + wd(tomorrow), tomorrow, '明日のご予約のお知らせはまだ送っていません'],
+    // ★2026-11-06 まるちゃん「今日予約 明日予約 にして」＝曜日は下の小さい行（人数と並べる）
+    ['today', '今日予約', today, '今日のご予約のお知らせはありません'],
+    ['tomorrow', '明日予約', tomorrow, '明日のご予約のお知らせはまだ送っていません'],
     ['past', '過去の履歴', null, '']
   ];
   var tabs = '<div class="mtTabs">' + TABS.map(function (x) {
-    var n = x[0] === 'past' ? past.length + '日分' : (x[2] ? mitaCnt_(x[2]) + '人' : '0人');
+    var n = x[0] === 'past' ? past.length + '日分' : ((x[2] ? x[2].label + '・' + mitaCnt_(x[2]) : '0') + '人');
     return '<button type="button" class="mtTab' + (x[0] === first ? ' on' : '') + '" data-t="' + x[0] + '" onclick="mitaTab_(this)">' +
       esc_(x[1]) + '<span class="mtTabN">' + n + '</span></button>';
   }).join('') + '</div>';
