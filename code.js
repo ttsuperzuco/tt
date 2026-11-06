@@ -13053,8 +13053,8 @@ var MITACSS_ = ''
 + '.mtSub{font-size:.8rem;color:#fff;opacity:.9;margin:14px 4px 6px;font-weight:700}';
 var MITA_CAT_ = {
   notice: { ic: '✅', t: 'お知らせで反応', c: '#16a34a' },
-  r1:     { ic: '🔗', t: '1回目のリンクで確認', c: '#2C7A99' },
-  r2:     { ic: '🌅', t: '当日朝のリンクで確認', c: '#d97706' },
+  r1:     { ic: '🔗', t: '1回目の確認リンクで確認', c: '#2C7A99' },
+  r2:     { ic: '🌅', t: '当日朝の確認リンクで確認', c: '#d97706' },
   none:   { ic: '⚠️', t: '反応なし', c: '#dc2626' },
   wait:   { ic: '⏳', t: 'まだ反応なし', c: '#64748b' },
   out:    { ic: '・', t: '対象外', c: '#94a3b8' }
@@ -13072,8 +13072,8 @@ function mitaRow_(r) {
   if (r.replied) ln.push('<span class="k">💬 返事</span>' + esc_(r.replied) + (r.reply ? '「' + esc_(r.reply) + '」' : ''));
   // ★2026-11-06 まるちゃん「お知らせ・リンクは下じゃなく右側に配置」＝送った時刻は右の小さな列にまとめる
   var side = ['🔔 お知らせ ' + esc_(r.notice || '')];
-  if (r.sent1) side.push('🔗 1回目 ' + esc_(r.sent1));
-  if (r.sent2) side.push('🔗 当日朝 ' + esc_(r.sent2));
+  if (r.sent1) side.push('🔗 確認リンク1回目 ' + esc_(r.sent1));
+  if (r.sent2) side.push('🔗 確認リンク当日朝 ' + esc_(r.sent2));
   return '<div class="mtR' + (r.cat === 'out' ? ' mtOut' : '') + '" style="border-left-color:' + c.c + '">' +
     // ★2026-11-06 まるちゃん「まだ反応なしの左に既読か未読か（こちらが最後に送ったメッセージを読んだか）」
     '<div class="mtHd">' + (r.seen ? '<span class="mtRd ' + (r.seen === '既読' ? 'y' : 'n') + '">' + esc_(r.seen) + '</span>' : '') +
@@ -13174,7 +13174,7 @@ function renderMitaPage_(d, base, staff, dev) {
     return '<div class="mtPane" data-t="' + x[0] + '"' + (x[0] === first ? '' : ' style="display:none"') + '>' + inner + '</div>';
   }).join('');
   var foot = '<div class="mtFoot">' + (d.generated_at ? esc_(d.generated_at) + ' 時点（5分ごとに新しくなります）<br>' : '') +
-    '✅ リンクを送る前に返事・スタンプが来た方／🔗 1回目のリンクのあと／🌅 当日朝のリンクのあと。<br>' +
+    '✅ 確認リンクを送る前に返事・スタンプが来た方／🔗 1回目の確認リンクのあと／🌅 当日朝の確認リンクのあと。<br>' +
     (d.read_as_of ? '既読・未読は ' + esc_(d.read_as_of) + ' 時点のLINEの記録です（15〜20分ごとに新しくなります）。<br>' : '') +
     '👆 押した・💬 返事は、両方あれば両方出ます。スタッフが手でLINEから送ったお知らせはここに出ません。</div>';
   return head + tabs + panes + foot + '</div>';
