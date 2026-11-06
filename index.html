@@ -374,7 +374,7 @@
 <script src="bigsend.js?v=0a105a201c"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=6c0e95d11b"></script>
+<script src="code.js?v=77d6ec5408"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -876,6 +876,23 @@
   // ★販売管理（2026-10-17・実務者用）。取ってくるデータは無い＝描くだけ。登録・一覧は画面の中から受付係へ頼む。
   function showHanbai() { mount(renderHanbaiPage_(base, staff, dev)); }
 
+  // ★お知らせ見てくれた？（2026-11-06）。サーバーがまとめた oshirase_mita.json を読んで描くだけ。
+  function showMita() {
+    var cb = '__mita' + Date.now();
+    window[cb] = function (payload) {
+      try { delete window[cb]; } catch (e) {}
+      try { mount(renderMitaPage_(payload || {}, base, staff, dev)); }
+      catch (e) { fail('描画エラー：' + e); }
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=data&name=oshirase_mita.json&callback=' + cb + '&cb=' + Date.now();
+    s.onerror = function () {
+      try { mount(renderMitaPage_({ error: '通信エラーです。通信環境をご確認ください。' }, base, staff, dev)); }
+      catch (e) {}
+    };
+    document.head.appendChild(s);
+  }
+
   // ★Threads投稿（2026-11-05）。出せるアカウント・一覧は画面の中から受付係に聞く＝ここでは描くだけ。
   function showThreads() { mount(renderThreadsPage_(base, staff, dev)); }
 
@@ -1302,6 +1319,7 @@
     else if (v === 'procstock') showProcStock();
     else if (v === 'hanbai') showHanbai();
     else if (v === 'threads') showThreads();
+    else if (v === 'mita') showMita();
     else if (v === 'claudechat') showClaudeChat();
     else if (v === 'instadm') showInstaDm();
     else if (v === 'igdm') showIgdm();

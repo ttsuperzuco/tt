@@ -176,6 +176,9 @@ function doGet(e) {
   } else if (view === 'procstock') {
     title = 'プロセル在庫';                             // ★品物ごとの今ある数を入れる（純JS・登録は受付係）
     html = renderProcStockPage_(base, staff, dev);
+  } else if (view === 'mita') {
+    title = 'お知らせ見てくれた？';                       // ★静的アプリが oshirase_mita.json を取って描く
+    html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください。' }, base, staff, dev);
   } else if (view === 'threads') {
     title = 'Threads投稿';                                   // ★お店のThreadsに投稿・削除（純JS・投稿は受付係 op=threads）
     html = renderThreadsPage_(base, staff, dev);
@@ -1044,7 +1047,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   //   既定は開発者だけ（共通ルール16）。まるちゃん「スタッフ全員に触らせる」＝試して大丈夫なら tile_settings.py の
   //   STAFF_ASSIGNABLE に入れて、自動監視の人ごとの表示でONにする。
   claudechat: { exec: false, staff: false },
-  threads:    { exec: false, staff: false }
+  threads:    { exec: false, staff: false },
+  // ★お知らせ見てくれた？（2026-11-06 まるちゃん依頼）＝前日お知らせのあと、お客様が反応してくれたかの一覧。
+  //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝確かめたら人ごとの表示でスタッフにONにする。
+  mita:       { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1052,7 +1058,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'mita'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1794,7 +1800,11 @@ var TILE_DEFS_ = [
   // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
   //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
   { id: 'threads', cls: 'threads', view: 'threads',
-    icon: '<span class="ticon">🧵</span>', label: 'Threads\n投稿' }
+    icon: '<span class="ticon">🧵</span>', label: 'Threads\n投稿' },
+  // ★お知らせ見てくれた？（2026-11-06）＝前日お知らせへの反応（返事・確認リンクを押した）を今日・明日・過去の履歴で見る。
+  //   分け方はサーバーが oshirase_mita.json に入れる（前日お知らせ確認リンクの お知らせ見てくれた.py）。
+  { id: 'mita', cls: 'mita', view: 'mita',
+    icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -1818,7 +1828,7 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', mita: 'kaihatsu'
   // ★2026-11-06 まるちゃん「開発中の機能に戻す」＝Threads投稿は開発版では開発中の機能に置く（TOMATO・オリーブ・みかんのスマホには人ごとの表示で出る）。
   // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
@@ -12993,6 +13003,137 @@ var PROCELLCSS_ = ''
 + '.pcDim{opacity:.7}'
 + '.pcFoot{margin:14px 4px;font-size:.85rem;opacity:.7}';
 
+// ========== お知らせ見てくれた？（2026-11-06 まるちゃん依頼・既定は開発者だけ） ==========
+// 前日お知らせのあと、お客様が反応してくれたか（返事・スタンプ／確認リンクを押した）を1予約1行で見せる。
+// 分け方はサーバーが決めて oshirase_mita.json に入れる（前日お知らせ確認リンク\programs\お知らせ見てくれた.py）＝ここは描くだけ。
+// 今日・明日を上のタブで主に出し、過去の履歴は3つ目のタブ（日ごとに開く）。
+var MITACSS_ = ''
++ '.mtTabs{display:flex;gap:6px;margin:0 0 12px}'
++ '.mtTab{flex:1 1 0;min-width:0;padding:10px 4px;border-radius:999px;border:2px solid rgba(255,255,255,.7);'
++   'background:transparent;color:#fff;font-weight:800;font-size:1rem;cursor:pointer}'
++ '.mtTab.on{background:#fff;color:#2C7A99;border-color:#fff}'
++ '.mtTabN{display:block;font-size:.72rem;font-weight:600;opacity:.85;margin-top:1px}'
++ '.mtSum{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}'
++ '.mtS{flex:1 1 30%;min-width:96px;background:var(--card);color:var(--ink);border:1px solid var(--line);'
++   'border-radius:12px;padding:8px 8px;border-left:6px solid #64748b}'
++ '.mtS b{display:block;font-size:1.5rem;line-height:1.1}'
++ '.mtS b span{font-size:.8rem;margin-left:2px}'
++ '.mtS > span{font-size:.78rem;opacity:.85}'
++ '.mtR{background:var(--card);color:var(--ink);border:1px solid var(--line);border-left:6px solid #64748b;'
++   'border-radius:12px;padding:10px 12px;margin:0 0 8px}'
++ '.mtHd{display:flex;flex-wrap:wrap;align-items:center;gap:6px}'
++ '.mtTm{font-weight:800;font-size:1.05rem}'
++ '.mtNm{font-weight:800;font-size:1.05rem}'
++ '.mtCd{font-size:.82rem;opacity:.7}'
++ '.mtBd{margin-left:auto;font-size:.78rem;font-weight:800;color:#fff;padding:2px 9px;border-radius:999px;white-space:nowrap}'
++ '.mtLn{font-size:.86rem;line-height:1.55;margin-top:4px}'
++ '.mtLn .k{display:inline-block;font-weight:700;margin-right:4px}'
++ '.mtDim{opacity:.7}'
++ '.mtOut{opacity:.6}'
++ '.mtDay{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;margin:0 0 8px;padding:0 12px}'
++ '.mtDay summary{cursor:pointer;padding:10px 0;font-weight:800}'
++ '.mtDay summary small{font-weight:600;opacity:.8;margin-left:8px;font-size:.8rem}'
++ '.mtDay[open]{padding-bottom:6px}'
++ '.mtFoot{font-size:.78rem;opacity:.85;margin:12px 4px;line-height:1.6;color:#fff}';
+var MITA_CAT_ = {
+  notice: { ic: '✅', t: 'お知らせで反応', c: '#16a34a' },
+  r1:     { ic: '🔗', t: '1回目のリンクで確認', c: '#2C7A99' },
+  r2:     { ic: '🌅', t: '当日朝のリンクで確認', c: '#d97706' },
+  none:   { ic: '⚠️', t: '反応なし', c: '#dc2626' },
+  wait:   { ic: '⏳', t: 'まだ反応なし', c: '#64748b' },
+  out:    { ic: '・', t: '対象外', c: '#94a3b8' }
+};
+var MITA_ORDER_ = ['notice', 'r1', 'r2', 'none', 'wait', 'out'];
+function mitaTab_(b) {
+  var t = b.getAttribute('data-t');
+  [].slice.call(document.querySelectorAll('.mtTab')).forEach(function (x) { x.classList.toggle('on', x === b); });
+  [].slice.call(document.querySelectorAll('.mtPane')).forEach(function (x) { x.style.display = x.getAttribute('data-t') === t ? '' : 'none'; });
+}
+function mitaRow_(r) {
+  var c = MITA_CAT_[r.cat] || MITA_CAT_.out;
+  var ln = [];
+  if (r.clicked) ln.push('<span class="k">👆 押した</span>' + esc_(r.clicked));
+  if (r.replied) ln.push('<span class="k">💬 返事</span>' + esc_(r.replied) + (r.reply ? '「' + esc_(r.reply) + '」' : ''));
+  var links = [];
+  if (r.sent1) links.push('1回目 ' + esc_(r.sent1));
+  if (r.sent2) links.push('当日朝 ' + esc_(r.sent2));
+  var sub = '<span class="k">🔔 お知らせ</span>' + esc_(r.notice || '') +
+    (links.length ? '　<span class="k">🔗 リンク</span>' + links.join('・') : '');
+  return '<div class="mtR' + (r.cat === 'out' ? ' mtOut' : '') + '" style="border-left-color:' + c.c + '">' +
+    '<div class="mtHd"><span class="mtTm">' + esc_(r.start || '--:--') + '</span>' +
+    '<span class="mtNm">' + esc_(r.name || '') + '</span>' +
+    (r.code ? '<span class="mtCd">' + esc_(r.code) + '</span>' : '') +
+    '<span class="mtBd" style="background:' + c.c + '">' + c.ic + ' ' + esc_(c.t) + '</span></div>' +
+    (ln.length ? '<div class="mtLn">' + ln.join('<br>') + '</div>' : '') +
+    '<div class="mtLn mtDim">' + sub + '</div>' +
+    (r.why ? '<div class="mtLn mtDim">' + esc_(r.why) + '</div>' : '') + '</div>';
+}
+function mitaSum_(cnt) {
+  return '<div class="mtSum">' + MITA_ORDER_.filter(function (k) { return (cnt || {})[k]; }).map(function (k) {
+    var c = MITA_CAT_[k];
+    return '<div class="mtS" style="border-left-color:' + c.c + '"><b>' + cnt[k] + '<span>人</span></b><span>' + c.ic + ' ' + esc_(c.t) + '</span></div>';
+  }).join('') + '</div>';
+}
+function mitaCnt_(day) {
+  var n = 0, c = (day && day.count) || {};
+  for (var k in c) n += c[k];
+  return n;
+}
+function renderMitaPage_(d, base, staff, dev) {
+  d = d || {};
+  var head = '<style>' + HOMECSS_ + MITACSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="hhead"><span class="bmark">👀</span><span class="bname">お知らせ見てくれた？</span></div>';
+  if (d.error || !d.days) {
+    return head + '<div class="soon"><div class="soonic">📄</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">まだ記録がありません</div>' +
+      '<div class="soondesc">' + esc_(d.error || '前日お知らせを送ると、ここに出てきます。') + '</div></div></div>';
+  }
+  var days = d.days || [], today = null, tomorrow = null, past = [];
+  days.forEach(function (x) {
+    if (x.when === 'today') today = x;
+    else if (x.when === 'tomorrow') tomorrow = x;
+    else if (x.when === 'past') past.push(x);
+  });
+  function pane(day, empty) {
+    if (!day || !day.rows || !day.rows.length) {
+      return '<div class="mtR mtDim">' + esc_(empty) + '</div>';
+    }
+    return mitaSum_(day.count) + day.rows.map(mitaRow_).join('');
+  }
+  // 最初に開くタブ＝今日に「まだ反応なし」が残っていれば今日、それ以外は明日（明日が無ければ今日）
+  var first = ((today && (today.count || {}).wait) || !tomorrow) ? 'today' : 'tomorrow';
+  function wd(day) { return day ? ' ' + String(day.label || '').replace(/^\d+\/\d+/, '') : ''; }
+  var TABS = [
+    ['today', '今日' + wd(today), today, '今日のご予約のお知らせはありません'],
+    ['tomorrow', '明日' + wd(tomorrow), tomorrow, '明日のご予約のお知らせはまだ送っていません'],
+    ['past', '過去の履歴', null, '']
+  ];
+  var tabs = '<div class="mtTabs">' + TABS.map(function (x) {
+    var n = x[0] === 'past' ? past.length + '日分' : (x[2] ? mitaCnt_(x[2]) + '人' : '0人');
+    return '<button type="button" class="mtTab' + (x[0] === first ? ' on' : '') + '" data-t="' + x[0] + '" onclick="mitaTab_(this)">' +
+      esc_(x[1]) + '<span class="mtTabN">' + n + '</span></button>';
+  }).join('') + '</div>';
+  var panes = TABS.map(function (x) {
+    var inner;
+    if (x[0] === 'past') {
+      inner = past.length ? past.map(function (day) {
+        var c = day.count || {};
+        var mini = MITA_ORDER_.filter(function (k) { return c[k]; }).map(function (k) { return MITA_CAT_[k].ic + c[k]; }).join(' ');
+        return '<details class="mtDay"><summary>' + esc_(day.label) + '<small>' + mitaCnt_(day) + '人　' + esc_(mini) + '</small></summary>' +
+          mitaSum_(c) + day.rows.map(mitaRow_).join('') + '</details>';
+      }).join('') : '<div class="mtR mtDim">まだ履歴はありません</div>';
+    } else {
+      inner = pane(x[2], x[3]);
+    }
+    return '<div class="mtPane" data-t="' + x[0] + '"' + (x[0] === first ? '' : ' style="display:none"') + '>' + inner + '</div>';
+  }).join('');
+  var foot = '<div class="mtFoot">' + (d.generated_at ? esc_(d.generated_at) + ' 時点（5分ごとに新しくなります）<br>' : '') +
+    '✅ リンクを送る前に返事・スタンプが来た方／🔗 1回目のリンクのあと／🌅 当日朝のリンクのあと。<br>' +
+    '👆 押した・💬 返事は、両方あれば両方出ます。スタッフが手でLINEから送ったお知らせはここに出ません。</div>';
+  return head + tabs + panes + foot + '</div>';
+}
+
 // ========== T＆Tショップ履歴（2026-09-19 まるちゃん依頼・開発URL専用・管理者用） ==========
 // ネットショップ（T＆T SIGNATURE）に、どなたが・何回来て・何を見て・どこまで進み・注文したか。
 // 事務所PCがまとめた shop_history.json（商品ページ（T＆Tショップ）\programs\ショップ履歴.py）を描くだけ＝判定はPC側。
@@ -15420,6 +15561,7 @@ var HOMECSS_ =
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.claudechat::before { background:#d97757; }' +
 '  .tile.threads::before { background:#101010; }' +
+'  .tile.mita::before { background:#0f766e; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile.kizon::before { background:#7c3aed; }' +
