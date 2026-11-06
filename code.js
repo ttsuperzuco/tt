@@ -1848,10 +1848,10 @@ function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
 // ★2026-11-06 まるちゃん「LINE一斉配信は下の段に。その右は今のところ空」＝LINE一斉配信(bcast)の右を空ける。
 //   ★空けるのは、そのボタンが左の列に来た時だけ（右の列なら空けない＝人によってボタンの数が違っても穴が開かない）。
 var BLANK_AFTER_ = { jitsumu: ['bcast'] };
-function tilesGap_(list, gaps) {
+function tilesGap_(list, gaps, draw) {   // draw＝ボタン1つを描く部品（ホームの中の tileA_ を渡す）
   var n = 0;
   return list.map(function (t) {
-    var h = tileA_(t); n++;
+    var h = draw(t); n++;
     if ((gaps || []).indexOf(t.id) >= 0 && n % 2 === 1) { h += '<div class="tilegap"></div>'; n++; }
     return h;
   }).join('');
@@ -1959,7 +1959,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button></div>' +
         '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
-        '<div class="tiles">' + tilesGap_(list, BLANK_AFTER_[R.id]) + '</div>' + subs.map(function (S) {
+        '<div class="tiles">' + tilesGap_(list, BLANK_AFTER_[R.id], tileA_) + '</div>' + subs.map(function (S) {
           var sl = byG[S.id] || [];
           return sl.length ? ('<div class="grouptitle" style="margin-top:22px">' + S.icon + ' ' + S.title + '</div>' +
             '<div class="tiles">' + sl.map(tileA_).join('') + '</div>') : '';
@@ -1974,7 +1974,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="home">' + head +
     // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
-    '<div class="tiles">' + tilesGap_(shown, staff ? BLANK_AFTER_.jitsumu : []) + '</div>' +
+    '<div class="tiles">' + tilesGap_(shown, staff ? BLANK_AFTER_.jitsumu : [], tileA_) + '</div>' +
   '</div>' + EXTLINK_SCRIPT_;
 }
 
