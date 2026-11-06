@@ -13047,6 +13047,9 @@ var MITACSS_ = ''
 + '.mtRd{font-size:.8rem;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap}'
 + '.mtRd.y{background:#2563eb;color:#fff}'
 + '.mtRd.n{background:transparent;color:#f87171;border:2px solid #f87171}'
++ '.mtBody{display:flex;gap:10px;align-items:flex-start}'
++ '.mtMain{flex:1 1 auto;min-width:0}'
++ '.mtSide{flex:0 0 auto;text-align:right;font-size:.78rem;line-height:1.6;opacity:.7;margin-top:4px;white-space:nowrap}'
 + '.mtSub{font-size:.8rem;color:#fff;opacity:.9;margin:14px 4px 6px;font-weight:700}';
 var MITA_CAT_ = {
   notice: { ic: '✅', t: 'お知らせで反応', c: '#16a34a' },
@@ -13065,13 +13068,12 @@ function mitaTab_(b) {
 function mitaRow_(r) {
   var c = MITA_CAT_[r.cat] || MITA_CAT_.out;
   var ln = [];
-  if (r.clicked) ln.push('<span class="k">👆 押した</span>' + esc_(r.clicked));
+  if (r.clicked) ln.push('<span class="k">👆 URLを押した</span>' + esc_(r.clicked));   // ★2026-11-06 まるちゃん「URLを押した にして」
   if (r.replied) ln.push('<span class="k">💬 返事</span>' + esc_(r.replied) + (r.reply ? '「' + esc_(r.reply) + '」' : ''));
-  var links = [];
-  if (r.sent1) links.push('1回目 ' + esc_(r.sent1));
-  if (r.sent2) links.push('当日朝 ' + esc_(r.sent2));
-  var sub = '<span class="k">🔔 お知らせ</span>' + esc_(r.notice || '') +
-    (links.length ? '　<span class="k">🔗 リンク</span>' + links.join('・') : '');
+  // ★2026-11-06 まるちゃん「お知らせ・リンクは下じゃなく右側に配置」＝送った時刻は右の小さな列にまとめる
+  var side = ['🔔 お知らせ ' + esc_(r.notice || '')];
+  if (r.sent1) side.push('🔗 1回目 ' + esc_(r.sent1));
+  if (r.sent2) side.push('🔗 当日朝 ' + esc_(r.sent2));
   return '<div class="mtR' + (r.cat === 'out' ? ' mtOut' : '') + '" style="border-left-color:' + c.c + '">' +
     // ★2026-11-06 まるちゃん「まだ反応なしの左に既読か未読か（こちらが最後に送ったメッセージを読んだか）」
     '<div class="mtHd">' + (r.seen ? '<span class="mtRd ' + (r.seen === '既読' ? 'y' : 'n') + '">' + esc_(r.seen) + '</span>' : '') +
@@ -13079,11 +13081,12 @@ function mitaRow_(r) {
     '<span class="mtNm">' + esc_(r.name || '') + '</span>' +
     (r.code ? '<span class="mtCd">' + esc_(r.code) + '</span>' : '') +
     '<span class="mtBd" style="background:' + c.c + '">' + c.ic + ' ' + esc_(c.t) + '</span></div>' +
+    '<div class="mtBody"><div class="mtMain">' +
     (ln.length ? '<div class="mtLn">' + ln.join('<br>') + '</div>' : '') +
-    '<div class="mtLn mtDim">' + sub + '</div>' +
     (r.why ? '<div class="mtLn mtDim">' + esc_(r.why) + '</div>' : '') +
     (r.seen ? '<div class="mtLn mtDim">👁 ' + (r.seen === '既読' ? 'お店が最後に送ったメッセージを読んでいます' : 'お店が最後に送ったメッセージをまだ読んでいません') +
-      (r.seen_at ? '（最後に読んだ ' + esc_(r.seen_at) + '）' : '') + '</div>' : '') + '</div>';
+      (r.seen_at ? '（最後に読んだ ' + esc_(r.seen_at) + '）' : '') + '</div>' : '') +
+    '</div><div class="mtSide">' + side.join('<br>') + '</div></div></div>';
 }
 // 「まだ反応なし」（⏳まだ・⚠️なし）と「リアクション済」（✅・🔗・🌅）の2つのボタン。押した方だけ下に出す。
 // 対象外（取り消し・当日のご予約など）はどちらにも入れず、まだ反応なしの一番下に小さく出す（追いかけなくてよい方）。
