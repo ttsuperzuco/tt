@@ -10884,6 +10884,8 @@ var UBCSS_ =
   '.ubtbl th{background:#fff2cc;color:#0f172a;font-weight:800;font-size:12px;padding:6px 3px;border-bottom:1px solid #cbd5e1;}' +
   '.ubtbl td{border-bottom:1px solid #e2e8f0;padding:7px 2px;vertical-align:top;font-weight:700;word-break:break-all;}' +
   '.ubtbl td.e{cursor:pointer;}' +
+  '.ubtbl tr.pend td{opacity:.5;}' +
+  '.ubtbl tr.del td{text-decoration:line-through;}' +
   '.ubtbl td.e:active{background:#e0f2fe;}' +
   '.ubtbl td.xc{text-align:center;padding:4px 1px;}' +
   '.ubx{background:#fee2e2;color:#b91c1c;border:0;border-radius:8px;width:28px;height:28px;font:inherit;font-weight:900;font-size:17px;line-height:1;cursor:pointer;}' +
@@ -10927,6 +10929,29 @@ function uriageBookScript_(C) {
   var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
   var D = null, busy = false, loading = false;
+  // ★2026-11-07 まるちゃん「修正するをOKしたとき、かきこみおわるまでまつとうざいので、バックグラウンドで書き込みします…
+  //   のBOXを出す。失敗した時だけポップアップで通知」＝書く用事は裏で進める。書き終わるまで、その行は薄く出す。
+  var PEND = [];          // 書き込み中の用事（{fields}）。画面には先に反映して見せる
+  function pendRow(r) { for (var i = 0; i < PEND.length; i++) if (PEND[i].row === r) return true; return false; }
+  function pendDel() { for (var i = 0; i < PEND.length; i++) if (PEND[i].action === 'delete') return true; return false; }
+  function applyPend() {
+    if (!D || !D.rows) return;
+    for (var i = 0; i < PEND.length; i++) {
+      var f = PEND[i];
+      for (var j = 0; j < D.rows.length; j++) {
+        var x = D.rows[j]; if (x.r !== f.row) continue;
+        x._pend = true;
+        if (f.action === 'pay') x.pay = f.value;
+        else if (f.action === 'delete') x._del = true;
+        else if (f.action === 'edit') {
+          if (f.col === 'B') x.num = String(f.value).toUpperCase();
+          else if (f.col === 'C') x.name = f.value;
+          else if (f.col === 'E') x.detail = f.value;
+          else if (f.col === 'F') { var n = parseInt(String(f.value).replace(/[^\d\-]/g, ''), 10); if (!isNaN(n)) x.amount = n; }
+        }
+      }
+    }
+  }
   function jsonp(p, cb) {
     var n = '__ubk' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
@@ -10954,7 +10979,7 @@ function uriageBookScript_(C) {
         '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th>支払</th><th>明細</th><th>合計</th><th>削除</th></tr></thead><tbody>';
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
-        L += '<tr class="r" data-j="' + j + '"><td class="w">' + esc(x.time || '') + '</td><td class="w">' + esc(x.no) + '</td>' +
+        L += '<tr class="r' + (x._pend ? ' pend' : '') + (x._del ? ' del' : '') + '" data-j="' + j + '"><td class="w">' + esc(x.time || '') + '</td><td class="w">' + esc(x.no) + '</td>' +
           '<td class="w e" data-c="B">' + esc(x.num) + '</td><td class="e" data-c="C">' + esc(x.name) + '</td>' +
           '<td class="p e' + (x.pay ? '' : ' np') + '" data-c="D">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '選ぶ') + '</td>' +
           '<td class="d e" data-c="E">' + esc(x.detail) + '</td><td class="n e" data-c="F">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td>' +
@@ -10974,20 +10999,35 @@ function uriageBookScript_(C) {
   }
   function fetchData(after) {
     jsonp({ action: 'data', name: 'uriagebook.json' }, function (p) {
-      if (p && p.rows) { D = p; draw(); }
+      if (p && p.rows) { D = p; applyPend(); draw(); }
       if (after) after(p);
     });
   }
 
-  // ── 頼む（書く時は全画面で「書き込み中」→「できました」） ──
+  // ── 頼む ──
+  //  読み直し（quiet）＝黙って読む。書く用事＝裏で進める：「バックグラウンドで書き込みします」の箱（OK）を出して
+  //  すぐ戻れる。画面には先に反映して見せ（その行は薄く）、失敗した時だけ知らせの小窓を出す（まるちゃん 2026-11-07）。
   function ask(fields, title, onOk, quiet) {
-    // ★読み直し（quiet）の最中も行は押せる＝書く用事だけ1つずつ（表の書き込みは係の鍵で順番になる）。
-    if (quiet ? loading : busy) return;
-    if (quiet) loading = true; else busy = true;
-    if (!quiet) szOvShow_(szBusyHtml_(title, '売上表への書き込みが終わったら自動で切り替わります。しばらくお待ちください。'), '#2C7A99');
-    else $('ubWhen').textContent = '最新の売上表を読んでいます…';
+    if (quiet) {
+      if (loading) return;
+      loading = true; $('ubWhen').textContent = '最新の売上表を読んでいます…';
+    } else {
+      // ★行を消している間は、下の行が1つずつ上にずれる＝その間に別の行を直すと違う行に書く恐れがあるので待ってもらう。
+      if (pendDel()) { popup('行を消しています。終わるまで少しお待ちください。'); return; }
+      // ★同じ行の書き込みが終わる前に重ねて直すと、係の「中身が変わっていないか」の確かめと食い違うので待ってもらう。
+      if (fields.row && pendRow(fields.row)) { popup('この行は書き込み中です。終わるまで少しお待ちください。'); return; }
+      PEND.push(fields); applyPend(); draw();
+      popup('バックグラウンドで書き込みします。しばらく時間がかかります。', { icon: '' });
+      if (onOk) onOk();
+    }
+    function settle() {
+      if (quiet) { loading = false; return; }
+      var i = PEND.indexOf(fields); if (i >= 0) PEND.splice(i, 1);
+    }
     function fail(msg) {
-      if (quiet) loading = false; else busy = false; if (!quiet) szOvHide_(); popup(msg || 'エラーが発生しました。りゅうさんに連絡しました。'); fetchData();
+      settle();
+      if (!quiet) popup('書き込めませんでした：' + (msg || 'エラーが発生しました。りゅうさんに連絡しました。'));
+      fetchData();
     }
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
             device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) }, function (r) {
@@ -10998,14 +11038,8 @@ function uriageBookScript_(C) {
         if (n > max) { fail('時間切れです。もう一度お試しください。'); return; }
         jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
           if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
-          if (s.status !== 'done') { fail(s.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
-          fetchData(function () {
-            if (quiet) { loading = false; draw(); return; }
-            busy = false;
-            szOvShow_(szDoneHtml_(esc(s.result || 'できました'), '戻る'), '#16a34a');
-            var b = document.getElementById('szDoneBack');
-            if (b) b.addEventListener('click', function () { szOvHide_(); if (onOk) onOk(); });
-          });
+          if (s.status !== 'done') { fail(s.result || ''); return; }
+          settle(); fetchData();
         });
       })();
     });
