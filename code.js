@@ -10921,7 +10921,7 @@ function uriageBookScript_(C) {
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
   var SECS = ['ubMain', 'ubAdd', 'ubOther', 'ubCoins'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
-  var D = null, busy = false;
+  var D = null, busy = false, loading = false;
   function jsonp(p, cb) {
     var n = '__ubk' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
@@ -10942,11 +10942,11 @@ function uriageBookScript_(C) {
     else {
       L = '<div class="ubtbl"><table><colgroup><col style="width:11%"><col style="width:13%"><col style="width:15%">' +
         '<col style="width:16%"><col><col style="width:17%"></colgroup>' +
-        '<thead><tr><th>番号</th><th>顧客<br>番号</th><th>顧客名</th><th>支払方法</th><th>明細</th><th>合計</th></tr></thead><tbody>';
+        '<thead><tr><th>番号</th><th>顧客<br>番号</th><th>顧客名</th><th>支払</th><th>明細</th><th>合計</th></tr></thead><tbody>';
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
         L += '<tr class="r" data-j="' + j + '"><td>' + esc(x.no) + '</td><td>' + esc(x.num) + '</td><td>' + esc(x.name) + '</td>' +
-          '<td class="p' + (x.pay ? '' : ' np') + '">' + esc(x.pay ? (x.pay === '街口支付' ? '街口' : x.pay) : '選ぶ') + '</td>' +
+          '<td class="p' + (x.pay ? '' : ' np') + '">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '選ぶ') + '</td>' +
           '<td class="d">' + esc(x.detail) + '</td><td class="n">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td></tr>';
       }
       L += '</tbody></table></div>';
@@ -10970,12 +10970,13 @@ function uriageBookScript_(C) {
 
   // ── 頼む（書く時は全画面で「書き込み中」→「できました」） ──
   function ask(fields, title, onOk, quiet) {
-    if (busy) return;
-    busy = true;
+    // ★読み直し（quiet）の最中も行は押せる＝書く用事だけ1つずつ（表の書き込みは係の鍵で順番になる）。
+    if (quiet ? loading : busy) return;
+    if (quiet) loading = true; else busy = true;
     if (!quiet) szOvShow_(szBusyHtml_(title, '売上表への書き込みが終わったら自動で切り替わります。しばらくお待ちください。'), '#2C7A99');
     else $('ubWhen').textContent = '最新の売上表を読んでいます…';
     function fail(msg) {
-      busy = false; if (!quiet) szOvHide_(); popup(msg || 'エラーが発生しました。りゅうさんに連絡しました。'); fetchData();
+      if (quiet) loading = false; else busy = false; if (!quiet) szOvHide_(); popup(msg || 'エラーが発生しました。りゅうさんに連絡しました。'); fetchData();
     }
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
             device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) }, function (r) {
@@ -10988,8 +10989,8 @@ function uriageBookScript_(C) {
           if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
           if (s.status !== 'done') { fail(s.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
           fetchData(function () {
+            if (quiet) { loading = false; draw(); return; }
             busy = false;
-            if (quiet) { draw(); return; }
             szOvShow_(szDoneHtml_(esc(s.result || 'できました'), '戻る'), '#16a34a');
             var b = document.getElementById('szDoneBack');
             if (b) b.addEventListener('click', function () { szOvHide_(); if (onOk) onOk(); });
