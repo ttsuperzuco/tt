@@ -10940,12 +10940,14 @@ function uriageBookScript_(C) {
     var L = '';
     if (!D.rows.length) L = '<div class="ubnone">まだ売上の行がありません</div>';
     else {
-      L = '<div class="ubtbl"><table><colgroup><col style="width:11%"><col style="width:13%"><col style="width:15%">' +
-        '<col style="width:16%"><col><col style="width:17%"></colgroup>' +
-        '<thead><tr><th>番号</th><th>顧客<br>番号</th><th>顧客名</th><th>支払</th><th>明細</th><th>合計</th></tr></thead><tbody>';
+      // ★2026-11-07 まるちゃん「番号は、發票下3桁」「一番左に時刻入れて（本番の売上表にはいれない）」
+      //   ＝時刻は發票を打った時刻（取り込みが残した発票から係が引く）。画面だけに出す。
+      L = '<div class="ubtbl"><table><colgroup><col style="width:12%"><col style="width:10%"><col style="width:12%"><col style="width:14%">' +
+        '<col style="width:12%"><col><col style="width:15%"></colgroup>' +
+        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th>支払</th><th>明細</th><th>合計</th></tr></thead><tbody>';
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
-        L += '<tr class="r" data-j="' + j + '"><td>' + esc(x.no) + '</td><td>' + esc(x.num) + '</td><td>' + esc(x.name) + '</td>' +
+        L += '<tr class="r" data-j="' + j + '"><td>' + esc(x.time || '') + '</td><td>' + esc(x.no) + '</td><td>' + esc(x.num) + '</td><td>' + esc(x.name) + '</td>' +
           '<td class="p' + (x.pay ? '' : ' np') + '">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '選ぶ') + '</td>' +
           '<td class="d">' + esc(x.detail) + '</td><td class="n">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td></tr>';
       }
@@ -11125,7 +11127,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubInv" style="display:none">' + inBack('ubInvBack') + head('🧾', '發票ありの売上') +
         '<div class="ubinfo"><span id="ubWhen"></span><button type="button" id="ubReload">読み直す</button></div>' +
-        '<div class="ubh">行を押すと支払方法を選べます</div>' +
+        '<div class="ubh">黄色の枠を押すと支払方法を選べます</div>' +
         '<div id="ubList"></div>' +
         '<div class="ubmenu"><button type="button" id="ubGoAdd">＋ 売上を手で1行足す</button></div>' +
       '</div>' +
