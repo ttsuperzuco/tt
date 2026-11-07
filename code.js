@@ -10881,6 +10881,9 @@ var UBCSS_ =
   '.ubbox:empty::before{content:attr(data-ph);color:#94a3b8;font-size:15px;font-weight:700;letter-spacing:normal;}' +
   '.ubbox.t{width:76px;justify-content:center;padding:8px 4px;}' +
   '.ubbox.sel{outline:4px solid #fde047;}' +
+  '.ubnumrow{display:flex;gap:8px;align-items:center;}' +
+  '.ubnumrow .ubbox{flex:1 1 auto;min-width:0;}' +
+  '.ubok{flex:0 0 auto;min-height:50px;background:#16a34a;color:#fff;border:0;border-radius:12px;padding:0 20px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.18);}' +
   '.ubkp{margin:12px 0 0;}' +
   '.ubkp .expad{margin:0 0 6px;}' +
   /* お客様番号のM・F切り替え＝既存の予約と同じ見た目（いつもの） */
@@ -11211,6 +11214,7 @@ function uriageBookScript_(C) {
       if (ks[i] === 'amt' && v) v = Number(v).toLocaleString();
       el.textContent = v; el.className = 'ubbox' + (ks[i] === 'h' || ks[i] === 'm' ? ' t' : '') + (afSel === ks[i] ? ' sel' : '');
     }
+    $('ubNumOk').style.display = (afSel === 'num') ? '' : 'none';   // ★2026-11-07 まるちゃん「顧客は入力欄の右にOKボタン出して閉じる」
   }
   function afOpen(k) {
     afSel = k; afFresh = true;
@@ -11226,6 +11230,7 @@ function uriageBookScript_(C) {
     if (bx) { var k = bx.getAttribute('data-f'); if (afSel === k) afClose(); else afOpen(k); }
   });
   $('ubAddDetail').addEventListener('focus', afClose);
+  $('ubNumOk').addEventListener('click', afClose);
   $('ubKpSeg').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     afPre = b.getAttribute('data-v') || ''; afSeg(); afDraw();
@@ -11249,6 +11254,7 @@ function uriageBookScript_(C) {
       if (afSel === 'h') { afOpen('m'); return; }
       if (afSel === 'm') { afClose(); return; }
     }
+    if (afSel === 'no' && /^[0-9]$/.test(k) && s.length >= 3) { afClose(); return; }   // ★2026-11-07 まるちゃん「三桁入れたらパネル閉じる」
     afDraw();
   });
   $('ubAddNow').addEventListener('click', function () { afNow(); afClose(); });
@@ -11360,7 +11366,8 @@ function renderUriageBookPage_(base, staff, dev) {
           '<label>時刻</label><div class="ubrow"><div class="ubtime"><div class="ubbox t" id="ubAf_h" data-f="h"></div><span class="ubu">時</span>' +
             '<div class="ubbox t" id="ubAf_m" data-f="m"></div><span class="ubu">分</span><button type="button" id="ubAddNow" class="ubnow">今</button></div></div>' +
           '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" id="ubAf_no" data-f="no" data-ph="押すと数字が出ます"></div></div>' +
-          '<label>顧客番号</label><div class="ubrow"><div class="ubbox" id="ubAf_num" data-f="num" data-ph="押すと数字が出ます"></div></div>' +
+          '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" id="ubAf_num" data-f="num" data-ph="押すと数字が出ます"></div>' +
+            '<button type="button" id="ubNumOk" class="ubok" style="display:none">OK</button></div></div>' +
           '<label>明細（購入内容）</label><input id="ubAddDetail">' +
           '<label>金額（元）</label><div class="ubrow"><div class="ubbox" id="ubAf_amt" data-f="amt" data-ph="押すと数字が出ます"></div></div>' +
           '<div class="ubkp" id="ubKp" style="display:none">' +
