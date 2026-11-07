@@ -10919,7 +10919,7 @@ function uriageBookScript_(C) {
   function yen(n) { return (n == null || n === '') ? '―' : Number(n).toLocaleString('ja-JP') + '元'; }
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
-  var SECS = ['ubMain', 'ubAdd', 'ubOther', 'ubCoins'];
+  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
   var D = null, busy = false, loading = false;
   function jsonp(p, cb) {
@@ -11049,18 +11049,18 @@ function uriageBookScript_(C) {
     if (!amt) { popup('金額を入れてください'); return; }
     if (!$('ubAddNum').value.trim() && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入れてください'); return; }
     ask({ action: 'add', no: $('ubAddNo').value.trim(), num: $('ubAddNum').value.trim(), detail: $('ubAddDetail').value.trim(),
-          amount: parseInt(amt, 10), pay: addPay }, '売上の行を足しています', function () { show('ubMain'); });
+          amount: parseInt(amt, 10), pay: addPay }, '売上の行を足しています', function () { show('ubInv'); });
   });
-  $('ubAddBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMain'); });
+  $('ubAddBack').addEventListener('click', function (e) { e.preventDefault(); show('ubInv'); });
 
   // ── その他に1行足す ──
   $('ubGoOther').addEventListener('click', function () { $('ubOthLabel').value = ''; $('ubOthAmt').value = ''; show('ubOther'); });
   $('ubOthGo').addEventListener('click', function () {
     var amt = $('ubOthAmt').value.replace(/[^\d\-]/g, '');
     if (!$('ubOthLabel').value.trim() || !amt) { popup('中身と金額を入れてください（経費などはマイナスで）'); return; }
-    ask({ action: 'other', label: $('ubOthLabel').value.trim(), amount: parseInt(amt, 10) }, 'その他を足しています', function () { show('ubMain'); });
+    ask({ action: 'other', label: $('ubOthLabel').value.trim(), amount: parseInt(amt, 10) }, 'その他を足しています', function () { show('ubNoInv'); });
   });
-  $('ubOthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMain'); });
+  $('ubOthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubNoInv'); });
 
   // ── 小銭とお札（数字ボタンで入れる） ──
   var CK = ['c100', 'c50', 'c10', 'c5', 'c1', 'bills'], CL = { c100: '100元', c50: '50元', c10: '10元', c5: '5元', c1: '1元', bills: 'お札' };
@@ -11087,12 +11087,17 @@ function uriageBookScript_(C) {
     var f = { action: 'coins' }, any = false;
     for (var i = 0; i < CK.length; i++) if (cv[CK[i]] !== '' && cv[CK[i]] !== undefined) { f[CK[i]] = parseInt(cv[CK[i]], 10); any = true; }
     if (!any) { popup('数を入れてください'); return; }
-    ask(f, '小銭を書いています', function () { show('ubMain'); });
+    ask(f, '小銭を書いています', function () { show('ubMenu'); });
   });
-  $('ubCoinBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMain'); });
+  $('ubCoinBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
+  // ★2026-11-07 まるちゃん「發票ありの売上　發票なしの売上　小銭とお札　の三つのボタンにする」
+  $('ubGoInv').addEventListener('click', function () { show('ubInv'); });
+  $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
+  $('ubInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
+  $('ubNoInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
 
   // ── はじめ：前に送られた中身をすぐ出し、裏で最新を読み直す（待たせない） ──
-  show('ubMain'); draw();
+  show('ubMenu'); draw();
   fetchData(function () { ask({ action: 'load' }, '', null, true); });
 }
 
@@ -11110,20 +11115,23 @@ function renderUriageBookPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + EXPADCSS_ + UBCSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="ub">' +
-      '<div id="ubMain">' + head('📒', 'TT売上帳簿') +
+      '<div id="ubMenu">' + head('📒', 'TT売上帳簿') +
         '<div class="ubtest" id="ubTest" style="display:none">テスト中：本番の売上表には書きません（2026_帳簿_テスト に書きます）</div>' +
-        '<div class="ubinfo"><span id="ubWhen"></span><button type="button" id="ubReload">読み直す</button></div>' +
-        '<div class="ubh">今日の売上（行を押すと支払方法を選べます）</div>' +
-        '<div id="ubList"></div>' +
         '<div class="ubmenu">' +
-          '<button type="button" id="ubGoAdd">＋ 売上を手で1行足す</button>' +
+          '<button type="button" id="ubGoInv">🧾 發票ありの売上</button>' +
+          '<button type="button" id="ubGoNoInv">📝 發票なしの売上</button>' +
+          '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
         '</div>' +
-        '<div class="ubh">その他（レシート発行しない分）</div>' +
+      '</div>' +
+      '<div id="ubInv" style="display:none">' + inBack('ubInvBack') + head('🧾', '發票ありの売上') +
+        '<div class="ubinfo"><span id="ubWhen"></span><button type="button" id="ubReload">読み直す</button></div>' +
+        '<div class="ubh">行を押すと支払方法を選べます</div>' +
+        '<div id="ubList"></div>' +
+        '<div class="ubmenu"><button type="button" id="ubGoAdd">＋ 売上を手で1行足す</button></div>' +
+      '</div>' +
+      '<div id="ubNoInv" style="display:none">' + inBack('ubNoInvBack') + head('📝', '發票なしの売上') +
         '<div class="uboth" id="ubOthers"></div>' +
-        '<div class="ubmenu"><button type="button" id="ubGoOther">＋ その他を1行足す</button></div>' +
-        '<div class="ubh">小銭とお札</div>' +
-        '<div class="ubinfo" id="ubCoinSum"></div>' +
-        '<div class="ubmenu"><button type="button" id="ubGoCoins">小銭とお札を入れる</button></div>' +
+        '<div class="ubmenu"><button type="button" id="ubGoOther">＋ 1行足す</button></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手で1行足す') +
         '<div class="ubf">' +
@@ -11135,14 +11143,15 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<button type="button" class="exgo" id="ubAddGo">この行を足す</button>' +
       '</div>' +
-      '<div id="ubOther" style="display:none">' + inBack('ubOthBack') + head('🧾', 'その他を1行足す') +
+      '<div id="ubOther" style="display:none">' + inBack('ubOthBack') + head('📝', '發票なしの売上を1行足す') +
         '<div class="ubf">' +
           '<label>中身（例 F791黃様 プロセルアフターセラム）</label><input id="ubOthLabel">' +
           '<label>金額（元・経費などはマイナス）</label><input id="ubOthAmt" inputmode="numeric">' +
         '</div>' +
-        '<button type="button" class="exgo" id="ubOthGo">その他に足す</button>' +
+        '<button type="button" class="exgo" id="ubOthGo">この行を足す</button>' +
       '</div>' +
       '<div id="ubCoins" style="display:none">' + inBack('ubCoinBack') + head('🪙', '小銭とお札') +
+        '<div class="ubinfo" id="ubCoinSum"></div>' +
         '<div class="ubinfo">入れたい所を押してから、数字ボタンで入れてください</div>' +
         '<div class="ubcoin" id="ubCoinGrid"></div>' +
         '<div class="expad" id="ubCoinPad" style="margin-top:12px">' + EXPADHTML_ + '</div>' +
