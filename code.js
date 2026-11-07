@@ -10879,9 +10879,10 @@ var UBCSS_ =
   '.ubsum .r.w{color:#b91c1c;}' +
   '.ubh{color:#fff;font-weight:900;font-size:19px;margin:16px 4px 6px;}' +
   '.ubtbl{background:#fff;border-radius:12px;overflow:hidden;margin:0 0 10px;box-shadow:0 3px 10px rgba(0,0,0,.14);}' +
-  '.ubtbl table{width:100%;border-collapse:collapse;color:#0f172a;font-size:13px;table-layout:fixed;}' +
+  '.ubtbl table{width:100%;border-collapse:collapse;color:#0f172a;font-size:12px;table-layout:fixed;}' +
+  '.ubtbl td.w{white-space:nowrap;word-break:normal;letter-spacing:-.02em;}' +
   '.ubtbl th{background:#fff2cc;color:#0f172a;font-weight:800;font-size:12px;padding:6px 3px;border-bottom:1px solid #cbd5e1;}' +
-  '.ubtbl td{border-bottom:1px solid #e2e8f0;padding:7px 3px;vertical-align:top;font-weight:700;word-break:break-all;}' +
+  '.ubtbl td{border-bottom:1px solid #e2e8f0;padding:7px 2px;vertical-align:top;font-weight:700;word-break:break-all;}' +
   '.ubtbl tr.r{cursor:pointer;}' +
   '.ubtbl tr.r:active td{background:#e0f2fe;}' +
   '.ubtbl td.n{text-align:right;white-space:nowrap;}' +
@@ -10942,12 +10943,12 @@ function uriageBookScript_(C) {
     else {
       // ★2026-11-07 まるちゃん「番号は、發票下3桁」「一番左に時刻入れて（本番の売上表にはいれない）」
       //   ＝時刻は發票を打った時刻（取り込みが残した発票から係が引く）。画面だけに出す。
-      L = '<div class="ubtbl"><table><colgroup><col style="width:12%"><col style="width:10%"><col style="width:12%"><col style="width:14%">' +
+      L = '<div class="ubtbl"><table><colgroup><col style="width:12%"><col style="width:9%"><col style="width:13%"><col style="width:14%">' +
         '<col style="width:12%"><col><col style="width:15%"></colgroup>' +
         '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th>支払</th><th>明細</th><th>合計</th></tr></thead><tbody>';
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
-        L += '<tr class="r" data-j="' + j + '"><td>' + esc(x.time || '') + '</td><td>' + esc(x.no) + '</td><td>' + esc(x.num) + '</td><td>' + esc(x.name) + '</td>' +
+        L += '<tr class="r" data-j="' + j + '"><td class="w">' + esc(x.time || '') + '</td><td class="w">' + esc(x.no) + '</td><td class="w">' + esc(x.num) + '</td><td>' + esc(x.name) + '</td>' +
           '<td class="p' + (x.pay ? '' : ' np') + '">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '選ぶ') + '</td>' +
           '<td class="d">' + esc(x.detail) + '</td><td class="n">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td></tr>';
       }
