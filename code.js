@@ -10878,10 +10878,22 @@ var UBCSS_ =
   '.ubsum .r.t{border-top:2px solid #0f172a;margin-top:4px;padding-top:6px;font-size:18px;font-weight:900;}' +
   '.ubsum .r.w{color:#b91c1c;}' +
   '.ubh{color:#fff;font-weight:900;font-size:19px;margin:16px 4px 6px;}' +
-  '.ubrow{background:#fff;border-radius:14px;padding:10px 12px;margin:0 0 10px;color:#0f172a;box-shadow:0 3px 10px rgba(0,0,0,.14);}' +
-  '.ubrow.np{outline:3px solid #f59e0b;}' +
-  '.ubrow .t{display:flex;justify-content:space-between;gap:8px;font-weight:900;font-size:17px;}' +
-  '.ubrow .d{font-size:15px;font-weight:700;color:#334155;margin:3px 0 8px;white-space:pre-wrap;word-break:break-word;}' +
+  '.ubtbl{background:#fff;border-radius:12px;overflow:hidden;margin:0 0 10px;box-shadow:0 3px 10px rgba(0,0,0,.14);}' +
+  '.ubtbl table{width:100%;border-collapse:collapse;color:#0f172a;font-size:13px;table-layout:fixed;}' +
+  '.ubtbl th{background:#fff2cc;color:#0f172a;font-weight:800;font-size:12px;padding:6px 3px;border-bottom:1px solid #cbd5e1;}' +
+  '.ubtbl td{border-bottom:1px solid #e2e8f0;padding:7px 3px;vertical-align:top;font-weight:700;word-break:break-all;}' +
+  '.ubtbl tr.r{cursor:pointer;}' +
+  '.ubtbl tr.r:active td{background:#e0f2fe;}' +
+  '.ubtbl td.n{text-align:right;white-space:nowrap;}' +
+  '.ubtbl td.d{white-space:pre-wrap;font-weight:600;}' +
+  '.ubtbl td.p{text-align:center;font-weight:800;font-size:12px;}' +
+  '.ubtbl td.p.np{background:#fde68a;color:#9a3412;}' +
+  '.ubmask{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;}' +
+  '.ubpick{background:#fff;border-radius:16px;padding:16px;width:100%;max-width:420px;color:#0f172a;box-shadow:0 8px 24px rgba(0,0,0,.3);}' +
+  '.ubpick .h{font-weight:900;font-size:18px;margin-bottom:4px;}' +
+  '.ubpick .s{font-weight:700;font-size:14px;color:#475569;margin-bottom:12px;white-space:pre-wrap;}' +
+  '.ubpick .ubpay button{padding:16px 2px;font-size:16px;}' +
+  '.ubpick .x{display:block;width:100%;margin-top:12px;background:#f1f5f9;border:0;border-radius:10px;padding:12px;font:inherit;font-size:16px;font-weight:800;color:#0f172a;cursor:pointer;}' +
   '.ubpay{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}' +
   '.ubpay button{border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:10px 2px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;}' +
   '.ubpay button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +
@@ -10923,19 +10935,21 @@ function uriageBookScript_(C) {
     if (!D || !D.rows) { $('ubList').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubTest').style.display = (D.mode === 'テスト') ? '' : 'none';
     $('ubWhen').textContent = D.tab + ' の売上表　' + String(D.at || '').slice(11, 16) + ' 時点';
-    var m = D.methods || {}, h = '';
-    for (var i = 0; i < PAYS.length; i++) h += '<div class="r"><span>' + PAYS[i] + '</span><span>' + yen(m[PAYS[i]]) + '</span></div>';
-    h += '<div class="r t"><span>合計</span><span>' + yen(D.total) + '</span></div>';
-    if (D.unpaid) h += '<div class="r w"><span>支払方法がまだの行</span><span>' + D.unpaid + '件</span></div>';
-    $('ubSum').innerHTML = h;
+    // ★2026-11-07 まるちゃん「ここのぶぶんいらない」「売上表くらいシンプルで一覧でみれるのがいい」
+    //   ＝上の支払方法毎の合計の欄をやめ、売上表と同じ並び（番号・顧客番号・顧客名・支払方法・明細・合計）の表にした。
     var L = '';
     if (!D.rows.length) L = '<div class="ubnone">まだ売上の行がありません</div>';
-    for (var j = 0; j < D.rows.length; j++) {
-      var x = D.rows[j], pb = '';
-      for (var k = 0; k < PAYS.length; k++) pb += '<button type="button" data-a="pay" data-j="' + j + '" data-v="' + esc(PAYS[k]) + '" class="' + (x.pay === PAYS[k] ? 'on' : '') + '">' + esc(PAYS[k] === '街口支付' ? '街口' : PAYS[k]) + '</button>';
-      L += '<div class="ubrow' + (x.pay ? '' : ' np') + '"><div class="t"><span>' + esc(x.no || '番号なし') + '　' + esc(x.num) + ' ' + esc(x.name) + '</span><span>' + yen(x.amount) + '</span></div>' +
-        '<div class="d">' + esc(x.detail) + '</div><div class="ubpay">' + pb + '</div>' +
-        '<button type="button" class="ubdel" data-a="del" data-j="' + j + '">この行を消す（発票の出し間違い）</button></div>';
+    else {
+      L = '<div class="ubtbl"><table><colgroup><col style="width:11%"><col style="width:13%"><col style="width:15%">' +
+        '<col style="width:16%"><col><col style="width:17%"></colgroup>' +
+        '<thead><tr><th>番号</th><th>顧客<br>番号</th><th>顧客名</th><th>支払方法</th><th>明細</th><th>合計</th></tr></thead><tbody>';
+      for (var j = 0; j < D.rows.length; j++) {
+        var x = D.rows[j];
+        L += '<tr class="r" data-j="' + j + '"><td>' + esc(x.no) + '</td><td>' + esc(x.num) + '</td><td>' + esc(x.name) + '</td>' +
+          '<td class="p' + (x.pay ? '' : ' np') + '">' + esc(x.pay ? (x.pay === '街口支付' ? '街口' : x.pay) : '選ぶ') + '</td>' +
+          '<td class="d">' + esc(x.detail) + '</td><td class="n">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td></tr>';
+      }
+      L += '</tbody></table></div>';
     }
     $('ubList').innerHTML = L;
     var o = '';
@@ -10986,18 +11000,35 @@ function uriageBookScript_(C) {
   }
 
   // ── 一覧：支払方法・消す ──
+  // 行を押す→支払方法を選ぶ小窓（消すのもここから）
+  function closePick() { var m = $('ubMask'); if (m && m.parentNode) m.parentNode.removeChild(m); }
   $('ubList').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b || busy || !D) return;
-    var x = D.rows[parseInt(b.getAttribute('data-j'), 10)]; if (!x) return;
-    if (b.getAttribute('data-a') === 'pay') {
-      var v = b.getAttribute('data-v');
-      if (x.pay === v) return;
-      ask({ action: 'pay', row: x.r, no: x.no, amount: x.amount, value: v }, '支払方法を書いています');
-    } else if (b.getAttribute('data-a') === 'del') {
+    var tr = e.target.closest('tr.r'); if (!tr || busy || !D) return;
+    var x = D.rows[parseInt(tr.getAttribute('data-j'), 10)]; if (!x) return;
+    var pb = '';
+    for (var k = 0; k < PAYS.length; k++) pb += '<button type="button" data-v="' + esc(PAYS[k]) + '" class="' + (x.pay === PAYS[k] ? 'on' : '') + '">' + esc(PAYS[k] === '街口支付' ? '街口' : PAYS[k]) + '</button>';
+    var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
+    m.innerHTML = '<div class="ubpick"><div class="h">' + esc(x.no || '番号なし') + '　' + esc(x.num) + ' ' + esc(x.name) + '　' + yen(x.amount) + '</div>' +
+      '<div class="s">' + esc(x.detail) + '</div><div class="ubpay">' + pb + '</div>' +
+      '<button type="button" class="ubdel" data-a="del">この行を消す（発票の出し間違い）</button>' +
+      '<button type="button" class="x" data-a="close">閉じる</button></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', function (ev) {
+      if (ev.target === m) { closePick(); return; }
+      var b = ev.target.closest('button'); if (!b) return;
+      var a = b.getAttribute('data-a');
+      if (a === 'close') { closePick(); return; }
+      if (a !== 'del') {
+        var v = b.getAttribute('data-v'); if (!v) return;
+        closePick();
+        if (x.pay !== v) ask({ action: 'pay', row: x.r, no: x.no, amount: x.amount, value: v }, '支払方法を書いています');
+        return;
+      }
+      closePick();
       popup((x.no || '番号なし') + '　' + (x.num || '') + ' ' + (x.name || '') + '　' + yen(x.amount) + '\nこの行を消しますか？', {
         cancel: true, onYes: function () { ask({ action: 'delete', row: x.r, no: x.no, amount: x.amount }, '行を消しています'); }
       });
-    }
+    });
   });
   $('ubReload').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
 
@@ -11081,8 +11112,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '<div id="ubMain">' + head('📒', 'TT売上帳簿') +
         '<div class="ubtest" id="ubTest" style="display:none">テスト中：本番の売上表には書きません（2026_帳簿_テスト に書きます）</div>' +
         '<div class="ubinfo"><span id="ubWhen"></span><button type="button" id="ubReload">読み直す</button></div>' +
-        '<div class="ubsum" id="ubSum"></div>' +
-        '<div class="ubh">今日の売上（支払方法を選んでください）</div>' +
+        '<div class="ubh">今日の売上（行を押すと支払方法を選べます）</div>' +
         '<div id="ubList"></div>' +
         '<div class="ubmenu">' +
           '<button type="button" id="ubGoAdd">＋ 売上を手で1行足す</button>' +
