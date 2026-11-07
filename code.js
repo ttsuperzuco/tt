@@ -10875,9 +10875,20 @@ var UBCSS_ =
   '.ubhrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 4px 6px;}' +
   '.ubhrow .ubh{margin:0;}' +
   '.ubadd{flex:0 0 auto;background:#16a34a;color:#fff;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.18);}' +
-  '.ubtime{display:flex;gap:8px;align-items:stretch;}' +
-  '.ubtime input{flex:1 1 auto;min-width:0;}' +
-  '.ubnow{flex:0 0 auto;background:#fff;color:#2C7A99;border:0;border-radius:12px;padding:0 18px;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
+  '.ubtime{display:flex;gap:8px;align-items:center;}' +
+  '.ubu{color:#fff;font-weight:900;font-size:18px;}' +
+  '.ubbox{display:flex;align-items:center;min-height:50px;box-sizing:border-box;background:#fff;color:#0f172a;border-radius:12px;padding:8px 14px;font-size:24px;font-weight:900;letter-spacing:.04em;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
+  '.ubbox:empty::before{content:attr(data-ph);color:#94a3b8;font-size:15px;font-weight:700;letter-spacing:normal;}' +
+  '.ubbox.t{width:76px;justify-content:center;padding:8px 4px;}' +
+  '.ubbox.sel{outline:4px solid #fde047;}' +
+  '.ubkp{margin:12px 0 0;}' +
+  '.ubkp .expad{margin:0 0 6px;}' +
+  /* お客様番号のM・F切り替え＝既存の予約と同じ見た目（いつもの） */
+  '.exseg{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(255,255,255,.16);border-radius:16px;padding:6px;margin:0 0 10px;overflow:hidden;}' +
+  '.exseg .thumb{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/3);background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .22s;}' +
+  '.exseg button{position:relative;z-index:1;background:none;border:0;padding:14px 4px;font-size:19px;font-weight:800;color:#eaf6fb;cursor:pointer;}' +
+  '.exseg button[aria-pressed="true"]{color:#0f172a;}' +
+  '.ubnow{flex:0 0 auto;background:#fff;color:#2C7A99;border:0;border-radius:12px;padding:0 18px;min-height:50px;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubtest{background:#fde047;color:#7c2d12;font-weight:900;font-size:15px;border-radius:12px;padding:8px 12px;margin:4px 0 10px;text-align:center;}' +
   '.ubinfo{color:#eaf6fb;font-weight:800;font-size:15px;margin:2px 4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;}' +
   '.ubinfo button{background:#fff;color:#2C7A99;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;}' +
@@ -11180,14 +11191,70 @@ function uriageBookScript_(C) {
   $('ubReload').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
 
   // ── 手で1行足す ──
-  // ★2026-11-07 まるちゃん「時刻 入力欄工夫して」＝開いた時に今の時刻が入っている・スマホは回して選べる・「今」で戻す。
-  //   時刻は売上表には書かず、画面の時刻の列にだけ出す（係が控える）。
-  function nowHM() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
-  $('ubAddNow').addEventListener('click', function () { $('ubAddTime').value = nowHM(); });
+  // ★2026-11-07 まるちゃん「時計はいらん 欄 時 欄 分 でいい」「欄を押すと数字のパネルが出てくる」
+  //   時・分・發票番号・顧客番号（M・F付きのいつものパネル）・金額＝押した欄のすぐ下に数字ボタンを出す。
+  //   開いた時は今の時刻が入っている・「今」で入れ直す。時刻は売上表には書かず、画面の時刻の列にだけ出す（係が控える）。
+  var AF = {}, afSel = '', afPre = 'M';
+  var AFMAX = { h: 2, m: 2, no: 3, num: 4, amt: 7 };
+  function p2(n) { return ('0' + n).slice(-2); }
+  function afNow() { var d = new Date(); AF.h = String(d.getHours()); AF.m = p2(d.getMinutes()); }
+  function afNum() { return AF.num ? afPre + AF.num : ''; }
+  function afSeg() {
+    var bs = $('ubKpSeg').querySelectorAll('button'), at = 0;
+    for (var i = 0; i < bs.length; i++) { var on = bs[i].getAttribute('data-v') === afPre; bs[i].setAttribute('aria-pressed', on ? 'true' : 'false'); if (on) at = i; }
+    $('ubKpSeg').querySelector('.thumb').style.transform = 'translateX(' + (at * 100) + '%)';
+  }
+  function afDraw() {
+    var ks = ['h', 'm', 'no', 'num', 'amt'];
+    for (var i = 0; i < ks.length; i++) {
+      var el = $('ubAf_' + ks[i]), v = ks[i] === 'num' ? afNum() : (AF[ks[i]] || '');
+      if (ks[i] === 'amt' && v) v = Number(v).toLocaleString();
+      el.textContent = v; el.className = 'ubbox' + (ks[i] === 'h' || ks[i] === 'm' ? ' t' : '') + (afSel === ks[i] ? ' sel' : '');
+    }
+  }
+  function afOpen(k) {
+    afSel = k;
+    var row = $('ubAf_' + k).closest('.ubrow'), kp = $('ubKp');
+    row.appendChild(kp); kp.style.display = '';
+    $('ubKpSeg').style.display = (k === 'num') ? '' : 'none';
+    afSeg(); afDraw();
+    setTimeout(function () { try { kp.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {} }, 30);
+  }
+  function afClose() { afSel = ''; $('ubKp').style.display = 'none'; afDraw(); }
+  $('ubAdd').addEventListener('click', function (e) {
+    var bx = e.target.closest('.ubbox[data-f]');
+    if (bx) { var k = bx.getAttribute('data-f'); if (afSel === k) afClose(); else afOpen(k); }
+  });
+  $('ubAddDetail').addEventListener('focus', afClose);
+  $('ubKpSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    afPre = b.getAttribute('data-v') || ''; afSeg(); afDraw();
+  });
+  $('ubKpPad').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || !afSel) return;
+    var k = b.getAttribute('data-k') || b.textContent, s = AF[afSel] || '';
+    if (k === 'clr') s = '';
+    else if (k === 'del') s = s.slice(0, -1);
+    else if (/^[0-9]$/.test(k)) {
+      if (s.length >= AFMAX[afSel]) return;
+      var t = (s === '0' && afSel === 'amt') ? k : s + k;
+      if (afSel === 'h' && parseInt(t, 10) > 23) return;   // 時は0〜23
+      if (afSel === 'm' && parseInt(t, 10) > 59) return;   // 分は0〜59
+      s = t;
+    }
+    AF[afSel] = s;
+    // 時を2けた入れたら分へ・分を2けた入れたら閉じる（押す回数を減らす）
+    if (k !== 'clr' && k !== 'del' && s.length >= 2) {
+      if (afSel === 'h') { afOpen('m'); return; }
+      if (afSel === 'm') { afClose(); return; }
+    }
+    afDraw();
+  });
+  $('ubAddNow').addEventListener('click', function () { afNow(); afClose(); });
   var addPay = '';
   $('ubGoAdd').addEventListener('click', function () {
-    $('ubAddNo').value = ''; $('ubAddNum').value = ''; $('ubAddDetail').value = ''; $('ubAddAmt').value = ''; addPay = ''; drawAddPay();
-    $('ubAddTime').value = nowHM(); show('ubAdd');
+    AF = { no: '', num: '', amt: '' }; afPre = 'M'; afNow();
+    $('ubAddDetail').value = ''; addPay = ''; drawAddPay(); afClose(); show('ubAdd');
   });
   function drawAddPay() {
     var h = '';
@@ -11196,11 +11263,12 @@ function uriageBookScript_(C) {
   }
   $('ubAddPay').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; addPay = b.getAttribute('data-v'); drawAddPay(); });
   $('ubAddGo').addEventListener('click', function () {
-    var amt = $('ubAddAmt').value.replace(/[^\d\-]/g, '');
-    if (!amt) { popup('金額を入れてください'); return; }
-    if (!$('ubAddNum').value.trim() && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入れてください'); return; }
-    ask({ action: 'add', time: $('ubAddTime').value || '', no: $('ubAddNo').value.trim(), num: $('ubAddNum').value.trim(), detail: $('ubAddDetail').value.trim(),
-          amount: parseInt(amt, 10), pay: addPay }, '売上の行を足しています', function () { show('ubInv'); });
+    if (!AF.amt) { popup('金額を入れてください'); return; }
+    if (!AF.num && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入れてください'); return; }
+    var tm = AF.h ? p2(AF.h) + ':' + p2(AF.m || '0') : '';
+    afClose();
+    ask({ action: 'add', time: tm, no: AF.no || '', num: afNum(), detail: $('ubAddDetail').value.trim(),
+          amount: parseInt(AF.amt, 10), pay: addPay }, '売上の行を足しています', function () { show('ubInv'); });
   });
   $('ubAddBack').addEventListener('click', function (e) { e.preventDefault(); show('ubInv'); });
 
@@ -11286,11 +11354,19 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
-          '<label>時刻（売上表には書きません）</label><div class="ubtime"><input id="ubAddTime" type="time"><button type="button" id="ubAddNow" class="ubnow">今</button></div>' +
-          '<label>発票番号（下3桁・無ければ空のまま）</label><input id="ubAddNo" inputmode="numeric">' +
-          '<label>顧客番号（例 F800）</label><input id="ubAddNum" autocapitalize="characters">' +
+          // ★2026-11-07 まるちゃん「時計はいらん 欄 時 欄 分 でいい」「欄を押すと数字のパネルが出てくる」
+          //   「發票番号も・顧客番号はMやFが付いたいつもの数字パネル・金額も数字パネル」
+          '<label>時刻</label><div class="ubrow"><div class="ubtime"><div class="ubbox t" id="ubAf_h" data-f="h"></div><span class="ubu">時</span>' +
+            '<div class="ubbox t" id="ubAf_m" data-f="m"></div><span class="ubu">分</span><button type="button" id="ubAddNow" class="ubnow">今</button></div></div>' +
+          '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" id="ubAf_no" data-f="no" data-ph="押すと数字が出ます"></div></div>' +
+          '<label>顧客番号</label><div class="ubrow"><div class="ubbox" id="ubAf_num" data-f="num" data-ph="押すと数字が出ます"></div></div>' +
           '<label>明細（購入内容）</label><input id="ubAddDetail">' +
-          '<label>金額（元）</label><input id="ubAddAmt" inputmode="numeric">' +
+          '<label>金額（元）</label><div class="ubrow"><div class="ubbox" id="ubAf_amt" data-f="amt" data-ph="押すと数字が出ます"></div></div>' +
+          '<div class="ubkp" id="ubKp" style="display:none">' +
+            '<div class="exseg" id="ubKpSeg"><span class="thumb"></span><button type="button" data-v="M" aria-pressed="true">M（男）</button>' +
+            '<button type="button" data-v="F">F（女）</button><button type="button" data-v="">文字なし</button></div>' +
+            '<div class="expad" id="ubKpPad">' + EXPADHTML_ + '</div>' +
+          '</div>' +
           '<label>支払方法</label><div class="ubpay" id="ubAddPay"></div>' +
         '</div>' +
         '<button type="button" class="exgo" id="ubAddGo">以上の内容で追加</button>' +
