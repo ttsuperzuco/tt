@@ -10883,8 +10883,12 @@ var UBCSS_ =
   '.ubtbl td.w{white-space:nowrap;word-break:normal;letter-spacing:-.02em;}' +
   '.ubtbl th{background:#fff2cc;color:#0f172a;font-weight:800;font-size:12px;padding:6px 3px;border-bottom:1px solid #cbd5e1;}' +
   '.ubtbl td{border-bottom:1px solid #e2e8f0;padding:7px 2px;vertical-align:top;font-weight:700;word-break:break-all;}' +
-  '.ubtbl tr.r{cursor:pointer;}' +
-  '.ubtbl tr.r:active td{background:#e0f2fe;}' +
+  '.ubtbl td.e{cursor:pointer;}' +
+  '.ubtbl td.e:active{background:#e0f2fe;}' +
+  '.ubtbl td.xc{text-align:center;padding:4px 1px;}' +
+  '.ubx{background:#fee2e2;color:#b91c1c;border:0;border-radius:8px;width:28px;height:28px;font:inherit;font-weight:900;font-size:17px;line-height:1;cursor:pointer;}' +
+  '.ubpick input,.ubpick textarea{display:block;width:100%;box-sizing:border-box;border:2px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;font-size:18px;color:#0f172a;margin:4px 0 10px;}' +
+  '.ubpick .go{display:block;width:100%;background:#16a34a;color:#fff;border:0;border-radius:10px;padding:14px;font:inherit;font-size:17px;font-weight:900;cursor:pointer;}' +
   '.ubtbl td.n{text-align:right;white-space:nowrap;}' +
   '.ubtbl td.d{white-space:pre-wrap;font-weight:600;}' +
   '.ubtbl td.p{text-align:center;font-weight:800;font-size:12px;}' +
@@ -10943,14 +10947,18 @@ function uriageBookScript_(C) {
     else {
       // ★2026-11-07 まるちゃん「番号は、發票下3桁」「一番左に時刻入れて（本番の売上表にはいれない）」
       //   ＝時刻は發票を打った時刻（取り込みが残した発票から係が引く）。画面だけに出す。
-      L = '<div class="ubtbl"><table><colgroup><col style="width:12%"><col style="width:9%"><col style="width:13%"><col style="width:14%">' +
-        '<col style="width:12%"><col><col style="width:15%"></colgroup>' +
-        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th>支払</th><th>明細</th><th>合計</th></tr></thead><tbody>';
+      // ★2026-11-07 まるちゃん「時刻と下三桁いがいは、手動で修正できるようにして」「一番右に削除（×ボタン）」
+      //   ＝顧客番号・顧客名・支払・明細・合計の枠（td.e）を押すとその欄を直せる。×で行を消す。
+      L = '<div class="ubtbl"><table><colgroup><col style="width:11%"><col style="width:8%"><col style="width:12%"><col style="width:13%">' +
+        '<col style="width:11%"><col><col style="width:14%"><col style="width:9%"></colgroup>' +
+        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th>支払</th><th>明細</th><th>合計</th><th>削除</th></tr></thead><tbody>';
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
-        L += '<tr class="r" data-j="' + j + '"><td class="w">' + esc(x.time || '') + '</td><td class="w">' + esc(x.no) + '</td><td class="w">' + esc(x.num) + '</td><td>' + esc(x.name) + '</td>' +
-          '<td class="p' + (x.pay ? '' : ' np') + '">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '選ぶ') + '</td>' +
-          '<td class="d">' + esc(x.detail) + '</td><td class="n">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td></tr>';
+        L += '<tr class="r" data-j="' + j + '"><td class="w">' + esc(x.time || '') + '</td><td class="w">' + esc(x.no) + '</td>' +
+          '<td class="w e" data-c="B">' + esc(x.num) + '</td><td class="e" data-c="C">' + esc(x.name) + '</td>' +
+          '<td class="p e' + (x.pay ? '' : ' np') + '" data-c="D">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '選ぶ') + '</td>' +
+          '<td class="d e" data-c="E">' + esc(x.detail) + '</td><td class="n e" data-c="F">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td>' +
+          '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
       }
       L += '</tbody></table></div>';
     }
@@ -11003,36 +11011,58 @@ function uriageBookScript_(C) {
     });
   }
 
-  // ── 一覧：支払方法・消す ──
-  // 行を押す→支払方法を選ぶ小窓（消すのもここから）
+  // ── 一覧：枠を押して直す・×で消す ──
+  var CNAME = { B: '顧客番号', C: '顧客名', D: '支払方法', E: '明細', F: '合計' };
   function closePick() { var m = $('ubMask'); if (m && m.parentNode) m.parentNode.removeChild(m); }
-  $('ubList').addEventListener('click', function (e) {
-    var tr = e.target.closest('tr.r'); if (!tr || busy || !D) return;
-    var x = D.rows[parseInt(tr.getAttribute('data-j'), 10)]; if (!x) return;
-    var pb = '';
-    for (var k = 0; k < PAYS.length; k++) pb += '<button type="button" data-v="' + esc(PAYS[k]) + '" class="' + (x.pay === PAYS[k] ? 'on' : '') + '">' + esc(PAYS[k] === '街口支付' ? '街口' : PAYS[k]) + '</button>';
+  function openPick(x, col) {
+    var head = '<div class="h">' + esc(x.no || '番号なし') + '　' + esc(x.num) + ' ' + esc(x.name) + '　' + yen(x.amount) + '</div>' +
+      '<div class="s">' + CNAME[col] + 'を直します</div>';
+    var body = '';
+    if (col === 'D') {
+      for (var k = 0; k < PAYS.length; k++) body += '<button type="button" data-v="' + esc(PAYS[k]) + '" class="' + (x.pay === PAYS[k] ? 'on' : '') + '">' + esc(PAYS[k] === '街口支付' ? '街口' : PAYS[k]) + '</button>';
+      body = '<div class="ubpay">' + body + '</div>';
+    } else {
+      var cur = { B: x.num, C: x.name, E: x.detail, F: (x.amount == null ? '' : String(x.amount)) }[col] || '';
+      body = (col === 'E' ? '<textarea id="ubEd" rows="3"></textarea>' : '<input id="ubEd"' + (col === 'F' ? ' inputmode="numeric"' : '') + (col === 'B' ? ' autocapitalize="characters"' : '') + '>') +
+        '<button type="button" class="go" data-a="save">これで直す</button>';
+    }
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
-    m.innerHTML = '<div class="ubpick"><div class="h">' + esc(x.no || '番号なし') + '　' + esc(x.num) + ' ' + esc(x.name) + '　' + yen(x.amount) + '</div>' +
-      '<div class="s">' + esc(x.detail) + '</div><div class="ubpay">' + pb + '</div>' +
-      '<button type="button" class="ubdel" data-a="del">この行を消す（発票の出し間違い）</button>' +
-      '<button type="button" class="x" data-a="close">閉じる</button></div>';
+    m.innerHTML = '<div class="ubpick">' + head + body + '<button type="button" class="x" data-a="close">閉じる</button></div>';
     document.body.appendChild(m);
+    var ed = $('ubEd');
+    if (ed) { ed.value = cur; try { ed.focus(); } catch (e2) {} }
     m.addEventListener('click', function (ev) {
       if (ev.target === m) { closePick(); return; }
       var b = ev.target.closest('button'); if (!b) return;
       var a = b.getAttribute('data-a');
       if (a === 'close') { closePick(); return; }
-      if (a !== 'del') {
+      if (col === 'D') {
         var v = b.getAttribute('data-v'); if (!v) return;
         closePick();
         if (x.pay !== v) ask({ action: 'pay', row: x.r, no: x.no, amount: x.amount, value: v }, '支払方法を書いています');
         return;
       }
+      if (a !== 'save') return;
+      var nv = $('ubEd').value;
+      if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入れてください'); return; }
       closePick();
-      popup((x.no || '番号なし') + '　' + (x.num || '') + ' ' + (x.name || '') + '　' + yen(x.amount) + '\nこの行を消しますか？', {
+      if (nv === cur) return;
+      ask({ action: 'edit', row: x.r, no: x.no, amount: x.amount, col: col, value: nv }, CNAME[col] + 'を直しています');
+    });
+  }
+  $('ubList').addEventListener('click', function (e) {
+    if (busy || !D) return;
+    var tr = e.target.closest('tr.r'); if (!tr) return;
+    var x = D.rows[parseInt(tr.getAttribute('data-j'), 10)]; if (!x) return;
+    // ×＝消す（まるちゃん指定の文：發票の入力間違いですか？そうであればこの行を削除します）
+    if (e.target.closest('button[data-a="del"]')) {
+      popup((x.no || '番号なし') + '　' + (x.num || '') + ' ' + (x.name || '') + '　' + yen(x.amount) + '\n發票の入力間違いですか？そうであればこの行を削除します', {
         cancel: true, onYes: function () { ask({ action: 'delete', row: x.r, no: x.no, amount: x.amount }, '行を消しています'); }
       });
-    });
+      return;
+    }
+    var td = e.target.closest('td.e'); if (!td) return;   // 時刻・發票下3桁は直さない
+    openPick(x, td.getAttribute('data-c'));
   });
   $('ubReload').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
 
@@ -11128,7 +11158,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubInv" style="display:none">' + inBack('ubInvBack') + head('🧾', '發票ありの売上') +
         '<div class="ubinfo"><span id="ubWhen"></span><button type="button" id="ubReload">読み直す</button></div>' +
-        '<div class="ubh">黄色の枠を押すと支払方法を選べます</div>' +
+        '<div class="ubh">枠を押すと修正できます</div>' +
         '<div id="ubList"></div>' +
         '<div class="ubmenu"><button type="button" id="ubGoAdd">＋ 売上を手で1行足す</button></div>' +
       '</div>' +
