@@ -10875,6 +10875,9 @@ var UBCSS_ =
   '.ubhrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 4px 6px;}' +
   '.ubhrow .ubh{margin:0;}' +
   '.ubadd{flex:0 0 auto;background:#16a34a;color:#fff;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.18);}' +
+  '.ubtime{display:flex;gap:8px;align-items:stretch;}' +
+  '.ubtime input{flex:1 1 auto;min-width:0;}' +
+  '.ubnow{flex:0 0 auto;background:#fff;color:#2C7A99;border:0;border-radius:12px;padding:0 18px;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubtest{background:#fde047;color:#7c2d12;font-weight:900;font-size:15px;border-radius:12px;padding:8px 12px;margin:4px 0 10px;text-align:center;}' +
   '.ubinfo{color:#eaf6fb;font-weight:800;font-size:15px;margin:2px 4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;}' +
   '.ubinfo button{background:#fff;color:#2C7A99;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;}' +
@@ -11177,9 +11180,14 @@ function uriageBookScript_(C) {
   $('ubReload').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
 
   // ── 手で1行足す ──
+  // ★2026-11-07 まるちゃん「時刻 入力欄工夫して」＝開いた時に今の時刻が入っている・スマホは回して選べる・「今」で戻す。
+  //   時刻は売上表には書かず、画面の時刻の列にだけ出す（係が控える）。
+  function nowHM() { var d = new Date(); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  $('ubAddNow').addEventListener('click', function () { $('ubAddTime').value = nowHM(); });
   var addPay = '';
   $('ubGoAdd').addEventListener('click', function () {
-    $('ubAddNo').value = ''; $('ubAddNum').value = ''; $('ubAddDetail').value = ''; $('ubAddAmt').value = ''; addPay = ''; drawAddPay(); show('ubAdd');
+    $('ubAddNo').value = ''; $('ubAddNum').value = ''; $('ubAddDetail').value = ''; $('ubAddAmt').value = ''; addPay = ''; drawAddPay();
+    $('ubAddTime').value = nowHM(); show('ubAdd');
   });
   function drawAddPay() {
     var h = '';
@@ -11191,7 +11199,7 @@ function uriageBookScript_(C) {
     var amt = $('ubAddAmt').value.replace(/[^\d\-]/g, '');
     if (!amt) { popup('金額を入れてください'); return; }
     if (!$('ubAddNum').value.trim() && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入れてください'); return; }
-    ask({ action: 'add', no: $('ubAddNo').value.trim(), num: $('ubAddNum').value.trim(), detail: $('ubAddDetail').value.trim(),
+    ask({ action: 'add', time: $('ubAddTime').value || '', no: $('ubAddNo').value.trim(), num: $('ubAddNum').value.trim(), detail: $('ubAddDetail').value.trim(),
           amount: parseInt(amt, 10), pay: addPay }, '売上の行を足しています', function () { show('ubInv'); });
   });
   $('ubAddBack').addEventListener('click', function (e) { e.preventDefault(); show('ubInv'); });
@@ -11278,6 +11286,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
+          '<label>時刻（売上表には書きません）</label><div class="ubtime"><input id="ubAddTime" type="time"><button type="button" id="ubAddNow" class="ubnow">今</button></div>' +
           '<label>発票番号（下3桁・無ければ空のまま）</label><input id="ubAddNo" inputmode="numeric">' +
           '<label>顧客番号（例 F800）</label><input id="ubAddNum" autocapitalize="characters">' +
           '<label>明細（購入内容）</label><input id="ubAddDetail">' +
