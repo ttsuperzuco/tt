@@ -11194,7 +11194,7 @@ function uriageBookScript_(C) {
   // ★2026-11-07 まるちゃん「時計はいらん 欄 時 欄 分 でいい」「欄を押すと数字のパネルが出てくる」
   //   時・分・發票番号・顧客番号（M・F付きのいつものパネル）・金額＝押した欄のすぐ下に数字ボタンを出す。
   //   開いた時は今の時刻が入っている・「今」で入れ直す。時刻は売上表には書かず、画面の時刻の列にだけ出す（係が控える）。
-  var AF = {}, afSel = '', afPre = 'M';
+  var AF = {}, afSel = '', afPre = 'M', afFresh = false;   // afFresh＝欄を押した直後は、最初の数字で入れ直す（今の時刻などを消す手間をなくす）
   var AFMAX = { h: 2, m: 2, no: 3, num: 4, amt: 7 };
   function p2(n) { return ('0' + n).slice(-2); }
   function afNow() { var d = new Date(); AF.h = String(d.getHours()); AF.m = p2(d.getMinutes()); }
@@ -11213,7 +11213,7 @@ function uriageBookScript_(C) {
     }
   }
   function afOpen(k) {
-    afSel = k;
+    afSel = k; afFresh = true;
     var row = $('ubAf_' + k).closest('.ubrow'), kp = $('ubKp');
     row.appendChild(kp); kp.style.display = '';
     $('ubKpSeg').style.display = (k === 'num') ? '' : 'none';
@@ -11233,9 +11233,10 @@ function uriageBookScript_(C) {
   $('ubKpPad').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b || !afSel) return;
     var k = b.getAttribute('data-k') || b.textContent, s = AF[afSel] || '';
-    if (k === 'clr') s = '';
-    else if (k === 'del') s = s.slice(0, -1);
+    if (k === 'clr') { s = ''; afFresh = false; }
+    else if (k === 'del') { s = s.slice(0, -1); afFresh = false; }
     else if (/^[0-9]$/.test(k)) {
+      if (afFresh) { s = ''; afFresh = false; }
       if (s.length >= AFMAX[afSel]) return;
       var t = (s === '0' && afSel === 'amt') ? k : s + k;
       if (afSel === 'h' && parseInt(t, 10) > 23) return;   // 時は0〜23
