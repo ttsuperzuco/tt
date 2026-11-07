@@ -11276,15 +11276,15 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="uboth" id="ubOthers"></div>' +
         '<div class="ubmenu"><button type="button" id="ubGoOther">＋ 1行足す</button></div>' +
       '</div>' +
-      '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手で1行足す') +
+      '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
           '<label>発票番号（下3桁・無ければ空のまま）</label><input id="ubAddNo" inputmode="numeric">' +
           '<label>顧客番号（例 F800）</label><input id="ubAddNum" autocapitalize="characters">' +
-          '<label>明細</label><input id="ubAddDetail">' +
+          '<label>明細（購入内容）</label><input id="ubAddDetail">' +
           '<label>金額（元）</label><input id="ubAddAmt" inputmode="numeric">' +
           '<label>支払方法</label><div class="ubpay" id="ubAddPay"></div>' +
         '</div>' +
-        '<button type="button" class="exgo" id="ubAddGo">この行を足す</button>' +
+        '<button type="button" class="exgo" id="ubAddGo">以上の内容で追加</button>' +
       '</div>' +
       '<div id="ubOther" style="display:none">' + inBack('ubOthBack') + head('📝', '發票なしの売上を1行足す') +
         '<div class="ubf">' +
