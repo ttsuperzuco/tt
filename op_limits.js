@@ -40,6 +40,7 @@
     "timedsend_list": 60,
     "translate": 120,
     "uriage_fix": 600,
+    "uriagebook": 300,
     "zenjitsu": 360,
     "zenjitsu_act": 120
   };

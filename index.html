@@ -363,7 +363,7 @@
      正本＝AI自動プログラム\共通\画面\新規予約入力_判断.js（手で書き写さない・共通\画面\スマホへ配る.py が写す）。code.js より前に読む。 -->
 <!-- お店の決まり（定休日など）＝共通usiness_day.py から自動で作った写し。手で書き換えない。 -->
 <!-- 用事ごとの制限時間＝受付係のコードから自動で作った写し。手で書き換えない。 -->
-<script src="op_limits.js?v=62d759264d"></script>
+<script src="op_limits.js?v=5bd7acb8da"></script>
 <script src="shop_rules.js?v=32af77593f"></script>
 <!-- 前日お知らせの「出し入れの判断」＝パソコン版と共有する正本の写し。 -->
 <script src="zj_rules.js?v=cb75dce7e8"></script>
@@ -374,7 +374,7 @@
 <script src="bigsend.js?v=0a105a201c"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=f386c18a89"></script>
+<script src="code.js?v=d935806877"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -872,6 +872,7 @@
 
   // ★プロセル在庫（2026-10-02・実務者用）。取ってくるデータは無い＝描くだけ。登録は画面の中から受付係へ頼む。
   function showProcStock() { mount(renderProcStockPage_(base, staff, dev)); }
+  function showUriageBook() { mount(renderUriageBookPage_(base, staff, dev)); }
 
   // ★販売管理（2026-10-17・実務者用）。取ってくるデータは無い＝描くだけ。登録・一覧は画面の中から受付係へ頼む。
   function showHanbai() { mount(renderHanbaiPage_(base, staff, dev)); }
@@ -1317,6 +1318,7 @@
     else if (v === 'shophist') showShopHist();
     else if (v === 'procamp') showProcamp();
     else if (v === 'procstock') showProcStock();
+    else if (v === 'uriagebook') showUriageBook();
     else if (v === 'hanbai') showHanbai();
     else if (v === 'threads') showThreads();
     else if (v === 'mita') showMita();
