@@ -10920,6 +10920,58 @@ var UBCSS_ =
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
   '.uboth .r:first-child{border-top:0;}';
 
+// ── 裏の書き込みの結果を、ズコのどの画面にいても箱で知らせる見張り（2026-11-07 まるちゃん） ──
+//  「書き込みが成功したら通知して、ズコを開いている限りどこの画面にいてもBOXで出す」。
+//  頼んだ書き込みの控え（依頼の番号）をこのズコの中（localStorage）に残し、どの画面でも数秒おきに結果を見に行く。
+//  終わったら箱を出して控えから消す。閉じても、次に開いた時に結果の箱が出る。箱が重なる時は1つずつ。
+//  ★画面を移るとページが読み直される作りなので、code.js が読まれた時に毎回ここが動き出す（下の一番最後の1行）。
+var UB_PEND_KEY_ = 'sz_ub_pending';
+var UB_EXEC_ = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+var UB_KEY_ = 'kx7Q2p9mVt4Zr8';
+var UB_FAIL_ = 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください。';
+var ubWatchTimer_ = null, ubPopQ_ = [], ubChecking_ = {};
+function ubPendList_() { try { return JSON.parse(localStorage.getItem(UB_PEND_KEY_) || '[]'); } catch (e) { return []; } }
+function ubPendSave_(a) { try { localStorage.setItem(UB_PEND_KEY_, JSON.stringify(a)); } catch (e) {} }
+function ubPendAdd_(o) { var a = ubPendList_(); a.push(o); ubPendSave_(a); ubWatch_(); }
+function ubPendDrop_(id) { ubPendSave_(ubPendList_().filter(function (x) { return x.id !== id; })); }
+function ubJsonp_(p, cb) {
+  var n = '__ubw' + Date.now() + Math.floor(Math.random() * 1000);
+  window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+  var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+  var s = document.createElement('script'); s.src = UB_EXEC_ + '?' + q + '&cb=' + Date.now();
+  s.onerror = function () { cb(null); }; (document.body || document.documentElement).appendChild(s);
+}
+function ubShowNextPop_() {
+  if (!ubPopQ_.length || typeof szPopup_ !== 'function') return;
+  if (document.querySelector('.szpopmask') || document.getElementById('ubMask')) return;   // 別の箱が出ている間は待つ
+  var m = ubPopQ_.shift();
+  szPopup_(m.text, { icon: m.icon, onYes: function () { setTimeout(ubShowNextPop_, 200); } });
+}
+function ubDone_(o, ok, text) {
+  ubPendDrop_(o.id);
+  ubPopQ_.push(ok ? { icon: '✅', text: '売上帳簿への書き込みが終わりました。\n' + (text || '') }
+                  : { icon: '⚠️', text: text || UB_FAIL_ });
+  try { window.dispatchEvent(new CustomEvent('ubdone', { detail: { id: o.id, ok: ok } })); } catch (e) {}
+  ubShowNextPop_();
+}
+function ubWatchTick_() {
+  var a = ubPendList_();
+  ubShowNextPop_();
+  if (!a.length && !ubPopQ_.length) { clearInterval(ubWatchTimer_); ubWatchTimer_ = null; return; }
+  a.forEach(function (o) {
+    if (ubChecking_[o.id]) return;
+    // 30分たっても終わらない＝何か起きている（受付係の制限は5分）。失敗として知らせて控えから外す。
+    if (Date.now() - (o.at || 0) > 30 * 60 * 1000) { ubDone_(o, false, ''); return; }
+    ubChecking_[o.id] = 1;
+    ubJsonp_({ action: 'status', key: UB_KEY_, id: o.id }, function (s) {
+      delete ubChecking_[o.id];
+      if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') return;
+      if (s.status === 'done') ubDone_(o, true, s.result); else ubDone_(o, false, s.result);
+    });
+  });
+}
+function ubWatch_() { if (ubWatchTimer_) return; ubWatchTimer_ = setInterval(ubWatchTick_, 2500); ubWatchTick_(); }
+
 function uriageBookScript_(C) {
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -10932,8 +10984,10 @@ function uriageBookScript_(C) {
   // ★2026-11-07 まるちゃん「修正するをOKしたとき、かきこみおわるまでまつとうざいので、バックグラウンドで書き込みします…
   //   のBOXを出す。失敗した時だけポップアップで通知」＝書く用事は裏で進める。書き終わるまで、その行は薄く出す。
   var PEND = [];          // 書き込み中の用事（{fields}）。画面には先に反映して見せる
-  function pendRow(r) { for (var i = 0; i < PEND.length; i++) if (PEND[i].row === r) return true; return false; }
-  function pendDel() { for (var i = 0; i < PEND.length; i++) if (PEND[i].action === 'delete') return true; return false; }
+  // ★画面を開き直しても、まだ終わっていない書き込み（見張りの控え）は数える
+  function pendAll() { return PEND.concat(ubPendList_()); }
+  function pendRow(r) { var a = pendAll(); for (var i = 0; i < a.length; i++) if (a[i].row === r) return true; return false; }
+  function pendDel() { var a = pendAll(); for (var i = 0; i < a.length; i++) if (a[i].action === 'delete') return true; return false; }
   function applyPend() {
     if (!D || !D.rows) return;
     for (var i = 0; i < PEND.length; i++) {
@@ -11033,6 +11087,13 @@ function uriageBookScript_(C) {
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
             device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) }, function (r) {
       if (!r || !r.ok || !r.id) { fail(''); return; }
+      if (!quiet) {
+        // ★書く用事の結果は、ズコのどの画面にいても箱で知らせる見張り（ubPendAdd_）に任せる。
+        //   この画面が開いていれば、終わった合図（ubdone）で薄い表示を戻して読み直す。
+        fields.__id = r.id;
+        ubPendAdd_({ id: r.id, at: Date.now(), row: fields.row || 0, action: fields.action });
+        return;
+      }
       var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('uriagebook', 1000) : 300;
       (function poll() {
         n++;
@@ -11046,8 +11107,17 @@ function uriageBookScript_(C) {
     });
   }
 
+  // 見張りが「書き込みが終わった」と知らせてきたら、その用事を薄い表示から外して読み直す
+  if (window.__ubDoneH) window.removeEventListener('ubdone', window.__ubDoneH);
+  window.__ubDoneH = function (ev) {
+    var id = ev && ev.detail && ev.detail.id;
+    for (var i = PEND.length - 1; i >= 0; i--) if (PEND[i].__id === id) PEND.splice(i, 1);
+    fetchData();
+  };
+  window.addEventListener('ubdone', window.__ubDoneH);
+
   // ── 一覧：枠を押して直す・×で消す ──
-  var CNAME = { B: '顧客番号', C: '顧客名', D: '支払方法', E: '明細', F: '合計' };
+  var CNAME ={ B: '顧客番号', C: '顧客名', D: '支払方法', E: '明細', F: '合計' };
   function closePick() { var m = $('ubMask'); if (m && m.parentNode) m.parentNode.removeChild(m); }
   function openPick(x, col) {
     var head = '<div class="h">' + esc(x.no || '番号なし') + '　' + esc(x.num) + ' ' + esc(x.name) + '　' + yen(x.amount) + '</div>' +
@@ -11228,6 +11298,9 @@ function renderUriageBookPage_(base, staff, dev) {
     '</div></div>' +
     '<script>(' + uriageBookScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
+
+// ★どの画面を開いた時も：まだ結果を知らせていない売上帳簿の書き込みがあれば、見張りを動かす（2026-11-07）
+try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined' && ubPendList_().length) setTimeout(ubWatch_, 1500); } catch (e) {}
 
 // ========== Claudeに聞く（2026-10-27 まるちゃん依頼） ==========
 // ズコで打った文を、事務所PCで動いている「会話のClaude」へ届けて、返事をこの画面に出す。
