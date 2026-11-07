@@ -10870,6 +10870,11 @@ function renderProcStockPage_(base, staff, dev) {
 //  ★テスト期間（2026-11-07〜）は「2026_帳簿_テスト」に書く（本番の売上表には一切ふれない・まるちゃん決定）。
 var UBCSS_ =
   '.ub{width:100%;box-sizing:border-box;max-width:620px;margin:0 auto;padding:0 6px 70px;text-align:left;}' +
+  '.ubinfo2{display:flex;align-items:center;gap:8px;color:#eaf6fb;font-weight:800;font-size:15px;margin:2px 4px 8px;}' +
+  '.ubsm{background:#fff;color:#2C7A99;border:0;border-radius:8px;padding:4px 10px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;}' +
+  '.ubhrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 4px 6px;}' +
+  '.ubhrow .ubh{margin:0;}' +
+  '.ubadd{flex:0 0 auto;background:#16a34a;color:#fff;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.18);}' +
   '.ubtest{background:#fde047;color:#7c2d12;font-weight:900;font-size:15px;border-radius:12px;padding:8px 12px;margin:4px 0 10px;text-align:center;}' +
   '.ubinfo{color:#eaf6fb;font-weight:800;font-size:15px;margin:2px 4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;}' +
   '.ubinfo button{background:#fff;color:#2C7A99;border:0;border-radius:10px;padding:8px 12px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;}' +
@@ -11262,10 +11267,10 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
       '</div>' +
       '<div id="ubInv" style="display:none">' + inBack('ubInvBack') + head('🧾', '發票ありの売上') +
-        '<div class="ubinfo"><span id="ubWhen"></span><button type="button" id="ubReload">読み直す</button></div>' +
-        '<div class="ubh">枠を押すと修正できます</div>' +
+        // ★2026-11-07 まるちゃん「時点のすぐ右に再読込ボタン小さめに」「修正できますの右側右寄せで売上追加ボタン」
+        '<div class="ubinfo2"><span id="ubWhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button></div>' +
+        '<div class="ubhrow"><span class="ubh">枠を押すと修正できます</span><button type="button" id="ubGoAdd" class="ubadd">売上追加</button></div>' +
         '<div id="ubList"></div>' +
-        '<div class="ubmenu"><button type="button" id="ubGoAdd">＋ 売上を手で1行足す</button></div>' +
       '</div>' +
       '<div id="ubNoInv" style="display:none">' + inBack('ubNoInvBack') + head('📝', '發票なしの売上') +
         '<div class="uboth" id="ubOthers"></div>' +
