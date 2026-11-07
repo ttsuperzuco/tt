@@ -11026,16 +11026,17 @@ function uriageBookScript_(C) {
     }
     function fail(msg) {
       settle();
-      if (!quiet) popup('書き込めませんでした：' + (msg || 'エラーが発生しました。りゅうさんに連絡しました。'));
+      // ★2026-11-07 まるちゃん指定の文（分からない失敗・時間切れ・送れない時）。中身が変わっていた等の理由は受付係の文をそのまま出す。
+      if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください。');
       fetchData();
     }
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
             device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) }, function (r) {
-      if (!r || !r.ok || !r.id) { fail('送れませんでした。もう一度お試しください。'); return; }
+      if (!r || !r.ok || !r.id) { fail(''); return; }
       var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('uriagebook', 1000) : 300;
       (function poll() {
         n++;
-        if (n > max) { fail('時間切れです。もう一度お試しください。'); return; }
+        if (n > max) { fail(''); return; }
         jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
           if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
           if (s.status !== 'done') { fail(s.result || ''); return; }
