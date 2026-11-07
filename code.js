@@ -1838,7 +1838,7 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', uriagebook: 'kaihatsu'
   // ★2026-11-06 まるちゃん「前日お知らせの右に見てくれた？」＝お知らせ見てくれた？(mita)はスタッフ画面（ここに書かない）
   // ★2026-11-06 まるちゃん「開発中の機能に戻す」＝Threads投稿は開発版では開発中の機能に置く（TOMATO・オリーブ・みかんのスマホには人ごとの表示で出る）。
   // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
