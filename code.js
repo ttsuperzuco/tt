@@ -11017,7 +11017,7 @@ function uriageBookScript_(C) {
       // ★同じ行の書き込みが終わる前に重ねて直すと、係の「中身が変わっていないか」の確かめと食い違うので待ってもらう。
       if (fields.row && pendRow(fields.row)) { popup('この行は書き込み中です。終わるまで少しお待ちください。'); return; }
       PEND.push(fields); applyPend(); draw();
-      popup('バックグラウンドで書き込みします。しばらく時間がかかります。', { icon: '' });
+      popup('バックグラウンドで書き込みします。しばらく時間がかかります。', { icon: '📝' });
       if (onOk) onOk();
     }
     function settle() {
