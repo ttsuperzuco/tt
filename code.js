@@ -148,7 +148,7 @@ function doGet(e) {
     html = renderClaudeChatPage_(base, staff, dev);
   } else if (view === 'shophist') {
     title = 'T＆Tショップ履歴';                        // ★開発URL(?dev=1)専用。静的アプリが shop_history.json を取って描く
-    html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてね😊' }, base, staff, dev);
+    html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
   } else if (view === 'kanshi') {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
@@ -181,7 +181,7 @@ function doGet(e) {
     html = renderUriageBookPage_(base, staff, dev);
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       // ★静的アプリが oshirase_mita.json を取って描く
-    html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてね😊' }, base, staff, dev);
+    html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
   } else if (view === 'insta') {
     title = 'インスタ';                                       // ★お店のインスタを本物そっくりに見せる（純JS・中身は受付係 op=insta）
     html = renderInstaPage_(base, staff, dev);
@@ -193,7 +193,7 @@ function doGet(e) {
     html = renderHanbaiPage_(base, staff, dev);
   } else if (view === 'procamp') {
     title = 'プロセル頭キャリスト';                     // ★社長版と開発版。静的アプリが一覧を取って描く（ここは中身なし）
-    html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてね😊' }, {}, base, staff, dev);
+    html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてください😊' }, {}, base, staff, dev);
   } else if (view === 'yoyaku_sejutsugo') {
     title = '施術後の予約';                              // ★施術者がその場で次回の予約を入れる入口（中身はこれから）
     html = renderAfterTreatmentPage_(base, staff, dev, who);
@@ -363,7 +363,7 @@ function kanshiOwner_() {
 function kanshiGate_(device) {
   device = String(device || '').trim();
   if (!device) {
-    return { ok: false, error: 'スマホ用のURL（ttsuperzuco.github.io/tt/）から開いてね😊' };
+    return { ok: false, error: 'スマホ用のURL（ttsuperzuco.github.io/tt/）から開いてください😊' };
   }
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
@@ -376,7 +376,7 @@ function kanshiGate_(device) {
     }
     if (cur.device === device) return { ok: true };
     return { ok: false, error: 'この画面は、登録したスマホからだけ開けます。'
-      + '（機種変更した時は、自宅PCの自動監視で「登録し直す」を押してね😊）' };
+      + '（機種変更した時は、自宅PCの自動監視で「登録し直す」を押してください😊）' };
   } finally {
     try { lock.releaseLock(); } catch (ig2) {}
   }
@@ -1406,7 +1406,7 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr, who
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
     : (!anyFree ? '<span class="mvng">空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
-    '<div class="mvlabel fit1line">移動先の部屋を選択してね😊 （下のボタンを押す）</div>' +
+    '<div class="mvlabel fit1line">移動先の部屋を選択してください😊 （下のボタンを押す）</div>' +
     '<div class="mvhint fit1line">※空いている施術室のみ表示しています</div>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
@@ -1504,7 +1504,7 @@ function staffMoveRow_(cal, event, title, oldFruit, oldName, timeStr, who, daySt
   });
   var note = !hasId ? '<span class="mvng">IDが取れず異動できません</span>'
     : (anyFree ? '' : '<span class="mvng">空いている担当がいません</span>');
-  return '<div class="mvrow"><div class="mvlabel fit1line">変更先の担当を選択してね😊 （下のボタンを押す）</div>' +
+  return '<div class="mvrow"><div class="mvlabel fit1line">変更先の担当を選択してください😊 （下のボタンを押す）</div>' +
     '<div class="mvhint fit1line">※その時間に空いている担当のみ表示しています</div>' +
     '<span class="mvbtns">' + btns + note + '</span></div>';
 }
@@ -2433,7 +2433,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   /* ★押したボタンの方で作る（mode="all"＝全員分／"unsent"＝まだLINEで送っていない人の分だけ）。
      依頼の中身は必ず fields のひとまとめ箱に入れる＝Google側の窓口は中身を判断せず素通しするだけ。 */
   'var waitMsg="",startedAt=0;' +
-  'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選択してね😊","err");return;}' +
+  'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選択してください😊","err");return;}' +
   'zjCurDate=date;' +
   'waitMsg=(mode==="unsent")?"まだ送っていない人の分を作成中…":"全員分を作成中…";startedAt=Date.now();' +
   'lock(true);setSt(waitMsg+"（通常、数十秒かかります）","wait");' +
@@ -2565,7 +2565,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var at=(document.getElementById("zjat").value||"").replace("T"," ");' +
   'if(sugu){var n=new Date();n.setSeconds(n.getSeconds()-30);' +
   'at=n.getFullYear()+"-"+zjTwo(n.getMonth()+1)+"-"+zjTwo(n.getDate())+" "+zjTwo(n.getHours())+":"+zjTwo(n.getMinutes());}' +
-  'if(!at){msg.textContent="⛔ 日時を指定してね😊";return;}' +
+  'if(!at){msg.textContent="⛔ 日時を指定してください😊";return;}' +
   'var 日=(zjRows[0]&&zjRows[0].date)||(document.getElementById("zjdate")||{}).value||"";' +
   'msg.textContent=sugu?"⏳ 送信しています…":"⏳ 送信の予約をしています…";' +
   'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
@@ -2637,16 +2637,16 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(d&&d.ok&&d.put>0){zjClearLocal(日);zjFreshShow(false);' +
   'msg.textContent=(sugu?("✅ "+d.put+"人に今から送信します。")' +
   ':("✅ "+d.put+"人ぶんの送信の予約を設定しました。まだ送信していません。"+at+" になったら自動で送ります。"))' +
-  '+"「"+ボタン+"」をもう一度押さないでね😊";' +
+  '+"「"+ボタン+"」をもう一度押さないでください😊";' +
   'if(sugu&&(d.ids||[]).length)zjWatch(d.ids,d.put);return;}' +
   'msg.textContent=(sugu?"⛔ 全員の送信が失敗しました。":"⛔ 全員の送信の予約が失敗しました。")' +
-  '+"「"+ボタン+"」をもう一度押してね😊";' +
+  '+"「"+ボタン+"」をもう一度押してください😊";' +
   '},function(e2){msg.textContent=(sugu?"⛔ 送信が完了したか分かりません。"' +
   ':"⛔ 送信の予約の設定が完了したか分かりません。")' +
-  '+"「← 戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてね😊'
+  '+"「← 戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてください😊'
   + 'この"+zjRows.length+"人が全員、一覧に並んでいれば"' +
   '+(sugu?"送信されています。":"送信の予約が完了しています。")' +
-  '+"リストになければ、ここへ戻って「"+ボタン+"」をもう一度押してね😊";});}' +
+  '+"リストになければ、ここへ戻って「"+ボタン+"」をもう一度押してください😊";});}' +
   'function zjWatch(ids,zenbu){var msg=document.getElementById("zjmsg");var t0=Date.now();var n=0;' +
   '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認くださいませ🙇";return;}' +
   'zjAsk("send_progress",{ids:ids},function(s){' +
@@ -2669,7 +2669,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjPersonImg(eid,info){' +
   'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk3\\">← 戻る</button>"' +
   '+"<h2>🖼 "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
-  '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してね😊</div>"' +
+  '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してください😊</div>"' +
   '+"<div id=\\"zjpick\\" class=\\"zjpick\\">読み込んでいます…</div>"' +
   '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjpicksave\\">この画像で決定</button></div>");' +
   'document.getElementById("zjbk3").onclick=zjBoxClose;' +
@@ -2697,7 +2697,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjImgSet(){' +
   'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk4\\">← 戻る</button>"' +
   '+"<h2>📷 画像送信セッティング</h2>"' +
-  '+"<div class=\\"zjnote\\">お知らせ文のあとに、この順番で画像を送信します。送信したくない画像は「送る」をオフにしてね😊</div>"' +
+  '+"<div class=\\"zjnote\\">お知らせ文のあとに、この順番で画像を送信します。送信したくない画像は「送る」をオフにしてください😊</div>"' +
   '+"<div id=\\"zjcases\\">読み込んでいます…</div>"' +
   '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjcasesave\\">この内容で保存</button>"' +
   '+"<div id=\\"zjcasemsg\\" class=\\"zjnote\\"></div></div>");' +
@@ -3164,7 +3164,7 @@ function renderInstaDmPage_(d, base, staff, dev) {
   }
   var body = '';
   if (!accounts.length) {
-    body = '<div class="idmempty">まだ読み取っていません。<br>少し待ってから、もう一度開いてね😊</div>';
+    body = '<div class="idmempty">まだ読み取っていません。<br>少し待ってから、もう一度開いてください😊</div>';
   } else {
     for (var i = 0; i < accounts.length; i++) {
       var a = accounts[i], threads = a.threads || [], reqs = a.requests || [];
@@ -3457,7 +3457,7 @@ function renderInstaDmGate_(msg, base, staff, dev) {
     '<div class="idmwrap">' +
       '<h1>📩 IGのDM</h1>' +
       '<div class="idmgate">' +
-        '<div class="idmgt">🔒 パスワードを入力してね😊</div>' +
+        '<div class="idmgt">🔒 パスワードを入力してください😊</div>' +
         '<div class="idmgm">この画面にはお客さまとの会話が入っています。パスワードを知っている端末だけ開けます。' +
           '一度入力すると、この端末では次回から入力不要です。</div>' +
         (msg ? '<div class="idmgerr">' + esc_(msg) + '</div>' : '') +
@@ -3624,7 +3624,7 @@ function igdmSelect(i) {
   var ms = t.msgs || [], body =
     '<div class="igdmth-h"><button type="button" class="igdmth-back" onclick="igdmBackList()">‹ 一覧</button>' +
     '<span class="igdmth-nm">' + esc_(t.title || '') + (t.req ? '（初めての人）' : '') + '</span></div><div class="igdmth-log">';
-  if (t.req) body += '<div class="idmempty">初めての人からのメッセージです。ここには最初の一言だけ出ます（全文は本物のインスタで確認してね😊）。</div>';
+  if (t.req) body += '<div class="idmempty">初めての人からのメッセージです。ここには最初の一言だけ出ます（全文は本物のインスタで確認してください😊）。</div>';
   if (!ms.length) body += '<div class="idmempty">内容がありません。</div>';
   for (var k = 0; k < ms.length; k++) {
     var m = ms[k];
@@ -4313,7 +4313,7 @@ function renderRirekiPage_(base, staff, dev) {
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1200);return;}' +
   'if(r.status!=="done"){stEl.textContent="検索に失敗しました："+esc(r.result||r.status);return;}' +
   'jsonp({action:"data",name:"custsearch_"+slot+".json"},function(d){render(d);});});}' +
-  'function doSearch(q){q=(q||qEl.value||"").trim();if(!q){stEl.textContent="番号か氏名を入力してね😊";return;}' +
+  'function doSearch(q){q=(q||qEl.value||"").trim();if(!q){stEl.textContent="番号か氏名を入力してください😊";return;}' +
   'stEl.textContent="検索中…（数秒）";resEl.innerHTML="";polls=0;' +
   'jsonp({action:"submit",key:KEY,op:"cust_search",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({q:q,slot:slot})},' +
   'function(r){if(!r||!r.ok||!r.id){stEl.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){poll(r.id);},1000);});}' +
@@ -4422,7 +4422,7 @@ function renderHonyakuPage_(base, staff, dev) {
   'goEl.disabled=false;' +
   'if(r.status!=="done"){setSt(String(r.result||"訳せませんでした。"),"err");return;}' +
   'dstEl.value=String(r.result||"");setSt("訳しました（なぞってコピーできます）","ok");});}' +
-  'function go(){var t=(srcEl.value||"").trim();if(!t){setSt("日本語を入力してね😊","err");return;}' +
+  'function go(){var t=(srcEl.value||"").trim();if(!t){setSt("日本語を入力してください😊","err");return;}' +
   'goEl.disabled=true;dstEl.value="";setSt("訳しています…（少し待っててくださいね🥺）","wait");' +
   'jsonp({action:"submit",key:KEY,op:"translate",who:idn.who,role:idn.role,device:idn.device,' +
   'fields:JSON.stringify({text:t,gender:gender,quality:"1"})},' +
@@ -4443,11 +4443,11 @@ function renderHonyakuPage_(base, staff, dev) {
   'setTimeout(function(){pollSub(r.id,btn);},900);});}' +
   'if(remEl){remEl.addEventListener("click",function(){' +
   'var t=(srcEl.value||"").trim(),d=(dstEl.value||"").trim();' +
-  'if(!t||!d){setSt("日本語と、登録したい中国語の両方を入力してね😊","err");return;}' +
+  'if(!t||!d){setSt("日本語と、登録したい中国語の両方を入力してください😊","err");return;}' +
   'ask({text:t,gender:gender,remember:d},remEl);});}' +
   'if(termEl){termEl.addEventListener("click",function(){' +
   'var a=(tjaEl.value||"").trim(),b=(tzhEl.value||"").trim();' +
-  'if(!a||!b){setSt("日本語と中国語の両方を入力してね😊","err");return;}' +
+  'if(!a||!b){setSt("日本語と中国語の両方を入力してください😊","err");return;}' +
   'ask({text:a,gender:gender,term_ja:a,term_zh:b},termEl);});}' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
@@ -4461,9 +4461,9 @@ function renderHonyakuPage_(base, staff, dev) {
         '<button type="button" data-g="男">男性</button>' +
       '</div>' +
       '<div class="hylbl">日本語（ここに貼る）</div>' +
-      '<textarea id="hysrc" placeholder="配信したい日本語をそのまま貼り付けてね😊"></textarea>' +
+      '<textarea id="hysrc" placeholder="配信したい日本語をそのまま貼り付けてください😊"></textarea>' +
       '<button type="button" class="hygo" id="hygo">訳す</button>' +
-      '<div class="hystatus" id="hystatus">日本語を入力して「訳す」を押してね😊</div>' +
+      '<div class="hystatus" id="hystatus">日本語を入力して「訳す」を押してください😊</div>' +
       '<div class="hylbl">台湾中国語（選択してコピー・修正できます）</div>' +
       '<textarea id="hydst" placeholder=""></textarea>' +
       // ★パソコン版と同じ「覚えさせる」機能（2026-08-24 まるちゃん）。
@@ -4534,10 +4534,10 @@ function renderTimedSendPage_(base, staff, dev) {
   'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに伝えてください🙇");return;}' +
   'goEl.disabled=false;msgEl.value="";imgs=[];fileEl.value="";renderThumbs();codesEl.value="";szOvShow_(szDoneHtml_("送信を予約しました","戻る"),"#16a34a");var _b=document.getElementById("szDoneBack");if(_b){_b.addEventListener("click",function(){szOvHide_();});}});}' +
   'function go(){var msg=(msgEl.value||"").trim();if(!msg&&!imgs.length){status("文章か画像のどちらかは必要です。",true);return;}' +
-  'var dv=dateEl.value,tv=timeEl.value;if(!dv||!tv){status("送信日と時刻を入力してね😊",true);return;}var send_at=dv+" "+tv;' +
+  'var dv=dateEl.value,tv=timeEl.value;if(!dv||!tv){status("送信日と時刻を入力してください😊",true);return;}var send_at=dv+" "+tv;' +
   'var mode=getMode(),target;' +
-  'if(mode==="person"){var codes=(codesEl.value||"").split(/[\\s,\\u3001\\uFF0C]+/).filter(Boolean);if(!codes.length){status("番号を入力してね😊 （例 M123）",true);return;}target={type:"person",codes:codes};}' +
-  'else if(mode==="group"){var val=groupEl.value;if(!val){status("グループを選択してね😊",true);return;}var g=GROUPS[val];target={type:"tag",tag_id:val,tag_name:g?g.name:""};}' +
+  'if(mode==="person"){var codes=(codesEl.value||"").split(/[\\s,\\u3001\\uFF0C]+/).filter(Boolean);if(!codes.length){status("番号を入力してください😊 （例 M123）",true);return;}target={type:"person",codes:codes};}' +
+  'else if(mode==="group"){var val=groupEl.value;if(!val){status("グループを選択してください😊",true);return;}var g=GROUPS[val];target={type:"tag",tag_id:val,tag_name:g?g.name:""};}' +
   'else if(mode==="all"){target={type:"all"};}else{target={type:"owner"};}' +
   'goEl.disabled=true;szOvShow_(szBusyHtml_("送信を予約中です","送信の予約が終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");' +
   'var names=[],ups=imgs.map(function(o){var n=rnd();names.push(n);return pushImage(n,o);});' +
@@ -5044,7 +5044,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcwhead"><span class="lb">日時入力欄</span>\'+' +
   '\'<button type="button" class="bcwauto" id="bcwauto">自動入力</button></div>\'+' +
   '\'<textarea id="bcwtxt" style="min-height:260px;font-size:14px" \'+' +
-  '\'placeholder="ここに空き時間検索の出力を貼るか、自分で入力してね😊&#10;&#10;'+
+  '\'placeholder="ここに空き時間検索の出力を貼るか、自分で入力してください😊&#10;&#10;'+
   '新規&#10;9/8（火）&#10;16:30&#10;9/9（水）&#10;11:00 / 12:00">\'+esc(WTEXT)+\'</textarea>\';' +
   'if(WDONE.length){h+=\'<div class="bchr"></div><div class="bcleft">できた画像</div><div class="bcgrid">\'+' +
   'WDONE.map(function(x){return \'<div class="bcpick new"><img src="\'+x.thumb+\'" data-bigw="\'+esc(x.name||"")+\'" style="cursor:zoom-in"><span>\'+' +
@@ -5068,7 +5068,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function(m){b.disabled=false;status(m,true);});};' +
   'document.getElementById("bcwmake").onclick=function(){' +
   'if(ta)WTEXT=ta.value;' +
-  'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してね😊",true);return;}' +
+  'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してください😊",true);return;}' +
   'WBUSY=true;WDONE=[];WMSG="";SENDN=null;status("");draw();' +
   'runMake(WTEXT,function(i,tot,label){WMSG=i+"枚できました（全"+tot+"枚）　作成中："+label;draw();},' +
   'function(done,err){WBUSY=false;' +
@@ -5288,7 +5288,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'return body.replace(/\\s+$/,"")+"\\n\\n"+times;}' +
   // ★文字数の知らせ（まるちゃん指示 2026-09-14「今何文字なのかだせよ」）
   'function numMsg(n){if(!n)return "";' +
-  'return (n>MAXT)?("今"+n+"文字です。"+MAXT+"文字までなので、あと"+(n-MAXT)+"文字減らしてね😊"):("今"+n+"文字です（"+MAXT+"文字まで）");}' +
+  'return (n>MAXT)?("今"+n+"文字です。"+MAXT+"文字までなので、あと"+(n-MAXT)+"文字減らしてください😊"):("今"+n+"文字です（"+MAXT+"文字まで）");}' +
   'function tgtNames(atama,sei,lang){var out=[];' +
   'for(var i=0;i<TPL.length;i++){var nm=TPL[i].name;' +
   'if(nm.indexOf(atama)<0)continue;' +
@@ -5369,7 +5369,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★最後のボタンの文＝何種類のどれを作るかを書く
   'function makeBtn(id){var a=sendNames();' +
   'if(!a.length)return \'<div class="bcstatus ng">送る区分がありません。\'+' +
-  '\'「← 戻る」で文章を入力してね😊</div>\';' +
+  '\'「← 戻る」で文章を入力してください😊</div>\';' +
   // ★2026-10-01 まるちゃん：対象の一覧は上に出しているので、ボタンは「以上◯種類の画像を生成する」だけ
   'return \'<button type="button" class="bctxt" id="\'+id+\'">以上\'+a.length+\'種類の画像を生成する</button>\'+' +
   // ★絵を作らずに中身の確認へ進む道（まるちゃん指示 2026-09-09）
@@ -5381,7 +5381,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★下のボタンは、いま入っている文から毎回作る（2026-10-01 まるちゃん「短い文いれてもボタンがでない」）。
   //   前は画面を描いた時に1回だけ決めていたので、長すぎて消えたボタンが、短くしても戻らなかった。
   //   打つたびに refreshBtns() で出し直す（入力欄は作り直さない＝打っている字は消えない）。
-  'function btnHtml(){var N=BORDER.length,LNG=\'<div class="bcstatus ng">長すぎます。上の文を短くしてね😊 （短くするとボタンが出ます）。</div>\';' +
+  'function btnHtml(){var N=BORDER.length,LNG=\'<div class="bcstatus ng">長すぎます。上の文を短くしてください😊 （短くするとボタンが出ます）。</div>\';' +
   'if(MSTEP===0){var x=BORDER[MIDX],last=(MIDX===N-1);' +
   'if(ulen(joinBody(MBODYS[MIDX]||"",timesOf(x[0],x[1])))>MAXT)return LNG;' +
   // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）。自動で訳す1つ目だけ紫。
@@ -5415,7 +5415,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★「【時間】」は区分の名前の右はし（まるちゃん指示 2026-09-09）。押すとそのまま写せる。
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,false))+\'</b>\'+' +
   '\'<button type="button" class="bcinstx" id="bcinscp">【時間】</button></div>\'+' +
-  '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入力してね😊&#10;&#10;\'+' +
+  '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入力してください😊&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(body)+\'</textarea>\';' +
   'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（文字の大きさ＝中）</div><div class="bcouttx bcbub" id="bcmprev">\'+' +
@@ -5431,7 +5431,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'else if(MSTEP===5){' +
   'var ja5=MJA.filter(function(x){return String(x.text||"").replace(/^\\s+|\\s+$/g,"");});' +
   'h=\'<div class="bcstop"><span class="bcsttl">中国語版の作成方法を選択</span></div>\'+' +
-  '(ja5.length?"":\'<div class="bcstatus ng">日本語の文がありません。「← 戻る」で文章を入力してね😊</div>\');' +
+  '(ja5.length?"":\'<div class="bcstatus ng">日本語の文がありません。「← 戻る」で文章を入力してください😊</div>\');' +
   'if(!MBUSY&&ja5.length)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   // ★画像を作るか選ぶ画面（2026-10-01 まるちゃん「日本語のときとおなじ。つぎのがめんでいってから」）
   'else if(MSTEP===6){var nm6=sendNames();' +
@@ -5447,7 +5447,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b>\'+' +
   '\'<button type="button" class="bcinstx" id="bcinscp">【時間】</button></div>\'+' +
-  '\'<textarea id="bcmzbody" class="bcmtx" placeholder="ここに、この対象へ送る中国語の文章を入力してね😊&#10;&#10;\'+' +
+  '\'<textarea id="bcmzbody" class="bcmtx" placeholder="ここに、この対象へ送る中国語の文章を入力してください😊&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(zb)+\'</textarea>\';' +
   'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（文字の大きさ＝中）</div><div class="bcouttx bcbub" id="bcmzprev">\'+' +
@@ -5865,7 +5865,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" class="bcmv bcseeall" data-seeall="\'+i+\'">内容を確認</button></div>\';});' +
   'h+=\'</div>\';' +
   'if(!m)h+=\'<div class="bcstatus on">内容を入力した対象がありません。\'+' +
-  '\'左上の「← 戻る」から入力してね😊</div>\';' +
+  '\'左上の「← 戻る」から入力してください😊</div>\';' +
   'else if(LMODE!=="at"){' +
   // ★「今すぐ送信する」は下（上だとすぐ押してしまって危ない・まるちゃん指示 2026-09-09）
   'h+=\'<button type="button" class="bcgo" id="bcplan">送信の予約を設定する</button>\'+' +
@@ -6563,7 +6563,7 @@ var SG_STEPS_JS_ =
       'var over=(TE>SLOT.e);' +
       'var er=$("sgterr");' +
       'if(over){er.style.display="block";' +
-        'er.innerHTML="その時間は空いていません。<br>入力し直してね😊";}' +
+        'er.innerHTML="その時間は空いていません。<br>入力し直してください😊";}' +
       'else{er.style.display="none";er.textContent="";}' +
       /* ★特例の時は止めずに、重なっている中身を赤字で出す（その旨を出したうえで選べる）。 */
       'if(SLOT.toku){var w=[];' +
@@ -6619,7 +6619,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '<div class="sg" id="sgPick">' +
       /* ★読み込み中は「施術者を選んでください」を出さない（まだ選べないので・まるちゃん 2026-09-12）。
          今日の予約を読み終えてボタンが並んだ時にはじめて出す（drawPick）。 */
-      '<div class="sgstep" id="sgpickhead" style="display:none">施術者を選択してね😊</div>' +
+      '<div class="sgstep" id="sgpickhead" style="display:none">施術者を選択してください😊</div>' +
       '<div class="sgstaff" id="sgstaff"></div>' +
       '<div class="sgstatus" id="sgstatus">今日の予約を読んでいます...</div>' +
     '</div>' +
@@ -6711,7 +6711,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        （そのままタイムツリーの次回の予約メモになる・まるちゃん 2026-09-12）。 */
     '<div class="sg" id="sgMemo" style="display:none">' +
       '<div class="sgwho">予約メモの修正</div>' +
-      '<div class="sgmnote">下に本日の予約メモを表示しています。次回の予約用にメモを修正してね😊' +
+      '<div class="sgmnote">下に本日の予約メモを表示しています。次回の予約用にメモを修正してください😊' +
         '次回の予約日の予約メモとしてタイムツリーに保存されます。</div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">予約メモのタイトル</div>' +
@@ -7200,7 +7200,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function sendMemo(){' +
       'if(sending)return;' +
       'var ti=($("sgmtitle").value||"").trim();' +
-      'if(!ti){szPopup_("予約メモのタイトルを入力してね😊");return;}' +
+      'if(!ti){szPopup_("予約メモのタイトルを入力してください😊");return;}' +
       'if(!PICKDATE||!ROOM){szPopup_("予約の日時と施術室が決まっていません。前に戻ってやり直してください🙇");return;}' +
       'var f={date:PICKDATE,start:m2hm(TS),end:m2hm(TE),room:ROOM,title:ti,memo:$("sgmtext").value||""};' +
       /* ★2026-10-31：9枚目「このお客様は以下に当てはまりますか？」の答えを全部渡す（ta=1＝この画面で選んだ印）。
@@ -7310,7 +7310,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(RLOADED){if(step===2)drawList();return;}RLOADED=true;cb();});}' +
     'function repBack(){if(step===8){if(RFROM===22){goRNum();}else{goList();}return true;}' +
       'if(step===2||step===22){goRChoose();return true;}if(step===21){goPick();return true;}return false;}' +
-    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入力してね😊";}' +
+    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入力してください😊";}' +
     'function repBind(){' +
       '$("sgrtoday").onclick=function(){if(!tapOK())return;repLoadToday(goList);};' +
       '$("sgrnum").onclick=function(){if(!tapOK())return;goRNum();};' +
@@ -7320,7 +7320,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgrpad").onclick=function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");' +
         'if(k==="clr"){RDIG="";}else if(k==="del"){RDIG=RDIG.slice(0,-1);}' +
         'else if(/^[0-9]$/.test(b.textContent)&&RDIG.length<4){RDIG+=b.textContent;}rUpd();};' +
-      '$("sgrgo").onclick=function(){if(!tapOK())return;if(!RDIG){szPopup_("お客様番号を入力してね😊");return;}' +
+      '$("sgrgo").onclick=function(){if(!tapOK())return;if(!RDIG){szPopup_("お客様番号を入力してください😊");return;}' +
         'RFROM=22;repOpen("number",RPRE+RDIG,"");};}' +
     /* 事務所パソコンに「🔁を書く予約」と「🔁を聞く施術」を聞く（決め方は 共通\kaeshi_target.target_booking）。 */
     'function repOpen(md,fnum,ev){if(!fnum){szPopup_("お客様番号が分かりません。");return;}' +
@@ -7430,7 +7430,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        ★直していた時だけ、直した後のメモで事務所パソコンに見分け直してもらう（回数を手で進めた時の取りこぼし防ぎ）。
        見分け直しに失敗したら下書きの答えで進む（止めない）。 */
     'function memoNext(){if(sending)return;' +
-      'if(!($("sgmtitle").value||"").trim()){szPopup_("予約メモのタイトルを入力してね😊");return;}' +
+      'if(!($("sgmtitle").value||"").trim()){szPopup_("予約メモのタイトルを入力してください😊");return;}' +
       'if(!MEMOTOUCHED||!(CUST&&CUST.note)){kDecide(FINALS||[]);return;}' +
       'var my=++kchk,cd=(typeof codeOf==="function"&&CUST)?(codeOf(CUST.title)||""):"";' +
       'szOvShow_(szBusyHtml_("予約メモを確認しています"),"#2C7A99");' +
@@ -7867,7 +7867,7 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★タイトルを作り直している間は登録させない（古い性別のまま登録されるのを防ぐ）。
     'if(_titleKeep&&tv.shown){var _k=_titleKeep;_titleKeep=null;fillTitles(_k.t,_k.d);return;}' +
     // ★作れなかった時は理由を出す（前は「作っています」のまま永久に止まっていた）。
-    'if(_titleErr){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作成できませんでした（"+_titleErr+"）。「← 戻る」で予約メモや担当・部屋を確認してね😊";ngbox.style.display="";}}' +
+    'if(_titleErr){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作成できませんでした（"+_titleErr+"）。「← 戻る」で予約メモや担当・部屋を確認してください😊";ngbox.style.display="";}}' +
     'else if(titleStale){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作っています。少し待っててくださいね🥺";ngbox.style.display="";}}}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
@@ -7900,7 +7900,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'function close(){if(ed)ed.style.display="none";if(row)row.style.display="flex";}' +
     'if(bFix)bFix.addEventListener("click",open);if(bNo)bNo.addEventListener("click",close);' +
     'if(bOk)bOk.addEventListener("click",function(){var mm=Number(gv("nrEdMM").value),dd=Number(gv("nrEdDD").value),hh=Number(gv("nrEdHH").value),mi=Number(gv("nrEdMI").value);' +
-    'if(!(mm>=1&&mm<=12)||!(dd>=1&&dd<=31)||!(hh>=0&&hh<=23)||!(mi>=0&&mi<=59)){szPopup_("月日時分を正しく入力してね😊");return;}' +
+    'if(!(mm>=1&&mm<=12)||!(dd>=1&&dd<=31)||!(hh>=0&&hh<=23)||!(mi>=0&&mi<=59)){szPopup_("月日時分を正しく入力してください😊");return;}' +
     'var y=window.__nrDate?Number(window.__nrDate.slice(0,4)):(new Date()).getFullYear();var dt=new Date(y,mm-1,dd);var today=new Date();today.setHours(0,0,0,0);' +
     'if((today-dt)>31*24*3600*1000){y+=1;dt=new Date(y,mm-1,dd);}' +
     'if(dt.getMonth()!==mm-1){szPopup_("その日付はありません。");return;}' +
@@ -8069,7 +8069,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'for(var _q=0;_q<_pab.length;_q++){_pab[_q].classList.toggle("sel",_pab[_q]===this);}' +
     'window.__nrSlotsMemo=prevEl.value;' +          // ★機械が書き換えた分は「作り直し」の対象にしない
     'nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
-    'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼り付けてね😊",true);return;}' +
+    'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼り付けてください😊",true);return;}' +
     'readEl.disabled=true;prevT0=Date.now();status("変換中です。通常は10秒以内に終わります。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},400);});}' +
@@ -8125,7 +8125,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(_titleTimer)clearTimeout(_titleTimer);_titleTimer=setTimeout(function(){refreshTitles(null,true);},350);}' +
     'window.__nrSchedTitle=scheduleTitleRefresh;' +
     // 登録＝画面に出ている（人が直せる）タイトルをそのまま使う。
-    'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼り付けてね😊",true);return;}' +
+    'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼り付けてください😊",true);return;}' +
     'var ins=document.querySelectorAll(".nrTitleIn"),ts=[];for(var j=0;j<ins.length;j++){ts.push(ins[j].value);}' +
     'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields(ins.length?{titles:JSON.stringify(ts)}:null))},' +
@@ -8182,7 +8182,7 @@ function renderNewReservationPage_(base, staff, dev) {
       // ── 画面＝プロセルはどれ？（聞く必要がある時だけ出す・2026-09-22 まるちゃん「画面をいっしょにすんな」） ──
       '<div id="nrStepProcell" style="display:none">' +
         '<div id="nrProcellAsk">' +
-          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選択してね😊</div>' +
+          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選択してください😊</div>' +
           '<div class="nrpills">' +
             '<button type="button" class="nrpill" data-procell="顔プロセルPro" style="background:#2563eb">顔プロセルPro</button>' +
             '<button type="button" class="nrpill" data-procell="顔プロセルMD" style="background:#0891b2">顔プロセルMD</button>' +
@@ -8210,7 +8210,7 @@ function renderNewReservationPage_(base, staff, dev) {
       '</div>' +
       // ── 画面＝予約メモの確認 ──
       '<div id="nrprevwrap" style="display:none">' +
-        '<div class="nrsec">以下の予約メモで間違いがないか確認してね😊 メモは直接編集可能です。</div>' +
+        '<div class="nrsec">以下の予約メモで間違いがないか確認してください😊 メモは直接編集可能です。</div>' +
         // ★直す所の赤い知らせ＋その右端に「お客様情報を確認」（2026-09-22 まるちゃん決定）。
         //   白い枠は色を付けられない普通の文字の箱なので、枠の**すぐ上**に赤で出す。
         '<div id="nrFixRow" class="nrfixrow" style="display:none">' +
@@ -8254,7 +8254,7 @@ function renderNewReservationPage_(base, staff, dev) {
       // ── 画面＝やる順番 ──
       '<div id="nrStepOrder" style="display:none">' +
         '<div id="secOrder"><div class="nrsec">やる順番（上から順にやります）</div>' +
-        '<div class="nrnote2">順番を変更したい項目の「↑ 上へ」を押してね😊</div><div id="nrOrderList"></div></div>' +
+        '<div class="nrnote2">順番を変更したい項目の「↑ 上へ」を押してください😊</div><div id="nrOrderList"></div></div>' +
         '<button type="button" class="nrgo" id="nrOrderOk">これでOK</button>' +
       '</div>' +
       // ── 画面＝所要時間（見出しに施術の名前を入れる＝まるちゃん「〇〇の所要時間（分）」） ──
@@ -8484,7 +8484,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div id="expickwho"></div>' +
       '<div class="exstatus" id="expickst"></div>' +
       '<button class="exgo" id="expickmode" style="display:none"><span>複数の予約枠を同時に移動する<span class="exswtxt" id="expickswtxt"></span></span><span class="exsw"><span class="exswk"></span></span></button>' +
-      '<div class="expickhint" id="expickhint" style="display:none">同じ日の予約を選択しています。外す・追加する時はその予約をタップしてね😊 1件だけ変更する時は上のスイッチをオフにしてね😊</div>' +
+      '<div class="expickhint" id="expickhint" style="display:none">同じ日の予約を選択しています。外す・追加する時はその予約をタップしてください😊 1件だけ変更する時は上のスイッチをオフにしてください😊</div>' +
       '<div class="expick" id="expicklist"></div>' +
       '<button class="exgo" id="expickmulti" style="display:none"></button>' +
     '</div>';
@@ -8516,7 +8516,7 @@ function renderExistingPage_(base, staff, dev, mode) {
           '<button type="button" class="extpm" data-d="5">＋ 5分</button>' +
         '</span>' +
       '</div>' +
-      '<div class="exhint">例：9時→0900 ／ 12時10分→1210（4桁で入力してね😊）</div>' +
+      '<div class="exhint">例：9時→0900 ／ 12時10分→1210（4桁で入力してください😊）</div>' +
       '<div class="expad" id="extpad">' + padHtml + '</div>' +
       '<button class="exgo" id="exToDone">この内容で進む→</button>' +
       '<div class="exdone" id="exdone2" style="display:none"></div>' +
@@ -8591,8 +8591,8 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div id="exrvnew"></div>' +
       '<button type="button" class="exgo" id="exrvAddBtn" style="background:#2563eb;margin:8px 0 4px">＋ 別の施術を追加</button>' +
       '<div id="exrvsingle">' +
-        '<div id="exrvstaffwrap"><div class="exsec">施術担当</div><div class="mvng" id="exrvstaffnone" style="display:none">その時間に空いている担当がいません</div><div class="rvbusy" id="exrvstaffbusy" style="display:none">前回と同じ担当はこの時間は空いていません。空いている人から選択してね😊</div><div class="expills" id="exrvstaff">' + rvStaffP + '</div></div>' +
-        '<div id="exrvroomdurwrap"><div class="exsec">部屋</div><div class="mvng" id="exrvroomnone" style="display:none">その時間に空いている部屋がありません</div><div class="rvbusy" id="exrvroombusy" style="display:none">前回と同じ部屋はこの時間は空いていません。空いている部屋から選択してね😊</div><div class="expills" id="exrvroom">' + rvRoomP + '</div>' +
+        '<div id="exrvstaffwrap"><div class="exsec">施術担当</div><div class="mvng" id="exrvstaffnone" style="display:none">その時間に空いている担当がいません</div><div class="rvbusy" id="exrvstaffbusy" style="display:none">前回と同じ担当はこの時間は空いていません。空いている人から選択してください😊</div><div class="expills" id="exrvstaff">' + rvStaffP + '</div></div>' +
+        '<div id="exrvroomdurwrap"><div class="exsec">部屋</div><div class="mvng" id="exrvroomnone" style="display:none">その時間に空いている部屋がありません</div><div class="rvbusy" id="exrvroombusy" style="display:none">前回と同じ部屋はこの時間は空いていません。空いている部屋から選択してください😊</div><div class="expills" id="exrvroom">' + rvRoomP + '</div>' +
         '<div class="exsec">施術時間（分）</div><div class="expills exdur" id="exrvdur">' + rvDurP + '</div></div>' +
       '</div>' +
       '<div class="exsec" id="exrvmarksh">タイトルの印<span style="font-weight:600;font-size:13px;opacity:.85">（施術から自動で選択しています）</span></div>' + '<div class="expills" id="exrvmarks"></div>' +
@@ -8611,7 +8611,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div id="exrvB">' +
       '<div class="exsec" id="exrvcnth" style="display:none">回数（修正できます）</div>' +
       '<div id="exrvcntbox"></div>' +
-      '<div class="exsec">TTに登録される予約メモです。間違いがないか確認してね😊 （修正可能）</div><textarea class="rvprevmemo rvmemoedit" id="exrvnowmemo">（作成中…）</textarea>' +
+      '<div class="exsec">TTに登録される予約メモです。間違いがないか確認してください😊 （修正可能）</div><textarea class="rvprevmemo rvmemoedit" id="exrvnowmemo">（作成中…）</textarea>' +
       '<button class="exgo" id="exResvGo">この内容でTimeTreeに登録する</button>' +
       '</div>' +
     '</div>';
@@ -8631,7 +8631,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var pickItemsSec =
     '<div id="exPickItems" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackPickItems" href="javascript:void(0)">← 戻る</a></div>' +
-      '<div class="exmh">今回やる施術を選択してね😊</div>' +
+      '<div class="exmh">今回やる施術を選択してください😊</div>' +
       '<div id="expkitems"></div>' +
       '<div id="expknew"></div>' +
       /* ★2026-10-27 まるちゃん「1個追加した後に『追加メニューはこれだけ』『＋メニューから足す』の
@@ -8660,7 +8660,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var groupSec =
     '<div id="exGroup" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackGroup" href="javascript:void(0)">← 戻る</a></div>' +
-      '<div class="exmh">同じ担当＆部屋にする施術には、同じ番号を選択してね😊</div>' +
+      '<div class="exmh">同じ担当＆部屋にする施術には、同じ番号を選択してください😊</div>' +
       '<div id="exgrplist"></div>' +
       '<button type="button" class="exgo" id="exgrpGo">これで決定→</button>' +
     '</div>';
@@ -8670,7 +8670,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var staffSelSec =
     '<div id="exStaffSel" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackStaffSel" href="javascript:void(0)">← 戻る</a></div>' +
-      '<div class="exmh">担当を選択してね😊</div>' +
+      '<div class="exmh">担当を選択してください😊</div>' +
       '<div id="exstflist"></div>' +
       /* ★2026-10-27 まるちゃん「分けたなら、それごとに担当えらばないと」＝枠を分けた時だけ、
          枠ごとに選んでからこのボタンで進む（枠が1つの時は担当を押すとすぐ進むので出さない）。 */
@@ -8681,7 +8681,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" id="exbackDur" href="javascript:void(0)">← 戻る</a></div>' +
       /* ★2026-10-04 まるちゃん「前回の時間数：〇分　と　参考で　選んでくださいの　みぎにだす」。
          ＝最初から選んでおくのではなく、**前回が何分だったかを参考として見出しの右に出す**。選ぶのは人のまま。 */
-      '<div class="exmhrow"><div class="exmh">施術時間を選択してね😊</div>' +
+      '<div class="exmhrow"><div class="exmh">施術時間を選択してください😊</div>' +
         '<div class="exmhsub" id="exdurprev"></div></div>' +
       '<div id="exdurlist"></div>' +
       '<button type="button" class="exgo" id="exdurGo">日付をえらぶ→</button>' +
@@ -8692,7 +8692,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     '<div id="exOrder" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackOrder" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="exmh">やる順番（上から順にやります）</div>' +
-      '<div class="exmhsub" style="white-space:normal">順番を変更したい項目の「↑ 上へ」を押してね😊</div>' +
+      '<div class="exmhsub" style="white-space:normal">順番を変更したい項目の「↑ 上へ」を押してください😊</div>' +
       '<div id="exorderlist"></div>' +
       '<button type="button" class="exgo" id="exorderGo">これでOK</button>' +
     '</div>';
@@ -8742,7 +8742,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exSm_(r){var p=String((r&&r.start_hm)||"").split(":");if(p.length===2&&/^[0-9]+$/.test(p[0])&&/^[0-9]+$/.test(p[1])){return parseInt(p[0],10)*60+parseInt(p[1],10);}return (r&&r.start_min!=null)?Number(r.start_min):0;}' +
     'var isNewCust=false;' +
     'function loadNewPicks(){isNewCust=true;document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="新規のお客様（番号なし）";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="新規のお客様の予約を検索しています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"new_customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
-    'function goDate(){hideSteps();document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="日付を選択してね😊";calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
+    'function goDate(){hideSteps();document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="日付を選択してください😊";calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
     'function disp(){return (prefix||"")+digits;}' +
     'function upd(){document.getElementById("exdisp").value=disp();}' +
     'var seg=document.getElementById("exseg"),sb=seg.querySelectorAll("button"),thumb=seg.querySelector(".thumb");' +
@@ -8752,7 +8752,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var box=document.getElementById("exdisp");' +   /* 白BOX＝貼り付けもでき、パッド入力も表示する */
     'box.addEventListener("input",function(){var m=(box.value||"").toUpperCase().replace(/\\s/g,"").match(/^([MF]?)([0-9]{0,4})/);if(!m){return;}digits=m[2];selSeg(m[1]==="M"?0:(m[1]==="F"?1:2));});' +
     'function drawCal(){var wd=["月","火","水","木","金","土","日"];document.getElementById("exct").textContent=calY+"年 "+(calM+1)+"月";var h="";for(var i=0;i<7;i++){h+="<div class=\\"exwd"+(i===5?" sat":i===6?" sun":"")+"\\">"+wd[i]+"</div>";}var first=new Date(calY,calM,1);var off=(first.getDay()+6)%7;var dim=new Date(calY,calM+1,0).getDate();for(var b=0;b<off;b++){h+="<div class=\\"exday blank\\"></div>";}var t0=new Date(today.getFullYear(),today.getMonth(),today.getDate());for(var d=1;d<=dim;d++){var dow=(off+d-1)%7;var cls="exday";if(dow===5){cls+=" sat";}if(dow===6){cls+=" sun";}var cur=new Date(calY,calM,d);if(calY===today.getFullYear()&&calM===today.getMonth()&&d===today.getDate()){cls+=" today";}if(cur<t0){cls+=" past";}if(picked&&picked.getFullYear()===calY&&picked.getMonth()===calM&&picked.getDate()===d){cls+=" picked";}h+="<button class=\\""+cls+"\\" data-d=\\""+d+"\\">"+d+"</button>";}document.getElementById("exgrid").innerHTML=h;}' +
-    'document.getElementById("exToDate").addEventListener("click",function(){if(!digits){szPopup_("お客様番号を入力してね😊");return;}' +
+    'document.getElementById("exToDate").addEventListener("click",function(){if(!digits){szPopup_("お客様番号を入力してください😊");return;}' +
       'if(ISCHANGE){loadPicks();return;}' +
       /* ★2026-09-25：番号のつぎは日付ではなく「今回も〇〇をやりますか？」（施術を先に決める）。 */
       'PREF=null;EXSEL=null;EXFLOW=null;EXSTAFF="";SGX.setNeed(0);SGX.setRoomTip("");exWaitCtx(exShowAsk);});' +
@@ -8770,7 +8770,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var _tpm=document.querySelectorAll(".extpm");for(var _ti=0;_ti<_tpm.length;_ti++){_tpm[_ti].addEventListener("click",function(){var d=parseInt(this.getAttribute("data-d"),10);var t=(tdig.length===4)?tdig:(initTdig_()||"1000");var m=parseInt(t.slice(0,2),10)*60+parseInt(t.slice(2),10)+d;if(m<0)m=0;if(m>23*60+55)m=23*60+55;tdig=("0"+Math.floor(m/60)).slice(-2)+("0"+(m%60)).slice(-2);tupd();});}' +
     'document.getElementById("extpad").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");if(k==="clr"){tdig="";}else if(k==="del"){tdig=tdig.slice(0,-1);}else if(/^[0-9]$/.test(b.textContent)&&tdig.length<4){tdig+=b.textContent;}tupd();});' +
     'document.getElementById("exbackTime").addEventListener("click",function(){document.getElementById("exTime").style.display="none";document.getElementById(chgtype==="t"?"exMenu":"exDate").style.display="";window.scrollTo(0,0);});' +
-    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){szPopup_("時刻を4桁で入力してね😊 （例 1230）");return;}if(ISCHANGE){if(MULTI_){startMultiMove();}else{startPickFlow();}}else{startExistingReserve();}});' +
+    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){szPopup_("時刻を4桁で入力してください😊 （例 1230）");return;}if(ISCHANGE){if(MULTI_){startMultiMove();}else{startPickFlow();}}else{startExistingReserve();}});' +
     // ── 既存の予約（新規登録＝前回コピー）：材料を取り込み→内容を選んで→登録 ──
     'var rvctx=null,rvitems=[],rvsel={staff:"",room:"",dur:""};' +
     'function startExistingReserve(){var nd=picked;var ymd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var tm=tdig.slice(0,2)+":"+tdig.slice(2);exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_build_ctx",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp(),date:ymd,time:tm})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollBuildCtx(r.id,ymd,tm);});}' +
@@ -8979,7 +8979,7 @@ function renderExistingPage_(base, staff, dev, mode) {
          3つ〜 … 今回も「①A　②B　③C」を、三つともやりますか？（四つとも／五つとも…最大9つ） */
       'var MRU_=["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];' +
       'var KAZ_=["","","両方","三つとも","四つとも","五つとも","六つとも","七つとも","八つとも","九つとも","十とも"];' +
-      'var _q="今回やる施術を選択してね😊";' +
+      'var _q="今回やる施術を選択してください😊";' +
       'if(ns.length===1){_q="今回も「"+ns[0]+"」をやりますか？😊";}' +
       'else if(ns.length>=2){var _t=[];for(var _i=0;_i<ns.length;_i++){_t.push((MRU_[_i]||("("+(_i+1)+")"))+ns[_i]);}' +
       'var _k=KAZ_[ns.length]||(ns.length+"つとも");' +
@@ -8993,7 +8993,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'for(var i=0;i<rvitems.length;i++){if(EXHIDE[i]){hid++;continue;}h+="<button type=\\"button\\" class=\\"exp pick"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exAskName(rvitems[i].name))+"</button>";}' +
       /* ★2026-10-27 まるちゃん「ゼロなんだから（これで決定は）だめだろ」＝選べる物も足した物も無い時は、
          決定ボタンを出さず「＋ メニューから追加」だけにする。1つでも選ぶ／足すと決定ボタンが出る。 */
-      'exEl("expkitems").innerHTML=h||(hid?"<div class=\\"exnone\\">下の「＋ メニューから追加」から、今回やる施術を選択してね😊</div>":"<div class=\\"exnone\\">前回の施術がありません</div>");' +
+      'exEl("expkitems").innerHTML=h||(hid?"<div class=\\"exnone\\">下の「＋ メニューから追加」から、今回やる施術を選択してください😊</div>":"<div class=\\"exnone\\">前回の施術がありません</div>");' +
       'exEl("expkGo").style.display=exChosen().length?"":"none";' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-expknew=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("expknew").innerHTML=n;' +
@@ -9006,7 +9006,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exEl("exaddlist").innerHTML=n;}' +
     /* 施術が決まったあと＝1つなら施術時間へ、2つ以上なら分けるか聞く */
     'function exAfterItems(){var ns=exChosen();var us=exUnits();' +
-      'if(!ns.length){szPopup_("今回やる施術を1つ以上選択してね😊");return;}' +
+      'if(!ns.length){szPopup_("今回やる施術を1つ以上選択してください😊");return;}' +
       'if(us.length<2){exSetGroups([ns]);exShowStaff();return;}' +
       'exOpen("exSplit");' +
       'var h="";for(var i=0;i<us.length;i++)h+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(exAskName(us[i]))+"</div></div>";' +
@@ -9108,7 +9108,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'var sh="";for(var q=0;q<SORD.length;q++){var sn=SORD[q];var ng=fr&&fr.indexOf(sn)<0;' +
         'sh+="<button type=\\"button\\" class=\\"exp"+((sn===cf.staff)?" sel":"")+"\\" data-spks=\\""+sn+"\\""+(ng?" data-spkng=\\"1\\"":"")+" style=\\"background:"+SC[sn]+(ng?";opacity:0.3;cursor:default":"")+"\\">"+SEMO_[sn]+" "+SNM_[sn]+"</button>";}' +
       'var nt="";' +
-      'if(fr&&fr.indexOf(cf.staff)<0)nt="<div class=\\"sgtokunote\\">"+esc(SEMO_[cf.staff]||"")+esc(SNM_[cf.staff]||"")+"さんはこの時間に予約があります。空いている担当を選ぶか、← 戻るで時間を選択し直してね😊</div>";' +
+      'if(fr&&fr.indexOf(cf.staff)<0)nt="<div class=\\"sgtokunote\\">"+esc(SEMO_[cf.staff]||"")+esc(SNM_[cf.staff]||"")+"さんはこの時間に予約があります。空いている担当を選ぶか、← 戻るで時間を選択し直してください😊</div>";' +
       'else if(fr)nt="<div class=\\"exmhsub\\" style=\\"white-space:normal\\">薄い担当はこの時間に予約があるので選べません</div>";' +
       'exEl("exspkstaff").innerHTML=sh;exEl("exspkng").innerHTML=nt;}' +
     /* その枠の時間（前の枠の続き〜自分の長さ）に空いている担当の番号。分からない時・特例の時は null＝絞らない。 */
@@ -9176,7 +9176,7 @@ function renderExistingPage_(base, staff, dev, mode) {
        選び直し画面の下の2つのボタンが『ない／ある』の答えそのもの。だから押したら
        「〇〇以外にやるメニューはありますか？」を聞き直さずに先へ進む。戻る時はこの画面へ。 */
     'function exBackToItems(){if(EXADDFROM==="exPickItems")exShowPick();else exShowAdd();}' +
-    'exEl("expkGo").onclick=function(){if(!exChosen().length){szPopup_("今回やる施術を1つ以上選択してね😊");return;}EXADDFROM="exPickItems";exAfterItems();};' +
+    'exEl("expkGo").onclick=function(){if(!exChosen().length){szPopup_("今回やる施術を1つ以上選択してください😊");return;}EXADDFROM="exPickItems";exAfterItems();};' +
     'exEl("exbackAdd").onclick=function(){if(EXADDFROM==="exPickItems")exShowPick();else exShowAsk();};' +
     'exEl("exaddlist").addEventListener("click",function(e){var b=e.target.closest("[data-exaddel]");if(!b)return;' +
       'rvNewItems.splice(parseInt(b.getAttribute("data-exaddel"),10),1);exShowAdd();});' +
@@ -9202,7 +9202,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'exEl("exspkstaff").addEventListener("click",function(e){var b=e.target.closest("[data-spks]");if(!b||b.getAttribute("data-spkng"))return;' +
       'var g=EXFLOW.groups;rvSlotCfg_(g[EXSLOTI].key).staff=b.getAttribute("data-spks");exDrawSlotPick();});' +
     'exEl("exspkGo").onclick=function(){var fr=exSlotFree(EXSLOTI);var cs=rvSlotCfg_(EXFLOW.groups[EXSLOTI].key).staff;' +
-      'if(fr&&fr.indexOf(cs)<0){szPopup_(SEMO_[cs]+SNM_[cs]+"さんはこの時間に予約があります。\\n空いている担当を選ぶか、← 戻るで時間を選択し直してね😊");return;}' +
+      'if(fr&&fr.indexOf(cs)<0){szPopup_(SEMO_[cs]+SNM_[cs]+"さんはこの時間に予約があります。\\n空いている担当を選ぶか、← 戻るで時間を選択し直してください😊");return;}' +
       'exShowSlotPick(EXSLOTI+1);};' +
     'exEl("exgrplist").addEventListener("click",function(e){var b=e.target.closest("[data-exgi]");if(!b)return;' +
       'EXGRP[parseInt(b.getAttribute("data-exgi"),10)]=parseInt(b.getAttribute("data-exgn"),10);exDrawGroup();});' +
@@ -9218,7 +9218,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exApplyStaff(b.getAttribute("data-exstf"));exShowDur();});' +
     /* 枠を分けた時の「これで決定→」＝枠ごとの担当はそのまま残し、1枠目の担当を空き状況で押せる担当にする。 */
     'exEl("exstfGo").onclick=function(){var g=EXFLOW.groups;' +
-      'for(var i=0;i<g.length;i++){if(!SEMO_[rvSlotCfg_(g[i].key).staff]||rvSlotCfg_(g[i].key).staff==="4"){szPopup_((i+1)+"枠目の担当を選択してね😊");return;}g[i].dur=g[i].baseDur;}' +
+      'for(var i=0;i<g.length;i++){if(!SEMO_[rvSlotCfg_(g[i].key).staff]||rvSlotCfg_(g[i].key).staff==="4"){szPopup_((i+1)+"枠目の担当を選択してください😊");return;}g[i].dur=g[i].baseDur;}' +
       'EXSTAFF=rvSlotCfg_(g[0].key).staff;exShowDur();};' +
     'exEl("exbackStaffSel").onclick=function(){var ns=exUnits();if(ns.length<2){exBackToItems();return;}' +
       'if(EXFLOW&&EXFLOW.groups.length>=2&&ns.length>=3){exShowGroup();return;}exAfterItems();};' +
@@ -9285,7 +9285,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'document.getElementById("exrvdur").addEventListener("click",function(e){var b=e.target.closest(".exp");if(!b)return;rvsel.dur=b.getAttribute("data-ev");rvSelPill("rvdur",rvsel.dur);rvLoadAvail();});' +
     'document.getElementById("exbackResv").addEventListener("click",function(){if(EXFLOW&&EXSTEP==="confirm"){exShowTitle();return;}if(EXSEL){SGX.toTime();return;}hideSteps();document.getElementById("exTime").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exResvGo").addEventListener("click",function(){if(exSlotKeys().length>=2){doRegisterMulti();}else{doRegister();}});' +
-    'function doRegister(){if(rvAvail&&(!rvStaffFree_(rvsel.staff)||(!EXSEL&&!rvRoomFree_(rvsel.room)))){szPopup_("その時間に空いている担当・部屋を選択してね😊");return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var doing=rvDoingTexts();var roomKey=(rvsel.room==="STAR/福/🇫🇷")?"STAR":rvsel.room;var fields={number:disp(),date:rvctx._ymd,time:rvctx._tm,dur:parseInt(rvsel.dur,10)||30,room_key:roomKey,prev_title:rvctx.prev_title||"",staff_emoji:SEMO_[rvsel.staff]||"",doing_texts:doing,suffix:rvSuffix(),marks:rvEffMarks(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[]),title_override:(rvTitleOv!=null?rvTitleOv:""),memo_override:(rvMemoOv!=null?rvMemoOv:"")};exOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_create",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollRegister(r.id,roomKey);});}' +
+    'function doRegister(){if(rvAvail&&(!rvStaffFree_(rvsel.staff)||(!EXSEL&&!rvRoomFree_(rvsel.room)))){szPopup_("その時間に空いている担当・部屋を選択してください😊");return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var doing=rvDoingTexts();var roomKey=(rvsel.room==="STAR/福/🇫🇷")?"STAR":rvsel.room;var fields={number:disp(),date:rvctx._ymd,time:rvctx._tm,dur:parseInt(rvsel.dur,10)||30,room_key:roomKey,prev_title:rvctx.prev_title||"",staff_emoji:SEMO_[rvsel.staff]||"",doing_texts:doing,suffix:rvSuffix(),marks:rvEffMarks(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[]),title_override:(rvTitleOv!=null?rvTitleOv:""),memo_override:(rvMemoOv!=null?rvMemoOv:"")};exOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_create",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollRegister(r.id,roomKey);});}' +
     'function pollRegister(id,roomKey){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollRegister(id,roomKey);},500);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに伝えてください🙇");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}var _al=ttAlias_(roomKey),_tt=_al?("https://timetreeapp.com/calendars/"+_al+"/events/"+(d.event_id||"")):"";exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:32px;font-weight:900;line-height:1.5;margin-bottom:24px;\\">予約を登録しました</div><button type=\\"button\\" id=\\"rvBack\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>"+(_tt?"<button type=\\"button\\" id=\\"rvTt\\" style=\\"display:block;margin:14px auto 0;font:inherit;font-size:1.05rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer;\\">タイムツリーを確認</button>":""),"#16a34a");var bb=document.getElementById("rvBack");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}var tb=document.getElementById("rvTt");if(tb){tb.addEventListener("click",function(){window.open(_tt,"_blank");});}});}' +
     'function doRegisterMulti(){var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var effM=exSlotKeys();var slots=[];for(var m=0;m<effM.length;m++){var mk=effM[m];var cf=rvSlotCfg_(mk);var rk=(cf.room==="STAR/福/🇫🇷")?"STAR":cf.room;slots.push({mark:exSlotMark(mk),room_key:rk,staff_emoji:(SEMO_[cf.staff]||""),dur:parseInt(cf.dur,10)||30});}rvLastSlotCount=slots.length;var fields={number:disp(),date:rvctx._ymd,time:rvctx._tm,prev_title:rvctx.prev_title||"",staff_emoji:SEMO_[rvsel.staff]||"",suffix:rvSuffix(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[]),memo_override:(rvMemoOv!=null?rvMemoOv:""),slots:slots};exOvShow_(szBusyHtml_(slots.length+"枠の予約を登録中です"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_create_multi",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollRegisterMulti(r.id);});}' +
     'function pollRegisterMulti(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollRegisterMulti(id);},500);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに伝えてください🙇");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}var cnt=(d.count||rvLastSlotCount);exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:32px;font-weight:900;line-height:1.5;margin-bottom:24px;\\">"+cnt+"枠の予約を登録しました</div><button type=\\"button\\" id=\\"rvBack\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>","#16a34a");var bb=document.getElementById("rvBack");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}});}' +
@@ -9297,7 +9297,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var RMAP_={"FREEDOM":{cal:"73208496",label:1},"HAPPY":{cal:"59950855",label:6},"LUCKY":{cal:"59950871",label:9},"STAR/福/🇫🇷":{cal:"86075789",label:10}};' +
     'function startPickFlow(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;newYmd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);newSm=hh*60+mm;pickStaff="";pickRoom="";availData=null;var dur=(chosen.dur_min||30);exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">空きを確認しています</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">その時間に空いている担当・部屋を調べています。少し待っててくださいね🥺</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:newYmd,start_min:newSm,dur:dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pickFlowPoll(r.id);});}' +
     'function pickFlowPoll(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pickFlowPoll(id);},600);return;}if(r.status!=="done"){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}availData={free_staff:(d.free_staff||[]).map(String),free_rooms:(d.free_rooms||[]).map(String)};exOvHide_();showStaffPick();});}' +
-    'function showStaffPick(){hideSteps();document.getElementById("exStaffPick").style.display="";var cur=staffNum(chosen.staff_emoji||"");var fs=(availData&&availData.free_staff)||[];if(fs.length===0){exNoSpace_("exspwho","exsplist","担当");return;}if(fs.length===1){exOnlyOne_("担当",fs[0],cur);return;}document.getElementById("exspwho").innerHTML="移す先："+exMoveLbl_()+"<br>現在の担当："+(SEMO_[cur]||"")+" "+(SNM_[cur]||"?")+"<div class=\\"exq\\">担当を変更しますか？😊</div>";var curBusy=(cur&&fs.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（<span class=\\"expkemo\\">"+(SEMO_[cur]||"")+"</span>"+(SNM_[cur]||"?")+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間「"+(SNM_[cur]||"")+"」は空いていないので、下の空いている担当から選択してね😊</div>";}var order=["2","3","1","4"];for(var i=0;i<order.length;i++){var n=order[i];if(n===cur)continue;if(fs.indexOf(n)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+n+"\\"><span class=\\"expkemo\\">"+SEMO_[n]+"</span>"+SNM_[n]+"</button>";}document.getElementById("exsplist").innerHTML=h;window.scrollTo(0,0);}' +
+    'function showStaffPick(){hideSteps();document.getElementById("exStaffPick").style.display="";var cur=staffNum(chosen.staff_emoji||"");var fs=(availData&&availData.free_staff)||[];if(fs.length===0){exNoSpace_("exspwho","exsplist","担当");return;}if(fs.length===1){exOnlyOne_("担当",fs[0],cur);return;}document.getElementById("exspwho").innerHTML="移す先："+exMoveLbl_()+"<br>現在の担当："+(SEMO_[cur]||"")+" "+(SNM_[cur]||"?")+"<div class=\\"exq\\">担当を変更しますか？😊</div>";var curBusy=(cur&&fs.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（<span class=\\"expkemo\\">"+(SEMO_[cur]||"")+"</span>"+(SNM_[cur]||"?")+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間「"+(SNM_[cur]||"")+"」は空いていないので、下の空いている担当から選択してください😊</div>";}var order=["2","3","1","4"];for(var i=0;i<order.length;i++){var n=order[i];if(n===cur)continue;if(fs.indexOf(n)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+n+"\\"><span class=\\"expkemo\\">"+SEMO_[n]+"</span>"+SNM_[n]+"</button>";}document.getElementById("exsplist").innerHTML=h;window.scrollTo(0,0);}' +
     /* ★2026-10-02 まるちゃん「空きがないのに変更しますかのボタンは変」＝空きが無い時は質問を出さず、
        「この時間には移せません」と言い切って「時間を選び直す」だけを出す（1件ずつ・まとめて の両方）。 */
     'function exNoSpace_(whoId,listId,what){var nm=(what==="担当")?"担当が全員うまっている":"部屋が全部うまっている";document.getElementById(whoId).innerHTML="移す先："+exMoveLbl_();document.getElementById(listId).innerHTML="<div class=\\"exnone\\">この時間は"+nm+"ので、移せません</div><button type=\\"button\\" class=\\"exgo\\" data-retime=\\"1\\">別の時間を選び直す</button>";var b=document.getElementById(listId).querySelector("[data-retime]");if(b){b.addEventListener("click",function(){hideSteps();document.getElementById("exTime").style.display="";window.scrollTo(0,0);});}window.scrollTo(0,0);}' +
@@ -9306,7 +9306,7 @@ function renderExistingPage_(base, staff, dev, mode) {
        空いている1つが今と違う時は「担当を🫒オリーブさんにする」（部屋も同じ形）。 */
     'function exOnlyOne_(what,v,cur){var isS=(what==="担当");var nm=isS?((SEMO_[v]||"")+(SNM_[v]||"?")+"さん"):roomBadge_(v,true);var who=isS?"exspwho":"exrpwho",lst=isS?"exsplist":"exrplist";document.getElementById(who).innerHTML="移す先："+exMoveLbl_()+"<div class=\\"exonly\\">この時間帯の"+(isS?"空き":"空き部屋")+"は "+nm+" だけです</div>";var keep=(v===cur);document.getElementById(lst).innerHTML="<button class=\\"expk one"+(keep?" keep":"")+"\\" data-v=\\""+(keep?"__keep":v)+"\\">"+what+(keep?"は":"を")+nm+(keep?"のまま":"にする")+"</button>";window.scrollTo(0,0);}' +
     'function roomBadge_(rk,small){var c=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var nm=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;return "<span class=\\""+(small?"expkroomS":"expkroom")+"\\" style=\\"background:"+c+"\\">"+nm+"</span>";}' +
-    'function showRoomPick(){hideSteps();document.getElementById("exRoomPick").style.display="";var cur=roomVal(chosen.room||"");var fr=(availData&&availData.free_rooms)||[];if(fr.length===0){exNoSpace_("exrpwho","exrplist","部屋");return;}if(fr.length===1){exOnlyOne_("部屋",fr[0],cur);return;}document.getElementById("exrpwho").innerHTML="移す先："+exMoveLbl_()+"<br>現在の部屋："+roomBadge_(cur,true)+"<div class=\\"exq\\">部屋を変更しますか？😊</div>";var curBusy=(cur&&fr.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（"+roomBadge_(cur,true)+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間この部屋は空いていないので、下の空いている部屋から選択してね😊</div>";}var order=["FREEDOM","HAPPY","LUCKY","STAR/福/🇫🇷"];for(var i=0;i<order.length;i++){var rm=order[i];if(rm===cur)continue;if(fr.indexOf(rm)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+rm+"\\">"+roomBadge_(rm)+"</button>";}document.getElementById("exrplist").innerHTML=h;window.scrollTo(0,0);}' +
+    'function showRoomPick(){hideSteps();document.getElementById("exRoomPick").style.display="";var cur=roomVal(chosen.room||"");var fr=(availData&&availData.free_rooms)||[];if(fr.length===0){exNoSpace_("exrpwho","exrplist","部屋");return;}if(fr.length===1){exOnlyOne_("部屋",fr[0],cur);return;}document.getElementById("exrpwho").innerHTML="移す先："+exMoveLbl_()+"<br>現在の部屋："+roomBadge_(cur,true)+"<div class=\\"exq\\">部屋を変更しますか？😊</div>";var curBusy=(cur&&fr.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（"+roomBadge_(cur,true)+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間この部屋は空いていないので、下の空いている部屋から選択してください😊</div>";}var order=["FREEDOM","HAPPY","LUCKY","STAR/福/🇫🇷"];for(var i=0;i<order.length;i++){var rm=order[i];if(rm===cur)continue;if(fr.indexOf(rm)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+rm+"\\">"+roomBadge_(rm)+"</button>";}document.getElementById("exrplist").innerHTML=h;window.scrollTo(0,0);}' +
     'document.getElementById("exsplist").addEventListener("click",function(e){var b=e.target.closest(".expk");if(!b||b.className.indexOf("dis")>=0)return;var v=b.getAttribute("data-v");pickStaff=(v==="__keep")?"":v;showRoomPick();});' +
     'document.getElementById("exrplist").addEventListener("click",function(e){var b=e.target.closest(".expk");if(!b||b.className.indexOf("dis")>=0)return;var v=b.getAttribute("data-v");pickRoom=(v==="__keep")?"":v;if(MULTI_){var p=MPLAN[MIDX];p.staff=pickStaff;p.room=pickRoom;MIDX++;exMultiPlanStep();return;}realChange(document.getElementById("exdone2"));});' +
     /* ★★2026-09-30 まるちゃん決定：同じ日の予約をまとめて移す。
@@ -9317,7 +9317,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exHm_(m){return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2);}' +
     'function exMoveLbl_(){if(MULTI_&&MPLAN[MIDX]){return newYmd+" "+exHm_(MPLAN[MIDX].sm)+"（"+(MIDX+1)+"件目）";}return newYmd+" "+tdisp();}' +
     'function exPollJob_(id,cb){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){cb(false,"通信に失敗しました。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){exPollJob_(id,cb);},500);return;}cb(r.status==="done",r.result||"");});}' +
-    'function startMultiMove(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;newYmd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var base=hh*60+mm;var s0=exSm_(MULTI_[0]);MPLAN=MULTI_.map(function(r){return {r:r,sm:base+(exSm_(r)-s0),dur:(parseInt(r.dur_min,10)||30),staff:"",room:"",fs:[],fr:[]};});for(var i=0;i<MPLAN.length;i++){if(MPLAN[i].sm+MPLAN[i].dur>24*60){szPopup_("その時刻だと"+(i+1)+"件目が日付をまたいでしまいます。時刻を入力し直してね😊");return;}}chosen=MULTI_[0];exOvShow_(szBusyHtml_("空きを確認しています","移す先で、それぞれの予約の担当・部屋が空いているか調べています。少し待っててくださいね🥺"),"#2C7A99");exMultiAvail(0);}' +
+    'function startMultiMove(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;newYmd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var base=hh*60+mm;var s0=exSm_(MULTI_[0]);MPLAN=MULTI_.map(function(r){return {r:r,sm:base+(exSm_(r)-s0),dur:(parseInt(r.dur_min,10)||30),staff:"",room:"",fs:[],fr:[]};});for(var i=0;i<MPLAN.length;i++){if(MPLAN[i].sm+MPLAN[i].dur>24*60){szPopup_("その時刻だと"+(i+1)+"件目が日付をまたいでしまいます。時刻を入力し直してください😊");return;}}chosen=MULTI_[0];exOvShow_(szBusyHtml_("空きを確認しています","移す先で、それぞれの予約の担当・部屋が空いているか調べています。少し待っててくださいね🥺"),"#2C7A99");exMultiAvail(0);}' +
     'function exMultiAvail(i){if(i>=MPLAN.length){exOvHide_();MIDX=0;exMultiPlanStep();return;}var p=MPLAN[i];jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:newYmd,start_min:p.sm,dur:p.dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}exPollJob_(r.id,function(ok,res){if(!ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}var d={};try{d=JSON.parse(res||"{}");}catch(e){}p.fs=(d.free_staff||[]).map(String);p.fr=(d.free_rooms||[]).map(String);exMultiAvail(i+1);});});}' +
     'function exPlanStaff_(q){return q.staff||staffNum(q.r.staff_emoji||"");}' +
     'function exPlanRoom_(q){return q.room||roomVal(q.r.room||"");}' +
@@ -9361,7 +9361,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var TOPHREF="' + topHref + '";' +
     'function exOvShow_(html,bg){var ov=document.getElementById("exOverlay");if(!ov){ov=document.createElement("div");ov.id="exOverlay";document.body.appendChild(ov);}ov.style.cssText="position:fixed;inset:0;z-index:9999;background:"+bg+";display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";ov.innerHTML=html;return ov;}' +
     'function exOvHide_(){var ov=document.getElementById("exOverlay");if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);}' +
-    'function realChange(doneEl){var fields={cal:chosen.calendar_id,event:chosen.event_id};if(chgtype==="dt"||chgtype==="t"){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var sd=new Date(picked.getFullYear(),picked.getMonth(),picked.getDate(),hh,mm,0,0);var ed=new Date(sd.getTime()+((chosen.dur_min||30)*60000));fields.start=_iso(sd);fields.end=_iso(ed);if(pickStaff){fields.new_fruit=SEMO_[pickStaff];}if(pickRoom&&RMAP_[pickRoom]){fields.to_cal=RMAP_[pickRoom].cal;fields.to_label=RMAP_[pickRoom].label;}}else if(chgtype==="dur"){var hm=(chosen.start_hm||"13:00").split(":");var sd=new Date(chosen.date+"T00:00:00");sd.setHours(parseInt(hm[0],10),parseInt(hm[1],10),0,0);var ed=new Date(sd.getTime()+(parseInt(esel.dur,10)*60000));fields.start=_iso(sd);fields.end=_iso(ed);}else if(chgtype==="memo"){fields.note=document.getElementById("exmemobox").value;}else if(chgtype==="staff"){if(!esel.staff){szPopup_("担当を選択してね😊");return;}fields.new_fruit=SEMO_[esel.staff];}else if(chgtype==="room"){if(!esel.room||!RMAP_[esel.room]){szPopup_("部屋を選択してね😊");return;}fields.to_cal=RMAP_[esel.room].cal;fields.to_label=RMAP_[esel.room].label;}else{szPopup_("この項目はまだ準備中です。");return;}exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">予約を変更中です</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"change_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollChange(r.id);});}' +
+    'function realChange(doneEl){var fields={cal:chosen.calendar_id,event:chosen.event_id};if(chgtype==="dt"||chgtype==="t"){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var sd=new Date(picked.getFullYear(),picked.getMonth(),picked.getDate(),hh,mm,0,0);var ed=new Date(sd.getTime()+((chosen.dur_min||30)*60000));fields.start=_iso(sd);fields.end=_iso(ed);if(pickStaff){fields.new_fruit=SEMO_[pickStaff];}if(pickRoom&&RMAP_[pickRoom]){fields.to_cal=RMAP_[pickRoom].cal;fields.to_label=RMAP_[pickRoom].label;}}else if(chgtype==="dur"){var hm=(chosen.start_hm||"13:00").split(":");var sd=new Date(chosen.date+"T00:00:00");sd.setHours(parseInt(hm[0],10),parseInt(hm[1],10),0,0);var ed=new Date(sd.getTime()+(parseInt(esel.dur,10)*60000));fields.start=_iso(sd);fields.end=_iso(ed);}else if(chgtype==="memo"){fields.note=document.getElementById("exmemobox").value;}else if(chgtype==="staff"){if(!esel.staff){szPopup_("担当を選択してください😊");return;}fields.new_fruit=SEMO_[esel.staff];}else if(chgtype==="room"){if(!esel.room||!RMAP_[esel.room]){szPopup_("部屋を選択してください😊");return;}fields.to_cal=RMAP_[esel.room].cal;fields.to_label=RMAP_[esel.room].label;}else{szPopup_("この項目はまだ準備中です。");return;}exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">予約を変更中です</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"change_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollChange(r.id);});}' +
     'function ttAlias_(room){var r=(""+room).toLowerCase();if(r.indexOf("freedom")>=0)return"2AfH2fMvqXEH";if(r.indexOf("happy")>=0)return"eavbC5WSuUs6";if(r.indexOf("lucky")>=0)return"GPapusGepg5P";if(r.indexOf("cosmos")>=0)return"ojzXKACEbghC";if(r.indexOf("スター")>=0||r.indexOf("star")>=0||r.indexOf("福")>=0)return"KMkTNuLk3Qif";return"";}' +
     'function pollChange(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollChange(id);},400);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに伝えてください🙇");return;}var _d2={};try{_d2=JSON.parse(r.result||"{}");}catch(e){}var _fev=(_d2&&_d2.new_event)||chosen.event_id;var _froom=chosen.room;if((chgtype==="dt"||chgtype==="t")&&pickRoom){_froom=pickRoom;}else if(chgtype==="room"&&esel.room){_froom=esel.room;}var _al=ttAlias_(_froom),_tt=_al?("https://timetreeapp.com/calendars/"+_al+"/events/"+_fev):"";exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:23px;font-weight:800;line-height:1.7;margin-bottom:10px;white-space:nowrap;\\">"+doneMsg()+"</div><div style=\\"color:#fff;font-size:30px;font-weight:900;margin-bottom:24px;\\">変更が完了しました</div><button type=\\"button\\" id=\\"exBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>"+(_tt?"<button type=\\"button\\" id=\\"exTtBtn\\" style=\\"display:block;margin:14px auto 0;font:inherit;font-size:1.15rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer;\\">タイムツリーを確認</button>":""),"#16a34a");var bb=document.getElementById("exBackBtn");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}var tb=document.getElementById("exTtBtn");if(tb){tb.addEventListener("click",function(){window.open(_tt,"_blank");});}});}' +
     'var mbtns=document.querySelectorAll(".exmbtn");for(var _mb=0;_mb<mbtns.length;_mb++){mbtns[_mb].addEventListener("click",function(){chgtype=this.getAttribute("data-chg");if(chgtype==="dt"){picked=null;goDate();}else if(chgtype==="t"){picked=new Date(chosen.date+"T00:00:00");goTime();}else if(chgtype==="memo"){enterMemo();}else{enterEdit();}});}' +
@@ -9934,7 +9934,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '</select>' +
   '<div id="unacust" class="unalist">' + custCards + '</div>' +
   '<div id="unaours" class="unalist unahidden">' + oursCards + '</div>' +
-  '<div class="unaempty unaemptybig" id="unaperiodempty" hidden>この期間に該当はありません。<br>上の期間を広げてね😊</div>' +
+  '<div class="unaempty unaemptybig" id="unaperiodempty" hidden>この期間に該当はありません。<br>上の期間を広げてください😊</div>' +
 '</div>' +
 // 詳細モーダル（LINEに触れずに会話の中身をここで確認＝PC版ダッシュボードと同じ）
 '<div class="unamask" id="unamask" role="dialog" aria-modal="true">' +
@@ -10019,7 +10019,7 @@ var UNASCRIPT_ =
 '  var ta=wrap.querySelector(".unartext"), box=wrap.querySelector(".unartrbox"), zt=wrap.querySelector(".unartrtext");' +
 '  var note=wrap.querySelector(".unarnote");' +
 '  var text=(ta&&ta.value||"").trim();' +
-'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="先に日本語を入力してね😊"; } return; }' +
+'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="先に日本語を入力してください😊"; } return; }' +
 '  if(box) box.style.display="block";' +
 '  if(zt){ zt.value="翻訳中…少し待っててくださいね🥺"; unaGrow(zt); }' +
 '  var idn=unaIdent_();' +
@@ -10133,7 +10133,7 @@ var UNASCRIPT_ =
 '  var note=wrap.querySelector(".unarnote");' +
 '  var cid=wrap.getAttribute("data-cid")||"", nm=wrap.getAttribute("data-nm")||"";' +
 '  var text=(ta&&ta.value||"").trim();' +
-'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="本文を入力してね😊"; } return; }' +
+'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="本文を入力してください😊"; } return; }' +
 '  unaAsk_(nm,text,function(){' +
 '    if(note){ note.className="unarnote"; note.textContent="送信中…"; }' +
 '    var idn=unaIdent_();' +
@@ -10717,7 +10717,7 @@ function procStockScript_(C) {
 
   // ── 1品ずつ入れる ──
   function drawBox() {
-    $('psBox').innerHTML = digits ? esc(digits) + '<span class="u">個</span>' : '<span class="ph">数字を入力してね😊</span>';
+    $('psBox').innerHTML = digits ? esc(digits) + '<span class="u">個</span>' : '<span class="ph">数字を入力してください😊</span>';
   }
   function openItem(i, back) {
     cur = i; fromList = !!back; digits = (vals[i] !== undefined) ? String(vals[i]) : '';
@@ -10738,7 +10738,7 @@ function procStockScript_(C) {
     press(b.getAttribute('data-k') || b.textContent);
   });
   function ok() {
-    if (digits === '') { popup('数量を入力してね😊 （無い時は 0）'); return; }
+    if (digits === '') { popup('数量を入力してください😊 （無い時は 0）'); return; }
     vals[cur] = parseInt(digits, 10);
     if (fromList || cur === ITEMS.length - 1) openList(); else openItem(cur + 1, false);
   }
@@ -10892,7 +10892,7 @@ function renderProcStockPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="psStart">現在庫入力</button>' +
       '</div>' +
       '<div id="psWho" style="display:none">' + inBack('psBackWho') + head('🙋', '入力する人') +
-        '<div class="pshint">入力する人を選択してね😊</div>' +
+        '<div class="pshint">入力する人を選択してください😊</div>' +
         '<div class="pspeople" id="psPeople"></div>' +
       '</div>' +
       '<div id="psItem" style="display:none">' + inBack('psBackItem') + head('📦', '現在庫入力') +
@@ -11362,7 +11362,7 @@ function uriageBookScript_(C) {
     } else {
       var cur = { B: x.num, C: x.name, E: x.detail, F: (x.amount == null ? '' : String(x.amount)) }[col] || '';
       var isPad = (col === 'B' || col === 'F');   // ★数字・顧客番号は売上追加と同じ数字ボタン（共通部品）
-      body = (isPad ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してね😊"></div></div>'
+      body = (isPad ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください😊"></div></div>'
         : col === 'E' ? '<textarea id="ubEd" rows="3"></textarea>' : '<input id="ubEd">') +
         '<button type="button" class="go" data-a="save" style="margin-top:12px">以上の内容で修正する</button>';
     }
@@ -11388,7 +11388,7 @@ function uriageBookScript_(C) {
       }
       if (a !== 'save') return;
       var nv = PK ? PK.get('v') : $('ubEd').value;
-      if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入力してね😊'); return; }
+      if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入力してください😊'); return; }
       closePick();
       if (nv === cur) return;
       ask({ action: 'edit', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x), col: col, value: nv }, CNAME[col] + 'を修正しています');
@@ -11421,7 +11421,7 @@ function uriageBookScript_(C) {
     var head = '<div class="h">' + esc(y.label) + '　' + yen(y.amount) + '</div>' +
       '<div class="s">' + (col === 'J' ? '内容' : '金額') + 'を修正します</div>';
     var cur = col === 'J' ? (y.label || '') : (y.amount == null ? '' : String(y.amount));
-    var body = (col === 'K' ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してね😊"></div></div>'
+    var body = (col === 'K' ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください😊"></div></div>'
       : '<textarea id="ubEd" rows="3"></textarea>') +
       '<button type="button" class="go" data-a="save" style="margin-top:12px">以上の内容で修正する</button>';
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
@@ -11437,8 +11437,8 @@ function uriageBookScript_(C) {
       if (a === 'close') { closePick(); return; }
       if (a !== 'save') return;
       var nv = PK ? PK.get('v') : $('ubEd').value.trim();
-      if (col === 'K' && !/\d/.test(nv)) { popup('金額は数字で入力してね😊'); return; }
-      if (col === 'J' && !nv) { popup('内容を入力してね😊'); return; }
+      if (col === 'K' && !/\d/.test(nv)) { popup('金額は数字で入力してください😊'); return; }
+      if (col === 'J' && !nv) { popup('内容を入力してください😊'); return; }
       closePick();
       if (nv === cur) return;
       ask({ action: 'oedit', row: y.r, label: y.label, amount: y.amount, _k: ok(y), col: col, value: nv }, (col === 'J' ? '内容' : '金額') + 'を修正しています');
@@ -11482,8 +11482,8 @@ function uriageBookScript_(C) {
   }
   $('ubAddPay').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; addPay = b.getAttribute('data-v'); drawAddPay(); });
   $('ubAddGo').addEventListener('click', function () {
-    if (!AK.raw('amt')) { popup('金額を入力してね😊'); return; }
-    if (!AK.get('num') && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入力してね😊'); return; }
+    if (!AK.raw('amt')) { popup('金額を入力してください😊'); return; }
+    if (!AK.get('num') && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入力してください😊'); return; }
     var tm = AK.raw('h') ? p2(AK.raw('h')) + ':' + p2(AK.raw('m') || '0') : '';
     AK.close();
     ask({ action: 'add', time: tm, no: AK.raw('no'), num: AK.get('num'), detail: $('ubAddDetail').value.trim(),
@@ -11501,7 +11501,7 @@ function uriageBookScript_(C) {
   $('ubOthGo').addEventListener('click', function () {
     var amt = OK2.get('amt'); OK2.close();
     var what = $('ubOthLabel').value.trim();
-    if (!what || !amt) { popup('内容と金額を入力してね😊 （経費などはマイナス）'); return; }
+    if (!what || !amt) { popup('内容と金額を入力してください😊 （経費などはマイナス）'); return; }
     var nm = $('ubOthName').value.trim().replace(/\s*様$/, '');
     var who = (OK2.get('num') || '') + (nm ? nm + '様' : '');
     ask({ action: 'other', label: who ? who + '　' + what : what, amount: parseInt(amt, 10) }, 'その他を追加しています', function () { show('ubNoInv'); });
@@ -11528,7 +11528,7 @@ function uriageBookScript_(C) {
     CP.close();
     var f = { action: 'coins' }, any = false;
     for (var i = 0; i < CK.length; i++) if (CP.raw(CK[i]) !== '') { f[CK[i]] = parseInt(CP.raw(CK[i]), 10); any = true; }
-    if (!any) { popup('枚数を入力してね😊'); return; }
+    if (!any) { popup('枚数を入力してください😊'); return; }
     // ★2026-11-09 まるちゃん「以上の内容で入力を押すと前の画面に戻っちゃう」＝この画面のまま（入れた数字を出したまま）
     ask(f, '小銭を書いています');
   });
@@ -11666,7 +11666,7 @@ function claudeChatScript_(C) {
   }
   function draw(h) {
     var items = (h && h.items) || [], out = '';
-    if (!items.length) { $('ccLog').innerHTML = '<div class="ccnone">聞きたいことを下に書いて「送る」を押してね😊</div>'; return; }
+    if (!items.length) { $('ccLog').innerHTML = '<div class="ccnone">聞きたいことを下に書いて「送る」を押してください😊</div>'; return; }
     for (var i = 0; i < items.length; i++) {
       out += '<div class="ccq">' + esc(items[i].q || '') + '</div>' +
         '<div class="cca">' + esc(items[i].a || '') + '<div class="cct">' + esc(items[i].at || '') + '</div></div>';
@@ -11698,8 +11698,8 @@ function claudeChatScript_(C) {
   $('ccSend').addEventListener('click', function () {
     if (sending) return;
     var t = $('ccText').value.replace(/^\s+|\s+$/g, '');
-    if (!t) { popup('聞きたいことを入力してね😊'); return; }
-    if (t.length > 2000) { popup('長すぎます。2000文字までにしてね😊'); return; }
+    if (!t) { popup('聞きたいことを入力してください😊'); return; }
+    if (t.length > 2000) { popup('長すぎます。2000文字までにしてください😊'); return; }
     sending = true; polls = 0; $('ccSend').disabled = true;
     if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('考え中…', false), '#2C7A99');
     jsonp({ action: 'submit', key: C.key, op: 'claude_chat',
@@ -11723,7 +11723,7 @@ function renderClaudeChatPage_(base, staff, dev) {
     '<div class="cc">' +
       '<div class="hhead"><span class="bmark">💬</span><span class="bname">Claudeに聞く</span></div>' +
       '<div class="cclog" id="ccLog"><div class="ccnone">読み込み中…</div></div>' +
-      '<textarea class="ccin" id="ccText" placeholder="聞きたいことを入力してね😊"></textarea>' +
+      '<textarea class="ccin" id="ccText" placeholder="聞きたいことを入力してください😊"></textarea>' +
       '<button type="button" class="exgo" id="ccSend">送る</button>' +
     '</div></div>' +
     '<script>(' + claudeChatScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
@@ -11988,7 +11988,7 @@ function hanbaiScript_(C) {
   // ── No31 お店在庫入力（2026-10-21）＝今お店にある本数を数字で入れて登録する ──
   var stDigits = '', stSending = false;
   function stDraw() {
-    $('hbStBox').innerHTML = stDigits ? esc(stDigits) + '<span class="u">本</span>' : '<span class="ph">数字を入力してね😊</span>';
+    $('hbStBox').innerHTML = stDigits ? esc(stDigits) + '<span class="u">本</span>' : '<span class="ph">数字を入力してください😊</span>';
   }
   $('hbGoStock').addEventListener('click', function () {
     clearMsg();
@@ -12004,7 +12004,7 @@ function hanbaiScript_(C) {
     stDraw();
   });
   $('hbStOk').addEventListener('click', function () {
-    if (stDigits === '') { popup('本数を入力してね😊 （無い時は 0）'); return; }
+    if (stDigits === '') { popup('本数を入力してください😊 （無い時は 0）'); return; }
     var rows = [['品物', 'ホホバエッセンスNo31（50ml）'], ['今お店にある本数', parseInt(stDigits, 10) + ' 本'], ['入力する人', who()]];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
@@ -12063,7 +12063,7 @@ function hanbaiScript_(C) {
   $('hbJRepBtn').addEventListener('click', function () { S.kind = 'repeat'; show('hbKana'); });
   $('hbJNewGo').addEventListener('click', function () {
     S.sei = $('hbSei').value.replace(/\s+/g, ' ').trim(); S.mei = $('hbMei').value.replace(/\s+/g, ' ').trim();
-    if (!S.sei) { popup('氏を入力してね😊'); return; }
+    if (!S.sei) { popup('氏を入力してください😊'); return; }
     // 苗字の最初のひらがな（🔁お客様で探す手がかり）は、事務所のパソコンが漢字から自動で付ける。
     S.yomi = ''; openQty();
   });
@@ -12171,7 +12171,7 @@ function hanbaiScript_(C) {
   // ★2026-10-17 まるちゃん「F M ははじめ押されてない。欄の下に置かないと」＝はじめはどちらも押されていない。
   var NPRE = '', NDIG = '';
   function numDraw() {
-    $('hbNumBox').innerHTML = (NPRE || NDIG) ? esc(NPRE + NDIG) : '<span class="ph">お客様番号を入力してね😊</span>';
+    $('hbNumBox').innerHTML = (NPRE || NDIG) ? esc(NPRE + NDIG) : '<span class="ph">お客様番号を入力してください😊</span>';
     var sg = $('hbNumSeg').querySelectorAll('button');
     for (var j = 0; j < sg.length; j++) sg[j].className = (sg[j].getAttribute('data-v') === NPRE) ? 'on' : '';
   }
@@ -12183,7 +12183,7 @@ function hanbaiScript_(C) {
   });
   $('hbShopGo').addEventListener('click', function () {
     S.name = $('hbShopName').value.replace(/\s+/g, ' ').trim();
-    if (!S.name) { popup('お名前を入力してね😊'); return; }
+    if (!S.name) { popup('お名前を入力してください😊'); return; }
     S.fnum = ''; S.pay = '蝦皮'; openQty();
   });
   var segs = $('hbNumSeg').querySelectorAll('button');
@@ -12198,8 +12198,8 @@ function hanbaiScript_(C) {
     numDraw();
   });
   $('hbNumGo').addEventListener('click', function () {
-    if (!NPRE) { popup('F（女性）か M（男性）を押してね😊'); return; }
-    if (!NDIG) { popup('お客様番号を入力してね😊'); return; }
+    if (!NPRE) { popup('F（女性）か M（男性）を押してください😊'); return; }
+    if (!NDIG) { popup('お客様番号を入力してください😊'); return; }
     ask({ kind: 'lookup', fnum: NPRE + NDIG }, 'お客様を検索しています', function (err, d) {
       if (err) { popup('さがせませんでした：' + err); return; }
       if (!d || !d.ok) { popup((d && d.reason) || 'お客様が見つかりません'); return; }
@@ -12220,7 +12220,7 @@ function hanbaiScript_(C) {
       var mb = btns.querySelector('[data-q="more"]'); if (!mb) return;
       btns.className = 'hbqty' + (isMore() ? ' more' : '');
       mb.className = 'wide' + (isMore() ? ' on' : '');
-      mb.innerHTML = !isMore() ? '10本以上（数字で入力）' : (dig ? '<span class="qn">' + esc(dig) + '</span> 本' : '数字ボタンで本数を入力してね😊');
+      mb.innerHTML = !isMore() ? '10本以上（数字で入力）' : (dig ? '<span class="qn">' + esc(dig) + '</span> 本' : '数字ボタンで本数を入力してください😊');
     }
     function open() {
       var v = S[key], h = noneLabel ? '<button type="button" class="wide none' + (v === 0 && S[key + 'Set'] ? ' on' : '') + '" data-q="0">' + noneLabel + '</button>' : '';
@@ -12246,7 +12246,7 @@ function hanbaiScript_(C) {
       draw();
     });
     go.addEventListener('click', function () {
-      if (dig === '') { popup('本数を入力してね😊 （無い時は 0）'); return; }
+      if (dig === '') { popup('本数を入力してください😊 （無い時は 0）'); return; }
       var q = parseInt(dig, 10);
       S[key] = q; S[key + 'Set'] = true; next();
     });
@@ -12281,7 +12281,7 @@ function hanbaiScript_(C) {
     $('hbAmtHead').textContent = '販売金額（' + unit() + '）';
     aDraw(); show('hbAmt');
   }
-  function aDraw() { $('hbAmtBox').innerHTML = ADIG ? esc(yen(ADIG)) + '<span class="u">' + unit() + '</span>' : '<span class="ph">金額を入力してね😊</span>'; }
+  function aDraw() { $('hbAmtBox').innerHTML = ADIG ? esc(yen(ADIG)) + '<span class="u">' + unit() + '</span>' : '<span class="ph">金額を入力してください😊</span>'; }
   $('hbAmtPad').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     var k = b.getAttribute('data-k') || b.textContent;
@@ -12290,7 +12290,7 @@ function hanbaiScript_(C) {
     aDraw();
   });
   $('hbAmtGo').addEventListener('click', function () {
-    if (ADIG === '') { popup('金額を入力してね😊'); return; }
+    if (ADIG === '') { popup('金額を入力してください😊'); return; }
     S.amount = parseInt(ADIG, 10);
     if (S.kind === 'shopee') { S.pay = '蝦皮'; $('hbNoteIn').value = S.note || ''; show('hbNote'); return; }   // 蝦皮は支払方法をえらばない
     openPay();
@@ -12511,7 +12511,7 @@ function renderHanbaiPage_(base, staff, dev) {
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="hb">' +
       '<div id="hbWho" style="display:none">' + head('🙋', 'No31 販売管理') +
-        '<div class="hbbighint">販売した人の名前を<br>選択してね😊</div>' +
+        '<div class="hbbighint">販売した人の名前を<br>選択してください😊</div>' +
         '<div class="pspeople" id="hbWhoBtns"></div>' +
       '</div>' +
       '<div id="hbMenu">' + head('🛒', 'No31 販売管理') +
@@ -12541,11 +12541,11 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbJNewGo">次へ</button>' +
       '</div>' +
       '<div id="hbKana" style="display:none">' + inBack + head('🔁', 'お客様') + sum +
-        '<div class="hbhint">苗字の最初の文字を選択してね😊<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます。英字などは「他」</small></div>' +
+        '<div class="hbhint">苗字の最初の文字を選択してください😊<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます。英字などは「他」</small></div>' +
         '<div class="hbkana" id="hbKanaGrid">' + kana + '</div>' +
       '</div>' +
       '<div id="hbCands" style="display:none">' + inBack + head('🔁', '', 'hbCandHead') + sum +
-        '<div class="hbhint">お客様を選択してね😊</div>' +
+        '<div class="hbhint">お客様を選択してください😊</div>' +
         '<div class="hbrows hbcards" id="hbCandRows"></div>' +
         '<div class="hbempty" id="hbCandNone">前に買ったお客様が見つかりません</div>' +
         '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕</span>新規お客様として入力</button>' +
@@ -12570,7 +12570,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
       '</div>' +
       count('hbQty', '🧴', '販売本数', '') +
-      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>選択してね😊') +
+      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>選択してください😊') +
       '<div id="hbPay" style="display:none">' + inBack + head('💳', '支払方法') + sum +
         '<div class="hbpay" id="hbPayBtns"></div>' +
       '</div>' +
@@ -13090,17 +13090,17 @@ function threadsScript_(C) {
     var topic = $('thTopic').style.display !== 'none' ? $('thTopicText').value.trim().replace(/^#/, '') : '';
     var chain = chainBoxes().map(function (t) { return t.value.trim(); }).filter(function (x) { return x; });
     if (!CUR) { warn('投稿するアカウントをえらんでください。'); return; }
-    if (!text && !MEDIA.length) { warn('文か写真・動画を入力してね😊'); return; }
+    if (!text && !MEDIA.length) { warn('文か写真・動画を入力してください😊'); return; }
     if (tlen(text) > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
     if (usePoll) {
       if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には出せません。'); return; }
-      if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入力してね😊'); return; }
-      if (!text) { warn('投票には質問の文を入力してね😊'); return; }
+      if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入力してください😊'); return; }
+      if (!text) { warn('投票には質問の文を入力してください😊'); return; }
     }
     if (longt) {
       if (MEDIA.length) { warn('長い文は、写真・動画と一緒には出せません。'); return; }
       if (tlen(longt) > MAXLONG) { warn('長い文は' + MAXLONG + '文字までです。'); return; }
-      if (!text) { warn('長い文には、最初に表示される文も入力してね😊'); return; }
+      if (!text) { warn('長い文には、最初に表示される文も入力してください😊'); return; }
     }
     if (topic && (tlen(topic) > 50 || /[.&]/.test(topic))) { warn('トピックは50文字まで・「.」と「&」は使えません。'); return; }
     if (chain.some(function (c) { return tlen(c) > MAXT; })) { warn('続きの文も1つ' + MAXT + '文字までです。'); return; }
@@ -13375,7 +13375,7 @@ function threadsScript_(C) {
     var mid = midOf(t);
     if (g('data-send')) {
       var to = g('data-send'), ta = $('rb_' + to).querySelector('textarea'), txt = ta.value.trim();
-      if (!txt) { warn('返信の文を入力してね😊'); return; }
+      if (!txt) { warn('返信の文を入力してください😊'); return; }
       if (tlen(txt) > 500) { warn('返信は500文字までです。'); return; }
       szPopup_('お店として返信しますか？', { icon: '', cancel: true, onYes: function () {
         act({ kind: 'reply', acct: CUR, to_id: to, text: txt }, '返信中です', '返信が完了しました', mid);
@@ -13964,9 +13964,9 @@ function instaScript_(C) {
       var files = Array.prototype.slice.call(this.files || []); this.value = '';
       var max = kind === 'feed' ? MAXI : 1;
       files.forEach(function (f) {
-        if (CMEDIA.length >= max) { warn(kind === 'feed' ? '写真・動画は' + MAXI + '個までです😊' : '1つだけ選択してね😊'); return; }
+        if (CMEDIA.length >= max) { warn(kind === 'feed' ? '写真・動画は' + MAXI + '個までです😊' : '1つだけ選択してください😊'); return; }
         if (/^video\//.test(f.type)) {
-          if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです。短い動画を選択してね😊'); return; }
+          if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです。短い動画を選択してください😊'); return; }
           var vr = new FileReader();
           vr.onload = function () {
             var b64 = String(vr.result).split(',')[1] || '';
@@ -14008,11 +14008,11 @@ function instaScript_(C) {
     }).join('');
   }
   function share() {
-    if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してね😊' : '写真か動画を選択してね😊'); return; }
+    if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してください😊' : '写真か動画を選択してください😊'); return; }
     var cap = document.getElementById('igcCap'), text = cap ? cap.value.trim() : '';
     if (Array.from(text).length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです😊'); return; }
     if ((text.match(/#/g) || []).length > 30) { warn('ハッシュタグは30個までです😊'); return; }
-    if (CK !== 'story' && CHIDE === null) { warn('「いいね！」数を非表示にするか選択してね😊'); return; }
+    if (CK !== 'story' && CHIDE === null) { warn('「いいね！」数を非表示にするか選択してください😊'); return; }
     var fields = { kind: 'post', acct: CUR, type: CK, caption: text, hide_likes: CK === 'story' ? false : CHIDE,
                    media: CMEDIA.map(function (m) { return { b64: m.b64 }; }) };
     if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('投稿中です', '写真・動画をインスタに送っています。動画は数分かかることがあるので、少し待っててくださいね🥺'), '#2C7A99');
@@ -14137,7 +14137,7 @@ function instaScript_(C) {
         if (e.target.id === 'igpCancelRep') { REPLY = null; drawReplyTo(); return; }
         if (e.target.id !== 'igpGo') return;
         var tx = document.getElementById('igpTx'), m = tx.value.trim();
-        if (!m) { warn('コメントを入力してね😊'); return; }
+        if (!m) { warn('コメントを入力してください😊'); return; }
         var f = REPLY ? { kind: 'reply', comment_id: REPLY.id } : { kind: 'comment' };
         f.acct = CUR; f.code = POST.code; f.message = m;
         simple(f, REPLY ? '返信しています' : 'コメントしています', function (err, d) {
@@ -15231,7 +15231,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
   '</div>' +
   '<div id="akidays">' + cards + '</div>' +
   (wakuOn ? '<div id="akiwakubox" class="akiwakubox akihidden"></div>' : '') +
-  '<div class="akinone" id="akiDateEmpty" hidden>この期間には表示できるデータがありません。期間を変更してね😊</div>' +
+  '<div class="akinone" id="akiDateEmpty" hidden>この期間には表示できるデータがありません。期間を変更してください😊</div>' +
 '</div>' +
 wakuData +
 AKISCRIPT_;
@@ -15781,7 +15781,7 @@ function renderClaudeToolsPage_(base, staff, dev) {
     backBar_(base, staff, dev) +
     '<div class="cttwrap">' +
       '<h1>🤖 自作Claudeツール</h1>' +
-      '<div class="cttnote">Claudeに言う「合言葉」です。タップ（またはコピー）で写して、別のチャットのClaudeにそのまま貼り付けてね😊 説明なしでその作業ができます。</div>' +
+      '<div class="cttnote">Claudeに言う「合言葉」です。タップ（またはコピー）で写して、別のチャットのClaudeにそのまま貼り付けてください😊 説明なしでその作業ができます。</div>' +
       cards +
     '</div>' +
     '<script>' + script + '<\/script>';
@@ -15945,7 +15945,7 @@ function lkImgScript_(base) {
       'function directSave(){if(msg)msg.textContent="保存しています…";fetch(u).then(function(r){return r.blob();}).then(function(b){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=(u.split("/").pop()||"image.jpg");document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},4000);if(msg)msg.textContent=(isAndroid?"保存しました。「ダウンロード」フォルダ（写真アプリの「ダウンロード」）に入ります。":"保存しました。「ダウンロード」フォルダに入ります。");}).catch(function(){if(msg)msg.textContent="";window.open(u,"_blank");});}' +
       'function iosSave(){if(!(navigator.canShare&&navigator.share)){directSave();return;}if(msg)msg.textContent="準備しています…";fetch(u).then(function(r){return r.blob();}).then(function(b){var f=new File([b],(u.split("/").pop()||"image.jpg"),{type:b.type||"image/jpeg"});if(!navigator.canShare({files:[f]}))throw new Error("no");if(msg)msg.textContent="出てきたメニューで「画像を保存」を押すと写真に入ります（LINEを押せばそのまま送れます）。";return navigator.share({files:[f]});}).catch(function(e){if(e&&e.name==="AbortError"){if(msg)msg.textContent="";return;}directSave();});}' +
       'function toPng(blob){return new Promise(function(res,rej){var im=new Image();var ou=URL.createObjectURL(blob);im.onload=function(){var c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext("2d").drawImage(im,0,0);URL.revokeObjectURL(ou);c.toBlob(function(pb){pb?res(pb):rej(new Error("x"));},"image/png");};im.onerror=function(){URL.revokeObjectURL(ou);rej(new Error("x"));};im.src=ou;});}' +
-      'function pcCopy(){if(!(navigator.clipboard&&navigator.clipboard.write&&window.ClipboardItem)){directSave();return;}if(msg)msg.textContent="コピーしています…";fetch(u).then(function(r){return r.blob();}).then(function(b){return toPng(b);}).then(function(png){return navigator.clipboard.write([new ClipboardItem({"image/png":png})]);}).then(function(){if(msg)msg.textContent="コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してね😊";}).catch(function(){if(msg)msg.textContent="コピーできなかったので、保存にします…";directSave();});}' +
+      'function pcCopy(){if(!(navigator.clipboard&&navigator.clipboard.write&&window.ClipboardItem)){directSave();return;}if(msg)msg.textContent="コピーしています…";fetch(u).then(function(r){return r.blob();}).then(function(b){return toPng(b);}).then(function(png){return navigator.clipboard.write([new ClipboardItem({"image/png":png})]);}).then(function(){if(msg)msg.textContent="コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してください😊";}).catch(function(){if(msg)msg.textContent="コピーできなかったので、保存にします…";directSave();});}' +
       'var cp=document.getElementById("lkCopy"),sv=document.getElementById("lkSave");' +
       'if(cp)cp.addEventListener("click",pcCopy);' +
       'if(sv)sv.addEventListener("click",function(){if(isIOS)iosSave();else directSave();});' +
@@ -16589,7 +16589,7 @@ function ttviewStart_(exec, base, staff, dev) {
         st.draft = null;
         st.ev.n = st.base;
         drawMemo();
-        szPopup_('先に予約メモを修正した人がいます。\n最新の予約メモを表示しました。\nもう一度修正してから保存してね😊');
+        szPopup_('先に予約メモを修正した人がいます。\n最新の予約メモを表示しました。\nもう一度修正してから保存してください😊');
         return;
       }
       /* 保存できた＝この画面で持っているメモも新しくする（写しに戻ってくるのは約15秒後） */
@@ -17835,14 +17835,14 @@ var KANSHISCRIPT_ =
 '    return "<button type=\\"button\\" class=\\"kchip\\" data-reset=\\""+esc(pid)+"\\">"+esc(ELAB_[pid]||pid)+"</button>";' +
 '  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠ 全員</button>";' +
 '  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
-'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してね😊 （反映まで最大1分）。</div>"+' +
+'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください😊 （反映まで最大1分）。</div>"+' +
 '    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
 '    "<div class=\\"ksec\\">新しいユーザーを追加</div>"+' +
 '    "<div class=\\"knote\\">新しいスタッフや、同じ人の別の名前（例：りんご2）を追加します。</div>"+' +
 '    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kAdd\\" placeholder=\\"例：りんご2\\">"+' +
 '    "<button type=\\"button\\" class=\\"kbtn\\" id=\\"kAddBtn\\">追加</button></div>"+' +
 '    "<div class=\\"ksec\\">スタッフ用URLのパスワード</div>"+' +
-'    "<div class=\\"knote\\">今のパスワードは、安全のためこの画面には表示しません。変更したい時だけ新しいパスワードを入力してね😊</div>"+' +
+'    "<div class=\\"knote\\">今のパスワードは、安全のためこの画面には表示しません。変更したい時だけ新しいパスワードを入力してください😊</div>"+' +
 '    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kPw2\\" placeholder=\\"新しいパスワード\\">"+' +
 '    "<button type=\\"button\\" class=\\"kbtn\\" id=\\"kPwBtn\\">変更</button></div>"+' +
 '    "<div class=\\"ksec\\">名前を選び直させる（スマホごと）</div>"+' +
@@ -17899,7 +17899,7 @@ var KANSHISCRIPT_ =
 '  if(mv){ moveTile_(mv.getAttribute("data-tid"), Number(mv.getAttribute("data-mv"))); return true; }' +
 '  if(t.closest("#kAddBtn")){' +
 '    var v=(document.getElementById("kAdd").value||"").trim();' +
-'    if(!v){ toast_("名前を入力してね😊"); return true; }' +
+'    if(!v){ toast_("名前を入力してください😊"); return true; }' +
 '    send_("tile_settings","setval", JSON.stringify({t:"add", v:v}),' +
 '      {title:"ユーザーを追加しています", done:"ユーザーを追加しました"});' +
 '    document.getElementById("kAdd").value="";' +
@@ -17907,7 +17907,7 @@ var KANSHISCRIPT_ =
 '  }' +
 '  if(t.closest("#kPwBtn")){' +
 '    var pw=(document.getElementById("kPw2").value||"").trim();' +
-'    if(!pw){ toast_("新しいパスワードを入力してね😊"); return true; }' +
+'    if(!pw){ toast_("新しいパスワードを入力してください😊"); return true; }' +
 '    if(confirm("スタッフ用URLのパスワードを「"+pw+"」に変更します。よろしいでしょうか？😊")){' +
 '      send_("tile_settings","setval", JSON.stringify({t:"pw", v:pw}),' +
 '        {title:"パスワードを変更しています", done:"パスワードを変更しました"});' +
@@ -18121,7 +18121,7 @@ function teikeiStart_(rows) {
       var msg = document.getElementById('tkmsg');
       var doCopy = function () {
         copyText(p.text, function (ok) {
-          msg.textContent = ok ? '✅ コピーしました。LINEに貼り付けてね😊'
+          msg.textContent = ok ? '✅ コピーしました。LINEに貼り付けてください😊'
                                : '⚠️ コピーできませんでした。下のボタンをもう一度押してください🙇';
         });
       };
@@ -18185,7 +18185,7 @@ function teikeiStart_(rows) {
       sm.textContent = 'コピーしています…';
       fetch(imgs[0]).then(function (r) { return r.blob(); }).then(toPng)
         .then(function (png) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]); })
-        .then(function () { sm.textContent = 'コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してね😊'; })
+        .then(function () { sm.textContent = 'コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してください😊'; })
         .catch(function () { sm.textContent = 'コピーできなかったので、保存にします…'; directSave(); });
     }
     if (isIOS || isAndroid) {
@@ -18208,7 +18208,7 @@ function teikeiStart_(rows) {
     var opts = options();
     if (!opts.length) {
       body.innerHTML = '<div class="tknone">' + esc(rows.length
-        ? '❌ この階層に表示できるデータがありません。\n\n・本文が右端の列に入っているか\n・階層（A,B,C…）が空になっていないか\nを確認してね😊'
+        ? '❌ この階層に表示できるデータがありません。\n\n・本文が右端の列に入っているか\n・階層（A,B,C…）が空になっていないか\nを確認してください😊'
         : 'まだ定型文が登録されていません。') + '</div>';
       return;
     }
@@ -18456,7 +18456,7 @@ function bcCampCode_() {
       function count() {
         // ★前後の空白は数えない（送る時に取る・LINEの管理画面も数えない）
         var L = trimLen(ta.value), over = L > MAXT;
-        cnt.textContent = L ? (L + ' / ' + MAXT + ' 文字' + (over ? '（あと' + (L - MAXT) + '文字減らしてね😊）' : '')) : '';
+        cnt.textContent = L ? (L + ' / ' + MAXT + ' 文字' + (over ? '（あと' + (L - MAXT) + '文字減らしてください😊）' : '')) : '';
         cnt.className = 'bccount' + (over ? ' over' : '');
       }
       function grow() { ta.style.height = '0px'; ta.style.height = (ta.scrollHeight + 12) + 'px'; }

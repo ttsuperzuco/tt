@@ -391,9 +391,9 @@ function instaScript_(C) {
       var files = Array.prototype.slice.call(this.files || []); this.value = '';
       var max = kind === 'feed' ? MAXI : 1;
       files.forEach(function (f) {
-        if (CMEDIA.length >= max) { warn(kind === 'feed' ? '写真・動画は' + MAXI + '個までです😊' : '1つだけ選択してね😊'); return; }
+        if (CMEDIA.length >= max) { warn(kind === 'feed' ? '写真・動画は' + MAXI + '個までです😊' : '1つだけ選択してください😊'); return; }
         if (/^video\//.test(f.type)) {
-          if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです。短い動画を選択してね😊'); return; }
+          if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです。短い動画を選択してください😊'); return; }
           var vr = new FileReader();
           vr.onload = function () {
             var b64 = String(vr.result).split(',')[1] || '';
@@ -434,11 +434,11 @@ function instaScript_(C) {
     }).join('');
   }
   function share() {
-    if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してね😊' : '写真か動画を選択してね😊'); return; }
+    if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してください😊' : '写真か動画を選択してください😊'); return; }
     var cap = document.getElementById('igcCap'), text = cap ? cap.value.trim() : '';
     if (Array.from(text).length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです😊'); return; }
     if ((text.match(/#/g) || []).length > 30) { warn('ハッシュタグは30個までです😊'); return; }
-    if (CK !== 'story' && CHIDE === null) { warn('「いいね！」数を非表示にするか選択してね😊'); return; }
+    if (CK !== 'story' && CHIDE === null) { warn('「いいね！」数を非表示にするか選択してください😊'); return; }
     var fields = { kind: 'post', acct: CUR, type: CK, caption: text, hide_likes: CK === 'story' ? false : CHIDE,
                    media: CMEDIA.map(function (m) { return { b64: m.b64 }; }) };
     if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('投稿中です', '写真・動画をインスタに送っています。動画は数分かかることがあるので、少し待っててくださいね🥺'), '#2C7A99');
@@ -556,7 +556,7 @@ function instaScript_(C) {
         if (e.target.id === 'igpCancelRep') { REPLY = null; drawReplyTo(); return; }
         if (e.target.id !== 'igpGo') return;
         var tx = document.getElementById('igpTx'), m = tx.value.trim();
-        if (!m) { warn('コメントを入力してね😊'); return; }
+        if (!m) { warn('コメントを入力してください😊'); return; }
         var f = REPLY ? { kind: 'reply', comment_id: REPLY.id } : { kind: 'comment' };
         f.acct = CUR; f.code = POST.code; f.message = m;
         simple(f, REPLY ? '返信しています' : 'コメントしています', function (err, d) {

@@ -452,17 +452,17 @@ function threadsScript_(C) {
     var topic = $('thTopic').style.display !== 'none' ? $('thTopicText').value.trim().replace(/^#/, '') : '';
     var chain = chainBoxes().map(function (t) { return t.value.trim(); }).filter(function (x) { return x; });
     if (!CUR) { warn('投稿するアカウントをえらんでください。'); return; }
-    if (!text && !MEDIA.length) { warn('文か写真・動画を入力してね😊'); return; }
+    if (!text && !MEDIA.length) { warn('文か写真・動画を入力してください😊'); return; }
     if (tlen(text) > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
     if (usePoll) {
       if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には出せません。'); return; }
-      if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入力してね😊'); return; }
-      if (!text) { warn('投票には質問の文を入力してね😊'); return; }
+      if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入力してください😊'); return; }
+      if (!text) { warn('投票には質問の文を入力してください😊'); return; }
     }
     if (longt) {
       if (MEDIA.length) { warn('長い文は、写真・動画と一緒には出せません。'); return; }
       if (tlen(longt) > MAXLONG) { warn('長い文は' + MAXLONG + '文字までです。'); return; }
-      if (!text) { warn('長い文には、最初に表示される文も入力してね😊'); return; }
+      if (!text) { warn('長い文には、最初に表示される文も入力してください😊'); return; }
     }
     if (topic && (tlen(topic) > 50 || /[.&]/.test(topic))) { warn('トピックは50文字まで・「.」と「&」は使えません。'); return; }
     if (chain.some(function (c) { return tlen(c) > MAXT; })) { warn('続きの文も1つ' + MAXT + '文字までです。'); return; }
@@ -727,7 +727,7 @@ function threadsScript_(C) {
     var mid = midOf(t);
     if (g('data-send')) {
       var to = g('data-send'), ta = $('rb_' + to).querySelector('textarea'), txt = ta.value.trim();
-      if (!txt) { warn('返信の文を入力してね😊'); return; }
+      if (!txt) { warn('返信の文を入力してください😊'); return; }
       if (tlen(txt) > 500) { warn('返信は500文字までです。'); return; }
       szPopup_('お店として返信しますか？', { icon: '', cancel: true, onYes: function () {
         act({ kind: 'reply', acct: CUR, to_id: to, text: txt }, '返信中です', '返信が完了しました', mid);

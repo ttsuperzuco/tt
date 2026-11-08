@@ -138,7 +138,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(r.status!=="done"){setSt("作成に失敗しました："+esc(r.result||r.status),"err");return;}' +
   'jsonp({action:"data",name:"notice_"+slot+".json"},function(d){showResult(d);setTimeout(function(){zjAskRestore(zjCurDate);},900);});});}' +
   'var waitMsg="",startedAt=0;' +
-  'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選択してね😊","err");return;}' +
+  'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選択してください😊","err");return;}' +
   'zjCurDate=date;' +
   'waitMsg=(mode==="unsent")?"まだ送っていない人の分を作成中…":"全員分を作成中…";startedAt=Date.now();' +
   'lock(true);setSt(waitMsg+"（通常、数十秒かかります）","wait");' +
@@ -239,7 +239,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var at=(document.getElementById("zjat").value||"").replace("T"," ");' +
   'if(sugu){var n=new Date();n.setSeconds(n.getSeconds()-30);' +
   'at=n.getFullYear()+"-"+zjTwo(n.getMonth()+1)+"-"+zjTwo(n.getDate())+" "+zjTwo(n.getHours())+":"+zjTwo(n.getMinutes());}' +
-  'if(!at){msg.textContent="⛔ 日時を指定してね😊";return;}' +
+  'if(!at){msg.textContent="⛔ 日時を指定してください😊";return;}' +
   'var 日=(zjRows[0]&&zjRows[0].date)||(document.getElementById("zjdate")||{}).value||"";' +
   'msg.textContent=sugu?"⏳ 送信しています…":"⏳ 送信の予約をしています…";' +
   'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
@@ -289,16 +289,16 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(d&&d.ok&&d.put>0){zjClearLocal(日);zjFreshShow(false);' +
   'msg.textContent=(sugu?("✅ "+d.put+"人に今から送信します。")' +
   ':("✅ "+d.put+"人ぶんの送信の予約を設定しました。まだ送信していません。"+at+" になったら自動で送ります。"))' +
-  '+"「"+ボタン+"」をもう一度押さないでね😊";' +
+  '+"「"+ボタン+"」をもう一度押さないでください😊";' +
   'if(sugu&&(d.ids||[]).length)zjWatch(d.ids,d.put);return;}' +
   'msg.textContent=(sugu?"⛔ 全員の送信が失敗しました。":"⛔ 全員の送信の予約が失敗しました。")' +
-  '+"「"+ボタン+"」をもう一度押してね😊";' +
+  '+"「"+ボタン+"」をもう一度押してください😊";' +
   '},function(e2){msg.textContent=(sugu?"⛔ 送信が完了したか分かりません。"' +
   ':"⛔ 送信の予約の設定が完了したか分かりません。")' +
-  '+"「← 戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてね😊'
+  '+"「← 戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてください😊'
   + 'この"+zjRows.length+"人が全員、一覧に並んでいれば"' +
   '+(sugu?"送信されています。":"送信の予約が完了しています。")' +
-  '+"リストになければ、ここへ戻って「"+ボタン+"」をもう一度押してね😊";});}' +
+  '+"リストになければ、ここへ戻って「"+ボタン+"」をもう一度押してください😊";});}' +
   'function zjWatch(ids,zenbu){var msg=document.getElementById("zjmsg");var t0=Date.now();var n=0;' +
   '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認くださいませ🙇";return;}' +
   'zjAsk("send_progress",{ids:ids},function(s){' +
@@ -319,7 +319,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjPersonImg(eid,info){' +
   'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk3\\">← 戻る</button>"' +
   '+"<h2>🖼 "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
-  '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してね😊</div>"' +
+  '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してください😊</div>"' +
   '+"<div id=\\"zjpick\\" class=\\"zjpick\\">読み込んでいます…</div>"' +
   '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjpicksave\\">この画像で決定</button></div>");' +
   'document.getElementById("zjbk3").onclick=zjBoxClose;' +
@@ -345,7 +345,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjImgSet(){' +
   'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk4\\">← 戻る</button>"' +
   '+"<h2>📷 画像送信セッティング</h2>"' +
-  '+"<div class=\\"zjnote\\">お知らせ文のあとに、この順番で画像を送信します。送信したくない画像は「送る」をオフにしてね😊</div>"' +
+  '+"<div class=\\"zjnote\\">お知らせ文のあとに、この順番で画像を送信します。送信したくない画像は「送る」をオフにしてください😊</div>"' +
   '+"<div id=\\"zjcases\\">読み込んでいます…</div>"' +
   '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjcasesave\\">この内容で保存</button>"' +
   '+"<div id=\\"zjcasemsg\\" class=\\"zjnote\\"></div></div>");' +

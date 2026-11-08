@@ -110,7 +110,7 @@ function doGet(e) {
     html = renderClaudeChatPage_(base, staff, dev);
   } else if (view === 'shophist') {
     title = 'T＆Tショップ履歴';                        
-    html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてね😊' }, base, staff, dev);
+    html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
   } else if (view === 'kanshi') {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   
@@ -143,7 +143,7 @@ function doGet(e) {
     html = renderUriageBookPage_(base, staff, dev);
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       
-    html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてね😊' }, base, staff, dev);
+    html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
   } else if (view === 'insta') {
     title = 'インスタ';                                       
     html = renderInstaPage_(base, staff, dev);
@@ -155,7 +155,7 @@ function doGet(e) {
     html = renderHanbaiPage_(base, staff, dev);
   } else if (view === 'procamp') {
     title = 'プロセル頭キャリスト';                     
-    html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてね😊' }, {}, base, staff, dev);
+    html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてください😊' }, {}, base, staff, dev);
   } else if (view === 'yoyaku_sejutsugo') {
     title = '施術後の予約';                              
     html = renderAfterTreatmentPage_(base, staff, dev, who);
@@ -282,7 +282,7 @@ function kanshiOwner_() {
 function kanshiGate_(device) {
   device = String(device || '').trim();
   if (!device) {
-    return { ok: false, error: 'スマホ用のURL（ttsuperzuco.github.io/tt/）から開いてね😊' };
+    return { ok: false, error: 'スマホ用のURL（ttsuperzuco.github.io/tt/）から開いてください😊' };
   }
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
@@ -295,7 +295,7 @@ function kanshiGate_(device) {
     }
     if (cur.device === device) return { ok: true };
     return { ok: false, error: 'この画面は、登録したスマホからだけ開けます。'
-      + '（機種変更した時は、自宅PCの自動監視で「登録し直す」を押してね😊）' };
+      + '（機種変更した時は、自宅PCの自動監視で「登録し直す」を押してください😊）' };
   } finally {
     try { lock.releaseLock(); } catch (ig2) {}
   }
@@ -1029,7 +1029,7 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr, who
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
     : (!anyFree ? '<span class="mvng">空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
-    '<div class="mvlabel fit1line">移動先の部屋を選択してね😊 （下のボタンを押す）</div>' +
+    '<div class="mvlabel fit1line">移動先の部屋を選択してください😊 （下のボタンを押す）</div>' +
     '<div class="mvhint fit1line">※空いている施術室のみ表示しています</div>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
@@ -1105,7 +1105,7 @@ function staffMoveRow_(cal, event, title, oldFruit, oldName, timeStr, who, daySt
   });
   var note = !hasId ? '<span class="mvng">IDが取れず異動できません</span>'
     : (anyFree ? '' : '<span class="mvng">空いている担当がいません</span>');
-  return '<div class="mvrow"><div class="mvlabel fit1line">変更先の担当を選択してね😊 （下のボタンを押す）</div>' +
+  return '<div class="mvrow"><div class="mvlabel fit1line">変更先の担当を選択してください😊 （下のボタンを押す）</div>' +
     '<div class="mvhint fit1line">※その時間に空いている担当のみ表示しています</div>' +
     '<span class="mvbtns">' + btns + note + '</span></div>';
 }
@@ -1668,7 +1668,7 @@ function renderInstaDmPage_(d, base, staff, dev) {
   }
   var body = '';
   if (!accounts.length) {
-    body = '<div class="idmempty">まだ読み取っていません。<br>少し待ってから、もう一度開いてね😊</div>';
+    body = '<div class="idmempty">まだ読み取っていません。<br>少し待ってから、もう一度開いてください😊</div>';
   } else {
     for (var i = 0; i < accounts.length; i++) {
       var a = accounts[i], threads = a.threads || [], reqs = a.requests || [];
@@ -1907,7 +1907,7 @@ function renderInstaDmGate_(msg, base, staff, dev) {
     '<div class="idmwrap">' +
       '<h1>📩 IGのDM</h1>' +
       '<div class="idmgate">' +
-        '<div class="idmgt">🔒 パスワードを入力してね😊</div>' +
+        '<div class="idmgt">🔒 パスワードを入力してください😊</div>' +
         '<div class="idmgm">この画面にはお客さまとの会話が入っています。パスワードを知っている端末だけ開けます。' +
           '一度入力すると、この端末では次回から入力不要です。</div>' +
         (msg ? '<div class="idmgerr">' + esc_(msg) + '</div>' : '') +

@@ -254,7 +254,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(tsec&&!tv.shown)tsec.style.display="none";' +
     'if(tv.shown&&!titleEdited&&!_titleErr&&!document.querySelector(".nrTitleIn"))refreshTitles();' +
     'if(_titleKeep&&tv.shown){var _k=_titleKeep;_titleKeep=null;fillTitles(_k.t,_k.d);return;}' +
-    'if(_titleErr){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作成できませんでした（"+_titleErr+"）。「← 戻る」で予約メモや担当・部屋を確認してね😊";ngbox.style.display="";}}' +
+    'if(_titleErr){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作成できませんでした（"+_titleErr+"）。「← 戻る」で予約メモや担当・部屋を確認してください😊";ngbox.style.display="";}}' +
     'else if(titleStale){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作っています。少し待っててくださいね🥺";ngbox.style.display="";}}}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     'var nrAvTimer=null;function nrScheduleAvail(){nrAvRetried=0;if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
@@ -278,7 +278,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'function close(){if(ed)ed.style.display="none";if(row)row.style.display="flex";}' +
     'if(bFix)bFix.addEventListener("click",open);if(bNo)bNo.addEventListener("click",close);' +
     'if(bOk)bOk.addEventListener("click",function(){var mm=Number(gv("nrEdMM").value),dd=Number(gv("nrEdDD").value),hh=Number(gv("nrEdHH").value),mi=Number(gv("nrEdMI").value);' +
-    'if(!(mm>=1&&mm<=12)||!(dd>=1&&dd<=31)||!(hh>=0&&hh<=23)||!(mi>=0&&mi<=59)){szPopup_("月日時分を正しく入力してね😊");return;}' +
+    'if(!(mm>=1&&mm<=12)||!(dd>=1&&dd<=31)||!(hh>=0&&hh<=23)||!(mi>=0&&mi<=59)){szPopup_("月日時分を正しく入力してください😊");return;}' +
     'var y=window.__nrDate?Number(window.__nrDate.slice(0,4)):(new Date()).getFullYear();var dt=new Date(y,mm-1,dd);var today=new Date();today.setHours(0,0,0,0);' +
     'if((today-dt)>31*24*3600*1000){y+=1;dt=new Date(y,mm-1,dd);}' +
     'if(dt.getMonth()!==mm-1){szPopup_("その日付はありません。");return;}' +
@@ -390,7 +390,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'for(var _q=0;_q<_pab.length;_q++){_pab[_q].classList.toggle("sel",_pab[_q]===this);}' +
     'window.__nrSlotsMemo=prevEl.value;' +          
     'nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
-    'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼り付けてね😊",true);return;}' +
+    'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼り付けてください😊",true);return;}' +
     'readEl.disabled=true;prevT0=Date.now();status("変換中です。通常は10秒以内に終わります。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},400);});}' +
@@ -421,7 +421,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(["staff","counsel","gender","tw","room"].indexOf(k)<0)return;markTitleStale();' +
     'if(_titleTimer)clearTimeout(_titleTimer);_titleTimer=setTimeout(function(){refreshTitles(null,true);},350);}' +
     'window.__nrSchedTitle=scheduleTitleRefresh;' +
-    'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼り付けてね😊",true);return;}' +
+    'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼り付けてください😊",true);return;}' +
     'var ins=document.querySelectorAll(".nrTitleIn"),ts=[];for(var j=0;j<ins.length;j++){ts.push(ins[j].value);}' +
     'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields(ins.length?{titles:JSON.stringify(ts)}:null))},' +
@@ -464,7 +464,7 @@ function renderNewReservationPage_(base, staff, dev) {
       '</div>' +
       '<div id="nrStepProcell" style="display:none">' +
         '<div id="nrProcellAsk">' +
-          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選択してね😊</div>' +
+          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選択してください😊</div>' +
           '<div class="nrpills">' +
             '<button type="button" class="nrpill" data-procell="顔プロセルPro" style="background:#2563eb">顔プロセルPro</button>' +
             '<button type="button" class="nrpill" data-procell="顔プロセルMD" style="background:#0891b2">顔プロセルMD</button>' +
@@ -486,7 +486,7 @@ function renderNewReservationPage_(base, staff, dev) {
         '<button type="button" class="nrgo" id="nrCounsOk">これでOK</button>' +
       '</div>' +
       '<div id="nrprevwrap" style="display:none">' +
-        '<div class="nrsec">以下の予約メモで間違いがないか確認してね😊 メモは直接編集可能です。</div>' +
+        '<div class="nrsec">以下の予約メモで間違いがないか確認してください😊 メモは直接編集可能です。</div>' +
         '<div id="nrFixRow" class="nrfixrow" style="display:none">' +
           '<div id="nrFixRed" class="nrfixred"></div>' +
           '<button type="button" class="nrrawbtn" data-raw="1">お客様情報を確認</button>' +
@@ -520,7 +520,7 @@ function renderNewReservationPage_(base, staff, dev) {
       '</div>' +
       '<div id="nrStepOrder" style="display:none">' +
         '<div id="secOrder"><div class="nrsec">やる順番（上から順にやります）</div>' +
-        '<div class="nrnote2">順番を変更したい項目の「↑ 上へ」を押してね😊</div><div id="nrOrderList"></div></div>' +
+        '<div class="nrnote2">順番を変更したい項目の「↑ 上へ」を押してください😊</div><div id="nrOrderList"></div></div>' +
         '<button type="button" class="nrgo" id="nrOrderOk">これでOK</button>' +
       '</div>' +
       '<div id="nrStepDur" style="display:none">' +

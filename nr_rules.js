@@ -29,7 +29,7 @@
     // ★時刻が読めなかった用紙は、日付だけ出して「時刻を入れてください」と促す（2026-08-25）。
     if (timeMissing) {
       var wd0 = weekday ? ("（" + weekday + "）") : "";
-      return Number(d.mm) + "月" + Number(d.dd) + "日" + wd0 + " ★時刻を入力してね😊";
+      return Number(d.mm) + "月" + Number(d.dd) + "日" + wd0 + " ★時刻を入力してください😊";
     }
     var wd = weekday ? ("（" + weekday + "）") : "";
     var mi = String(d.mi);
@@ -263,7 +263,7 @@
     //   ここに修正があってわかるから」）＝赤い行だけで足りるため、popup は必ず空にする。
     var items = NR.pendingChecks(s), red = "";
     // ★2026-09-23 まるちゃん指定：どこを見て直すかを添える（メモの中は短くしたため）。
-    if (items.length) red = items.join("・") + " を修正してね😊 （LINEのやりとりを参照）";
+    if (items.length) red = items.join("・") + " を修正してください😊 （LINEのやりとりを参照）";
     return { items: items, memo: s, popup: "", red: red };
   };
 
@@ -365,7 +365,7 @@
     if (!String(gender || "")) miss.push("性別");
     if (!String(tw || "")) miss.push("国籍");
     return { ok: miss.length === 0,
-             msg: miss.length ? (miss.join("と") + "を選択してね😊") : "" };
+             msg: miss.length ? (miss.join("と") + "を選択してください😊") : "" };
   };
 
   /* ── ⑪-1e プロセルが顔か頭皮か決まっていないか ───────────────
@@ -379,7 +379,7 @@
   };
   NR.procellOk = function (memo) {
     var a = NR.procellAsk(memo);
-    return { ok: !a.ask, msg: a.ask ? "どのプロセルかを選択してね😊" : "" };
+    return { ok: !a.ask, msg: a.ask ? "どのプロセルかを選択してください😊" : "" };
   };
 
   /* ── ⑪-1d 次の画面へ進ませてよいか ─────────────────────
@@ -389,7 +389,7 @@
   NR.memoOk = function (memo) {
     var pend = NR.pendingChecks(memo);
     return { ok: pend.length === 0,
-             msg: pend.length ? (pend.join("・") + "を修正してから「予約メモはこれでOK」を押してね😊") : "" };
+             msg: pend.length ? (pend.join("・") + "を修正してから「予約メモはこれでOK」を押してください😊") : "" };
   };
   /* ★時間を変えたら、空いている部屋・担当を取り直し終わるまで次へ行かせない
      （2026-09-22 まるちゃん「時間かえたら、あいてる部屋や担当も読み直しだろ」）。
@@ -397,7 +397,7 @@
      ふさがっている部屋・担当のまま登録の画面へ行けてしまう。 */
   NR.timeOk = function (timeMissing, checking) {
     if (timeMissing) {
-      return { ok: false, msg: "開始時間が読み取れませんでした。上の「修正」から時刻を入力してね😊" };
+      return { ok: false, msg: "開始時間が読み取れませんでした。上の「修正」から時刻を入力してください😊" };
     }
     // ★★2026-09-23 まるちゃん決定：**ここでは空きの取り直しを待たせない。裏で続ける。**
     //   まるちゃん「ここで担当者と空き部屋検索しないで。裏でやって。担当と部屋選択のときに
@@ -416,7 +416,7 @@
   NR.counselOk = function (kind) {
     var k = String(kind || "");
     var ok = (k === "1" || k === "2" || k === "3");
-    return { ok: ok, msg: ok ? "" : "①②③のどれかを選択してね😊" };
+    return { ok: ok, msg: ok ? "" : "①②③のどれかを選択してください😊" };
   };
 
   /* ── 担当・部屋を選ぶ画面に着いた時、まだ空きを調べているか（2026-09-23 まるちゃん）─────
@@ -447,7 +447,7 @@
     L.push("⚠ " + (t ? (t + "〜は") : "この時間は") + "カウンセリングができません。");
     L.push("カウンセリングの部屋（コスモス）に、別の予約が入っています。");
     if (w) L.push("入っている予約＝" + w);
-    L.push("「← 戻る」で開始時間か施術の順番を変更してね😊");
+    L.push("「← 戻る」で開始時間か施術の順番を変更してください😊");
     return L.join("\n");
   };
 
@@ -463,7 +463,7 @@
       return { disabled: true, msg: "空いている担当・部屋を調べています。少し待っててくださいね🥺" };
     }
     if (locked) { return { disabled: true, msg: "" }; }
-    if (n.length) { return { disabled: true, msg: n.join("と") + "を選択してね😊" }; }
+    if (n.length) { return { disabled: true, msg: n.join("と") + "を選択してください😊" }; }
     return { disabled: false, msg: "" };
   };
 
@@ -498,7 +498,7 @@
       if (_n.tw) _w.push("国籍");
       var _ng = [];
       for (var _i = 0; _i < _w.length; _i++) _ng.push({ name: _w[_i], why: "決まっていません" });
-      return { ok: false, ng: _ng, msg: _w.join("・") + "を選択してね😊" };
+      return { ok: false, ng: _ng, msg: _w.join("・") + "を選択してください😊" };
     }
     // ★予約メモに【要確認】が残っている間は登録させない（2026-09-04 まるちゃん決定）。
     //   ＝分からないまま登録すると、その中身がそのままお客様への前日お知らせに流れる。
@@ -513,13 +513,13 @@
                //   ★2026-09-22：経由の行は【確認して修正】に書き換わるので「要確認になっています」
                //     では字が合わない。どちらの印にも当てはまる言い方にそろえた。
                msg: pend.join("・") + "が修正されていません。予約メモを修正してから" +
-                    "「この内容で登録する」を押してね😊" };
+                    "「この内容で登録する」を押してください😊" };
     }
     // ★時刻が読めなかった用紙（昔は時刻の欄が無かった）＝人が「開始時間」を入れるまで登録させない
     //   （2026-08-25 まるちゃん決定）。
     if (timeMissing) {
       return { ok: false, ng: [{ name: "", why: "開始時間が入っていません" }],
-               msg: "開始時間が読み取れませんでした。上の「修正」から時刻を入力してね😊" };
+               msg: "開始時間が読み取れませんでした。上の「修正」から時刻を入力してください😊" };
     }
     if (checking) {
       return { ok: false, ng: [{ name: "", why: "確認中" }],
@@ -532,7 +532,7 @@
     if (_n.avFail) {
       return { ok: false, ng: [{ name: "", why: "空きを確認できませんでした" }],
                msg: "空いている担当・部屋を確認できませんでした（" + _n.avFail + "）。" +
-                    "少し待ってから、この画面をもう一度開いてね😊" };
+                    "少し待ってから、この画面をもう一度開いてください😊" };
     }
     var R = rows || [], ng = [];
     for (var i = 0; i < R.length; i++) {
@@ -548,7 +548,7 @@
       // ★2026-09-22 まるちゃん決定：「上の」をやめて「← 戻る」にした。開始時間は別の画面へ
       //   移ったので、いま見ている画面を探しても「開始時間」が無く、スタッフが迷うため。
       msg = "この内容では登録できません（" + parts.join("／") +
-            "）。「← 戻る」で開始時間か施術の順番を変更してね😊";
+            "）。「← 戻る」で開始時間か施術の順番を変更してください😊";
     }
     return { ok: (ng.length === 0), ng: ng, msg: msg };
   };

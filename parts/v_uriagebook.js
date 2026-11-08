@@ -341,7 +341,7 @@ function uriageBookScript_(C) {
     } else {
       var cur = { B: x.num, C: x.name, E: x.detail, F: (x.amount == null ? '' : String(x.amount)) }[col] || '';
       var isPad = (col === 'B' || col === 'F');   
-      body = (isPad ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してね😊"></div></div>'
+      body = (isPad ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください😊"></div></div>'
         : col === 'E' ? '<textarea id="ubEd" rows="3"></textarea>' : '<input id="ubEd">') +
         '<button type="button" class="go" data-a="save" style="margin-top:12px">以上の内容で修正する</button>';
     }
@@ -367,7 +367,7 @@ function uriageBookScript_(C) {
       }
       if (a !== 'save') return;
       var nv = PK ? PK.get('v') : $('ubEd').value;
-      if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入力してね😊'); return; }
+      if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入力してください😊'); return; }
       closePick();
       if (nv === cur) return;
       ask({ action: 'edit', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x), col: col, value: nv }, CNAME[col] + 'を修正しています');
@@ -397,7 +397,7 @@ function uriageBookScript_(C) {
     var head = '<div class="h">' + esc(y.label) + '　' + yen(y.amount) + '</div>' +
       '<div class="s">' + (col === 'J' ? '内容' : '金額') + 'を修正します</div>';
     var cur = col === 'J' ? (y.label || '') : (y.amount == null ? '' : String(y.amount));
-    var body = (col === 'K' ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してね😊"></div></div>'
+    var body = (col === 'K' ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください😊"></div></div>'
       : '<textarea id="ubEd" rows="3"></textarea>') +
       '<button type="button" class="go" data-a="save" style="margin-top:12px">以上の内容で修正する</button>';
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
@@ -413,8 +413,8 @@ function uriageBookScript_(C) {
       if (a === 'close') { closePick(); return; }
       if (a !== 'save') return;
       var nv = PK ? PK.get('v') : $('ubEd').value.trim();
-      if (col === 'K' && !/\d/.test(nv)) { popup('金額は数字で入力してね😊'); return; }
-      if (col === 'J' && !nv) { popup('内容を入力してね😊'); return; }
+      if (col === 'K' && !/\d/.test(nv)) { popup('金額は数字で入力してください😊'); return; }
+      if (col === 'J' && !nv) { popup('内容を入力してください😊'); return; }
       closePick();
       if (nv === cur) return;
       ask({ action: 'oedit', row: y.r, label: y.label, amount: y.amount, _k: ok(y), col: col, value: nv }, (col === 'J' ? '内容' : '金額') + 'を修正しています');
@@ -454,8 +454,8 @@ function uriageBookScript_(C) {
   }
   $('ubAddPay').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; addPay = b.getAttribute('data-v'); drawAddPay(); });
   $('ubAddGo').addEventListener('click', function () {
-    if (!AK.raw('amt')) { popup('金額を入力してね😊'); return; }
-    if (!AK.get('num') && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入力してね😊'); return; }
+    if (!AK.raw('amt')) { popup('金額を入力してください😊'); return; }
+    if (!AK.get('num') && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入力してください😊'); return; }
     var tm = AK.raw('h') ? p2(AK.raw('h')) + ':' + p2(AK.raw('m') || '0') : '';
     AK.close();
     ask({ action: 'add', time: tm, no: AK.raw('no'), num: AK.get('num'), detail: $('ubAddDetail').value.trim(),
@@ -472,7 +472,7 @@ function uriageBookScript_(C) {
   $('ubOthGo').addEventListener('click', function () {
     var amt = OK2.get('amt'); OK2.close();
     var what = $('ubOthLabel').value.trim();
-    if (!what || !amt) { popup('内容と金額を入力してね😊 （経費などはマイナス）'); return; }
+    if (!what || !amt) { popup('内容と金額を入力してください😊 （経費などはマイナス）'); return; }
     var nm = $('ubOthName').value.trim().replace(/\s*様$/, '');
     var who = (OK2.get('num') || '') + (nm ? nm + '様' : '');
     ask({ action: 'other', label: who ? who + '　' + what : what, amount: parseInt(amt, 10) }, 'その他を追加しています', function () { show('ubNoInv'); });
@@ -498,7 +498,7 @@ function uriageBookScript_(C) {
     CP.close();
     var f = { action: 'coins' }, any = false;
     for (var i = 0; i < CK.length; i++) if (CP.raw(CK[i]) !== '') { f[CK[i]] = parseInt(CP.raw(CK[i]), 10); any = true; }
-    if (!any) { popup('枚数を入力してね😊'); return; }
+    if (!any) { popup('枚数を入力してください😊'); return; }
     ask(f, '小銭を書いています');
   });
   $('ubCoinBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });

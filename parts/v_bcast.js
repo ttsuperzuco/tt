@@ -353,7 +353,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcwhead"><span class="lb">日時入力欄</span>\'+' +
   '\'<button type="button" class="bcwauto" id="bcwauto">自動入力</button></div>\'+' +
   '\'<textarea id="bcwtxt" style="min-height:260px;font-size:14px" \'+' +
-  '\'placeholder="ここに空き時間検索の出力を貼るか、自分で入力してね😊&#10;&#10;'+
+  '\'placeholder="ここに空き時間検索の出力を貼るか、自分で入力してください😊&#10;&#10;'+
   '新規&#10;9/8（火）&#10;16:30&#10;9/9（水）&#10;11:00 / 12:00">\'+esc(WTEXT)+\'</textarea>\';' +
   'if(WDONE.length){h+=\'<div class="bchr"></div><div class="bcleft">できた画像</div><div class="bcgrid">\'+' +
   'WDONE.map(function(x){return \'<div class="bcpick new"><img src="\'+x.thumb+\'" data-bigw="\'+esc(x.name||"")+\'" style="cursor:zoom-in"><span>\'+' +
@@ -377,7 +377,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function(m){b.disabled=false;status(m,true);});};' +
   'document.getElementById("bcwmake").onclick=function(){' +
   'if(ta)WTEXT=ta.value;' +
-  'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してね😊",true);return;}' +
+  'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してください😊",true);return;}' +
   'WBUSY=true;WDONE=[];WMSG="";SENDN=null;status("");draw();' +
   'runMake(WTEXT,function(i,tot,label){WMSG=i+"枚できました（全"+tot+"枚）　作成中："+label;draw();},' +
   'function(done,err){WBUSY=false;' +
@@ -542,7 +542,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(o.at>=0){o.lines.splice(o.at,0,times);return o.lines.join("\\n");}' +
   'return body.replace(/\\s+$/,"")+"\\n\\n"+times;}' +
   'function numMsg(n){if(!n)return "";' +
-  'return (n>MAXT)?("今"+n+"文字です。"+MAXT+"文字までなので、あと"+(n-MAXT)+"文字減らしてね😊"):("今"+n+"文字です（"+MAXT+"文字まで）");}' +
+  'return (n>MAXT)?("今"+n+"文字です。"+MAXT+"文字までなので、あと"+(n-MAXT)+"文字減らしてください😊"):("今"+n+"文字です（"+MAXT+"文字まで）");}' +
   'function tgtNames(atama,sei,lang){var out=[];' +
   'for(var i=0;i<TPL.length;i++){var nm=TPL[i].name;' +
   'if(nm.indexOf(atama)<0)continue;' +
@@ -604,13 +604,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'return a;}' +
   'function makeBtn(id){var a=sendNames();' +
   'if(!a.length)return \'<div class="bcstatus ng">送る区分がありません。\'+' +
-  '\'「← 戻る」で文章を入力してね😊</div>\';' +
+  '\'「← 戻る」で文章を入力してください😊</div>\';' +
   'return \'<button type="button" class="bctxt" id="\'+id+\'">以上\'+a.length+\'種類の画像を生成する</button>\'+' +
   '\'<button type="button" class="bcgo" id="\'+id+\'n">\'+' +
   '\'画像は生成せず配信内容の最終確認をする</button>\';}' +
   'function zLive(){var a=[],i;for(i=0;i<BORDER.length;i++)' +
   'if(String((MZH[i]||{}).text||"").replace(/^\\s+|\\s+$/g,""))a.push(i);return a;}' +
-  'function btnHtml(){var N=BORDER.length,LNG=\'<div class="bcstatus ng">長すぎます。上の文を短くしてね😊 （短くするとボタンが出ます）。</div>\';' +
+  'function btnHtml(){var N=BORDER.length,LNG=\'<div class="bcstatus ng">長すぎます。上の文を短くしてください😊 （短くするとボタンが出ます）。</div>\';' +
   'if(MSTEP===0){var x=BORDER[MIDX],last=(MIDX===N-1);' +
   'if(ulen(joinBody(MBODYS[MIDX]||"",timesOf(x[0],x[1])))>MAXT)return LNG;' +
   'return \'<button type="button" class="bcgo" id="bcmok">この内容でOK</button>\';}' +
@@ -638,7 +638,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,false))+\'</b>\'+' +
   '\'<button type="button" class="bcinstx" id="bcinscp">【時間】</button></div>\'+' +
-  '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入力してね😊&#10;&#10;\'+' +
+  '\'<textarea id="bcmbody" class="bcmtx" placeholder="ここに、この対象へ送る日本語の文章を入力してください😊&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(body)+\'</textarea>\';' +
   'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（文字の大きさ＝中）</div><div class="bcouttx bcbub" id="bcmprev">\'+' +
@@ -651,7 +651,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'else if(MSTEP===5){' +
   'var ja5=MJA.filter(function(x){return String(x.text||"").replace(/^\\s+|\\s+$/g,"");});' +
   'h=\'<div class="bcstop"><span class="bcsttl">中国語版の作成方法を選択</span></div>\'+' +
-  '(ja5.length?"":\'<div class="bcstatus ng">日本語の文がありません。「← 戻る」で文章を入力してね😊</div>\');' +
+  '(ja5.length?"":\'<div class="bcstatus ng">日本語の文がありません。「← 戻る」で文章を入力してください😊</div>\');' +
   'if(!MBUSY&&ja5.length)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   'else if(MSTEP===6){var nm6=sendNames();' +
   'h=\'<div class="bcstop"><span class="bcsttl">予約可能枠の画像を作りますか？😊</span></div>\'+' +
@@ -666,7 +666,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<span class="bcsno">\'+(MIDX+1)+\' / \'+N+\'</span></div>\';' +
   'h+=\'<div class="bccard bcwide"><div class="bcouth"><b>\'+esc(ordLabel(MIDX,true))+\'</b>\'+' +
   '\'<button type="button" class="bcinstx" id="bcinscp">【時間】</button></div>\'+' +
-  '\'<textarea id="bcmzbody" class="bcmtx" placeholder="ここに、この対象へ送る中国語の文章を入力してね😊&#10;&#10;\'+' +
+  '\'<textarea id="bcmzbody" class="bcmtx" placeholder="ここに、この対象へ送る中国語の文章を入力してください😊&#10;&#10;\'+' +
   '\'「【時間】」と書いた所に予約可能時間が入ります。書かなければ文の最後に入ります。">\'+' +
   'esc(zb)+\'</textarea>\';' +
   'h+=\'<div class="bcbubcap">お客様のスマホでの見え方（文字の大きさ＝中）</div><div class="bcouttx bcbub" id="bcmzprev">\'+' +
@@ -1027,7 +1027,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" class="bcmv bcseeall" data-seeall="\'+i+\'">内容を確認</button></div>\';});' +
   'h+=\'</div>\';' +
   'if(!m)h+=\'<div class="bcstatus on">内容を入力した対象がありません。\'+' +
-  '\'左上の「← 戻る」から入力してね😊</div>\';' +
+  '\'左上の「← 戻る」から入力してください😊</div>\';' +
   'else if(LMODE!=="at"){' +
   'h+=\'<button type="button" class="bcgo" id="bcplan">送信の予約を設定する</button>\'+' +
   '\'<button type="button" class="bctxt" id="bcnow">今すぐ送信する</button>\';}' +
@@ -1402,7 +1402,7 @@ function bcCampCode_() {
       var i = +ta.getAttribute('data-st'), cnt = box.querySelector('[data-sc="' + i + '"]');
       function count() {
         var L = trimLen(ta.value), over = L > MAXT;
-        cnt.textContent = L ? (L + ' / ' + MAXT + ' 文字' + (over ? '（あと' + (L - MAXT) + '文字減らしてね😊）' : '')) : '';
+        cnt.textContent = L ? (L + ' / ' + MAXT + ' 文字' + (over ? '（あと' + (L - MAXT) + '文字減らしてください😊）' : '')) : '';
         cnt.className = 'bccount' + (over ? ' over' : '');
       }
       function grow() { ta.style.height = '0px'; ta.style.height = (ta.scrollHeight + 12) + 'px'; }

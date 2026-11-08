@@ -103,7 +103,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '</select>' +
   '<div id="unacust" class="unalist">' + custCards + '</div>' +
   '<div id="unaours" class="unalist unahidden">' + oursCards + '</div>' +
-  '<div class="unaempty unaemptybig" id="unaperiodempty" hidden>この期間に該当はありません。<br>上の期間を広げてね😊</div>' +
+  '<div class="unaempty unaemptybig" id="unaperiodempty" hidden>この期間に該当はありません。<br>上の期間を広げてください😊</div>' +
 '</div>' +
 '<div class="unamask" id="unamask" role="dialog" aria-modal="true">' +
   '<div class="unamodal">' +
@@ -178,7 +178,7 @@ var UNASCRIPT_ =
 '  var ta=wrap.querySelector(".unartext"), box=wrap.querySelector(".unartrbox"), zt=wrap.querySelector(".unartrtext");' +
 '  var note=wrap.querySelector(".unarnote");' +
 '  var text=(ta&&ta.value||"").trim();' +
-'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="先に日本語を入力してね😊"; } return; }' +
+'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="先に日本語を入力してください😊"; } return; }' +
 '  if(box) box.style.display="block";' +
 '  if(zt){ zt.value="翻訳中…少し待っててくださいね🥺"; unaGrow(zt); }' +
 '  var idn=unaIdent_();' +
@@ -283,7 +283,7 @@ var UNASCRIPT_ =
 '  var note=wrap.querySelector(".unarnote");' +
 '  var cid=wrap.getAttribute("data-cid")||"", nm=wrap.getAttribute("data-nm")||"";' +
 '  var text=(ta&&ta.value||"").trim();' +
-'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="本文を入力してね😊"; } return; }' +
+'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="本文を入力してください😊"; } return; }' +
 '  unaAsk_(nm,text,function(){' +
 '    if(note){ note.className="unarnote"; note.textContent="送信中…"; }' +
 '    var idn=unaIdent_();' +

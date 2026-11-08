@@ -11,7 +11,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
   var css = sgCss_();
   var body =
     '<div class="sg" id="sgPick">' +
-      '<div class="sgstep" id="sgpickhead" style="display:none">施術者を選択してね😊</div>' +
+      '<div class="sgstep" id="sgpickhead" style="display:none">施術者を選択してください😊</div>' +
       '<div class="sgstaff" id="sgstaff"></div>' +
       '<div class="sgstatus" id="sgstatus">今日の予約を読んでいます...</div>' +
     '</div>' +
@@ -81,7 +81,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '</div>' +
     '<div class="sg" id="sgMemo" style="display:none">' +
       '<div class="sgwho">予約メモの修正</div>' +
-      '<div class="sgmnote">下に本日の予約メモを表示しています。次回の予約用にメモを修正してね😊' +
+      '<div class="sgmnote">下に本日の予約メモを表示しています。次回の予約用にメモを修正してください😊' +
         '次回の予約日の予約メモとしてタイムツリーに保存されます。</div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">予約メモのタイトル</div>' +
@@ -463,7 +463,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function sendMemo(){' +
       'if(sending)return;' +
       'var ti=($("sgmtitle").value||"").trim();' +
-      'if(!ti){szPopup_("予約メモのタイトルを入力してね😊");return;}' +
+      'if(!ti){szPopup_("予約メモのタイトルを入力してください😊");return;}' +
       'if(!PICKDATE||!ROOM){szPopup_("予約の日時と施術室が決まっていません。前に戻ってやり直してください🙇");return;}' +
       'var f={date:PICKDATE,start:m2hm(TS),end:m2hm(TE),room:ROOM,title:ti,memo:$("sgmtext").value||""};' +
       'if(!REP&&!LN){f.ta=1;f.today_title=(CUST&&CUST.title)||"";' +
@@ -553,7 +553,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(RLOADED){if(step===2)drawList();return;}RLOADED=true;cb();});}' +
     'function repBack(){if(step===8){if(RFROM===22){goRNum();}else{goList();}return true;}' +
       'if(step===2||step===22){goRChoose();return true;}if(step===21){goPick();return true;}return false;}' +
-    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入力してね😊";}' +
+    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入力してください😊";}' +
     'function repBind(){' +
       '$("sgrtoday").onclick=function(){if(!tapOK())return;repLoadToday(goList);};' +
       '$("sgrnum").onclick=function(){if(!tapOK())return;goRNum();};' +
@@ -563,7 +563,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgrpad").onclick=function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");' +
         'if(k==="clr"){RDIG="";}else if(k==="del"){RDIG=RDIG.slice(0,-1);}' +
         'else if(/^[0-9]$/.test(b.textContent)&&RDIG.length<4){RDIG+=b.textContent;}rUpd();};' +
-      '$("sgrgo").onclick=function(){if(!tapOK())return;if(!RDIG){szPopup_("お客様番号を入力してね😊");return;}' +
+      '$("sgrgo").onclick=function(){if(!tapOK())return;if(!RDIG){szPopup_("お客様番号を入力してください😊");return;}' +
         'RFROM=22;repOpen("number",RPRE+RDIG,"");};}' +
     'function repOpen(md,fnum,ev){if(!fnum){szPopup_("お客様番号が分かりません。");return;}' +
       'szOvShow_(szBusyHtml_("予約を検索しています"),"#2C7A99");var n=0;' +
@@ -657,7 +657,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var n=SG.kaeshiMissing(tx,KT);$("sgkgo").disabled=n>0||sending;' +
       '$("sgkwarn").textContent=n>0?"🔁を選択していない施術があと"+n+"つあります":"";}' +
     'function memoNext(){if(sending)return;' +
-      'if(!($("sgmtitle").value||"").trim()){szPopup_("予約メモのタイトルを入力してね😊");return;}' +
+      'if(!($("sgmtitle").value||"").trim()){szPopup_("予約メモのタイトルを入力してください😊");return;}' +
       'if(!MEMOTOUCHED||!(CUST&&CUST.note)){kDecide(FINALS||[]);return;}' +
       'var my=++kchk,cd=(typeof codeOf==="function"&&CUST)?(codeOf(CUST.title)||""):"";' +
       'szOvShow_(szBusyHtml_("予約メモを確認しています"),"#2C7A99");' +

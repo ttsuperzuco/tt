@@ -42,7 +42,7 @@ function procStockScript_(C) {
   });
 
   function drawBox() {
-    $('psBox').innerHTML = digits ? esc(digits) + '<span class="u">個</span>' : '<span class="ph">数字を入力してね😊</span>';
+    $('psBox').innerHTML = digits ? esc(digits) + '<span class="u">個</span>' : '<span class="ph">数字を入力してください😊</span>';
   }
   function openItem(i, back) {
     cur = i; fromList = !!back; digits = (vals[i] !== undefined) ? String(vals[i]) : '';
@@ -63,7 +63,7 @@ function procStockScript_(C) {
     press(b.getAttribute('data-k') || b.textContent);
   });
   function ok() {
-    if (digits === '') { popup('数量を入力してね😊 （無い時は 0）'); return; }
+    if (digits === '') { popup('数量を入力してください😊 （無い時は 0）'); return; }
     vals[cur] = parseInt(digits, 10);
     if (fromList || cur === ITEMS.length - 1) openList(); else openItem(cur + 1, false);
   }
@@ -205,7 +205,7 @@ function renderProcStockPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="psStart">現在庫入力</button>' +
       '</div>' +
       '<div id="psWho" style="display:none">' + inBack('psBackWho') + head('🙋', '入力する人') +
-        '<div class="pshint">入力する人を選択してね😊</div>' +
+        '<div class="pshint">入力する人を選択してください😊</div>' +
         '<div class="pspeople" id="psPeople"></div>' +
       '</div>' +
       '<div id="psItem" style="display:none">' + inBack('psBackItem') + head('📦', '現在庫入力') +

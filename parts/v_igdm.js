@@ -134,7 +134,7 @@ function igdmSelect(i) {
   var ms = t.msgs || [], body =
     '<div class="igdmth-h"><button type="button" class="igdmth-back" onclick="igdmBackList()">‹ 一覧</button>' +
     '<span class="igdmth-nm">' + esc_(t.title || '') + (t.req ? '（初めての人）' : '') + '</span></div><div class="igdmth-log">';
-  if (t.req) body += '<div class="idmempty">初めての人からのメッセージです。ここには最初の一言だけ出ます（全文は本物のインスタで確認してね😊）。</div>';
+  if (t.req) body += '<div class="idmempty">初めての人からのメッセージです。ここには最初の一言だけ出ます（全文は本物のインスタで確認してください😊）。</div>';
   if (!ms.length) body += '<div class="idmempty">内容がありません。</div>';
   for (var k = 0; k < ms.length; k++) {
     var m = ms[k];
