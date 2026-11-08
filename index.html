@@ -367,14 +367,14 @@
 <script src="shop_rules.js?v=32af77593f"></script>
 <!-- 前日お知らせの「出し入れの判断」＝パソコン版と共有する正本の写し。 -->
 <script src="zj_rules.js?v=2f9242edbf"></script>
-<script src="nr_rules.js?v=4becf11906"></script>
+<script src="nr_rules.js?v=d7c8d2a541"></script>
 <!-- 「施術後の予約」で担当をどう並べ・どれをはじめから選ぶかの決まり＝パソコン版と共有する正本の写し。 -->
 <script src="sg_rules.js?v=6b7a45fd05"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
 <script src="bigsend.js?v=76e65d7673"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=540eb3f6cc"></script>
+<script src="code.js?v=84d6ab612a"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -1028,7 +1028,7 @@
           if (s.status === 'done') {
             var d = null; try { d = JSON.parse(s.result); } catch (e) {}
             if (d && d.msgs) { statusFn(''); onMsgs(d); } else { statusFn('内容を読み込めませんでした。'); }
-          } else { statusFn(s.result || '読めませんでした。'); }
+          } else { statusFn(s.result || '読み込めませんでした。'); }
           return;
         }
         setTimeout(function () { poll(id, n + 1); }, 700);
