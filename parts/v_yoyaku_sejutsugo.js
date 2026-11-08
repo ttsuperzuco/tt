@@ -66,8 +66,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（頭皮のプロセルをやっていない）</button>' +
     '</div>' +
     '<div class="sg" id="sgCheck" style="display:none">' +
-      '<div class="sgwho">ここからは、お客様が退店された後に行ってね😊</div>' +
-      '<div class="sgmnote">まず、このお客様を担当した施術者に以下の確認をしてね😊</div>' +
+      '<div class="sgwho">ここからは、お客様が退店された後に行ってください。</div>' +
+      '<div class="sgwho">まず、このお客様を担当した施術者に以下の確認をしてください。</div>' +
       '<div class="sgcklist" id="sgcklist"></div>' +
       '<button type="button" class="sggo" id="sgckgo">全て確認しました</button>' +
     '</div>' +
