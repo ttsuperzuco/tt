@@ -11008,14 +11008,16 @@ function uriageBookScript_(C) {
   var PEND = [];          // 書き込み中の用事（{fields}）。画面には先に反映して見せる
   // ★画面を開き直しても、まだ終わっていない書き込み（見張りの控え）は数える
   function pendAll() { return PEND.concat(ubPendList_()); }
-  function pendRow(r) { var a = pendAll(); for (var i = 0; i < a.length; i++) if (a[i].row === r) return true; return false; }
-  function pendDel() { var a = pendAll(); for (var i = 0; i < a.length; i++) if (a[i].action === 'delete') return true; return false; }
+  // ★2026-11-08 まるちゃん「複数の修正作業を同時にまかせたい　裏でプログラムが順番調整すればいいだけ」
+  //   ＝待たせない。受付係が届いた順に1件ずつ片付け、係が行を中身で探し直す（消して行がずれても正しい行に書く）。
+  //   画面の「書き込み中」の印は、行番号でなく中身の鍵で合わせる（読み直して行がずれても合う）。
+  function rk(x) { return x.no ? 'n:' + x.no : 'x:' + (x.num || '') + '|' + (x.amount == null ? '' : x.amount); }
   function applyPend() {
     if (!D || !D.rows) return;
     for (var i = 0; i < PEND.length; i++) {
       var f = PEND[i];
       for (var j = 0; j < D.rows.length; j++) {
-        var x = D.rows[j]; if (x.r !== f.row) continue;
+        var x = D.rows[j]; if (rk(x) !== f._k) continue;
         x._pend = true;
         if (f.action === 'pay') x.pay = f.value;
         else if (f.action === 'delete') x._del = true;
@@ -11088,10 +11090,6 @@ function uriageBookScript_(C) {
       if (loading) return;
       loading = true; $('ubWhen').textContent = '最新の売上表を読んでいます…';
     } else {
-      // ★行を消している間は、下の行が1つずつ上にずれる＝その間に別の行を直すと違う行に書く恐れがあるので待ってもらう。
-      if (pendDel()) { popup('行を消しています。終わるまで少しお待ちください。'); return; }
-      // ★同じ行の書き込みが終わる前に重ねて直すと、係の「中身が変わっていないか」の確かめと食い違うので待ってもらう。
-      if (fields.row && pendRow(fields.row)) { popup('この行は書き込み中です。終わるまで少しお待ちください。'); return; }
       PEND.push(fields); applyPend(); draw();
       popup('バックグラウンドで書き込みします。しばらく時間がかかります。', { icon: '📝' });
       if (onOk) onOk();
@@ -11166,7 +11164,7 @@ function uriageBookScript_(C) {
       if (col === 'D') {
         var v = b.getAttribute('data-v'); if (!v) return;
         closePick();
-        if (x.pay !== v) ask({ action: 'pay', row: x.r, no: x.no, amount: x.amount, value: v }, '支払方法を書いています');
+        if (x.pay !== v) ask({ action: 'pay', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x), value: v }, '支払方法を書いています');
         return;
       }
       if (a !== 'save') return;
@@ -11174,17 +11172,18 @@ function uriageBookScript_(C) {
       if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入れてください'); return; }
       closePick();
       if (nv === cur) return;
-      ask({ action: 'edit', row: x.r, no: x.no, amount: x.amount, col: col, value: nv }, CNAME[col] + 'を直しています');
+      ask({ action: 'edit', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x), col: col, value: nv }, CNAME[col] + 'を直しています');
     });
   }
   $('ubList').addEventListener('click', function (e) {
     if (busy || !D) return;
     var tr = e.target.closest('tr.r'); if (!tr) return;
     var x = D.rows[parseInt(tr.getAttribute('data-j'), 10)]; if (!x) return;
+    if (x._del) { popup('この行は消している途中です。'); return; }
     // ×＝消す（まるちゃん指定の文：發票の入力間違いですか？そうであればこの行を削除します）
     if (e.target.closest('button[data-a="del"]')) {
       popup((x.no || '番号なし') + '　' + (x.num || '') + ' ' + (x.name || '') + '　' + yen(x.amount) + '\n發票の入力間違いですか？そうであればこの行を削除します', {
-        cancel: true, onYes: function () { ask({ action: 'delete', row: x.r, no: x.no, amount: x.amount }, '行を消しています'); }
+        cancel: true, onYes: function () { ask({ action: 'delete', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x) }, '行を消しています'); }
       });
       return;
     }
