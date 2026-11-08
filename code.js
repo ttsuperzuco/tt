@@ -13594,9 +13594,9 @@ var INSTACSS_ =
   // ── 新規投稿の画面 ──
   '.igc{position:fixed;inset:0;z-index:8500;background:#fff;color:#000;overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Roboto,"Noto Sans JP",sans-serif;font-size:15px;}' +
   '.igc .w{max-width:560px;margin:0 auto;padding-bottom:40px;}' +
-  '.igch{position:sticky;top:0;background:#fff;display:grid;grid-template-columns:70px 1fr 70px;align-items:center;height:52px;padding:0 12px;border-bottom:1px solid #efefef;z-index:1;}' +
+  '.igch{position:sticky;top:0;background:#fff;display:grid;grid-template-columns:96px 1fr 96px;align-items:center;height:52px;padding:0 12px;border-bottom:1px solid #efefef;z-index:1;}' +
   '.igch b{text-align:center;font-size:17px;}' +
-  '.igch button{background:none;border:0;font:inherit;font-size:16px;cursor:pointer;color:#000;padding:8px 0;}' +
+  '.igch button{background:none;border:0;font:inherit;font-size:16px;cursor:pointer;color:#000;padding:8px 0;white-space:nowrap;text-align:left;}' +
   '.igch .go{color:#0095f6;font-weight:700;text-align:right;}' +
   '.igch .go:disabled{color:#b2dffc;}' +
   '.igcacct{padding:12px 16px 4px;color:#737373;font-size:14px;}' +
