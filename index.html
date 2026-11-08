@@ -367,14 +367,14 @@
 <script src="shop_rules.js?v=32af77593f"></script>
 <!-- 前日お知らせの「出し入れの判断」＝パソコン版と共有する正本の写し。 -->
 <script src="zj_rules.js?v=cb75dce7e8"></script>
-<script src="nr_rules.js?v=7d700d3bd0"></script>
+<script src="nr_rules.js?v=377c8edf37"></script>
 <!-- 「施術後の予約」で担当をどう並べ・どれをはじめから選ぶかの決まり＝パソコン版と共有する正本の写し。 -->
 <script src="sg_rules.js?v=6b7a45fd05"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
-<script src="bigsend.js?v=0a105a201c"></script>
+<script src="bigsend.js?v=4f9755de41"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=86b66243d4"></script>
+<script src="code.js?v=30aee855ab"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -945,7 +945,7 @@
         try { delete window[cb]; } catch (e) {}
         if (!payload || payload.error || payload.locked || !payload.accounts) {
           lsSet(LS_IDMPW, '');   // 合言葉が違う＝秘密の名前が見つからない
-          try { mount(renderInstaDmGate_('合言葉が違うようです。もう一度入れてください。', base, staff, dev)); } catch (e) {}
+          try { mount(renderInstaDmGate_('パスワードが違います。もう一度入力してね😊', base, staff, dev)); } catch (e) {}
           return;
         }
         window.__idmData = payload;   // ★カードを押した時、会話の全文を取り出す元
@@ -1027,7 +1027,7 @@
         if (s && s.status && s.status !== 'pending' && s.status !== 'notfound' && s.status !== 'running') {
           if (s.status === 'done') {
             var d = null; try { d = JSON.parse(s.result); } catch (e) {}
-            if (d && d.msgs) { statusFn(''); onMsgs(d); } else { statusFn('中身を読めませんでした。'); }
+            if (d && d.msgs) { statusFn(''); onMsgs(d); } else { statusFn('内容を読み込めませんでした。'); }
           } else { statusFn(s.result || '読めませんでした。'); }
           return;
         }
@@ -1173,8 +1173,8 @@
           location.reload();   // 記憶して読み直し→通常フローへ
         } else {
           root.innerHTML = '<div class="pkwrap"><div class="pktitle">' +
-            esc((r && r.error) || 'すでに他の人が選んでいます') + '</div>' +
-            '<div class="pknote">画面を読み直して、もう一度選んでください。</div></div>';
+            esc((r && r.error) || 'すでに他の人が選択しています') + '</div>' +
+            '<div class="pknote">再読込してから、もう一度選択してね😊</div></div>';
           setTimeout(function () { location.reload(); }, 1800);
         }
       };
@@ -1183,7 +1183,7 @@
         '&label=' + encodeURIComponent(label) + '&callback=__ttClaim&cb=' + Date.now();
       s.onerror = function () {
         root.innerHTML = '<div class="pkwrap"><div class="pktitle">通信エラーです</div>' +
-          '<div class="pknote">画面を読み直して、もう一度選んでください。</div></div>';
+          '<div class="pknote">再読込してから、もう一度選択してね😊</div></div>';
         setTimeout(function () { location.reload(); }, 1800);
       };
       document.body.appendChild(s);
