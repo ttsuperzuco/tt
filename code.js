@@ -1298,6 +1298,11 @@ function szDoneHtml_(title, backLabel, openUrl) {
 //   見た目にそろえる。素っ気ない標準の警告(alert/confirm)を使わない。どのページのスクリプトからも
 //   window.szPopup_ で呼べる（自前でCSS変数に頼らず全部この関数の中で見た目を作るので、どの画面でも同じ形）。
 //   使い方：szPopup_("メッセージ")／確認は szPopup_("…しますか？", {cancel:true, onYes:fn})。
+// 文の終わり（。？！）のすぐ後に次の文が続いていたら、そこで改行を入れる（小窓の文を言葉の途中で切らないため）。
+//   絵文字（😊🙇など）・かっこ閉じ・空白・改行が続く時は入れない。
+function szSentenceBreak_(t) {
+  return t.replace(/([。？！])(?=[^\s。？！」』）)\]\uD800-\uDFFF\u2600-\u27BF\uFE0F])/g, '$1\n');
+}
 function szPopup_(msg, opts) {
   opts = opts || {};
   var mask = document.createElement('div');
@@ -1309,7 +1314,7 @@ function szPopup_(msg, opts) {
     "<div style='background:#12303c;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:26px 24px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-sizing:border-box;box-shadow:0 14px 44px rgba(0,0,0,.45);text-align:center;'>" +
       // ★2026-09-16まるちゃん：長い文でも「OK／閉じる」は下に止めておく（文の部分だけが動く）。
       (icon ? "<div style='flex:0 0 auto;font-size:56px;line-height:1;margin-bottom:14px;'>" + icon + "</div>" : "") +
-      "<div class='szpopmsg' style='flex:1 1 auto;min-height:0;overflow:auto;color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:22px;'></div>" +
+      "<div class='szpopmsg' style='flex:1 1 auto;min-height:0;overflow:auto;color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;word-break:auto-phrase;overflow-wrap:break-word;text-wrap:pretty;margin-bottom:22px;'></div>" +
       // ★2026-09-23 まるちゃん「これ閉じるボタンあるのはおかしい　けして」＝待っている間の知らせは
       //   終われば自分で消えるので、押すボタンを出さない（押せると「何が起きるの？」と迷わせる）。
       (opts.noButtons ? "" :
@@ -1318,7 +1323,12 @@ function szPopup_(msg, opts) {
         "<button type='button' class='szpopyes' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:0;background:#2C7A99;color:#fff;cursor:pointer;'>" + yesLabel + "</button>" +
       "</div>") +
     "</div>";
-  if (opts.isHtml) mask.querySelector('.szpopmsg').innerHTML = msg; else mask.querySelector('.szpopmsg').textContent = msg;
+  // ★2026-11-08 まるちゃん「メッセージで不自然な改行をやめるルールにして」（「削／除します」と言葉の途中で切れていた）。
+  //   ①文の終わり（。？！）のあとに続く文は次の行から始める（絵文字・かっこ閉じ・改行が続く時はそのまま）
+  //   ②それでも長くて折り返す時は、言葉のまとまりの切れ目で折り返す（上の word-break:auto-phrase）。
+  //   ＝全部の小窓に効く。共通の決まり＝共通\画面\CLAUDE.md ルール18。
+  if (opts.isHtml) mask.querySelector('.szpopmsg').innerHTML = msg;
+  else mask.querySelector('.szpopmsg').textContent = szSentenceBreak_(String(msg));
   document.body.appendChild(mask);
   var yes = mask.querySelector('.szpopyes');
   if (yes) yes.addEventListener('click', function () { if (mask.parentNode) mask.parentNode.removeChild(mask); if (opts.onYes) opts.onYes(); });
@@ -11338,7 +11348,10 @@ function uriageBookScript_(C) {
     if (x._del) { popup('この行は削除中です。'); return; }
     // ×＝消す（まるちゃん指定の文：發票の入力間違いですか？そうであればこの行を削除します）
     if (e.target.closest('button[data-a="del"]')) {
-      popup((x.no || '番号なし') + '　' + (x.num || '') + ' ' + (x.name || '') + '　' + yen(x.amount) + '\n發票の入力間違いですか？そうであればこの行を削除します', {
+      // ★2026-11-08 まるちゃん「發票番号774にする」「時刻も最初に入れる」＝1行目は「17:13　發票番号774　F865 楊様　500元」
+      var head1 = [x.time || '', x.no ? '發票番号' + x.no : '發票番号なし', ((x.num || '') + ' ' + (x.name || '')).trim(), yen(x.amount)]
+        .filter(function (v) { return v; }).join('　');
+      popup(head1 + '\n發票の入力間違いですか？\nそうであればこの行を削除します', {
         cancel: true, onYes: function () { ask({ action: 'delete', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x) }, '行を削除しています'); }
       });
       return;
