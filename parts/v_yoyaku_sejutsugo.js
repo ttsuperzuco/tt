@@ -65,6 +65,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span>YES（頭皮のプロセルをやった）</button>' +
       '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（頭皮のプロセルをやっていない）</button>' +
     '</div>' +
+    '<div class="sg" id="sgCheck" style="display:none">' +
+      '<div class="sgwho">ここからは、お客様が退店された後に行ってください。</div>' +
+      '<div class="sgmnote">まず、このお客様を担当した施術者に以下の確認をしてください</div>' +
+      '<div class="sgcklist" id="sgcklist"></div>' +
+      '<button type="button" class="sggo" id="sgckgo">全て確認しました</button>' +
+    '</div>' +
     '<div class="sg" id="sgAfter" style="display:none">' +
       '<div class="sgwho">このお客様は以下に当てはまりますか？😊 （複数選択可）</div>' +
       '<div class="sgmnote" id="sgtahint" style="display:none"></div>' +
@@ -200,13 +206,19 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgLash").style.display=step===12?"":"none";' +
       '$("sgPF").style.display=step===13?"":"none";' +
       '$("sgPH").style.display=step===14?"":"none";' +
+      '$("sgCheck").style.display=step===15?"":"none";' +
       'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
       'var hd=$("sghead");if(hd)hd.style.display=step===1?"":"none";}' +
     'function goPick(){step=1;show();drawPick();window.scrollTo(0,0);}' +
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
-    'function back(){if(REP&&repBack())return;if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
+    'function back(){if(REP&&repBack())return;' +
+      'if(rcp()&&step===8){var sv8=seqv();if(sv8.length){goStep(sv8[sv8.length-1]);}else{goCheck();}return;}' +
+      'if(rcp()&&step===15){step=7;show();growMemo();window.scrollTo(0,0);return;}' +
+      'if(rcp()&&step===3){goList();return;}' +
+      'if(rcp()&&step>=9&&step<=14){if(!prevOf(step))goCheck();return;}' +
+      'if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
       'else if(step===7){step=6;show();drawTime();window.scrollTo(0,0);}' +
       'else if(step===6){goFree();}else if(step===5){goDay();}' +
       'else if(step===4){goMonth();}else if(step===3&&!REP&&!LN&&seqv().length){goStep(seqv()[seqv().length-1]);}' +
@@ -236,6 +248,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var now=NOW();' +
       'var list=ALLEV.filter(function(e){return pick===SG.ALL||e.mark===pick;});' +
       'list.sort(function(a,b){return a.start-b.start;});' +
+      'if(!REP&&!LN){var sm=pick===SG.ALL?"🍅":pick;list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg1",dname:"RYU（試し）",dummy:true,fdask:true,firstdat:true,title:sm+"🇫🇷預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉イーライト VIO＋脇 5回コース：全5回の4回目 あり\\n◉🇫🇷パリジェンヌリペア あり\\n\\n💰お支払い状況\\n◉イーライト VIO＋脇 5回コース：支払い済み"});}/*TEMPDUMMY*/' +
       'LIST=list;' +
       '$("sglisthead").textContent="お客様の選択";' +
       'if(!list.length){$("sglist").innerHTML="";' +
@@ -271,7 +284,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'else if(FDASK==null&&CUST&&FDMAP[CUST.id]){FIRSTDAT=FDMAP[CUST.id][0];FDASK=FDMAP[CUST.id][1];}' +
         'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT&&!(LN&&lnHasNext()))SEQ.push(11);' +
         'if(ACQ.indexOf("lash")>=0)SEQ.push(12);if(ACQ.indexOf("procell_face")>=0)SEQ.push(13);if(ACQ.indexOf("procell_scalp")>=0)SEQ.push(14);' +
-        'if(seqv().length){goStep(seqv()[0]);}else if(LN){lnFinish();}else{goMonth();}};}}' +
+        'if(seqv().length&&!rcp()){goStep(seqv()[0]);}else if(LN){lnFinish();}else{goMonth();}};}}' +
     'function fitNames(){' +
       'var BIG=34,MIN=16;' +
       'var ns=$("sglist").getElementsByClassName("sgnm2");' +
@@ -397,7 +410,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'after:[LASHANS==="yes"?"lash":"",PFANS==="yes"?"procell_face":"",' +
           'PHANS==="yes"?"procell_scalp":""].filter(function(x){return x;})};}' +
     'function seqv(){return SEQ.filter(seqShown);}' +
-    'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}if(LN){lnFinish();return;}goMonth();}' +
+    'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}if(LN){lnFinish();return;}if(rcp()){rcpFinish();return;}goMonth();}' +
+    'function rcp(){return DEVMODE&&!REP&&!LN&&typeof SG.asksAfterMemo==="function"&&SG.asksAfterMemo(WHO);}' +
+    'function goCheck(){step=15;show();' +
+      'var it=SG.checkItems(seqv(),(ELJ&&ELJ.parts)||[],KT),NB="①②③④⑤⑥⑦⑧⑨",h="";' +
+      'for(var i=0;i<it.length;i++)h+="<div class=\\"sgckrow\\"><span class=\\"sgckn\\">"+(NB.charAt(i)||"・")+"</span><span>"+esc(it[i])+"</span></div>";' +
+      '$("sgcklist").innerHTML=h;window.scrollTo(0,0);}' +
+    'function rcpFinish(){if(KT.length){step=8;show();drawKaeshi();window.scrollTo(0,0);return;}sendMemo();}' +
     'function prevOf(n){var i=SEQ.indexOf(n);for(var j=i-1;j>=0;j--){if(seqShown(SEQ[j])){goStep(SEQ[j]);return true;}}return false;}' +
     'function afterElight(){nextOf(9);}' +
     'function goLash(){step=12;show();' +
@@ -597,10 +616,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var m=(typeof staffOf==="function"&&CUST)?staffOf(CUST.title||""):"";' +
       'if(!m&&pick&&pick!==SG.ALL)m=pick;return m||"";}' +
     'function kDecide(list){' +
-      'if(typeof SG.kaeshiLineOf!=="function"||typeof SG.kaeshiSetLine!=="function"){sendMemo();return;}' +
-      'var tx=$("sgmtext").value||"";KT=[];' +
-      'for(var i=0;i<(list||[]).length;i++){if(SG.kaeshiLineOf(tx,list[i])!==null)KT.push(list[i]);}' +
-      'if(!KT.length){sendMemo();return;}' +
+      'var old=(typeof SG.kaeshiLineOf!=="function"||typeof SG.kaeshiSetLine!=="function");KT=[];' +
+      'if(!old){var tx=$("sgmtext").value||"";' +
+        'for(var i=0;i<(list||[]).length;i++){if(SG.kaeshiLineOf(tx,list[i])!==null)KT.push(list[i]);}}' +
+      'if(rcp()){if(KT.length||seqv().length){goCheck();}else{sendMemo();}return;}' +
+      'if(old||!KT.length){sendMemo();return;}' +
       'step=8;show();drawKaeshi();window.scrollTo(0,0);}' +
     'var KPICK={};' +
     'function kPick(t){var key=t.head||"";if(!KPICK[key])KPICK[key]={};return KPICK[key];}' +
@@ -696,6 +716,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'for(var hi=0;hi<hb.length;hi++){hb[hi].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){PHANS=k;nextOf(14);};' +
           'if(k==="no"){noCheck("頭皮のプロセル",go);return;}go();};}}' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
+      '$("sgckgo").onclick=function(){if(!tapOK())return;var sv=seqv();if(sv.length){goStep(sv[0]);}else{rcpFinish();}};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
         'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
       'if(REP)repBind();' +
@@ -711,6 +732,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '.sgrbig.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
     '.sgrbig.sel::after{content:"✔";margin-left:auto;color:#fb8c44;font-size:28px;}' +
     '#sglgo:disabled{opacity:.45;}' +
+    '.sgcklist{margin:12px 0 18px;}' +
+    '.sgckrow{display:flex;gap:12px;align-items:flex-start;margin:12px 0;padding:18px;border-radius:18px;background:#fff;color:#0f172a;font-size:22px;font-weight:900;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
+    '.sgckn{flex:none;font-size:26px;color:#2C7A99;}' +
     '#sgrdisp{text-align:center;font-size:34px;font-weight:900;min-height:1.35em;}' : '') +
     '.sgkpre{white-space:pre-wrap;word-break:break-all;background:#fff;color:#0f172a;border-radius:12px;padding:12px;margin:0;font:inherit;font-size:15px;line-height:1.5;}' +
     '</style>' +
