@@ -506,7 +506,7 @@ function renderUriageBookPage_(base, staff, dev) {
             '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
           '<label>氏名（未記入可）</label><div class="ubnamerow"><input id="ubOthName"><span class="ubu">様</span></div>' +
           '<label>内容（例 プロセルアフターセラム）</label><input id="ubOthLabel">' +
-          '<label>金額（元・経費などはマイナス）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
+          '<label>金額（売上は＋　経費は－　例：ティッシュ補充　-300元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +
         '</div>' +
         '<button type="button" class="exgo" id="ubOthGo">以上の内容で追加</button>' +
