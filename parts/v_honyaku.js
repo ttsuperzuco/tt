@@ -44,7 +44,7 @@ function renderHonyakuPage_(base, staff, dev) {
   'goEl.disabled=false;' +
   'if(r.status!=="done"){setSt(String(r.result||"訳せませんでした。"),"err");return;}' +
   'dstEl.value=String(r.result||"");setSt("訳しました（なぞってコピーできます）","ok");});}' +
-  'function go(){var t=(srcEl.value||"").trim();if(!t){setSt("日本語を入力してね😊","err");return;}' +
+  'function go(){var t=(srcEl.value||"").trim();if(!t){setSt("日本語を入力してください😊","err");return;}' +
   'goEl.disabled=true;dstEl.value="";setSt("訳しています…（少し待っててくださいね🥺）","wait");' +
   'jsonp({action:"submit",key:KEY,op:"translate",who:idn.who,role:idn.role,device:idn.device,' +
   'fields:JSON.stringify({text:t,gender:gender,quality:"1"})},' +
@@ -63,11 +63,11 @@ function renderHonyakuPage_(base, staff, dev) {
   'setTimeout(function(){pollSub(r.id,btn);},900);});}' +
   'if(remEl){remEl.addEventListener("click",function(){' +
   'var t=(srcEl.value||"").trim(),d=(dstEl.value||"").trim();' +
-  'if(!t||!d){setSt("日本語と、登録したい中国語の両方を入力してね😊","err");return;}' +
+  'if(!t||!d){setSt("日本語と、登録したい中国語の両方を入力してください😊","err");return;}' +
   'ask({text:t,gender:gender,remember:d},remEl);});}' +
   'if(termEl){termEl.addEventListener("click",function(){' +
   'var a=(tjaEl.value||"").trim(),b=(tzhEl.value||"").trim();' +
-  'if(!a||!b){setSt("日本語と中国語の両方を入力してね😊","err");return;}' +
+  'if(!a||!b){setSt("日本語と中国語の両方を入力してください😊","err");return;}' +
   'ask({text:a,gender:gender,term_ja:a,term_zh:b},termEl);});}' +
   '})();</script>';
   return '<style>' + HOMECSS_ + css + '</style>' +
@@ -81,9 +81,9 @@ function renderHonyakuPage_(base, staff, dev) {
         '<button type="button" data-g="男">男性</button>' +
       '</div>' +
       '<div class="hylbl">日本語（ここに貼る）</div>' +
-      '<textarea id="hysrc" placeholder="配信したい日本語をそのまま貼り付けてね😊"></textarea>' +
+      '<textarea id="hysrc" placeholder="配信したい日本語をそのまま貼り付けてください😊"></textarea>' +
       '<button type="button" class="hygo" id="hygo">訳す</button>' +
-      '<div class="hystatus" id="hystatus">日本語を入力して「訳す」を押してね😊</div>' +
+      '<div class="hystatus" id="hystatus">日本語を入力して「訳す」を押してください😊</div>' +
       '<div class="hylbl">台湾中国語（選択してコピー・修正できます）</div>' +
       '<textarea id="hydst" placeholder=""></textarea>' +
       '<button type="button" class="hysub" id="hyrem">この訳で覚える</button>' +

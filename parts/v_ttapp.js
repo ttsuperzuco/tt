@@ -141,7 +141,7 @@ function teikeiStart_(rows) {
       var msg = document.getElementById('tkmsg');
       var doCopy = function () {
         copyText(p.text, function (ok) {
-          msg.textContent = ok ? '✅ コピーしました。LINEに貼り付けてね😊'
+          msg.textContent = ok ? '✅ コピーしました。LINEに貼り付けてください😊'
                                : '⚠️ コピーできませんでした。下のボタンをもう一度押してください🙇';
         });
       };
@@ -204,7 +204,7 @@ function teikeiStart_(rows) {
       sm.textContent = 'コピーしています…';
       fetch(imgs[0]).then(function (r) { return r.blob(); }).then(toPng)
         .then(function (png) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]); })
-        .then(function () { sm.textContent = 'コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してね😊'; })
+        .then(function () { sm.textContent = 'コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してください😊'; })
         .catch(function () { sm.textContent = 'コピーできなかったので、保存にします…'; directSave(); });
     }
     if (isIOS || isAndroid) {
@@ -227,7 +227,7 @@ function teikeiStart_(rows) {
     var opts = options();
     if (!opts.length) {
       body.innerHTML = '<div class="tknone">' + esc(rows.length
-        ? '❌ この階層に表示できるデータがありません。\n\n・本文が右端の列に入っているか\n・階層（A,B,C…）が空になっていないか\nを確認してね😊'
+        ? '❌ この階層に表示できるデータがありません。\n\n・本文が右端の列に入っているか\n・階層（A,B,C…）が空になっていないか\nを確認してください😊'
         : 'まだ定型文が登録されていません。') + '</div>';
       return;
     }

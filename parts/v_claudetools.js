@@ -59,7 +59,7 @@ function renderClaudeToolsPage_(base, staff, dev) {
     backBar_(base, staff, dev) +
     '<div class="cttwrap">' +
       '<h1>🤖 自作Claudeツール</h1>' +
-      '<div class="cttnote">Claudeに言う「合言葉」です。タップ（またはコピー）で写して、別のチャットのClaudeにそのまま貼り付けてね😊 説明なしでその作業ができます。</div>' +
+      '<div class="cttnote">Claudeに言う「合言葉」です。タップ（またはコピー）で写して、別のチャットのClaudeにそのまま貼り付けてください😊 説明なしでその作業ができます。</div>' +
       cards +
     '</div>' +
     '<script>' + script + '<\/script>';

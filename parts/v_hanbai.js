@@ -144,7 +144,7 @@ function hanbaiScript_(C) {
 
   var stDigits = '', stSending = false;
   function stDraw() {
-    $('hbStBox').innerHTML = stDigits ? esc(stDigits) + '<span class="u">本</span>' : '<span class="ph">数字を入力してね😊</span>';
+    $('hbStBox').innerHTML = stDigits ? esc(stDigits) + '<span class="u">本</span>' : '<span class="ph">数字を入力してください😊</span>';
   }
   $('hbGoStock').addEventListener('click', function () {
     clearMsg();
@@ -160,7 +160,7 @@ function hanbaiScript_(C) {
     stDraw();
   });
   $('hbStOk').addEventListener('click', function () {
-    if (stDigits === '') { popup('本数を入力してね😊 （無い時は 0）'); return; }
+    if (stDigits === '') { popup('本数を入力してください😊 （無い時は 0）'); return; }
     var rows = [['品物', 'ホホバエッセンスNo31（50ml）'], ['今お店にある本数', parseInt(stDigits, 10) + ' 本'], ['入力する人', who()]];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
@@ -212,7 +212,7 @@ function hanbaiScript_(C) {
   $('hbJRepBtn').addEventListener('click', function () { S.kind = 'repeat'; show('hbKana'); });
   $('hbJNewGo').addEventListener('click', function () {
     S.sei = $('hbSei').value.replace(/\s+/g, ' ').trim(); S.mei = $('hbMei').value.replace(/\s+/g, ' ').trim();
-    if (!S.sei) { popup('氏を入力してね😊'); return; }
+    if (!S.sei) { popup('氏を入力してください😊'); return; }
     S.yomi = ''; openQty();
   });
 
@@ -313,7 +313,7 @@ function hanbaiScript_(C) {
   });
   var NPRE = '', NDIG = '';
   function numDraw() {
-    $('hbNumBox').innerHTML = (NPRE || NDIG) ? esc(NPRE + NDIG) : '<span class="ph">お客様番号を入力してね😊</span>';
+    $('hbNumBox').innerHTML = (NPRE || NDIG) ? esc(NPRE + NDIG) : '<span class="ph">お客様番号を入力してください😊</span>';
     var sg = $('hbNumSeg').querySelectorAll('button');
     for (var j = 0; j < sg.length; j++) sg[j].className = (sg[j].getAttribute('data-v') === NPRE) ? 'on' : '';
   }
@@ -323,7 +323,7 @@ function hanbaiScript_(C) {
   });
   $('hbShopGo').addEventListener('click', function () {
     S.name = $('hbShopName').value.replace(/\s+/g, ' ').trim();
-    if (!S.name) { popup('お名前を入力してね😊'); return; }
+    if (!S.name) { popup('お名前を入力してください😊'); return; }
     S.fnum = ''; S.pay = '蝦皮'; openQty();
   });
   var segs = $('hbNumSeg').querySelectorAll('button');
@@ -338,8 +338,8 @@ function hanbaiScript_(C) {
     numDraw();
   });
   $('hbNumGo').addEventListener('click', function () {
-    if (!NPRE) { popup('F（女性）か M（男性）を押してね😊'); return; }
-    if (!NDIG) { popup('お客様番号を入力してね😊'); return; }
+    if (!NPRE) { popup('F（女性）か M（男性）を押してください😊'); return; }
+    if (!NDIG) { popup('お客様番号を入力してください😊'); return; }
     ask({ kind: 'lookup', fnum: NPRE + NDIG }, 'お客様を検索しています', function (err, d) {
       if (err) { popup('さがせませんでした：' + err); return; }
       if (!d || !d.ok) { popup((d && d.reason) || 'お客様が見つかりません'); return; }
@@ -355,7 +355,7 @@ function hanbaiScript_(C) {
       var mb = btns.querySelector('[data-q="more"]'); if (!mb) return;
       btns.className = 'hbqty' + (isMore() ? ' more' : '');
       mb.className = 'wide' + (isMore() ? ' on' : '');
-      mb.innerHTML = !isMore() ? '10本以上（数字で入力）' : (dig ? '<span class="qn">' + esc(dig) + '</span> 本' : '数字ボタンで本数を入力してね😊');
+      mb.innerHTML = !isMore() ? '10本以上（数字で入力）' : (dig ? '<span class="qn">' + esc(dig) + '</span> 本' : '数字ボタンで本数を入力してください😊');
     }
     function open() {
       var v = S[key], h = noneLabel ? '<button type="button" class="wide none' + (v === 0 && S[key + 'Set'] ? ' on' : '') + '" data-q="0">' + noneLabel + '</button>' : '';
@@ -381,7 +381,7 @@ function hanbaiScript_(C) {
       draw();
     });
     go.addEventListener('click', function () {
-      if (dig === '') { popup('本数を入力してね😊 （無い時は 0）'); return; }
+      if (dig === '') { popup('本数を入力してください😊 （無い時は 0）'); return; }
       var q = parseInt(dig, 10);
       S[key] = q; S[key + 'Set'] = true; next();
     });
@@ -411,7 +411,7 @@ function hanbaiScript_(C) {
     $('hbAmtHead').textContent = '販売金額（' + unit() + '）';
     aDraw(); show('hbAmt');
   }
-  function aDraw() { $('hbAmtBox').innerHTML = ADIG ? esc(yen(ADIG)) + '<span class="u">' + unit() + '</span>' : '<span class="ph">金額を入力してね😊</span>'; }
+  function aDraw() { $('hbAmtBox').innerHTML = ADIG ? esc(yen(ADIG)) + '<span class="u">' + unit() + '</span>' : '<span class="ph">金額を入力してください😊</span>'; }
   $('hbAmtPad').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     var k = b.getAttribute('data-k') || b.textContent;
@@ -420,7 +420,7 @@ function hanbaiScript_(C) {
     aDraw();
   });
   $('hbAmtGo').addEventListener('click', function () {
-    if (ADIG === '') { popup('金額を入力してね😊'); return; }
+    if (ADIG === '') { popup('金額を入力してください😊'); return; }
     S.amount = parseInt(ADIG, 10);
     if (S.kind === 'shopee') { S.pay = '蝦皮'; $('hbNoteIn').value = S.note || ''; show('hbNote'); return; }   
     openPay();
@@ -615,7 +615,7 @@ function renderHanbaiPage_(base, staff, dev) {
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="hb">' +
       '<div id="hbWho" style="display:none">' + head('🙋', 'No31 販売管理') +
-        '<div class="hbbighint">販売した人の名前を<br>選択してね😊</div>' +
+        '<div class="hbbighint">販売した人の名前を<br>選択してください😊</div>' +
         '<div class="pspeople" id="hbWhoBtns"></div>' +
       '</div>' +
       '<div id="hbMenu">' + head('🛒', 'No31 販売管理') +
@@ -644,11 +644,11 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbJNewGo">次へ</button>' +
       '</div>' +
       '<div id="hbKana" style="display:none">' + inBack + head('🔁', 'お客様') + sum +
-        '<div class="hbhint">苗字の最初の文字を選択してね😊<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます。英字などは「他」</small></div>' +
+        '<div class="hbhint">苗字の最初の文字を選択してください😊<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます。英字などは「他」</small></div>' +
         '<div class="hbkana" id="hbKanaGrid">' + kana + '</div>' +
       '</div>' +
       '<div id="hbCands" style="display:none">' + inBack + head('🔁', '', 'hbCandHead') + sum +
-        '<div class="hbhint">お客様を選択してね😊</div>' +
+        '<div class="hbhint">お客様を選択してください😊</div>' +
         '<div class="hbrows hbcards" id="hbCandRows"></div>' +
         '<div class="hbempty" id="hbCandNone">前に買ったお客様が見つかりません</div>' +
         '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕</span>新規お客様として入力</button>' +
@@ -673,7 +673,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
       '</div>' +
       count('hbQty', '🧴', '販売本数', '') +
-      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>選択してね😊') +
+      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>選択してください😊') +
       '<div id="hbPay" style="display:none">' + inBack + head('💳', '支払方法') + sum +
         '<div class="hbpay" id="hbPayBtns"></div>' +
       '</div>' +

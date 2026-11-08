@@ -24,7 +24,7 @@ function claudeChatScript_(C) {
   }
   function draw(h) {
     var items = (h && h.items) || [], out = '';
-    if (!items.length) { $('ccLog').innerHTML = '<div class="ccnone">聞きたいことを下に書いて「送る」を押してね😊</div>'; return; }
+    if (!items.length) { $('ccLog').innerHTML = '<div class="ccnone">聞きたいことを下に書いて「送る」を押してください😊</div>'; return; }
     for (var i = 0; i < items.length; i++) {
       out += '<div class="ccq">' + esc(items[i].q || '') + '</div>' +
         '<div class="cca">' + esc(items[i].a || '') + '<div class="cct">' + esc(items[i].at || '') + '</div></div>';
@@ -56,8 +56,8 @@ function claudeChatScript_(C) {
   $('ccSend').addEventListener('click', function () {
     if (sending) return;
     var t = $('ccText').value.replace(/^\s+|\s+$/g, '');
-    if (!t) { popup('聞きたいことを入力してね😊'); return; }
-    if (t.length > 2000) { popup('長すぎます。2000文字までにしてね😊'); return; }
+    if (!t) { popup('聞きたいことを入力してください😊'); return; }
+    if (t.length > 2000) { popup('長すぎます。2000文字までにしてください😊'); return; }
     sending = true; polls = 0; $('ccSend').disabled = true;
     if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('考え中…', false), '#2C7A99');
     jsonp({ action: 'submit', key: C.key, op: 'claude_chat',
@@ -80,7 +80,7 @@ function renderClaudeChatPage_(base, staff, dev) {
     '<div class="cc">' +
       '<div class="hhead"><span class="bmark">💬</span><span class="bname">Claudeに聞く</span></div>' +
       '<div class="cclog" id="ccLog"><div class="ccnone">読み込み中…</div></div>' +
-      '<textarea class="ccin" id="ccText" placeholder="聞きたいことを入力してね😊"></textarea>' +
+      '<textarea class="ccin" id="ccText" placeholder="聞きたいことを入力してください😊"></textarea>' +
       '<button type="button" class="exgo" id="ccSend">送る</button>' +
     '</div></div>' +
     '<script>(' + claudeChatScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';

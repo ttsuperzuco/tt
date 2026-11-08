@@ -136,7 +136,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
   '</div>' +
   '<div id="akidays">' + cards + '</div>' +
   (wakuOn ? '<div id="akiwakubox" class="akiwakubox akihidden"></div>' : '') +
-  '<div class="akinone" id="akiDateEmpty" hidden>この期間には表示できるデータがありません。期間を変更してね😊</div>' +
+  '<div class="akinone" id="akiDateEmpty" hidden>この期間には表示できるデータがありません。期間を変更してください😊</div>' +
 '</div>' +
 wakuData +
 AKISCRIPT_;

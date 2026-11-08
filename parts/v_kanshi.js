@@ -397,14 +397,14 @@ var KANSHISCRIPT_ =
 '    return "<button type=\\"button\\" class=\\"kchip\\" data-reset=\\""+esc(pid)+"\\">"+esc(ELAB_[pid]||pid)+"</button>";' +
 '  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠ 全員</button>";' +
 '  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
-'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してね😊 （反映まで最大1分）。</div>"+' +
+'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください😊 （反映まで最大1分）。</div>"+' +
 '    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
 '    "<div class=\\"ksec\\">新しいユーザーを追加</div>"+' +
 '    "<div class=\\"knote\\">新しいスタッフや、同じ人の別の名前（例：りんご2）を追加します。</div>"+' +
 '    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kAdd\\" placeholder=\\"例：りんご2\\">"+' +
 '    "<button type=\\"button\\" class=\\"kbtn\\" id=\\"kAddBtn\\">追加</button></div>"+' +
 '    "<div class=\\"ksec\\">スタッフ用URLのパスワード</div>"+' +
-'    "<div class=\\"knote\\">今のパスワードは、安全のためこの画面には表示しません。変更したい時だけ新しいパスワードを入力してね😊</div>"+' +
+'    "<div class=\\"knote\\">今のパスワードは、安全のためこの画面には表示しません。変更したい時だけ新しいパスワードを入力してください😊</div>"+' +
 '    "<div class=\\"krow2\\"><input type=\\"text\\" id=\\"kPw2\\" placeholder=\\"新しいパスワード\\">"+' +
 '    "<button type=\\"button\\" class=\\"kbtn\\" id=\\"kPwBtn\\">変更</button></div>"+' +
 '    "<div class=\\"ksec\\">名前を選び直させる（スマホごと）</div>"+' +
@@ -461,7 +461,7 @@ var KANSHISCRIPT_ =
 '  if(mv){ moveTile_(mv.getAttribute("data-tid"), Number(mv.getAttribute("data-mv"))); return true; }' +
 '  if(t.closest("#kAddBtn")){' +
 '    var v=(document.getElementById("kAdd").value||"").trim();' +
-'    if(!v){ toast_("名前を入力してね😊"); return true; }' +
+'    if(!v){ toast_("名前を入力してください😊"); return true; }' +
 '    send_("tile_settings","setval", JSON.stringify({t:"add", v:v}),' +
 '      {title:"ユーザーを追加しています", done:"ユーザーを追加しました"});' +
 '    document.getElementById("kAdd").value="";' +
@@ -469,7 +469,7 @@ var KANSHISCRIPT_ =
 '  }' +
 '  if(t.closest("#kPwBtn")){' +
 '    var pw=(document.getElementById("kPw2").value||"").trim();' +
-'    if(!pw){ toast_("新しいパスワードを入力してね😊"); return true; }' +
+'    if(!pw){ toast_("新しいパスワードを入力してください😊"); return true; }' +
 '    if(confirm("スタッフ用URLのパスワードを「"+pw+"」に変更します。よろしいでしょうか？😊")){' +
 '      send_("tile_settings","setval", JSON.stringify({t:"pw", v:pw}),' +
 '        {title:"パスワードを変更しています", done:"パスワードを変更しました"});' +

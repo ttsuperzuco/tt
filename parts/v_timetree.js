@@ -428,7 +428,7 @@ function ttviewStart_(exec, base, staff, dev) {
         st.draft = null;
         st.ev.n = st.base;
         drawMemo();
-        szPopup_('先に予約メモを修正した人がいます。\n最新の予約メモを表示しました。\nもう一度修正してから保存してね😊');
+        szPopup_('先に予約メモを修正した人がいます。\n最新の予約メモを表示しました。\nもう一度修正してから保存してください😊');
         return;
       }
       st.ev.n = text;

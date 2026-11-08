@@ -39,7 +39,7 @@
   var approve = op === 'approve';
   box.innerHTML = '<h1>' + (approve ? 'このスマホを許可しますか？😊' : 'このスマホを外しますか？😊') + '</h1>'
     + '<div>画面の番号</div><div class="code">' + code + '</div>'
-    + '<p>' + (approve ? '心当たりがある時だけ押してね😊<br>押さなければ、何も見られないままです。'
+    + '<p>' + (approve ? '心当たりがある時だけ押してください😊<br>押さなければ、何も見られないままです。'
                        : '押すと、そのスマホではズコのデータが見られなくなります。') + '</p>'
     + '<button id="go" class="' + (approve ? '' : 'rm') + '">' + (approve ? '許可する' : '外す') + '</button>';
   document.getElementById('go').onclick = function(){

@@ -360,7 +360,7 @@ var SG_STEPS_JS_ =
       'var over=(TE>SLOT.e);' +
       'var er=$("sgterr");' +
       'if(over){er.style.display="block";' +
-        'er.innerHTML="その時間は空いていません。<br>入力し直してね😊";}' +
+        'er.innerHTML="その時間は空いていません。<br>入力し直してください😊";}' +
       'else{er.style.display="none";er.textContent="";}' +
       'if(SLOT.toku){var w=[];' +
         'if(!sgStaffFree(SLOT.emoji,TS,TE))w.push(SLOT.who+"さんは、この時間に空きがありません（予約か勤務の外と重なります）。");' +
