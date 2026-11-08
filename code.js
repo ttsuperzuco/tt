@@ -13583,7 +13583,40 @@ var INSTACSS_ =
   '.igempty b{display:block;color:#000;font-size:20px;font-weight:800;margin-bottom:6px;}' +
   '.ignav{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #dbdbdb;height:50px;}' +
   '.ignav button{display:flex;align-items:center;justify-content:center;}' +
-  '.ignav .me{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #000;}';
+  '.ignav .me{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #000;}' +
+  // ── 作成（＋）の小窓＝本物のインスタの「作成」と同じ並び ──
+  '.igsheet{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;}' +
+  '.igsheet .in{background:#fff;color:#000;width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:8px 0 24px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Roboto,"Noto Sans JP",sans-serif;}' +
+  '.igsheet .bar{width:40px;height:4px;border-radius:2px;background:#c7c7c7;margin:4px auto 10px;}' +
+  '.igsheet .in>b{display:block;text-align:center;font-size:16px;padding:6px 0 12px;border-bottom:1px solid #efefef;}' +
+  '.igsheet button{display:flex;align-items:center;gap:14px;width:100%;background:none;border:0;border-bottom:1px solid #efefef;padding:15px 20px;font:inherit;font-size:16px;color:#000;cursor:pointer;text-align:left;}' +
+  '.igsheet button.off{color:#9a9a9a;}' +
+  // ── 新規投稿の画面 ──
+  '.igc{position:fixed;inset:0;z-index:8500;background:#fff;color:#000;overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Roboto,"Noto Sans JP",sans-serif;font-size:15px;}' +
+  '.igc .w{max-width:560px;margin:0 auto;padding-bottom:40px;}' +
+  '.igch{position:sticky;top:0;background:#fff;display:grid;grid-template-columns:70px 1fr 70px;align-items:center;height:52px;padding:0 12px;border-bottom:1px solid #efefef;z-index:1;}' +
+  '.igch b{text-align:center;font-size:17px;}' +
+  '.igch button{background:none;border:0;font:inherit;font-size:16px;cursor:pointer;color:#000;padding:8px 0;}' +
+  '.igch .go{color:#0095f6;font-weight:700;text-align:right;}' +
+  '.igch .go:disabled{color:#b2dffc;}' +
+  '.igcacct{padding:12px 16px 4px;color:#737373;font-size:14px;}' +
+  '.igcacct b{color:#000;}' +
+  '.igcprev{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:8px 0 0;}' +
+  '.igcprev div{position:relative;aspect-ratio:4/5;background:#efefef;overflow:hidden;}' +
+  '.igcprev img,.igcprev video{width:100%;height:100%;object-fit:cover;display:block;}' +
+  '.igcprev button{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:15px;cursor:pointer;}' +
+  '.igcprev .n{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.6);color:#fff;border-radius:10px;padding:1px 7px;font-size:12px;}' +
+  '.igcpick{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 16px 0;padding:14px;border:1px dashed #c7c7c7;border-radius:12px;color:#0095f6;font-weight:700;cursor:pointer;}' +
+  '.igcpick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;}' +
+  '.igccap{display:block;width:calc(100% - 32px);box-sizing:border-box;margin:14px 16px 0;min-height:130px;border:0;border-bottom:1px solid #efefef;font:inherit;font-size:15px;outline:none;resize:vertical;}' +
+  '.igccnt{text-align:right;color:#737373;font-size:12px;padding:4px 16px 0;}' +
+  '.igccnt.over{color:#ed4956;}' +
+  '.igcq{margin:16px 16px 0;padding:14px;border-radius:12px;background:#f3f5f7;}' +
+  '.igcq .t{font-weight:700;margin-bottom:10px;}' +
+  '.igcq .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}' +
+  '.igcq .seg button{border:1px solid #dbdbdb;background:#fff;border-radius:10px;padding:11px 4px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;color:#000;}' +
+  '.igcq .seg button.on{background:#0095f6;border-color:#0095f6;color:#fff;}' +
+  '.igcnote{margin:12px 16px 0;color:#737373;font-size:12.5px;line-height:1.5;}';
 
 function renderInstaPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">📸</span><span class="bname">インスタ</span></div>';
@@ -13758,7 +13791,7 @@ function instaScript_(C) {
     if (!v || !v.prof) { $('igApp').innerHTML = '<div class="igempty">' + (BUSY[CUR] ? 'インスタから読み込み中です…（30秒ほどかかります）' : '読み込み中です…') + '</div>'; return; }
     var p = v.prof, links = p.links || [];
     var h = '';
-    h += '<div class="igtop"><button type="button" data-soon="1">' + IC.plus + '</button>' +
+    h += '<div class="igtop"><button type="button" data-create="1">' + IC.plus + '</button>' +
       '<div class="u"><span>' + esc(p.user) + '</span>' + IC.down + '<i></i></div>' +
       '<div class="r"><button type="button" data-soon="1">' + IC.threads + '</button><button type="button" data-soon="1">' + IC.menu + '</button></div></div>';
     h += '<div class="igprof"><div class="igav"><img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></div>' +
@@ -13793,9 +13826,168 @@ function instaScript_(C) {
     var t = e.target;
     var tb = t.closest && t.closest('[data-tab]');
     if (tb) { TAB = tb.getAttribute('data-tab'); drawApp(); return; }
+    if (t.closest && t.closest('[data-create]')) { openCreate(); return; }
     if (t.closest && (t.closest('[data-soon]') || t.closest('[data-post]'))) { warn(SOON); return; }
   });
   $('igReload').addEventListener('click', function () { loadWeb(CUR, true); });
+
+  // ── 作成（＋）＝リール／投稿／ストーリーズ（2026-11-09 まるちゃん「投稿を作る」）──
+  //   投稿は受付係（op=insta・kind=post）→ メタ公式の仕組みで出す。写真はAIの記録を抜いてから上げ、
+  //   上げたあと「いいねの数を非表示（選んだ時）」「AIの札が付いていないか」を受付係が専用ブラウザで行う（決まり 4-0／4-0b）。
+  var CK = 'feed', CMEDIA = [], CHIDE = null, MAXI = 10, VIDEO_MB = 18, TOTAL_MB = 18, MAXCAP = 2200;
+  function openCreate() {
+    var sh = document.createElement('div'); sh.className = 'igsheet';
+    sh.innerHTML = '<div class="in"><div class="bar"></div><b>作成</b>' +
+      '<button type="button" data-k="reel">' + IC.reels + 'リール</button>' +
+      '<button type="button" data-k="feed">' + IC.grid + '投稿</button>' +
+      '<button type="button" data-k="story">' + IC.plus + 'ストーリーズ</button>' +
+      '<button type="button" class="off" data-k="">' + IC.plus + 'ハイライト</button>' +
+      '<button type="button" class="off" data-k="">' + IC.reels + 'ライブ</button></div>';
+    sh.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) { if (e.target === sh) sh.remove(); return; }
+      var k = b.getAttribute('data-k');
+      if (!k) { warn(SOON); return; }
+      sh.remove(); openCompose(k);
+    });
+    document.body.appendChild(sh);
+  }
+  function totalMB() { return CMEDIA.reduce(function (a, m) { return a + m.b64.length * 3 / 4 / 1048576; }, 0); }
+  function openCompose(kind) {
+    CK = kind; CMEDIA = []; CHIDE = null;
+    var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0] || {};
+    var title = { feed: '新規投稿', reel: '新規リール動画', story: 'ストーリーズに追加' }[kind];
+    var acc = kind === 'reel' ? 'video/mp4,video/quicktime' : 'image/*,video/mp4,video/quicktime';
+    var c = document.createElement('div'); c.className = 'igc'; c.id = 'igCompose';
+    c.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igcX">キャンセル</button><b>' + title + '</b>' +
+      '<button type="button" class="go" id="igcGo">シェア</button></div>' +
+      '<div class="igcacct">投稿先：<b>' + esc(a.label || '') + '（@' + esc((DATA && DATA.views && DATA.views[CUR] && DATA.views[CUR].prof && DATA.views[CUR].prof.user) || a.username || '') + '）</b></div>' +
+      '<div class="igcprev" id="igcPrev"></div>' +
+      '<label class="igcpick">' + IC.plus + (kind === 'reel' ? '動画を選択' : kind === 'story' ? '写真・動画を選択' : '写真・動画を選択（10個まで）') +
+      '<input type="file" id="igcFile" accept="' + acc + '"' + (kind === 'feed' ? ' multiple' : '') + '></label>' +
+      (kind === 'story' ? '' : '<textarea class="igccap" id="igcCap" placeholder="キャプションを入力…"></textarea><div class="igccnt" id="igcCnt">0 / ' + MAXCAP + '</div>' +
+        '<div class="igcq"><div class="t">「いいね！」数を他の人に非表示にしますか？😊</div><div class="seg">' +
+        '<button type="button" data-h="1">非表示にする（おすすめ）</button><button type="button" data-h="0">そのまま表示する</button></div></div>') +
+      '<div class="igcnote">写真に入っているAIの記録は、投稿の前に自動で取り除きます。投稿のあと、AIの札が付いていないかも自動で確認します。' +
+      (kind !== 'feed' ? '' : '<br>写真の縦横が合わない時は、インスタと同じく中央で切り取ります。') + '</div></div>';
+    document.body.appendChild(c);
+    var cap = document.getElementById('igcCap');
+    if (cap) cap.addEventListener('input', function () {
+      var n = Array.from(cap.value).length, o = document.getElementById('igcCnt');
+      o.textContent = n + ' / ' + MAXCAP; o.className = 'igccnt' + (n > MAXCAP ? ' over' : '');
+    });
+    c.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.id === 'igcX') {
+        if (!CMEDIA.length) { c.remove(); return; }
+        szPopup_('作成中の投稿を破棄しますか？😊', { cancel: true, onYes: function () { c.remove(); } });
+        return;
+      }
+      var h = t.closest && t.closest('[data-h]');
+      if (h) { CHIDE = h.getAttribute('data-h') === '1'; c.querySelectorAll('[data-h]').forEach(function (x) { x.className = x === h ? 'on' : ''; }); return; }
+      var del = t.closest && t.closest('[data-del]');
+      if (del) { CMEDIA.splice(Number(del.getAttribute('data-del')), 1); drawPrev(); return; }
+      if (t.id === 'igcGo') share();
+    });
+    document.getElementById('igcFile').addEventListener('change', function () {
+      var files = Array.prototype.slice.call(this.files || []); this.value = '';
+      var max = kind === 'feed' ? MAXI : 1;
+      files.forEach(function (f) {
+        if (CMEDIA.length >= max) { warn(kind === 'feed' ? '写真・動画は' + MAXI + '個までです😊' : '1つだけ選択してね😊'); return; }
+        if (/^video\//.test(f.type)) {
+          if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです。短い動画を選択してね😊'); return; }
+          var vr = new FileReader();
+          vr.onload = function () {
+            var b64 = String(vr.result).split(',')[1] || '';
+            if (totalMB() + b64.length * 3 / 4 / 1048576 > TOTAL_MB) { warn('写真・動画は合わせて' + TOTAL_MB + 'MBまでです😊'); return; }
+            CMEDIA.push({ b64: b64, video: true, url: URL.createObjectURL(f) }); drawPrev();
+          };
+          vr.readAsDataURL(f); return;
+        }
+        if (kind === 'reel' || !/^image\//.test(f.type)) return;
+        var fr = new FileReader();
+        fr.onload = function () {
+          var im = new Image();
+          im.onload = function () {
+            // インスタの決まり：投稿の写真は縦横の比が 4:5〜1.91:1 の間＝外れたら中央で切り取る（アプリと同じ）。JPEGだけ。
+            var sw = im.width, sh = im.height, sx = 0, sy = 0, r = sw / sh;
+            if (kind === 'feed') {
+              if (r < 0.8) { var nh = Math.round(sw / 0.8); sy = Math.round((sh - nh) / 2); sh = nh; }
+              else if (r > 1.91) { var nw = Math.round(sh * 1.91); sx = Math.round((sw - nw) / 2); sw = nw; }
+            }
+            var mx = 1440, w = sw, h = sh;
+            if (w > mx || h > mx) { if (w >= h) { h = Math.round(h * mx / w); w = mx; } else { w = Math.round(w * mx / h); h = mx; } }
+            var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+            cv.getContext('2d').drawImage(im, sx, sy, sw, sh, 0, 0, w, h);
+            if (CMEDIA.length >= max) return;
+            var d = cv.toDataURL('image/jpeg', 0.9);
+            CMEDIA.push({ b64: d.split(',')[1], url: d }); drawPrev();
+          };
+          im.src = fr.result;
+        };
+        fr.readAsDataURL(f);
+      });
+    });
+  }
+  function drawPrev() {
+    var el = document.getElementById('igcPrev'); if (!el) return;
+    el.innerHTML = CMEDIA.map(function (m, i) {
+      return '<div>' + (m.video ? '<video src="' + m.url + '" muted playsinline></video>' : '<img src="' + m.url + '" alt="">') +
+        (CMEDIA.length > 1 ? '<span class="n">' + (i + 1) + '</span>' : '') + '<button type="button" data-del="' + i + '">✕</button></div>';
+    }).join('');
+  }
+  function share() {
+    if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してね😊' : '写真か動画を選択してね😊'); return; }
+    var cap = document.getElementById('igcCap'), text = cap ? cap.value.trim() : '';
+    if (Array.from(text).length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです😊'); return; }
+    if ((text.match(/#/g) || []).length > 30) { warn('ハッシュタグは30個までです😊'); return; }
+    if (CK !== 'story' && CHIDE === null) { warn('「いいね！」数を非表示にするか選択してね😊'); return; }
+    var fields = { kind: 'post', acct: CUR, type: CK, caption: text, hide_likes: CK === 'story' ? false : CHIDE,
+                   media: CMEDIA.map(function (m) { return { b64: m.b64 }; }) };
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('投稿中です', '写真・動画をインスタに送っています。動画は数分かかることがあるので、少し待っててくださいね🥺'), '#2C7A99');
+    askBig(fields, function (err, d) {
+      if (typeof szOvHide_ === 'function') szOvHide_();
+      if (err) { warn(err); return; }
+      var c = document.getElementById('igCompose'); if (c) c.remove();
+      var notes = [], af = (d && d.after) || {};
+      if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIの札が付いています。りゅうさんに連絡してください🙇');
+      if (CK !== 'story' && fields.hide_likes && !af.hidden) notes.push('「いいね！」数の非表示ができませんでした。りゅうさんに連絡してください🙇');
+      szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
+      var db = document.getElementById('szDoneBack');
+      if (db) db.addEventListener('click', function () { szOvHide_(); if (notes.length) warn(notes.join('\n')); TAB = CK === 'reel' ? 'reels' : 'posts'; loadWeb(CUR, false); });
+    });
+  }
+  // 写真・動画つきの依頼は大きいので、共通の BIG で別に預ける（Threads投稿と同じ）。動画は準備に数分かかる＝約10分まで待つ。
+  function askBig(fields, done) {
+    devKey(function (ex) {
+      for (var k in ex) fields[k] = ex[k];
+      var me = { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' };
+      var poll = function (id) {
+        var n = 0;
+        var tick = function () {
+          n++; if (n > 600) { done('時間切れです。インスタの投稿の一覧を確認してから、もう一度試してもらえると嬉しいです🙇'); return; }
+          jsonp({ action: 'status', key: C.key, id: id }, function (x) {
+            if (!x || !x.ok) { setTimeout(tick, 2000); return; }
+            if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1000); return; }
+            if (x.status !== 'done') { done(x.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
+            var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
+            done(null, d || {});
+          });
+        };
+        setTimeout(tick, 1500);
+      };
+      var send = function (ft) {
+        jsonp({ action: 'submit', key: C.key, op: 'insta', who: me.who, role: me.role, device: me.device, fields: ft }, function (r) {
+          if (!r || !r.ok || !r.id) { done((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
+          poll(r.id);
+        });
+      };
+      if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
+      BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'insta', op: 'insta',
+                    who: me.who, role: me.role, device: me.device, fields: fields },
+        send, function () { done('写真・動画を送れませんでした。数を減らして、もう一度試してもらえると嬉しいです🙇'); });
+    });
+  }
 
   // ── 本物の画面から読み直す（受付係は控えが30分以内なら読み直さずに控えを返す。⟳は今すぐ）──
   function loadWeb(acct, force) {
