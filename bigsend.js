@@ -69,7 +69,7 @@
     try {
       fieldsText = JSON.stringify(o.fields || {});
     } catch (e) {
-      (onFail || function () {})('依頼の中身を作れませんでした。');
+      (onFail || function () {})('依頼の内容を作成できませんでした。');
       return;
     }
     if (BIG.fits(o, fieldsText)) { onReady(fieldsText); return; }
@@ -82,7 +82,7 @@
     try {
       body = JSON.stringify({ ticket: ticket, op: String(o.op || ''), fields: o.fields || {} });
     } catch (e2) {
-      (onFail || function () {})('依頼の中身を作れませんでした。');
+      (onFail || function () {})('依頼の内容を作成できませんでした。');
       return;
     }
     var done = false;
