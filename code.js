@@ -10873,7 +10873,8 @@ var UBCSS_ =
   /* ★2026-11-08 まるちゃん「画面の大きさに応じて広げて文字ができるだけ一行で表示されるようにして」
      ＝売上の一覧だけ画面の幅いっぱいまで広げる（入力の画面は今までどおり620まで）。広い画面では、
      明細以外の欄は折り返さず、明細が残りの幅を使う（それでも入らない時だけ明細を折り返す）。 */
-  '#ubMenu,#ubNoInv,#ubAdd,#ubOther,#ubCoins{max-width:620px;margin:0 auto;}' +
+  '.home.ubhome{max-width:1200px;}' +
+  '#ubMenu,#ubNoInv,#ubAdd,#ubOther,#ubCoins{max-width:560px;margin:0 auto;}' +
   '@media (min-width:700px){.ubtbl table{table-layout:auto;font-size:14px;}.ubtbl col{width:auto!important;}' +
   '.ubtbl th,.ubtbl td{white-space:nowrap;padding-left:8px;padding-right:8px;}.ubtbl th br{display:none;}.ubtbl td.d{white-space:normal;width:100%;}}' +
   '.ubinfo2{display:flex;align-items:center;gap:8px;color:#eaf6fb;font-weight:800;font-size:15px;margin:2px 4px 8px;}' +
@@ -11409,7 +11410,7 @@ function renderUriageBookPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + EXPADCSS_ + UBCSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="home ubhome">' + backBar_(base, staff, dev) +   // ★この画面だけ枠を広げる（ズコ共通の枠は560まで）
     '<div class="ub">' +
       '<div id="ubMenu">' + head('📒', 'TT売上帳簿') +
         '<div class="ubtest" id="ubTest" style="display:none">テスト中：本番の売上表には書きません（2026_帳簿_テスト に書きます）</div>' +
