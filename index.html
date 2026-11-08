@@ -132,7 +132,7 @@
       + (st === 'need' ? '確認しています…' : 'このスマホは、まだ<br>ズコに登録されていません')
       + '</div>'
       + (st === 'need' ? '' : '<div style="color:#fff;font-size:18px;line-height:1.7;margin-top:12px">'
-        + 'りゅうさんが許可すると、自動で開きます。<br>このままお待ちください。</div>'
+        + 'りゅうさんが許可すると、自動で開きます。<br>このまま少し待っててくださいね🥺</div>'
         + '<div style="color:#fff;font-size:22px;font-weight:700;margin-top:18px">画面の番号：' + code + '</div>')
       + '</div>';
     if (st === 'pending') poll();
@@ -367,14 +367,14 @@
 <script src="shop_rules.js?v=32af77593f"></script>
 <!-- 前日お知らせの「出し入れの判断」＝パソコン版と共有する正本の写し。 -->
 <script src="zj_rules.js?v=cb75dce7e8"></script>
-<script src="nr_rules.js?v=377c8edf37"></script>
+<script src="nr_rules.js?v=4becf11906"></script>
 <!-- 「施術後の予約」で担当をどう並べ・どれをはじめから選ぶかの決まり＝パソコン版と共有する正本の写し。 -->
 <script src="sg_rules.js?v=6b7a45fd05"></script>
 <!-- 大きい依頼を別の入口へ丸ごと預ける決まり＝共通\画面\大きい依頼_別送.js の写し。手で書き換えない。 -->
-<script src="bigsend.js?v=4f9755de41"></script>
+<script src="bigsend.js?v=76e65d7673"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=30aee855ab"></script>
+<script src="code.js?v=32d77af240"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -627,7 +627,7 @@
         if (got || gaveUp) return;
         if (n >= TRIES) {
           gaveUp = true;
-          onPayload(lastErr && lastErr.error ? lastErr : { error: '通信エラーです。通信環境をご確認ください。' });
+          onPayload(lastErr && lastErr.error ? lastErr : { error: '通信エラーです。通信環境をご確認くださいませ🙇' });
           return;
         }
         n++;
@@ -752,7 +752,7 @@
         })
         .catch(function () {
           if (n > 1) { setTimeout(function () { attempt(n - 1); }, 600); }
-          else { mount(renderLinksError_('通信エラーです。通信環境をご確認ください。', base, staff, dev)); }
+          else { mount(renderLinksError_('通信エラーです。通信環境をご確認くださいませ🙇', base, staff, dev)); }
         });
     }
     attempt(4);
@@ -779,7 +779,7 @@
         })
         .catch(function () {
           if (n > 1) { setTimeout(function () { attempt(n - 1); }, 600); }
-          else { mount(renderTeikeiError_('通信エラーです。通信環境をご確認ください。', base, staff, dev)); }
+          else { mount(renderTeikeiError_('通信エラーです。通信環境をご確認くださいませ🙇', base, staff, dev)); }
         });
     }
     attempt(4);
@@ -799,7 +799,7 @@
     var s = document.createElement('script');
     s.src = EXEC + '?action=data&name=monitor.json&device=' + encodeURIComponent(device) +
             '&callback=__ttKanshi&cb=' + Date.now();   // ★このスマホが登録した1台か（code.js の kanshiGate_）
-    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認ください。'); };
+    s.onerror = function () { fail('データに接続できませんでした。通信環境をご確認くださいませ🙇'); };
     document.body.appendChild(s);
   }
 
@@ -847,7 +847,7 @@
     var s = document.createElement('script');
     s.src = EXEC + '?action=data&name=pc_status.json&callback=' + cb + '&cb=' + Date.now();
     s.onerror = function () {
-      try { mount(renderPcStatusPage_({ error: '通信エラーです。通信環境をご確認ください。' }, base, staff, dev)); }
+      try { mount(renderPcStatusPage_({ error: '通信エラーです。通信環境をご確認くださいませ🙇' }, base, staff, dev)); }
       catch (e) {}
     };
     document.head.appendChild(s);
@@ -864,7 +864,7 @@
     var s = document.createElement('script');
     s.src = EXEC + '?action=data&name=shop_history.json&callback=' + cb + '&cb=' + Date.now();
     s.onerror = function () {
-      try { mount(renderShopHistPage_({ error: '通信エラーです。通信環境をご確認ください。' }, base, staff, dev)); }
+      try { mount(renderShopHistPage_({ error: '通信エラーです。通信環境をご確認くださいませ🙇' }, base, staff, dev)); }
       catch (e) {}
     };
     document.head.appendChild(s);
@@ -888,7 +888,7 @@
     var s = document.createElement('script');
     s.src = EXEC + '?action=data&name=oshirase_mita.json&callback=' + cb + '&cb=' + Date.now();
     s.onerror = function () {
-      try { mount(renderMitaPage_({ error: '通信エラーです。通信環境をご確認ください。' }, base, staff, dev)); }
+      try { mount(renderMitaPage_({ error: '通信エラーです。通信環境をご確認くださいませ🙇' }, base, staff, dev)); }
       catch (e) {}
     };
     document.head.appendChild(s);
@@ -913,7 +913,7 @@
       };
       var s = document.createElement('script');
       s.src = EXEC + '?action=data&name=' + name + '&callback=' + cb + '&cb=' + Date.now();
-      s.onerror = function () { got[key] = (key === 'list') ? { error: '通信エラーです。通信環境をご確認ください。' } : {}; draw(); };
+      s.onerror = function () { got[key] = (key === 'list') ? { error: '通信エラーです。通信環境をご確認くださいませ🙇' } : {}; draw(); };
       document.head.appendChild(s);
     }
     function draw() {
@@ -955,7 +955,7 @@
       };
       var s = document.createElement('script');
       s.src = EXEC + '?action=data&name=insta_dm_' + hex + '.json&callback=' + cb + '&cb=' + Date.now();
-      s.onerror = function () { try { mount(renderInstaDmGate_('つながりませんでした。通信環境をご確認ください。', base, staff, dev)); } catch (e) {} };
+      s.onerror = function () { try { mount(renderInstaDmGate_('つながりませんでした。通信環境をご確認くださいませ🙇', base, staff, dev)); } catch (e) {} };
       document.head.appendChild(s);
     })['catch'](function () { try { mount(renderInstaDmGate_('この端末では合言葉を計算できませんでした。', base, staff, dev)); } catch (e) {} });
   }
@@ -999,7 +999,7 @@
   //     ＝送れているのに「時間がかかっています」と出て、送れたか分からなくなっていた）。
   function igdmPoll_(id, statusFn, n, op) {
     var max = (window.LIMITS && LIMITS.tries) ? LIMITS.tries(op || 'instadm_reply', 700) : 100;
-    if (n > max) { statusFn('時間がかかっています。あとで会話を更新して確かめてください。'); return; }
+    if (n > max) { statusFn('時間がかかっています。あとで会話を更新して確認してください🙇'); return; }
     var cb = '__idmSt' + Date.now();
     window[cb] = function (r) {
       try { delete window[cb]; } catch (e) {}
@@ -1020,7 +1020,7 @@
     if (typeof occ === 'function') { onMsgs = statusFn; statusFn = occ; occ = 0; }   // 旧呼び出し(occなし)も許す
     var fields = JSON.stringify({ account: acc, name: name, preview: preview, occ: occ || 0 });
     function poll(id, n) {
-      if (n > 40) { statusFn('時間がかかっています。もう一度お試しください。'); return; }
+      if (n > 40) { statusFn('時間がかかっています。もう一度試してもらえると嬉しいです🙇'); return; }
       var cb = '__idmRs' + Date.now();
       window[cb] = function (s) {
         try { delete window[cb]; } catch (e) {}
@@ -1150,7 +1150,7 @@
     }).join('');
     root.innerHTML = '<div class="pkwrap"><div class="pktitle">あなたは誰ですか？</div>' +
       '<div class="pkgrid">' + btns + '</div>' +
-      '<div class="pknote">すでに他の人が選んだ名前は出ません。自分の名前が無い時は、自動監視システムから新しく作ってもらってください。</div></div>';
+      '<div class="pknote">すでに他の人が選んだ名前は出ません。自分の名前が無い時は、自動監視システムから新しく作ってもらってね😊</div></div>';
     var bs = root.querySelectorAll('.pk');
     for (var i = 0; i < bs.length; i++) {
       bs[i].addEventListener('click', function () {
@@ -1199,7 +1199,7 @@
   function showPwGate(cfg) {
     var root = document.getElementById('root');
     try { window.__btDone && window.__btDone('合言葉'); } catch (e) {}
-    root.innerHTML = '<div class="pkwrap"><div class="pktitle">合言葉を<br>入力してください</div>' +
+    root.innerHTML = '<div class="pkwrap"><div class="pktitle">合言葉を<br>入力してね😊</div>' +
       '<input type="text" id="pwIn" class="pwinput2" autocomplete="off" autocapitalize="off">' +
       '<button type="button" class="pwgo" id="pwGoBtn">すすむ</button>' +
       '<div class="pwerr" id="pwErr"></div></div>';
@@ -1220,11 +1220,11 @@
             location.reload();
           })['catch'](function () { err.textContent = 'この端末では合言葉を確かめられませんでした。'; });
         }
-        else { err.textContent = (r && r.error) || '合言葉が違います。もう一度お試しください。'; input.value=''; input.focus(); }
+        else { err.textContent = (r && r.error) || 'パスワードが違います。もう一度試してもらえると嬉しいです🙇'; input.value=''; input.focus(); }
       };
       var s = document.createElement('script');
       s.src = EXEC + '?action=checkpw&pw=' + encodeURIComponent(v) + '&callback=__ttCheckPw&cb=' + Date.now();
-      s.onerror = function () { btn.disabled = false; err.textContent = '通信エラーです。もう一度お試しください。'; };
+      s.onerror = function () { btn.disabled = false; err.textContent = '通信エラーです。もう一度試してもらえると嬉しいです🙇'; };
       document.body.appendChild(s);
     }
     btn.addEventListener('click', submit);
