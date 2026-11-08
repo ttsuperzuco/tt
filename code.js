@@ -5645,7 +5645,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'return (g.z?"🇹🇼\\n":(twin?"🇯🇵\\n":""))+head+"\\n"+g.text;}).join("\\n\\n");' +
   'WDONE=[];' +
   'runMake(src,function(i,tot,label){' +
-  'MMSG="画像を生成しています… "+(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
+  'MMSG="画像を生成しています… "+i+"枚できました（全"+tot+"枚）　作成中："+label;draw();},' +
   // ★2026-10-02 まるちゃん「間の画面はなくして。何枚入れましたも言わなくていい」
   //   ＝画像ができたらそのまま最終確認へ（画像を作らない時と同じ道）。中止・失敗の時だけ一言出す。
   'function(done,err){MBUSY=false;MSTEP=3;MMSG="";page="t";step=0;mode="";' +
