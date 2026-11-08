@@ -32,7 +32,7 @@ button[disabled]{opacity:.5}
 <body>
 <div class="wrap"><div class="card">
   <div id="ask">
-    <h1 id="t">お給料を「TTお給料」に送りますか？</h1>
+    <h1 id="t">お給料を「TTお給料」に送りますか？😊</h1>
     <p>スタッフ1人ずつ、お給料の文と写真2枚を送ります。<br>内容はLINEに届いた文で確認してね😊</p>
     <button id="go">送る</button>
   </div>
@@ -48,7 +48,7 @@ button[disabled]{opacity:.5}
   function arg(n){ var m = new RegExp('[?&]' + n + '=([^&]*)').exec(q); return m ? decodeURIComponent(m[1]) : ''; }
   var k = arg('k').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
   var m = arg('m').replace(/[^0-9]/g, '').slice(0, 2);
-  if (m) document.getElementById('t').textContent = m + '月のお給料を「TTお給料」に送りますか？';
+  if (m) document.getElementById('t').textContent = m + '月のお給料を「TTお給料」に送りますか？😊';
   var PIPE = "https://script.google.com/macros/s/"
     + "AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";
   var b = document.getElementById('go');

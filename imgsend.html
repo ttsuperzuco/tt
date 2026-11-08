@@ -103,7 +103,7 @@
   function setTip(){
     if (!shareBtn.hidden){
       tip.innerHTML = isIOS
-        ? '「この画像をまとめて送る」を押すと送り先が選べます。LINEを選べばそのまま送れます。写真に残したい時は「画像を保存」を選んでください。'
+        ? '「この画像をまとめて送る」を押すと送り先が選べます。LINEを選べばそのまま送れます。写真に残したい時は「画像を保存」を選択してね😊'
         : '「この画像をまとめて送る」を押すと送り先が選べます。LINEを選べばそのまま送れます。';
     } else {
       tip.innerHTML = 'パソコンの方：<b>「まとめて保存する」</b>を押すとダウンロードのフォルダに'
@@ -137,7 +137,7 @@
       msg.textContent = '';
       return navigator.share({ files: files });
     }).catch(function(e){
-      msg.textContent = (e && e.name === 'AbortError') ? '' : 'うまくいきませんでした。保存を試してください。';
+      msg.textContent = (e && e.name === 'AbortError') ? '' : 'うまくいきませんでした。保存を試してください🙇';
     }).then(function(){ shareBtn.disabled = false; });
   };
 

@@ -50,10 +50,10 @@
 // ★★2026-10-18 まるちゃん「すぐやって」：グーグルの窓口への問い合わせ全部に「合言葉から作った印」を自動で添える。
 //   それまでは、このページの中身（誰でも見られる公開の置き場）に窓口の住所と鍵が書いてあり、
 //   合言葉なしで予約一覧・未回答のLINE・売上を誰でも取れた。窓口が印を確かめるようにしたので、
-//   ここで全部の問い合わせ（画面の数に関係なく1か所）に印を付ける。印は合言葉を入れた端末にだけある。
+//   ここで全部の問い合わせ（画面の数に関係なく1か所）に印を付ける。印はパスワードを入れた端末にだけある。
 //   ・印＝合言葉から計算した文字（合言葉そのものは送らない・この端末に覚える）。
 //   ・パソコン版ズコは開く住所に印を付けて渡してくる（?zk=…）。
-//   ・合言葉が変わって印が古くなったら、窓口がそう返す→印を消してもう一度合言葉を聞く。
+//   ・合言葉が変わって印が古くなったら、窓口がそう返す→印を消してもう一度パスワードを聞く。
 // ★★2026-10-18 午後 まるちゃん「スタッフはもう名前でスマホに入っているから合言葉はいらない。データを渡す道に
 //   すごい鍵を」→ スマホ1台ごとの鍵に変えた。
 //   ・この端末の番号（zk_dv）と鍵（zk_dk）を窓口からもらって覚え、問い合わせ全部に添える。
@@ -366,7 +366,7 @@
 <script src="op_limits.js?v=5bd7acb8da"></script>
 <script src="shop_rules.js?v=32af77593f"></script>
 <!-- 前日お知らせの「出し入れの判断」＝パソコン版と共有する正本の写し。 -->
-<script src="zj_rules.js?v=cb75dce7e8"></script>
+<script src="zj_rules.js?v=2f9242edbf"></script>
 <script src="nr_rules.js?v=4becf11906"></script>
 <!-- 「施術後の予約」で担当をどう並べ・どれをはじめから選ぶかの決まり＝パソコン版と共有する正本の写し。 -->
 <script src="sg_rules.js?v=6b7a45fd05"></script>
@@ -374,7 +374,7 @@
 <script src="bigsend.js?v=76e65d7673"></script>
 <!-- ★2026-10-02：LINEの吹き出しの折り返し（共通\画面\LINEの折り返し.js の写し）。code.js より先に読む -->
 <script src="line_wrap.js?v=315503a50a"></script>
-<script src="code.js?v=32d77af240"></script>
+<script src="code.js?v=540eb3f6cc"></script>
 <script>
 (function () {
   try { window.__btMark && window.__btMark('本体を読み終わった', 's'); } catch (e) {}
@@ -957,7 +957,7 @@
       s.src = EXEC + '?action=data&name=insta_dm_' + hex + '.json&callback=' + cb + '&cb=' + Date.now();
       s.onerror = function () { try { mount(renderInstaDmGate_('つながりませんでした。通信環境をご確認くださいませ🙇', base, staff, dev)); } catch (e) {} };
       document.head.appendChild(s);
-    })['catch'](function () { try { mount(renderInstaDmGate_('この端末では合言葉を計算できませんでした。', base, staff, dev)); } catch (e) {} });
+    })['catch'](function () { try { mount(renderInstaDmGate_('この端末ではパスワードを計算できませんでした。', base, staff, dev)); } catch (e) {} });
   }
   window.idmSubmit = function (pw) { pw = (pw || '').trim(); if (!pw) return; lsSet(LS_IDMPW, pw); idmFetch(pw); };
   window.idmClear = function () { lsSet(LS_IDMPW, ''); (window.__idmReshow || showInstaDm)(); };
@@ -1095,7 +1095,7 @@
     } catch (e) {}
     if (window.__idmReshow) window.__idmReshow();
   };
-  // IGのDM（合言葉方式）。会話は「合言葉から作った秘密の名前」の所にある＝合言葉を知る端末だけ読める。
+  // IGのDM（合言葉方式）。会話は「合言葉から作った秘密の名前」の所にある＝パスワードを知る端末だけ読める。
   function showInstaDm() {
     window.__idmRender = function (p) { return renderInstaDmPage_(p, base, staff, dev); };
     window.__idmReshow = showInstaDm;
@@ -1195,11 +1195,11 @@
   // ★あくまで「知らない人が適当に開けない」程度の鍵。正解の合言葉自体はここには置かず、
   //   GAS(action=checkpw)へ問い合わせてok:true/falseだけ受け取る。合言葉は自動監視メニュー4
   //   （tile_settings.py）から事務所PCが変更できる。一度通れば端末に記憶し、次回以降は聞かない
-  //   （名前選択のリセット合図とは別物＝合言葉を変えても既存端末の記憶は自動では消えない）。
+  //   （名前選択のリセット合図とは別物＝パスワードを変えても既存端末の記憶は自動では消えない）。
   function showPwGate(cfg) {
     var root = document.getElementById('root');
     try { window.__btDone && window.__btDone('合言葉'); } catch (e) {}
-    root.innerHTML = '<div class="pkwrap"><div class="pktitle">合言葉を<br>入力してね😊</div>' +
+    root.innerHTML = '<div class="pkwrap"><div class="pktitle">パスワードを<br>入力してね😊</div>' +
       '<input type="text" id="pwIn" class="pwinput2" autocomplete="off" autocapitalize="off">' +
       '<button type="button" class="pwgo" id="pwGoBtn">すすむ</button>' +
       '<div class="pwerr" id="pwErr"></div></div>';
@@ -1218,7 +1218,7 @@
             lsSet('zk_tk', tk); lsSet(LS_PWOK, '1');
             try { sessionStorage.removeItem('zk_fail_once'); } catch (e) {}
             location.reload();
-          })['catch'](function () { err.textContent = 'この端末では合言葉を確かめられませんでした。'; });
+          })['catch'](function () { err.textContent = 'この端末ではパスワードを確認できませんでした。'; });
         }
         else { err.textContent = (r && r.error) || 'パスワードが違います。もう一度試してもらえると嬉しいです🙇'; input.value=''; input.focus(); }
       };
