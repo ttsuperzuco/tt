@@ -857,7 +857,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'return (g.z?"🇹🇼\\n":(twin?"🇯🇵\\n":""))+head+"\\n"+g.text;}).join("\\n\\n");' +
   'WDONE=[];' +
   'runMake(src,function(i,tot,label){' +
-  'MMSG="画像を生成しています… "+(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
+  'MMSG="画像を生成しています… "+i+"枚できました（全"+tot+"枚）　作成中："+label;draw();},' +
   'function(done,err){MBUSY=false;MSTEP=3;MMSG="";page="t";step=0;mode="";' +
   'status((err==="中止")?"画像生成を中止しました。":(err?("画像を作成できませんでした："+err):""),!!(err&&err!=="中止"));' +
   'draw();});}' +
