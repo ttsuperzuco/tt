@@ -14193,7 +14193,7 @@ function instaScript_(C) {
             simple({ kind: 'delete', acct: CUR, code: POST.code }, '削除しています', function (err) {
               if (err) { warn(err); return; }
               closePost(); szOvShow_(szDoneHtml_('削除が完了しました'), '#16a34a');
-              var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); loadWeb(CUR, true); });
+              var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); loadWeb(CUR, false); });
             });
           } });
         } },
