@@ -10891,6 +10891,12 @@ var UBCSS_ =
   '.exseg .thumb{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/3);background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:transform .22s;}' +
   '.exseg button{position:relative;z-index:1;background:none;border:0;padding:14px 4px;font-size:19px;font-weight:800;color:#eaf6fb;cursor:pointer;}' +
   '.exseg button[aria-pressed="true"]{color:#0f172a;}' +
+  '.exseg.two .thumb{width:calc((100% - 12px)/2);}' +
+  '.ubpick .ubbox{border:2px solid #cbd5e1;box-shadow:none;}' +
+  '.ubpick .exseg{background:#2C7A99;}' +
+  '.ubpick .expad{gap:8px;}' +
+  '.ubpick .expad button{background:#f1f5f9;box-shadow:none;font-size:26px;padding:6px 0;}' +
+  '.ubpick .expad button.util{background:#fde2e4;}' +
   '.ubnow{flex:0 0 auto;background:#fff;color:#2C7A99;border:0;border-radius:12px;padding:0 18px;min-height:50px;font:inherit;font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubtest{background:#fde047;color:#7c2d12;font-weight:900;font-size:15px;border-radius:12px;padding:8px 12px;margin:4px 0 10px;text-align:center;}' +
   '.ubinfo{color:#eaf6fb;font-weight:800;font-size:15px;margin:2px 4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;}' +
@@ -11136,6 +11142,108 @@ function uriageBookScript_(C) {
   };
   window.addEventListener('ubdone', window.__ubDoneH);
 
+  // ── 数字の欄の共通部品（★売上帳簿全体の決まり）──
+  // ★2026-11-08 まるちゃん「数字や顧客番号を直す時は、売上追加と同じやり方。この売上帳簿全体のルールにして　共通モジュール」
+  //   売上帳簿の中で数字・顧客番号を入れる所は、必ずこの部品を使う（キーボードの入れ口を作らない）。
+  //   欄（.ubbox data-pk="名前"）を押すと、すぐ下にいつもの数字ボタンが出る。右に「入力OK」（data-pok="名前"）を置けば閉じるボタン。
+  //   決め方 spec[名前]：kind＝num（顧客番号：M・F・文字なしの切り替え付き）／int（数字だけ）／sint（プラス・マイナス付き＝その他の経費など）
+  //     max＝けた数／auto＝入れきったら閉じる（發票番号）／next＝入れきったら次の欄へ（時→分）／lim＝それより大きい数は入れない（時23・分59）
+  //     comma＝金額（3けたごとに区切って見せる・頭の0を消す）／open＝ずっと開いておく（直す小窓）
+  //   欄を押した直後の最初の数字は入れ直し（入っている数字を消す手間をなくす）。
+  function padKit(cont, spec) {
+    var V = {}, pre = {}, sign = {}, sel = '', fresh = false;
+    var kp = document.createElement('div'); kp.className = 'ubkp'; kp.style.display = 'none';
+    kp.innerHTML = '<div class="exseg" data-s="pre"><span class="thumb"></span><button type="button" data-v="M">M（男）</button>' +
+      '<button type="button" data-v="F">F（女）</button><button type="button" data-v="">文字なし</button></div>' +
+      '<div class="exseg two" data-s="sign"><span class="thumb"></span><button type="button" data-v="">プラス</button>' +
+      '<button type="button" data-v="-">マイナス（経費など）</button></div>' +
+      '<div class="expad">' + EXPADHTML_ + '</div>';
+    function box(k) { return cont.querySelector('.ubbox[data-pk="' + k + '"]'); }
+    function val(k) {
+      var d = V[k] || '', t = (spec[k] || {}).kind;
+      if (!d) return '';
+      if (t === 'num') return (pre[k] || '') + d;
+      if (t === 'sint') return (sign[k] || '') + d;
+      return d;
+    }
+    function segs() {
+      var t = sel ? spec[sel].kind : '', ss = kp.querySelectorAll('.exseg');
+      for (var i = 0; i < ss.length; i++) {
+        var nm = ss[i].getAttribute('data-s'), on = (nm === 'pre' && t === 'num') || (nm === 'sign' && t === 'sint');
+        ss[i].style.display = on ? '' : 'none';
+        if (!on) continue;
+        var cur = nm === 'pre' ? (pre[sel] || '') : (sign[sel] || ''), bs = ss[i].querySelectorAll('button'), at = 0;
+        for (var j = 0; j < bs.length; j++) { var o = bs[j].getAttribute('data-v') === cur; bs[j].setAttribute('aria-pressed', o ? 'true' : 'false'); if (o) at = j; }
+        ss[i].querySelector('.thumb').style.transform = 'translateX(' + (at * 100) + '%)';
+      }
+    }
+    function draw() {
+      for (var k in spec) {
+        var b = box(k); if (!b) continue;
+        var v = val(k);
+        if (spec[k].comma && V[k]) v = (spec[k].kind === 'sint' ? (sign[k] || '') : '') + Number(V[k]).toLocaleString();
+        b.textContent = v;
+        b.classList.toggle('sel', sel === k);
+        var o = cont.querySelector('[data-pok="' + k + '"]');
+        if (o) o.style.display = (sel === k) ? '' : 'none';
+      }
+    }
+    function open(k) {
+      sel = k; fresh = true;
+      var b = box(k), row = b.closest('.ubrow') || b.parentNode;
+      row.appendChild(kp); kp.style.display = '';
+      segs(); draw();
+      setTimeout(function () { try { kp.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {} }, 30);
+    }
+    function close() {
+      if (sel && spec[sel].open) return;
+      sel = ''; kp.style.display = 'none'; draw();
+    }
+    cont.addEventListener('click', function (e) {
+      var b = e.target.closest('.ubbox[data-pk]');
+      if (b) { var k = b.getAttribute('data-pk'); if (sel === k) close(); else open(k); return; }
+      if (e.target.closest('[data-pok]')) close();
+    });
+    kp.addEventListener('click', function (e) {
+      var g = e.target.closest('.exseg button');
+      if (g) {
+        if (g.closest('.exseg').getAttribute('data-s') === 'pre') pre[sel] = g.getAttribute('data-v') || '';
+        else sign[sel] = g.getAttribute('data-v') || '';
+        segs(); draw(); return;
+      }
+      var b = e.target.closest('.expad button'); if (!b || !sel) return;
+      var k = b.getAttribute('data-k') || b.textContent, sp = spec[sel], d = V[sel] || '';
+      if (k === 'clr') { d = ''; fresh = false; }
+      else if (k === 'del') { d = d.slice(0, -1); fresh = false; }
+      else if (/^[0-9]$/.test(k)) {
+        if (fresh) { d = ''; fresh = false; }
+        if (sp.max && d.length >= sp.max) return;
+        var t = (d === '0' && sp.comma) ? k : d + k;
+        if (sp.lim != null && parseInt(t, 10) > sp.lim) return;
+        d = t;
+      } else return;
+      V[sel] = d;
+      if (/^[0-9]$/.test(k) && sp.max && d.length >= sp.max) {
+        if (sp.next) { open(sp.next); return; }
+        if (sp.auto) { close(); return; }
+      }
+      draw();
+    });
+    return {
+      get: val,
+      raw: function (k) { return V[k] || ''; },
+      set: function (k, v) {
+        v = String(v == null ? '' : v).toUpperCase().replace(/[\s,]/g, '');
+        var t = (spec[k] || {}).kind;
+        if (t === 'num') { var m = v.match(/^([MF]?)(\d*)/); pre[k] = v ? (m ? m[1] : '') : 'M'; V[k] = m ? m[2] : ''; }
+        else if (t === 'sint') { sign[k] = v.charAt(0) === '-' ? '-' : ''; V[k] = v.replace(/\D/g, ''); }
+        else V[k] = v.replace(/\D/g, '');
+        draw();
+      },
+      open: open, close: close
+    };
+  }
+
   // ── 一覧：枠を押して直す・×で消す ──
   var CNAME ={ B: '顧客番号', C: '顧客名', D: '支払方法', E: '明細', F: '合計' };
   function closePick() { var m = $('ubMask'); if (m && m.parentNode) m.parentNode.removeChild(m); }
@@ -11148,14 +11256,20 @@ function uriageBookScript_(C) {
       body = '<div class="ubpay">' + body + '</div>';
     } else {
       var cur = { B: x.num, C: x.name, E: x.detail, F: (x.amount == null ? '' : String(x.amount)) }[col] || '';
-      body = (col === 'E' ? '<textarea id="ubEd" rows="3"></textarea>' : '<input id="ubEd"' + (col === 'F' ? ' inputmode="numeric"' : '') + (col === 'B' ? ' autocapitalize="characters"' : '') + '>') +
-        '<button type="button" class="go" data-a="save">これで直す</button>';
+      var isPad = (col === 'B' || col === 'F');   // ★数字・顧客番号は売上追加と同じ数字ボタン（共通部品）
+      body = (isPad ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください"></div></div>'
+        : col === 'E' ? '<textarea id="ubEd" rows="3"></textarea>' : '<input id="ubEd">') +
+        '<button type="button" class="go" data-a="save" style="margin-top:12px">これで直す</button>';
     }
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
     m.innerHTML = '<div class="ubpick">' + head + body + '<button type="button" class="x" data-a="close">閉じる</button></div>';
     document.body.appendChild(m);
-    var ed = $('ubEd');
+    var ed = $('ubEd'), PK = null;
     if (ed) { ed.value = cur; try { ed.focus(); } catch (e2) {} }
+    if (isPad) {
+      PK = padKit(m.querySelector('.ubpick'), { v: col === 'B' ? { kind: 'num', max: 4, open: true } : { kind: 'int', max: 7, comma: true, open: true } });
+      PK.set('v', cur); PK.open('v');
+    }
     m.addEventListener('click', function (ev) {
       if (ev.target === m) { closePick(); return; }
       var b = ev.target.closest('button'); if (!b) return;
@@ -11168,7 +11282,7 @@ function uriageBookScript_(C) {
         return;
       }
       if (a !== 'save') return;
-      var nv = $('ubEd').value;
+      var nv = PK ? PK.get('v') : $('ubEd').value;
       if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入れてください'); return; }
       closePick();
       if (nv === cur) return;
@@ -11194,74 +11308,19 @@ function uriageBookScript_(C) {
 
   // ── 手で1行足す ──
   // ★2026-11-07 まるちゃん「時計はいらん 欄 時 欄 分 でいい」「欄を押すと数字のパネルが出てくる」
-  //   時・分・發票番号・顧客番号（M・F付きのいつものパネル）・金額＝押した欄のすぐ下に数字ボタンを出す。
-  //   開いた時は今の時刻が入っている・「今」で入れ直す。時刻は売上表には書かず、画面の時刻の列にだけ出す（係が控える）。
-  var AF = {}, afSel = '', afPre = 'M', afFresh = false;   // afFresh＝欄を押した直後は、最初の数字で入れ直す（今の時刻などを消す手間をなくす）
-  var AFMAX = { h: 2, m: 2, no: 3, num: 4, amt: 7 };
+  //   時・分・發票番号・顧客番号（M・F付き）・金額＝数字の欄の共通部品。開いた時は今の時刻が入っている。
+  //   時刻は売上表には書かず、画面の時刻の列にだけ出す（係が控える）。發票番号は3けたで閉じる・顧客番号と金額は「入力OK」で閉じる。
   function p2(n) { return ('0' + n).slice(-2); }
-  function afNow() { var d = new Date(); AF.h = p2(d.getHours()); AF.m = p2(d.getMinutes()); }
-  function afNum() { return AF.num ? afPre + AF.num : ''; }
-  function afSeg() {
-    var bs = $('ubKpSeg').querySelectorAll('button'), at = 0;
-    for (var i = 0; i < bs.length; i++) { var on = bs[i].getAttribute('data-v') === afPre; bs[i].setAttribute('aria-pressed', on ? 'true' : 'false'); if (on) at = i; }
-    $('ubKpSeg').querySelector('.thumb').style.transform = 'translateX(' + (at * 100) + '%)';
-  }
-  function afDraw() {
-    var ks = ['h', 'm', 'no', 'num', 'amt'];
-    for (var i = 0; i < ks.length; i++) {
-      var el = $('ubAf_' + ks[i]), v = ks[i] === 'num' ? afNum() : (AF[ks[i]] || '');
-      if (ks[i] === 'amt' && v) v = Number(v).toLocaleString();
-      el.textContent = v; el.className = 'ubbox' + (ks[i] === 'h' || ks[i] === 'm' ? ' t' : '') + (afSel === ks[i] ? ' sel' : '');
-    }
-    $('ubNumOk').style.display = (afSel === 'num') ? '' : 'none';
-    $('ubAmtOk').style.display = (afSel === 'amt') ? '' : 'none';   // ★2026-11-07 まるちゃん「顧客は入力欄の右にOKボタン出して閉じる」
-  }
-  function afOpen(k) {
-    afSel = k; afFresh = true;
-    var row = $('ubAf_' + k).closest('.ubrow'), kp = $('ubKp');
-    row.appendChild(kp); kp.style.display = '';
-    $('ubKpSeg').style.display = (k === 'num') ? '' : 'none';
-    afSeg(); afDraw();
-    setTimeout(function () { try { kp.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {} }, 30);
-  }
-  function afClose() { afSel = ''; $('ubKp').style.display = 'none'; afDraw(); }
-  $('ubAdd').addEventListener('click', function (e) {
-    var bx = e.target.closest('.ubbox[data-f]');
-    if (bx) { var k = bx.getAttribute('data-f'); if (afSel === k) afClose(); else afOpen(k); }
+  var AK = padKit($('ubAdd'), {
+    h: { kind: 'int', max: 2, lim: 23, next: 'm' }, m: { kind: 'int', max: 2, lim: 59 }, no: { kind: 'int', max: 3, auto: true },
+    num: { kind: 'num', max: 4 }, amt: { kind: 'int', max: 7, comma: true }
   });
-  $('ubAddDetail').addEventListener('focus', afClose);
-  $('ubNumOk').addEventListener('click', afClose);
-  $('ubAmtOk').addEventListener('click', afClose);
-  $('ubKpSeg').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    afPre = b.getAttribute('data-v') || ''; afSeg(); afDraw();
-  });
-  $('ubKpPad').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b || !afSel) return;
-    var k = b.getAttribute('data-k') || b.textContent, s = AF[afSel] || '';
-    if (k === 'clr') { s = ''; afFresh = false; }
-    else if (k === 'del') { s = s.slice(0, -1); afFresh = false; }
-    else if (/^[0-9]$/.test(k)) {
-      if (afFresh) { s = ''; afFresh = false; }
-      if (s.length >= AFMAX[afSel]) return;
-      var t = (s === '0' && afSel === 'amt') ? k : s + k;
-      if (afSel === 'h' && parseInt(t, 10) > 23) return;   // 時は0〜23
-      if (afSel === 'm' && parseInt(t, 10) > 59) return;   // 分は0〜59
-      s = t;
-    }
-    AF[afSel] = s;
-    // 時を2けた入れたら分へ・分を2けた入れたら閉じる（押す回数を減らす）
-    if (k !== 'clr' && k !== 'del' && s.length >= 2) {
-      if (afSel === 'h') { afOpen('m'); return; }
-      if (afSel === 'm') { afClose(); return; }
-    }
-    if (afSel === 'no' && /^[0-9]$/.test(k) && s.length >= 3) { afClose(); return; }   // ★2026-11-07 まるちゃん「三桁入れたらパネル閉じる」
-    afDraw();
-  });
+  $('ubAddDetail').addEventListener('focus', AK.close);
   var addPay = '';
   $('ubGoAdd').addEventListener('click', function () {
-    AF = { no: '', num: '', amt: '' }; afPre = 'M'; afNow();
-    $('ubAddDetail').value = ''; addPay = ''; drawAddPay(); afClose(); show('ubAdd');
+    var d = new Date();
+    AK.set('h', p2(d.getHours())); AK.set('m', p2(d.getMinutes())); AK.set('no', ''); AK.set('num', ''); AK.set('amt', '');
+    $('ubAddDetail').value = ''; addPay = ''; drawAddPay(); AK.close(); show('ubAdd');
   });
   function drawAddPay() {
     var h = '';
@@ -11270,19 +11329,21 @@ function uriageBookScript_(C) {
   }
   $('ubAddPay').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; addPay = b.getAttribute('data-v'); drawAddPay(); });
   $('ubAddGo').addEventListener('click', function () {
-    if (!AF.amt) { popup('金額を入れてください'); return; }
-    if (!AF.num && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入れてください'); return; }
-    var tm = AF.h ? p2(AF.h) + ':' + p2(AF.m || '0') : '';
-    afClose();
-    ask({ action: 'add', time: tm, no: AF.no || '', num: afNum(), detail: $('ubAddDetail').value.trim(),
-          amount: parseInt(AF.amt, 10), pay: addPay }, '売上の行を足しています', function () { show('ubInv'); });
+    if (!AK.raw('amt')) { popup('金額を入れてください'); return; }
+    if (!AK.get('num') && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入れてください'); return; }
+    var tm = AK.raw('h') ? p2(AK.raw('h')) + ':' + p2(AK.raw('m') || '0') : '';
+    AK.close();
+    ask({ action: 'add', time: tm, no: AK.raw('no'), num: AK.get('num'), detail: $('ubAddDetail').value.trim(),
+          amount: parseInt(AK.raw('amt'), 10), pay: addPay }, '売上の行を足しています', function () { show('ubInv'); });
   });
   $('ubAddBack').addEventListener('click', function (e) { e.preventDefault(); show('ubInv'); });
 
   // ── その他に1行足す ──
-  $('ubGoOther').addEventListener('click', function () { $('ubOthLabel').value = ''; $('ubOthAmt').value = ''; show('ubOther'); });
+  var OK2 = padKit($('ubOther'), { amt: { kind: 'sint', max: 7, comma: true } });
+  $('ubOthLabel').addEventListener('focus', OK2.close);
+  $('ubGoOther').addEventListener('click', function () { $('ubOthLabel').value = ''; OK2.set('amt', ''); OK2.close(); show('ubOther'); });
   $('ubOthGo').addEventListener('click', function () {
-    var amt = $('ubOthAmt').value.replace(/[^\d\-]/g, '');
+    var amt = OK2.get('amt'); OK2.close();
     if (!$('ubOthLabel').value.trim() || !amt) { popup('中身と金額を入れてください（経費などはマイナスで）'); return; }
     ask({ action: 'other', label: $('ubOthLabel').value.trim(), amount: parseInt(amt, 10) }, 'その他を足しています', function () { show('ubNoInv'); });
   });
@@ -11363,19 +11424,14 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubf">' +
           // ★2026-11-07 まるちゃん「時計はいらん 欄 時 欄 分 でいい」「欄を押すと数字のパネルが出てくる」
           //   「發票番号も・顧客番号はMやFが付いたいつもの数字パネル・金額も数字パネル」
-          '<label>時刻（9時3分なら 09時03分と入力）</label><div class="ubrow"><div class="ubtime"><div class="ubbox t" id="ubAf_h" data-f="h"></div><span class="ubu">時</span>' +
-            '<div class="ubbox t" id="ubAf_m" data-f="m"></div><span class="ubu">分</span></div></div>' +   // ★2026-11-08 まるちゃん「最初から今が入ってるなら今ボタンはいらない」
-          '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" id="ubAf_no" data-f="no" data-ph="押すと数字が出ます"></div></div>' +
-          '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" id="ubAf_num" data-f="num" data-ph="押すと数字が出ます"></div>' +
-            '<button type="button" id="ubNumOk" class="ubok" style="display:none">入力OK</button></div></div>' +
+          '<label>時刻（9時3分なら 09時03分と入力）</label><div class="ubrow"><div class="ubtime"><div class="ubbox t" data-pk="h"></div><span class="ubu">時</span>' +
+            '<div class="ubbox t" data-pk="m"></div><span class="ubu">分</span></div></div>' +   // ★2026-11-08 まるちゃん「最初から今が入ってるなら今ボタンはいらない」
+          '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" data-pk="no" data-ph="押すと数字が出ます"></div></div>' +
+          '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押すと数字が出ます"></div>' +
+            '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
           '<label>明細（購入内容）</label><input id="ubAddDetail">' +
-          '<label>金額（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" id="ubAf_amt" data-f="amt" data-ph="押すと数字が出ます"></div>' +
-            '<button type="button" id="ubAmtOk" class="ubok" style="display:none">入力OK</button></div></div>' +   // ★2026-11-08 まるちゃん「金額もOKボタンいれる」
-          '<div class="ubkp" id="ubKp" style="display:none">' +
-            '<div class="exseg" id="ubKpSeg"><span class="thumb"></span><button type="button" data-v="M" aria-pressed="true">M（男）</button>' +
-            '<button type="button" data-v="F">F（女）</button><button type="button" data-v="">文字なし</button></div>' +
-            '<div class="expad" id="ubKpPad">' + EXPADHTML_ + '</div>' +
-          '</div>' +
+          '<label>金額（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押すと数字が出ます"></div>' +
+            '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +   // ★2026-11-08 まるちゃん「金額もOKボタンいれる」
           '<label>支払方法</label><div class="ubpay" id="ubAddPay"></div>' +
         '</div>' +
         '<button type="button" class="exgo" id="ubAddGo">以上の内容で追加</button>' +
@@ -11383,7 +11439,8 @@ function renderUriageBookPage_(base, staff, dev) {
       '<div id="ubOther" style="display:none">' + inBack('ubOthBack') + head('📝', '發票なしの売上を1行足す') +
         '<div class="ubf">' +
           '<label>中身（例 F791黃様 プロセルアフターセラム）</label><input id="ubOthLabel">' +
-          '<label>金額（元・経費などはマイナス）</label><input id="ubOthAmt" inputmode="numeric">' +
+          '<label>金額（元・経費などはマイナス）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押すと数字が出ます"></div>' +
+            '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +
         '</div>' +
         '<button type="button" class="exgo" id="ubOthGo">この行を足す</button>' +
       '</div>' +
