@@ -85,6 +85,7 @@ var UBCSS_ =
   '.ubf label{display:block;color:#fff;font-weight:800;font-size:16px;margin:10px 4px 4px;}' +
   '.ubf input{display:block;width:100%;box-sizing:border-box;border:0;border-radius:12px;padding:12px;font:inherit;font-size:19px;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubf input.sel{outline:4px solid #fde047;}' +
+  '.ubnamerow{display:flex;align-items:center;gap:8px;}.ubnamerow input{flex:1 1 auto;min-width:0;}' +
   '.ubcoin{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}' +
   '.ubcoin div{background:#fff;border-radius:12px;padding:8px;text-align:center;cursor:pointer;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubcoin div b{display:block;font-size:14px;color:#475569;}' +
@@ -400,13 +401,19 @@ function uriageBookScript_(C) {
   });
   $('ubAddBack').addEventListener('click', function (e) { e.preventDefault(); show('ubInv'); });
 
-  var OK2 = padKit($('ubOther'), { amt: { kind: 'sint', max: 7, comma: true } });
+  var OK2 = padKit($('ubOther'), { num: { kind: 'num', max: 4 }, amt: { kind: 'sint', max: 7, comma: true } });
   $('ubOthLabel').addEventListener('focus', OK2.close);
-  $('ubGoOther').addEventListener('click', function () { $('ubOthLabel').value = ''; OK2.set('amt', ''); OK2.close(); show('ubOther'); });
+  $('ubOthName').addEventListener('focus', OK2.close);
+  $('ubGoOther').addEventListener('click', function () {
+    $('ubOthLabel').value = ''; $('ubOthName').value = ''; OK2.set('num', ''); OK2.set('amt', ''); OK2.close(); show('ubOther');
+  });
   $('ubOthGo').addEventListener('click', function () {
     var amt = OK2.get('amt'); OK2.close();
-    if (!$('ubOthLabel').value.trim() || !amt) { popup('内容と金額を入力してね😊 （経費などはマイナス）'); return; }
-    ask({ action: 'other', label: $('ubOthLabel').value.trim(), amount: parseInt(amt, 10) }, 'その他を追加しています', function () { show('ubNoInv'); });
+    var what = $('ubOthLabel').value.trim();
+    if (!what || !amt) { popup('内容と金額を入力してね😊 （経費などはマイナス）'); return; }
+    var nm = $('ubOthName').value.trim().replace(/\s*様$/, '');
+    var who = (OK2.get('num') || '') + (nm ? nm + '様' : '');
+    ask({ action: 'other', label: who ? who + '　' + what : what, amount: parseInt(amt, 10) }, 'その他を追加しています', function () { show('ubNoInv'); });
   });
   $('ubOthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubNoInv'); });
 
@@ -495,7 +502,10 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubOther" style="display:none">' + inBack('ubOthBack') + head('📝', '發票なしの売上を追加') +
         '<div class="ubf">' +
-          '<label>内容（例 F791黃様 プロセルアフターセラム）</label><input id="ubOthLabel">' +
+          '<label>顧客番号（未記入可）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
+            '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
+          '<label>氏名（未記入可）</label><div class="ubnamerow"><input id="ubOthName"><span class="ubu">様</span></div>' +
+          '<label>内容（例 プロセルアフターセラム）</label><input id="ubOthLabel">' +
           '<label>金額（元・経費などはマイナス）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +
         '</div>' +
