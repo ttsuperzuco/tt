@@ -360,7 +360,9 @@ function uriageBookScript_(C) {
     var x = D.rows[parseInt(tr.getAttribute('data-j'), 10)]; if (!x) return;
     if (x._del) { popup('この行は削除中です。'); return; }
     if (e.target.closest('button[data-a="del"]')) {
-      popup((x.no || '番号なし') + '　' + (x.num || '') + ' ' + (x.name || '') + '　' + yen(x.amount) + '\n發票の入力間違いですか？そうであればこの行を削除します', {
+      var head1 = [x.time || '', x.no ? '發票番号' + x.no : '發票番号なし', ((x.num || '') + ' ' + (x.name || '')).trim(), yen(x.amount)]
+        .filter(function (v) { return v; }).join('　');
+      popup(head1 + '\n發票の入力間違いですか？\nそうであればこの行を削除します', {
         cancel: true, onYes: function () { ask({ action: 'delete', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x) }, '行を削除しています'); }
       });
       return;

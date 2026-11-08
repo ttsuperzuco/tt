@@ -945,6 +945,9 @@ function staffColor_(fruit) {
 
 
 
+function szSentenceBreak_(t) {
+  return t.replace(/([。？！])(?=[^\s。？！」』）)\]\uD800-\uDFFF\u2600-\u27BF\uFE0F])/g, '$1\n');
+}
 function szPopup_(msg, opts) {
   opts = opts || {};
   var mask = document.createElement('div');
@@ -955,14 +958,15 @@ function szPopup_(msg, opts) {
   mask.innerHTML =
     "<div style='background:#12303c;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:26px 24px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-sizing:border-box;box-shadow:0 14px 44px rgba(0,0,0,.45);text-align:center;'>" +
       (icon ? "<div style='flex:0 0 auto;font-size:56px;line-height:1;margin-bottom:14px;'>" + icon + "</div>" : "") +
-      "<div class='szpopmsg' style='flex:1 1 auto;min-height:0;overflow:auto;color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:22px;'></div>" +
+      "<div class='szpopmsg' style='flex:1 1 auto;min-height:0;overflow:auto;color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;word-break:auto-phrase;overflow-wrap:break-word;text-wrap:pretty;margin-bottom:22px;'></div>" +
       (opts.noButtons ? "" :
       "<div style='flex:0 0 auto;display:flex;gap:12px;'>" +
         (opts.cancel ? "<button type='button' class='szpopno' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#eaf3f7;cursor:pointer;'>" + (opts.noLabel || 'キャンセル') + "</button>" : "") +
         "<button type='button' class='szpopyes' style='flex:1;font:inherit;font-size:1.2rem;font-weight:800;padding:14px;border-radius:12px;border:0;background:#2C7A99;color:#fff;cursor:pointer;'>" + yesLabel + "</button>" +
       "</div>") +
     "</div>";
-  if (opts.isHtml) mask.querySelector('.szpopmsg').innerHTML = msg; else mask.querySelector('.szpopmsg').textContent = msg;
+  if (opts.isHtml) mask.querySelector('.szpopmsg').innerHTML = msg;
+  else mask.querySelector('.szpopmsg').textContent = szSentenceBreak_(String(msg));
   document.body.appendChild(mask);
   var yes = mask.querySelector('.szpopyes');
   if (yes) yes.addEventListener('click', function () { if (mask.parentNode) mask.parentNode.removeChild(mask); if (opts.onYes) opts.onYes(); });
