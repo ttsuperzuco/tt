@@ -14020,9 +14020,13 @@ function instaScript_(C) {
       if (typeof szOvHide_ === 'function') szOvHide_();
       if (err) { warn(err); return; }
       var c = document.getElementById('igCompose'); if (c) c.remove();
+      // ★2026-11-09 いいね非表示・AIの札の確認は受付係が投稿のあと裏で行い、問題があればりゅうさんのLINEへ知らせる
+      //   （d.after_bg）。ここで「できませんでした」と出すと、まだ裏で動いている途中なのに毎回まちがいの注意が出る。
       var notes = [], af = (d && d.after) || {};
-      if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIの札が付いています。りゅうさんに連絡してください🙇');
-      if (CK !== 'story' && fields.hide_likes && !af.hidden) notes.push('「いいね！」数の非表示ができませんでした。りゅうさんに連絡してください🙇');
+      if (!(d && d.after_bg)) {
+        if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIの札が付いています。りゅうさんに連絡してください🙇');
+        if (CK !== 'story' && fields.hide_likes && !af.hidden) notes.push('「いいね！」数の非表示ができませんでした。りゅうさんに連絡してください🙇');
+      }
       szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
       var db = document.getElementById('szDoneBack');
       if (db) db.addEventListener('click', function () { szOvHide_(); if (notes.length) warn(notes.join('\n')); TAB = CK === 'reel' ? 'reels' : 'posts'; loadWeb(CUR, false); });

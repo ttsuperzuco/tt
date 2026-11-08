@@ -447,8 +447,10 @@ function instaScript_(C) {
       if (err) { warn(err); return; }
       var c = document.getElementById('igCompose'); if (c) c.remove();
       var notes = [], af = (d && d.after) || {};
-      if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIの札が付いています。りゅうさんに連絡してください🙇');
-      if (CK !== 'story' && fields.hide_likes && !af.hidden) notes.push('「いいね！」数の非表示ができませんでした。りゅうさんに連絡してください🙇');
+      if (!(d && d.after_bg)) {
+        if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIの札が付いています。りゅうさんに連絡してください🙇');
+        if (CK !== 'story' && fields.hide_likes && !af.hidden) notes.push('「いいね！」数の非表示ができませんでした。りゅうさんに連絡してください🙇');
+      }
       szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
       var db = document.getElementById('szDoneBack');
       if (db) db.addEventListener('click', function () { szOvHide_(); if (notes.length) warn(notes.join('\n')); TAB = CK === 'reel' ? 'reels' : 'posts'; loadWeb(CUR, false); });
