@@ -90,7 +90,42 @@ var INSTACSS_ =
   '.igcq .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}' +
   '.igcq .seg button{border:1px solid #dbdbdb;background:#fff;border-radius:10px;padding:11px 4px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;color:#000;}' +
   '.igcq .seg button.on{background:#0095f6;border-color:#0095f6;color:#fff;}' +
-  '.igcnote{margin:12px 16px 0;color:#737373;font-size:12.5px;line-height:1.5;}';
+  '.igcnote{margin:12px 16px 0;color:#737373;font-size:12.5px;line-height:1.5;}' +
+  '.igp{position:fixed;inset:0;z-index:8400;background:#fff;color:#000;overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Roboto,"Noto Sans JP",sans-serif;font-size:14px;line-height:1.4;}' +
+  '.igp .w{max-width:560px;margin:0 auto;padding-bottom:90px;}' +
+  '.igp button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;}' +
+  '.igph{position:sticky;top:0;z-index:2;background:#fff;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;height:48px;padding:0 8px;border-bottom:1px solid #efefef;}' +
+  '.igph b{text-align:center;font-size:16px;}' +
+  '.igph button{font-size:28px;line-height:1;}' +
+  '.igpu{display:flex;align-items:center;gap:10px;padding:10px 12px;}' +
+  '.igpu img{width:32px;height:32px;border-radius:50%;object-fit:cover;}' +
+  '.igpu b{flex:1;font-size:14px;}' +
+  '.igpm{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;background:#000;}' +
+  '.igpm::-webkit-scrollbar{display:none;}' +
+  '.igpm>*{flex:0 0 100%;width:100%;scroll-snap-align:center;max-height:75vh;object-fit:contain;background:#000;}' +
+  '.igpa{display:flex;align-items:center;gap:16px;padding:10px 12px 4px;}' +
+  '.igpa .sp{flex:1;}' +
+  '.igpl{padding:2px 12px;font-weight:700;}' +
+  '.igpcap{padding:4px 12px;white-space:pre-wrap;word-break:break-word;}' +
+  '.igpd{padding:6px 12px;color:#737373;font-size:12px;}' +
+  '.igpcs{border-top:1px solid #efefef;margin-top:8px;padding:8px 12px;}' +
+  '.igpc{display:flex;gap:10px;padding:8px 0;}' +
+  '.igpc .tx{flex:1;white-space:pre-wrap;word-break:break-word;}' +
+  '.igpc .tx b{margin-right:6px;}' +
+  '.igpc .meta{color:#737373;font-size:12px;margin-top:4px;display:flex;gap:14px;}' +
+  '.igpc .meta button{color:#737373;font-weight:700;font-size:12px;}' +
+  '.igpc.rep{margin-left:36px;}' +
+  '.igpc.hid .tx{opacity:.45;}' +
+  '.igpc .mo{color:#737373;font-size:18px;align-self:flex-start;}' +
+  '.igpin{position:fixed;left:0;right:0;bottom:0;z-index:3;background:#fff;border-top:1px solid #efefef;}' +
+  '.igpin .in{max-width:560px;margin:0 auto;padding:8px 12px;}' +
+  '.igpin .to{font-size:12px;color:#737373;padding-bottom:6px;display:flex;justify-content:space-between;}' +
+  '.igpin .row{display:flex;gap:8px;align-items:center;}' +
+  '.igpin textarea{flex:1;border:1px solid #dbdbdb;border-radius:20px;padding:9px 14px;font:inherit;font-size:14px;resize:none;height:40px;box-sizing:border-box;}' +
+  '.igpin .go{color:#0095f6;font-weight:700;font-size:15px;}' +
+  '.igpe{position:fixed;inset:0;z-index:8600;background:#fff;}' +
+  '.igpe textarea{display:block;width:calc(100% - 24px);box-sizing:border-box;margin:12px;min-height:60vh;border:1px solid #efefef;border-radius:10px;padding:10px;font:inherit;font-size:15px;}' +
+  '.igsheet button.red{color:#ed4956;font-weight:700;}';
 function renderInstaPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">📸</span><span class="bname">インスタ</span></div>';
   var C = {
@@ -291,6 +326,8 @@ function instaScript_(C) {
     var tb = t.closest && t.closest('[data-tab]');
     if (tb) { TAB = tb.getAttribute('data-tab'); drawApp(); return; }
     if (t.closest && t.closest('[data-create]')) { openCreate(); return; }
+    var po = t.closest && t.closest('[data-post]');
+    if (po && TAB !== 'tagged') { openPost(po.getAttribute('data-post'), (po.querySelector('img') || {}).src || ''); return; }
     if (t.closest && (t.closest('[data-soon]') || t.closest('[data-post]'))) { warn(SOON); return; }
   });
   $('igReload').addEventListener('click', function () { loadWeb(CUR, true); });
@@ -445,6 +482,174 @@ function instaScript_(C) {
       BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'insta', op: 'insta',
                     who: me.who, role: me.role, device: me.device, fields: fields },
         send, function () { done('写真・動画を送れませんでした。数を減らして、もう一度試してもらえると嬉しいです🙇'); });
+    });
+  }
+
+  var POST = null, REPLY = null;
+  function simple(fields, busy, done) {
+    if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
+    ask(fields, function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); });
+  }
+  function ago(iso) {
+    var t = Date.parse(iso || ''); if (!t) return '';
+    var m = Math.floor((Date.now() - t) / 60000);
+    if (m < 60) return Math.max(1, m) + '分前';
+    if (m < 1440) return Math.floor(m / 60) + '時間前';
+    if (m < 10080) return Math.floor(m / 1440) + '日前';
+    var d = new Date(t); return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+  }
+  function openPost(code, thumb) {
+    POST = { code: code, loading: true, thumb: thumb }; REPLY = null;
+    var el = document.getElementById('igPost');
+    if (!el) { el = document.createElement('div'); el.className = 'igp'; el.id = 'igPost'; document.body.appendChild(el); el.addEventListener('click', postClick); }
+    drawPost();
+    ask({ kind: 'detail', acct: CUR, code: code }, function (err, d) {
+      if (!POST || POST.code !== code) return;
+      if (err) { closePost(); warn(err); return; }
+      POST = d; drawPost();
+    });
+  }
+  function closePost() { var el = document.getElementById('igPost'); if (el) el.remove(); var i = document.getElementById('igPin'); if (i) i.remove(); POST = null; }
+  function drawPost() {
+    var el = document.getElementById('igPost'); if (!el || !POST) return;
+    var v = DATA && DATA.views && DATA.views[CUR], p = (v && v.prof) || {};
+    var h = '<div class="w"><div class="igph"><button type="button" data-pback="1">‹</button><b>投稿</b><span></span></div>' +
+      '<div class="igpu"><img src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><b>' + esc(p.user || '') + '</b>' +
+      '<button type="button" data-pmenu="1" style="font-size:20px">⋯</button></div>';
+    if (POST.loading) {
+      h += '<div class="igpm">' + (POST.thumb ? '<img src="' + esc(POST.thumb) + '" referrerpolicy="no-referrer" alt="">' : '') + '</div><div class="igempty">読み込み中です…</div></div>';
+      el.innerHTML = h; return;
+    }
+    h += '<div class="igpm">' + (POST.items || []).map(function (it) {
+      return it.type === 'VIDEO' ? '<video src="' + esc(it.url) + '" poster="' + esc(it.th) + '" controls playsinline></video>'
+        : '<img src="' + esc(it.url) + '" referrerpolicy="no-referrer" alt="">';
+    }).join('') + '</div>';
+    h += '<div class="igpa"><button type="button" data-soon="1">' + S('<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', 26) + '</button>' +
+      '<button type="button" data-pcom="1">' + S('<path d="M20.7 12a8.7 8.7 0 01-12.6 7.8L3.5 21l1.3-4.4A8.7 8.7 0 1120.7 12z"/>', 26) + '</button>' +
+      '<button type="button" data-soon="1">' + IC.send + '</button><span class="sp"></span>' +
+      '<button type="button" data-soon="1">' + S('<path d="M19 21l-7-5-7 5V4a1 1 0 011-1h12a1 1 0 011 1z"/>', 26) + '</button></div>';
+    h += '<div class="igpl">' + (POST.likes_hidden ? '「いいね！」数は非表示です' : 'いいね！' + num(POST.likes || 0) + '件') + '</div>';
+    if (POST.caption) h += '<div class="igpcap"><b>' + esc(p.user || '') + '</b> ' + esc(POST.caption) + '</div>';
+    h += '<div class="igpd">' + esc(ago(POST.at)) + (POST.comments_on ? '' : '　・　コメントはオフです') + '</div>';
+    h += '<div class="igpcs">' + (POST.comments && POST.comments.length ? POST.comments.map(function (c) {
+      return cmt(c, false) + (c.replies || []).map(function (r) { return cmt(r, true, c); }).join('');
+    }).join('') : '<div class="igpd">まだコメントはありません。</div>') + '</div></div>';
+    el.innerHTML = h;
+    drawInput();
+  }
+  function cmt(c, rep, parent) {
+    return '<div class="igpc' + (rep ? ' rep' : '') + (c.hidden ? ' hid' : '') + '"><div class="tx"><b>' + esc(c.u) + '</b>' + esc(c.t) +
+      '<div class="meta"><span>' + esc(ago(c.at)) + (c.hidden ? '・非表示中' : '') + '</span>' +
+      '<button type="button" data-rep="' + esc(rep ? parent.id : c.id) + '" data-ru="' + esc(c.u) + '">返信する</button></div></div>' +
+      '<button type="button" class="mo" data-cmo="' + esc(c.id) + '" data-ch="' + (c.hidden ? 1 : 0) + '" data-top="' + (rep ? 0 : 1) + '">⋯</button></div>';
+  }
+  function drawInput() {
+    var i = document.getElementById('igPin');
+    if (!POST || POST.loading || !POST.comments_on) { if (i) i.remove(); return; }
+    if (!i) {
+      i = document.createElement('div'); i.className = 'igpin'; i.id = 'igPin'; document.body.appendChild(i);
+      i.innerHTML = '<div class="in"><div class="to" id="igpTo" style="display:none"></div><div class="row">' +
+        '<textarea id="igpTx" placeholder="コメントを追加…"></textarea><button type="button" class="go" id="igpGo">投稿する</button></div></div>';
+      i.addEventListener('click', function (e) {
+        if (e.target.id === 'igpCancelRep') { REPLY = null; drawReplyTo(); return; }
+        if (e.target.id !== 'igpGo') return;
+        var tx = document.getElementById('igpTx'), m = tx.value.trim();
+        if (!m) { warn('コメントを入力してね😊'); return; }
+        var f = REPLY ? { kind: 'reply', comment_id: REPLY.id } : { kind: 'comment' };
+        f.acct = CUR; f.code = POST.code; f.message = m;
+        simple(f, REPLY ? '返信しています' : 'コメントしています', function (err, d) {
+          if (err) { warn(err); return; }
+          tx.value = ''; REPLY = null; drawReplyTo(); POST.comments = d.comments || POST.comments; drawPost();
+        });
+      });
+    }
+    drawReplyTo();
+  }
+  function drawReplyTo() {
+    var t = document.getElementById('igpTo'), tx = document.getElementById('igpTx'); if (!t) return;
+    if (REPLY) { t.style.display = ''; t.innerHTML = '<span>@' + esc(REPLY.u) + 'さんに返信中</span><button type="button" id="igpCancelRep" style="background:none;border:0;color:#737373;font:inherit;cursor:pointer">✕</button>'; if (tx && !tx.value) tx.value = '@' + REPLY.u + ' '; }
+    else { t.style.display = 'none'; t.innerHTML = ''; }
+  }
+  function sheet(items) {
+    var sh = document.createElement('div'); sh.className = 'igsheet';
+    sh.innerHTML = '<div class="in"><div class="bar"></div>' + items.map(function (it, i) {
+      return '<button type="button" data-i="' + i + '"' + (it.red ? ' class="red"' : '') + '>' + esc(it.t) + '</button>';
+    }).join('') + '<button type="button" data-i="-1">キャンセル</button></div>';
+    sh.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) { if (e.target === sh) sh.remove(); return; }
+      sh.remove(); var i = Number(b.getAttribute('data-i')); if (i >= 0 && items[i].go) items[i].go();
+    });
+    document.body.appendChild(sh);
+  }
+  function postClick(e) {
+    var t = e.target, cl = function (q) { return t.closest && t.closest(q); };
+    if (cl('[data-pback]')) { closePost(); return; }
+    if (cl('[data-soon]')) { warn(SOON); return; }
+    if (cl('[data-pcom]')) { var tx = document.getElementById('igpTx'); if (tx) tx.focus(); else warn('この投稿はコメントがオフです😊'); return; }
+    var rp = cl('[data-rep]');
+    if (rp) { REPLY = { id: rp.getAttribute('data-rep'), u: rp.getAttribute('data-ru') }; drawInput(); var x = document.getElementById('igpTx'); if (x) x.focus(); return; }
+    var mo = cl('[data-cmo]');
+    if (mo) {
+      var cid = mo.getAttribute('data-cmo'), hid = mo.getAttribute('data-ch') === '1', top = mo.getAttribute('data-top') === '1';
+      var its = [];
+      if (top) its.push({ t: hid ? 'コメントを表示に戻す' : 'コメントを非表示にする', go: function () {
+        simple({ kind: 'chide', acct: CUR, code: POST.code, comment_id: cid, hide: !hid }, hid ? '表示に戻しています' : '非表示にしています',
+          function (err, d) { if (err) { warn(err); return; } POST.comments = d.comments; drawPost(); });
+      } });
+      its.push({ t: 'コメントを削除', red: true, go: function () {
+        szPopup_('このコメントを削除しますか？😊', { cancel: true, onYes: function () {
+          simple({ kind: 'cdel', acct: CUR, code: POST.code, comment_id: cid }, '削除しています',
+            function (err, d) { if (err) { warn(err); return; } POST.comments = d.comments; drawPost(); });
+        } });
+      } });
+      sheet(its); return;
+    }
+    if (cl('[data-pmenu]') && POST && !POST.loading) {
+      var lh = POST.likes_hidden;
+      sheet([
+        { t: '削除', red: true, go: function () {
+          szPopup_('この投稿をインスタから削除しますか？😊', { cancel: true, onYes: function () {
+            simple({ kind: 'delete', acct: CUR, code: POST.code }, '削除しています', function (err) {
+              if (err) { warn(err); return; }
+              closePost(); szOvShow_(szDoneHtml_('削除が完了しました'), '#16a34a');
+              var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); loadWeb(CUR, true); });
+            });
+          } });
+        } },
+        { t: '編集', go: openEdit },
+        { t: lh ? '「いいね！」数を他の人に表示する' : '「いいね！」数を他の人に表示しない', go: function () {
+          simple({ kind: 'likes', acct: CUR, code: POST.code, hide: !lh }, '切り替えています', function (err, d) {
+            if (err) { warn(err); return; } POST.likes_hidden = !!d.hidden; drawPost();
+          });
+        } },
+        { t: POST.comments_on ? 'コメントをオフにする' : 'コメントをオンにする', go: function () {
+          simple({ kind: 'conoff', acct: CUR, code: POST.code, on: !POST.comments_on }, '切り替えています', function (err) {
+            if (err) { warn(err); return; } POST.comments_on = !POST.comments_on; drawPost();
+          });
+        } }
+      ]);
+    }
+  }
+  function openEdit() {
+    var e = document.createElement('div'); e.className = 'igpe igc'; e.id = 'igEdit';
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igeX">キャンセル</button><b>情報を編集</b><button type="button" class="go" id="igeGo">完了</button></div>' +
+      '<textarea id="igeTx"></textarea><div class="igccnt" id="igeCnt"></div></div>';
+    document.body.appendChild(e);
+    var tx = document.getElementById('igeTx'); tx.value = POST.caption || '';
+    var cnt = function () { var n = Array.from(tx.value).length, o = document.getElementById('igeCnt'); o.textContent = n + ' / ' + MAXCAP; o.className = 'igccnt' + (n > MAXCAP ? ' over' : ''); };
+    tx.addEventListener('input', cnt); cnt();
+    e.addEventListener('click', function (ev) {
+      if (ev.target.id === 'igeX') { e.remove(); return; }
+      if (ev.target.id !== 'igeGo') return;
+      var v = tx.value.trim();
+      if (Array.from(v).length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです😊'); return; }
+      simple({ kind: 'edit', acct: CUR, code: POST.code, caption: v }, 'キャプションを修正しています', function (err, d) {
+        if (err) { warn(err); return; }
+        e.remove(); POST.caption = d.caption; drawPost();
+        szOvShow_(szDoneHtml_('修正が完了しました'), '#16a34a');
+        var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); });
+      });
     });
   }
 
