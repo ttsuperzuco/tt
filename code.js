@@ -11368,10 +11368,10 @@ function renderUriageBookPage_(base, staff, dev) {
             '<div class="ubbox t" id="ubAf_m" data-f="m"></div><span class="ubu">分</span></div></div>' +   // ★2026-11-08 まるちゃん「最初から今が入ってるなら今ボタンはいらない」
           '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" id="ubAf_no" data-f="no" data-ph="押すと数字が出ます"></div></div>' +
           '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" id="ubAf_num" data-f="num" data-ph="押すと数字が出ます"></div>' +
-            '<button type="button" id="ubNumOk" class="ubok" style="display:none">OK</button></div></div>' +
+            '<button type="button" id="ubNumOk" class="ubok" style="display:none">入力OK</button></div></div>' +
           '<label>明細（購入内容）</label><input id="ubAddDetail">' +
           '<label>金額（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" id="ubAf_amt" data-f="amt" data-ph="押すと数字が出ます"></div>' +
-            '<button type="button" id="ubAmtOk" class="ubok" style="display:none">OK</button></div></div>' +   // ★2026-11-08 まるちゃん「金額もOKボタンいれる」
+            '<button type="button" id="ubAmtOk" class="ubok" style="display:none">入力OK</button></div></div>' +   // ★2026-11-08 まるちゃん「金額もOKボタンいれる」
           '<div class="ubkp" id="ubKp" style="display:none">' +
             '<div class="exseg" id="ubKpSeg"><span class="thumb"></span><button type="button" data-v="M" aria-pressed="true">M（男）</button>' +
             '<button type="button" data-v="F">F（女）</button><button type="button" data-v="">文字なし</button></div>' +
