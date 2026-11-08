@@ -10991,11 +10991,10 @@ var UBCSS_ =
   '.ubf input{display:block;width:100%;box-sizing:border-box;border:0;border-radius:12px;padding:12px;font:inherit;font-size:19px;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubf input.sel{outline:4px solid #fde047;}' +
   '.ubnamerow{display:flex;align-items:center;gap:8px;}.ubnamerow input{flex:1 1 auto;min-width:0;}' +
-  '.ubcoin{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}' +
-  '.ubcoin div{background:#fff;border-radius:12px;padding:8px;text-align:center;cursor:pointer;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
-  '.ubcoin div b{display:block;font-size:14px;color:#475569;}' +
-  '.ubcoin div span{font-size:26px;font-weight:900;}' +
-  '.ubcoin div.sel{outline:4px solid #fde047;}' +
+  '.ubcoin{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 8px;margin-top:4px;}' +
+  '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
+  '.ubcell .ubbox{justify-content:center;}' +
+  '.ubokrow{display:flex;justify-content:flex-end;margin-top:10px;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
   '.uboth .r:first-child{border-top:0;}';
@@ -11102,7 +11101,7 @@ function uriageBookScript_(C) {
       }
     }
   }
-  function setWhen(t) { $('ubWhen').textContent = t; $('ubWhen2').textContent = t; }
+  function setWhen(t) { $('ubWhen').textContent = t; $('ubWhen2').textContent = t; $('ubWhen3').textContent = t; }
   function jsonp(p, cb) {
     var n = '__ubk' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
@@ -11153,10 +11152,6 @@ function uriageBookScript_(C) {
     }
     o += '</tbody><tfoot><tr class="ubsum"><td>合計</td><td class="n">' + (D.other_total == null ? '' : Number(D.other_total).toLocaleString('ja-JP')) + '</td><td></td></tr></tfoot></table></div>';
     $('ubOthers').innerHTML = o;
-    var c = D.coins || {};
-    $('ubCoinSum').textContent = '小銭：100元×' + (c['100'] == null ? '―' : c['100']) + '・50元×' + (c['50'] == null ? '―' : c['50']) +
-      '・10元×' + (c['10'] == null ? '―' : c['10']) + '・5元×' + (c['5'] == null ? '―' : c['5']) + '・1元×' + (c['1'] == null ? '―' : c['1']) +
-      '　お札：' + yen(D.bills);
   }
   function fetchData(after) {
     jsonp({ action: 'data', name: 'uriagebook.json' }, function (p) {
@@ -11386,6 +11381,7 @@ function uriageBookScript_(C) {
   });
   $('ubReload').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
   $('ubReload2').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
+  $('ubReload3').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
 
   // ── 發票なしの売上：枠を押して直す・×で消す（2026-11-08 まるちゃん「發票ありと同じにして」）──
   function openPickO(y, col) {
@@ -11480,29 +11476,20 @@ function uriageBookScript_(C) {
   $('ubOthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubNoInv'); });
 
   // ── 小銭とお札（数字ボタンで入れる） ──
-  var CK = ['c100', 'c50', 'c10', 'c5', 'c1', 'bills'], CL = { c100: '100元', c50: '50元', c10: '10元', c5: '5元', c1: '1元', bills: 'お札' };
-  var cv = {}, csel = 'c100';
-  function drawCoins() {
-    var h = '';
-    for (var i = 0; i < CK.length; i++) h += '<div data-k="' + CK[i] + '" class="' + (csel === CK[i] ? 'sel' : '') + '"><b>' + CL[CK[i]] + (CK[i] === 'bills' ? '（元）' : '（枚）') + '</b><span>' + (cv[CK[i]] === undefined || cv[CK[i]] === '' ? '―' : esc(cv[CK[i]])) + '</span></div>';
-    $('ubCoinGrid').innerHTML = h;
-  }
+  var CK = ['c100', 'c50', 'c10', 'c5', 'c1', 'bills'];
+  var CP = padKit($('ubCoins'), { c100: { kind: 'int', max: 4, comma: true }, c50: { kind: 'int', max: 4, comma: true },
+    c10: { kind: 'int', max: 4, comma: true }, c5: { kind: 'int', max: 4, comma: true }, c1: { kind: 'int', max: 4, comma: true },
+    bills: { kind: 'int', max: 6, comma: true } });
   $('ubGoCoins').addEventListener('click', function () {
     var c = (D && D.coins) || {};
-    cv = { c100: c['100'] == null ? '' : String(c['100']), c50: c['50'] == null ? '' : String(c['50']), c10: c['10'] == null ? '' : String(c['10']),
-           c5: c['5'] == null ? '' : String(c['5']), c1: c['1'] == null ? '' : String(c['1']), bills: (D && D.bills != null) ? String(D.bills) : '' };
-    csel = 'c100'; drawCoins(); show('ubCoins');
-  });
-  $('ubCoinGrid').addEventListener('click', function (e) { var d = e.target.closest('div[data-k]'); if (!d) return; csel = d.getAttribute('data-k'); drawCoins(); });
-  $('ubCoinPad').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    var k = b.getAttribute('data-k') || b.textContent, s = cv[csel] || '';
-    if (k === 'clr') s = ''; else if (k === 'del') s = s.slice(0, -1); else if (/^[0-9]$/.test(k) && s.length < 6) s = (s === '0') ? k : s + k;
-    cv[csel] = s; drawCoins();
+    var v = { c100: c['100'], c50: c['50'], c10: c['10'], c5: c['5'], c1: c['1'], bills: D ? D.bills : null };
+    for (var i = 0; i < CK.length; i++) CP.set(CK[i], v[CK[i]] == null ? '' : String(v[CK[i]]));
+    CP.close(); show('ubCoins');
   });
   $('ubCoinGo').addEventListener('click', function () {
+    CP.close();
     var f = { action: 'coins' }, any = false;
-    for (var i = 0; i < CK.length; i++) if (cv[CK[i]] !== '' && cv[CK[i]] !== undefined) { f[CK[i]] = parseInt(cv[CK[i]], 10); any = true; }
+    for (var i = 0; i < CK.length; i++) if (CP.raw(CK[i]) !== '') { f[CK[i]] = parseInt(CP.raw(CK[i]), 10); any = true; }
     if (!any) { popup('枚数を入力してね😊'); return; }
     ask(f, '小銭を書いています', function () { show('ubMenu'); });
   });
@@ -11589,11 +11576,19 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<button type="button" class="exgo" id="ubOthGo">以上の内容で追加</button>' +
       '</div>' +
-      '<div id="ubCoins" style="display:none">' + inBack('ubCoinBack') + head('🪙', '小銭とお札') +
-        '<div class="ubinfo" id="ubCoinSum"></div>' +
-        '<div class="ubinfo">入力する欄を選択してから、数字ボタンで入力してね😊</div>' +
-        '<div class="ubcoin" id="ubCoinGrid"></div>' +
-        '<div class="expad" id="ubCoinPad" style="margin-top:12px">' + EXPADHTML_ + '</div>' +
+      // ★2026-11-08 まるちゃん「はじめから数字入力ボタンが出ているから分かりにくい」「上の部分を他の画面と同じに」
+      //   「枠の説明や売上一行（追加）はいらない」＝上は戻る・見出し・何時点・再読込の1行。
+      //   数字は売上帳簿の共通の数字パネル（枠を押した時だけ出る・入力OKで閉じる）。
+      '<div id="ubCoins" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubCoinBack') + '<span class="bname ubttl">🪙 小銭とお札</span>' +
+          '<span id="ubWhen3" class="ubwhen"></span><button type="button" id="ubReload3" class="ubsm">再読込</button>' +
+        '</div>' +
+        '<div class="ubrow"><div class="ubcoin">' +
+          [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]
+            .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div></div>'; }).join('') +
+        '</div><div class="ubokrow">' +
+          ['c100', 'c50', 'c10', 'c5', 'c1', 'bills'].map(function (k) { return '<button type="button" data-pok="' + k + '" class="ubok" style="display:none">入力OK</button>'; }).join('') +
+        '</div></div>' +
         '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
       '</div>' +
     '</div></div>' +
