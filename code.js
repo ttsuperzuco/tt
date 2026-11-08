@@ -11257,7 +11257,6 @@ function uriageBookScript_(C) {
     if (afSel === 'no' && /^[0-9]$/.test(k) && s.length >= 3) { afClose(); return; }   // ★2026-11-07 まるちゃん「三桁入れたらパネル閉じる」
     afDraw();
   });
-  $('ubAddNow').addEventListener('click', function () { afNow(); afClose(); });
   var addPay = '';
   $('ubGoAdd').addEventListener('click', function () {
     AF = { no: '', num: '', amt: '' }; afPre = 'M'; afNow();
@@ -11364,7 +11363,7 @@ function renderUriageBookPage_(base, staff, dev) {
           // ★2026-11-07 まるちゃん「時計はいらん 欄 時 欄 分 でいい」「欄を押すと数字のパネルが出てくる」
           //   「發票番号も・顧客番号はMやFが付いたいつもの数字パネル・金額も数字パネル」
           '<label>時刻</label><div class="ubrow"><div class="ubtime"><div class="ubbox t" id="ubAf_h" data-f="h"></div><span class="ubu">時</span>' +
-            '<div class="ubbox t" id="ubAf_m" data-f="m"></div><span class="ubu">分</span><button type="button" id="ubAddNow" class="ubnow">今</button></div></div>' +
+            '<div class="ubbox t" id="ubAf_m" data-f="m"></div><span class="ubu">分</span></div></div>' +   // ★2026-11-08 まるちゃん「最初から今が入ってるなら今ボタンはいらない」
           '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" id="ubAf_no" data-f="no" data-ph="押すと数字が出ます"></div></div>' +
           '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" id="ubAf_num" data-f="num" data-ph="押すと数字が出ます"></div>' +
             '<button type="button" id="ubNumOk" class="ubok" style="display:none">OK</button></div></div>' +
