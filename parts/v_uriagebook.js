@@ -57,8 +57,8 @@ var UBCSS_ =
   '.ubtbl td.e{cursor:pointer;}' +
   '.ubtbl tr.pend td{opacity:.5;}' +
   '.ubtbl tr.del td{text-decoration:line-through;}' +
-  '.ubtbl tbody tr:nth-child(even) td{background:#eef2f7;}' +
-  '@media (hover:hover){.ubtbl tbody tr:hover td{background:#d6ebfa;}}' +
+  '.ubtbl tbody tr:nth-child(even) td{background:#d8e4ee;}' +   
+  '@media (hover:hover){.ubtbl tbody tr:hover td{background:#aed8fb;}}' +
   '.ubtbl td.e:active{background:#bfdbfe;}' +
   '.ubtbl td.xc{text-align:center;padding:4px 1px;}' +
   '.ubtbl th{text-align:left;}.ubtbl th.c{text-align:center;}.ubtbl th.r{text-align:right;}' +

@@ -10940,8 +10940,8 @@ var UBCSS_ =
   // ★2026-11-08 まるちゃん「1行のデータが左と右で同じ行だと分かるように」
   //   ＝①偶数の行に薄い色（スマホもパソコンも）②パソコンはマウスを乗せた行全体に色（今どの行を見ているか分かる）。
   //   未選択の黄色・押した時の色は、この色より優先（下の決まりの方が強い）。
-  '.ubtbl tbody tr:nth-child(even) td{background:#eef2f7;}' +
-  '@media (hover:hover){.ubtbl tbody tr:hover td{background:#d6ebfa;}}' +
+  '.ubtbl tbody tr:nth-child(even) td{background:#d8e4ee;}' +   // ★2026-11-08 まるちゃん「灰色ほとんど区別つかない」＝#eef2f7から濃くした
+  '@media (hover:hover){.ubtbl tbody tr:hover td{background:#aed8fb;}}' +
   '.ubtbl td.e:active{background:#bfdbfe;}' +
   '.ubtbl td.xc{text-align:center;padding:4px 1px;}' +
   // ★2026-11-08 まるちゃん「タイトルと実際の項目がずれてる」＝見出しだけ左寄せだった。中身と同じ寄せ方にそろえる。
