@@ -233,14 +233,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
   'function pushImage(name,obj){return fetch(EXEC+"?action=push&key="+KEY+"&name="+name,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(obj)});}' +
   'function rnd(){var s="bc_img_",c="abcdefghijklmnopqrstuvwxyz0123456789",i;for(i=0;i<12;i++)s+=c[Math.floor(Math.random()*36)];return s+".json";}' +
-  'function ask(op,fields,onDone,onFail){' +
+  'function ask(op,fields,onDone,onFail,iv){iv=iv||700;' +
   'var f=fields||{};var p={action:"submit",key:KEY,op:op,who:idn.who,role:idn.role,device:idn.device};' +
   'for(var k in f)p[k]=f[k];' +
   'jsonp(p,function(r){if(!r||!r.ok||!r.id){(onFail||function(){})("依頼を送れませんでした。");return;}' +
-  'var lim=(window.LIMITS&&LIMITS.tries)?LIMITS.tries(op,700):500;' +
+  'var lim=(window.LIMITS&&LIMITS.tries)?LIMITS.tries(op,iv):500;' +
   'var n=0;(function poll(){n++;if(n>lim){(onFail||function(){})("時間がかかりすぎました。");return;}' +
   'jsonp({action:"status",key:KEY,id:r.id},function(s){if(!s||!s.ok){(onFail||function(){})("通信に失敗しました。");return;}' +
-  'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
+  'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,iv);return;}' +
   'if(s.status!=="done"){(onFail||function(){})(String(s.result||"うまくいきませんでした。"));return;}' +
   'var d=null;try{d=JSON.parse(s.result);}catch(e){d={ok:true,note:String(s.result||"")};}' +
   'onDone(d);});})();});}' +
@@ -379,7 +379,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(ta)WTEXT=ta.value;' +
   'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してね😊",true);return;}' +
   'WBUSY=true;WDONE=[];WMSG="";SENDN=null;status("");draw();' +
-  'runMake(WTEXT,function(i,tot,label){WMSG=(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
+  'runMake(WTEXT,function(i,tot,label){WMSG=i+"枚できました（全"+tot+"枚）　作成中："+label;draw();},' +
   'function(done,err){WBUSY=false;' +
   'if(err){WMSG="";status(err,true);}' +
   'else WMSG="できました。"+done+"枚を、それぞれの対象の1つ目に追加しました。";' +
@@ -391,12 +391,17 @@ function renderBroadcastPage_(base, staff, dev) {
   'var jobs=r.jobs,i=0,done=0;' +
   'if(SENDN)jobs=jobs.filter(function(j){return (j.targets||[]).some(function(nm){return SENDN.indexOf(nm)>=0;});});' +
   'if(!jobs.length){onDone(0,"");return;}' +
-  '(function next(){if(MKSTOP){onDone(done,"中止");return;}if(i>=jobs.length){onDone(done,"");return;}' +
-  'var j=jobs[i];onStep(i,jobs.length,j.label);' +
+  'var got=[],run=0,fin=false,err="",PAR=4;' +
+  'function finish(){if(fin)return;fin=true;for(var q=0;q<jobs.length;q++){if(got[q])putIntoTargets(jobs[q].targets,got[q].name,got[q].thumb);}' +
+  'onDone(done,MKSTOP?"中止":err);}' +
+  'function step(){var lb=[];for(var q=0;q<jobs.length;q++)if(jobs[q]._on)lb.push(jobs[q].label);onStep(done,jobs.length,lb.join("・"));}' +
+  'function pump(){if(fin)return;while(!MKSTOP&&!err&&run<PAR&&i<jobs.length){(function(k){var j=jobs[k];j._on=true;run++;' +
   'ask("bc_wakuimg",{fields:JSON.stringify({mode:"make",kind:j.kind,days:j.days})},' +
-  'function(g){if(MKSTOP){onDone(done,"中止");return;}if(g&&g.ok&&g.name){WDONE.push({label:j.label,thumb:g.thumb,name:g.name});' +
-  'putIntoTargets(j.targets,g.name,g.thumb);done++;}i++;next();},' +
-  'function(m2){onDone(done,MKSTOP?"中止":("「"+j.label+"」で止まりました："+m2));});})();},' +
+  'function(g){run--;j._on=false;if(g&&g.ok&&g.name&&!MKSTOP){got[k]={name:g.name,thumb:g.thumb};WDONE.push({label:j.label,thumb:g.thumb,name:g.name});done++;}' +
+  'if(run===0&&(MKSTOP||err||i>=jobs.length))finish();else{step();pump();}},' +
+  'function(m2){run--;j._on=false;if(!err&&!MKSTOP)err="「"+j.label+"」で止まりました："+m2;if(run===0)finish();},2000);})(i);i++;}' +
+  'step();if(run===0)finish();}' +
+  'pump();},' +
   'function(m){onDone(0,m);});}' +
   'var SENDN=null;' +
   'function putIntoTargets(names,name,thumb){' +
