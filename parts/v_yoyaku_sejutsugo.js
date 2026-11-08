@@ -248,7 +248,6 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var now=NOW();' +
       'var list=ALLEV.filter(function(e){return pick===SG.ALL||e.mark===pick;});' +
       'list.sort(function(a,b){return a.start-b.start;});' +
-      'if(!REP&&!LN){var sm=pick===SG.ALL?"🍅":pick;list.push({mark:sm,start:0,end:0,room:"",st:"ダミー",et:"",id:"DUMMY:sg1",dname:"RYU（試し）",dummy:true,fdask:true,firstdat:true,title:sm+"🇫🇷預約M999",note:"RYU様\\n0900000000\\n\\n⭐️現在進行中\\n◉イーライト VIO＋脇 5回コース：全5回の4回目 あり\\n◉🇫🇷パリジェンヌリペア あり\\n\\n💰お支払い状況\\n◉イーライト VIO＋脇 5回コース：支払い済み"});}/*TEMPDUMMY*/' +
       'LIST=list;' +
       '$("sglisthead").textContent="お客様の選択";' +
       'if(!list.length){$("sglist").innerHTML="";' +
