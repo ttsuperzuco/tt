@@ -10973,11 +10973,14 @@ function ubShowNextPop_() {
   if (!ubPopQ_.length || typeof szPopup_ !== 'function') return;
   if (document.querySelector('.szpopmask') || document.getElementById('ubMask')) return;   // 別の箱が出ている間は待つ
   var m = ubPopQ_.shift();
-  szPopup_(m.text, { icon: m.icon, onYes: function () { setTimeout(ubShowNextPop_, 200); } });
+  szPopup_(m.html || m.text, { icon: m.icon, isHtml: !!m.html, onYes: function () { setTimeout(ubShowNextPop_, 200); } });
 }
 function ubDone_(o, ok, text) {
   ubPendDrop_(o.id);
-  ubPopQ_.push(ok ? { icon: '✅', text: '売上帳簿への書き込みが終わりました。\n' + (text || '') }
+  // ★2026-11-08 まるちゃん「上を一行におさめて　二行目も。つけて」＝1行目は小さめの字で折り返さない・2行目の終わりに「。」
+  var t2 = String(text || '').trim(); if (t2 && !/[。！？]$/.test(t2)) t2 += '。';
+  var e2 = function (v) { return String(v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  ubPopQ_.push(ok ? { icon: '✅', html: '<div style="white-space:nowrap;font-size:min(1.5rem,4.2vw)">売上帳簿への書き込みが終わりました。</div>' + (t2 ? '<div>' + e2(t2) + '</div>' : '') }
                   : { icon: '⚠️', text: text || UB_FAIL_ });
   try { window.dispatchEvent(new CustomEvent('ubdone', { detail: { id: o.id, ok: ok } })); } catch (e) {}
   ubShowNextPop_();
@@ -11259,7 +11262,7 @@ function uriageBookScript_(C) {
       var isPad = (col === 'B' || col === 'F');   // ★数字・顧客番号は売上追加と同じ数字ボタン（共通部品）
       body = (isPad ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください"></div></div>'
         : col === 'E' ? '<textarea id="ubEd" rows="3"></textarea>' : '<input id="ubEd">') +
-        '<button type="button" class="go" data-a="save" style="margin-top:12px">これで直す</button>';
+        '<button type="button" class="go" data-a="save" style="margin-top:12px">以上の内容で修正する</button>';
     }
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
     m.innerHTML = '<div class="ubpick">' + head + body + '<button type="button" class="x" data-a="close">閉じる</button></div>';
