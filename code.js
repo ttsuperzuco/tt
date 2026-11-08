@@ -2113,7 +2113,7 @@ function ltGmapSection_(g) {
     '</article>';
   }).join('\n');
   return '<h1>⚠️ GGMAP書き込み未返信 <span class="lcnt">' + list.length + '件</span></h1>' +
-         '<div class="lgmwhen">口コミを確かめた時刻：' + esc_(when) + '</div>' +
+         '<div class="lgmwhen">口コミを確認した時刻：' + esc_(when) + '</div>' +
          '<div class="lcards">' + cardsHtml + '</div>';
 }
 
@@ -2612,7 +2612,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjPutTashikame(日,at,理由,sugu){' +
   'var msg=document.getElementById("zjmsg");' +
   'var ボタン=sugu?"⚡ 今すぐ送る":"この日時で送信の予約をする";' +
-  'msg.textContent=sugu?"⏳ 送信できたか確かめています…":"⏳ 送信の予約ができたか確かめています…";' +
+  'msg.textContent=sugu?"⏳ 送信できたか確認しています…":"⏳ 送信の予約ができたか確認しています…";' +
   'var eids=zjRows.map(function(r){return r.id;});' +
   'zjAsk("put_check",{date:日,event_ids:eids},function(d){' +
   'if(d&&d.ok&&d.put>0){zjClearLocal(日);zjFreshShow(false);' +
@@ -2644,7 +2644,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'zjAsk("big_image",{key:key,lang:lang||"日"},function(d){' +
   'var el=document.getElementById("zjbig");if(!el)return;' +
   'el.innerHTML=d.ok?("<h2>"+esc(d.name)+"</h2><img class=\\"zjbigimg\\" src=\\""+d.src+"\\" alt=\\"\\">")' +
-  ':("⛔ "+esc(d.error||"出せませんでした"));},function(e){' +
+  ':("⛔ "+esc(d.error||"表示できませんでした"));},function(e){' +
   'var el=document.getElementById("zjbig");if(el)el.textContent="⛔ "+e;});}' +
   /* ── その方に付く画像を修正する ─────────────────────── */
   'function zjPersonImg(eid,info){' +
@@ -2848,7 +2848,7 @@ function renderCostPage_(base, staff, dev) {
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){st.textContent="エラー："+((r&&r.error)||"不明");b.disabled=false;return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},700);return;}' +
     'b.disabled=false;' +
-    'if(r.status!=="done"){st.textContent=String(r.result||"出せませんでした。");return;}' +
+    'if(r.status!=="done"){st.textContent=String(r.result||"表示できませんでした。");return;}' +
     // ★大きな表は答えに載せられないので、事務所パソコンが置き場所へ置いた物を読みに行く
     //   （前日お知らせと同じやり方・2026-08-24）。
     'st.textContent="受け取っています…";' +
@@ -5641,7 +5641,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★2026-10-02 まるちゃん「間の画面はなくして。何枚入れましたも言わなくていい」
   //   ＝画像ができたらそのまま最終確認へ（画像を作らない時と同じ道）。中止・失敗の時だけ一言出す。
   'function(done,err){MBUSY=false;MSTEP=3;MMSG="";page="t";step=0;mode="";' +
-  'status((err==="中止")?"画像生成を中止しました。":(err?("画像を作れませんでした："+err):""),!!(err&&err!=="中止"));' +
+  'status((err==="中止")?"画像生成を中止しました。":(err?("画像を作成できませんでした："+err):""),!!(err&&err!=="中止"));' +
   'draw();});}' +
   // ── 対象1つぶんの設定 ────────────────────────────────
   'function drawOne(){' +
@@ -6369,11 +6369,11 @@ var SG_STEPS_JS_ =
       '$("sgfct").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）の空き状況";' +
       'if(!AKI&&!AKIERR){$("sgstatus3").textContent="空き状況を読んでいます...";' +
         '$("sgfree").innerHTML="";AKIWAIT=function(){if(step===5)drawFree();};return;}' +
-      'if(AKIERR){$("sgstatus3").textContent="空き状況を読めませんでした。通信環境をご確認くださいませ🙇";' +
+      'if(AKIERR){$("sgstatus3").textContent="空き状況を読み込めませんでした。通信環境をご確認くださいませ🙇";' +
         '$("sgfree").innerHTML="";return;}' +
       'var day=null;' +
       'for(var i=0;i<AKI.days.length;i++){if(AKI.days[i].date===PICKDATE){day=AKI.days[i];break;}}' +
-      'if(!day){$("sgstatus3").textContent="この日の空き状況はまだ出せません（先の日は近づくと出ます）。";' +
+      'if(!day){$("sgstatus3").textContent="この日の空き状況はまだ表示できません（先の日は近づくと出ます）。";' +
         '$("sgfree").innerHTML="";return;}' +
       'if(day.kind==="closed"){$("sgstatus3").textContent=day.label||"この日はお休みです。";' +
         '$("sgfree").innerHTML="";return;}' +
@@ -6806,7 +6806,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       's.onerror=function(){cb({error:"net"});};document.body.appendChild(s);}' +
     /* 受け取った予定から「今日・うちの施術者の分」だけ取り出す */
     'function build(p){' +
-      'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読めませんでした。通信環境をご確認くださいませ🙇";return;}' +
+      'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読み込めませんでした。通信環境をご確認くださいませ🙇";return;}' +
       'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};NXC={};' +
       'var day=[];' +
       /* ★2026-11-02：今日より先に同じ番号の予約がある方＝次回の予約がもう入っている（施術後のLINE送信の「新規脱毛（次回予約なし）」に印を付けない） */
@@ -7253,7 +7253,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function repLoadToday(cb){if(RLOADED){cb();return;}' +
       'szOvShow_(szBusyHtml_("今日の予約を読んでいます"),"#2C7A99");' +
       'need(function(p){szOvHide_();var keep=pick;build(p);pick=keep;' +
-        'if(!p||p.error||!p.events){szPopup_("今日の予約を読めませんでした。通信環境をご確認くださいませ🙇");return;}' +
+        'if(!p||p.error||!p.events){szPopup_("今日の予約を読み込めませんでした。通信環境をご確認くださいませ🙇");return;}' +
         'if(RLOADED){if(step===2)drawList();return;}RLOADED=true;cb();});}' +
     'function repBack(){if(step===8){if(RFROM===22){goRNum();}else{goList();}return true;}' +
       'if(step===2||step===22){goRChoose();return true;}if(step===21){goPick();return true;}return false;}' +
@@ -8096,13 +8096,13 @@ function renderNewReservationPage_(base, staff, dev) {
     '+"<div style=\\"font-size:.85rem;line-height:1.5;text-align:left;margin-top:4px;white-space:pre-wrap;max-height:32vh;overflow:auto;background:rgba(255,255,255,.08);border-radius:8px;padding:8px 10px\\">"+esch(d.memo)+"</div>"):""),' +
     '{icon:"",isHtml:true,yesLabel:"OK",noLabel:"やめる",cancel:true,onYes:go});}' +
     // ★確かめの中身は「今の選び方で受付係が作った予定リスト」。手元に新しい物が無ければ、その場で聞いてから出す。
-    'function nrAskPlan(){szOvShow_(szBusyHtml_("登録する内容を確かめています"),"#2C7A99");' +
+    'function nrAskPlan(){szOvShow_(szBusyHtml_("登録する内容を確認しています"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){' +
-    'if(!r||!r.ok||!r.id){szOvHide_();szPopup_("登録する内容を確かめられませんでした（送れませんでした）。もう一度試してもらえると嬉しいです🙇");return;}var n=0;' +
-    '(function pp(){n++;if(n>LIMITS.tries("preview_new_titles",700)){szOvHide_();szPopup_("登録する内容を確かめられませんでした（時間がかかりすぎました）。もう一度試してもらえると嬉しいです🙇");return;}' +
+    'if(!r||!r.ok||!r.id){szOvHide_();szPopup_("登録する内容を確認できませんでした（送れませんでした）。もう一度試してもらえると嬉しいです🙇");return;}var n=0;' +
+    '(function pp(){n++;if(n>LIMITS.tries("preview_new_titles",700)){szOvHide_();szPopup_("登録する内容を確認できませんでした（時間がかかりすぎました）。もう一度試してもらえると嬉しいです🙇");return;}' +
     'jsonp({action:"status",key:KEY,id:r.id},function(x){if(!x||!x.ok||x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(pp,700);return;}' +
     'var d={};try{d=JSON.parse(x.result||"{}");}catch(e){}szOvHide_();' +
-    'if(x.status!=="done"||!d||!d.ok){szPopup_("登録する内容を確かめられませんでした（"+esch((d&&d.error)||"途中で止まりました")+"）。もう一度試してもらえると嬉しいです🙇");return;}' +
+    'if(x.status!=="done"||!d||!d.ok){szPopup_("登録する内容を確認できませんでした（"+esch((d&&d.error)||"途中で止まりました")+"）。もう一度試してもらえると嬉しいです🙇");return;}' +
     'window.__nrPlanPrev=d;nrConfirm(d);});})();});}' +
     'goEl.addEventListener("click",function(){var d=window.__nrPlanPrev;' +
     'if(d&&d.slots&&!titleStale){nrConfirm(d);return;}nrAskPlan();});' +
@@ -9193,7 +9193,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var EXSTEP="";' +
     'exEl("exToConfirm").onclick=function(){exShowConfirm();};' +
     /* ★新しい流れ（ここまで）────────────────────────────────────── */
-    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx){exGoBusy_(false);return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[])};exPayNow("","",true);jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exGoBusy_(false);return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度試してもらえると嬉しいです🙇）";exGoBusy_(false);return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok){exGoBusy_(false);return;}if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done"){exGoBusy_(false);return;}var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exGrowMemo();setTimeout(exGrowMemo,0);setTimeout(exGrowMemo,300);exPayRemovedNote(el2,(d&&d.memo)||"");exPaidNote(el2,(d&&d.paid_note)||"");exPayNow((rvMemoOv!=null&&el2)?el2.value:((d&&d.memo)||""),(d&&d.paid_note)||"");exGoBusy_(false);});})();});}' +
+    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx){exGoBusy_(false);return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[])};exPayNow("","",true);jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exGoBusy_(false);return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度試してもらえると嬉しいです🙇）";exGoBusy_(false);return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok){exGoBusy_(false);return;}if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done"){exGoBusy_(false);return;}var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作成できませんでした）";exGrowMemo();setTimeout(exGrowMemo,0);setTimeout(exGrowMemo,300);exPayRemovedNote(el2,(d&&d.memo)||"");exPaidNote(el2,(d&&d.paid_note)||"");exPayNow((rvMemoOv!=null&&el2)?el2.value:((d&&d.memo)||""),(d&&d.paid_note)||"");exGoBusy_(false);});})();});}' +
     // ★複数枠：印が2つ以上なら印ごとに1枠。枠ごとに部屋・担当・分を選び、時間は続けて自動で並べる。
     'var rvSlotCfg={},rvLastSlotCount=0;' +
     'function rvSlotCfg_(mk){if(!rvSlotCfg[mk])rvSlotCfg[mk]={room:rvsel.room,staff:rvsel.staff,dur:rvsel.dur};return rvSlotCfg[mk];}' +
@@ -10516,7 +10516,7 @@ function renderProcampPage_(list, choice, base, staff, dev) {
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="home">' + backBar_(base, staff, dev) + head +
       '<div class="soon"><div class="soonic">📄</div>' +
-      '<div class="soontitle" style="font-size:1.4rem">一覧を読めませんでした</div>' +
+      '<div class="soontitle" style="font-size:1.4rem">一覧を読み込めませんでした</div>' +
       '<div class="soondesc">' + esc_(list.error || 'まだ一覧が作られていません。') + '</div></div></div>';
   }
   var body = '';
@@ -11953,7 +11953,7 @@ function hanbaiScript_(C) {
     if (DAYS[d]) { TODAY = DAYS[d]; drawToday(); return; }
     if (!isToday()) {
       ask({ kind: 'day', date: d }, dayWord() + '予約を読んでいます', function (err, r) {
-        if (err || !r || !r.ok) { popup('予約を読めませんでした：' + (err || '不明')); return; }
+        if (err || !r || !r.ok) { popup('予約を読み込めませんでした：' + (err || '不明')); return; }
         DAYS[d] = TODAY = ours(r.list || []); drawToday();
       }, '少し待っててくださいね🥺');
       return;
@@ -11963,7 +11963,7 @@ function hanbaiScript_(C) {
     var fin = function (p) {
       try { delete window[n]; } catch (e) {}
       if (typeof szOvHide_ === 'function') szOvHide_();
-      if (!p || p.error || !p.events) { popup('本日の予約を読めませんでした。通信環境をご確認くださいませ🙇'); return; }
+      if (!p || p.error || !p.events) { popup('本日の予約を読み込めませんでした。通信環境をご確認くださいませ🙇'); return; }
       var day = p.date_from || ymd(new Date()), out = [];
       for (var i = 0; i < p.events.length; i++) {
         var e = p.events[i]; if (e.date !== day) continue;
@@ -12236,7 +12236,7 @@ function hanbaiScript_(C) {
     if (!all) {
       $('hbListBody').innerHTML = '<div class="hbempty">読んでいます…</div>';
       prefetch(LM, function (err) {
-        if (err && cur === 'hbList') $('hbListBody').innerHTML = '<div class="hbempty">読めませんでした：' + esc(err) + '</div>';
+        if (err && cur === 'hbList') $('hbListBody').innerHTML = '<div class="hbempty">読み込めませんでした：' + esc(err) + '</div>';
       });
       return;
     }
@@ -14831,7 +14831,7 @@ function renderClaudeToolsPage_(base, staff, dev) {
     { t: 'インスタを操作したい',
       d: 'インスタのDM返信・投稿・ストーリーズ・投稿のアーカイブなどを操作（3アカウント／ログイン使い回し）' },
     { t: '画像のURLをつくりたい',
-      d: '画像（料金表・お支払い方法など）を、お客様がそのまま開ける短いリンク（x.gd/〇〇）に変える' },
+      d: '画像（料金表・お支払い方法など）を、お客様がそのまま開ける短いリンク（x.gd/〇〇）に変換する' },
     { t: '画像からAIタグ除去',
       d: 'ChatGPT等で作った画像をSNSに上げると付く「AI情報／AIで作成」の表示を削除する。画像に埋め込まれた"AIが作った"記録だけを削除し、絵（色・大きさ）は元と完全に同じまま。画像を貼って「AIタグ除去」と言うだけ' },
     { t: '家計簿操作ツール', c: '家計簿',
@@ -16871,7 +16871,7 @@ var KANSHISCRIPT_ =
 //   今は設定ファイルを直接読み、人・名前・権限・並び順は code.js の共通関数
 //   （_peopleFromCfg_ 等＝ホーム起動と同じ導出）でこの場で組み立てる。
 '  jsonp_({action:"data", name:"tile_settings.json"}, function(r){' +
-'    if(!r||r.error){ toast_("⚠ 設定を読めませんでした"); return; }' +
+'    if(!r||r.error){ toast_("⚠ 設定を読み込めませんでした"); return; }' +
 '    EPEOPLE_=(typeof _peopleFromCfg_==="function")?_peopleFromCfg_(r):(r.people||[]);' +
 '    ELAB_=(typeof _labelsFromCfg_==="function")?_labelsFromCfg_(r):(r.labels||{});' +
 '    ECLAIM_=r.claimed||{};' +
@@ -17414,7 +17414,7 @@ function bcCampCode_() {
     fetch(base + 'links.json?cb=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (d) { CLINKS = d || { topics: [] }; if (CMODE) draw(); })
-      .catch(function () { CLINKERR = '各種LINKを読めませんでした。通信環境を確かめて、もう一度開いてください🙇'; if (CMODE) draw(); });
+      .catch(function () { CLINKERR = '各種LINKを読み込めませんでした。通信環境を確認して、もう一度開いてください🙇'; if (CMODE) draw(); });
   }
   // ★送り先の決まりは事務所パソコンに聞くので10秒以上かかることがある（2026-09-17 実機）。
   //   ・届いても、文章を打っている画面は描き直さない（描き直すと入力欄が作り直されて打てなくなる）
