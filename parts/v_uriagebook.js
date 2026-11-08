@@ -183,7 +183,7 @@ function uriageBookScript_(C) {
   }
   function fetchData(after) {
     jsonp({ action: 'data', name: 'uriagebook.json' }, function (p) {
-      if (p && p.rows) { D = p; applyPend(); draw(); }
+      if (p && p.rows) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); }
       if (after) after(p);
     });
   }
@@ -483,11 +483,16 @@ function uriageBookScript_(C) {
   var CP = padKit($('ubCoins'), { c100: { kind: 'int', max: 4, comma: true }, c50: { kind: 'int', max: 4, comma: true },
     c10: { kind: 'int', max: 4, comma: true }, c5: { kind: 'int', max: 4, comma: true }, c1: { kind: 'int', max: 4, comma: true },
     bills: { kind: 'int', max: 6, comma: true } });
-  $('ubGoCoins').addEventListener('click', function () {
-    var c = (D && D.coins) || {};
-    var v = { c100: c['100'], c50: c['50'], c10: c['10'], c5: c['5'], c1: c['1'], bills: D ? D.bills : null };
+  var coinTouched = false;    
+  function fillCoins() {
+    if (!CP || !D) return;
+    var c = D.coins || {};
+    var v = { c100: c['100'], c50: c['50'], c10: c['10'], c5: c['5'], c1: c['1'], bills: D.bills };
     for (var i = 0; i < CK.length; i++) CP.set(CK[i], v[CK[i]] == null ? '' : String(v[CK[i]]));
-    CP.close(); show('ubCoins');
+  }
+  $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; });
+  $('ubGoCoins').addEventListener('click', function () {
+    coinTouched = false; fillCoins(); CP.close(); show('ubCoins');
   });
   $('ubCoinGo').addEventListener('click', function () {
     CP.close();
