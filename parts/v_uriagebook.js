@@ -57,7 +57,9 @@ var UBCSS_ =
   '.ubtbl td.e{cursor:pointer;}' +
   '.ubtbl tr.pend td{opacity:.5;}' +
   '.ubtbl tr.del td{text-decoration:line-through;}' +
-  '.ubtbl td.e:active{background:#e0f2fe;}' +
+  '.ubtbl tbody tr:nth-child(even) td{background:#eef2f7;}' +
+  '@media (hover:hover){.ubtbl tbody tr:hover td{background:#d6ebfa;}}' +
+  '.ubtbl td.e:active{background:#bfdbfe;}' +
   '.ubtbl td.xc{text-align:center;padding:4px 1px;}' +
   '.ubtbl th{text-align:left;}.ubtbl th.c{text-align:center;}.ubtbl th.r{text-align:right;}' +
   '.ubx{background:#fee2e2;color:#b91c1c;border:0;border-radius:8px;width:28px;height:28px;font:inherit;font-weight:900;font-size:17px;line-height:1;cursor:pointer;}' +
