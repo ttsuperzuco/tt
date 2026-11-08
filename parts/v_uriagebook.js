@@ -8,8 +8,9 @@ var UBCSS_ =
   '.ubtop .uhome{padding:7px 12px;}' +
   '.ubttl{font-size:20px;line-height:1.2;margin:0;}' +
   '.ubwhen{color:#eaf6fb;font-weight:800;font-size:15px;}' +
-  '.ubtop .ubhint{font-size:15px;margin:0 0 0 auto;}' +
-  '.ubtop .ubadd{padding:7px 14px;}' +
+  '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
+  '.ubtop2 .ubhint{font-size:15px;margin:0;}' +
+  '.ubtop2 .ubadd{padding:7px 14px;}' +
   '#ubMenu,#ubNoInv,#ubAdd,#ubOther,#ubCoins{max-width:560px;margin:0 auto;}' +
   '@media (min-width:700px){.ubtbl table{table-layout:auto;font-size:14px;}.ubtbl col{width:auto!important;}' +
   '.ubtbl th,.ubtbl td{white-space:nowrap;padding-left:8px;padding-right:8px;}.ubtbl th br{display:none;}.ubtbl td.d{white-space:normal;width:100%;}}' +
@@ -464,13 +465,14 @@ function renderUriageBookPage_(base, staff, dev) {
       '<div id="ubInv" style="display:none">' +
         '<div class="ubtop">' + inBack('ubInvBack') + '<span class="bname ubttl">🧾 發票ありの売上</span>' +
           '<span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button>' +
-          '<span class="ubh ubhint">枠を押すと修正できます</span><button type="button" id="ubGoAdd" class="ubadd">売上追加</button>' +
         '</div>' +
+        '<div class="ubtop2"><span class="ubh ubhint">枠を押すと修正できます</span><button type="button" id="ubGoAdd" class="ubadd">売上追加</button></div>' +
         '<div id="ubList"></div>' +
       '</div>' +
-      '<div id="ubNoInv" style="display:none">' + inBack('ubNoInvBack') + head('📝', '發票なしの売上') +
+      '<div id="ubNoInv" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubNoInvBack') + '<span class="bname ubttl">📝 發票なしの売上</span></div>' +
+        '<div class="ubtop2"><button type="button" id="ubGoOther" class="ubadd">売上追加</button></div>' +
         '<div class="uboth" id="ubOthers"></div>' +
-        '<div class="ubmenu"><button type="button" id="ubGoOther">＋ 行を追加</button></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
