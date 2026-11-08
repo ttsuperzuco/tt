@@ -144,6 +144,9 @@ function doGet(e) {
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       
     html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてね😊' }, base, staff, dev);
+  } else if (view === 'insta') {
+    title = 'インスタ';                                       
+    html = renderInstaPage_(base, staff, dev);
   } else if (view === 'threads') {
     title = 'Threads投稿';                                   
     html = renderThreadsPage_(base, staff, dev);
@@ -808,9 +811,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   hanbai:     { exec: true, staff: true },
   claudechat: { exec: false, staff: false },
   threads:    { exec: false, staff: false },
+  insta:      { exec: false, staff: false },
   mita:       { exec: true, staff: true }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'mita', 'uriagebook'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'mita', 'uriagebook'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1343,6 +1347,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' },
   { id: 'threads', cls: 'threads', view: 'threads',
     icon: '<span class="ticon">🧵</span>', label: 'Threads\n投稿' },
+  { id: 'insta', cls: 'insta', view: 'insta',
+    icon: '<span class="ticon">📸</span>', label: 'インスタ' },
   { id: 'mita', cls: 'mita', view: 'mita',
     icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' }
 ];
@@ -1352,7 +1358,7 @@ var TILE_GROUP_ = {
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', uriagebook: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', uriagebook: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
@@ -2263,6 +2269,9 @@ try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined'
 
 
 
+
+
+
 function renderPcStatus_(base, staff, dev) {
   try {
     return renderPcStatusPage_(
@@ -2705,6 +2714,7 @@ var HOMECSS_ =
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.claudechat::before { background:#d97757; }' +
 '  .tile.threads::before { background:#101010; }' +
+'  .tile.insta::before { background:#d62976; }' +
 '  .tile.mita::before { background:#0f766e; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
