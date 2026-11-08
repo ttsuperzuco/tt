@@ -10889,7 +10889,7 @@ var UBCSS_ =
   '.ubwhen{color:#eaf6fb;font-weight:800;font-size:15px;}' +
   '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop2 .ubhint{font-size:15px;margin:0;}' +
-  '.ubtop2 .ubadd{padding:7px 14px;}' +
+  '.ubtop2 .ubadd{padding:7px 14px;margin-left:auto;}' +
   '#ubMenu,#ubNoInv,#ubAdd,#ubOther,#ubCoins{max-width:560px;margin:0 auto;}' +
   '@media (min-width:700px){.ubtbl table{table-layout:auto;font-size:14px;}.ubtbl col{width:auto!important;}' +
   '.ubtbl th,.ubtbl td{white-space:nowrap;padding-left:8px;padding-right:8px;}.ubtbl th br{display:none;}.ubtbl td.d{white-space:normal;width:100%;}}' +
@@ -10939,6 +10939,8 @@ var UBCSS_ =
   '.ubtbl tr.del td{text-decoration:line-through;}' +
   '.ubtbl td.e:active{background:#e0f2fe;}' +
   '.ubtbl td.xc{text-align:center;padding:4px 1px;}' +
+  // ★2026-11-08 まるちゃん「タイトルと実際の項目がずれてる」＝見出しだけ左寄せだった。中身と同じ寄せ方にそろえる。
+  '.ubtbl th{text-align:left;}.ubtbl th.c{text-align:center;}.ubtbl th.r{text-align:right;}' +
   '.ubx{background:#fee2e2;color:#b91c1c;border:0;border-radius:8px;width:28px;height:28px;font:inherit;font-weight:900;font-size:17px;line-height:1;cursor:pointer;}' +
   '.ubpick input,.ubpick textarea{display:block;width:100%;box-sizing:border-box;border:2px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;font-size:18px;color:#0f172a;margin:4px 0 10px;}' +
   '.ubpick .go{display:block;width:100%;background:#16a34a;color:#fff;border:0;border-radius:10px;padding:14px;font:inherit;font-size:17px;font-weight:900;cursor:pointer;}' +
@@ -11086,7 +11088,7 @@ function uriageBookScript_(C) {
       //   ＝顧客番号・顧客名・支払・明細・合計の枠（td.e）を押すとその欄を直せる。×で行を消す。
       L = '<div class="ubtbl"><table><colgroup><col style="width:11%"><col style="width:8%"><col style="width:12%"><col style="width:13%">' +
         '<col style="width:11%"><col><col style="width:14%"><col style="width:9%"></colgroup>' +
-        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th>支払</th><th>明細</th><th>合計</th><th>削除</th></tr></thead><tbody>';
+        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="c">削除</th></tr></thead><tbody>';
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
         L += '<tr class="r' + (x._pend ? ' pend' : '') + (x._del ? ' del' : '') + '" data-j="' + j + '"><td class="w">' + esc(x.time || '') + '</td><td class="w">' + esc(x.no) + '</td>' +
@@ -11444,13 +11446,13 @@ function renderUriageBookPage_(base, staff, dev) {
           '<span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button>' +
         '</div>' +
         // ★2026-11-08 まるちゃん「枠を押すと修正できます・売上追加ボタンは二行目の左寄せで」
-        '<div class="ubtop2"><span class="ubh ubhint">枠を押すと修正できます</span><button type="button" id="ubGoAdd" class="ubadd">売上追加</button></div>' +
+        '<div class="ubtop2"><span class="ubh ubhint">各項目の枠内を押すと修正できます</span><button type="button" id="ubGoAdd" class="ubadd">売上一行追加</button></div>' +
         '<div id="ubList"></div>' +
       '</div>' +
       // ★2026-11-08 まるちゃん「こちらも売上追加ボタンにして上に」＝發票ありと同じ並び（1行目＝戻る・見出し／2行目の左＝売上追加）
       '<div id="ubNoInv" style="display:none">' +
         '<div class="ubtop">' + inBack('ubNoInvBack') + '<span class="bname ubttl">📝 發票なしの売上</span></div>' +
-        '<div class="ubtop2"><button type="button" id="ubGoOther" class="ubadd">売上追加</button></div>' +
+        '<div class="ubtop2"><button type="button" id="ubGoOther" class="ubadd">売上一行追加</button></div>' +
         '<div class="uboth" id="ubOthers"></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
