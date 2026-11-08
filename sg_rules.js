@@ -528,7 +528,7 @@
     for (var j = 0; j < f.length; j++) {
       var w = ((f[j] && f[j].parts) || []).map(function (p) { return p && p.word; }).filter(function (x) { return x; });
       var nm = w.length ? w.join('、') : ((f[j] && (f[j].name || f[j].head)) || '');
-      out.push('次回の予約で' + nm + 'がラストですが、お知らせのリピートおすすめはどうしますか？（都度・5回・8回）');
+      out.push('次回の予約で' + nm + 'がラストですが、お知らせのリピートおすすめ（都度・5回・8回）はどうしますか？😊');
     }
     return out;
   };

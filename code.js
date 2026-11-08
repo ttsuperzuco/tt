@@ -6690,8 +6690,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 15枚目＝確認の一覧（2026-11-09 まるちゃん決定・受付の端末だけ・今は開発版だけ）。予約メモの確定のあとに出す。
        お客様が退店された後に、担当した施術者へ聞く物を全部並べる。「全て確認しました」で各確認の画面へ。文は共通の判断（SG.checkItems）。 */
     '<div class="sg" id="sgCheck" style="display:none">' +
-      '<div class="sgwho">ここからは、お客様が退店された後に行ってください。</div>' +
-      '<div class="sgmnote">まず、このお客様を担当した施術者に以下の確認をしてください</div>' +
+      '<div class="sgwho">ここからは、お客様が退店された後に行ってね😊</div>' +
+      '<div class="sgmnote">まず、このお客様を担当した施術者に以下の確認をしてね😊</div>' +
       '<div class="sgcklist" id="sgcklist"></div>' +
       '<button type="button" class="sggo" id="sgckgo">全て確認しました</button>' +
     '</div>' +
