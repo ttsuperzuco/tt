@@ -11200,7 +11200,7 @@ function uriageBookScript_(C) {
   var AF = {}, afSel = '', afPre = 'M', afFresh = false;   // afFresh＝欄を押した直後は、最初の数字で入れ直す（今の時刻などを消す手間をなくす）
   var AFMAX = { h: 2, m: 2, no: 3, num: 4, amt: 7 };
   function p2(n) { return ('0' + n).slice(-2); }
-  function afNow() { var d = new Date(); AF.h = String(d.getHours()); AF.m = p2(d.getMinutes()); }
+  function afNow() { var d = new Date(); AF.h = p2(d.getHours()); AF.m = p2(d.getMinutes()); }
   function afNum() { return AF.num ? afPre + AF.num : ''; }
   function afSeg() {
     var bs = $('ubKpSeg').querySelectorAll('button'), at = 0;
@@ -11214,7 +11214,8 @@ function uriageBookScript_(C) {
       if (ks[i] === 'amt' && v) v = Number(v).toLocaleString();
       el.textContent = v; el.className = 'ubbox' + (ks[i] === 'h' || ks[i] === 'm' ? ' t' : '') + (afSel === ks[i] ? ' sel' : '');
     }
-    $('ubNumOk').style.display = (afSel === 'num') ? '' : 'none';   // ★2026-11-07 まるちゃん「顧客は入力欄の右にOKボタン出して閉じる」
+    $('ubNumOk').style.display = (afSel === 'num') ? '' : 'none';
+    $('ubAmtOk').style.display = (afSel === 'amt') ? '' : 'none';   // ★2026-11-07 まるちゃん「顧客は入力欄の右にOKボタン出して閉じる」
   }
   function afOpen(k) {
     afSel = k; afFresh = true;
@@ -11231,6 +11232,7 @@ function uriageBookScript_(C) {
   });
   $('ubAddDetail').addEventListener('focus', afClose);
   $('ubNumOk').addEventListener('click', afClose);
+  $('ubAmtOk').addEventListener('click', afClose);
   $('ubKpSeg').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     afPre = b.getAttribute('data-v') || ''; afSeg(); afDraw();
@@ -11362,13 +11364,14 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubf">' +
           // ★2026-11-07 まるちゃん「時計はいらん 欄 時 欄 分 でいい」「欄を押すと数字のパネルが出てくる」
           //   「發票番号も・顧客番号はMやFが付いたいつもの数字パネル・金額も数字パネル」
-          '<label>時刻</label><div class="ubrow"><div class="ubtime"><div class="ubbox t" id="ubAf_h" data-f="h"></div><span class="ubu">時</span>' +
+          '<label>時刻（9時3分なら 09時03分と入力）</label><div class="ubrow"><div class="ubtime"><div class="ubbox t" id="ubAf_h" data-f="h"></div><span class="ubu">時</span>' +
             '<div class="ubbox t" id="ubAf_m" data-f="m"></div><span class="ubu">分</span></div></div>' +   // ★2026-11-08 まるちゃん「最初から今が入ってるなら今ボタンはいらない」
           '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" id="ubAf_no" data-f="no" data-ph="押すと数字が出ます"></div></div>' +
           '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" id="ubAf_num" data-f="num" data-ph="押すと数字が出ます"></div>' +
             '<button type="button" id="ubNumOk" class="ubok" style="display:none">OK</button></div></div>' +
           '<label>明細（購入内容）</label><input id="ubAddDetail">' +
-          '<label>金額（元）</label><div class="ubrow"><div class="ubbox" id="ubAf_amt" data-f="amt" data-ph="押すと数字が出ます"></div></div>' +
+          '<label>金額（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" id="ubAf_amt" data-f="amt" data-ph="押すと数字が出ます"></div>' +
+            '<button type="button" id="ubAmtOk" class="ubok" style="display:none">OK</button></div></div>' +   // ★2026-11-08 まるちゃん「金額もOKボタンいれる」
           '<div class="ubkp" id="ubKp" style="display:none">' +
             '<div class="exseg" id="ubKpSeg"><span class="thumb"></span><button type="button" data-v="M" aria-pressed="true">M（男）</button>' +
             '<button type="button" data-v="F">F（女）</button><button type="button" data-v="">文字なし</button></div>' +
