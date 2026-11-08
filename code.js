@@ -10963,6 +10963,8 @@ var UBCSS_ =
   '@media (hover:hover){.ubtbl tbody tr:hover td{background:#aed8fb;}}' +
   '.ubtbl td.e:active{background:#bfdbfe;}' +
   '.ubtbl td.xc{text-align:center;padding:4px 1px;}' +
+  '.ubtbl tfoot td{font-weight:900;font-size:15px;padding:9px 8px;background:#fff2cc;border-top:2px solid #cbd5e1;}' +
+  '.ubtbl td.ubnone{padding:14px;text-align:center;color:#64748b;}' +
   // ★2026-11-08 まるちゃん「タイトルと実際の項目がずれてる」＝見出しだけ左寄せだった。中身と同じ寄せ方にそろえる。
   '.ubtbl th{text-align:left;}.ubtbl th.c{text-align:center;}.ubtbl th.r{text-align:right;}' +
   '.ubx{background:#fee2e2;color:#b91c1c;border:0;border-radius:8px;width:28px;height:28px;font:inherit;font-weight:900;font-size:17px;line-height:1;cursor:pointer;}' +
@@ -11071,8 +11073,19 @@ function uriageBookScript_(C) {
   //   ＝待たせない。受付係が届いた順に1件ずつ片付け、係が行を中身で探し直す（消して行がずれても正しい行に書く）。
   //   画面の「書き込み中」の印は、行番号でなく中身の鍵で合わせる（読み直して行がずれても合う）。
   function rk(x) { return x.no ? 'n:' + x.no : 'x:' + (x.num || '') + '|' + (x.amount == null ? '' : x.amount); }
+  function ok(y) { return 'o:' + (y.label || '') + '|' + (y.amount == null ? '' : y.amount); }
   function applyPend() {
     if (!D || !D.rows) return;
+    for (var i2 = 0; i2 < PEND.length; i2++) {
+      var g = PEND[i2]; if (g.action !== 'oedit' && g.action !== 'odelete') continue;
+      for (var j2 = 0; j2 < (D.others || []).length; j2++) {
+        var y = D.others[j2]; if (ok(y) !== g._k) continue;
+        y._pend = true;
+        if (g.action === 'odelete') y._del = true;
+        else if (g.col === 'J') y.label = g.value;
+        else { var n2 = parseInt(String(g.value).replace(/[^\d\-]/g, ''), 10); if (!isNaN(n2)) y.amount = n2; }
+      }
+    }
     for (var i = 0; i < PEND.length; i++) {
       var f = PEND[i];
       for (var j = 0; j < D.rows.length; j++) {
@@ -11089,6 +11102,7 @@ function uriageBookScript_(C) {
       }
     }
   }
+  function setWhen(t) { $('ubWhen').textContent = t; $('ubWhen2').textContent = t; }
   function jsonp(p, cb) {
     var n = '__ubk' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
@@ -11101,7 +11115,7 @@ function uriageBookScript_(C) {
   function draw() {
     if (!D || !D.rows) { $('ubList').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubTest').style.display = (D.mode === 'テスト') ? '' : 'none';
-    $('ubWhen').textContent = D.tab + ' の売上表　' + String(D.at || '').slice(11, 16) + ' 時点';
+    setWhen(D.tab + ' の売上表　' + String(D.at || '').slice(11, 16) + ' 時点');
     // ★2026-11-07 まるちゃん「ここのぶぶんいらない」「売上表くらいシンプルで一覧でみれるのがいい」
     //   ＝上の支払方法毎の合計の欄をやめ、売上表と同じ並び（番号・顧客番号・顧客名・支払方法・明細・合計）の表にした。
     var L = '';
@@ -11125,9 +11139,19 @@ function uriageBookScript_(C) {
       L += '</tbody></table></div>';
     }
     $('ubList').innerHTML = L;
-    var o = '';
-    for (var q = 0; q < (D.others || []).length; q++) o += '<div class="r"><span>' + esc(D.others[q].label) + '</span><span>' + yen(D.others[q].amount) + '</span></div>';
-    o += '<div class="r" style="font-weight:900"><span>合計</span><span>' + yen(D.other_total) + '</span></div>';
+    // ★2026-11-08 まるちゃん「發票ありと同じにして」＝同じ表の形。内容・金額の枠を押すと直せる・右の×で消す。
+    var O = D.others || [];
+    var o = '<div class="ubtbl"><table><colgroup><col><col style="width:22%"><col style="width:13%"></colgroup>' +
+      '<thead><tr><th>内容</th><th class="r">金額</th><th class="c">削除</th></tr></thead><tbody>';
+    if (!O.length) o += '<tr><td colspan="3" class="ubnone">まだ行がありません</td></tr>';
+    for (var q = 0; q < O.length; q++) {
+      var y = O[q];
+      o += '<tr class="r' + (y._pend ? ' pend' : '') + (y._del ? ' del' : '') + '" data-q="' + q + '">' +
+        '<td class="d e" data-c="J">' + esc(y.label) + '</td>' +
+        '<td class="n e" data-c="K">' + (y.amount == null ? '' : Number(y.amount).toLocaleString('ja-JP')) + '</td>' +
+        '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
+    }
+    o += '</tbody><tfoot><tr class="ubsum"><td>合計</td><td class="n">' + (D.other_total == null ? '' : Number(D.other_total).toLocaleString('ja-JP')) + '</td><td></td></tr></tfoot></table></div>';
     $('ubOthers').innerHTML = o;
     var c = D.coins || {};
     $('ubCoinSum').textContent = '小銭：100元×' + (c['100'] == null ? '―' : c['100']) + '・50元×' + (c['50'] == null ? '―' : c['50']) +
@@ -11147,7 +11171,7 @@ function uriageBookScript_(C) {
   function ask(fields, title, onOk, quiet) {
     if (quiet) {
       if (loading) return;
-      loading = true; $('ubWhen').textContent = '最新の売上表を読んでいます…';
+      loading = true; setWhen('最新の売上表を読んでいます…');
     } else {
       PEND.push(fields); applyPend(); draw();
       popup('バックグラウンドで書き込みします。しばらく時間がかかります。', { icon: '📝' });
@@ -11361,6 +11385,50 @@ function uriageBookScript_(C) {
     openPick(x, td.getAttribute('data-c'));
   });
   $('ubReload').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
+  $('ubReload2').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
+
+  // ── 發票なしの売上：枠を押して直す・×で消す（2026-11-08 まるちゃん「發票ありと同じにして」）──
+  function openPickO(y, col) {
+    var head = '<div class="h">' + esc(y.label) + '　' + yen(y.amount) + '</div>' +
+      '<div class="s">' + (col === 'J' ? '内容' : '金額') + 'を修正します</div>';
+    var cur = col === 'J' ? (y.label || '') : (y.amount == null ? '' : String(y.amount));
+    var body = (col === 'K' ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してね😊"></div></div>'
+      : '<textarea id="ubEd" rows="3"></textarea>') +
+      '<button type="button" class="go" data-a="save" style="margin-top:12px">以上の内容で修正する</button>';
+    var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
+    m.innerHTML = '<div class="ubpick">' + head + body + '<button type="button" class="x" data-a="close">閉じる</button></div>';
+    document.body.appendChild(m);
+    var PK = null;
+    if (col === 'J') { $('ubEd').value = cur; try { $('ubEd').focus(); } catch (e2) {} }
+    else { PK = padKit(m.querySelector('.ubpick'), { v: { kind: 'sint', max: 7, comma: true, open: true } }); PK.set('v', cur); PK.open('v'); }
+    m.addEventListener('click', function (ev) {
+      if (ev.target === m) { closePick(); return; }
+      var b = ev.target.closest('button'); if (!b) return;
+      var a = b.getAttribute('data-a');
+      if (a === 'close') { closePick(); return; }
+      if (a !== 'save') return;
+      var nv = PK ? PK.get('v') : $('ubEd').value.trim();
+      if (col === 'K' && !/\d/.test(nv)) { popup('金額は数字で入力してね😊'); return; }
+      if (col === 'J' && !nv) { popup('内容を入力してね😊'); return; }
+      closePick();
+      if (nv === cur) return;
+      ask({ action: 'oedit', row: y.r, label: y.label, amount: y.amount, _k: ok(y), col: col, value: nv }, (col === 'J' ? '内容' : '金額') + 'を修正しています');
+    });
+  }
+  $('ubOthers').addEventListener('click', function (e) {
+    if (busy || !D) return;
+    var tr = e.target.closest('tr.r'); if (!tr) return;
+    var y = (D.others || [])[parseInt(tr.getAttribute('data-q'), 10)]; if (!y) return;
+    if (y._del) { popup('この行は削除中です。'); return; }
+    if (e.target.closest('button[data-a="del"]')) {
+      popup(y.label + '　' + yen(y.amount) + '\nこの行を削除しますか？😊', {
+        cancel: true, onYes: function () { ask({ action: 'odelete', row: y.r, label: y.label, amount: y.amount, _k: ok(y) }, '行を削除しています'); }
+      });
+      return;
+    }
+    var td = e.target.closest('td.e'); if (!td) return;
+    openPickO(y, td.getAttribute('data-c'));
+  });
 
   // ── 手で1行足す ──
   // ★2026-11-07 まるちゃん「時計はいらん 欄 時 欄 分 でいい」「欄を押すと数字のパネルが出てくる」
@@ -11485,9 +11553,12 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       // ★2026-11-08 まるちゃん「こちらも売上追加ボタンにして上に」＝發票ありと同じ並び（1行目＝戻る・見出し／2行目の左＝売上追加）
       '<div id="ubNoInv" style="display:none">' +
-        '<div class="ubtop">' + inBack('ubNoInvBack') + '<span class="bname ubttl">📝 發票なしの売上</span></div>' +
-        '<div class="ubtop2"><button type="button" id="ubGoOther" class="ubadd">売上一行追加</button></div>' +
-        '<div class="uboth" id="ubOthers"></div>' +
+        // ★2026-11-08 まるちゃん「枠を押すと編集の、あの文字や再読込など、發票ありと同じにして」
+        '<div class="ubtop">' + inBack('ubNoInvBack') + '<span class="bname ubttl">📝 發票なしの売上</span>' +
+          '<span id="ubWhen2" class="ubwhen"></span><button type="button" id="ubReload2" class="ubsm">再読込</button>' +
+        '</div>' +
+        '<div class="ubtop2"><span class="ubh ubhint">各項目の枠内を押すと修正できます</span><button type="button" id="ubGoOther" class="ubadd">売上一行追加</button></div>' +
+        '<div id="ubOthers"></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
