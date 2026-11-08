@@ -11496,7 +11496,8 @@ function uriageBookScript_(C) {
     var f = { action: 'coins' }, any = false;
     for (var i = 0; i < CK.length; i++) if (CP.raw(CK[i]) !== '') { f[CK[i]] = parseInt(CP.raw(CK[i]), 10); any = true; }
     if (!any) { popup('枚数を入力してね😊'); return; }
-    ask(f, '小銭を書いています', function () { show('ubMenu'); });
+    // ★2026-11-09 まるちゃん「以上の内容で入力を押すと前の画面に戻っちゃう」＝この画面のまま（入れた数字を出したまま）
+    ask(f, '小銭を書いています');
   });
   $('ubCoinBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   // ★2026-11-07 まるちゃん「發票ありの売上　發票なしの売上　小銭とお札　の三つのボタンにする」

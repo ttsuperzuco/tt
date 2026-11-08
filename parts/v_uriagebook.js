@@ -499,7 +499,7 @@ function uriageBookScript_(C) {
     var f = { action: 'coins' }, any = false;
     for (var i = 0; i < CK.length; i++) if (CP.raw(CK[i]) !== '') { f[CK[i]] = parseInt(CP.raw(CK[i]), 10); any = true; }
     if (!any) { popup('枚数を入力してね😊'); return; }
-    ask(f, '小銭を書いています', function () { show('ubMenu'); });
+    ask(f, '小銭を書いています');
   });
   $('ubCoinBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubGoInv').addEventListener('click', function () { show('ubInv'); });
