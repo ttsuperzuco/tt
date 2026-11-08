@@ -10937,7 +10937,12 @@ var UBCSS_ =
   '.ubtbl td.e{cursor:pointer;}' +
   '.ubtbl tr.pend td{opacity:.5;}' +
   '.ubtbl tr.del td{text-decoration:line-through;}' +
-  '.ubtbl td.e:active{background:#e0f2fe;}' +
+  // ★2026-11-08 まるちゃん「1行のデータが左と右で同じ行だと分かるように」
+  //   ＝①偶数の行に薄い色（スマホもパソコンも）②パソコンはマウスを乗せた行全体に色（今どの行を見ているか分かる）。
+  //   未選択の黄色・押した時の色は、この色より優先（下の決まりの方が強い）。
+  '.ubtbl tbody tr:nth-child(even) td{background:#eef2f7;}' +
+  '@media (hover:hover){.ubtbl tbody tr:hover td{background:#d6ebfa;}}' +
+  '.ubtbl td.e:active{background:#bfdbfe;}' +
   '.ubtbl td.xc{text-align:center;padding:4px 1px;}' +
   // ★2026-11-08 まるちゃん「タイトルと実際の項目がずれてる」＝見出しだけ左寄せだった。中身と同じ寄せ方にそろえる。
   '.ubtbl th{text-align:left;}.ubtbl th.c{text-align:center;}.ubtbl th.r{text-align:right;}' +
