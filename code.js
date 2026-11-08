@@ -13464,7 +13464,7 @@ var INSTACSS_ =
   '.igav b{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:#000;color:#fff;border:3px solid #fff;display:flex;align-items:center;justify-content:center;}' +
   '.igr{flex:1;min-width:0;}' +
   '.igr .nm{font-size:15px;font-weight:700;line-height:1.3;word-break:break-word;margin-bottom:8px;}' +
-  '.igcnt{display:grid;grid-template-columns:repeat(3,1fr);}' +
+  '.igcnt{display:flex;justify-content:space-between;gap:10px;}' +
   '.igcnt div{font-size:13px;line-height:1.25;white-space:nowrap;}' +
   '.igcnt b{display:block;font-size:17px;font-weight:700;}' +
   '.igbio{padding:10px 16px 0;white-space:pre-wrap;word-break:break-word;}' +
