@@ -1,7 +1,27 @@
 #!/bin/sh
-# 押し出す直前の二重の安全網。入口の版の番号が本体と合っていなければ止める。
-# （コミット時の自動書き直しを飛ばした場合などに効く）
+# 押し出す直前の二重の安全網。
+#  ① 本体(code.js)と、画面ごとの部品(parts/)・入口の一覧が合っているか
+#  ② 入口の版の番号が本体と合っているか
+# どちらかがズレていたら止める（コミット時の自動書き直しを飛ばした場合などに効く）。
 top=$(git rev-parse --show-toplevel) || exit 1
+
+py=$(command -v python || command -v python3 || command -v py)
+if [ -n "$py" ]; then
+  if ! "$py" -X utf8 "$top/.githooks/zuko_split.py" --check --head; then
+    echo "" >&2
+    echo "→ 画面ごとの部品が本体(code.js)と合っていません。押し出しを止めました。" >&2
+    echo "   直し方： python -X utf8 .githooks/zuko_split.py   のあと、もう一度コミットしてください。" >&2
+    exit 1
+  fi
+else
+  # python が無い時も、最低限「一覧が今の code.js から作られたか」だけは確かめる
+  want=$(git hash-object "$top/code.js" | cut -c1-10)
+  if ! grep -q "\"id\":\"$want\"" "$top/index.html"; then
+    echo "→ 入口の部品の一覧が今の code.js から作られていません。押し出しを止めました。" >&2
+    exit 1
+  fi
+fi
+
 if ! sh "$top/.githooks/version-stamp.sh" --check; then
   echo "" >&2
   echo "→ 入口の版の番号が本体と合っていません。押し出しを止めました。" >&2

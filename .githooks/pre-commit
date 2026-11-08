@@ -1,7 +1,22 @@
 #!/bin/sh
-# コミットの直前に、入口(index.html)の版の番号を本体の中身から自動で書き直す。
-# 詳しくは .githooks/version-stamp.sh の冒頭。
+# コミットの直前に自動でやること（人は何もしなくてよい）：
+#  ① 本体(code.js)を、画面ごとに要る部品(parts/)へ分け直し、入口(index.html)の一覧を書き直す
+#     （2026-11-08 まるちゃん決定。詳しくは .githooks/zuko_split.py の冒頭）
+#  ② 入口(index.html)の版の番号を本体の中身から書き直す（詳しくは .githooks/version-stamp.sh の冒頭）
 top=$(git rev-parse --show-toplevel) || exit 1
+
+py=$(command -v python || command -v python3 || command -v py)
+if [ -z "$py" ]; then
+  echo "！python が見つからないので、本体を画面ごとに分けられません。コミットを止めました。" >&2
+  exit 1
+fi
+"$py" -X utf8 "$top/.githooks/zuko_split.py" --staged
+r=$?
+[ $r -eq 1 ] && exit 1
+if [ $r -eq 2 ]; then
+  git add -A "$top/parts"   # 入口の一覧は zuko_split.py がコミットに入れる分だけ差し替え済み
+fi
+
 sh "$top/.githooks/version-stamp.sh"
 r=$?
 [ $r -eq 1 ] && exit 1              # 入口の書き方がおかしい＝止める
