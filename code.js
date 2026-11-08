@@ -10869,7 +10869,13 @@ function renderProcStockPage_(base, staff, dev) {
 //  書く＝依頼置き場へ op=uriagebook（fields＝{action,…}）→受付係→係が表に書いて読み直す。
 //  ★テスト期間（2026-11-07〜）は「2026_帳簿_テスト」に書く（本番の売上表には一切ふれない・まるちゃん決定）。
 var UBCSS_ =
-  '.ub{width:100%;box-sizing:border-box;max-width:620px;margin:0 auto;padding:0 6px 70px;text-align:left;}' +
+  '.ub{width:100%;box-sizing:border-box;max-width:1200px;margin:0 auto;padding:0 6px 70px;text-align:left;}' +
+  /* ★2026-11-08 まるちゃん「画面の大きさに応じて広げて文字ができるだけ一行で表示されるようにして」
+     ＝売上の一覧だけ画面の幅いっぱいまで広げる（入力の画面は今までどおり620まで）。広い画面では、
+     明細以外の欄は折り返さず、明細が残りの幅を使う（それでも入らない時だけ明細を折り返す）。 */
+  '#ubMenu,#ubNoInv,#ubAdd,#ubOther,#ubCoins{max-width:620px;margin:0 auto;}' +
+  '@media (min-width:700px){.ubtbl table{table-layout:auto;font-size:14px;}.ubtbl col{width:auto!important;}' +
+  '.ubtbl th,.ubtbl td{white-space:nowrap;padding-left:8px;padding-right:8px;}.ubtbl th br{display:none;}.ubtbl td.d{white-space:normal;width:100%;}}' +
   '.ubinfo2{display:flex;align-items:center;gap:8px;color:#eaf6fb;font-weight:800;font-size:15px;margin:2px 4px 8px;}' +
   '.ubsm{background:#fff;color:#2C7A99;border:0;border-radius:8px;padding:4px 10px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;}' +
   '.ubhrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 4px 6px;}' +
