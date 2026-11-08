@@ -91,7 +91,7 @@ var UBCSS_ =
   '.ubcoin{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 8px;margin-top:4px;}' +
   '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
-  '.ubokrow{display:flex;justify-content:flex-end;margin-top:10px;}' +
+  '#ubCoins .ubkp{margin-top:12px;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
   '.uboth .r:first-child{border-top:0;}';
@@ -578,9 +578,7 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubrow"><div class="ubcoin">' +
           [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]
             .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div></div>'; }).join('') +
-        '</div><div class="ubokrow">' +
-          ['c100', 'c50', 'c10', 'c5', 'c1', 'bills'].map(function (k) { return '<button type="button" data-pok="' + k + '" class="ubok" style="display:none">入力OK</button>'; }).join('') +
-        '</div></div>' +
+        '</div></div>' +   
         '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
       '</div>' +
     '</div></div>' +
