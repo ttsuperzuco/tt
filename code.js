@@ -11068,7 +11068,7 @@ function uriageBookScript_(C) {
         var x = D.rows[j];
         L += '<tr class="r' + (x._pend ? ' pend' : '') + (x._del ? ' del' : '') + '" data-j="' + j + '"><td class="w">' + esc(x.time || '') + '</td><td class="w">' + esc(x.no) + '</td>' +
           '<td class="w e" data-c="B">' + esc(x.num) + '</td><td class="e" data-c="C">' + esc(x.name) + '</td>' +
-          '<td class="p e' + (x.pay ? '' : ' np') + '" data-c="D">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '選ぶ') + '</td>' +
+          '<td class="p e' + (x.pay ? '' : ' np') + '" data-c="D">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '未選択') + '</td>' +
           '<td class="d e" data-c="E">' + esc(x.detail) + '</td><td class="n e" data-c="F">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td>' +
           '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
       }
@@ -11252,7 +11252,7 @@ function uriageBookScript_(C) {
   function closePick() { var m = $('ubMask'); if (m && m.parentNode) m.parentNode.removeChild(m); }
   function openPick(x, col) {
     var head = '<div class="h">' + esc(x.no || '番号なし') + '　' + esc(x.num) + ' ' + esc(x.name) + '　' + yen(x.amount) + '</div>' +
-      '<div class="s">' + CNAME[col] + 'を直します</div>';
+      '<div class="s">' + CNAME[col] + 'を修正します</div>';
     var body = '';
     if (col === 'D') {
       for (var k = 0; k < PAYS.length; k++) body += '<button type="button" data-v="' + esc(PAYS[k]) + '" class="' + (x.pay === PAYS[k] ? 'on' : '') + '">' + esc(PAYS[k] === '街口支付' ? '街口' : PAYS[k]) + '</button>';
@@ -11286,7 +11286,7 @@ function uriageBookScript_(C) {
       }
       if (a !== 'save') return;
       var nv = PK ? PK.get('v') : $('ubEd').value;
-      if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入れてください'); return; }
+      if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入力してください'); return; }
       closePick();
       if (nv === cur) return;
       ask({ action: 'edit', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x), col: col, value: nv }, CNAME[col] + 'を直しています');
@@ -11296,7 +11296,7 @@ function uriageBookScript_(C) {
     if (busy || !D) return;
     var tr = e.target.closest('tr.r'); if (!tr) return;
     var x = D.rows[parseInt(tr.getAttribute('data-j'), 10)]; if (!x) return;
-    if (x._del) { popup('この行は消している途中です。'); return; }
+    if (x._del) { popup('この行は削除中です。'); return; }
     // ×＝消す（まるちゃん指定の文：發票の入力間違いですか？そうであればこの行を削除します）
     if (e.target.closest('button[data-a="del"]')) {
       popup((x.no || '番号なし') + '　' + (x.num || '') + ' ' + (x.name || '') + '　' + yen(x.amount) + '\n發票の入力間違いですか？そうであればこの行を削除します', {
@@ -11332,8 +11332,8 @@ function uriageBookScript_(C) {
   }
   $('ubAddPay').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; addPay = b.getAttribute('data-v'); drawAddPay(); });
   $('ubAddGo').addEventListener('click', function () {
-    if (!AK.raw('amt')) { popup('金額を入れてください'); return; }
-    if (!AK.get('num') && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入れてください'); return; }
+    if (!AK.raw('amt')) { popup('金額を入力してください'); return; }
+    if (!AK.get('num') && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入力してください'); return; }
     var tm = AK.raw('h') ? p2(AK.raw('h')) + ':' + p2(AK.raw('m') || '0') : '';
     AK.close();
     ask({ action: 'add', time: tm, no: AK.raw('no'), num: AK.get('num'), detail: $('ubAddDetail').value.trim(),
@@ -11347,7 +11347,7 @@ function uriageBookScript_(C) {
   $('ubGoOther').addEventListener('click', function () { $('ubOthLabel').value = ''; OK2.set('amt', ''); OK2.close(); show('ubOther'); });
   $('ubOthGo').addEventListener('click', function () {
     var amt = OK2.get('amt'); OK2.close();
-    if (!$('ubOthLabel').value.trim() || !amt) { popup('中身と金額を入れてください（経費などはマイナスで）'); return; }
+    if (!$('ubOthLabel').value.trim() || !amt) { popup('内容と金額を入力してください（経費などはマイナス）'); return; }
     ask({ action: 'other', label: $('ubOthLabel').value.trim(), amount: parseInt(amt, 10) }, 'その他を足しています', function () { show('ubNoInv'); });
   });
   $('ubOthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubNoInv'); });
@@ -11376,7 +11376,7 @@ function uriageBookScript_(C) {
   $('ubCoinGo').addEventListener('click', function () {
     var f = { action: 'coins' }, any = false;
     for (var i = 0; i < CK.length; i++) if (cv[CK[i]] !== '' && cv[CK[i]] !== undefined) { f[CK[i]] = parseInt(cv[CK[i]], 10); any = true; }
-    if (!any) { popup('数を入れてください'); return; }
+    if (!any) { popup('枚数を入力してください'); return; }
     ask(f, '小銭を書いています', function () { show('ubMenu'); });
   });
   $('ubCoinBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
@@ -11421,7 +11421,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubNoInv" style="display:none">' + inBack('ubNoInvBack') + head('📝', '發票なしの売上') +
         '<div class="uboth" id="ubOthers"></div>' +
-        '<div class="ubmenu"><button type="button" id="ubGoOther">＋ 1行足す</button></div>' +
+        '<div class="ubmenu"><button type="button" id="ubGoOther">＋ 行を追加</button></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
@@ -11429,30 +11429,30 @@ function renderUriageBookPage_(base, staff, dev) {
           //   「發票番号も・顧客番号はMやFが付いたいつもの数字パネル・金額も数字パネル」
           '<label>時刻（9時3分なら 09時03分と入力）</label><div class="ubrow"><div class="ubtime"><div class="ubbox t" data-pk="h"></div><span class="ubu">時</span>' +
             '<div class="ubbox t" data-pk="m"></div><span class="ubu">分</span></div></div>' +   // ★2026-11-08 まるちゃん「最初から今が入ってるなら今ボタンはいらない」
-          '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" data-pk="no" data-ph="押すと数字が出ます"></div></div>' +
-          '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押すと数字が出ます"></div>' +
+          '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" data-pk="no" data-ph="押して入力"></div></div>' +
+          '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
           '<label>明細（購入内容）</label><input id="ubAddDetail">' +
-          '<label>金額（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押すと数字が出ます"></div>' +
+          '<label>金額（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +   // ★2026-11-08 まるちゃん「金額もOKボタンいれる」
           '<label>支払方法</label><div class="ubpay" id="ubAddPay"></div>' +
         '</div>' +
         '<button type="button" class="exgo" id="ubAddGo">以上の内容で追加</button>' +
       '</div>' +
-      '<div id="ubOther" style="display:none">' + inBack('ubOthBack') + head('📝', '發票なしの売上を1行足す') +
+      '<div id="ubOther" style="display:none">' + inBack('ubOthBack') + head('📝', '發票なしの売上を追加') +
         '<div class="ubf">' +
-          '<label>中身（例 F791黃様 プロセルアフターセラム）</label><input id="ubOthLabel">' +
-          '<label>金額（元・経費などはマイナス）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押すと数字が出ます"></div>' +
+          '<label>内容（例 F791黃様 プロセルアフターセラム）</label><input id="ubOthLabel">' +
+          '<label>金額（元・経費などはマイナス）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +
         '</div>' +
-        '<button type="button" class="exgo" id="ubOthGo">この行を足す</button>' +
+        '<button type="button" class="exgo" id="ubOthGo">以上の内容で追加</button>' +
       '</div>' +
       '<div id="ubCoins" style="display:none">' + inBack('ubCoinBack') + head('🪙', '小銭とお札') +
         '<div class="ubinfo" id="ubCoinSum"></div>' +
-        '<div class="ubinfo">入れたい所を押してから、数字ボタンで入れてください</div>' +
+        '<div class="ubinfo">入力する欄を選んでから、数字ボタンで入力してください</div>' +
         '<div class="ubcoin" id="ubCoinGrid"></div>' +
         '<div class="expad" id="ubCoinPad" style="margin-top:12px">' + EXPADHTML_ + '</div>' +
-        '<button type="button" class="exgo" id="ubCoinGo">これで入れる</button>' +
+        '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
       '</div>' +
     '</div></div>' +
     '<script>(' + uriageBookScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
