@@ -148,7 +148,7 @@ function doGet(e) {
     html = renderClaudeChatPage_(base, staff, dev);
   } else if (view === 'shophist') {
     title = 'T＆Tショップ履歴';                        // ★開発URL(?dev=1)専用。静的アプリが shop_history.json を取って描く
-    html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてください。' }, base, staff, dev);
+    html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてね😊' }, base, staff, dev);
   } else if (view === 'kanshi') {
     title = '自動監視';
     html = renderKanshi_(base, staff, dev, device);   // ★登録した1台のスマホだけ（kanshiGate_）
@@ -181,7 +181,7 @@ function doGet(e) {
     html = renderUriageBookPage_(base, staff, dev);
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       // ★静的アプリが oshirase_mita.json を取って描く
-    html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください。' }, base, staff, dev);
+    html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてね😊' }, base, staff, dev);
   } else if (view === 'threads') {
     title = 'Threads投稿';                                   // ★お店のThreadsに投稿・削除（純JS・投稿は受付係 op=threads）
     html = renderThreadsPage_(base, staff, dev);
@@ -190,7 +190,7 @@ function doGet(e) {
     html = renderHanbaiPage_(base, staff, dev);
   } else if (view === 'procamp') {
     title = 'プロセル頭キャリスト';                     // ★社長版と開発版。静的アプリが一覧を取って描く（ここは中身なし）
-    html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてください。' }, {}, base, staff, dev);
+    html = renderProcampPage_({ error: 'スーパーズコのアプリから開いてね😊' }, {}, base, staff, dev);
   } else if (view === 'yoyaku_sejutsugo') {
     title = '施術後の予約';                              // ★施術者がその場で次回の予約を入れる入口（中身はこれから）
     html = renderAfterTreatmentPage_(base, staff, dev, who);
@@ -360,7 +360,7 @@ function kanshiOwner_() {
 function kanshiGate_(device) {
   device = String(device || '').trim();
   if (!device) {
-    return { ok: false, error: 'スマホ用のURL（ttsuperzuco.github.io/tt/）から開いてください。' };
+    return { ok: false, error: 'スマホ用のURL（ttsuperzuco.github.io/tt/）から開いてね😊' };
   }
   var lock = LockService.getScriptLock();
   try { lock.tryLock(10000); } catch (ig) {}
@@ -384,13 +384,13 @@ function _kanshiDevResetJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
   var out;
   if (!_pwRateOk_()) {
-    out = { ok: false, error: '試行回数が多すぎます。少し待ってから試してください。' };
+    out = { ok: false, error: '試行回数が多すぎます。少し待ってから試してください🙇' };
   } else {
     var cur = kanshiOwner_();
     var byPw = String(p.pw || '') === getStaffPassword_();
     var byOwner = !!(cur && cur.device && cur.device === String(p.device || '').trim());
     if (!byPw && !byOwner) {
-      out = { ok: false, error: '解除できません（自宅PCか、いま登録中のスマホから押してください）。' };
+      out = { ok: false, error: '解除できません（自宅PCか、いま登録中のスマホから押してください🙇）。' };
     } else {
       PropertiesService.getScriptProperties().deleteProperty(KANSHI_DEV_PROP_);
       out = { ok: true, msg: '登録を解除しました。次に自動監視を開いたスマホが持ち主になります。' };
@@ -502,7 +502,7 @@ function _checkPwJsonp_(p) {
   var cb = String(p.callback || 'cb').replace(/[^A-Za-z0-9_$.]/g, '');
   var out;
   if (!_pwRateOk_()) {
-    out = { ok: false, error: '試行回数が多すぎます。少し待ってから試してください。' };
+    out = { ok: false, error: '試行回数が多すぎます。少し待ってから試してください🙇' };
   } else {
     out = { ok: String(p.pw || '') === getStaffPassword_() };
   }
@@ -580,7 +580,7 @@ function _validKanshiCtl_(key, act) {
 // キューへ積む共通処理（handleAction_のaction=submitと、uiSubmitMoveの両方から呼ぶ）。
 function _submitToQueue_(q, op, fields) {
   if (op === 'kanshi_ctl') {
-    if (!_rateOk_(q)) return { ok: false, error: '依頼が集中しています。少し待ってから試してください。' };
+    if (!_rateOk_(q)) return { ok: false, error: '依頼が集中しています。少し待ってから試してください🙇' };
     // ★2026-07-17：関門を「合言葉」から「登録した1台のスマホ」へ入れ替えた（kanshiGate_ の説明参照）。
     //   画面を開けているのは持ち主だけなので、ここは登録済みか(=同じ端末か)の確認だけでよい
     //   ＝社長は何も入力しない。持ち主が未登録（解除直後）の状態では操作させない
@@ -602,13 +602,13 @@ function _submitToQueue_(q, op, fields) {
     return { ok: true, id: kid };
   }
   if (op === 'movecal') {
-    if (!_rateOk_(q)) return { ok: false, error: '依頼が集中しています。少し待ってから試してください。' };
+    if (!_rateOk_(q)) return { ok: false, error: '依頼が集中しています。少し待ってから試してください🙇' };
     if (!_validRoom_(fields.to_cal, fields.to_label)) return { ok: false, error: '移動先が不正です。' };
     if (!_isCurrentConflict_(fields.cal, fields.event)) {
-      return { ok: false, error: 'この予定は現在、被り検出に出ていません。画面を更新してからもう一度お試しください。' };
+      return { ok: false, error: 'この予定は現在、被り検出に出ていません。画面を更新してからもう一度試してもらえると嬉しいです🙇' };
     }
   } else if (!_rateOk_(q)) {
-    return { ok: false, error: '依頼が集中しています。少し待ってから試してください。' };
+    return { ok: false, error: '依頼が集中しています。少し待ってから試してください🙇' };
   }
   var id = 'c' + Date.now() + Math.floor(Math.random() * 1000);
   q.push({ id: id, ts: new Date().toISOString(), op: op,
@@ -786,7 +786,7 @@ function getEventsFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('events.json がドライブに見つかりません。自宅PCで export_events.py を実行し、Googleドライブの同期を待ってください。');
+    throw new Error('events.json がドライブに見つかりません。自宅PCで export_events.py を実行し、Googleドライブの同期を待ってください🙇');
   }
   props.setProperty('EVENTS_FILE_ID', newest.getId());
   return newest;
@@ -803,7 +803,7 @@ function getNoticeFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('notice_compare.json がドライブに見つかりません。自宅PCから書き出してください。');
+    throw new Error('notice_compare.json がドライブに見つかりません。自宅PCから書き出してください🙇');
   }
   return newest;
 }
@@ -823,7 +823,7 @@ function getLtFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('lt_match.json がドライブに見つかりません。自宅PCで「予約照合」を実行（export_lt_super.py）し、Googleドライブの同期を待ってください。');
+    throw new Error('lt_match.json がドライブに見つかりません。自宅PCで「予約照合」を実行（export_lt_super.py）し、Googleドライブの同期を待ってください🙇');
   }
   props.setProperty('LT_FILE_ID', newest.getId());
   return newest;
@@ -844,7 +844,7 @@ function getUriageFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('uriage.json がドライブに見つかりません。自宅PCで export_uriage.py を実行し、Googleドライブの同期を待ってください。');
+    throw new Error('uriage.json がドライブに見つかりません。自宅PCで export_uriage.py を実行し、Googleドライブの同期を待ってください🙇');
   }
   props.setProperty('URIAGE_FILE_ID', newest.getId());
   return newest;
@@ -866,7 +866,7 @@ function getUnansweredFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('unanswered.json がドライブに見つかりません。自宅PCで export_unanswered_super.py を実行し、Googleドライブの同期を待ってください。');
+    throw new Error('unanswered.json がドライブに見つかりません。自宅PCで export_unanswered_super.py を実行し、Googleドライブの同期を待ってください🙇');
   }
   props.setProperty('UNANSWERED_FILE_ID', newest.getId());
   return newest;
@@ -889,7 +889,7 @@ function getProcellFile_() {
     var f = it.next();
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
-  if (!newest) throw new Error(PROCELL_FILENAME + ' が見つかりません（自宅PCで書き出してください）。');
+  if (!newest) throw new Error(PROCELL_FILENAME + ' が見つかりません（自宅PCで書き出してください🙇）。');
   props.setProperty('PROCELL_FILE_ID', newest.getId());
   return newest;
 }
@@ -908,7 +908,7 @@ function getPcStatusFile_() {
     var f = it.next();
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
-  if (!newest) throw new Error(PCSTATUS_FILENAME + ' が見つかりません（自宅PCで書き出してください）。');
+  if (!newest) throw new Error(PCSTATUS_FILENAME + ' が見つかりません（自宅PCで書き出してください🙇）。');
   props.setProperty('PCSTATUS_FILE_ID', newest.getId());
   return newest;
 }
@@ -926,7 +926,7 @@ function getAkijikanFile_() {
     if (!newest || f.getLastUpdated() > newest.getLastUpdated()) newest = f;
   }
   if (!newest) {
-    throw new Error('akijikan.json がドライブに見つかりません。自宅PCで export_akijikan_super.py を実行し、Googleドライブの同期を待ってください。');
+    throw new Error('akijikan.json がドライブに見つかりません。自宅PCで export_akijikan_super.py を実行し、Googleドライブの同期を待ってください🙇');
   }
   props.setProperty('AKIJIKAN_FILE_ID', newest.getId());
   return newest;
@@ -955,7 +955,7 @@ function getMonitorFile_(createIfMissing) {
     newest = folder.createFile(MONITOR_FILENAME, '{}', 'application/json');
   }
   if (!newest) {
-    throw new Error('monitor.json がドライブに見つかりません。自宅PCで export_monitor_super.py を実行してください。');
+    throw new Error('monitor.json がドライブに見つかりません。自宅PCで export_monitor_super.py を実行してください🙇');
   }
   props.setProperty('MONITOR_FILE_ID', newest.getId());
   return newest;
@@ -1152,7 +1152,7 @@ function _claimJsonp_(p) {
       var claimed = (d.claimed && typeof d.claimed === 'object') ? d.claimed : {};
       var cur = claimed[pid];
       if (cur && cur.device && cur.device !== device) {
-        out = { ok: false, error: 'すでに他の人が選択しています。再読込してから、もう一度選択してね😊' };
+        out = { ok: false, error: 'すでに他の人が選択しています。再読込してから、もう一度選択してください🙇' };
       } else {
         claimed[pid] = { device: device, label: String(p.label || ''), at: Date.now() };
         d.claimed = claimed;
@@ -1273,7 +1273,7 @@ function szBusyHtml_(title, sub) {
   return "<div style='font-size:66px;margin-bottom:20px;'>⏳</div>" +
     "<div style='color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;'>" + title + "</div>" +
     (sub === false ? "" : "<div style='color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;'>" +
-    (sub || "タイムツリーへの書き込みが完了したら自動で切り替わりますので、しばらくお待ちください。") + "</div>");
+    (sub || "タイムツリーへの書き込みが完了したら自動で切り替わりますので、少し待っててくださいね🥺") + "</div>");
 }
 function szDoneHtml_(title, backLabel, openUrl) {
   // ★openUrl＝あれば「タイムツリーを確認」ボタンを戻るの下に出す（2026-08-23 まるちゃん）。
@@ -1391,7 +1391,7 @@ function moveRow_(cal, event, who, title, curRoom, roomBusyForDate, timeStr, who
   var note = !hasId ? '<span class="mvng">IDが取れず移動不可</span>'
     : (!anyFree ? '<span class="mvng">空いている部屋がありません</span>' : '');
   return '<div class="mvrow">' +
-    '<div class="mvlabel fit1line">移動先の部屋を選択してね😊（下のボタンを押す）</div>' +
+    '<div class="mvlabel fit1line">移動先の部屋を選択してね😊 （下のボタンを押す）</div>' +
     '<div class="mvhint fit1line">※空いている施術室のみ表示しています</div>' +
     '<span class="mvbtns">' + btns + note + '</span>' +
   '</div>';
@@ -1489,7 +1489,7 @@ function staffMoveRow_(cal, event, title, oldFruit, oldName, timeStr, who, daySt
   });
   var note = !hasId ? '<span class="mvng">IDが取れず異動できません</span>'
     : (anyFree ? '' : '<span class="mvng">空いている担当がいません</span>');
-  return '<div class="mvrow"><div class="mvlabel fit1line">変更先の担当を選択してね😊（下のボタンを押す）</div>' +
+  return '<div class="mvrow"><div class="mvlabel fit1line">変更先の担当を選択してね😊 （下のボタンを押す）</div>' +
     '<div class="mvhint fit1line">※その時間に空いている担当のみ表示しています</div>' +
     '<span class="mvbtns">' + btns + note + '</span></div>';
 }
@@ -2384,7 +2384,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjWipHas(st){return !!st&&((st.done||[]).length+Object.keys(st.text||{}).length)>0;}' +
   'function zjFresh(){if(!zjLastBody)return;' +
   'var b=document.createElement("div");b.className="zjask";' +
-  'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">確認済・修正した文をすべて削除して、<br>自動作成した状態に戻します。よろしいですか？</div>"' +
+  'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">確認済・修正した文をすべて削除して、<br>自動作成した状態に戻します。よろしいでしょうか？😊</div>"' +
   '+"<div class=\\"zjaskrow\\"><button type=\\"button\\" class=\\"zjaskyes\\">はい、初期状態に戻す</button>"' +
   '+"<button type=\\"button\\" class=\\"zjaskno\\">やめる</button></div></div>";' +
   'document.body.appendChild(b);' +
@@ -2402,7 +2402,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   //   前は「1.3秒×160回＝208秒」と手で書いており、事務所側を伸ばしても画面が先にあきらめる形だった。
   //   （元の数字は2026-08-24に「お知らせ作りは実データで最長45秒」の前提で決めた物。
   //     その後8/25に下ごしらえ（最新化＋やること一覧の作り直し）が入って中身が重くなっている。）
-  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("zenjitsu",1300)){setSt("時間切れです。もう一度お試しください。","err");lock(false);return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("zenjitsu",1300)){setSt("時間切れです。もう一度試してもらえると嬉しいです🙇","err");lock(false);return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");lock(false);return;}' +
   /* ★待っている間、何秒たったかを出す（パソコンの窓と同じ）。長くかかる時に固まったように見えないため。 */
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){' +
@@ -2414,7 +2414,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   /* ★押したボタンの方で作る（mode="all"＝全員分／"unsent"＝まだLINEで送っていない人の分だけ）。
      依頼の中身は必ず fields のひとまとめ箱に入れる＝Google側の窓口は中身を判断せず素通しするだけ。 */
   'var waitMsg="",startedAt=0;' +
-  'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選んでください。","err");return;}' +
+  'function run(mode){var date=(dEl.value||"").trim();if(!date){setSt("来店日を選択してね😊","err");return;}' +
   'zjCurDate=date;' +
   'waitMsg=(mode==="unsent")?"まだ送っていない人の分を作成中…":"全員分を作成中…";startedAt=Date.now();' +
   'lock(true);setSt(waitMsg+"（通常、数十秒かかります）","wait");' +
@@ -2453,7 +2453,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'fields:ft},function(r){' +
   /* ★2026-09-08：ここで「送れませんでした」と**言い切らない**。事務所パソコンは受け取って
      やり終えているのに、返事だけが戻ってこないことがあるため（9/8に実際に発生）。 */
-  'if(!r||!r.ok||!r.id){(onFail||function(){})("つながりませんでした。もう一度お試しください。");return;}' +
+  'if(!r||!r.ok||!r.id){(onFail||function(){})("つながりませんでした。もう一度試してもらえると嬉しいです🙇");return;}' +
   'var n=0;(function poll(){n++;if(n>LIMITS.tries("zenjitsu_act",700)){(onFail||function(){})("時間がかかりすぎました。");return;}' +
   'jsonp({action:"status",key:KEY,id:r.id},function(s){if(!s||!s.ok){(onFail||function(){})("通信に失敗しました。");return;}' +
   'if(s.status==="pending"||s.status==="running"||s.status==="queued"||s.status===""){setTimeout(poll,700);return;}' +
@@ -2463,7 +2463,7 @@ function renderZenjitsuPage_(base, staff, dev) {
      ここには「置いた場所」だけが届く。そこを読みに行って本当の答えを渡す。 */
   'if(d&&d.__bigres){jsonp({action:"data",name:d.__bigres},function(x){' +
   'var v=null;try{v=JSON.parse(x&&x.result);}catch(e){v=null;}' +
-  'if(!v){(onFail||function(){})("答えを読み込めませんでした。もう一度お試しください。");return;}' +
+  'if(!v){(onFail||function(){})("答えを読み込めませんでした。もう一度試してもらえると嬉しいです🙇");return;}' +
   'onDone(v);});return;}' +
   'onDone(d);});})();});};' +
   'if(typeof BIG==="undefined"){go(JSON.stringify(F));return;}' +
@@ -2497,7 +2497,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjAskRestore(day){zjLoadLocal(day,function(st){if(!st)return;' +
   'var n=(st.done||[]).length+Object.keys(st.text||{}).length;if(!n)return;' +
   'var b=document.createElement("div");b.className="zjask";b.id="zjrestask";' +
-  'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">既に作業した確認済・修正済を復元しますか？<br>"' +
+  'b.innerHTML="<div class=\\"zjask-in\\"><div class=\\"zjaskmsg\\">既に作業した確認済・修正済を復元しますか？😊<br>"' +
   '+"<span class=\\"zjasksub\\">（確認済 "+(st.done||[]).length+" 人分・修正した文 "+Object.keys(st.text||{}).length+" 人分）</span></div>"' +
   '+"<div class=\\"zjaskrow\\"><button type=\\"button\\" class=\\"zjaskyes\\">はい、復元する</button>"' +
   '+"<button type=\\"button\\" class=\\"zjaskno\\">いいえ、まっさらから始める</button></div></div>";' +
@@ -2546,7 +2546,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var at=(document.getElementById("zjat").value||"").replace("T"," ");' +
   'if(sugu){var n=new Date();n.setSeconds(n.getSeconds()-30);' +
   'at=n.getFullYear()+"-"+zjTwo(n.getMonth()+1)+"-"+zjTwo(n.getDate())+" "+zjTwo(n.getHours())+":"+zjTwo(n.getMinutes());}' +
-  'if(!at){msg.textContent="⛔ 日時を決めてください";return;}' +
+  'if(!at){msg.textContent="⛔ 日時を指定してね😊";return;}' +
   'var 日=(zjRows[0]&&zjRows[0].date)||(document.getElementById("zjdate")||{}).value||"";' +
   'msg.textContent=sugu?"⏳ 送信しています…":"⏳ 送信の予約をしています…";' +
   'zjAsk("put_sends",{date:日,at:at,rows:zjRows,now:!!sugu},function(d){' +
@@ -2618,18 +2618,18 @@ function renderZenjitsuPage_(base, staff, dev) {
   'if(d&&d.ok&&d.put>0){zjClearLocal(日);zjFreshShow(false);' +
   'msg.textContent=(sugu?("✅ "+d.put+"人に今から送信します。")' +
   ':("✅ "+d.put+"人ぶんの送信の予約を設定しました。まだ送信していません。"+at+" になったら自動で送ります。"))' +
-  '+"「"+ボタン+"」をもう一度押さないでください。";' +
+  '+"「"+ボタン+"」をもう一度押さないでね😊";' +
   'if(sugu&&(d.ids||[]).length)zjWatch(d.ids,d.put);return;}' +
   'msg.textContent=(sugu?"⛔ 全員の送信が失敗しました。":"⛔ 全員の送信の予約が失敗しました。")' +
-  '+"「"+ボタン+"」をもう一度押してください。";' +
+  '+"「"+ボタン+"」をもう一度押してね😊";' +
   '},function(e2){msg.textContent=(sugu?"⛔ 送信が完了したか分かりません。"' +
   ':"⛔ 送信の予約の設定が完了したか分かりません。")' +
-  '+"「← 戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてください。'
+  '+"「← 戻る」で戻り、「📨 予約送信の設定完了したお知らせ一覧」を開いてね😊'
   + 'この"+zjRows.length+"人が全員、一覧に並んでいれば"' +
   '+(sugu?"送信されています。":"送信の予約が完了しています。")' +
-  '+"リストになければ、ここへ戻って「"+ボタン+"」をもう一度押してください。";});}' +
+  '+"リストになければ、ここへ戻って「"+ボタン+"」をもう一度押してね😊";});}' +
   'function zjWatch(ids,zenbu){var msg=document.getElementById("zjmsg");var t0=Date.now();var n=0;' +
-  '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認ください。";return;}' +
+  '(function tick(){n++;if(n>80){msg.textContent="⏳ まだ送っています。一覧でご確認くださいませ🙇";return;}' +
   'zjAsk("send_progress",{ids:ids},function(s){' +
   'var 秒=Math.round((Date.now()-t0)/1000);' +
   'if(!s.ok||s.busy>0){msg.textContent="⏳ 送っています…（"+((s.done||0)+(s.ng||0))+"／"+zenbu+"人・"+秒+"秒）";setTimeout(tick,3000);return;}' +
@@ -2650,7 +2650,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjPersonImg(eid,info){' +
   'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk3\\">← 戻る</button>"' +
   '+"<h2>🖼 "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
-  '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してください。</div>"' +
+  '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してね😊</div>"' +
   '+"<div id=\\"zjpick\\" class=\\"zjpick\\">読み込んでいます…</div>"' +
   '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjpicksave\\">この画像で決定</button></div>");' +
   'document.getElementById("zjbk3").onclick=zjBoxClose;' +
@@ -2678,7 +2678,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'function zjImgSet(){' +
   'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk4\\">← 戻る</button>"' +
   '+"<h2>📷 画像送信セッティング</h2>"' +
-  '+"<div class=\\"zjnote\\">お知らせ文のあとに、この順番で画像を送信します。送信したくない画像は「送る」をオフにしてください。</div>"' +
+  '+"<div class=\\"zjnote\\">お知らせ文のあとに、この順番で画像を送信します。送信したくない画像は「送る」をオフにしてね😊</div>"' +
   '+"<div id=\\"zjcases\\">読み込んでいます…</div>"' +
   '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjcasesave\\">この内容で保存</button>"' +
   '+"<div id=\\"zjcasemsg\\" class=\\"zjnote\\"></div></div>");' +
@@ -2844,7 +2844,7 @@ function renderCostPage_(base, staff, dev) {
     'function show(html){res.innerHTML="<iframe id=\\"cframe\\" class=\\"cframe\\" srcdoc=\\""+esc(html)+"\\"></iframe>";' +
     'var f=document.getElementById("cframe");f.addEventListener("load",function(){fit(f);});' +
     'setTimeout(function(){fit(f);},600);setTimeout(function(){fit(f);},1800);}' +
-    'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("cost",700)){st.textContent="時間がかかりすぎました。もう一度お試しください。";b.disabled=false;return;}' +
+    'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("cost",700)){st.textContent="時間がかかりすぎました。もう一度試してもらえると嬉しいです🙇";b.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){st.textContent="エラー："+((r&&r.error)||"不明");b.disabled=false;return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},700);return;}' +
     'b.disabled=false;' +
@@ -2857,7 +2857,7 @@ function renderCostPage_(base, staff, dev) {
     'if(!d||!d.ok||!d.body_html){st.textContent="表示できませんでした："+((d&&d.error)||"内容が空です");return;}' +
     'st.textContent="";show(d.body_html);});});}' +
     'if(b){b.addEventListener("click",function(){b.disabled=true;res.innerHTML="";' +
-    'st.textContent="計算しています…（少し待ってください）";polls=0;' +
+    'st.textContent="計算しています…（少し待っててくださいね🥺）";polls=0;' +
     'jsonp({action:"submit",key:KEY,op:"cost",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({part:"cost",slot:slot})},' +
     'function(r){if(!r||!r.ok||!r.id){st.textContent="依頼を送れませんでした："+((r&&r.error)||"不明");b.disabled=false;return;}' +
     'setTimeout(function(){poll(r.id);},1000);});});}' +
@@ -3309,13 +3309,13 @@ function idmSendReply(btn) {
   }
   if (kind === 't') {
     var thId = card.getAttribute('data-rid') || '';
-    szPopup_('このお客さんに送りますか？\n\n' + txt, { icon: '✉️', cancel: true, yesLabel: '送る', onYes: function () {
+    szPopup_('このお客さんに送りますか？😊\n\n' + txt, { icon: '✉️', cancel: true, yesLabel: '送る', onYes: function () {
       idmGo_('送信中…', window.igdmReply && function () { window.igdmReply(acc, thId, txt, idmDone_); });
     } });
   } else if (kind === 'r') {
     var name = card.getAttribute('data-rname') || '';
     var occ = parseInt(card.getAttribute('data-rocc') || '0', 10) || 0;
-    szPopup_('この初めての人「' + name + '」を承認して、返信を送りますか？\n\n' + txt,
+    szPopup_('この初めての人「' + name + '」を承認して、返信を送りますか？😊\n\n' + txt,
       { icon: '✉️', cancel: true, yesLabel: '承認して送る', onYes: function () {
         idmGo_('承認して送信中…', window.igdmApproveReply && function () { window.igdmApproveReply(acc, name, occ, txt, idmDone_); });
       } });
@@ -3335,7 +3335,7 @@ function idmResolve(btn) {
   if (!key) return;
   var card = btn;
   for (var k = 0; k < 4 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
-  szPopup_('この相手を「解決済み」にして一覧から隠しますか？\n（削除はしません。相手から新しいメッセージが来たら、その時だけまた出ます）',
+  szPopup_('この相手を「解決済み」にして一覧から隠しますか？😊\n（削除はしません。相手から新しいメッセージが来たら、その時だけまた出ます）',
     { icon: '✓', cancel: true, yesLabel: '解決済みにする', onYes: function () {
       idmResAdd_(key, sig);                       // 先に覚える＝開き直しても消えたまま
       if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0';
@@ -3346,7 +3346,7 @@ function idmResolve(btn) {
         // 書けなかった＝この端末だけ隠れている状態。行を戻して知らせる。
         idmResDel_(key);
         if (card) { card.style.display = ''; card.style.opacity = '1'; }
-        szPopup_('うまくいきませんでした。もう一度押してください。\n（' + ('' + (m || 'つながりませんでした')) + '）');
+        szPopup_('うまくいきませんでした。もう一度押してください🙇\n（' + ('' + (m || 'つながりませんでした')) + '）');
       });
     } });
 }
@@ -3358,7 +3358,7 @@ function idmDelReq(btn) {
   var name = btn.getAttribute('data-name') || '';
   var prev = btn.getAttribute('data-prev') || '';
   var occ = parseInt(btn.getAttribute('data-occ') || '0', 10) || 0;
-  if (!confirm('この初めての人「' + name + '」を削除しますか？\n元に戻せません。')) return;
+  if (!confirm('この初めての人「' + name + '」を削除しますか？😊\n元に戻せません。')) return;
   var card = btn;
   for (var k = 0; k < 4 && card && !(card.className && card.className.indexOf('idmcard') >= 0); k++) card = card.parentElement;
   var st = card ? card.querySelector('.idmdelst') : null;
@@ -3530,7 +3530,7 @@ function renderIgdmHome_(d, base, staff, dev) {
       '<span class="igdmaccsub">@' + esc_(a.handle || '') + '　' + ((a.threads || []).length) + '会話' +
       ((a.requests || []).length ? '・初めての人' + a.requests.length : '') + '</span></button>';
   }
-  if (!btns) btns = '<div class="idmempty">まだ読み込んでいません。少し待ってから、もう一度開いてね😊</div>';
+  if (!btns) btns = '<div class="idmempty">まだ読み込んでいません。少し待ってから、もう一度開いてください🙇</div>';
   return '<style>' + INSTADM_CSS_ + IGDM_CSS_ + '</style>' +
     backBar_(base, staff, dev) +
     '<div class="idmwrap"><h1>📱 DM再現<span class="idmgen">インスタのDMをそのまま表示（読むだけ）</span>' +
@@ -3605,7 +3605,7 @@ function igdmSelect(i) {
   var ms = t.msgs || [], body =
     '<div class="igdmth-h"><button type="button" class="igdmth-back" onclick="igdmBackList()">‹ 一覧</button>' +
     '<span class="igdmth-nm">' + esc_(t.title || '') + (t.req ? '（初めての人）' : '') + '</span></div><div class="igdmth-log">';
-  if (t.req) body += '<div class="idmempty">初めての人からのメッセージです。ここには最初の一言だけ出ます（全文は本物のインスタで確認してください）。</div>';
+  if (t.req) body += '<div class="idmempty">初めての人からのメッセージです。ここには最初の一言だけ出ます（全文は本物のインスタで確認してね😊）。</div>';
   if (!ms.length) body += '<div class="idmempty">内容がありません。</div>';
   for (var k = 0; k < ms.length; k++) {
     var m = ms[k];
@@ -3662,8 +3662,8 @@ function igdmDoReply() {
   var ta = document.getElementById('igdmReplyTxt'); var txt = ta ? ta.value.trim() : '';
   if (!txt) { szPopup_('本文が空です。'); return; }
   var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
-  szPopup_('このお客さんに送りますか？\n\n' + txt, { icon: '✉️', cancel: true, yesLabel: '送る', onYes: function () {
-    szOvShow_(szBusyHtml_('送っています', 'インスタへの書き込みが終わったら自動で切り替わりますので、しばらくお待ちください。'), '#2C7A99');
+  szPopup_('このお客さんに送りますか？😊\n\n' + txt, { icon: '✉️', cancel: true, yesLabel: '送る', onYes: function () {
+    szOvShow_(szBusyHtml_('送っています', 'インスタへの書き込みが終わったら自動で切り替わりますので、少し待っててくださいね🥺'), '#2C7A99');
     if (window.igdmReply) window.igdmReply(acc, t.id, txt, igdmSendResult_);
     else { szOvHide_(); szPopup_('この画面からは送れません。りゅうさんにお伝えください。'); }
   } });
@@ -3677,9 +3677,9 @@ function igdmDoApproveReply() {
   if (!txt) { szPopup_('本文が空です。'); return; }
   var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
   var nm = t.title || '', occ = t.occ || 0;
-  szPopup_('この初めての人「' + nm + '」を承認して、この返信を送りますか？\n\n' + txt,
+  szPopup_('この初めての人「' + nm + '」を承認して、この返信を送りますか？😊\n\n' + txt,
     { icon: '✉️', cancel: true, yesLabel: '承認して送る', onYes: function () {
-      szOvShow_(szBusyHtml_('承認して送っています', 'インスタへの書き込みが終わったら自動で切り替わりますので、しばらくお待ちください。'), '#2C7A99');
+      szOvShow_(szBusyHtml_('承認して送っています', 'インスタへの書き込みが終わったら自動で切り替わりますので、少し待っててくださいね🥺'), '#2C7A99');
       if (window.igdmApproveReply) window.igdmApproveReply(acc, nm, occ, txt, igdmSendResult_);
       else { szOvHide_(); szPopup_('この画面からは送れません。りゅうさんにお伝えください。'); }
     } });
@@ -3688,12 +3688,12 @@ function igdmDoApproveReply() {
 // 初めての人（スパム）を削除する。中身を見た上で、押した1件だけ・確認してから。戻せない。
 function igdmDoDelete() {
   var t = (IGDM_STATE_.items || [])[IGDM_STATE_.sel]; if (!t || !t.req) return;
-  szPopup_('この初めての人「' + (t.title || '') + '」を削除しますか？\n削除すると元に戻せません。',
+  szPopup_('この初めての人「' + (t.title || '') + '」を削除しますか？😊\n削除すると元に戻せません。',
     { cancel: true, yesLabel: '削除する', onYes: function () { igdmDoDeleteGo_(t); } });
 }
 function igdmDoDeleteGo_(t) {
   var acc = (igdmAccs_()[IGDM_STATE_.ai] || {}).key || '';
-  szOvShow_(szBusyHtml_('削除しています', 'インスタでの削除が終わったら自動で切り替わりますので、しばらくお待ちください。'), '#2C7A99');   // 部屋かぶりと同じ全画面表示（共通ルール）
+  szOvShow_(szBusyHtml_('削除しています', 'インスタでの削除が終わったら自動で切り替わりますので、少し待っててくださいね🥺'), '#2C7A99');   // 部屋かぶりと同じ全画面表示（共通ルール）
   if (window.igdmDelete) window.igdmDelete(acc, t.title, t.last_text, t.occ || 0, function (m) {
     var ms = '' + (m || '');
     if (ms.indexOf('エラー') >= 0 || ms.indexOf('失敗') >= 0 || ms.indexOf('できません') >= 0 || ms.indexOf('つながり') >= 0 || ms.indexOf('時間がかかって') >= 0) {
@@ -4289,7 +4289,7 @@ function renderRirekiPage_(base, staff, dev) {
   'stEl.textContent=cs.length+" 人ヒット";resEl.innerHTML=cs.map(custHtml).join("");toTop();}' +
   // ★2026-08-24：あきらめるまでを 36秒 → 210秒（1.2秒×175回）。事務所パソコンが混んでいる時に
   //   出来ているのに「時間切れ」と出ていた。
-  'var polls=0;function poll(id){polls++;if(polls>175){stEl.textContent="時間切れです。もう一度お試しください。";return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>175){stEl.textContent="時間切れです。もう一度試してもらえると嬉しいです🙇";return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){stEl.textContent="エラー："+((r&&r.error)||"不明");return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1200);return;}' +
   'if(r.status!=="done"){stEl.textContent="検索に失敗しました："+esc(r.result||r.status);return;}' +
@@ -4397,14 +4397,14 @@ function renderHonyakuPage_(base, staff, dev) {
   'segs.forEach(function(b){b.addEventListener("click",function(){' +
   'gender=b.getAttribute("data-g");segs.forEach(function(x){x.classList.remove("sel");});b.classList.add("sel");});});' +
   // ★あきらめるまで＝事務所パソコン側の制限(180秒)より長くする（短いと答えが出ても画面が止まる）。
-  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("translate",700)){setSt("時間がかかりすぎました。もう一度お試しください。","err");goEl.disabled=false;return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("translate",700)){setSt("時間がかかりすぎました。もう一度試してもらえると嬉しいです🙇","err");goEl.disabled=false;return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){setSt("エラー："+((r&&r.error)||"不明"),"err");goEl.disabled=false;return;}' +
-  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setSt("訳しています…（少し待ってください）","wait");setTimeout(function(){poll(id);},700);return;}' +
+  'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setSt("訳しています…（少し待っててくださいね🥺）","wait");setTimeout(function(){poll(id);},700);return;}' +
   'goEl.disabled=false;' +
   'if(r.status!=="done"){setSt(String(r.result||"訳せませんでした。"),"err");return;}' +
   'dstEl.value=String(r.result||"");setSt("訳しました（なぞってコピーできます）","ok");});}' +
   'function go(){var t=(srcEl.value||"").trim();if(!t){setSt("日本語を入力してね😊","err");return;}' +
-  'goEl.disabled=true;dstEl.value="";setSt("訳しています…（少し待ってください）","wait");' +
+  'goEl.disabled=true;dstEl.value="";setSt("訳しています…（少し待っててくださいね🥺）","wait");' +
   'jsonp({action:"submit",key:KEY,op:"translate",who:idn.who,role:idn.role,device:idn.device,' +
   'fields:JSON.stringify({text:t,gender:gender,quality:"1"})},' +
   'function(r){if(!r||!r.ok||!r.id){setSt("依頼を送れませんでした："+((r&&r.error)||"不明"),"err");goEl.disabled=false;return;}' +
@@ -4442,7 +4442,7 @@ function renderHonyakuPage_(base, staff, dev) {
         '<button type="button" data-g="男">男性</button>' +
       '</div>' +
       '<div class="hylbl">日本語（ここに貼る）</div>' +
-      '<textarea id="hysrc" placeholder="配信したい日本語をそのまま貼ってください"></textarea>' +
+      '<textarea id="hysrc" placeholder="配信したい日本語をそのまま貼り付けてね😊"></textarea>' +
       '<button type="button" class="hygo" id="hygo">訳す</button>' +
       '<div class="hystatus" id="hystatus">日本語を入力して「訳す」を押してね😊</div>' +
       '<div class="hylbl">台湾中国語（選択してコピー・修正できます）</div>' +
@@ -4509,23 +4509,23 @@ function renderTimedSendPage_(base, staff, dev) {
   'else if(d){banEl.style.display="none";banEl.textContent="";}});' +
   // ★2026-08-24：あきらめるまでを 18秒 → 210秒（0.6秒×350回）。18秒では、送信の予約が出来ているのに
   //   「失敗しました」と出て、押し直すと二重に予約してしまう危険があった。
-  'var polls=0;function poll(id){polls++;if(polls>350){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
-  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>350){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}' +
+  'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
   'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}' +
   'goEl.disabled=false;msgEl.value="";imgs=[];fileEl.value="";renderThumbs();codesEl.value="";szOvShow_(szDoneHtml_("送信を予約しました","戻る"),"#16a34a");var _b=document.getElementById("szDoneBack");if(_b){_b.addEventListener("click",function(){szOvHide_();});}});}' +
   'function go(){var msg=(msgEl.value||"").trim();if(!msg&&!imgs.length){status("文章か画像のどちらかは必要です。",true);return;}' +
   'var dv=dateEl.value,tv=timeEl.value;if(!dv||!tv){status("送信日と時刻を入力してね😊",true);return;}var send_at=dv+" "+tv;' +
   'var mode=getMode(),target;' +
-  'if(mode==="person"){var codes=(codesEl.value||"").split(/[\\s,\\u3001\\uFF0C]+/).filter(Boolean);if(!codes.length){status("番号を入力してね😊（例 M123）",true);return;}target={type:"person",codes:codes};}' +
-  'else if(mode==="group"){var val=groupEl.value;if(!val){status("グループを選んでください。",true);return;}var g=GROUPS[val];target={type:"tag",tag_id:val,tag_name:g?g.name:""};}' +
+  'if(mode==="person"){var codes=(codesEl.value||"").split(/[\\s,\\u3001\\uFF0C]+/).filter(Boolean);if(!codes.length){status("番号を入力してね😊 （例 M123）",true);return;}target={type:"person",codes:codes};}' +
+  'else if(mode==="group"){var val=groupEl.value;if(!val){status("グループを選択してね😊",true);return;}var g=GROUPS[val];target={type:"tag",tag_id:val,tag_name:g?g.name:""};}' +
   'else if(mode==="all"){target={type:"all"};}else{target={type:"owner"};}' +
-  'goEl.disabled=true;szOvShow_(szBusyHtml_("送信を予約中です","送信の予約が終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
+  'goEl.disabled=true;szOvShow_(szBusyHtml_("送信を予約中です","送信の予約が終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");' +
   'var names=[],ups=imgs.map(function(o){var n=rnd();names.push(n);return pushImage(n,o);});' +
   'Promise.all(ups).then(function(){' +
   'jsonp({action:"submit",key:KEY,op:"timed_line_send",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({message:msg,send_at:send_at,target:target,images:names})},' +
-  'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1000);});' +
-  '}).catch(function(){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。画像の送信でつまずきました。もう一度お試しください。");});}' +
+  'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}setTimeout(function(){poll(r.id);},1000);});' +
+  '}).catch(function(){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。画像の送信でつまずきました。もう一度試してもらえると嬉しいです🙇");});}' +
   // ★登録した送信の一覧＝パソコン版と同じ1本（sends_view.py）が作った物をそのまま並べる。
   //   状態の言い方・相手の書き方は事務所パソコンが決める＝スマホ側に写しを持たない（2026-08-24）。
   'var listEl=document.getElementById("tslist");' +
@@ -4541,7 +4541,7 @@ function renderTimedSendPage_(base, staff, dev) {
   '+"</div>";}' +
   'listEl.innerHTML=h;' +
   'var cbs=listEl.querySelectorAll(".tscancel");for(var j=0;j<cbs.length;j++){cbs[j].addEventListener("click",function(){' +
-  'var id=this.getAttribute("data-id");szPopup_("この送信を取り消しますか？",{cancel:true,onYes:function(){askSends("timedsend_cancel",id);}});});}}' +
+  'var id=this.getAttribute("data-id");szPopup_("この送信を取り消しますか？😊",{cancel:true,onYes:function(){askSends("timedsend_cancel",id);}});});}}' +
   'var tsPolls=0;function pollSends(qid){tsPolls++;if(tsPolls>LIMITS.tries("timedsend_list",700)){listEl.textContent="読み込めませんでした。";return;}' +
   'jsonp({action:"status",key:KEY,id:qid},function(r){if(!r||!r.ok){listEl.textContent="読み込めませんでした。";return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollSends(qid);},700);return;}' +
@@ -4994,7 +4994,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcfreshbar"><button type="button" class="bcfreshbtn" id="bcfresh">\'+' +
   '\'↩ 初期状態に戻す</button></div>\':"";}' +
   'function bindFresh(){var b=document.getElementById("bcfresh");if(!b)return;' +
-  'b.onclick=function(){szPopup_("入力した内容をすべて削除して、最初から始めますか？",{cancel:true,' +
+  'b.onclick=function(){szPopup_("入力した内容をすべて削除して、最初から始めますか？😊",{cancel:true,' +
   'onYes:function(){wipClear();DATA=TPL.map(function(){return {parts:[]};});' +
   'WTEXT="";MBODY="";SPER="";SRES=null;MJA=[];MZH=[];MSTEP=0;MMSG="";' +
   'step=0;page="k";mode="";FRESH=false;status("まっさらに戻しました。");draw();}});};}' +
@@ -5025,7 +5025,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcwhead"><span class="lb">日時入力欄</span>\'+' +
   '\'<button type="button" class="bcwauto" id="bcwauto">自動入力</button></div>\'+' +
   '\'<textarea id="bcwtxt" style="min-height:260px;font-size:14px" \'+' +
-  '\'placeholder="ここに空き時間検索の出力を貼るか、自分で書いてください。&#10;&#10;'+
+  '\'placeholder="ここに空き時間検索の出力を貼るか、自分で入力してね😊&#10;&#10;'+
   '新規&#10;9/8（火）&#10;16:30&#10;9/9（水）&#10;11:00 / 12:00">\'+esc(WTEXT)+\'</textarea>\';' +
   'if(WDONE.length){h+=\'<div class="bchr"></div><div class="bcleft">できた画像</div><div class="bcgrid">\'+' +
   'WDONE.map(function(x){return \'<div class="bcpick new"><img src="\'+x.thumb+\'" data-bigw="\'+esc(x.name||"")+\'" style="cursor:zoom-in"><span>\'+' +
@@ -5049,7 +5049,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function(m){b.disabled=false;status(m,true);});};' +
   'document.getElementById("bcwmake").onclick=function(){' +
   'if(ta)WTEXT=ta.value;' +
-  'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してください。",true);return;}' +
+  'if(!(WTEXT||"").trim()){status("日時入力欄が空です。貼るか「自動入力」を押してね😊",true);return;}' +
   'WBUSY=true;WDONE=[];WMSG="";SENDN=null;status("");draw();' +
   'runMake(WTEXT,function(i,tot,label){WMSG=(i+1)+"枚目 / "+tot+"枚　"+label;draw();},' +
   'function(done,err){WBUSY=false;' +
@@ -5261,7 +5261,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'return body.replace(/\\s+$/,"")+"\\n\\n"+times;}' +
   // ★文字数の知らせ（まるちゃん指示 2026-09-14「今何文字なのかだせよ」）
   'function numMsg(n){if(!n)return "";' +
-  'return (n>MAXT)?("今"+n+"文字です。"+MAXT+"文字までなので、あと"+(n-MAXT)+"文字減らしてください"):("今"+n+"文字です（"+MAXT+"文字まで）");}' +
+  'return (n>MAXT)?("今"+n+"文字です。"+MAXT+"文字までなので、あと"+(n-MAXT)+"文字減らしてね😊"):("今"+n+"文字です（"+MAXT+"文字まで）");}' +
   'function tgtNames(atama,sei,lang){var out=[];' +
   'for(var i=0;i<TPL.length;i++){var nm=TPL[i].name;' +
   'if(nm.indexOf(atama)<0)continue;' +
@@ -5354,7 +5354,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★下のボタンは、いま入っている文から毎回作る（2026-10-01 まるちゃん「短い文いれてもボタンがでない」）。
   //   前は画面を描いた時に1回だけ決めていたので、長すぎて消えたボタンが、短くしても戻らなかった。
   //   打つたびに refreshBtns() で出し直す（入力欄は作り直さない＝打っている字は消えない）。
-  'function btnHtml(){var N=BORDER.length,LNG=\'<div class="bcstatus ng">長すぎます。上の文を短くしてください（短くするとボタンが出ます）。</div>\';' +
+  'function btnHtml(){var N=BORDER.length,LNG=\'<div class="bcstatus ng">長すぎます。上の文を短くしてね😊 （短くするとボタンが出ます）。</div>\';' +
   'if(MSTEP===0){var x=BORDER[MIDX],last=(MIDX===N-1);' +
   'if(ulen(joinBody(MBODYS[MIDX]||"",timesOf(x[0],x[1])))>MAXT)return LNG;' +
   // ★最後の区分では、中国語版の作り方を3つから選ぶ（まるちゃん指示 2026-09-09）。自動で訳す1つ目だけ紫。
@@ -5408,7 +5408,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'if(!MBUSY&&ja5.length)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
   // ★画像を作るか選ぶ画面（2026-10-01 まるちゃん「日本語のときとおなじ。つぎのがめんでいってから」）
   'else if(MSTEP===6){var nm6=sendNames();' +
-  'h=\'<div class="bcstop"><span class="bcsttl">予約可能枠の画像を作りますか？</span></div>\'+' +
+  'h=\'<div class="bcstop"><span class="bcsttl">予約可能枠の画像を作りますか？😊</span></div>\'+' +
   '\'<div class="bccard bcwide"><div class="bcouth"><b>画像生成の対象（以下の\'+nm6.length+\'種類）</b></div>\'+' +
   '\'<div class="bcouttx">\'+esc(nm6.join("\\n"))+\'</div></div>\';' +
   'if(!MBUSY)h+=\'<div id="bcmbtns">\'+btnHtml()+\'</div>\';}' +
@@ -6369,7 +6369,7 @@ var SG_STEPS_JS_ =
       '$("sgfct").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）の空き状況";' +
       'if(!AKI&&!AKIERR){$("sgstatus3").textContent="空き状況を読んでいます...";' +
         '$("sgfree").innerHTML="";AKIWAIT=function(){if(step===5)drawFree();};return;}' +
-      'if(AKIERR){$("sgstatus3").textContent="空き状況を読めませんでした。通信環境をご確認ください。";' +
+      'if(AKIERR){$("sgstatus3").textContent="空き状況を読めませんでした。通信環境をご確認くださいませ🙇";' +
         '$("sgfree").innerHTML="";return;}' +
       'var day=null;' +
       'for(var i=0;i<AKI.days.length;i++){if(AKI.days[i].date===PICKDATE){day=AKI.days[i];break;}}' +
@@ -6536,7 +6536,7 @@ var SG_STEPS_JS_ =
       'var over=(TE>SLOT.e);' +
       'var er=$("sgterr");' +
       'if(over){er.style.display="block";' +
-        'er.innerHTML="その時間は空いていません。<br>入力し直してください。";}' +
+        'er.innerHTML="その時間は空いていません。<br>入力し直してね😊";}' +
       'else{er.style.display="none";er.textContent="";}' +
       /* ★特例の時は止めずに、重なっている中身を赤字で出す（その旨を出したうえで選べる）。 */
       'if(SLOT.toku){var w=[];' +
@@ -6592,7 +6592,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '<div class="sg" id="sgPick">' +
       /* ★読み込み中は「施術者を選んでください」を出さない（まだ選べないので・まるちゃん 2026-09-12）。
          今日の予約を読み終えてボタンが並んだ時にはじめて出す（drawPick）。 */
-      '<div class="sgstep" id="sgpickhead" style="display:none">施術者を選んでください</div>' +
+      '<div class="sgstep" id="sgpickhead" style="display:none">施術者を選択してね😊</div>' +
       '<div class="sgstaff" id="sgstaff"></div>' +
       '<div class="sgstatus" id="sgstatus">今日の予約を読んでいます...</div>' +
     '</div>' +
@@ -6665,7 +6665,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        全員に出す。「どれも当てはまらない」はすぐ次の画面へ。それ以外は選んで「上記の内容で確定」で次へ。
        予約メモから機械が読んだ答えは、当てはまる物がある時だけ小さく出す（印は付けない＝選ぶのはスタッフ）。 */
     '<div class="sg" id="sgAfter" style="display:none">' +
-      '<div class="sgwho">このお客様は以下に当てはまりますか？（複数選択可）</div>' +
+      '<div class="sgwho">このお客様は以下に当てはまりますか？😊 （複数選択可）</div>' +
       '<div class="sgmnote" id="sgtahint" style="display:none"></div>' +
       '<button type="button" class="sgrbig" id="sgtanone"><span class="sgrbi">🙅</span>どれも当てはまらない</button>' +
       '<button type="button" class="sgrbig sgta" data-k="procell_face"><span class="sgrbi">✨</span>顔プロセルを行った</button>' +
@@ -6676,7 +6676,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        （そのままタイムツリーの次回の予約メモになる・まるちゃん 2026-09-12）。 */
     '<div class="sg" id="sgMemo" style="display:none">' +
       '<div class="sgwho">予約メモの修正</div>' +
-      '<div class="sgmnote">下に本日の予約メモを表示しています。次回の予約用にメモを修正してください。' +
+      '<div class="sgmnote">下に本日の予約メモを表示しています。次回の予約用にメモを修正してね😊' +
         '次回の予約日の予約メモとしてタイムツリーに保存されます。</div>' +
       '<div class="sgtimebox">' +
         '<div class="sgtlab">予約メモのタイトル</div>' +
@@ -6806,7 +6806,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       's.onerror=function(){cb({error:"net"});};document.body.appendChild(s);}' +
     /* 受け取った予定から「今日・うちの施術者の分」だけ取り出す */
     'function build(p){' +
-      'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読めませんでした。通信環境をご確認ください。";return;}' +
+      'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読めませんでした。通信環境をご確認くださいませ🙇";return;}' +
       'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};NXC={};' +
       'var day=[];' +
       /* ★2026-11-02：今日より先に同じ番号の予約がある方＝次回の予約がもう入っている（施術後のLINE送信の「新規脱毛（次回予約なし）」に印を付けない） */
@@ -7046,7 +7046,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgmgo").disabled=true;' +
       /* いつまでも待たせない＝25秒で今日のメモのまま進めるようにする（回数は手で直せる）。 */
       'setTimeout(function(){if(step===7&&!NEXTMEMO){' +
-        'w.textContent="次回用の下書きを作成できませんでした。回数とお支払いは手動で修正してね😊";' +
+        'w.textContent="次回用の下書きを作成できませんでした。回数とお支払いは手動で修正してください🙇";' +
         '$("sgmgo").disabled=false;}},25000);}' +
     /* ── 9枚目：このお客様は以下に当てはまりますか？（複数選択可・全員に出す） ── */
     'function goElight(){step=9;show();' +
@@ -7127,7 +7127,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(TA[ks[i]]!==true&&on)d.push("予約メモに"+ACNAME[ks[i]]+"があります");}' +
       'return d;}' +
     'function taNext(){var d=taDiff();if(!d.length){goMonth();return;}' +
-      'szPopup_("予約メモと違うところがあります。\\n\\n・"+d.join("\\n・")+"\\n\\nこの内容で確定しますか？",' +
+      'szPopup_("予約メモと違うところがあります。\\n\\n・"+d.join("\\n・")+"\\n\\nこの内容で確定しますか？😊",' +
         '{cancel:true,noLabel:"選び直す",yesLabel:"確定する",onYes:function(){goMonth();}});}' +
     'function goMemo(){step=7;show();' +
       '$("sgmtitle").value=(CUST&&CUST.title)||"";' +
@@ -7143,12 +7143,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ── タイムツリーへ書き込む（事務所パソコンの受付係にお願いする） ── */
     'var sending=false,mpolls=0;' +
     'function memoFail(msg){szOvHide_();sending=false;$("sgmgo").disabled=false;$("sgkgo").disabled=false;' +
-      'szPopup_(msg||"エラーが発生しました。通信に失敗しました。もう一度お試しください。");}' +
+      'szPopup_(msg||"エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");}' +
     'function sendMemo(){' +
       'if(sending)return;' +
       'var ti=($("sgmtitle").value||"").trim();' +
       'if(!ti){szPopup_("予約メモのタイトルを入力してね😊");return;}' +
-      'if(!PICKDATE||!ROOM){szPopup_("予約の日時と施術室が決まっていません。前に戻ってやり直してください。");return;}' +
+      'if(!PICKDATE||!ROOM){szPopup_("予約の日時と施術室が決まっていません。前に戻ってやり直してください🙇");return;}' +
       'var f={date:PICKDATE,start:m2hm(TS),end:m2hm(TE),room:ROOM,title:ti,memo:$("sgmtext").value||""};' +
       /* ★2026-10-31：9枚目「このお客様は以下に当てはまりますか？」の答えを全部渡す（ta=1＝この画面で選んだ印）。
          イーライト（VIO／VIO以外）・当店での脱毛が初めて・パリジェンヌ・顔プロセル・頭皮プロセル。 */
@@ -7205,15 +7205,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
       'if(!ks.length){szPopup_((nm||"このお客様")+"に送る施術後のLINEはありません。",{icon:"",onYes:function(){goList();}});return;}' +
       'var names=ks.map(function(k){return "「"+LNNAME[k]+"」";}).join("");' +
-      'szPopup_((nm||"このお客様")+"へ"+names+"の施術後フォローLINE文を送りますか？",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(ks);}});}' +
+      'szPopup_((nm||"このお客様")+"へ"+names+"の施術後フォローLINE文を送りますか？😊",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(ks);}});}' +
     'function lnFail(m){lsending=false;szOvHide_();szPopup_(m||"エラーが発生しました。りゅうさんに連絡しました。");}' +
     'function lnSend(k){if(lsending)return;lsending=true;' +
       /* ★2026-10-31 まるちゃん「タイムツリーへの書き込みになってる」＝予定表には書かないので、説明をLINE向けにする。 */
-      'szOvShow_(szBusyHtml_("LINEを送る準備をしています","準備が終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");var n=0;' +
+      'szOvShow_(szBusyHtml_("LINEを送る準備をしています","準備が終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");var n=0;' +
       'jsonp({action:"submit",key:KEY,op:"sgline_send",who:idn.who,role:idn.role,device:idn.device,' +
         'fields:JSON.stringify({event:CUST.id||"",title:CUST.title||"",kinds:k.join(","),who:idn.who||WHO||""})},' +
       'function(r){if(!r||!r.ok||!r.id){lnFail();return;}' +
-        'var poll=function(){n++;if(n>LIMITS.tries("sgline_send",600)){lnFail("時間切れです。もう一度お試しください。");return;}' +
+        'var poll=function(){n++;if(n>LIMITS.tries("sgline_send",600)){lnFail("時間切れです。もう一度試してもらえると嬉しいです🙇");return;}' +
           'jsonp({action:"status",key:KEY,id:r.id},function(x){' +
             'if(!x||!x.ok){lnFail();return;}' +
             'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(poll,600);return;}' +
@@ -7253,7 +7253,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function repLoadToday(cb){if(RLOADED){cb();return;}' +
       'szOvShow_(szBusyHtml_("今日の予約を読んでいます"),"#2C7A99");' +
       'need(function(p){szOvHide_();var keep=pick;build(p);pick=keep;' +
-        'if(!p||p.error||!p.events){szPopup_("今日の予約を読めませんでした。通信環境をご確認ください。");return;}' +
+        'if(!p||p.error||!p.events){szPopup_("今日の予約を読めませんでした。通信環境をご確認くださいませ🙇");return;}' +
         'if(RLOADED){if(step===2)drawList();return;}RLOADED=true;cb();});}' +
     'function repBack(){if(step===8){if(RFROM===22){goRNum();}else{goList();}return true;}' +
       'if(step===2||step===22){goRChoose();return true;}if(step===21){goPick();return true;}return false;}' +
@@ -7272,7 +7272,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 事務所パソコンに「🔁を書く予約」と「🔁を聞く施術」を聞く（決め方は 共通\kaeshi_target.target_booking）。 */
     'function repOpen(md,fnum,ev){if(!fnum){szPopup_("お客様番号が分かりません。");return;}' +
       'szOvShow_(szBusyHtml_("予約を検索しています"),"#2C7A99");var n=0;' +
-      'var fail=function(m){szOvHide_();szPopup_(m||"エラーが発生しました。通信に失敗しました。もう一度お試しください。");};' +
+      'var fail=function(m){szOvHide_();szPopup_(m||"エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");};' +
       'jsonp({action:"submit",key:KEY,op:"kaeshi_booking",who:idn.who,role:idn.role,device:idn.device,' +
         'fields:JSON.stringify({fnum:fnum,today:TODAY,mode:md,event:ev||""})},' +
       'function(r){if(!r||!r.ok||!r.id){fail();return;}' +
@@ -7317,7 +7317,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
             'if(d&&d.conflict&&tries<1){var live=String(d.note||""),t2=live;' +
               'for(var i=0;i<KT.length;i++){var ln=SG.kaeshiSetLine(KT[i],kPick(KT[i]),kMark());if(ln)t2=SG.kaeshiPutLine(t2,KT[i],ln);}' +
               'RB.note=live;$("sgmtext").value=t2;repSubmit(t2,live,tries+1);return;}' +
-            'memoFail("予約メモが他の端末で修正されていました。もう一度お客様を選択してね😊");});};' +
+            'memoFail("予約メモが他の端末で修正されていました。もう一度お客様を選択してください🙇");});};' +
         'setTimeout(poll,1200);});}' +
     /* ── 8枚目：お知らせのおすすめ（🔁） ── */
     /* 🔁の後ろの印＝今日この施術をした担当（＝最終回の1つ前の来店の担当。🔁を書く人の決まり）。 */
@@ -7422,12 +7422,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var fb=$("sgFirst").getElementsByClassName("sgfd");' +
         'for(var fi=0;fi<fb.length;fi++){fb[fi].onclick=function(){if(!tapOK())return;' +
           'var k=this.getAttribute("data-k"),m="";' +
-          'if(k==="yes"&&FIRSTDAT===false)m="記録では、このお客様は過去に当店で脱毛をしています。「初めての脱毛の施術でした」で、本当によろしいですか？";' +
-          'if(k==="no"&&FIRSTDAT===true)m="記録では、このお客様は本日が当店はじめての脱毛のようです。「過去に当店で脱毛履歴がありました」で、本当によろしいですか？";' +
+          'if(k==="yes"&&FIRSTDAT===false)m="記録では、このお客様は過去に当店で脱毛をしています。「初めての脱毛の施術でした」で、本当によろしいでしょうか？😊";' +
+          'if(k==="no"&&FIRSTDAT===true)m="記録では、このお客様は本日が当店はじめての脱毛のようです。「過去に当店で脱毛履歴がありました」で、本当によろしいでしょうか？😊";' +
           /* ★2026-11-02 試しで見つけた食い違い：イーライトを「やった」と答えたのに「カウンセリングだけで施術しなかった」を押した時も確かめる。
              このまま進むなら、施術はしていない＝イーライトの注意事項は送らない。 */
           'if(k==="counsel"&&(ELANS==="vio"||ELANS==="both"||ELANS==="other"))' +
-            'm="前の画面で、イーライトをやったと選んでいます。「今日はカウンセリングだけで施術しなかった」で、本当によろしいですか？";' +
+            'm="前の画面で、イーライトをやったと選んでいます。「今日はカウンセリングだけで施術しなかった」で、本当によろしいでしょうか？😊";' +
           'if(!m){FDANS=k;nextOf(11);return;}' +
           'szPopup_(m,{cancel:true,noLabel:"選び直す",yesLabel:"はい、大丈夫です",onYes:function(){if(k==="counsel")ELANS="no";FDANS=k;nextOf(11);}});};}' +
         /* ★12枚目：パリジェンヌ＝押すとすぐ次へ。 */
@@ -7808,7 +7808,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(_titleKeep&&tv.shown){var _k=_titleKeep;_titleKeep=null;fillTitles(_k.t,_k.d);return;}' +
     // ★作れなかった時は理由を出す（前は「作っています」のまま永久に止まっていた）。
     'if(_titleErr){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作成できませんでした（"+_titleErr+"）。「← 戻る」で予約メモや担当・部屋を確認してね😊";ngbox.style.display="";}}' +
-    'else if(titleStale){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作っています。少しお待ちください。";ngbox.style.display="";}}}' +
+    'else if(titleStale){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作っています。少し待っててくださいね🥺";ngbox.style.display="";}}}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
     'var nrAvTimer=null;function nrScheduleAvail(){nrAvRetried=0;if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
@@ -7912,8 +7912,8 @@ function renderNewReservationPage_(base, staff, dev) {
     //   0.6秒おきに40回＝24秒しか待っていなかったが、実データでは登録に最長66秒かかっている。
     //   24秒で「通信に失敗しました」と出すと、実際は登録が進んでいるのにスタッフが押し直し、
     //   **同じ予約を二重に作る**危険があった（0.6秒×350回＝210秒に変更）。
-    'var polls=0;function poll(id){polls++;if(polls>350){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
-    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}' +
+    'var polls=0;function poll(id){polls++;if(polls>350){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}' +
+    'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
     'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}' +
     // ★事務所パソコンが返す文の後ろに、作った予約の住所が付いてくる＝「タイムツリーで見る」に使う（2026-08-23 まるちゃん）。
@@ -7925,7 +7925,7 @@ function renderNewReservationPage_(base, staff, dev) {
     //   ★片方だけ変えないこと（60秒のままだったのが8/24の詰まりの正体）。
     //   あわせて、待っている間は経過秒数を出す＝スタッフが「止まった」と思わずに済む。
     'var ppolls=0,prevT0=0;function pollPrev(id){ppolls++;' +
-    'if(prevT0&&(Date.now()-prevT0)>210000){status("読み取りに時間がかかりすぎました。もう一度お試しください。",true);readEl.disabled=false;return;}' +
+    'if(prevT0&&(Date.now()-prevT0)>210000){status("読み取りに時間がかかりすぎました。もう一度試してもらえると嬉しいです🙇",true);readEl.disabled=false;return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){status("エラー："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}' +
     // ★2026-08-24 まるちゃん「処理中に予測時間を表示するのはむずかしい？」への答え。
     //   実績（読み取り34件）＝半分は9秒以内・4分の3は15秒以内・1割ほどが1分を超える。
@@ -7935,7 +7935,7 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★2026-08-24 まるちゃん指定の言い回し。「用紙」では何を指すか分からないので「貼った内容」。
     'var _mg=(_es<15)?"変換中です。通常は10秒以内に終わります。"' +
     ':(_es<100)?"変換中です（"+_es+"秒）。貼り付けた内容が読み取りにくいため、AIで確認しています。数十秒かかる場合があります。"' +
-    ':"変換中です（"+_es+"秒）。時間がかかっています。終わらなければ、もう一度お試しください。";' +
+    ':"変換中です（"+_es+"秒）。時間がかかっています。終わらなければ、もう一度試してもらえると嬉しいです🙇";' +
     'status(_mg,false);' +
     'setTimeout(function(){pollPrev(id);},700);return;}readEl.disabled=false;' +
     'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
@@ -8009,7 +8009,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'for(var _q=0;_q<_pab.length;_q++){_pab[_q].classList.toggle("sel",_pab[_q]===this);}' +
     'window.__nrSlotsMemo=prevEl.value;' +          // ★機械が書き換えた分は「作り直し」の対象にしない
     'nrGoCheck();if(window.__nrSchedTitle){titleEdited=false;window.__nrSchedTitle("staff");}});}' +
-    'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼ってください。",true);return;}' +
+    'function readGo(){var text=(txtEl.value||"").trim();if(!text){status("先に予約フォームを貼り付けてね😊",true);return;}' +
     'readEl.disabled=true;prevT0=Date.now();status("変換中です。通常は10秒以内に終わります。",false);' +
     'jsonp({action:"submit",key:KEY,op:"preview_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({text:text})},' +
     'function(r){if(!r||!r.ok||!r.id){status("依頼を送れませんでした："+((r&&r.error)||"不明"),true);readEl.disabled=false;return;}setTimeout(function(){pollPrev(r.id);},400);});}' +
@@ -8065,11 +8065,11 @@ function renderNewReservationPage_(base, staff, dev) {
     'if(_titleTimer)clearTimeout(_titleTimer);_titleTimer=setTimeout(function(){refreshTitles(null,true);},350);}' +
     'window.__nrSchedTitle=scheduleTitleRefresh;' +
     // 登録＝画面に出ている（人が直せる）タイトルをそのまま使う。
-    'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼ってください。",true);return;}' +
+    'function go(){var text=(txtEl.value||"").trim();if(!text){status("予約フォームを貼り付けてね😊",true);return;}' +
     'var ins=document.querySelectorAll(".nrTitleIn"),ts=[];for(var j=0;j<ins.length;j++){ts.push(ins[j].value);}' +
     'goEl.disabled=true;szOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"new_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields(ins.length?{titles:JSON.stringify(ts)}:null))},' +
-    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}setTimeout(function(){poll(r.id);},1200);});}' +
+    'function(r){if(!r||!r.ok||!r.id){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}setTimeout(function(){poll(r.id);},1200);});}' +
     // ★★2026-09-22 まるちゃん決定：**押したらすぐ登録**をやめ、先に中身を見せて確かめてもらう。
     //   ＝この画面は一番最後で、押すと本物の予約が入り部屋も担当も押さえてしまうため。
     //   小窓の形＝「以下の内容を、タイムツリーに登録してよろしいですか？」＋登録する中身＋OK／やめる。
@@ -8090,7 +8090,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'out.push("■ "+(x.start?(x.start+"～"+(x.end||"")+"　"):"")+(x.disp||("枠"+(j+1))));' +
     'out.push("タイトル："+(ins[j]?ins[j].value:((d.titles||[])[j]||"")));' +
     'var rn=nrRoomName(x.room);if(rn)out.push("部屋："+rn);}' +
-    'szPopup_("<div style=\\"font-size:1.15rem;line-height:1.5;font-weight:800\\">以下の内容を、タイムツリーに登録してよろしいですか？</div>"' +
+    'szPopup_("<div style=\\"font-size:1.15rem;line-height:1.5;font-weight:800\\">以下の内容を、タイムツリーに登録してよろしいでしょうか？😊</div>"' +
     '+"<div style=\\"font-size:.95rem;line-height:1.6;text-align:left;margin-top:14px;white-space:pre-wrap;font-weight:700\\">"+esch(out.join("\\n"))+"</div>"' +
     '+(d.memo?("<div style=\\"font-size:.9rem;text-align:left;margin-top:12px;font-weight:800\\">■ 予約メモ（タイムツリーのメモ欄に入ります）</div>"' +
     '+"<div style=\\"font-size:.85rem;line-height:1.5;text-align:left;margin-top:4px;white-space:pre-wrap;max-height:32vh;overflow:auto;background:rgba(255,255,255,.08);border-radius:8px;padding:8px 10px\\">"+esch(d.memo)+"</div>"):""),' +
@@ -8098,11 +8098,11 @@ function renderNewReservationPage_(base, staff, dev) {
     // ★確かめの中身は「今の選び方で受付係が作った予定リスト」。手元に新しい物が無ければ、その場で聞いてから出す。
     'function nrAskPlan(){szOvShow_(szBusyHtml_("登録する内容を確かめています"),"#2C7A99");' +
     'jsonp({action:"submit",key:KEY,op:"preview_new_titles",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(buildFields())},function(r){' +
-    'if(!r||!r.ok||!r.id){szOvHide_();szPopup_("登録する内容を確かめられませんでした（送れませんでした）。もう一度お試しください。");return;}var n=0;' +
-    '(function pp(){n++;if(n>LIMITS.tries("preview_new_titles",700)){szOvHide_();szPopup_("登録する内容を確かめられませんでした（時間がかかりすぎました）。もう一度お試しください。");return;}' +
+    'if(!r||!r.ok||!r.id){szOvHide_();szPopup_("登録する内容を確かめられませんでした（送れませんでした）。もう一度試してもらえると嬉しいです🙇");return;}var n=0;' +
+    '(function pp(){n++;if(n>LIMITS.tries("preview_new_titles",700)){szOvHide_();szPopup_("登録する内容を確かめられませんでした（時間がかかりすぎました）。もう一度試してもらえると嬉しいです🙇");return;}' +
     'jsonp({action:"status",key:KEY,id:r.id},function(x){if(!x||!x.ok||x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(pp,700);return;}' +
     'var d={};try{d=JSON.parse(x.result||"{}");}catch(e){}szOvHide_();' +
-    'if(x.status!=="done"||!d||!d.ok){szPopup_("登録する内容を確かめられませんでした（"+esch((d&&d.error)||"途中で止まりました")+"）。もう一度お試しください。");return;}' +
+    'if(x.status!=="done"||!d||!d.ok){szPopup_("登録する内容を確かめられませんでした（"+esch((d&&d.error)||"途中で止まりました")+"）。もう一度試してもらえると嬉しいです🙇");return;}' +
     'window.__nrPlanPrev=d;nrConfirm(d);});})();});}' +
     'goEl.addEventListener("click",function(){var d=window.__nrPlanPrev;' +
     'if(d&&d.slots&&!titleStale){nrConfirm(d);return;}nrAskPlan();});' +
@@ -8122,7 +8122,7 @@ function renderNewReservationPage_(base, staff, dev) {
       // ── 画面＝プロセルはどれ？（聞く必要がある時だけ出す・2026-09-22 まるちゃん「画面をいっしょにすんな」） ──
       '<div id="nrStepProcell" style="display:none">' +
         '<div id="nrProcellAsk">' +
-          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選んでください。</div>' +
+          '<div style="background:#7f1d1d;color:#fecaca;padding:12px 14px;border-radius:12px;font-weight:900;line-height:1.6;margin:6px 0">プロセルは どれですか？　下から選択してね😊</div>' +
           '<div class="nrpills">' +
             '<button type="button" class="nrpill" data-procell="顔プロセルPro" style="background:#2563eb">顔プロセルPro</button>' +
             '<button type="button" class="nrpill" data-procell="顔プロセルMD" style="background:#0891b2">顔プロセルMD</button>' +
@@ -8150,7 +8150,7 @@ function renderNewReservationPage_(base, staff, dev) {
       '</div>' +
       // ── 画面＝予約メモの確認 ──
       '<div id="nrprevwrap" style="display:none">' +
-        '<div class="nrsec">以下の予約メモで間違いがないか確認してください。メモは直接編集可能です。</div>' +
+        '<div class="nrsec">以下の予約メモで間違いがないか確認してね😊 メモは直接編集可能です。</div>' +
         // ★直す所の赤い知らせ＋その右端に「お客様情報を確認」（2026-09-22 まるちゃん決定）。
         //   白い枠は色を付けられない普通の文字の箱なので、枠の**すぐ上**に赤で出す。
         '<div id="nrFixRow" class="nrfixrow" style="display:none">' +
@@ -8531,8 +8531,8 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div id="exrvnew"></div>' +
       '<button type="button" class="exgo" id="exrvAddBtn" style="background:#2563eb;margin:8px 0 4px">＋ 別の施術を追加</button>' +
       '<div id="exrvsingle">' +
-        '<div id="exrvstaffwrap"><div class="exsec">施術担当</div><div class="mvng" id="exrvstaffnone" style="display:none">その時間に空いている担当がいません</div><div class="rvbusy" id="exrvstaffbusy" style="display:none">前回と同じ担当はこの時間は空いていません。空いている人から選んでください。</div><div class="expills" id="exrvstaff">' + rvStaffP + '</div></div>' +
-        '<div id="exrvroomdurwrap"><div class="exsec">部屋</div><div class="mvng" id="exrvroomnone" style="display:none">その時間に空いている部屋がありません</div><div class="rvbusy" id="exrvroombusy" style="display:none">前回と同じ部屋はこの時間は空いていません。空いている部屋から選んでください。</div><div class="expills" id="exrvroom">' + rvRoomP + '</div>' +
+        '<div id="exrvstaffwrap"><div class="exsec">施術担当</div><div class="mvng" id="exrvstaffnone" style="display:none">その時間に空いている担当がいません</div><div class="rvbusy" id="exrvstaffbusy" style="display:none">前回と同じ担当はこの時間は空いていません。空いている人から選択してね😊</div><div class="expills" id="exrvstaff">' + rvStaffP + '</div></div>' +
+        '<div id="exrvroomdurwrap"><div class="exsec">部屋</div><div class="mvng" id="exrvroomnone" style="display:none">その時間に空いている部屋がありません</div><div class="rvbusy" id="exrvroombusy" style="display:none">前回と同じ部屋はこの時間は空いていません。空いている部屋から選択してね😊</div><div class="expills" id="exrvroom">' + rvRoomP + '</div>' +
         '<div class="exsec">施術時間（分）</div><div class="expills exdur" id="exrvdur">' + rvDurP + '</div></div>' +
       '</div>' +
       '<div class="exsec" id="exrvmarksh">タイトルの印<span style="font-weight:600;font-size:13px;opacity:.85">（施術から自動で選んでいます）</span></div>' + '<div class="expills" id="exrvmarks"></div>' +
@@ -8551,7 +8551,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div id="exrvB">' +
       '<div class="exsec" id="exrvcnth" style="display:none">回数（修正できます）</div>' +
       '<div id="exrvcntbox"></div>' +
-      '<div class="exsec">TTに登録される予約メモです。間違いがないか確認してください（修正可能）</div><textarea class="rvprevmemo rvmemoedit" id="exrvnowmemo">（作成中…）</textarea>' +
+      '<div class="exsec">TTに登録される予約メモです。間違いがないか確認してね😊 （修正可能）</div><textarea class="rvprevmemo rvmemoedit" id="exrvnowmemo">（作成中…）</textarea>' +
       '<button class="exgo" id="exResvGo">この内容でTimeTreeに登録する</button>' +
       '</div>' +
     '</div>';
@@ -8564,14 +8564,14 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" id="exbackAsk" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="exwho1" id="exaskwho"></div>' +
       '<div id="exaskprev"></div>' +
-      '<div class="exmh" id="exaskq">今回も同じ施術をやりますか？</div>' +
+      '<div class="exmh" id="exaskq">今回も同じ施術をやりますか？😊</div>' +
       '<button type="button" class="exgo" id="exaskyes">はい</button>' +
       '<button type="button" class="exgo" id="exaskno" style="background:#475569;margin-top:8px">いいえ</button>' +
     '</div>';
   var pickItemsSec =
     '<div id="exPickItems" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackPickItems" href="javascript:void(0)">← 戻る</a></div>' +
-      '<div class="exmh">今回やる施術を選んでください</div>' +
+      '<div class="exmh">今回やる施術を選択してね😊</div>' +
       '<div id="expkitems"></div>' +
       '<div id="expknew"></div>' +
       /* ★2026-10-27 まるちゃん「1個追加した後に『追加メニューはこれだけ』『＋メニューから足す』の
@@ -8593,14 +8593,14 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" id="exbackSplit" href="javascript:void(0)">← 戻る</a></div>' +
       '<div class="exmh">今回の施術</div>' +
       '<div id="exspunits"></div>' +
-      '<div class="exmh">担当者・部屋を分けますか？</div>' +
+      '<div class="exmh">担当者・部屋を分けますか？😊</div>' +
       '<button type="button" class="exgo" id="exsplitsame">全部同じ担当＆部屋</button>' +
       '<button type="button" class="exgo" id="exsplitdiv" style="background:#2563eb;margin-top:8px">担当者か部屋を分ける</button>' +
     '</div>';
   var groupSec =
     '<div id="exGroup" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackGroup" href="javascript:void(0)">← 戻る</a></div>' +
-      '<div class="exmh">同じ担当＆部屋にする施術には、同じ番号を選んでください</div>' +
+      '<div class="exmh">同じ担当＆部屋にする施術には、同じ番号を選択してね😊</div>' +
       '<div id="exgrplist"></div>' +
       '<button type="button" class="exgo" id="exgrpGo">これで決定→</button>' +
     '</div>';
@@ -8610,7 +8610,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var staffSelSec =
     '<div id="exStaffSel" style="display:none">' +
       '<div class="ubar"><a class="uhome" id="exbackStaffSel" href="javascript:void(0)">← 戻る</a></div>' +
-      '<div class="exmh">担当を選んでください</div>' +
+      '<div class="exmh">担当を選択してね😊</div>' +
       '<div id="exstflist"></div>' +
       /* ★2026-10-27 まるちゃん「分けたなら、それごとに担当えらばないと」＝枠を分けた時だけ、
          枠ごとに選んでからこのボタンで進む（枠が1つの時は担当を押すとすぐ進むので出さない）。 */
@@ -8621,7 +8621,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" id="exbackDur" href="javascript:void(0)">← 戻る</a></div>' +
       /* ★2026-10-04 まるちゃん「前回の時間数：〇分　と　参考で　選んでくださいの　みぎにだす」。
          ＝最初から選んでおくのではなく、**前回が何分だったかを参考として見出しの右に出す**。選ぶのは人のまま。 */
-      '<div class="exmhrow"><div class="exmh">施術時間を選んでください</div>' +
+      '<div class="exmhrow"><div class="exmh">施術時間を選択してね😊</div>' +
         '<div class="exmhsub" id="exdurprev"></div></div>' +
       '<div id="exdurlist"></div>' +
       '<button type="button" class="exgo" id="exdurGo">日付をえらぶ→</button>' +
@@ -8667,7 +8667,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function jsonp(params,onR){var cb="__ck"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
     // ★2026-08-24：あきらめるまでを 24秒 → 210秒（0.6秒×350回）。事務所パソコンが混んでいる時に
     //   出来ているのに「時間切れ」と出ていた。
-    'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>350){document.getElementById("expickst").textContent="時間切れです。もう一度お試しください。";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},600);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
+    'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>350){document.getElementById("expickst").textContent="時間切れです。もう一度試してもらえると嬉しいです🙇";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},600);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
     'function loadPicks(){isNewCust=false;document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="「"+disp()+"」の予約";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="予約を検索しています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp()})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
     'function renderPicks(list){var el=document.getElementById("expicklist");document.getElementById("expickst").textContent=list.length?"":(isNewCust?"番号なしの新規のお客様の予約が見つかりません。":"この番号の予約が見つかりません。");document.getElementById("expickwho").textContent=isNewCust?"新規のお客様（番号なし）":("「"+disp()+"」"+((list.length&&list[0].name)?list[0].name+"様":"の予約"));var h="";var dayCnt={};for(var q=0;q<list.length;q++){if(!list[q].is_past){dayCnt[list[q].date]=(dayCnt[list[q].date]||0)+1;}}for(var i=0;i<list.length;i++){var r=list[i];var pm=(r.parts||[]).join("・")||"—";var past=r.is_past?"（過去）":"";var rk=roomVal(r.room);var rc=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var nameLine=isNewCust?("<span class=\\"pname\\" style=\\"font-weight:900\\">お名前："+esc(r.name||"?")+"</span>"):"";var btn="<button class=\\"expickrow\\" data-i=\\""+i+"\\">"+nameLine+"<span class=\\"pd\\">"+past+r.date+" "+r.start_hm+" "+(r.dur_min||"")+"分</span><span class=\\"pm\\">担当 "+esc(r.staff_emoji||"?")+"　<span class=\\"proom\\" style=\\"background:"+rc+"\\">"+esc(rn)+"</span></span><span class=\\"ppart\\">施術部位："+esc(pm)+"</span></button>";h+=btn;}el.innerHTML=h;window.__PICKS=list;MSEL=[];MULTI_=null;MMODE=false;MOK=[];var anyM=false;for(var z=0;z<list.length;z++){MOK[z]=(!list[z].is_past&&dayCnt[list[z].date]>=2);if(MOK[z])anyM=true;}document.getElementById("expickmode").style.display=anyM?"":"none";MMODE=anyM;exMultiPre_();exMultiDraw();var rows=el.querySelectorAll(".expickrow");for(var j=0;j<rows.length;j++){(function(k){rows[k].addEventListener("click",function(){if(MMODE&&MOK[k]){exMultiToggle(k);return;}MULTI_=null;chosen=window.__PICKS[k];showMenu();});})(j);}}' +
     /* ★2026-09-30 まるちゃん決定：同じ日の予約をまとめて選ぶ（別の日の予約を選んだら、前に選んだ分は外す）。
@@ -8682,7 +8682,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exSm_(r){var p=String((r&&r.start_hm)||"").split(":");if(p.length===2&&/^[0-9]+$/.test(p[0])&&/^[0-9]+$/.test(p[1])){return parseInt(p[0],10)*60+parseInt(p[1],10);}return (r&&r.start_min!=null)?Number(r.start_min):0;}' +
     'var isNewCust=false;' +
     'function loadNewPicks(){isNewCust=true;document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="新規のお客様（番号なし）";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="新規のお客様の予約を検索しています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"new_customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
-    'function goDate(){hideSteps();document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="日付を選んでください";calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
+    'function goDate(){hideSteps();document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="日付を選択してね😊";calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
     'function disp(){return (prefix||"")+digits;}' +
     'function upd(){document.getElementById("exdisp").value=disp();}' +
     'var seg=document.getElementById("exseg"),sb=seg.querySelectorAll("button"),thumb=seg.querySelector(".thumb");' +
@@ -8710,10 +8710,10 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var _tpm=document.querySelectorAll(".extpm");for(var _ti=0;_ti<_tpm.length;_ti++){_tpm[_ti].addEventListener("click",function(){var d=parseInt(this.getAttribute("data-d"),10);var t=(tdig.length===4)?tdig:(initTdig_()||"1000");var m=parseInt(t.slice(0,2),10)*60+parseInt(t.slice(2),10)+d;if(m<0)m=0;if(m>23*60+55)m=23*60+55;tdig=("0"+Math.floor(m/60)).slice(-2)+("0"+(m%60)).slice(-2);tupd();});}' +
     'document.getElementById("extpad").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var k=b.getAttribute("data-k");if(k==="clr"){tdig="";}else if(k==="del"){tdig=tdig.slice(0,-1);}else if(/^[0-9]$/.test(b.textContent)&&tdig.length<4){tdig+=b.textContent;}tupd();});' +
     'document.getElementById("exbackTime").addEventListener("click",function(){document.getElementById("exTime").style.display="none";document.getElementById(chgtype==="t"?"exMenu":"exDate").style.display="";window.scrollTo(0,0);});' +
-    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){szPopup_("時刻を4桁で入力してね😊（例 1230）");return;}if(ISCHANGE){if(MULTI_){startMultiMove();}else{startPickFlow();}}else{startExistingReserve();}});' +
+    'document.getElementById("exToDone").addEventListener("click",function(){if(tdig.length<4){szPopup_("時刻を4桁で入力してね😊 （例 1230）");return;}if(ISCHANGE){if(MULTI_){startMultiMove();}else{startPickFlow();}}else{startExistingReserve();}});' +
     // ── 既存の予約（新規登録＝前回コピー）：材料を取り込み→内容を選んで→登録 ──
     'var rvctx=null,rvitems=[],rvsel={staff:"",room:"",dur:""};' +
-    'function startExistingReserve(){var nd=picked;var ymd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var tm=tdig.slice(0,2)+":"+tdig.slice(2);exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_build_ctx",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp(),date:ymd,time:tm})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollBuildCtx(r.id,ymd,tm);});}' +
+    'function startExistingReserve(){var nd=picked;var ymd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var tm=tdig.slice(0,2)+":"+tdig.slice(2);exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_build_ctx",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp(),date:ymd,time:tm})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollBuildCtx(r.id,ymd,tm);});}' +
     'function pollBuildCtx(id,ymd,tm){var nm="exctx_"+String(id).toLowerCase().replace(/[^a-z0-9_]/g,"")+".json",n=0,fin=false;function got(ctx){if(fin)return;fin=true;exOvHide_();if(!ctx||!ctx.found){szPopup_("「"+disp()+"」の前回の予約が見つかりません。");return;}rvctx=ctx;rvctx._ymd=ymd;rvctx._tm=tm;showResvEdit();}function fail(m){if(fin)return;fin=true;exOvHide_();szPopup_(m);}function tryData(){if(fin)return;n++;jsonp({action:"data",name:nm},function(ctx){if(fin)return;if(ctx&&ctx.ok){got(ctx);return;}if(n%3===0){jsonp({action:"status",key:KEY,id:id},function(r){if(fin)return;if(!r||!r.ok){setTimeout(tryData,700);return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""||r.status==="done"){setTimeout(tryData,r.status==="done"?0:700);return;}fail(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");});return;}setTimeout(tryData,700);});}tryData();}' +
     'var rvMarkOv={},rvEyeOv=null,rvDochi=false,rvNewItems=[],rvTitleOv=null,rvMemoOv=null;' +
     'var _rvcat="",_rvsub="";' +
@@ -8788,7 +8788,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     /* 材料（前回の予約・施術・施術時間の目安）を、日付を決める前に取る。 */
     'function exWaitCtx(cb){if(!PREF||PREF.err)exPrefetch("");var me=PREF;' +
       'if(me.err){var m=me.err;PREF=null;szPopup_(m);return;}' +
-      'if(!me.ctx){exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
+      'if(!me.ctx){exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");' +
         'me.wait=function(){exOvHide_();exWaitCtx(cb);};return;}' +
       'if(!me.ctx.found){szPopup_("「"+disp()+"」の前回の予約が見つかりません。");return;}' +
       'rvctx=JSON.parse(JSON.stringify(me.ctx));' +
@@ -8919,11 +8919,11 @@ function renderExistingPage_(base, staff, dev, mode) {
          3つ〜 … 今回も「①A　②B　③C」を、三つともやりますか？（四つとも／五つとも…最大9つ） */
       'var MRU_=["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩"];' +
       'var KAZ_=["","","両方","三つとも","四つとも","五つとも","六つとも","七つとも","八つとも","九つとも","十とも"];' +
-      'var _q="今回やる施術を選んでください";' +
-      'if(ns.length===1){_q="今回も「"+ns[0]+"」をやりますか？";}' +
+      'var _q="今回やる施術を選択してね😊";' +
+      'if(ns.length===1){_q="今回も「"+ns[0]+"」をやりますか？😊";}' +
       'else if(ns.length>=2){var _t=[];for(var _i=0;_i<ns.length;_i++){_t.push((MRU_[_i]||("("+(_i+1)+")"))+ns[_i]);}' +
       'var _k=KAZ_[ns.length]||(ns.length+"つとも");' +
-      '_q="今回も「"+_t.join("　")+"」を、"+_k+"やりますか？";}' +
+      '_q="今回も「"+_t.join("　")+"」を、"+_k+"やりますか？😊";}' +
       'exEl("exaskq").textContent=_q;' +
       'exEl("exaskyes").style.display=ns.length?"":"none";}' +
     /* いいえ＝今回やる施術を選び直す。
@@ -8933,7 +8933,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'for(var i=0;i<rvitems.length;i++){if(EXHIDE[i]){hid++;continue;}h+="<button type=\\"button\\" class=\\"exp pick"+(rvitems[i].do?" sel":"")+"\\" data-expk=\\""+i+"\\" style=\\"display:block;width:100%;text-align:left;margin:6px 0;padding:14px 12px;font-size:19px\\">"+(rvitems[i].do?"✓ ":"　")+esc(exAskName(rvitems[i].name))+"</button>";}' +
       /* ★2026-10-27 まるちゃん「ゼロなんだから（これで決定は）だめだろ」＝選べる物も足した物も無い時は、
          決定ボタンを出さず「＋ メニューから追加」だけにする。1つでも選ぶ／足すと決定ボタンが出る。 */
-      'exEl("expkitems").innerHTML=h||(hid?"<div class=\\"exnone\\">下の「＋ メニューから追加」から、今回やる施術を選んでください</div>":"<div class=\\"exnone\\">前回の施術がありません</div>");' +
+      'exEl("expkitems").innerHTML=h||(hid?"<div class=\\"exnone\\">下の「＋ メニューから追加」から、今回やる施術を選択してね😊</div>":"<div class=\\"exnone\\">前回の施術がありません</div>");' +
       'exEl("expkGo").style.display=exChosen().length?"":"none";' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-expknew=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("expknew").innerHTML=n;' +
@@ -8941,12 +8941,12 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exEl("expkGo").textContent=rvNewItems.length?"追加メニューはこれだけ":"これで決定→";}' +
     /* 2枚目＝〇〇以外にやるメニューはありますか？ */
     'function exShowAdd(){exOpen("exAdd");var ns=exChosen();' +
-      'exEl("exaddq").textContent="「"+ns.map(exAskName).join("＋")+"」以外にやるメニューはありますか？";' +
+      'exEl("exaddq").textContent="「"+ns.map(exAskName).join("＋")+"」以外にやるメニューはありますか？😊";' +
       'var n="";for(var k=0;k<rvNewItems.length;k++){n+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(rvNewItems[k])+"（今回から）</div><button type=\\"button\\" class=\\"rvb\\" data-exaddel=\\""+k+"\\" style=\\"background:#fde2e4;color:#9b1c31;border-color:#f3b4bd\\">やめる</button></div>";}' +
       'exEl("exaddlist").innerHTML=n;}' +
     /* 施術が決まったあと＝1つなら施術時間へ、2つ以上なら分けるか聞く */
     'function exAfterItems(){var ns=exChosen();var us=exUnits();' +
-      'if(!ns.length){szPopup_("今回やる施術を1つ以上選んでください。");return;}' +
+      'if(!ns.length){szPopup_("今回やる施術を1つ以上選択してね😊");return;}' +
       'if(us.length<2){exSetGroups([ns]);exShowStaff();return;}' +
       'exOpen("exSplit");' +
       'var h="";for(var i=0;i<us.length;i++)h+="<div class=\\"rvcard\\"><div class=\\"rvname\\">◉ "+esc(exAskName(us[i]))+"</div></div>";' +
@@ -9048,7 +9048,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'var sh="";for(var q=0;q<SORD.length;q++){var sn=SORD[q];var ng=fr&&fr.indexOf(sn)<0;' +
         'sh+="<button type=\\"button\\" class=\\"exp"+((sn===cf.staff)?" sel":"")+"\\" data-spks=\\""+sn+"\\""+(ng?" data-spkng=\\"1\\"":"")+" style=\\"background:"+SC[sn]+(ng?";opacity:0.3;cursor:default":"")+"\\">"+SEMO_[sn]+" "+SNM_[sn]+"</button>";}' +
       'var nt="";' +
-      'if(fr&&fr.indexOf(cf.staff)<0)nt="<div class=\\"sgtokunote\\">"+esc(SEMO_[cf.staff]||"")+esc(SNM_[cf.staff]||"")+"さんはこの時間に予約があります。空いている担当を選ぶか、← 戻るで時間を選び直してください。</div>";' +
+      'if(fr&&fr.indexOf(cf.staff)<0)nt="<div class=\\"sgtokunote\\">"+esc(SEMO_[cf.staff]||"")+esc(SNM_[cf.staff]||"")+"さんはこの時間に予約があります。空いている担当を選ぶか、← 戻るで時間を選択し直してね😊</div>";' +
       'else if(fr)nt="<div class=\\"exmhsub\\" style=\\"white-space:normal\\">薄い担当はこの時間に予約があるので選べません</div>";' +
       'exEl("exspkstaff").innerHTML=sh;exEl("exspkng").innerHTML=nt;}' +
     /* その枠の時間（前の枠の続き〜自分の長さ）に空いている担当の番号。分からない時・特例の時は null＝絞らない。 */
@@ -9116,7 +9116,7 @@ function renderExistingPage_(base, staff, dev, mode) {
        選び直し画面の下の2つのボタンが『ない／ある』の答えそのもの。だから押したら
        「〇〇以外にやるメニューはありますか？」を聞き直さずに先へ進む。戻る時はこの画面へ。 */
     'function exBackToItems(){if(EXADDFROM==="exPickItems")exShowPick();else exShowAdd();}' +
-    'exEl("expkGo").onclick=function(){if(!exChosen().length){szPopup_("今回やる施術を1つ以上選んでください。");return;}EXADDFROM="exPickItems";exAfterItems();};' +
+    'exEl("expkGo").onclick=function(){if(!exChosen().length){szPopup_("今回やる施術を1つ以上選択してね😊");return;}EXADDFROM="exPickItems";exAfterItems();};' +
     'exEl("exbackAdd").onclick=function(){if(EXADDFROM==="exPickItems")exShowPick();else exShowAsk();};' +
     'exEl("exaddlist").addEventListener("click",function(e){var b=e.target.closest("[data-exaddel]");if(!b)return;' +
       'rvNewItems.splice(parseInt(b.getAttribute("data-exaddel"),10),1);exShowAdd();});' +
@@ -9142,7 +9142,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'exEl("exspkstaff").addEventListener("click",function(e){var b=e.target.closest("[data-spks]");if(!b||b.getAttribute("data-spkng"))return;' +
       'var g=EXFLOW.groups;rvSlotCfg_(g[EXSLOTI].key).staff=b.getAttribute("data-spks");exDrawSlotPick();});' +
     'exEl("exspkGo").onclick=function(){var fr=exSlotFree(EXSLOTI);var cs=rvSlotCfg_(EXFLOW.groups[EXSLOTI].key).staff;' +
-      'if(fr&&fr.indexOf(cs)<0){szPopup_(SEMO_[cs]+SNM_[cs]+"さんはこの時間に予約があります。\\n空いている担当を選ぶか、← 戻るで時間を選び直してください。");return;}' +
+      'if(fr&&fr.indexOf(cs)<0){szPopup_(SEMO_[cs]+SNM_[cs]+"さんはこの時間に予約があります。\\n空いている担当を選ぶか、← 戻るで時間を選択し直してね😊");return;}' +
       'exShowSlotPick(EXSLOTI+1);};' +
     'exEl("exgrplist").addEventListener("click",function(e){var b=e.target.closest("[data-exgi]");if(!b)return;' +
       'EXGRP[parseInt(b.getAttribute("data-exgi"),10)]=parseInt(b.getAttribute("data-exgn"),10);exDrawGroup();});' +
@@ -9158,7 +9158,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'exApplyStaff(b.getAttribute("data-exstf"));exShowDur();});' +
     /* 枠を分けた時の「これで決定→」＝枠ごとの担当はそのまま残し、1枠目の担当を空き状況で押せる担当にする。 */
     'exEl("exstfGo").onclick=function(){var g=EXFLOW.groups;' +
-      'for(var i=0;i<g.length;i++){if(!SEMO_[rvSlotCfg_(g[i].key).staff]||rvSlotCfg_(g[i].key).staff==="4"){szPopup_((i+1)+"枠目の担当を選んでください。");return;}g[i].dur=g[i].baseDur;}' +
+      'for(var i=0;i<g.length;i++){if(!SEMO_[rvSlotCfg_(g[i].key).staff]||rvSlotCfg_(g[i].key).staff==="4"){szPopup_((i+1)+"枠目の担当を選択してね😊");return;}g[i].dur=g[i].baseDur;}' +
       'EXSTAFF=rvSlotCfg_(g[0].key).staff;exShowDur();};' +
     'exEl("exbackStaffSel").onclick=function(){var ns=exUnits();if(ns.length<2){exBackToItems();return;}' +
       'if(EXFLOW&&EXFLOW.groups.length>=2&&ns.length>=3){exShowGroup();return;}exAfterItems();};' +
@@ -9193,7 +9193,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var EXSTEP="";' +
     'exEl("exToConfirm").onclick=function(){exShowConfirm();};' +
     /* ★新しい流れ（ここまで）────────────────────────────────────── */
-    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx){exGoBusy_(false);return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[])};exPayNow("","",true);jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exGoBusy_(false);return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度お試しください）";exGoBusy_(false);return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok){exGoBusy_(false);return;}if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done"){exGoBusy_(false);return;}var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exGrowMemo();setTimeout(exGrowMemo,0);setTimeout(exGrowMemo,300);exPayRemovedNote(el2,(d&&d.memo)||"");exPaidNote(el2,(d&&d.paid_note)||"");exPayNow((rvMemoOv!=null&&el2)?el2.value:((d&&d.memo)||""),(d&&d.paid_note)||"");exGoBusy_(false);});})();});}' +
+    'function rvUpdateNowMemoDo(){var el=document.getElementById("exrvnowmemo");if(!el||!rvctx){exGoBusy_(false);return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var fields={number:disp(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),date:rvctx._ymd,time:rvctx._tm,booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[])};exPayNow("","",true);jsonp({action:"submit",key:KEY,op:"existing_apply_memo",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exGoBusy_(false);return;}var tries=0;(function pll(){tries++;if(tries>60){var el3=document.getElementById("exrvnowmemo");if(el3&&rvMemoOv==null)el3.value="（時間がかかっています。もう一度試してもらえると嬉しいです🙇）";exGoBusy_(false);return;}jsonp({action:"status",key:KEY,id:r.id},function(st){if(!st||!st.ok){exGoBusy_(false);return;}if(st.status==="pending"||st.status==="running"||st.status==="queued"||st.status===""){setTimeout(pll,500);return;}if(st.status!=="done"){exGoBusy_(false);return;}var d={};try{d=JSON.parse(st.result||"{}");}catch(e){}var el2=document.getElementById("exrvnowmemo");if(el2&&rvMemoOv==null)el2.value=(d&&d.ok)?(d.memo||""):"（メモを作れませんでした）";exGrowMemo();setTimeout(exGrowMemo,0);setTimeout(exGrowMemo,300);exPayRemovedNote(el2,(d&&d.memo)||"");exPaidNote(el2,(d&&d.paid_note)||"");exPayNow((rvMemoOv!=null&&el2)?el2.value:((d&&d.memo)||""),(d&&d.paid_note)||"");exGoBusy_(false);});})();});}' +
     // ★複数枠：印が2つ以上なら印ごとに1枠。枠ごとに部屋・担当・分を選び、時間は続けて自動で並べる。
     'var rvSlotCfg={},rvLastSlotCount=0;' +
     'function rvSlotCfg_(mk){if(!rvSlotCfg[mk])rvSlotCfg[mk]={room:rvsel.room,staff:rvsel.staff,dur:rvsel.dur};return rvSlotCfg[mk];}' +
@@ -9225,19 +9225,19 @@ function renderExistingPage_(base, staff, dev, mode) {
     'document.getElementById("exrvdur").addEventListener("click",function(e){var b=e.target.closest(".exp");if(!b)return;rvsel.dur=b.getAttribute("data-ev");rvSelPill("rvdur",rvsel.dur);rvLoadAvail();});' +
     'document.getElementById("exbackResv").addEventListener("click",function(){if(EXFLOW&&EXSTEP==="confirm"){exShowTitle();return;}if(EXSEL){SGX.toTime();return;}hideSteps();document.getElementById("exTime").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exResvGo").addEventListener("click",function(){if(exSlotKeys().length>=2){doRegisterMulti();}else{doRegister();}});' +
-    'function doRegister(){if(rvAvail&&(!rvStaffFree_(rvsel.staff)||(!EXSEL&&!rvRoomFree_(rvsel.room)))){szPopup_("その時間に空いている担当・部屋を選んでください。");return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var doing=rvDoingTexts();var roomKey=(rvsel.room==="STAR/福/🇫🇷")?"STAR":rvsel.room;var fields={number:disp(),date:rvctx._ymd,time:rvctx._tm,dur:parseInt(rvsel.dur,10)||30,room_key:roomKey,prev_title:rvctx.prev_title||"",staff_emoji:SEMO_[rvsel.staff]||"",doing_texts:doing,suffix:rvSuffix(),marks:rvEffMarks(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[]),title_override:(rvTitleOv!=null?rvTitleOv:""),memo_override:(rvMemoOv!=null?rvMemoOv:"")};exOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_create",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollRegister(r.id,roomKey);});}' +
-    'function pollRegister(id,roomKey){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollRegister(id,roomKey);},500);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}var _al=ttAlias_(roomKey),_tt=_al?("https://timetreeapp.com/calendars/"+_al+"/events/"+(d.event_id||"")):"";exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:32px;font-weight:900;line-height:1.5;margin-bottom:24px;\\">予約を登録しました</div><button type=\\"button\\" id=\\"rvBack\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>"+(_tt?"<button type=\\"button\\" id=\\"rvTt\\" style=\\"display:block;margin:14px auto 0;font:inherit;font-size:1.05rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer;\\">タイムツリーを確認</button>":""),"#16a34a");var bb=document.getElementById("rvBack");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}var tb=document.getElementById("rvTt");if(tb){tb.addEventListener("click",function(){window.open(_tt,"_blank");});}});}' +
-    'function doRegisterMulti(){var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var effM=exSlotKeys();var slots=[];for(var m=0;m<effM.length;m++){var mk=effM[m];var cf=rvSlotCfg_(mk);var rk=(cf.room==="STAR/福/🇫🇷")?"STAR":cf.room;slots.push({mark:exSlotMark(mk),room_key:rk,staff_emoji:(SEMO_[cf.staff]||""),dur:parseInt(cf.dur,10)||30});}rvLastSlotCount=slots.length;var fields={number:disp(),date:rvctx._ymd,time:rvctx._tm,prev_title:rvctx.prev_title||"",staff_emoji:SEMO_[rvsel.staff]||"",suffix:rvSuffix(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[]),memo_override:(rvMemoOv!=null?rvMemoOv:""),slots:slots};exOvShow_(szBusyHtml_(slots.length+"枠の予約を登録中です"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_create_multi",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollRegisterMulti(r.id);});}' +
-    'function pollRegisterMulti(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollRegisterMulti(id);},500);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}var cnt=(d.count||rvLastSlotCount);exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:32px;font-weight:900;line-height:1.5;margin-bottom:24px;\\">"+cnt+"枠の予約を登録しました</div><button type=\\"button\\" id=\\"rvBack\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>","#16a34a");var bb=document.getElementById("rvBack");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}});}' +
+    'function doRegister(){if(rvAvail&&(!rvStaffFree_(rvsel.staff)||(!EXSEL&&!rvRoomFree_(rvsel.room)))){szPopup_("その時間に空いている担当・部屋を選択してね😊");return;}var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var doing=rvDoingTexts();var roomKey=(rvsel.room==="STAR/福/🇫🇷")?"STAR":rvsel.room;var fields={number:disp(),date:rvctx._ymd,time:rvctx._tm,dur:parseInt(rvsel.dur,10)||30,room_key:roomKey,prev_title:rvctx.prev_title||"",staff_emoji:SEMO_[rvsel.staff]||"",doing_texts:doing,suffix:rvSuffix(),marks:rvEffMarks(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[]),title_override:(rvTitleOv!=null?rvTitleOv:""),memo_override:(rvMemoOv!=null?rvMemoOv:"")};exOvShow_(szBusyHtml_("予約を登録中です"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_create",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollRegister(r.id,roomKey);});}' +
+    'function pollRegister(id,roomKey){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollRegister(id,roomKey);},500);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}var _al=ttAlias_(roomKey),_tt=_al?("https://timetreeapp.com/calendars/"+_al+"/events/"+(d.event_id||"")):"";exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:32px;font-weight:900;line-height:1.5;margin-bottom:24px;\\">予約を登録しました</div><button type=\\"button\\" id=\\"rvBack\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>"+(_tt?"<button type=\\"button\\" id=\\"rvTt\\" style=\\"display:block;margin:14px auto 0;font:inherit;font-size:1.05rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer;\\">タイムツリーを確認</button>":""),"#16a34a");var bb=document.getElementById("rvBack");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}var tb=document.getElementById("rvTt");if(tb){tb.addEventListener("click",function(){window.open(_tt,"_blank");});}});}' +
+    'function doRegisterMulti(){var decisions=[];for(var i=0;i<rvitems.length;i++){var it=rvitems[i];decisions.push({line_no:it.line_no,do:it.do,count:it.count,finish:it.finish});}var effM=exSlotKeys();var slots=[];for(var m=0;m<effM.length;m++){var mk=effM[m];var cf=rvSlotCfg_(mk);var rk=(cf.room==="STAR/福/🇫🇷")?"STAR":cf.room;slots.push({mark:exSlotMark(mk),room_key:rk,staff_emoji:(SEMO_[cf.staff]||""),dur:parseInt(cf.dur,10)||30});}rvLastSlotCount=slots.length;var fields={number:disp(),date:rvctx._ymd,time:rvctx._tm,prev_title:rvctx.prev_title||"",staff_emoji:SEMO_[rvsel.staff]||"",suffix:rvSuffix(),new_memo:rvctx.new_memo||"",decisions:decisions,new_items:rvNewItems.slice(),booking_services:rvBookingTexts(),paid:exPaid(),pay_parts:((rvctx&&rvctx.pay_parts)||[]),memo_override:(rvMemoOv!=null?rvMemoOv:""),slots:slots};exOvShow_(szBusyHtml_(slots.length+"枠の予約を登録中です"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_create_multi",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollRegisterMulti(r.id);});}' +
+    'function pollRegisterMulti(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollRegisterMulti(id);},500);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}var cnt=(d.count||rvLastSlotCount);exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:32px;font-weight:900;line-height:1.5;margin-bottom:24px;\\">"+cnt+"枠の予約を登録しました</div><button type=\\"button\\" id=\\"rvBack\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>","#16a34a");var bb=document.getElementById("rvBack");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}});}' +
     // 日付・時刻を移す前に、移し先でこの予約の担当・部屋が別の予約と重ならないか確認する（自分自身は番号で除く）。
     // 日付・時刻を移す時の流れ：移し先の空きを調べる→担当を選ぶ→部屋を選ぶ→書き込む。
     'var pickStaff="",pickRoom="",availData=null,newYmd="",newSm=0;' +
     'var SNM_={"1":"トマト","2":"みかん","3":"オリーブ","4":"マンゴー"};' +
     'var SEMO_={"1":"🍅","2":"🍊","3":"🫒","4":"🥭"};' +
     'var RMAP_={"FREEDOM":{cal:"73208496",label:1},"HAPPY":{cal:"59950855",label:6},"LUCKY":{cal:"59950871",label:9},"STAR/福/🇫🇷":{cal:"86075789",label:10}};' +
-    'function startPickFlow(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;newYmd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);newSm=hh*60+mm;pickStaff="";pickRoom="";availData=null;var dur=(chosen.dur_min||30);exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">空きを確認しています</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">その時間に空いている担当・部屋を調べています。しばらくお待ちください。</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:newYmd,start_min:newSm,dur:dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pickFlowPoll(r.id);});}' +
-    'function pickFlowPoll(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pickFlowPoll(id);},600);return;}if(r.status!=="done"){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}availData={free_staff:(d.free_staff||[]).map(String),free_rooms:(d.free_rooms||[]).map(String)};exOvHide_();showStaffPick();});}' +
-    'function showStaffPick(){hideSteps();document.getElementById("exStaffPick").style.display="";var cur=staffNum(chosen.staff_emoji||"");var fs=(availData&&availData.free_staff)||[];if(fs.length===0){exNoSpace_("exspwho","exsplist","担当");return;}if(fs.length===1){exOnlyOne_("担当",fs[0],cur);return;}document.getElementById("exspwho").innerHTML="移す先："+exMoveLbl_()+"<br>現在の担当："+(SEMO_[cur]||"")+" "+(SNM_[cur]||"?")+"<div class=\\"exq\\">担当を変更しますか？</div>";var curBusy=(cur&&fs.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（<span class=\\"expkemo\\">"+(SEMO_[cur]||"")+"</span>"+(SNM_[cur]||"?")+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間「"+(SNM_[cur]||"")+"」は空いていないので、下の空いている担当から選んでください。</div>";}var order=["2","3","1","4"];for(var i=0;i<order.length;i++){var n=order[i];if(n===cur)continue;if(fs.indexOf(n)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+n+"\\"><span class=\\"expkemo\\">"+SEMO_[n]+"</span>"+SNM_[n]+"</button>";}document.getElementById("exsplist").innerHTML=h;window.scrollTo(0,0);}' +
+    'function startPickFlow(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;newYmd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);newSm=hh*60+mm;pickStaff="";pickRoom="";availData=null;var dur=(chosen.dur_min||30);exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">空きを確認しています</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">その時間に空いている担当・部屋を調べています。少し待っててくださいね🥺</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:newYmd,start_min:newSm,dur:dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pickFlowPoll(r.id);});}' +
+    'function pickFlowPoll(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pickFlowPoll(id);},600);return;}if(r.status!=="done"){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}availData={free_staff:(d.free_staff||[]).map(String),free_rooms:(d.free_rooms||[]).map(String)};exOvHide_();showStaffPick();});}' +
+    'function showStaffPick(){hideSteps();document.getElementById("exStaffPick").style.display="";var cur=staffNum(chosen.staff_emoji||"");var fs=(availData&&availData.free_staff)||[];if(fs.length===0){exNoSpace_("exspwho","exsplist","担当");return;}if(fs.length===1){exOnlyOne_("担当",fs[0],cur);return;}document.getElementById("exspwho").innerHTML="移す先："+exMoveLbl_()+"<br>現在の担当："+(SEMO_[cur]||"")+" "+(SNM_[cur]||"?")+"<div class=\\"exq\\">担当を変更しますか？😊</div>";var curBusy=(cur&&fs.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（<span class=\\"expkemo\\">"+(SEMO_[cur]||"")+"</span>"+(SNM_[cur]||"?")+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間「"+(SNM_[cur]||"")+"」は空いていないので、下の空いている担当から選択してね😊</div>";}var order=["2","3","1","4"];for(var i=0;i<order.length;i++){var n=order[i];if(n===cur)continue;if(fs.indexOf(n)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+n+"\\"><span class=\\"expkemo\\">"+SEMO_[n]+"</span>"+SNM_[n]+"</button>";}document.getElementById("exsplist").innerHTML=h;window.scrollTo(0,0);}' +
     /* ★2026-10-02 まるちゃん「空きがないのに変更しますかのボタンは変」＝空きが無い時は質問を出さず、
        「この時間には移せません」と言い切って「時間を選び直す」だけを出す（1件ずつ・まとめて の両方）。 */
     'function exNoSpace_(whoId,listId,what){var nm=(what==="担当")?"担当が全員うまっている":"部屋が全部うまっている";document.getElementById(whoId).innerHTML="移す先："+exMoveLbl_();document.getElementById(listId).innerHTML="<div class=\\"exnone\\">この時間は"+nm+"ので、移せません</div><button type=\\"button\\" class=\\"exgo\\" data-retime=\\"1\\">別の時間を選び直す</button>";var b=document.getElementById(listId).querySelector("[data-retime]");if(b){b.addEventListener("click",function(){hideSteps();document.getElementById("exTime").style.display="";window.scrollTo(0,0);});}window.scrollTo(0,0);}' +
@@ -9246,7 +9246,7 @@ function renderExistingPage_(base, staff, dev, mode) {
        空いている1つが今と違う時は「担当を🫒オリーブさんにする」（部屋も同じ形）。 */
     'function exOnlyOne_(what,v,cur){var isS=(what==="担当");var nm=isS?((SEMO_[v]||"")+(SNM_[v]||"?")+"さん"):roomBadge_(v,true);var who=isS?"exspwho":"exrpwho",lst=isS?"exsplist":"exrplist";document.getElementById(who).innerHTML="移す先："+exMoveLbl_()+"<div class=\\"exonly\\">この時間帯の"+(isS?"空き":"空き部屋")+"は "+nm+" だけです</div>";var keep=(v===cur);document.getElementById(lst).innerHTML="<button class=\\"expk one"+(keep?" keep":"")+"\\" data-v=\\""+(keep?"__keep":v)+"\\">"+what+(keep?"は":"を")+nm+(keep?"のまま":"にする")+"</button>";window.scrollTo(0,0);}' +
     'function roomBadge_(rk,small){var c=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var nm=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;return "<span class=\\""+(small?"expkroomS":"expkroom")+"\\" style=\\"background:"+c+"\\">"+nm+"</span>";}' +
-    'function showRoomPick(){hideSteps();document.getElementById("exRoomPick").style.display="";var cur=roomVal(chosen.room||"");var fr=(availData&&availData.free_rooms)||[];if(fr.length===0){exNoSpace_("exrpwho","exrplist","部屋");return;}if(fr.length===1){exOnlyOne_("部屋",fr[0],cur);return;}document.getElementById("exrpwho").innerHTML="移す先："+exMoveLbl_()+"<br>現在の部屋："+roomBadge_(cur,true)+"<div class=\\"exq\\">部屋を変更しますか？</div>";var curBusy=(cur&&fr.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（"+roomBadge_(cur,true)+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間この部屋は空いていないので、下の空いている部屋から選んでください。</div>";}var order=["FREEDOM","HAPPY","LUCKY","STAR/福/🇫🇷"];for(var i=0;i<order.length;i++){var rm=order[i];if(rm===cur)continue;if(fr.indexOf(rm)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+rm+"\\">"+roomBadge_(rm)+"</button>";}document.getElementById("exrplist").innerHTML=h;window.scrollTo(0,0);}' +
+    'function showRoomPick(){hideSteps();document.getElementById("exRoomPick").style.display="";var cur=roomVal(chosen.room||"");var fr=(availData&&availData.free_rooms)||[];if(fr.length===0){exNoSpace_("exrpwho","exrplist","部屋");return;}if(fr.length===1){exOnlyOne_("部屋",fr[0],cur);return;}document.getElementById("exrpwho").innerHTML="移す先："+exMoveLbl_()+"<br>現在の部屋："+roomBadge_(cur,true)+"<div class=\\"exq\\">部屋を変更しますか？😊</div>";var curBusy=(cur&&fr.indexOf(cur)<0);var h="<button class=\\"expk keep"+(curBusy?" dis":"")+"\\" data-v=\\"__keep\\">変更なし（"+roomBadge_(cur,true)+"）</button>";if(curBusy){h+="<div class=\\"expknote\\">その時間この部屋は空いていないので、下の空いている部屋から選択してね😊</div>";}var order=["FREEDOM","HAPPY","LUCKY","STAR/福/🇫🇷"];for(var i=0;i<order.length;i++){var rm=order[i];if(rm===cur)continue;if(fr.indexOf(rm)<0)continue;h+="<button class=\\"expk\\" data-v=\\""+rm+"\\">"+roomBadge_(rm)+"</button>";}document.getElementById("exrplist").innerHTML=h;window.scrollTo(0,0);}' +
     'document.getElementById("exsplist").addEventListener("click",function(e){var b=e.target.closest(".expk");if(!b||b.className.indexOf("dis")>=0)return;var v=b.getAttribute("data-v");pickStaff=(v==="__keep")?"":v;showRoomPick();});' +
     'document.getElementById("exrplist").addEventListener("click",function(e){var b=e.target.closest(".expk");if(!b||b.className.indexOf("dis")>=0)return;var v=b.getAttribute("data-v");pickRoom=(v==="__keep")?"":v;if(MULTI_){var p=MPLAN[MIDX];p.staff=pickStaff;p.room=pickRoom;MIDX++;exMultiPlanStep();return;}realChange(document.getElementById("exdone2"));});' +
     /* ★★2026-09-30 まるちゃん決定：同じ日の予約をまとめて移す。
@@ -9257,16 +9257,16 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exHm_(m){return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2);}' +
     'function exMoveLbl_(){if(MULTI_&&MPLAN[MIDX]){return newYmd+" "+exHm_(MPLAN[MIDX].sm)+"（"+(MIDX+1)+"件目）";}return newYmd+" "+tdisp();}' +
     'function exPollJob_(id,cb){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){cb(false,"通信に失敗しました。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){exPollJob_(id,cb);},500);return;}cb(r.status==="done",r.result||"");});}' +
-    'function startMultiMove(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;newYmd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var base=hh*60+mm;var s0=exSm_(MULTI_[0]);MPLAN=MULTI_.map(function(r){return {r:r,sm:base+(exSm_(r)-s0),dur:(parseInt(r.dur_min,10)||30),staff:"",room:"",fs:[],fr:[]};});for(var i=0;i<MPLAN.length;i++){if(MPLAN[i].sm+MPLAN[i].dur>24*60){szPopup_("その時刻だと"+(i+1)+"件目が日付をまたいでしまいます。時刻を入力し直してね😊");return;}}chosen=MULTI_[0];exOvShow_(szBusyHtml_("空きを確認しています","移す先で、それぞれの予約の担当・部屋が空いているか調べています。しばらくお待ちください。"),"#2C7A99");exMultiAvail(0);}' +
-    'function exMultiAvail(i){if(i>=MPLAN.length){exOvHide_();MIDX=0;exMultiPlanStep();return;}var p=MPLAN[i];jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:newYmd,start_min:p.sm,dur:p.dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}exPollJob_(r.id,function(ok,res){if(!ok){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}var d={};try{d=JSON.parse(res||"{}");}catch(e){}p.fs=(d.free_staff||[]).map(String);p.fr=(d.free_rooms||[]).map(String);exMultiAvail(i+1);});});}' +
+    'function startMultiMove(){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var nd=(chgtype==="t")?new Date(chosen.date+"T00:00:00"):picked;newYmd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var base=hh*60+mm;var s0=exSm_(MULTI_[0]);MPLAN=MULTI_.map(function(r){return {r:r,sm:base+(exSm_(r)-s0),dur:(parseInt(r.dur_min,10)||30),staff:"",room:"",fs:[],fr:[]};});for(var i=0;i<MPLAN.length;i++){if(MPLAN[i].sm+MPLAN[i].dur>24*60){szPopup_("その時刻だと"+(i+1)+"件目が日付をまたいでしまいます。時刻を入力し直してね😊");return;}}chosen=MULTI_[0];exOvShow_(szBusyHtml_("空きを確認しています","移す先で、それぞれの予約の担当・部屋が空いているか調べています。少し待っててくださいね🥺"),"#2C7A99");exMultiAvail(0);}' +
+    'function exMultiAvail(i){if(i>=MPLAN.length){exOvHide_();MIDX=0;exMultiPlanStep();return;}var p=MPLAN[i];jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:newYmd,start_min:p.sm,dur:p.dur,exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}exPollJob_(r.id,function(ok,res){if(!ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}var d={};try{d=JSON.parse(res||"{}");}catch(e){}p.fs=(d.free_staff||[]).map(String);p.fr=(d.free_rooms||[]).map(String);exMultiAvail(i+1);});});}' +
     'function exPlanStaff_(q){return q.staff||staffNum(q.r.staff_emoji||"");}' +
     'function exPlanRoom_(q){return q.room||roomVal(q.r.room||"");}' +
     /* 同じ時間に重なる予約どうしで、同じ担当・同じ部屋を取り合わないように、先に決めた分を空きから外す。 */
     'function exMultiPlanStep(){while(MIDX<MPLAN.length){var p=MPLAN[MIDX];var fs=p.fs.slice(),fr=p.fr.slice();for(var j=0;j<MIDX;j++){var q=MPLAN[j];if(q.sm<p.sm+p.dur&&p.sm<q.sm+q.dur){var a=fs.indexOf(exPlanStaff_(q));if(a>=0)fs.splice(a,1);var b=fr.indexOf(exPlanRoom_(q));if(b>=0)fr.splice(b,1);}}chosen=p.r;availData={free_staff:fs,free_rooms:fr};newSm=p.sm;pickStaff="";pickRoom="";showStaffPick();return;}chosen=MULTI_[0];exMultiConfirm();}' +
-    'function exMultiConfirm(){var t="この"+MPLAN.length+"件を移します。よろしいですか？\\n";for(var i=0;i<MPLAN.length;i++){var p=MPLAN[i];var rk=exPlanRoom_(p);var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var sn=exPlanStaff_(p);t+="\\n"+(i+1)+"件目："+newYmd+" "+exHm_(p.sm)+"〜"+exHm_(p.sm+p.dur)+"　"+(SEMO_[sn]||"")+(SNM_[sn]||"")+"　"+rn;}szPopup_(t,{cancel:true,yesLabel:"移す",onYes:exMultiRunMove});}' +
+    'function exMultiConfirm(){var t="この"+MPLAN.length+"件を移します。よろしいでしょうか？😊\\n";for(var i=0;i<MPLAN.length;i++){var p=MPLAN[i];var rk=exPlanRoom_(p);var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var sn=exPlanStaff_(p);t+="\\n"+(i+1)+"件目："+newYmd+" "+exHm_(p.sm)+"〜"+exHm_(p.sm+p.dur)+"　"+(SEMO_[sn]||"")+(SNM_[sn]||"")+"　"+rn;}szPopup_(t,{cancel:true,yesLabel:"移す",onYes:exMultiRunMove});}' +
     'function exMultiRunMove(){var p0=newYmd.split("-");var list=[];for(var i=0;i<MPLAN.length;i++){var p=MPLAN[i];var sd=new Date(parseInt(p0[0],10),parseInt(p0[1],10)-1,parseInt(p0[2],10),0,0,0,0);sd.setMinutes(p.sm);var ed=new Date(sd.getTime()+p.dur*60000);var f={cal:p.r.calendar_id,event:p.r.event_id,start:_iso(sd),end:_iso(ed)};if(p.staff){f.new_fruit=SEMO_[p.staff];}if(p.room&&RMAP_[p.room]){f.to_cal=RMAP_[p.room].cal;f.to_label=RMAP_[p.room].label;}list.push(f);}var md=parseInt(p0[1],10)+"月"+parseInt(p0[2],10)+"日 "+exHm_(MPLAN[0].sm);exMultiRun("change_reservation",list,MPLAN.length+"件を "+md+"〜 へ移しました");}' +
     'function exMultiRun(op,list,doneTitle){var i=0;function step(){if(i>=list.length){exOvShow_(szDoneHtml_(doneTitle,"予約入力に戻る"),"#16a34a");var b=document.getElementById("szDoneBack");if(b){b.addEventListener("click",function(){location.href=TOPHREF;});}return;}exOvShow_(szBusyHtml_("まとめて変更中です（"+(i+1)+"／"+list.length+"件目）"),"#2C7A99");jsonp({action:"submit",key:KEY,op:op,who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(list[i])},function(r){if(!r||!r.ok||!r.id){exMultiFail_(i);return;}exPollJob_(r.id,function(ok,res){var d={};try{d=JSON.parse(res||"{}");}catch(e){}if(!ok||(d&&d.ok===false)){exMultiFail_(i,ok?"":res);return;}i++;step();});});}step();}' +
-    'function exMultiFail_(i,res){exOvHide_();szPopup_((i?(i+"件目までは変更できました。"):"")+(i+1)+"件目の変更に失敗しました。タイムツリーで確認してください。"+(res?("\\n"+esc(res)):""));}' +
+    'function exMultiFail_(i,res){exOvHide_();szPopup_((i?(i+"件目までは変更できました。"):"")+(i+1)+"件目の変更に失敗しました。タイムツリーで確認してください🙇"+(res?("\\n"+esc(res)):""));}' +
     'document.getElementById("exbackStaffPick").addEventListener("click",function(){hideSteps();document.getElementById("exTime").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exbackRoomPick").addEventListener("click",function(){showStaffPick();});' +
     'function pickExtra(){var x="";if(pickStaff){x+="／担当を"+(SNM_[pickStaff]||"")+"へ";}if(pickRoom){x+="／部屋を"+pickRoom+"へ";}return x;}' +
@@ -9301,14 +9301,14 @@ function renderExistingPage_(base, staff, dev, mode) {
     'var TOPHREF="' + topHref + '";' +
     'function exOvShow_(html,bg){var ov=document.getElementById("exOverlay");if(!ov){ov=document.createElement("div");ov.id="exOverlay";document.body.appendChild(ov);}ov.style.cssText="position:fixed;inset:0;z-index:9999;background:"+bg+";display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";ov.innerHTML=html;return ov;}' +
     'function exOvHide_(){var ov=document.getElementById("exOverlay");if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);}' +
-    'function realChange(doneEl){var fields={cal:chosen.calendar_id,event:chosen.event_id};if(chgtype==="dt"||chgtype==="t"){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var sd=new Date(picked.getFullYear(),picked.getMonth(),picked.getDate(),hh,mm,0,0);var ed=new Date(sd.getTime()+((chosen.dur_min||30)*60000));fields.start=_iso(sd);fields.end=_iso(ed);if(pickStaff){fields.new_fruit=SEMO_[pickStaff];}if(pickRoom&&RMAP_[pickRoom]){fields.to_cal=RMAP_[pickRoom].cal;fields.to_label=RMAP_[pickRoom].label;}}else if(chgtype==="dur"){var hm=(chosen.start_hm||"13:00").split(":");var sd=new Date(chosen.date+"T00:00:00");sd.setHours(parseInt(hm[0],10),parseInt(hm[1],10),0,0);var ed=new Date(sd.getTime()+(parseInt(esel.dur,10)*60000));fields.start=_iso(sd);fields.end=_iso(ed);}else if(chgtype==="memo"){fields.note=document.getElementById("exmemobox").value;}else if(chgtype==="staff"){if(!esel.staff){szPopup_("担当を選んでください。");return;}fields.new_fruit=SEMO_[esel.staff];}else if(chgtype==="room"){if(!esel.room||!RMAP_[esel.room]){szPopup_("部屋を選んでください。");return;}fields.to_cal=RMAP_[esel.room].cal;fields.to_label=RMAP_[esel.room].label;}else{szPopup_("この項目はまだ準備中です。");return;}exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">予約を変更中です</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"change_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollChange(r.id);});}' +
+    'function realChange(doneEl){var fields={cal:chosen.calendar_id,event:chosen.event_id};if(chgtype==="dt"||chgtype==="t"){var hh=parseInt(tdig.slice(0,2),10),mm=parseInt(tdig.slice(2),10);var sd=new Date(picked.getFullYear(),picked.getMonth(),picked.getDate(),hh,mm,0,0);var ed=new Date(sd.getTime()+((chosen.dur_min||30)*60000));fields.start=_iso(sd);fields.end=_iso(ed);if(pickStaff){fields.new_fruit=SEMO_[pickStaff];}if(pickRoom&&RMAP_[pickRoom]){fields.to_cal=RMAP_[pickRoom].cal;fields.to_label=RMAP_[pickRoom].label;}}else if(chgtype==="dur"){var hm=(chosen.start_hm||"13:00").split(":");var sd=new Date(chosen.date+"T00:00:00");sd.setHours(parseInt(hm[0],10),parseInt(hm[1],10),0,0);var ed=new Date(sd.getTime()+(parseInt(esel.dur,10)*60000));fields.start=_iso(sd);fields.end=_iso(ed);}else if(chgtype==="memo"){fields.note=document.getElementById("exmemobox").value;}else if(chgtype==="staff"){if(!esel.staff){szPopup_("担当を選択してね😊");return;}fields.new_fruit=SEMO_[esel.staff];}else if(chgtype==="room"){if(!esel.room||!RMAP_[esel.room]){szPopup_("部屋を選択してね😊");return;}fields.to_cal=RMAP_[esel.room].cal;fields.to_label=RMAP_[esel.room].label;}else{szPopup_("この項目はまだ準備中です。");return;}exOvShow_("<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div><div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">予約を変更中です</div><div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>","#2C7A99");jsonp({action:"submit",key:KEY,op:"change_reservation",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(fields)},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollChange(r.id);});}' +
     'function ttAlias_(room){var r=(""+room).toLowerCase();if(r.indexOf("freedom")>=0)return"2AfH2fMvqXEH";if(r.indexOf("happy")>=0)return"eavbC5WSuUs6";if(r.indexOf("lucky")>=0)return"GPapusGepg5P";if(r.indexOf("cosmos")>=0)return"ojzXKACEbghC";if(r.indexOf("スター")>=0||r.indexOf("star")>=0||r.indexOf("福")>=0)return"KMkTNuLk3Qif";return"";}' +
-    'function pollChange(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollChange(id);},400);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}var _d2={};try{_d2=JSON.parse(r.result||"{}");}catch(e){}var _fev=(_d2&&_d2.new_event)||chosen.event_id;var _froom=chosen.room;if((chgtype==="dt"||chgtype==="t")&&pickRoom){_froom=pickRoom;}else if(chgtype==="room"&&esel.room){_froom=esel.room;}var _al=ttAlias_(_froom),_tt=_al?("https://timetreeapp.com/calendars/"+_al+"/events/"+_fev):"";exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:23px;font-weight:800;line-height:1.7;margin-bottom:10px;white-space:nowrap;\\">"+doneMsg()+"</div><div style=\\"color:#fff;font-size:30px;font-weight:900;margin-bottom:24px;\\">変更が完了しました</div><button type=\\"button\\" id=\\"exBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>"+(_tt?"<button type=\\"button\\" id=\\"exTtBtn\\" style=\\"display:block;margin:14px auto 0;font:inherit;font-size:1.15rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer;\\">タイムツリーを確認</button>":""),"#16a34a");var bb=document.getElementById("exBackBtn");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}var tb=document.getElementById("exTtBtn");if(tb){tb.addEventListener("click",function(){window.open(_tt,"_blank");});}});}' +
+    'function pollChange(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollChange(id);},400);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}var _d2={};try{_d2=JSON.parse(r.result||"{}");}catch(e){}var _fev=(_d2&&_d2.new_event)||chosen.event_id;var _froom=chosen.room;if((chgtype==="dt"||chgtype==="t")&&pickRoom){_froom=pickRoom;}else if(chgtype==="room"&&esel.room){_froom=esel.room;}var _al=ttAlias_(_froom),_tt=_al?("https://timetreeapp.com/calendars/"+_al+"/events/"+_fev):"";exOvShow_("<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div><div style=\\"color:#fff;font-size:23px;font-weight:800;line-height:1.7;margin-bottom:10px;white-space:nowrap;\\">"+doneMsg()+"</div><div style=\\"color:#fff;font-size:30px;font-weight:900;margin-bottom:24px;\\">変更が完了しました</div><button type=\\"button\\" id=\\"exBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">予約入力に戻る</button>"+(_tt?"<button type=\\"button\\" id=\\"exTtBtn\\" style=\\"display:block;margin:14px auto 0;font:inherit;font-size:1.15rem;font-weight:800;color:#fff;background:rgba(255,255,255,.18);border:2px solid #fff;border-radius:12px;padding:12px 24px;cursor:pointer;\\">タイムツリーを確認</button>":""),"#16a34a");var bb=document.getElementById("exBackBtn");if(bb){bb.addEventListener("click",function(){location.href=TOPHREF;});}var tb=document.getElementById("exTtBtn");if(tb){tb.addEventListener("click",function(){window.open(_tt,"_blank");});}});}' +
     'var mbtns=document.querySelectorAll(".exmbtn");for(var _mb=0;_mb<mbtns.length;_mb++){mbtns[_mb].addEventListener("click",function(){chgtype=this.getAttribute("data-chg");if(chgtype==="dt"){picked=null;goDate();}else if(chgtype==="t"){picked=new Date(chosen.date+"T00:00:00");goTime();}else if(chgtype==="memo"){enterMemo();}else{enterEdit();}});}' +
     // この予約を終日にする＝この店ではキャンセル/保留（部屋と時間が空く・名前とメモは残る）。
-    'document.getElementById("exAllDay").addEventListener("click",function(){szPopup_((MULTI_?("この"+MULTI_.length+"件"):"この予約")+"を終日（キャンセル・保留）にしますか？\\n部屋と時間が空きます。名前とメモは残ります。",{cancel:true,yesLabel:"終日にする",onYes:doAllday});});' +
-    'function doAllday(){if(MULTI_){exMultiRun("make_allday",MULTI_.map(function(r){return {cal:r.calendar_id,event:r.event_id};}),MULTI_.length+"件を終日にしました（部屋が空きました）");return;}exOvShow_(szBusyHtml_("終日にしています"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"make_allday",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({cal:chosen.calendar_id,event:chosen.event_id})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度お試しください。");return;}pollAllday(r.id);});}' +
-    'function pollAllday(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度お試しください。");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollAllday(id);},400);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}exOvShow_(szDoneHtml_("終日にしました（部屋が空きました）","予約入力に戻る"),"#16a34a");var b=document.getElementById("szDoneBack");if(b){b.addEventListener("click",function(){location.href=TOPHREF;});}});}' +
+    'document.getElementById("exAllDay").addEventListener("click",function(){szPopup_((MULTI_?("この"+MULTI_.length+"件"):"この予約")+"を終日（キャンセル・保留）にしますか？😊\\n部屋と時間が空きます。名前とメモは残ります。",{cancel:true,yesLabel:"終日にする",onYes:doAllday});});' +
+    'function doAllday(){if(MULTI_){exMultiRun("make_allday",MULTI_.map(function(r){return {cal:r.calendar_id,event:r.event_id};}),MULTI_.length+"件を終日にしました（部屋が空きました）");return;}exOvShow_(szBusyHtml_("終日にしています"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"make_allday",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({cal:chosen.calendar_id,event:chosen.event_id})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollAllday(r.id);});}' +
+    'function pollAllday(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){exOvHide_();szPopup_("エラーが発生しました。もう一度試してもらえると嬉しいです🙇");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollAllday(id);},400);return;}if(r.status!=="done"){exOvHide_();szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんにお伝えください。");return;}exOvShow_(szDoneHtml_("終日にしました（部屋が空きました）","予約入力に戻る"),"#16a34a");var b=document.getElementById("szDoneBack");if(b){b.addEventListener("click",function(){location.href=TOPHREF;});}});}' +
     'document.getElementById("exbackMenu").addEventListener("click",function(){hideSteps();document.getElementById("exPick").style.display="";window.scrollTo(0,0);});' +
     'document.getElementById("exbackMemo").addEventListener("click",function(){showMenu();});' +
     'document.getElementById("exMemoGo").addEventListener("click",function(){if(MULTI_){var nv=document.getElementById("exmemobox").value;exMultiRun("change_reservation",MULTI_.map(function(r){return {cal:r.calendar_id,event:r.event_id,note:nv};}),MULTI_.length+"件の予約メモを変更しました");return;}realChange(document.getElementById("exdone4"));window.scrollTo(0,document.body.scrollHeight);});' +
@@ -9423,7 +9423,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     /* 日にちを押した瞬間から、前回の予約を裏で読み始める（時間を決めている間に読み終わる）。 */
     'function exPrefetch(date){if(PREF&&PREF.date===date&&!PREF.err)return;var me={date:date,ctx:null,err:"",wait:null};PREF=me;' +
       'jsonp({action:"submit",key:KEY,op:"existing_build_ctx",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp(),date:date,time:""})},function(r){' +
-        'if(PREF!==me)return;if(!r||!r.ok||!r.id){me.err="エラーが発生しました。通信に失敗しました。もう一度お試しください。";exPrefDone(me);return;}' +
+        'if(PREF!==me)return;if(!r||!r.ok||!r.id){me.err="エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇";exPrefDone(me);return;}' +
         'var nm="exctx_"+String(r.id).toLowerCase().replace(/[^a-z0-9_]/g,"")+".json",n=0;' +
         'function tryData(){if(PREF!==me||me.ctx||me.err)return;n++;jsonp({action:"data",name:nm},function(ctx){' +
           'if(PREF!==me)return;if(ctx&&ctx.ok){me.ctx=ctx;exPrefDone(me);return;}' +
@@ -9440,7 +9440,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     /* 「この時間と部屋で決定」＝予約メモの画面へ。読み終わっていなければ、読み終わるまで待つ。 */
     'function exGoMemo(st){if(!(EXFLOW&&PREF&&PREF.ctx)&&(!PREF||PREF.date!==st.date))exPrefetch(st.date);var me=PREF;' +
       'if(me.err){var m=me.err;PREF=null;szPopup_(m);return;}' +
-      'if(!me.ctx){exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
+      'if(!me.ctx){exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");' +
         'me.wait=function(){exOvHide_();exGoMemo(SGX.state());};return;}' +
       'if(!me.ctx.found){szPopup_("「"+disp()+"」の前回の予約が見つかりません。");return;}' +
       /* ★2026-09-25：既存の予約は支払いを聞かないので、ここで時間の画面へ戻す必要がなくなった（決まりは上のとおり）。 */
@@ -9483,7 +9483,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '$("sgtgo").onclick=function(){if(!tapOK())return;' +
         'var _go=function(){exGoMemo({date:PICKDATE,ts:TS,te:TE,room:ROOM,slot:SLOT,paid:PAID,free:freeStaffAt(TS,TE)});};' +
         /* ★特例は押す前に確かめる（押し間違いで重なった予約を作らないため）。 */
-        'if(SLOT&&SLOT.toku){szPopup_("特例で登録します。\\n"+SLOT.who+"さん　"+m2hm(TS)+"〜"+m2hm(TE)+"　"+shortRoomName_(ROOM)+"\\n\\n空きの外や、予約と重なる時間でも登録されます。よろしいですか？",' +
+        'if(SLOT&&SLOT.toku){szPopup_("特例で登録します。\\n"+SLOT.who+"さん　"+m2hm(TS)+"〜"+m2hm(TE)+"　"+shortRoomName_(ROOM)+"\\n\\n空きの外や、予約と重なる時間でも登録されます。よろしいでしょうか？😊",' +
           '{cancel:true,yesLabel:"特例で登録する",onYes:_go});return;}' +
         '_go();};' +
       'window.addEventListener("resize",function(){if(step===6)fitLine($("sgtwho"),26,13);});' +
@@ -9684,7 +9684,7 @@ var URIAGESCRIPT_ =
 '      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",(r.result)||""); allBtn.disabled=false; enableUriageBtns();' +
 '        try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }' +
 '      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",(r.result)||s); allBtn.disabled=false; enableUriageBtns(); }' +
-'      else if(tries>=120){ clearInterval(timer); szOverlayResult_(false,"時間切れです","もう一度お試しください。"); allBtn.disabled=false; enableUriageBtns(); }' +
+'      else if(tries>=120){ clearInterval(timer); szOverlayResult_(false,"時間切れです","もう一度試してもらえると嬉しいです🙇"); allBtn.disabled=false; enableUriageBtns(); }' +
 '    });' +
 '  },3000);' +
 '}' +
@@ -9874,7 +9874,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
   '</select>' +
   '<div id="unacust" class="unalist">' + custCards + '</div>' +
   '<div id="unaours" class="unalist unahidden">' + oursCards + '</div>' +
-  '<div class="unaempty unaemptybig" id="unaperiodempty" hidden>この期間に該当はありません。<br>上の期間を広げてください。</div>' +
+  '<div class="unaempty unaemptybig" id="unaperiodempty" hidden>この期間に該当はありません。<br>上の期間を広げてね😊</div>' +
 '</div>' +
 // 詳細モーダル（LINEに触れずに会話の中身をここで確認＝PC版ダッシュボードと同じ）
 '<div class="unamask" id="unamask" role="dialog" aria-modal="true">' +
@@ -9959,9 +9959,9 @@ var UNASCRIPT_ =
 '  var ta=wrap.querySelector(".unartext"), box=wrap.querySelector(".unartrbox"), zt=wrap.querySelector(".unartrtext");' +
 '  var note=wrap.querySelector(".unarnote");' +
 '  var text=(ta&&ta.value||"").trim();' +
-'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="先に日本語を打ってください。"; } return; }' +
+'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="先に日本語を入力してね😊"; } return; }' +
 '  if(box) box.style.display="block";' +
-'  if(zt){ zt.value="翻訳中…しばらくお待ちください。"; unaGrow(zt); }' +
+'  if(zt){ zt.value="翻訳中…少し待っててくださいね🥺"; unaGrow(zt); }' +
 '  var idn=unaIdent_();' +
 '  unaCall_({action:"submit",op:"translate",who:idn.who,role:idn.role,device:idn.device,' +
 '    fields:JSON.stringify({text:text,gender:(wrap.getAttribute("data-sex")||"")})},' +
@@ -9972,7 +9972,7 @@ var UNASCRIPT_ =
 '        unaCall_({action:"status",id:r.id},function(st){' +
 '          if(st&&st.status==="done"){ if(zt){ zt.value=st.result||""; unaGrow(zt); } return; }' +
 '          if(st&&st.status==="error"){ if(zt){ zt.value=st.result||"翻訳できませんでした。"; unaGrow(zt); } return; }' +
-'          if(tries>60){ if(zt){ zt.value="返事がありません。もう一度お試しください。"; unaGrow(zt); } return; }' +
+'          if(tries>60){ if(zt){ zt.value="返事がありません。もう一度試してもらえると嬉しいです🙇"; unaGrow(zt); } return; }' +
 '          setTimeout(poll,1200); }); })();' +
 '    });' +
 '});' +
@@ -10073,7 +10073,7 @@ var UNASCRIPT_ =
 '  var note=wrap.querySelector(".unarnote");' +
 '  var cid=wrap.getAttribute("data-cid")||"", nm=wrap.getAttribute("data-nm")||"";' +
 '  var text=(ta&&ta.value||"").trim();' +
-'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="本文を打ってください。"; } return; }' +
+'  if(!text){ if(note){ note.className="unarnote ng"; note.textContent="本文を入力してね😊"; } return; }' +
 '  unaAsk_(nm,text,function(){' +
 '    if(note){ note.className="unarnote"; note.textContent="送信中…"; }' +
 '    var idn=unaIdent_();' +
@@ -10098,7 +10098,7 @@ var UNASCRIPT_ =
 '            if(st&&st.status==="error"){' +
 '              if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } mark("送れませんでした","unafail"); return; }' +
 '            if(tries>60){' +
-'              if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度お試しください。"; } mark("未確認","unafail"); return; }' +
+'              if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度試してもらえると嬉しいです🙇"; } mark("未確認","unafail"); return; }' +
 '            setTimeout(poll,1200);' +
 '          });' +
 '        })();' +
@@ -10167,7 +10167,7 @@ var UNASCRIPT_ =
 '          unaCall_({action:"status",id:r.id},function(st){' +
 '            if(st&&st.status==="done"){ if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } return; }' +
 '            if(st&&st.status==="error"){ if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
-'            if(tries>40){ if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度お試しください。"; } return; }' +
+'            if(tries>40){ if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度試してもらえると嬉しいです🙇"; } return; }' +
 '            setTimeout(poll,3000);' +
 '          });' +
 '        })();' +
@@ -10251,7 +10251,7 @@ var UNASCRIPT_ =
 '          unaCall_({action:"status",id:r.id},function(st){' +
 '            if(st&&st.status==="done"){ if(note){ note.className="unarnote ok"; note.textContent=st.result||"送りました。"; } return; }' +
 '            if(st&&st.status==="error"){ if(note){ note.className="unarnote ng"; note.textContent=st.result||"送れませんでした。"; } return; }' +
-'            if(tries>60){ if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度お試しください。"; } return; }' +
+'            if(tries>60){ if(note){ note.className="unarnote ng"; note.textContent="返事がありません。もう一度試してもらえると嬉しいです🙇"; } return; }' +
 '            setTimeout(poll,3000);' +
 '          });' +
 '        })();' +
@@ -10551,7 +10551,7 @@ function renderProcampPage_(list, choice, base, staff, dev) {
   'var q="callback="+n;for(var k in p)q+="&"+k+"="+encodeURIComponent(p[k]);' +
   'var s=document.createElement("script");s.src=EXEC+"?"+q+"&cb="+Date.now();s.onerror=function(){cb({ok:false,error:"通信エラーです"});};document.body.appendChild(s);}' +
   'function fail(msg){btn.disabled=false;setSt("");if(typeof szPopup_==="function")szPopup_(msg);else setSt(msg,"err");}' +
-  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("procamp_save",1000)){fail("時間切れです。もう一度登録してください。");return;}' +
+  'var polls=0;function poll(id){polls++;if(polls>LIMITS.tries("procamp_save",1000)){fail("時間切れです。もう一度登録してください🙇");return;}' +
   'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){fail("登録できませんでした："+((r&&r.error)||"不明"));return;}' +
   'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},1000);return;}' +
   'if(r.status!=="done"){fail("登録できませんでした："+(r.result||r.status));return;}' +
@@ -10560,7 +10560,7 @@ function renderProcampPage_(list, choice, base, staff, dev) {
   'jsonp({action:"submit",key:KEY,op:"procamp_save",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({picks:picks})},' +
   'function(r){if(!r||!r.ok||!r.id){fail("登録できませんでした："+((r&&r.error)||"不明"));return;}setTimeout(function(){poll(r.id);},1000);});}' +
   'btn.addEventListener("click",function(){var left=trs.length-Object.keys(picks).length;' +
-  'if(left>0&&typeof szPopup_==="function"){szPopup_("まだ選んでいない方が "+left+" 人います。このまま登録しますか？",{cancel:true,icon:"",onYes:send});return;}send();});' +
+  'if(left>0&&typeof szPopup_==="function"){szPopup_("まだ選んでいない方が "+left+" 人います。このまま登録しますか？😊",{cancel:true,icon:"",onYes:send});return;}send();});' +
   '})();<\/script>';
   return '<style>' + HOMECSS_ + PROCAMPCSS_ + '</style>' +
     '<div class="home">' + backBar_(base, staff, dev) + head +
@@ -10678,7 +10678,7 @@ function procStockScript_(C) {
     press(b.getAttribute('data-k') || b.textContent);
   });
   function ok() {
-    if (digits === '') { popup('数量を入力してね😊（無い時は 0）'); return; }
+    if (digits === '') { popup('数量を入力してね😊 （無い時は 0）'); return; }
     vals[cur] = parseInt(digits, 10);
     if (fromList || cur === ITEMS.length - 1) openList(); else openItem(cur + 1, false);
   }
@@ -10732,7 +10732,7 @@ function procStockScript_(C) {
   var polls = 0, doneAt = '';
   function poll(id) {
     polls++;
-    if (polls > LIMITS.tries('procell_stock_save', 1000)) { fail('時間切れです。もう一度「これで在庫を登録」を押してください。'); return; }
+    if (polls > LIMITS.tries('procell_stock_save', 1000)) { fail('時間切れです。もう一度「これで在庫を登録」を押してください🙇'); return; }
     jsonp({ action: 'status', key: C.key, id: id }, function (r) {
       if (!r || !r.ok) { fail('登録できませんでした：' + ((r && r.error) || '不明')); return; }
       if (r.status === 'pending' || r.status === 'running' || r.status === 'queued' || r.status === '') { setTimeout(function () { poll(id); }, 1000); return; }
@@ -10832,7 +10832,7 @@ function renderProcStockPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="psStart">現在庫入力</button>' +
       '</div>' +
       '<div id="psWho" style="display:none">' + inBack('psBackWho') + head('🙋', '入力する人') +
-        '<div class="pshint">入力する人をえらんでください</div>' +
+        '<div class="pshint">入力する人を選択してね😊</div>' +
         '<div class="pspeople" id="psPeople"></div>' +
       '</div>' +
       '<div id="psItem" style="display:none">' + inBack('psBackItem') + head('📦', '現在庫入力') +
@@ -10963,7 +10963,7 @@ var UBCSS_ =
 var UB_PEND_KEY_ = 'sz_ub_pending';
 var UB_EXEC_ = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
 var UB_KEY_ = 'kx7Q2p9mVt4Zr8';
-var UB_FAIL_ = 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してね😊';
+var UB_FAIL_ = 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇';
 var ubWatchTimer_ = null, ubPopQ_ = [], ubChecking_ = {};
 function ubPendList_() { try { return JSON.parse(localStorage.getItem(UB_PEND_KEY_) || '[]'); } catch (e) { return []; } }
 function ubPendSave_(a) { try { localStorage.setItem(UB_PEND_KEY_, JSON.stringify(a)); } catch (e) {} }
@@ -11117,7 +11117,7 @@ function uriageBookScript_(C) {
     function fail(msg) {
       settle();
       // ★2026-11-07 まるちゃん指定の文（分からない失敗・時間切れ・送れない時）。中身が変わっていた等の理由は受付係の文をそのまま出す。
-      if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してね😊');
+      if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇');
       fetchData();
     }
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
@@ -11354,7 +11354,7 @@ function uriageBookScript_(C) {
   $('ubGoOther').addEventListener('click', function () { $('ubOthLabel').value = ''; OK2.set('amt', ''); OK2.close(); show('ubOther'); });
   $('ubOthGo').addEventListener('click', function () {
     var amt = OK2.get('amt'); OK2.close();
-    if (!$('ubOthLabel').value.trim() || !amt) { popup('内容と金額を入力してね😊（経費などはマイナス）'); return; }
+    if (!$('ubOthLabel').value.trim() || !amt) { popup('内容と金額を入力してね😊 （経費などはマイナス）'); return; }
     ask({ action: 'other', label: $('ubOthLabel').value.trim(), amount: parseInt(amt, 10) }, 'その他を足しています', function () { show('ubNoInv'); });
   });
   $('ubOthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubNoInv'); });
@@ -11499,7 +11499,7 @@ function claudeChatScript_(C) {
   }
   function draw(h) {
     var items = (h && h.items) || [], out = '';
-    if (!items.length) { $('ccLog').innerHTML = '<div class="ccnone">聞きたいことを下に書いて「送る」を押してください</div>'; return; }
+    if (!items.length) { $('ccLog').innerHTML = '<div class="ccnone">聞きたいことを下に書いて「送る」を押してね😊</div>'; return; }
     for (var i = 0; i < items.length; i++) {
       out += '<div class="ccq">' + esc(items[i].q || '') + '</div>' +
         '<div class="cca">' + esc(items[i].a || '') + '<div class="cct">' + esc(items[i].at || '') + '</div></div>';
@@ -11516,11 +11516,11 @@ function claudeChatScript_(C) {
   var polls = 0, MAX = Math.ceil(12 * 60 * 1000 / (3000 + 1100));
   function poll(id) {
     polls++;
-    if (polls > MAX) { fail('時間切れです。もう一度お試しください。'); return; }
+    if (polls > MAX) { fail('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
     jsonp({ action: 'status', key: C.key, id: id }, function (r) {
       if (!r || !r.ok) { setTimeout(function () { poll(id); }, 3000); return; }   // 一時的な不通は待ち続ける
       if (r.status === 'pending' || r.status === 'running' || r.status === 'queued' || r.status === '') { setTimeout(function () { poll(id); }, 3000); return; }
-      if (r.status !== 'done') { fail(r.result || '時間切れです。もう一度お試しください。'); return; }
+      if (r.status !== 'done') { fail(r.result || '時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
       load(function () {
         sending = false; $('ccText').value = ''; $('ccSend').disabled = false;
         if (typeof szOvHide_ === 'function') szOvHide_();
@@ -11531,15 +11531,15 @@ function claudeChatScript_(C) {
   $('ccSend').addEventListener('click', function () {
     if (sending) return;
     var t = $('ccText').value.replace(/^\s+|\s+$/g, '');
-    if (!t) { popup('聞きたいことを書いてください'); return; }
-    if (t.length > 2000) { popup('長すぎます。2000文字までにしてください'); return; }
+    if (!t) { popup('聞きたいことを入力してね😊'); return; }
+    if (t.length > 2000) { popup('長すぎます。2000文字までにしてね😊'); return; }
     sending = true; polls = 0; $('ccSend').disabled = true;
     if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('考え中…', false), '#2C7A99');
     jsonp({ action: 'submit', key: C.key, op: 'claude_chat',
             who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '',
             fields: JSON.stringify({ text: t }) },
       function (r) {
-        if (!r || !r.ok || !r.id) { fail('送れませんでした。もう一度お試しください。'); return; }
+        if (!r || !r.ok || !r.id) { fail('送れませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
         setTimeout(function () { poll(r.id); }, 3000);
       });
   });
@@ -11556,7 +11556,7 @@ function renderClaudeChatPage_(base, staff, dev) {
     '<div class="cc">' +
       '<div class="hhead"><span class="bmark">💬</span><span class="bname">Claudeに聞く</span></div>' +
       '<div class="cclog" id="ccLog"><div class="ccnone">読み込み中…</div></div>' +
-      '<textarea class="ccin" id="ccText" placeholder="聞きたいことを書いてください"></textarea>' +
+      '<textarea class="ccin" id="ccText" placeholder="聞きたいことを入力してね😊"></textarea>' +
       '<button type="button" class="exgo" id="ccSend">送る</button>' +
     '</div></div>' +
     '<script>(' + claudeChatScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
@@ -11790,7 +11790,7 @@ function hanbaiScript_(C) {
         if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました'); return; }
         var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('hanbai', 800) : 200;
         var poll = function () {
-          n++; if (n > max) { end('時間切れです。もう一度お試しください。'); return; }
+          n++; if (n > max) { end('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
           jsonp({ action: 'status', key: C.key, id: r.id }, function (x) {
             if (!x || !x.ok) { end((x && x.error) || '通信に失敗しました'); return; }
             if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(poll, 800); return; }
@@ -11837,7 +11837,7 @@ function hanbaiScript_(C) {
     stDraw();
   });
   $('hbStOk').addEventListener('click', function () {
-    if (stDigits === '') { popup('本数を入力してね😊（無い時は 0）'); return; }
+    if (stDigits === '') { popup('本数を入力してね😊 （無い時は 0）'); return; }
     var rows = [['品物', 'ホホバエッセンスNo31（50ml）'], ['今お店にある本数', parseInt(stDigits, 10) + ' 本'], ['入力する人', who()]];
     var h = '';
     for (var i = 0; i < rows.length; i++) h += '<div><b>' + esc(rows[i][0]) + '</b><span>' + esc(rows[i][1]) + '</span></div>';
@@ -11854,7 +11854,7 @@ function hanbaiScript_(C) {
       $('hbMenuMsg').innerHTML = '✅ お店の在庫を登録しました　No31　' + n + '本';
       $('hbMenuMsg').style.display = '';
       hist = []; show('hbMenu', true);
-    }, '登録が終わったら自動で画面が切り替わりますので、しばらくお待ちください。');
+    }, '登録が終わったら自動で画面が切り替わりますので、少し待っててくださいね🥺');
   });
 
   // ── 日付 ──
@@ -11955,15 +11955,15 @@ function hanbaiScript_(C) {
       ask({ kind: 'day', date: d }, dayWord() + '予約を読んでいます', function (err, r) {
         if (err || !r || !r.ok) { popup('予約を読めませんでした：' + (err || '不明')); return; }
         DAYS[d] = TODAY = ours(r.list || []); drawToday();
-      }, 'しばらくお待ちください。');
+      }, '少し待っててくださいね🥺');
       return;
     }
-    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('本日の予約を読んでいます', 'しばらくお待ちください。'), '#2C7A99');
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('本日の予約を読んでいます', '少し待っててくださいね🥺'), '#2C7A99');
     var n = '__hbev' + Date.now();
     var fin = function (p) {
       try { delete window[n]; } catch (e) {}
       if (typeof szOvHide_ === 'function') szOvHide_();
-      if (!p || p.error || !p.events) { popup('本日の予約を読めませんでした。通信環境をご確認ください。'); return; }
+      if (!p || p.error || !p.events) { popup('本日の予約を読めませんでした。通信環境をご確認くださいませ🙇'); return; }
       var day = p.date_from || ymd(new Date()), out = [];
       for (var i = 0; i < p.events.length; i++) {
         var e = p.events[i]; if (e.date !== day) continue;
@@ -12031,7 +12031,7 @@ function hanbaiScript_(C) {
     numDraw();
   });
   $('hbNumGo').addEventListener('click', function () {
-    if (!NPRE) { popup('F（女性）か M（男性）を押してください'); return; }
+    if (!NPRE) { popup('F（女性）か M（男性）を押してね😊'); return; }
     if (!NDIG) { popup('お客様番号を入力してね😊'); return; }
     ask({ kind: 'lookup', fnum: NPRE + NDIG }, 'お客様を検索しています', function (err, d) {
       if (err) { popup('さがせませんでした：' + err); return; }
@@ -12079,7 +12079,7 @@ function hanbaiScript_(C) {
       draw();
     });
     go.addEventListener('click', function () {
-      if (dig === '') { popup('本数を入力してね😊（無い時は 0）'); return; }
+      if (dig === '') { popup('本数を入力してね😊 （無い時は 0）'); return; }
       var q = parseInt(dig, 10);
       S[key] = q; S[key + 'Set'] = true; next();
     });
@@ -12114,7 +12114,7 @@ function hanbaiScript_(C) {
     $('hbAmtHead').textContent = '販売金額（' + unit() + '）';
     aDraw(); show('hbAmt');
   }
-  function aDraw() { $('hbAmtBox').innerHTML = ADIG ? esc(yen(ADIG)) + '<span class="u">' + unit() + '</span>' : '<span class="ph">金額を入れてください</span>'; }
+  function aDraw() { $('hbAmtBox').innerHTML = ADIG ? esc(yen(ADIG)) + '<span class="u">' + unit() + '</span>' : '<span class="ph">金額を入力してね😊</span>'; }
   $('hbAmtPad').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     var k = b.getAttribute('data-k') || b.textContent;
@@ -12123,7 +12123,7 @@ function hanbaiScript_(C) {
     aDraw();
   });
   $('hbAmtGo').addEventListener('click', function () {
-    if (ADIG === '') { popup('金額を入れてください'); return; }
+    if (ADIG === '') { popup('金額を入力してね😊'); return; }
     S.amount = parseInt(ADIG, 10);
     if (S.kind === 'shopee') { S.pay = '蝦皮'; $('hbNoteIn').value = S.note || ''; show('hbNote'); return; }   // 蝦皮は支払方法をえらばない
     openPay();
@@ -12173,7 +12173,7 @@ function hanbaiScript_(C) {
         $('hbMenuMsg').style.display = '';
         hist = []; show('hbMenu', true);
         delete LCACHE[S.date.slice(0, 7)]; delete LCACHE.ALL; prefetch(thisMonth());   // 一覧の覚えを新しくしておく（全期間も読み直す）
-      }, '登録が終わったら自動で画面が切り替わりますので、しばらくお待ちください。');   // ★2026-10-17 まるちゃん指定の文
+      }, '登録が終わったら自動で画面が切り替わりますので、少し待っててくださいね🥺');   // ★2026-10-17 まるちゃん指定の文
   });
 
   // ── 販売管理表 ──
@@ -12204,7 +12204,7 @@ function hanbaiScript_(C) {
         if (!r || !r.ok || !r.id) { fin((r && r.error) || '通信に失敗しました'); return; }
         var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('hanbai', 800) : 200;
         var poll = function () {
-          n++; if (n > max) { fin('時間切れです。もう一度お試しください。'); return; }
+          n++; if (n > max) { fin('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
           jsonp({ action: 'status', key: C.key, id: r.id }, function (x) {
             if (!x || !x.ok) { fin((x && x.error) || '通信に失敗しました'); return; }
             if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(poll, 800); return; }
@@ -12344,7 +12344,7 @@ function renderHanbaiPage_(base, staff, dev) {
     '<div class="home">' + backBar_(base, staff, dev) +
     '<div class="hb">' +
       '<div id="hbWho" style="display:none">' + head('🙋', 'No31 販売管理') +
-        '<div class="hbbighint">販売した人の名前を<br>選んでください</div>' +
+        '<div class="hbbighint">販売した人の名前を<br>選択してね😊</div>' +
         '<div class="pspeople" id="hbWhoBtns"></div>' +
       '</div>' +
       '<div id="hbMenu">' + head('🛒', 'No31 販売管理') +
@@ -12374,11 +12374,11 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbJNewGo">次へ</button>' +
       '</div>' +
       '<div id="hbKana" style="display:none">' + inBack + head('🔁', 'お客様') + sum +
-        '<div class="hbhint">苗字の最初の文字をえらんでください<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます。英字などは「他」</small></div>' +
+        '<div class="hbhint">苗字の最初の文字を選択してね😊<br><small>「ご」は「こ」、「ぱ」は「は」をえらびます。英字などは「他」</small></div>' +
         '<div class="hbkana" id="hbKanaGrid">' + kana + '</div>' +
       '</div>' +
       '<div id="hbCands" style="display:none">' + inBack + head('🔁', '', 'hbCandHead') + sum +
-        '<div class="hbhint">お客様をえらんでください</div>' +
+        '<div class="hbhint">お客様を選択してね😊</div>' +
         '<div class="hbrows hbcards" id="hbCandRows"></div>' +
         '<div class="hbempty" id="hbCandNone">前に買ったお客様が見つかりません</div>' +
         '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕</span>新規お客様として入力</button>' +
@@ -12403,7 +12403,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
       '</div>' +
       count('hbQty', '🧴', '販売本数', '') +
-      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>えらんでください') +
+      count('hbGift', '🎁', 'プレゼントの有無', '無料であげた本数を<br>選択してね😊') +
       '<div id="hbPay" style="display:none">' + inBack + head('💳', '支払方法') + sum +
         '<div class="hbpay" id="hbPayBtns"></div>' +
       '</div>' +
@@ -12418,7 +12418,7 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       '<div id="hbConf" style="display:none">' + inBack + head('✅', '確認') +
         '<div class="hbconf" id="hbConfRows"></div>' +
-        '<div class="hbq">以上の内容で登録しますか？</div>' +
+        '<div class="hbq">以上の内容で登録しますか？😊</div>' +
         '<button type="button" class="exgo" id="hbSend">登録する</button>' +
         '<div class="hbst" id="hbSt"></div>' +
       '</div>' +
@@ -14877,7 +14877,7 @@ function renderClaudeToolsPage_(base, staff, dev) {
       'var t=(el.getAttribute&&el.getAttribute("data-t"))||(card&&card.getAttribute("data-t"))||"";' +
       'var ok=card?card.querySelector(".cttok"):null;' +
       'function done(){ if(ok){ ok.textContent="コピーしました ✓"; setTimeout(function(){ if(ok) ok.textContent=""; },2000);} }' +
-      'function fb(){ try{ var ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); done(); }catch(e2){ if(ok) ok.textContent="コピーできませんでした（長押しで選んでください）"; } }' +
+      'function fb(){ try{ var ta=document.createElement("textarea"); ta.value=t; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); done(); }catch(e2){ if(ok) ok.textContent="コピーできませんでした（長押しで選択してください🙇）"; } }' +
       'try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done,fb); } else { fb(); } }catch(e){ fb(); }' +
     '};' +
   '})();';
@@ -14885,7 +14885,7 @@ function renderClaudeToolsPage_(base, staff, dev) {
     backBar_(base, staff, dev) +
     '<div class="cttwrap">' +
       '<h1>🤖 自作Claudeツール</h1>' +
-      '<div class="cttnote">Claudeに言う「合言葉」です。タップ（またはコピー）で写して、別のチャットのClaudeにそのまま貼ってください。説明なしでその作業ができます。</div>' +
+      '<div class="cttnote">Claudeに言う「合言葉」です。タップ（またはコピー）で写して、別のチャットのClaudeにそのまま貼り付けてね😊 説明なしでその作業ができます。</div>' +
       cards +
     '</div>' +
     '<script>' + script + '<\/script>';
@@ -14979,7 +14979,7 @@ function lkImgScript_(base) {
     'function loadImages(){if(imgLoading||CATS)return;imgLoading=true;' +
       'tryFetch(4,function(ok,r){imgLoading=false;' +
         'if(ok){CATS=(r&&r.cats)||[];if(!imgsec.hidden)renderCats();}' +
-        'else if(!imgsec.hidden){body.innerHTML="<div class=\\"lknone\\">画像の読み込みに失敗しました。もう一度お試しください。</div>";}' +
+        'else if(!imgsec.hidden){body.innerHTML="<div class=\\"lknone\\">画像の読み込みに失敗しました。もう一度試してもらえると嬉しいです🙇</div>";}' +
       '});}' +
     // 画像リンクを押した時：もう手元にあれば即出す。取得中なら「読み込み中」、まだなら取りに行く。
     'function openImg(){showImg();if(CATS){renderCats();return;}' +
@@ -15049,7 +15049,7 @@ function lkImgScript_(base) {
       'function directSave(){if(msg)msg.textContent="保存しています…";fetch(u).then(function(r){return r.blob();}).then(function(b){var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=(u.split("/").pop()||"image.jpg");document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},4000);if(msg)msg.textContent=(isAndroid?"保存しました。「ダウンロード」フォルダ（写真アプリの「ダウンロード」）に入ります。":"保存しました。「ダウンロード」フォルダに入ります。");}).catch(function(){if(msg)msg.textContent="";window.open(u,"_blank");});}' +
       'function iosSave(){if(!(navigator.canShare&&navigator.share)){directSave();return;}if(msg)msg.textContent="準備しています…";fetch(u).then(function(r){return r.blob();}).then(function(b){var f=new File([b],(u.split("/").pop()||"image.jpg"),{type:b.type||"image/jpeg"});if(!navigator.canShare({files:[f]}))throw new Error("no");if(msg)msg.textContent="出てきたメニューで「画像を保存」を押すと写真に入ります（LINEを押せばそのまま送れます）。";return navigator.share({files:[f]});}).catch(function(e){if(e&&e.name==="AbortError"){if(msg)msg.textContent="";return;}directSave();});}' +
       'function toPng(blob){return new Promise(function(res,rej){var im=new Image();var ou=URL.createObjectURL(blob);im.onload=function(){var c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext("2d").drawImage(im,0,0);URL.revokeObjectURL(ou);c.toBlob(function(pb){pb?res(pb):rej(new Error("x"));},"image/png");};im.onerror=function(){URL.revokeObjectURL(ou);rej(new Error("x"));};im.src=ou;});}' +
-      'function pcCopy(){if(!(navigator.clipboard&&navigator.clipboard.write&&window.ClipboardItem)){directSave();return;}if(msg)msg.textContent="コピーしています…";fetch(u).then(function(r){return r.blob();}).then(function(b){return toPng(b);}).then(function(png){return navigator.clipboard.write([new ClipboardItem({"image/png":png})]);}).then(function(){if(msg)msg.textContent="コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してください。";}).catch(function(){if(msg)msg.textContent="コピーできなかったので、保存にします…";directSave();});}' +
+      'function pcCopy(){if(!(navigator.clipboard&&navigator.clipboard.write&&window.ClipboardItem)){directSave();return;}if(msg)msg.textContent="コピーしています…";fetch(u).then(function(r){return r.blob();}).then(function(b){return toPng(b);}).then(function(png){return navigator.clipboard.write([new ClipboardItem({"image/png":png})]);}).then(function(){if(msg)msg.textContent="コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してね😊";}).catch(function(){if(msg)msg.textContent="コピーできなかったので、保存にします…";directSave();});}' +
       'var cp=document.getElementById("lkCopy"),sv=document.getElementById("lkSave");' +
       'if(cp)cp.addEventListener("click",pcCopy);' +
       'if(sv)sv.addEventListener("click",function(){if(isIOS)iosSave();else directSave();});' +
@@ -15404,8 +15404,8 @@ function ttviewStart_(exec, base, staff, dev) {
     setTimeout(function () { finish({ error: 'net' }); }, 20000);
   }
   function failText(p) {
-    if (p && p.error === 'month') return '月が変わったばかりで、予定の再作成を待っています。少し待ってから、もう一度開いてね😊';
-    return 'この月の予定を読み込めませんでした。通信環境を確認して、もう一度開いてね😊';
+    if (p && p.error === 'month') return '月が変わったばかりで、予定の再作成を待っています。少し待ってから、もう一度開いてください🙇';
+    return 'この月の予定を読み込めませんでした。通信環境を確認して、もう一度開いてください🙇';
   }
   function visible(evs) {
     if (!roomOnly) return evs;
@@ -15670,7 +15670,7 @@ function ttviewStart_(exec, base, staff, dev) {
     szOvShow_(szBusyHtml_('予約メモを保存中です'), '#2C7A99');
     var fields = { cal: e.c, event: e.i, note: text, expect_note: base };
     jsonp({ action: 'submit', key: KEY, op: 'change_reservation', who: idn.who, role: idn.role, device: idn.device, fields: JSON.stringify(fields) }, function (r) {
-      if (!r || !r.ok || !r.id) { szOvHide_(); szPopup_('エラーが発生しました。通信に失敗しました。もう一度お試しください。'); return; }
+      if (!r || !r.ok || !r.id) { szOvHide_(); szPopup_('エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
       poll(r.id, (typeof LIMITS !== 'undefined') ? LIMITS.tries('change_reservation', 700) : 300, text);
     });
   }
@@ -15682,7 +15682,7 @@ function ttviewStart_(exec, base, staff, dev) {
       }
       if (r.status === 'pending' || r.status === 'running' || r.status === 'queued' || r.status === '') {
         if (left > 0) { setTimeout(function () { poll(id, left - 1, text); }, 700); return; }
-        szOvHide_(); szPopup_('時間がかかっています。少ししてからタイムツリーで確かめてください。'); return;
+        szOvHide_(); szPopup_('時間がかかっています。少ししてからタイムツリーで確認してください🙇'); return;
       }
       if (r.status !== 'done') { szOvHide_(); szPopup_('エラーが発生しました。りゅうさんに連絡しました。'); return; }
       var d = {}; try { d = JSON.parse(r.result || '{}'); } catch (x) {}
@@ -15871,13 +15871,13 @@ var MOVESCRIPT_ =
 '    var fromColor=t.getAttribute("data-fromcolor")||"#64748b", toColor=t.style.getPropertyValue("--rc")||"#64748b";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取れず移動できません", false); return; }' +
 '    ccPopup_(ccH_(whoShort)+"の予約を<br>"+ccRoomBadge_(fromShort,fromColor)+"から<br>"+' +
-'      ccRoomBadge_(toShort,toColor)+"へ<br>移動します。<br>よろしいですか？", true, function(){' +
+'      ccRoomBadge_(toShort,toColor)+"へ<br>移動します。<br>よろしいでしょうか？😊", true, function(){' +
 // ★押した瞬間に全画面「移動中」を出し、TimeTreeへの書き込みが本当に完了するまで出したまま。
 //   完了したら全画面「✓完了」を0.5秒見せてから、被りが消えた一覧へ戻す（見た目の先行なし＝正確）。
 '      mvOverlay_(who,mtime,fromRoom,room);' +
 '      submitMove_(cal,evid,toCal,toLabel,room,title,fromRoom,function(r){' +
 '        if(r && r.ok){ waitDoneThenFinish_(r.id,evid,room); }' +
-'        else { mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度お試しください。", false); }' +
+'        else { mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r&&r.error)||"依頼に失敗")+"。もう一度試してもらえると嬉しいです🙇", false); }' +
 '      });' +
 '    }, true);' +
 '  }' +
@@ -15889,11 +15889,11 @@ var MOVESCRIPT_ =
 '    var swho=t.getAttribute("data-who")||"", stime=t.getAttribute("data-time")||"";' +
 '    var of=t.getAttribute("data-oldfruit")||"", onm=t.getAttribute("data-oldname")||"";' +
 '    if(!cal||!evid){ ccPopup_("この予約のIDが取得できず担当を変更できません", false); return; }' +
-'    ccPopup_(ccH_(swho)+"の予約の担当を<br>"+ccRoomBadge_(of+onm, staffColor_(of))+"から<br>"+ccRoomBadge_(nf+nm, staffColor_(nf))+"へ<br>変更します。<br>よろしいですか？", true, function(){' +
+'    ccPopup_(ccH_(swho)+"の予約の担当を<br>"+ccRoomBadge_(of+onm, staffColor_(of))+"から<br>"+ccRoomBadge_(nf+nm, staffColor_(nf))+"へ<br>変更します。<br>よろしいでしょうか？😊", true, function(){' +
 '      mvStaffOverlay_(swho,stime,of,onm,nf,nm);' +
 '      submitMoveStaff_(cal,evid,nf,function(r){' +
 '        if(r && r.ok){ waitStaffDoneFinish_(r.id,evid,nf,nm); }' +
-'        else { mvOverlayHide_(); ccPopup_("⚠️ 担当を変更できませんでした：もう一度お試しください。二度続けてこのエラーがでた場合は、Ryuさんに連絡してください。", false); }' +
+'        else { mvOverlayHide_(); ccPopup_("⚠️ 担当を変更できませんでした：もう一度試してもらえると嬉しいです🙇 二度続けてこのエラーがでた場合は、Ryuさんに連絡してください🙇", false); }' +
 '      });' +
 '    }, true);' +
 '  }' +
@@ -15903,7 +15903,7 @@ var MOVESCRIPT_ =
 'function mvDesc_(who,mtime,fromRoom,room){ var t=(mtime||"").split("-")[0];' +
 '  return (who?who+" ":"")+(t?t+"の予約を、":"")+"「"+fromRoom+"」から「"+room+"」へ移動中です"; }' +
 'function movingHtml_(who,mtime,fromRoom,room){ return "⏳ "+mvDesc_(who,mtime,fromRoom,room)+' +
-'  "<div style=\\"font-size:.82rem;font-weight:normal;margin-top:6px;line-height:1.5;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>"; }' +
+'  "<div style=\\"font-size:.82rem;font-weight:normal;margin-top:6px;line-height:1.5;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>"; }' +
 // ★待機は画面いっぱいのオーバーレイで出す（2026-07-12 ユーザー要望）。移動開始〜検出画面へ戻るまで
 //   全画面で覆う。完了時の再描画で index.html 側が #mvWaitOverlay を消す（失敗時は mvOverlayHide_）。
 'function mvOverlay_(who,mtime,fromRoom,room){ var ov=document.getElementById("mvWaitOverlay");' +
@@ -15914,7 +15914,7 @@ var MOVESCRIPT_ =
 '  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
 '    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">「"+fromRoom+"」から「"+room+"」へ<br>移動中です</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
+'    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>";' +
 '  return ov; }' +
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
 // ★完了まで全画面のまま待ち、本当に完了したら全画面「✓完了」を0.5秒→被りを消して一覧へ戻す。
@@ -15936,8 +15936,8 @@ var MOVESCRIPT_ =
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
 '      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showDoneOverlay_(room);' +
 '        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
-'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度お試しください。", false); }' +
-'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした（時間切れ）：もう一度お試しください。", false); }' +
+'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした："+((r.result)||s)+"。もう一度試してもらえると嬉しいです🙇", false); }' +
+'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 移動できませんでした（時間切れ）：もう一度試してもらえると嬉しいです🙇", false); }' +
 '      else { setTimeout(chk,250); } });' +
 '  }' +
 '  setTimeout(chk,250); }' +
@@ -15951,7 +15951,7 @@ var MOVESCRIPT_ =
 '  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
 '    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">担当を「"+of+onm+"」から「"+nf+nm+"」へ<br>変更中です</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、しばらくお待ちください。</div>";' +
+'    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>";' +
 '  return ov; }' +
 'function showStaffDoneOverlay_(nf,nm){ var ov=document.getElementById("mvWaitOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
@@ -15968,8 +15968,8 @@ var MOVESCRIPT_ =
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
 '      if(s==="done"){ try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e){} showStaffDoneOverlay_(nf,nm);' +
 '        try{ window.__keepMvOverlay=true; }catch(e2){} doneRefreshFast_(); }' +
-'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 担当を変更できませんでした：もう一度お試しください。二度続けてこのエラーがでた場合は、Ryuさんに連絡してください。", false); }' +
-'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください", false); }' +
+'      else if(s==="error"||s==="failed"){ mvOverlayHide_(); ccPopup_("⚠️ 担当を変更できませんでした：もう一度試してもらえると嬉しいです🙇 二度続けてこのエラーがでた場合は、Ryuさんに連絡してください🙇", false); }' +
+'      else if(tries>=90){ mvOverlayHide_(); ccPopup_("⚠️ 処理が時間切れで失敗しました。Ryuさんに連絡してください🙇", false); }' +
 '      else { setTimeout(chk,250); } });' +
 '  }' +
 '  setTimeout(chk,250); }' +
@@ -15987,13 +15987,13 @@ var MOVESCRIPT_ =
 '    statusCheck_(id,function(r){ var s=(r&&r.status)||"";' +
 '      if(s==="done"){ mvToastDone_("✓ "+(who?who+"を":"")+"「"+room+"」へ移動しました"); }' +
 '      else if(s==="error"||s==="failed"){ rollbackMove_(evid,(r.result)||s,side,who,room); }' +
-'      else if(tries>=60){ rollbackMove_(evid,"時間切れ（もう一度お試しください）",side,who,room); }' +
+'      else if(tries>=60){ rollbackMove_(evid,"時間切れ（もう一度試してもらえると嬉しいです🙇）",side,who,room); }' +
 '      else { setTimeout(chk,400); } });' +
 '  }' +
 '  setTimeout(chk,400); }' +
 'function rollbackMove_(evid,reason,side,who,room){ try{ if(window.__movedOut) delete window.__movedOut[evid]; }catch(e){}' +
 '  mvToastHide_(); doneRefreshFast_();' +
-'  ccPopup_("⚠️ 移動できませんでした："+reason+"。画面に被りを戻しました。もう一度お試しください。", false); }' +
+'  ccPopup_("⚠️ 移動できませんでした："+reason+"。画面に被りを戻しました。もう一度試してもらえると嬉しいです🙇", false); }' +
 // 完了後の画面更新：★リロード画面を出さず、検出画面(showConflict)を直接再描画し、最上部へスクロールする
 //   （2026-07-12）。静的アプリが window.__refreshConflictView を公開している時はそれを使う。
 //   無い場合(GAS直アクセス等)だけ従来どおり location.reload() にフォールバック。
@@ -16013,7 +16013,7 @@ var MOVESCRIPT_ =
 '      var s=(r&&r.status)||"";' +
 '      if(s==="done"){ st.className="mvstatus ok"; try{ window.__movedOut=window.__movedOut||{}; window.__movedOut[evid]=1; }catch(e0){} doneRefreshFast_(); }' +
 '      else if(s==="error"||s==="failed"){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 失敗："+((r.result)||s); }' +
-'      else if(tries>=60){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。もう一度お試しください。"; }' +
+'      else if(tries>=60){ mvOverlayHide_(); st.className="mvstatus err"; st.textContent="⚠️ 時間切れ。もう一度試してもらえると嬉しいです🙇"; }' +
 '      else { setTimeout(chk,400); }' +
 '    });' +
 '  }' +
@@ -16770,7 +16770,7 @@ var KANSHISCRIPT_ =
 '  renderFresh_();' +
 '  var list=document.getElementById("kList"); if(!list) return;' +
 '  var gs=data_.groups||[];' +
-'  if(!gs.length){ list.innerHTML="<div class=\\"kcard\\">状態が空です。自宅PCをご確認ください。</div>"; return; }' +
+'  if(!gs.length){ list.innerHTML="<div class=\\"kcard\\">状態が空です。自宅PCをご確認くださいませ🙇</div>"; return; }' +
 /* いま1つの枠の中を見ている＝その中身だけの画面（上に「← 戻る」） */
 '  if(cur_!==null && gs[cur_]){' +
 '    var g=gs[cur_];' +
@@ -16844,8 +16844,8 @@ var KANSHISCRIPT_ =
 '      return;' +
 '    }' +
 '    if(tries<=0){' +
-'      if(busy){ szOvHide_(); szPopup_("時間切れです。自宅PCの状態をご確認ください。"); }' +
-'      else { toast_("時間切れです。自宅PCの状態をご確認ください。"); }' +
+'      if(busy){ szOvHide_(); szPopup_("時間切れです。自宅PCの状態をご確認くださいませ🙇"); }' +
+'      else { toast_("時間切れです。自宅PCの状態をご確認くださいませ🙇"); }' +
 '      return;' +
 '    }' +
 '    setTimeout(function(){ poll_(id, tries-1, busy); }, 5000);' +
@@ -16938,7 +16938,7 @@ var KANSHISCRIPT_ =
 '    return "<button type=\\"button\\" class=\\"kchip\\" data-reset=\\""+esc(pid)+"\\">"+esc(ELAB_[pid]||pid)+"</button>";' +
 '  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠ 全員</button>";' +
 '  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
-'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください（反映まで最大1分）。</div>"+' +
+'    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してね😊 （反映まで最大1分）。</div>"+' +
 '    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
 '    "<div class=\\"ksec\\">新しいユーザーを追加</div>"+' +
 '    "<div class=\\"knote\\">新しいスタッフや、同じ人の別の名前（例：りんご2）を追加します。</div>"+' +
@@ -16992,7 +16992,7 @@ var KANSHISCRIPT_ =
 '  }' +
 '  if(chip&&chip.getAttribute("data-reset")){' +
 '    var rid=chip.getAttribute("data-reset");' +
-'    if(confirm("「"+(rid==="all"?"全員":(ELAB_[rid]||rid))+"」を名前の選び直しにします。よろしいですか？")){' +
+'    if(confirm("「"+(rid==="all"?"全員":(ELAB_[rid]||rid))+"」を名前の選び直しにします。よろしいでしょうか？😊")){' +
 '      send_("tile_settings","setval", JSON.stringify({t:"reset", v:rid}),' +
 '        {title:"選び直しにしています", done:"選び直しにしました"});' +
 '    }' +
@@ -17011,7 +17011,7 @@ var KANSHISCRIPT_ =
 '  if(t.closest("#kPwBtn")){' +
 '    var pw=(document.getElementById("kPw2").value||"").trim();' +
 '    if(!pw){ toast_("新しいパスワードを入力してね😊"); return true; }' +
-'    if(confirm("スタッフ用URLのパスワードを「"+pw+"」に変更します。よろしいですか？")){' +
+'    if(confirm("スタッフ用URLのパスワードを「"+pw+"」に変更します。よろしいでしょうか？😊")){' +
 '      send_("tile_settings","setval", JSON.stringify({t:"pw", v:pw}),' +
 '        {title:"パスワードを変更しています", done:"パスワードを変更しました"});' +
 '    }' +
@@ -17023,7 +17023,7 @@ var KANSHISCRIPT_ =
 '}' +
 // 依頼を送る。合言葉は無い＝**登録した1台のスマホ**であることをサーバー側が見る（kanshiGate_）。
 'function send_(key, act, val, busy){' +
-'  if(busy){ szOvShow_(szBusyHtml_(busy.title, "書き終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99"); }' +
+'  if(busy){ szOvShow_(szBusyHtml_(busy.title, "書き終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99"); }' +
 '  else { toast_("受け付けました。自宅PCが実行します（最大1分）…"); }' +
 '  jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", device:DEV_,' +
 '    fields:JSON.stringify({ctl_key:key, ctl_act:act, ctl_val:(val||"")})},' +
@@ -17224,8 +17224,8 @@ function teikeiStart_(rows) {
       var msg = document.getElementById('tkmsg');
       var doCopy = function () {
         copyText(p.text, function (ok) {
-          msg.textContent = ok ? '✅ コピーしました。LINEに貼り付けてください。'
-                               : '⚠️ コピーできませんでした。下のボタンをもう一度押してください。';
+          msg.textContent = ok ? '✅ コピーしました。LINEに貼り付けてね😊'
+                               : '⚠️ コピーできませんでした。下のボタンをもう一度押してください🙇';
         });
       };
       document.getElementById('tkcopybtn').onclick = doCopy;
@@ -17288,7 +17288,7 @@ function teikeiStart_(rows) {
       sm.textContent = 'コピーしています…';
       fetch(imgs[0]).then(function (r) { return r.blob(); }).then(toPng)
         .then(function (png) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]); })
-        .then(function () { sm.textContent = 'コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してください。'; })
+        .then(function () { sm.textContent = 'コピーしました。LINEの入力らんで貼り付け（Ctrl+V）してね😊'; })
         .catch(function () { sm.textContent = 'コピーできなかったので、保存にします…'; directSave(); });
     }
     if (isIOS || isAndroid) {
@@ -17311,7 +17311,7 @@ function teikeiStart_(rows) {
     var opts = options();
     if (!opts.length) {
       body.innerHTML = '<div class="tknone">' + esc(rows.length
-        ? '❌ この階層に表示できるデータがありません。\n\n・本文が右端の列に入っているか\n・階層（A,B,C…）が空になっていないか\nを確認してください。'
+        ? '❌ この階層に表示できるデータがありません。\n\n・本文が右端の列に入っているか\n・階層（A,B,C…）が空になっていないか\nを確認してね😊'
         : 'まだ定型文が登録されていません。') + '</div>';
       return;
     }
@@ -17414,7 +17414,7 @@ function bcCampCode_() {
     fetch(base + 'links.json?cb=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw 0; return r.json(); })
       .then(function (d) { CLINKS = d || { topics: [] }; if (CMODE) draw(); })
-      .catch(function () { CLINKERR = '各種LINKを読めませんでした。通信環境を確かめて、もう一度開いてください。'; if (CMODE) draw(); });
+      .catch(function () { CLINKERR = '各種LINKを読めませんでした。通信環境を確かめて、もう一度開いてください🙇'; if (CMODE) draw(); });
   }
   // ★送り先の決まりは事務所パソコンに聞くので10秒以上かかることがある（2026-09-17 実機）。
   //   ・届いても、文章を打っている画面は描き直さない（描き直すと入力欄が作り直されて打てなくなる）
@@ -17485,7 +17485,7 @@ function bcCampCode_() {
         var nm = b.getAttribute('data-ck');
         function go() { if (nm !== CKIND) { CDATA = {}; } CKIND = nm; CGI = 0; CTAB = 0; page = 'ce'; status(''); draw(); }
         if (CKIND && nm !== CKIND && campAny()) {
-          szPopup_('入力した内容を削除して「' + nm + '」に切り替えますか？', { cancel: true, onYes: go });
+          szPopup_('入力した内容を削除して「' + nm + '」に切り替えますか？😊', { cancel: true, onYes: go });
           return;
         }
         go();
@@ -17559,7 +17559,7 @@ function bcCampCode_() {
       function count() {
         // ★前後の空白は数えない（送る時に取る・LINEの管理画面も数えない）
         var L = trimLen(ta.value), over = L > MAXT;
-        cnt.textContent = L ? (L + ' / ' + MAXT + ' 文字' + (over ? '（あと' + (L - MAXT) + '文字減らしてください）' : '')) : '';
+        cnt.textContent = L ? (L + ' / ' + MAXT + ' 文字' + (over ? '（あと' + (L - MAXT) + '文字減らしてね😊）' : '')) : '';
         cnt.className = 'bccount' + (over ? ' over' : '');
       }
       function grow() { ta.style.height = '0px'; ta.style.height = (ta.scrollHeight + 12) + 'px'; }
@@ -17580,7 +17580,7 @@ function bcCampCode_() {
       b.onclick = function () {
         var i = +b.getAttribute('data-sx'), x = c.parts[i];
         function go() { c.parts.splice(i, 1); changed(); }
-        if (x.k === 'txt' && trimLen(x.text)) { szPopup_(i + 1 + 'つ目の文章を削除しますか？', { cancel: true, onYes: go }); return; }
+        if (x.k === 'txt' && trimLen(x.text)) { szPopup_(i + 1 + 'つ目の文章を削除しますか？😊', { cancel: true, onYes: go }); return; }
         go();
       };
     });

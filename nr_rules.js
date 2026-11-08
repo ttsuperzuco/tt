@@ -263,7 +263,7 @@
     //   ここに修正があってわかるから」）＝赤い行だけで足りるため、popup は必ず空にする。
     var items = NR.pendingChecks(s), red = "";
     // ★2026-09-23 まるちゃん指定：どこを見て直すかを添える（メモの中は短くしたため）。
-    if (items.length) red = items.join("・") + " を修正してください（LINEのやりとりを参照）";
+    if (items.length) red = items.join("・") + " を修正してね😊 （LINEのやりとりを参照）";
     return { items: items, memo: s, popup: "", red: red };
   };
 
@@ -365,7 +365,7 @@
     if (!String(gender || "")) miss.push("性別");
     if (!String(tw || "")) miss.push("国籍");
     return { ok: miss.length === 0,
-             msg: miss.length ? (miss.join("と") + "を選んでください。") : "" };
+             msg: miss.length ? (miss.join("と") + "を選択してね😊") : "" };
   };
 
   /* ── ⑪-1e プロセルが顔か頭皮か決まっていないか ───────────────
@@ -379,7 +379,7 @@
   };
   NR.procellOk = function (memo) {
     var a = NR.procellAsk(memo);
-    return { ok: !a.ask, msg: a.ask ? "どのプロセルかを選んでください。" : "" };
+    return { ok: !a.ask, msg: a.ask ? "どのプロセルかを選択してね😊" : "" };
   };
 
   /* ── ⑪-1d 次の画面へ進ませてよいか ─────────────────────
@@ -416,14 +416,14 @@
   NR.counselOk = function (kind) {
     var k = String(kind || "");
     var ok = (k === "1" || k === "2" || k === "3");
-    return { ok: ok, msg: ok ? "" : "①②③のどれかを選んでください。" };
+    return { ok: ok, msg: ok ? "" : "①②③のどれかを選択してね😊" };
   };
 
   /* ── 担当・部屋を選ぶ画面に着いた時、まだ空きを調べているか（2026-09-23 まるちゃん）─────
      true なら「空いている担当・部屋を調べています。少しお待ちください。」の小窓を出す。 */
   NR.availWaitView = function (avPending, timeChecking) {
     return { shown: !!(avPending || timeChecking),
-             msg: "空いている担当・部屋を調べています。少しお待ちください。" };
+             msg: "空いている担当・部屋を調べています。少し待っててくださいね🥺" };
   };
 
   /* ── カウンセリングの部屋がふさがっている時の知らせ（2026-09-23 まるちゃん）───────
@@ -460,10 +460,10 @@
   NR.slotGo = function (need, waiting, locked) {
     var n = need || [];
     if (waiting) {
-      return { disabled: true, msg: "空いている担当・部屋を調べています。少しお待ちください。" };
+      return { disabled: true, msg: "空いている担当・部屋を調べています。少し待っててくださいね🥺" };
     }
     if (locked) { return { disabled: true, msg: "" }; }
-    if (n.length) { return { disabled: true, msg: n.join("と") + "を選んでください。" }; }
+    if (n.length) { return { disabled: true, msg: n.join("と") + "を選択してね😊" }; }
     return { disabled: false, msg: "" };
   };
 
@@ -472,7 +472,7 @@
        そのメモを事務所パソコンへ渡して枠（施術の並び）を作り直す。その間に出す小窓。 */
   NR.slotsWaitView = function (pending) {
     return { shown: !!pending,
-             msg: "予約メモから施術の枠を作っています。少しお待ちください。" };
+             msg: "予約メモから施術の枠を作っています。少し待っててくださいね🥺" };
   };
 
   /* ── ⑪-2 登録してよいか（決まっていない枠があれば押させない） ──────
@@ -498,7 +498,7 @@
       if (_n.tw) _w.push("国籍");
       var _ng = [];
       for (var _i = 0; _i < _w.length; _i++) _ng.push({ name: _w[_i], why: "決まっていません" });
-      return { ok: false, ng: _ng, msg: _w.join("・") + "を選択してください" };
+      return { ok: false, ng: _ng, msg: _w.join("・") + "を選択してね😊" };
     }
     // ★予約メモに【要確認】が残っている間は登録させない（2026-09-04 まるちゃん決定）。
     //   ＝分からないまま登録すると、その中身がそのままお客様への前日お知らせに流れる。
@@ -513,7 +513,7 @@
                //   ★2026-09-22：経由の行は【確認して修正】に書き換わるので「要確認になっています」
                //     では字が合わない。どちらの印にも当てはまる言い方にそろえた。
                msg: pend.join("・") + "が修正されていません。予約メモを修正してから" +
-                    "「この内容で登録する」を押してください。" };
+                    "「この内容で登録する」を押してね😊" };
     }
     // ★時刻が読めなかった用紙（昔は時刻の欄が無かった）＝人が「開始時間」を入れるまで登録させない
     //   （2026-08-25 まるちゃん決定）。
@@ -523,7 +523,7 @@
     }
     if (checking) {
       return { ok: false, ng: [{ name: "", why: "確かめ中" }],
-               msg: "空き具合を確かめています。少しお待ちください。" };
+               msg: "空き具合を確かめています。少し待っててくださいね🥺" };
     }
     // ★★2026-10-26 まるちゃん「１」：空いている担当・部屋を**確かめられなかった**時も登録させない。
     //   前は確かめに失敗する（通信が一瞬切れる・返事が遅れる）と黙って先へ進み、
@@ -596,7 +596,7 @@
       ask: (k === "要確認"),
       // ★2026-09-11 まるちゃん：画面では「相談」の言葉を一切使わない（分かりにくいため）。
       label: (k === "要確認"
-              ? "カウンセリングのみか、施術も行うかを判断できませんでした。選択してね😊"
+              ? "カウンセリングのみか、施術も行うかを判断できませんでした。選択してください🙇"
               : "カウンセリングのみの予約ですか？")
     };
   };
