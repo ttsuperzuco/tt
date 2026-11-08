@@ -498,6 +498,41 @@
     return hv && ho ? 'both' : (hv ? 'vio' : (ho ? 'other' : ''));
   };
 
+  /* ── ★受付の端末は「予約メモの確定のあと」に確認する（2026-11-09 まるちゃん決定・今は開発版だけ）──
+     まるちゃん「受付は施術をやったかわからないけど、客が予約している目の前で施術者にきくわけにもいかない」
+     ＝受付の端末（SG.isReception）だけ、お客様を選んだ直後の確認の画面（イーライト・はじめての脱毛・パリジェンヌ・
+       顔／頭皮プロセル）を出さず、予約メモの確定のあとに
+       ①「確認の一覧」（お客様が退店された後に、担当した施術者へ聞く物を全部並べる・ボタン「全て確認しました」）
+       ②各確認の画面 ③次が最終回の施術があればお知らせのおすすめ の順に出す。
+     施術者のスマホは本人が施術したので今までどおり（お客様を選んだ直後に聞く）。
+     ★本番に出すかどうかは画面側（開発版の時だけ）で止める。ここは「受付か」と「一覧の文」だけを決める。 */
+  SG.asksAfterMemo = function (who) {
+    return SG.isReception(who);
+  };
+  /* 確認の一覧の文。seq＝出す確認の画面の番号の並び（9イーライト・11はじめての脱毛・12パリジェンヌ・13顔プロセル・14頭皮プロセル）、
+     elParts＝イーライトの部位（SG.elightAsk の parts）、finals＝次が最終回の施術（事務所パソコンの答え・{name, head, parts:[{word}]}）。
+     〇〇には今日の予約の部位を全部入れる（まるちゃん「VIO、脇、〇〇 など」）。 */
+  SG.checkItems = function (seq, elParts, finals) {
+    var out = [], s = seq || [];
+    for (var i = 0; i < s.length; i++) {
+      var n = s[i];
+      if (n === 9) {
+        var ps = (elParts || []).filter(function (p) { return p.indexOf('プラン') < 0; });
+        out.push('本日イーライト' + (ps.length ? '（' + ps.join('、') + '）' : '') + 'をやりましたか？');
+      } else if (n === 11) out.push('本日が当店はじめての脱毛の施術でしたか？');
+      else if (n === 12) out.push('本日パリジェンヌをやりましたか？');
+      else if (n === 13) out.push('本日、顔のプロセルをやりましたか？');
+      else if (n === 14) out.push('本日、頭皮のプロセルをやりましたか？');
+    }
+    var f = finals || [];
+    for (var j = 0; j < f.length; j++) {
+      var w = ((f[j] && f[j].parts) || []).map(function (p) { return p && p.word; }).filter(function (x) { return x; });
+      var nm = w.length ? w.join('、') : ((f[j] && (f[j].name || f[j].head)) || '');
+      out.push('次回の予約で' + nm + 'がラストですが、お知らせのリピートおすすめはどうしますか？（都度・5回・8回）');
+    }
+    return out;
+  };
+
   if (typeof module !== 'undefined' && module.exports) module.exports = SG;
   root.SG = SG;
 })(typeof window !== 'undefined' ? window : this);
