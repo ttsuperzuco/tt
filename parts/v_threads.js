@@ -362,7 +362,7 @@ function threadsScript_(C) {
     window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
     var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
     var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
-    s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度お試しください。' }); }; document.body.appendChild(s);
+    s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
   }
   function devKey(cb) {
     if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
@@ -384,16 +384,16 @@ function threadsScript_(C) {
     var poll = function (id) {
       var n = 0, max = 300;
       var tick = function () {
-        n++; if (n > max) { end('時間切れです。もう一度お試しください。'); return; }
+        n++; if (n > max) { end('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
         jsonp({ action: 'status', key: C.key, id: id }, function (x) {
-          if (!x || !x.ok) { end((x && x.error) || '通信に失敗しました。もう一度お試しください。'); return; }
+          if (!x || !x.ok) { end((x && x.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1000); return; }
           if (x.status !== 'done') { end(x.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
           var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
           if (d && d.__bigres) {
             jsonp({ action: 'data', key: C.key, name: d.__bigres }, function (y) {
               var v = null; try { v = JSON.parse(y && y.result); } catch (e) {}
-              if (!v) { end('答えを読み込めませんでした。もう一度お試しください。'); return; }
+              if (!v) { end('答えを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
               end(null, v);
             });
             return;
@@ -406,14 +406,14 @@ function threadsScript_(C) {
     var send = function (ft) {
       jsonp({ action: 'submit', key: C.key, op: 'threads', who: me.who, role: me.role, device: me.device, fields: ft },
         function (r) {
-          if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました。もう一度お試しください。'); return; }
+          if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           poll(r.id);
         });
     };
     if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
     BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'threads', op: 'threads',
                   who: me.who, role: me.role, device: me.device, fields: fields },
-      send, function () { end('写真・動画を送れませんでした。数を減らしてもう一度お試しください。'); });
+      send, function () { end('写真・動画を送れませんでした。数を減らして、もう一度試してもらえると嬉しいです🙇'); });
   }
 
   function drawAcct() {
@@ -437,7 +437,7 @@ function threadsScript_(C) {
   });
 
   var IC = function (k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" width="' + (sz || 20) + '" height="' + (sz || 20) + '" aria-hidden="true">' + ((C.ico && C.ico[k]) || '') + '</svg>'; };
-  var OFFMSG = 'は、Threadsの公式の仕組みでは使えません（Threadsのアプリから行ってください）。';
+  var OFFMSG = 'は、Threadsの公式の仕組みでは使えません。Threadsのアプリから行ってください🙇';
   var CHMSG = '続きの投稿には文だけ付けられます。写真・アンケート・添付テキストは最初の投稿に付けてください😊';
   var LONG = '', APPR = false, SPOIL = false, OPEN_DRAFT = 0;
   function each(sel, root, fn) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
@@ -536,7 +536,7 @@ function threadsScript_(C) {
     files.forEach(function (f) {
       if (MEDIA.length >= MAXI) { warn('写真・動画は合わせて' + MAXI + '個までです。'); return; }
       if (/^video\//.test(f.type)) {
-        if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです（短い動画にしてください）。'); return; }
+        if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです。短い動画にしてください🙇'); return; }
         var vr = new FileReader();
         vr.onload = function () {
           var b64 = String(vr.result).split(',')[1] || '';
@@ -736,16 +736,16 @@ function threadsScript_(C) {
     var longt = LONG;
     var topic = $('thTopicText').value.trim().replace(/^#/, '');
     var chain = chainBoxes().map(function (t) { return t.value.trim(); }).filter(function (x) { return x; });
-    if (!CUR) { warn('投稿するアカウントをえらんでください。'); return; }
+    if (!CUR) { warn('投稿するアカウントを選択してください😊'); return; }
     if (!text && !MEDIA.length) { warn('文か写真・動画を入力してください😊'); return; }
     if (tlen(text) > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
     if (usePoll) {
-      if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には出せません。'); return; }
+      if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には投稿できません。'); return; }
       if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入力してください😊'); return; }
       if (!text) { warn('投票には質問の文を入力してください😊'); return; }
     }
     if (longt) {
-      if (MEDIA.length) { warn('長い文は、写真・動画と一緒には出せません。'); return; }
+      if (MEDIA.length) { warn('長い文は、写真・動画と一緒には投稿できません。'); return; }
       if (tlen(longt) > MAXLONG) { warn('長い文は' + MAXLONG + '文字までです。'); return; }
       if (!text) { warn('長い文には、最初に表示される文も入力してください😊'); return; }
     }
@@ -756,7 +756,7 @@ function threadsScript_(C) {
               approvals: APPR, spoiler: SPOIL };
     if (usePoll) f.poll = { a: pv[0], b: pv[1], c: pv[2], d: pv[3] };
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
-    szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？', { icon: '', cancel: true, onYes: function () {
+    szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？😊', { icon: '', cancel: true, onYes: function () {
       ask(f, MEDIA.some(function (o) { return o.video; }) ? 'Threadsに投稿中です（動画は数分かかります）' : 'Threadsに投稿中です', function (err, d) {
         if (err) { warn(err); return; }
         dropDraft(OPEN_DRAFT);
@@ -815,7 +815,7 @@ function threadsScript_(C) {
         '<span>フォロワー' + esc((wb && wb.fcount) || pf.followers) + '人</span></div>' +
         '<a class="ig" href="https://www.instagram.com/' + esc(pf.username || '') + '/" target="_blank" rel="noopener" title="Instagram">◎</a></div>';
     }
-    h += '<div class="pbtns"><button type="button" class="off" data-off="プロフィールの編集はThreadsのアプリから行ってください（公式の仕組みでは変えられません）">プロフィールを編集</button>' +
+    h += '<div class="pbtns"><button type="button" class="off" data-off="プロフィールの編集は、公式の仕組みでは変更できません。Threadsのアプリから行ってください🙇">プロフィールを編集</button>' +
       '<button type="button" id="thInsOpen">インサイトを見る</button></div>';
     var TABS = [['th', 'スレッド'], ['rp', '返信'], ['md', 'メディア'], ['rs', '再投稿']];
     h += '<div class="tabs">' + TABS.map(function (t) { return '<div data-tab="' + t[0] + '"' + (t[0] === TAB ? ' class="on"' : '') + '>' + t[1] + '</div>'; }).join('') + '</div>';
@@ -996,7 +996,7 @@ function threadsScript_(C) {
     if (g('data-rp')) { openReply(g('data-rp')); return; }
     if (g('data-fdel')) {
       var dmid = g('data-fdel');
-      szPopup_('この投稿をThreadsから削除しますか？（元に戻せません）', { cancel: true, onYes: function () {
+      szPopup_('この投稿をThreadsから削除しますか？😊\n（元に戻せません）', { cancel: true, onYes: function () {
         ask({ kind: 'delete', acct: CUR, media_id: dmid }, '削除中です', function (err) {
           if (err) { warn(err); return; }
           if (FEED) FEED.posts = FEED.posts.filter(function (x) { return x.id !== dmid; });
@@ -1012,15 +1012,15 @@ function threadsScript_(C) {
       var to = g('data-send'), ta = $('rb_' + to).querySelector('textarea'), txt = ta.value.trim();
       if (!txt) { warn('返信の文を入力してください😊'); return; }
       if (tlen(txt) > 500) { warn('返信は500文字までです。'); return; }
-      szPopup_('お店として返信しますか？', { icon: '', cancel: true, onYes: function () {
+      szPopup_('お店として返信しますか？😊', { icon: '', cancel: true, onYes: function () {
         act({ kind: 'reply', acct: CUR, to_id: to, text: txt }, '返信中です', '返信が完了しました', mid);
       } });
       return;
     }
-    if (g('data-hd')) { var r1 = g('data-hd'); szPopup_('このコメントを非表示にしますか？（あとで戻せます）', { cancel: true, onYes: function () { act({ kind: 'hide', acct: CUR, reply_id: r1, hide: true }, '非表示にしています', '非表示にしました', mid); } }); return; }
+    if (g('data-hd')) { var r1 = g('data-hd'); szPopup_('このコメントを非表示にしますか？😊\n（あとで戻せます）', { cancel: true, onYes: function () { act({ kind: 'hide', acct: CUR, reply_id: r1, hide: true }, '非表示にしています', '非表示にしました', mid); } }); return; }
     if (g('data-un')) { var r2 = g('data-un'); act({ kind: 'hide', acct: CUR, reply_id: r2, hide: false }, '表示に戻しています', '表示に戻しました', mid); return; }
     if (g('data-ap')) { var r3 = g('data-ap'); act({ kind: 'approve', acct: CUR, reply_id: r3, approve: true }, '承認しています', '承認しました', mid); return; }
-    if (g('data-ig')) { var r4 = g('data-ig'); szPopup_('このコメントを無視しますか？（表示しません）', { cancel: true, onYes: function () { act({ kind: 'approve', acct: CUR, reply_id: r4, approve: false }, '処理中です', '無視しました', mid); } }); return; }
+    if (g('data-ig')) { var r4 = g('data-ig'); szPopup_('このコメントを無視しますか？😊\n（表示しません）', { cancel: true, onYes: function () { act({ kind: 'approve', acct: CUR, reply_id: r4, approve: false }, '処理中です', '無視しました', mid); } }); return; }
   });
 
   var WEB = {}, INS = {}, WEBBUSY = {}, INSBUSY = {}, VIEW = 'feed', DAYS = 30;
@@ -1150,7 +1150,7 @@ function threadsScript_(C) {
   $('thList').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-id]'); if (!b) return;
     var mid = b.getAttribute('data-id');
-    szPopup_('この投稿をThreadsから削除しますか？（続きの投稿も一緒に消えます）', { cancel: true, onYes: function () {
+    szPopup_('この投稿をThreadsから削除しますか？😊\n（続きの投稿も一緒に消えます）', { cancel: true, onYes: function () {
       ask({ kind: 'delete', acct: CUR, media_id: mid }, '削除中です', function (err) {
         if (err) { warn(err); return; }
         szOvShow_(szDoneHtml_('削除が完了しました'), '#16a34a');

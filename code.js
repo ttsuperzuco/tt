@@ -5788,7 +5788,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" data-addimg="\'+sk+\'">🖼 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="\'+sk+\'">✍ 文章を追加</button></div>\';}' +
   'if(n>=MAXP)h+=\'<div class="bcwho">\'+MAXP+\'つまで送れます（いっぱいです）。\'+' +
-  '\'入れ替える時は「消去」してから追加してください。</div>\';}' +
+  '\'入れ替える時は「消去」してから追加してください😊</div>\';}' +
   'if(mode==="img"){' +
   'h+=\'<div class="bchr"></div><div class="bcleft">\'+(ADDAT+1)+\'つ目に追加する画像を選ぶ</div><div class="bcgrid">\'+' +
   'picks().map(function(p){return \'<div class="bcpick\'+(p.made?" new":"")+\'">\'+' +
@@ -5804,7 +5804,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var cur=(TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(t);' +
   'h+=\'<div class="bchr"></div><div class="bcleft">送るタグをえらぶ（いくつでも選べます。もう一度押すと外れます）</div>\';' +
   'if(TAGBUSY){h+=\'<div class="bcouttx">タグの一覧を読んでいます…</div>\';}' +
-  'else if(!TAGLIST.length){h+=\'<div class="bcouttx">タグの一覧を読めませんでした。</div>\';}' +
+  'else if(!TAGLIST.length){h+=\'<div class="bcouttx">タグの一覧を読み込めませんでした。</div>\';}' +
   'else{h+=\'<div class="bctaglist">\'+TAGLIST.map(function(x){' +
   'return \'<button type="button" data-tag="\'+esc(x)+\'" class="\'+' +
   '((cur.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';}' +
@@ -5892,7 +5892,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var x=b.getAttribute("data-tag"),a=((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).slice(),k=a.indexOf(x);' +
   'if(k>=0)a.splice(k,1);else a.push(x);TAGS[step]=a;saveNow();draw();};});' +
   'if(e=document.getElementById("bctagok"))e.onclick=function(){' +
-  'if(!(TAGS[step]||[]).length){status("タグを1つ以上えらんでください。",true);return;}' +
+  'if(!(TAGS[step]||[]).length){status("タグを1つ以上選択してください😊",true);return;}' +
   // 最初の決まりと同じなら「選び直していない」に戻す（決まりの外すタグもそのまま効く）
   'if(sameSet(TAGS[step],defTags(TPL[step])))TAGS[step]=[];' +
   'mode="";saveNow();status("タグを確定しました。");draw();};' +
@@ -5917,7 +5917,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ta=document.getElementById("bctxt"),cnt=document.getElementById("bccnt"),ad=document.getElementById("bcaddtxt");' +
   'function growTa(){if(!ta)return;ta.style.height="0px";ta.style.height=(ta.scrollHeight+12)+"px";}' +
   'if(ta){ta.focus();growTa();setTimeout(growTa,0);setTimeout(growTa,200);' +
-  'ta.oninput=function(){var L=ulen(ta.value.replace(/^\\s+|\\s+$/g,""));cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください）"):"");' +
+  'ta.oninput=function(){var L=ulen(ta.value.replace(/^\\s+|\\s+$/g,""));cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください😊）"):"");' +
   'cnt.className="bccount"+(L>MAXT?" over":"");growTa();};' +
   'ad.onclick=function(){var v=(ta.value||"").trim();' +
   'if(!v){status("文章が空です。",true);return;}' +
@@ -5969,12 +5969,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'items.push({name:t.name,tags:(TAGS[i]||[]),' +
   'parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
   'if(!n){status("文章か画像を入力した対象が1つもありません。",true);return;}' +
-  'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいですか？")' +
-  ':(d0+" "+t0+" から、"+n+"通りの配信を予約します。よろしいですか？"),{cancel:true,onYes:function(){try{' +
+  'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいでしょうか？😊")' +
+  ':(d0+" "+t0+" から、"+n+"通りの配信を予約します。よろしいでしょうか？😊"),{cancel:true,onYes:function(){try{' +
   // ★押したボタンを見る（今すぐ=bcnow／予約=bcplace）。前は予約用だけを探して、
   //   今すぐを押した時に見つからず止まっていた（2026-09-08 実機で発生）。
   'var go=document.getElementById(now?"bcnow":"bcplace");if(go)go.disabled=true;' +
-  'szOvShow_(szBusyHtml_(now?"配信を送っています":"配信を予約しています","LINEへの登録が終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
+  'szOvShow_(szBusyHtml_(now?"配信を送っています":"配信を予約しています","LINEへの登録が終わったら自動で切り替わります。少し待っててくださいね🥺"),"#2C7A99");' +
   'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
   'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
   'delete p.b64;});});' +
@@ -6008,7 +6008,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
   'ask("bc_list",{},function(d){' +
   'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,function(p){LPOSTS=p;drawList(LPOSTS);});},' +
-  'function(m){el.innerHTML=\'<div class="bcouttx">読めませんでした。</div>\';status(m,true);});}' +
+  'function(m){el.innerHTML=\'<div class="bcouttx">読み込めませんでした。</div>\';status(m,true);});}' +
   // ★配信済みは今日送った分も出す（まるちゃん指示 2026-09-14。前は昨日までの分だけ＝9/9の決まり）
   'function drawList(posts){var el=document.getElementById("bclist");if(!el)return;' +
   'LPOSTS=posts||LPOSTS;' +
@@ -6033,7 +6033,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '(r.cancelable?(\'<button type="button" class="bccx" data-cx="\'+r.broadcast_id+\'">取り消し</button>\'):"")+' +
   '\'</div>\';}).join("");' +
   '[].slice.call(el.querySelectorAll("[data-cx]")).forEach(function(b){b.onclick=function(){' +
-  'szPopup_("この配信を取り消しますか？",{cancel:true,onYes:function(){status("取り消しています…");' +
+  'szPopup_("この配信を取り消しますか？😊",{cancel:true,onYes:function(){status("取り消しています…");' +
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
   'status(d.note||"取り消しました。",!d.ok);LBATCH=((d.batch&&d.batch.n)||LBATCH);' +
   'postsOf(d,drawList);},function(m3){status(m3,true);});}});};});' +
@@ -6041,14 +6041,14 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★全部取り消す／戻す（まるちゃん指示 2026-09-09）
   'function bindList(){' +
   'var a=document.getElementById("bcallcx");' +
-  'if(a)a.onclick=function(){szPopup_("配信待ちを全部取り消しますか？\\n"+' +
+  'if(a)a.onclick=function(){szPopup_("配信待ちを全部取り消しますか？😊\\n"+' +
   '"（内容は控えに残るため、後で元に戻せます）",{cancel:true,onYes:function(){' +
   'a.disabled=true;status("取り消しています…");' +
   'ask("bc_cancel_all",{},function(d){status(d.note||"取り消しました。",!d.ok);' +
   'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,drawList);},' +
   'function(m){a.disabled=false;status(m,true);});}});};' +
   'var u=document.getElementById("bcundo");' +
-  'if(u)u.onclick=function(){szPopup_("取り消した配信を元に戻しますか？",{cancel:true,' +
+  'if(u)u.onclick=function(){szPopup_("取り消した配信を元に戻しますか？😊",{cancel:true,' +
   'onYes:function(){u.disabled=true;status("戻しています…");' +
   'ask("bc_restore",{},function(d){status(d.note||"戻しました。",!d.ok);' +
   'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,drawList);},' +
@@ -13332,7 +13332,7 @@ function threadsScript_(C) {
     window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
     var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
     var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
-    s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度お試しください。' }); }; document.body.appendChild(s);
+    s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
   }
   // 開発版だけ：この窓の鍵の指紋を添える（パソコン版ズコの窓は端末番号が窓ごとにばらばらなので、受付係が鍵の指紋で見分ける）。
   function devKey(cb) {
@@ -13357,9 +13357,9 @@ function threadsScript_(C) {
       // 動画はThreadsの準備に数分かかることがある＝約10分まで待つ（受付係の待ちより長く）。
       var n = 0, max = 300;
       var tick = function () {
-        n++; if (n > max) { end('時間切れです。もう一度お試しください。'); return; }
+        n++; if (n > max) { end('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
         jsonp({ action: 'status', key: C.key, id: id }, function (x) {
-          if (!x || !x.ok) { end((x && x.error) || '通信に失敗しました。もう一度お試しください。'); return; }
+          if (!x || !x.ok) { end((x && x.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1000); return; }
           if (x.status !== 'done') { end(x.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
           var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
@@ -13367,7 +13367,7 @@ function threadsScript_(C) {
           if (d && d.__bigres) {
             jsonp({ action: 'data', key: C.key, name: d.__bigres }, function (y) {
               var v = null; try { v = JSON.parse(y && y.result); } catch (e) {}
-              if (!v) { end('答えを読み込めませんでした。もう一度お試しください。'); return; }
+              if (!v) { end('答えを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
               end(null, v);
             });
             return;
@@ -13380,14 +13380,14 @@ function threadsScript_(C) {
     var send = function (ft) {
       jsonp({ action: 'submit', key: C.key, op: 'threads', who: me.who, role: me.role, device: me.device, fields: ft },
         function (r) {
-          if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました。もう一度お試しください。'); return; }
+          if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           poll(r.id);
         });
     };
     if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
     BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'threads', op: 'threads',
                   who: me.who, role: me.role, device: me.device, fields: fields },
-      send, function () { end('写真・動画を送れませんでした。数を減らしてもう一度お試しください。'); });
+      send, function () { end('写真・動画を送れませんでした。数を減らして、もう一度試してもらえると嬉しいです🙇'); });
   }
 
   // ── アカウント ──
@@ -13416,7 +13416,7 @@ function threadsScript_(C) {
   //   ・残りの文字数は本物と同じく「残り50文字から」右下に出す（超えたら赤）。何も書いていない時・超えた時は「投稿」を押せない。
   //   ・下書きは公式の仕組みに無いので、この端末に覚えておく（アカウントごと）。
   var IC = function (k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" width="' + (sz || 20) + '" height="' + (sz || 20) + '" aria-hidden="true">' + ((C.ico && C.ico[k]) || '') + '</svg>'; };
-  var OFFMSG = 'は、Threadsの公式の仕組みでは使えません（Threadsのアプリから行ってください）。';
+  var OFFMSG = 'は、Threadsの公式の仕組みでは使えません。Threadsのアプリから行ってください🙇';
   var CHMSG = '続きの投稿には文だけ付けられます。写真・アンケート・添付テキストは最初の投稿に付けてください😊';
   var LONG = '', APPR = false, SPOIL = false, OPEN_DRAFT = 0;
   function each(sel, root, fn) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
@@ -13519,7 +13519,7 @@ function threadsScript_(C) {
     files.forEach(function (f) {
       if (MEDIA.length >= MAXI) { warn('写真・動画は合わせて' + MAXI + '個までです。'); return; }
       if (/^video\//.test(f.type)) {
-        if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです（短い動画にしてください）。'); return; }
+        if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです。短い動画にしてください🙇'); return; }
         var vr = new FileReader();
         vr.onload = function () {
           var b64 = String(vr.result).split(',')[1] || '';
@@ -13726,16 +13726,16 @@ function threadsScript_(C) {
     var longt = LONG;
     var topic = $('thTopicText').value.trim().replace(/^#/, '');
     var chain = chainBoxes().map(function (t) { return t.value.trim(); }).filter(function (x) { return x; });
-    if (!CUR) { warn('投稿するアカウントをえらんでください。'); return; }
+    if (!CUR) { warn('投稿するアカウントを選択してください😊'); return; }
     if (!text && !MEDIA.length) { warn('文か写真・動画を入力してください😊'); return; }
     if (tlen(text) > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
     if (usePoll) {
-      if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には出せません。'); return; }
+      if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には投稿できません。'); return; }
       if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入力してください😊'); return; }
       if (!text) { warn('投票には質問の文を入力してください😊'); return; }
     }
     if (longt) {
-      if (MEDIA.length) { warn('長い文は、写真・動画と一緒には出せません。'); return; }
+      if (MEDIA.length) { warn('長い文は、写真・動画と一緒には投稿できません。'); return; }
       if (tlen(longt) > MAXLONG) { warn('長い文は' + MAXLONG + '文字までです。'); return; }
       if (!text) { warn('長い文には、最初に表示される文も入力してください😊'); return; }
     }
@@ -13746,7 +13746,7 @@ function threadsScript_(C) {
               approvals: APPR, spoiler: SPOIL };
     if (usePoll) f.poll = { a: pv[0], b: pv[1], c: pv[2], d: pv[3] };
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
-    szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？', { icon: '', cancel: true, onYes: function () {
+    szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？😊', { icon: '', cancel: true, onYes: function () {
       ask(f, MEDIA.some(function (o) { return o.video; }) ? 'Threadsに投稿中です（動画は数分かかります）' : 'Threadsに投稿中です', function (err, d) {
         if (err) { warn(err); return; }
         dropDraft(OPEN_DRAFT);
@@ -13807,7 +13807,7 @@ function threadsScript_(C) {
         '<span>フォロワー' + esc((wb && wb.fcount) || pf.followers) + '人</span></div>' +
         '<a class="ig" href="https://www.instagram.com/' + esc(pf.username || '') + '/" target="_blank" rel="noopener" title="Instagram">◎</a></div>';
     }
-    h += '<div class="pbtns"><button type="button" class="off" data-off="プロフィールの編集はThreadsのアプリから行ってください（公式の仕組みでは変えられません）">プロフィールを編集</button>' +
+    h += '<div class="pbtns"><button type="button" class="off" data-off="プロフィールの編集は、公式の仕組みでは変更できません。Threadsのアプリから行ってください🙇">プロフィールを編集</button>' +
       '<button type="button" id="thInsOpen">インサイトを見る</button></div>';
     var TABS = [['th', 'スレッド'], ['rp', '返信'], ['md', 'メディア'], ['rs', '再投稿']];
     h += '<div class="tabs">' + TABS.map(function (t) { return '<div data-tab="' + t[0] + '"' + (t[0] === TAB ? ' class="on"' : '') + '>' + t[1] + '</div>'; }).join('') + '</div>';
@@ -13996,7 +13996,7 @@ function threadsScript_(C) {
     if (g('data-rp')) { openReply(g('data-rp')); return; }
     if (g('data-fdel')) {
       var dmid = g('data-fdel');
-      szPopup_('この投稿をThreadsから削除しますか？（元に戻せません）', { cancel: true, onYes: function () {
+      szPopup_('この投稿をThreadsから削除しますか？😊\n（元に戻せません）', { cancel: true, onYes: function () {
         ask({ kind: 'delete', acct: CUR, media_id: dmid }, '削除中です', function (err) {
           if (err) { warn(err); return; }
           if (FEED) FEED.posts = FEED.posts.filter(function (x) { return x.id !== dmid; });
@@ -14012,15 +14012,15 @@ function threadsScript_(C) {
       var to = g('data-send'), ta = $('rb_' + to).querySelector('textarea'), txt = ta.value.trim();
       if (!txt) { warn('返信の文を入力してください😊'); return; }
       if (tlen(txt) > 500) { warn('返信は500文字までです。'); return; }
-      szPopup_('お店として返信しますか？', { icon: '', cancel: true, onYes: function () {
+      szPopup_('お店として返信しますか？😊', { icon: '', cancel: true, onYes: function () {
         act({ kind: 'reply', acct: CUR, to_id: to, text: txt }, '返信中です', '返信が完了しました', mid);
       } });
       return;
     }
-    if (g('data-hd')) { var r1 = g('data-hd'); szPopup_('このコメントを非表示にしますか？（あとで戻せます）', { cancel: true, onYes: function () { act({ kind: 'hide', acct: CUR, reply_id: r1, hide: true }, '非表示にしています', '非表示にしました', mid); } }); return; }
+    if (g('data-hd')) { var r1 = g('data-hd'); szPopup_('このコメントを非表示にしますか？😊\n（あとで戻せます）', { cancel: true, onYes: function () { act({ kind: 'hide', acct: CUR, reply_id: r1, hide: true }, '非表示にしています', '非表示にしました', mid); } }); return; }
     if (g('data-un')) { var r2 = g('data-un'); act({ kind: 'hide', acct: CUR, reply_id: r2, hide: false }, '表示に戻しています', '表示に戻しました', mid); return; }
     if (g('data-ap')) { var r3 = g('data-ap'); act({ kind: 'approve', acct: CUR, reply_id: r3, approve: true }, '承認しています', '承認しました', mid); return; }
-    if (g('data-ig')) { var r4 = g('data-ig'); szPopup_('このコメントを無視しますか？（表示しません）', { cancel: true, onYes: function () { act({ kind: 'approve', acct: CUR, reply_id: r4, approve: false }, '処理中です', '無視しました', mid); } }); return; }
+    if (g('data-ig')) { var r4 = g('data-ig'); szPopup_('このコメントを無視しますか？😊\n（表示しません）', { cancel: true, onYes: function () { act({ kind: 'approve', acct: CUR, reply_id: r4, approve: false }, '処理中です', '無視しました', mid); } }); return; }
   });
 
   // ── フォロワー一覧・インサイト（2026-11-05 まるちゃん「完全再現して」）──
@@ -14160,7 +14160,7 @@ function threadsScript_(C) {
   $('thList').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-id]'); if (!b) return;
     var mid = b.getAttribute('data-id');
-    szPopup_('この投稿をThreadsから削除しますか？（続きの投稿も一緒に消えます）', { cancel: true, onYes: function () {
+    szPopup_('この投稿をThreadsから削除しますか？😊\n（続きの投稿も一緒に消えます）', { cancel: true, onYes: function () {
       ask({ kind: 'delete', acct: CUR, media_id: mid }, '削除中です', function (err) {
         if (err) { warn(err); return; }
         szOvShow_(szDoneHtml_('削除が完了しました'), '#16a34a');
@@ -15111,7 +15111,7 @@ function instaScript_(C) {
       (type === 'slider' ? '<div class="igcq"><div class="t">絵文字</div><div style="display:flex;gap:4px;flex-wrap:wrap" id="igStkE">' + SLIDER_EMOJI.map(function (x, k) {
         return '<button type="button" data-em2="' + x + '" style="font-size:26px;border:' + (k === 0 ? '2px solid #0095f6' : '1px solid #dbdbdb') + ';background:#fff;border-radius:10px;padding:4px 8px;cursor:pointer">' + x + '</button>'; }).join('') + '</div></div>' : '') +
       '<div class="igcq"><div class="t">置く場所</div><div class="seg" id="igStkP">' + STK_POS.map(function (x) { return '<button type="button" data-p="' + x + '"' + (x === '真ん中' ? ' class="on"' : '') + '>' + x + '</button>'; }).join('') + '</div></div>' +
-      '<div class="igcnote">文字・絵文字は日本語でも大丈夫です。スタンプの見た目はインスタと同じになります。ほかのスタンプやリンクと置く場所が重ならないようにしてください。</div></div>';
+      '<div class="igcnote">文字・絵文字は日本語でも大丈夫です。スタンプの見た目はインスタと同じになります。ほかのスタンプやリンクと置く場所が重ならないように配置してください😊</div></div>';
     document.body.appendChild(e);
     e.addEventListener('click', function (ev) {
       var t = ev.target;
@@ -15147,7 +15147,7 @@ function instaScript_(C) {
         (CMEDIA.length > 1 ? '<span class="n">' + (i + 1) + '</span>' : '') + '<button type="button" data-del="' + i + '">✕</button>' +
         ((CK === 'story' || (CK === 'reel' && m.video)) ? '<button type="button" data-sedit="' + i + '" style="position:absolute;left:6px;bottom:6px;top:auto;right:auto;width:auto;height:auto;border-radius:14px;padding:4px 10px;font-size:12px;font-weight:700;background:rgba(0,0,0,.6);color:#fff;border:0">✏️ 文字・スタンプ</button>' : '') + '</div>';
     }).join('') + ((CK === 'story' || CK === 'reel') && CMEDIA.length && CMEDIA[0].video ?
-      '<div class="igcnote">動画にも文字・スタンプを付けられます（✏️）。' + (CK === 'story' ? 'リンク・音楽・質問などのスタンプは、写真のストーリーズだけに付けられます。' : '音楽はインスタのアプリから付けてください（ズコからは付けられません）。') + '</div>' : '');
+      '<div class="igcnote">動画にも文字・スタンプを付けられます（✏️）。' + (CK === 'story' ? 'リンク・音楽・質問などのスタンプは、写真のストーリーズだけに付けられます。' : 'ズコからは音楽を付けられません。インスタのアプリから付けてください🙇') + '</div>' : '');
   }
   function share() {
     if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してください😊' : '写真か動画を選択してください😊'); return; }
@@ -15161,7 +15161,7 @@ function instaScript_(C) {
     var lt = document.getElementById('igcLinkT'), ltext = lt ? lt.value.trim() : '';
     var m0 = CMEDIA[0];
     var sc = document.getElementById('igcSCap'), scap = sc ? sc.value.trim() : '', cfo = document.getElementById('igcCF'), cf = !!(cfo && cfo.checked);
-    if (CK === 'story' && m0.video && (link || CMUS || CSTK.length || scap || cf)) { warn('説明文・親しい友達・リンク・音楽・スタンプは写真のストーリーズだけに使えます😊（動画の時は外してください）'); return; }
+    if (CK === 'story' && m0.video && (link || CMUS || CSTK.length || scap || cf)) { warn('説明文・親しい友達・リンク・音楽・スタンプは写真のストーリーズだけに使えます。動画の時は外してください🙇'); return; }
     if (ltext && !link) { warn('スタンプに出す文字は、リンクを入力した時だけ使えます😊'); return; }
     if (CK === 'story' && (link || CMUS || CSTK.length || scap || cf)) {
       if (link && !/^https?:\/\/[^\s]+$/.test(link)) { warn('リンクは https:// から始まる住所を入力してください😊'); return; }
@@ -15439,7 +15439,7 @@ function instaScript_(C) {
   //   自宅PCだけが受ける（op=instaphone・Instagram投稿\programs\insta_phone_jobs.py）。
   //   ★まるちゃん「100秒後じゃおそい。1〜2秒後に」＝押した瞬間に自宅PCの「動いている印」（1分ごとに置かれる）を読み、
   //     150秒より古ければ依頼を送らずにすぐ知らせる。
-  var PHONE_OFF = '現在その機能は使用できません。りゅうさんに連絡してください。';
+  var PHONE_OFF = '現在その機能は使用できません。りゅうさんに連絡してください🙇';
   function phone(fields, busy, done) {
     jsonp({ action: 'data', key: C.key, name: 'instaphone_alive.json' }, function (y) {
       var v = null;
@@ -16212,7 +16212,7 @@ function instaScript_(C) {
         if (err) { box.innerHTML = '<div class="n">' + esc(err) + '</div>'; return; }
         BIZ = d || {};
         var inp = function (id, ph, v, im) { return '<input id="' + id + '" placeholder="' + ph + '"' + (im ? ' inputmode="' + im + '"' : '') + ' style="border-bottom:1px solid #efefef;margin:4px 0" value="' + esc(v || '') + '">'; };
-        box.innerHTML = '<div class="n">カテゴリ：' + esc(BIZ.category || 'なし') + '（カテゴリはインスタのアプリから変更してください）</div>' +
+        box.innerHTML = '<div class="n">カテゴリ：' + esc(BIZ.category || 'なし') + '（カテゴリはインスタのアプリから変更してください😊）</div>' +
           '<div class="n" style="margin-top:8px">メールアドレス</div>' + inp('igbEmail', 'メールアドレス（空にすると削除）', BIZ.email, 'email') +
           '<div class="n" style="margin-top:8px">住所（今：' + esc(BIZ.address || 'なし') + '）</div>' +
           inp('igbStreet', '町名・番地（変更する時だけ入力）', '') + inp('igbCity', '市区町村（例：台北市）', '') + inp('igbZip', '郵便番号', '', 'numeric') +
@@ -16415,7 +16415,7 @@ function instaScript_(C) {
       '<div class="cv"><div class="c"><img id="igheCvImg" src="' + esc(coverSrc()) + '" referrerpolicy="no-referrer" alt=""></div><button type="button" id="igheCv">カバーを編集</button></div>' +
       '<input class="nm" id="igheNm" placeholder="ハイライト名" maxlength="' + HL_MAX + '">' +
       '<div class="tabs" id="igheTabs"></div><div id="igheGrid"></div>' +
-      '<div class="igcnote">「ストーリーズ」には、保存したストーリーズ（アーカイブ）の新しい方から90件が出ます（いちばん下のボタンで300件まで読み込めます）。新しい写真を入れる時は、先に＋の「ストーリーズ」から投稿してください😊<br>' +
+      '<div class="igcnote">「ストーリーズ」には、保存したストーリーズ（アーカイブ）の新しい方から90件が出ます（いちばん下のボタンで300件まで読み込めます）。新しい写真を追加する時は、先に＋の「ストーリーズ」から投稿してください😊<br>' +
       '保存には1〜2分かかります。ハイライトの削除は、ハイライトを開いて右上の「⋯」からできます。</div></div>';
     document.body.appendChild(e);
     var nmEl = document.getElementById('igheNm'); nmEl.value = NAME;
@@ -16662,7 +16662,7 @@ function renderPcStatusPage_(d, base, staff, dev) {
       why = '予告なしで止まりました';
       whySub = '停電・眠っている（スリープ）・異常終了（青い画面など）・固まった、のどれかです。'
              + '<br>どれだったかは、パソコンが戻ってきた時にここへ必ず出ます'
-             + '（パソコン自身がWindowsの日記を読んで確かめます）。';
+             + '（パソコン自身がWindowsの日記を読んで確認します）。';
     }
   }
 
