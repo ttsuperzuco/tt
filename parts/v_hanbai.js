@@ -316,6 +316,7 @@ function hanbaiScript_(C) {
     $('hbNumBox').innerHTML = (NPRE || NDIG) ? esc(NPRE + NDIG) : '<span class="ph">お客様番号を入力してください😊</span>';
     var sg = $('hbNumSeg').querySelectorAll('button');
     for (var j = 0; j < sg.length; j++) sg[j].className = (sg[j].getAttribute('data-v') === NPRE) ? 'on' : '';
+    szName_.show($('hbNumName'), (NPRE && NDIG) ? NPRE + NDIG : '');   
   }
   $('hbNumBtn').addEventListener('click', function () { S.kind = 'number'; NPRE = ''; NDIG = ''; numDraw(); show('hbNum'); });
   $('hbShopBtn').addEventListener('click', function () {
@@ -668,6 +669,7 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       '<div id="hbNum" style="display:none">' + inBack + head('🔢', 'お客様番号検索') + sum +
         '<div class="exbox psbox" id="hbNumBox"></div>' +
+        '<div id="hbNumName" style="display:none"></div>' +   
         '<div class="hbseg" id="hbNumSeg"><button type="button" data-v="F">F（女性）</button><button type="button" data-v="M">M（男性）</button></div>' +
         pad('hbNumPad') +
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +

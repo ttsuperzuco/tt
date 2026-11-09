@@ -137,6 +137,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 戻る</a></div>' +
       '<div class="hhead"><span class="bmark">📝</span><span class="bname">' + head + '</span></div>' +
       '<textarea class="exbox" id="exdisp" rows="2" placeholder="ここにお客様番号を貼り付けるか、下のボタンでお客様番号を入力する"></textarea>' +
+      '<div id="exname" style="display:none"></div>' +   
       '<div class="exseg" id="exseg"><span class="thumb"></span>' +
         '<button data-v="M" aria-pressed="true">M（男）</button>' +
         '<button data-v="F">F（女）</button>' +
@@ -380,7 +381,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function loadNewPicks(){isNewCust=true;document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="新規のお客様（番号なし）";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="新規のお客様の予約を検索しています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"new_customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
     'function goDate(){hideSteps();document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="日付を選択してください😊";calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
     'function disp(){return (prefix||"")+digits;}' +
-    'function upd(){document.getElementById("exdisp").value=disp();}' +
+    'function upd(){document.getElementById("exdisp").value=disp();szName_.show(document.getElementById("exname"),digits?disp():"");}' +
     'var seg=document.getElementById("exseg"),sb=seg.querySelectorAll("button"),thumb=seg.querySelector(".thumb");' +
     'function selSeg(i){for(var j=0;j<sb.length;j++)sb[j].setAttribute("aria-pressed",j===i);thumb.style.transform="translateX("+(i*100)+"%)";prefix=sb[i].getAttribute("data-v");upd();}' +
     'for(var i=0;i<sb.length;i++){(function(k){sb[k].addEventListener("click",function(){selSeg(k);});})(i);}' +
