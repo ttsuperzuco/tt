@@ -443,6 +443,8 @@ function instaScript_(C) {
   });
   $('igReload').addEventListener('click', function () { loadWeb(CUR, true); });
 
+  var PERM = {}, ISDEV = false, NOPERM = 'この操作の権限がありません。りゅうさんに連絡してください🙇';
+  function can(f) { var p = PERM && PERM[CUR]; return !p || p.indexOf(f) >= 0; }
   var CK = 'feed', CMEDIA = [], CHIDE = null, CLOC = null, CMUS = null, CSTK = [], MAXI = 10, VIDEO_MB = 18, TOTAL_MB = 18, MAXCAP = 2200;
   function openCreate() {
     var sh = document.createElement('div'); sh.className = 'igsheet';
@@ -465,6 +467,7 @@ function instaScript_(C) {
   }
   function totalMB() { return CMEDIA.reduce(function (a, m) { return a + m.b64.length * 3 / 4 / 1048576; }, 0); }
   function openCompose(kind) {
+    if (!can('post')) { warn(NOPERM); return; }
     CK = kind; CMEDIA = []; CHIDE = null; CLOC = null; CMUS = null; CSTK = [];
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0] || {};
     var title = { feed: '新規投稿', reel: '新規リール動画', story: 'ストーリーズに追加' }[kind];
@@ -963,6 +966,7 @@ function instaScript_(C) {
   function iso(sec) { return sec ? new Date(sec * 1000).toISOString() : ''; }
   function ini(u) { var c = String(u || '?').replace(/^[._]+/, '').charAt(0); return esc((c || '?').toUpperCase()); }
   function openDm() {
+    if (!can('dm')) { warn(NOPERM); return; }
     var el = document.createElement('div'); el.className = 'igp igdm'; el.id = 'igDm';
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
@@ -1142,14 +1146,66 @@ function instaScript_(C) {
              { t: 'お知らせ', go: openNotifs },
              { t: 'ストーリーズ（見た人）', go: openStories },
              { t: 'アーカイブ', go: openArch },
-             { t: '親しい友達', go: openCF },
+             { t: '親しい友達', go: openCF }].concat(ISDEV ? [{ t: '権限（スタッフごと）', go: openPerm }] : []).concat([
              { t: '最新の内容に更新', go: function () { loadWeb(CUR, true); } },
-             { t: 'インスタで開く', go: function () { openUrl('https://www.instagram.com/' + (p.user || '') + '/'); } }]);
+             { t: 'インスタで開く', go: function () { openUrl('https://www.instagram.com/' + (p.user || '') + '/'); } }]));
       return;
     }
     warn(SOON);
   }
+  var PERM_PEOPLE = { kanbu: '🍅 トマト', ringo: '🍎 りんご', mikan: '🍊 みかん', olive: '🫒 オリーブ', mango: '🥭 マンゴー',
+                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥 お店受付PC', reception_sp: '📱 お店スマホ' };
+  function openPerm() {
+    var e = document.createElement('div'); e.className = 'igc'; e.id = 'igPerm'; e.style.zIndex = 8500;
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igPmX">← 戻る</button><b>権限（スタッフごと）</b><button type="button" class="go" id="igPmGo">保存</button></div><div id="igPmB" style="padding:12px">読み込んでいます…</div></div>';
+    document.body.appendChild(e);
+    var T = null, who = null;
+    var draw = function () {
+      var b = document.getElementById('igPmB'); if (!b || !T) return;
+      var staff = (T.staff || []).filter(function (x) { return PERM_PEOPLE[x] || x; });
+      if (!who) who = staff[0];
+      var row = (T.people[who] = T.people[who] || {});
+      b.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">' + staff.map(function (x) {
+          var n = 0; for (var a in (T.people[x] || {})) n += (T.people[x][a] || []).length;
+          return '<button type="button" data-pw="' + esc(x) + '" style="border:1px solid ' + (x === who ? '#0095f6' : '#dbdbdb') + ';background:' + (x === who ? '#e8f3ff' : '#fff') + ';border-radius:16px;padding:6px 12px;font:inherit;cursor:pointer">' + esc(PERM_PEOPLE[x] || x) + (n ? '（' + n + '）' : '') + '</button>';
+        }).join('') + '</div>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:13px"><tr><th style="text-align:left;padding:6px 4px">機能</th>' +
+        Object.keys(T.accounts).map(function (a) { return '<th style="padding:6px 4px">' + esc(T.accounts[a]) + '</th>'; }).join('') + '</tr>' +
+        T.funcs.map(function (fn) {
+          return '<tr style="border-top:1px solid #efefef"><td style="padding:8px 4px">' + esc(fn[1]) + '</td>' + Object.keys(T.accounts).map(function (a) {
+            var on = (row[a] || []).indexOf(fn[0]) >= 0;
+            return '<td style="text-align:center"><input type="checkbox" data-pa="' + a + '" data-pf="' + fn[0] + '"' + (on ? ' checked' : '') + ' style="width:22px;height:22px"></td>';
+          }).join('') + '</tr>';
+        }).join('') + '</table>' +
+        '<div class="igcnote">開発（まるちゃん）と社長の端末は、いつも全部使えます。スタッフは、ここで印を付けた所だけ使えます（ズコの📸インスタのボタンを見せるかは、人ごとの表示の設定です）。' +
+        (T.at ? '<br>最後に保存：' + new Date(T.at * 1000).toLocaleString('ja-JP') + (T.by ? '（' + esc(T.by) + '）' : '') : '') + '</div>';
+    };
+    simple({ kind: 'perm_get' }, '', function (err, d) {
+      if (err) { warn(err); e.remove(); return; }
+      T = d; T.people = T.people || {}; draw();
+    });
+    e.addEventListener('click', function (ev) {
+      var t = ev.target;
+      if (t.id === 'igPmX') { e.remove(); return; }
+      var pw = t.closest && t.closest('[data-pw]');
+      if (pw) { who = pw.getAttribute('data-pw'); draw(); return; }
+      if (t.matches && t.matches('input[data-pa]')) {
+        var a = t.getAttribute('data-pa'), fn = t.getAttribute('data-pf'), row = (T.people[who] = T.people[who] || {}), lst = row[a] || [];
+        lst = lst.filter(function (x) { return x !== fn; }); if (t.checked) lst.push(fn);
+        if (t.checked && fn !== 'view' && lst.indexOf('view') < 0) lst.push('view');      
+        row[a] = lst; draw(); return;
+      }
+      if (t.id === 'igPmGo') {
+        simple({ kind: 'perm_save', people: T.people }, '権限を保存しています', function (err2) {
+          if (err2) { warn(err2); return; }
+          e.remove(); szOvShow_(szDoneHtml_('権限の保存が完了しました'), '#16a34a');
+          var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); });
+        });
+      }
+    });
+  }
   function openCF() {
+    if (!can('profile')) { warn(NOPERM); return; }
     var e = document.createElement('div'); e.className = 'igc'; e.id = 'igCF'; e.style.zIndex = 8500;
     var users = null;
     var draw = function () {
@@ -1342,6 +1398,7 @@ function instaScript_(C) {
     load();
   }
   function openBanners() {
+    if (!can('profile')) { warn(NOPERM); return; }
     var acct = CUR;
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igBn';
     var head = '<div class="w"><div class="igph"><button type="button" data-bnback="1">‹</button><b>バナー</b><span></span></div>';
@@ -1706,6 +1763,7 @@ function instaScript_(C) {
     }
   }
   function openEdit() {
+    if (!can('manage')) { warn(NOPERM); return; }
     var e = document.createElement('div'); e.className = 'igpe igc'; e.id = 'igEdit';
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igeX">キャンセル</button><b>情報を編集</b><button type="button" class="go" id="igeGo">完了</button></div>' +
       '<textarea id="igeTx"></textarea><div class="igccnt" id="igeCnt"></div></div>';
@@ -1737,6 +1795,7 @@ function instaScript_(C) {
     var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); if (after) after(); });
   }
   function openProfEdit() {
+    if (!can('profile')) { warn(NOPERM); return; }
     var v = DATA && DATA.views && DATA.views[CUR], p = (v && v.prof) || {};
     if (!p.user) { warn('プロフィールの読み込みが終わるまで、少し待っててくださいね🥺'); return; }
     var PIC = null, links = p.links || [], acct = CUR;
@@ -2075,6 +2134,7 @@ function instaScript_(C) {
     DATA = d; DATA.views = DATA.views || {};
     if (keep) for (var k in keep) { if (!DATA.views[k] || (keep[k].read_at || 0) > (DATA.views[k].read_at || 0)) DATA.views[k] = keep[k]; }
     ACCTS = (d && d.accounts) || [];
+    if (d && d.perm) { PERM = d.perm; ISDEV = !!d.dev; }
     if (!ACCTS.length) {
       if (fresh) { $('igMain').style.display = 'none'; $('igLoad').style.display = ''; $('igLoad').textContent = 'この端末から表示できるアカウントがありません。'; }
       return;
