@@ -11030,6 +11030,8 @@ var UBCSS_ =
   '.ubf input{display:block;width:100%;box-sizing:border-box;border:0;border-radius:12px;padding:12px;font:inherit;font-size:19px;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubf input.sel{outline:4px solid #fde047;}' +
   '.ubnamerow{display:flex;align-items:center;gap:8px;}.ubnamerow input{flex:1 1 auto;min-width:0;}' +
+  // ★2026-11-09 顧客番号に該当する方がいない時の知らせ（欄のすぐ下・白地に赤い太字）
+  '.ubnf{margin:6px 0 0;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
   '.ubcoin{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 8px;margin-top:4px;}' +
   '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
@@ -11261,7 +11263,8 @@ function uriageBookScript_(C) {
   //     max＝けた数／auto＝入れきったら閉じる（發票番号）／next＝入れきったら次の欄へ（時→分）／lim＝それより大きい数は入れない（時23・分59）
   //     comma＝金額（3けたごとに区切って見せる・頭の0を消す）／open＝ずっと開いておく（直す小窓）
   //   欄を押した直後の最初の数字は入れ直し（入っている数字を消す手間をなくす）。
-  function padKit(cont, spec) {
+  //   onchg(名前)＝欄の中身が変わった時に呼ぶ（顧客番号→顧客名の自動表示に使う・2026-11-09）。
+  function padKit(cont, spec, onchg) {
     var V = {}, pre = {}, sign = {}, sel = '', fresh = false;
     var kp = document.createElement('div'); kp.className = 'ubkp'; kp.style.display = 'none';
     kp.innerHTML = '<div class="exseg" data-s="pre"><span class="thumb"></span><button type="button" data-v="M">M（男）</button>' +
@@ -11320,7 +11323,7 @@ function uriageBookScript_(C) {
       if (g) {
         if (g.closest('.exseg').getAttribute('data-s') === 'pre') pre[sel] = g.getAttribute('data-v') || '';
         else sign[sel] = g.getAttribute('data-v') || '';
-        segs(); draw(); return;
+        segs(); draw(); if (onchg) onchg(sel); return;
       }
       var b = e.target.closest('.expad button'); if (!b || !sel) return;
       var k = b.getAttribute('data-k') || b.textContent, sp = spec[sel], d = V[sel] || '';
@@ -11334,6 +11337,7 @@ function uriageBookScript_(C) {
         d = t;
       } else return;
       V[sel] = d;
+      if (onchg) onchg(sel);
       if (/^[0-9]$/.test(k) && sp.max && d.length >= sp.max) {
         if (sp.next) { open(sp.next); return; }
         if (sp.auto) { close(); return; }
@@ -11350,6 +11354,7 @@ function uriageBookScript_(C) {
         else if (t === 'sint') { sign[k] = v.charAt(0) === '-' ? '-' : ''; V[k] = v.replace(/\D/g, ''); }
         else V[k] = v.replace(/\D/g, '');
         draw();
+        if (onchg) onchg(k);
       },
       open: open, close: close
     };
@@ -11470,14 +11475,56 @@ function uriageBookScript_(C) {
   //   時・分・發票番号・顧客番号（M・F付き）・金額＝数字の欄の共通部品。開いた時は今の時刻が入っている。
   //   時刻は売上表には書かず、画面の時刻の列にだけ出す（係が控える）。發票番号は3けたで閉じる・顧客番号と金額は「入力OK」で閉じる。
   function p2(n) { return ('0' + n).slice(-2); }
+  // ── 顧客番号→顧客名（★2026-11-09 まるちゃん「顧客番号を入れたら、自動で入った顧客名をそこに表示させよう。じゃないとわかんない」
+  //   「該当する顧客がいない場合は『該当する顧客が存在しません』っていうメッセージを出そう」）──
+  //   一覧はパソコン側が作って送る（uriagebook_names.json＝帳簿でその番号を最後に使った時の書き方。帳簿に無い新しい方は名簿の名前）。
+  //   今日の売上表に同じ番号があれば、そちらを先に使う（今日書いた一番新しい書き方）。番号を入れた瞬間に探す（待たせない）。
+  //   自動で入った名前はそのまま修正できる。手で入力した名前は、番号を変えても上書きしない。
+  var NAMES = null, NAMEW = [];
+  function numKey(s) { var v = String(s || '').toUpperCase().replace(/\s/g, ''), m = v.match(/^([FMD])0*(\d+)$/); return m ? m[1] + parseInt(m[2], 10) : v; }
+  function nameOf(num) {
+    var k = numKey(num); if (!k) return '';
+    var rs = (D && D.rows) || [];
+    for (var i = rs.length - 1; i >= 0; i--) if (rs[i].name && numKey(rs[i].num) === k) return rs[i].name;
+    return (NAMES && NAMES[k]) || '';
+  }
+  function nameWatch(kit, inId, msgId) {
+    var W = { auto: '', full: '' };
+    W.run = function () {
+      var inp = $(inId), msg = $(msgId);
+      if (!kit.raw('num')) { if (W.auto && inp.value === W.auto) inp.value = ''; W.auto = W.full = ''; msg.style.display = 'none'; return; }
+      var nm = nameOf(kit.get('num'));
+      if (nm) {
+        var shown = nm.replace(/\s*様$/, '');
+        if (!inp.value.trim() || inp.value === W.auto) { inp.value = shown; W.auto = shown; W.full = nm; }
+        msg.style.display = 'none';
+      } else {
+        if (W.auto && inp.value === W.auto) inp.value = '';
+        W.auto = W.full = '';
+        msg.style.display = NAMES ? '' : 'none';     // 一覧がまだ届いていない間は「存在しません」と言わない
+      }
+    };
+    W.reset = function () { $(inId).value = ''; W.auto = W.full = ''; $(msgId).style.display = 'none'; };
+    // 送る時の顧客名：自動のまま＝帳簿の書き方そのまま／手で入力・修正した＝後ろに「様」
+    W.send = function () { var v = $(inId).value.trim(); if (!v) return ''; if (W.full && v === W.auto) return W.full; return v.replace(/\s*様$/, '') + '様'; };
+    NAMEW.push(W);
+    return W;
+  }
+  jsonp({ action: 'data', name: 'uriagebook_names.json' }, function (p) {
+    if (p && p.names) { NAMES = p.names; for (var i = 0; i < NAMEW.length; i++) NAMEW[i].run(); }
+  });
+
   var AK = padKit($('ubAdd'), {
     h: { kind: 'int', max: 2, lim: 23, next: 'm' }, m: { kind: 'int', max: 2, lim: 59 }, no: { kind: 'int', max: 3, auto: true },
     num: { kind: 'num', max: 4 }, amt: { kind: 'int', max: 7, comma: true }
-  });
+  }, function (k) { if (k === 'num' && AW) AW.run(); });
+  var AW = nameWatch(AK, 'ubAddName', 'ubAddNameMsg');
+  $('ubAddName').addEventListener('focus', AK.close);
   $('ubAddDetail').addEventListener('focus', AK.close);
   var addPay = '';
   $('ubGoAdd').addEventListener('click', function () {
     var d = new Date();
+    AW.reset();
     AK.set('h', p2(d.getHours())); AK.set('m', p2(d.getMinutes())); AK.set('no', ''); AK.set('num', ''); AK.set('amt', '');
     $('ubAddDetail').value = ''; addPay = ''; drawAddPay(); AK.close(); show('ubAdd');
   });
@@ -11492,24 +11539,25 @@ function uriageBookScript_(C) {
     if (!AK.get('num') && !$('ubAddDetail').value.trim()) { popup('顧客番号か明細を入力してください😊'); return; }
     var tm = AK.raw('h') ? p2(AK.raw('h')) + ':' + p2(AK.raw('m') || '0') : '';
     AK.close();
-    ask({ action: 'add', time: tm, no: AK.raw('no'), num: AK.get('num'), detail: $('ubAddDetail').value.trim(),
+    ask({ action: 'add', time: tm, no: AK.raw('no'), num: AK.get('num'), name: AW.send(), detail: $('ubAddDetail').value.trim(),
           amount: parseInt(AK.raw('amt'), 10), pay: addPay }, '売上の行を追加しています', function () { show('ubInv'); });
   });
   $('ubAddBack').addEventListener('click', function (e) { e.preventDefault(); show('ubInv'); });
 
   // ── その他に1行足す ──
-  var OK2 = padKit($('ubOther'), { num: { kind: 'num', max: 4 }, amt: { kind: 'sint', max: 7, comma: true } });
+  var OK2 = padKit($('ubOther'), { num: { kind: 'num', max: 4 }, amt: { kind: 'sint', max: 7, comma: true } },
+    function (k) { if (k === 'num' && OW) OW.run(); });
+  var OW = nameWatch(OK2, 'ubOthName', 'ubOthNameMsg');
   $('ubOthLabel').addEventListener('focus', OK2.close);
   $('ubOthName').addEventListener('focus', OK2.close);
   $('ubGoOther').addEventListener('click', function () {
-    $('ubOthLabel').value = ''; $('ubOthName').value = ''; OK2.set('num', ''); OK2.set('amt', ''); OK2.close(); show('ubOther');
+    $('ubOthLabel').value = ''; OW.reset(); OK2.set('num', ''); OK2.set('amt', ''); OK2.close(); show('ubOther');
   });
   $('ubOthGo').addEventListener('click', function () {
     var amt = OK2.get('amt'); OK2.close();
     var what = $('ubOthLabel').value.trim();
     if (!what || !amt) { popup('内容と金額を入力してください😊 （経費などはマイナス）'); return; }
-    var nm = $('ubOthName').value.trim().replace(/\s*様$/, '');
-    var who = (OK2.get('num') || '') + (nm ? nm + '様' : '');
+    var who = (OK2.get('num') || '') + OW.send();
     ask({ action: 'other', label: who ? who + '　' + what : what, amount: parseInt(amt, 10) }, 'その他を追加しています', function () { show('ubNoInv'); });
   });
   $('ubOthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubNoInv'); });
@@ -11601,6 +11649,8 @@ function renderUriageBookPage_(base, staff, dev) {
           '<label>発票番号（下3桁・無ければ空のまま）</label><div class="ubrow"><div class="ubbox" data-pk="no" data-ph="押して入力"></div></div>' +
           '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
+          '<label>顧客名</label><div class="ubnamerow"><input id="ubAddName"><span class="ubu">様</span></div>' +
+            '<div class="ubnf" id="ubAddNameMsg" style="display:none">該当する顧客が存在しません</div>' +
           '<label>明細（購入内容）</label><input id="ubAddDetail">' +
           '<label>金額（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +   // ★2026-11-08 まるちゃん「金額もOKボタンいれる」
@@ -11615,6 +11665,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<label>顧客番号（未記入可）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
           '<label>氏名（未記入可）</label><div class="ubnamerow"><input id="ubOthName"><span class="ubu">様</span></div>' +
+            '<div class="ubnf" id="ubOthNameMsg" style="display:none">該当する顧客が存在しません</div>' +
           '<label>内容（例 プロセルアフターセラム）</label><input id="ubOthLabel">' +
           '<label>金額（売上は＋　経費は－　例：ティッシュ補充　-300元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +
