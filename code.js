@@ -14040,11 +14040,17 @@ function instaScript_(C) {
 
   // ── 受付係へ頼む（op=insta）→ 済んだら答えを受け取る ──
   function jsonp(p, cb) {
-    var n = '__ig' + Date.now() + Math.floor(Math.random() * 1000);
-    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var n = '__ig' + Date.now() + Math.floor(Math.random() * 1000), fin = false;
+    var end = function (r) { if (fin) return; fin = true; try { delete window[n]; } catch (e) {} cb(r); };
+    window[n] = function (r) { end(r); };
     var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
     var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
-    s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
+    s.onerror = function () { end({ ok: false, error: '通信エラーです。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
+    // ★2026-11-09 実際に起きた：結果を聞く通信が返ってこないまま止まり、終わっているのに「作っています」のままになった。
+    //   読むだけの問い合わせ（status・data）は20秒で見切って聞き直す（送る依頼は二重に送らないよう待つ）。
+    if (p.action === 'status' || p.action === 'data') {
+      setTimeout(function () { if (!fin) { end({ ok: false, error: '通信エラーです。もう一度試してもらえると嬉しいです🙇' }); try { s.remove(); } catch (e) {} window[n] = function () {}; } }, 20000);
+    }
   }
   // 開発版だけ：この窓の鍵の指紋を添える（パソコン版ズコの窓は端末番号が窓ごとにばらばら＝受付係が鍵の指紋で見分ける）
   function devKey(cb) {

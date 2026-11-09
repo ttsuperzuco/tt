@@ -283,11 +283,15 @@ function instaScript_(C) {
   function shortUrl(u) { return String(u || '').replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, ''); }
 
   function jsonp(p, cb) {
-    var n = '__ig' + Date.now() + Math.floor(Math.random() * 1000);
-    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var n = '__ig' + Date.now() + Math.floor(Math.random() * 1000), fin = false;
+    var end = function (r) { if (fin) return; fin = true; try { delete window[n]; } catch (e) {} cb(r); };
+    window[n] = function (r) { end(r); };
     var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
     var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
-    s.onerror = function () { cb({ ok: false, error: '通信エラーです。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
+    s.onerror = function () { end({ ok: false, error: '通信エラーです。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
+    if (p.action === 'status' || p.action === 'data') {
+      setTimeout(function () { if (!fin) { end({ ok: false, error: '通信エラーです。もう一度試してもらえると嬉しいです🙇' }); try { s.remove(); } catch (e) {} window[n] = function () {}; } }, 20000);
+    }
   }
   function devKey(cb) {
     if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
