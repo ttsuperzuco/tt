@@ -14670,7 +14670,8 @@ function instaScript_(C) {
         '<div class="bd">' + (st.err ? '<div class="msg">' + esc(st.err) + '</div>' :
           !st.items ? '<div class="msg">読み込み中です…（1分ほどかかります）</div>' :
           !its.length ? '<div class="msg">48時間以内のストーリーズはありません。<br>見た人は、ストーリーズを出してから48時間まで確認できます。</div>' :
-          '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '') +
+          (it.v && it.vid ? '<video src="' + esc(it.vid) + '" poster="' + esc(it.big || it.th) + '" autoplay playsinline controls style="max-width:100%;max-height:100%"></video>' :
+            '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '')) +
           '<span class="lt" data-sprev="1"></span><span class="rt" data-snext="1"></span>') + '</div>' +
         (its.length ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
           '👁 見た人 ' + num(n || 0) + '人</button>' : '');
@@ -14745,6 +14746,12 @@ function instaScript_(C) {
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
       if (e.target.closest('[data-ntback]')) { el.remove(); return; }
+      var pc = e.target.closest('[data-ntc]');
+      if (pc) {
+        var code = pc.getAttribute('data-ntc'), g = gridPost(code);
+        if (g) { el.remove(); openPost(code, g.th || ''); } else openUrl('https://www.instagram.com/p/' + code + '/');
+        return;
+      }
       var u = e.target.closest('[data-ntu]'); if (u) openUrl('https://www.instagram.com/' + u.getAttribute('data-ntu') + '/');
     });
     ask({ kind: 'notifs', acct: acct }, function (err, d) {
@@ -14756,7 +14763,7 @@ function instaScript_(C) {
       el.innerHTML = head + (its.length ? its.map(function (x) {
         var g = grp(x.at), h = '';
         if (g !== sec) { sec = g; h += '<div class="hint" style="font-weight:700;color:#000;margin-top:6px">' + g + '</div>'; }
-        return h + '<div' + (x.u ? ' data-ntu="' + esc(x.u) + '" style="cursor:pointer"' : '') + '>' + userRow(x, '<span style="font-size:14px">' + esc(x.text) +
+        return h + '<div' + (x.code ? ' data-ntc="' + esc(x.code) + '" style="cursor:pointer"' : x.u ? ' data-ntu="' + esc(x.u) + '" style="cursor:pointer"' : '') + '>' + userRow(x, '<span style="font-size:14px">' + esc(x.text) +
           ' <span style="color:#737373">' + esc(when(x.at)) + '</span></span>') .replace('</span></div>', '</span>' +
           (x.th ? '<img src="' + esc(x.th) + '" referrerpolicy="no-referrer" alt="" style="width:44px;height:44px;object-fit:cover;flex:none">' : '') + '</div>') + '</div>';
       }).join('') : '<div class="igempty"><b>お知らせはありません</b></div>') + '</div>';
@@ -15369,7 +15376,8 @@ function instaScript_(C) {
         '<div class="hd"><img src="' + esc(h.cv) + '" referrerpolicy="no-referrer" alt=""><b>' + esc(h.t) + '</b>' +
         '<button type="button" data-hm="1">⋯</button><button type="button" data-hx="1">✕</button></div>' +
         '<div class="bd">' + (st.err ? '<div class="msg">' + esc(st.err) + '</div>' : !st.items ? '<div class="msg">読み込み中です…（20秒ほどかかります）</div>' :
-          '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '') +
+          (it.v && it.vid ? '<video src="' + esc(it.vid) + '" poster="' + esc(it.big || it.th) + '" autoplay playsinline controls style="max-width:100%;max-height:100%"></video>' :
+            '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '')) +
           '<span class="lt" data-prev="1"></span><span class="rt" data-next="1"></span>') + '</div>';
     };
     draw();
