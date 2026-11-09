@@ -14436,6 +14436,19 @@ var INSTACSS_ =
   '.igdash2 .per button{border:1px solid #dbdbdb !important;border-radius:16px;padding:6px 12px !important;font-size:13px !important;}' +
   '.igdash2 .per button.on{background:#000 !important;color:#fff !important;border-color:#000 !important;}' +
   '.igsr{z-index:8450;}' +
+  '.igfd{z-index:8440;}.igup{z-index:8460;}' +
+  '.igfdi{border-bottom:1px solid #efefef;padding-bottom:8px;}' +
+  '.igfdi .m{display:block;position:relative;width:100%;background:#fafafa;}' +
+  '.igfdi .m img{display:block;width:100%;height:auto;}' +
+  '.igfdi .m .k{position:absolute;top:10px;right:10px;color:#fff;filter:drop-shadow(0 0 2px rgba(0,0,0,.5));}' +
+  '.igfdi .igpcap{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;}' +
+  '.igfdi .igpcap.open{display:block;}' +
+  '.igfdsep{text-align:center;padding:28px 16px;color:#737373;border-bottom:1px solid #efefef;}' +
+  '.igfdsep b{display:block;color:#000;font-size:16px;margin-bottom:4px;}' +
+  '.igfdsep .s{margin-top:18px;color:#000;font-weight:700;text-align:left;}' +
+  '.igsr .row{display:flex;align-items:center;gap:12px;width:100%;padding:8px 16px;text-align:left;}' +
+  '.igsr .row .av{width:44px;height:44px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;flex:none;}' +
+  '.igsr .row small{display:block;color:#737373;}' +
   '.igsr .q{margin:8px 16px;background:#efefef;border-radius:10px;padding:9px 12px;display:flex;gap:8px;}' +
   '.igsr .q input{border:0;background:none;outline:0;font:inherit;flex:1;}' +
   '.igsr .q button{color:#0095f6 !important;font-weight:700 !important;}' +
@@ -14749,7 +14762,7 @@ function instaScript_(C) {
         return '<button type="button" data-tab="' + t[0] + '"' + (TAB === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>';
       }).join('') + '</div>';
     h += drawGrid(v);
-    h += '<div class="ignav"><button type="button" data-go="home">' + IC.home + '</button><button type="button" data-go="reels">' + IC.reels + '</button>' +
+    h += '<div class="ignav"><button type="button" data-go="feed">' + IC.home + '</button><button type="button" data-go="reels">' + IC.reels + '</button>' +
       '<button type="button" data-dm="1">' + IC.send + '</button><button type="button" data-go="search">' + IC.search + '</button>' +
       '<button type="button" data-go="home"><img class="me" src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""></button></div>';
     $('igApp').innerHTML = h;
@@ -14779,7 +14792,7 @@ function instaScript_(C) {
   // ★2026-11-09 まるちゃん決定の6つ＝view（お客様が見る画面）／post（投稿・ストーリーズ）／highlight／profile／reply（お客様に返事）／insights（分析）
   var PERM = {}, ISDEV = false, NOPERM = 'この操作の権限がありません。りゅうさんに連絡してください🙇';
   function can(f) { var p = PERM && PERM[CUR]; return !p || p.indexOf(f) >= 0; }
-  var CK = 'feed', CMEDIA = [], CHIDE = null, CLOC = null, CMUS = null, CSTK = [], MAXI = 10, VIDEO_MB = 18, TOTAL_MB = 18, MAXCAP = 2200;
+  var CK = 'feed', CMEDIA = [], CHIDE = null, CLOC = null, CMUS = null, CSTK = [], CPEN = [], CEFF = '', MAXI = 10, VIDEO_MB = 18, TOTAL_MB = 18, MAXCAP = 2200;
   function openCreate() {
     var sh = document.createElement('div'); sh.className = 'igsheet';
     sh.innerHTML = '<div class="in"><div class="bar"></div><b>作成</b>' +
@@ -14787,6 +14800,8 @@ function instaScript_(C) {
       '<button type="button" data-k="feed">' + IC.grid + '投稿</button>' +
       '<button type="button" data-k="story">' + IC.plus + 'ストーリーズ</button>' +
       '<button type="button" data-k="hl">' + IC.plus + 'ハイライト</button>' +
+      '<button type="button" data-k="drafts">' + IC.grid + '下書き</button>' +
+      '<button type="button" data-k="sched">' + IC.plus + '予約投稿の一覧</button>' +
       '<button type="button" class="off" data-k="">' + IC.reels + 'ライブ</button></div>';
     sh.addEventListener('click', function (e) {
       var b = e.target.closest('button');
@@ -14795,14 +14810,16 @@ function instaScript_(C) {
       if (!k) { warn('ライブはインスタのアプリから開始してください😊'); return; }
       sh.remove();
       if (k === 'hl') { openHlEdit(null, []); return; }
+      if (k === 'drafts') { openDrafts(); return; }
+      if (k === 'sched') { openSched(); return; }
       openCompose(k);
     });
     document.body.appendChild(sh);
   }
   function totalMB() { return CMEDIA.reduce(function (a, m) { return a + m.b64.length * 3 / 4 / 1048576; }, 0); }
-  function openCompose(kind) {
+  function openCompose(kind, dr) {
     if (!can('post')) { warn(NOPERM); return; }
-    CK = kind; CMEDIA = []; CHIDE = null; CLOC = null; CMUS = null; CSTK = [];
+    CK = kind; CMEDIA = []; CHIDE = null; CLOC = null; CMUS = null; CSTK = []; CPEN = []; CEFF = ''; DRAFT_ID = dr ? dr.id : '';
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0] || {};
     var title = { feed: '新規投稿', reel: '新規リール動画', story: 'ストーリーズに追加' }[kind];
     var acc = kind === 'reel' ? 'video/mp4,video/quicktime' : 'image/*,video/mp4,video/quicktime';
@@ -14821,6 +14838,9 @@ function instaScript_(C) {
         '<label style="font-size:14px;display:block;margin:2px 0"><input type="checkbox" id="igcCF"> 親しい友達だけに見せる（名簿は ≡ の「親しい友達」で変更できます）</label></div>' +
         '<div class="igcq"><div class="t">スタンプ（質問・アンケート・場所など）</div><div id="igcStk"></div>' +
         '<button type="button" id="igcStkAdd" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer;margin-top:4px">＋ スタンプを追加</button></div>' +
+        '<div class="igcq"><div class="t">ペン・効果</div><div id="igcPenE" style="margin:2px 0"></div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap"><button type="button" id="igcPen" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer">✏️ ペンで描く</button>' +
+        '<button type="button" id="igcEff" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer">✨ 効果を選ぶ</button></div></div>' +
         '<div class="igcq"><div class="t">音楽</div><div id="igcMus" style="margin:4px 0"></div>' +
         '<div style="display:flex;gap:6px"><input id="igcMusQ" placeholder="曲名・歌手名で探す（空ならおすすめ）" style="flex:1;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit">' +
         '<button type="button" id="igcMusGo" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer">曲を選ぶ</button></div>' +
@@ -14829,7 +14849,7 @@ function instaScript_(C) {
       (kind === 'reel' ? '<div class="igcq"><div class="t">音楽</div><div id="igcMus" style="margin:4px 0"></div>' +
         '<div style="display:flex;gap:6px"><input id="igcMusQ" placeholder="曲名・歌手名で探す（空ならおすすめ）" style="flex:1;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit">' +
         '<button type="button" id="igcMusGo" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer">曲を選ぶ</button></div>' +
-        '<div style="font-size:12px;color:#737373;margin-top:4px">音楽を付けると、インスタのアプリで作成して上げます（3〜5分かかります）。お店のアカウントは、インスタがお店で使ってよいと決めた曲だけ選べます。場所・人のタグは付きません。</div>' +
+        '<div style="font-size:12px;color:#737373;margin-top:4px">音楽を付けると、インスタのアプリで作成して上げます（3〜5分かかります）。お店のアカウントは、インスタがお店で使ってよいと決めた曲だけ選べます。</div>' +
         (window.__SZ_ROLE_ === '開発' ? '<label style="font-size:12px;color:#737373"><input type="checkbox" id="igcDry"> 開発：試しだけ（上げる直前まで作って破棄する）</label>' : '') + '</div>' : '') +
       (kind === 'story' ? '' : '<textarea class="igccap" id="igcCap" placeholder="キャプションを入力…"></textarea><div class="igccnt" id="igcCnt">0 / ' + MAXCAP + '</div>' +
         '<div class="igcq"><div class="t">「いいね！」数を他の人に非表示にしますか？😊</div><div class="seg">' +
@@ -14840,9 +14860,13 @@ function instaScript_(C) {
         '<button type="button" id="igcLocGo" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer">探す</button></div><div id="igcLocR"></div></div></div>' +
         '<div class="igcq"><div class="t">人をタグ付け</div><input id="igcTags" placeholder="ユーザーネーム（複数ある時はスペースで区切る）" style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit;margin:4px 0">' +
         '<div style="font-size:12px;color:#737373">写真のタグは1枚目の写真の下の方に並びます。</div></div>') +
+      '<div class="igcq"><div class="t">予約投稿</div><label style="display:block;font-size:14px"><input type="checkbox" id="igcSch"> 日時を決めて投稿する</label>' +
+        '<input type="datetime-local" id="igcSchT" style="display:none;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit;margin:6px 0">' +
+        '<div style="font-size:12px;color:#737373">15分後から75日先まで選べます。その時間になったら自動で投稿します。予約は作成の「予約投稿の一覧」で確認・取り消しできます。</div></div>' +
       '<div class="igcnote">写真に入っているAIの記録は、投稿の前に自動で取り除きます。投稿のあと、AIラベルが付いていないかも自動で確認します。' +
       (kind !== 'feed' ? '' : '<br>写真の縦横が合わない時は、インスタと同じく中央で切り取ります。') + '</div></div>';
     document.body.appendChild(c);
+    if (dr) restoreDraft(c, dr);
     var cap = document.getElementById('igcCap');
     if (cap) cap.addEventListener('input', function () {
       var n = cap.value.length, o = document.getElementById('igcCnt');   // インスタと同じ数え方（絵文字は2文字）
@@ -14852,7 +14876,15 @@ function instaScript_(C) {
       var t = e.target;
       if (t.id === 'igcX') {
         if (!CMEDIA.length) { c.remove(); return; }
-        szPopup_('作成中の投稿を破棄しますか？😊', { cancel: true, onYes: function () { c.remove(); } });
+        // 2026-11-10 本物のインスタと同じ「下書きを保存しますか？」
+        sheet([{ t: '下書きを保存', go: function () { saveDraft(c, function () { c.remove(); warn('下書きに保存しました😊'); }); } },
+               { t: '破棄', go: function () { c.remove(); } }, { t: '編集を続ける', go: function () {} }]);
+        return;
+      }
+      if (t.id === 'igcSch') {
+        var st2 = document.getElementById('igcSchT'); st2.style.display = t.checked ? 'block' : 'none';
+        if (t.checked && !st2.value) { var d0 = new Date(Date.now() + 3600000); d0.setMinutes(0, 0, 0); st2.value = localIso(d0); }
+        st2.min = localIso(new Date(Date.now() + 15 * 60000)); st2.max = localIso(new Date(Date.now() + 75 * 86400000));
         return;
       }
       var h = t.closest && t.closest('[data-h]');
@@ -14886,12 +14918,26 @@ function instaScript_(C) {
       var lpb = t.closest && t.closest('[data-lp]');
       if (lpb) { document.querySelectorAll('#igcLinkP [data-lp]').forEach(function (b) { b.className = b === lpb ? 'on' : ''; }); return; }
       if (t.id === 'igcStkAdd') {
-        if (CSTK.length >= 5) { warn('スタンプは5つまでです😊'); return; }
-        sheet(['question', 'poll', 'countdown', 'slider', 'mention', 'location', 'hashtag', 'addyours'].map(function (k) {
-          return { t: STK_NAME[k], go: function () { openStk(k); } };
-        }));
+        if (CSTK.length >= 8) { warn('スタンプは8つまでです😊'); return; }
+        var vid0 = CMEDIA[0] && CMEDIA[0].video;
+        sheet(['igtext', 'question', 'poll', 'countdown', 'slider', 'mention', 'location', 'hashtag', 'addyours', 'gif', 'reaction', 'notify', 'highlight', 'photo', 'frame']
+          .concat(vid0 ? ['captions'] : []).map(function (k) {
+            return { t: STK_NAME[k], go: function () { openStk(k); } };
+          }));
         return;
       }
+      if (t.id === 'igcPen') { if (!CMEDIA.length) { warn('先に写真か動画を選択してください😊'); return; } openPen(); return; }
+      if (t.id === 'igcEff') {
+        phone({ kind: 'phone_effects', acct: CUR }, '効果の一覧を読み込んでいます（1〜2分かかります）', function (err, d) {
+          if (err) { warn(err); return; }
+          var ef = (d && d.effects) || [];
+          if (!ef.length) { warn('効果が見つかりませんでした😊'); return; }
+          sheet([{ t: '効果なし', go: function () { CEFF = ''; drawPenE(); } }].concat(ef.map(function (n) { return { t: n, go: function () { CEFF = n; drawPenE(); } }; })));
+        });
+        return;
+      }
+      if (t.id === 'igcPenX') { CPEN = []; drawPenE(); return; }
+      if (t.id === 'igcEffX') { CEFF = ''; drawPenE(); return; }
       var sx = t.closest && t.closest('[data-sx]');
       if (sx) { CSTK.splice(Number(sx.getAttribute('data-sx')), 1); drawStk(); return; }
       if (t.id === 'igcMusGo') {
@@ -15100,14 +15146,84 @@ function instaScript_(C) {
   // ★2026-11-09 まるちゃん「いちからよん」①：質問・アンケート・カウントダウン（インスタのアプリで付ける＝疑似スマホ）
   // ★2026-11-09 まるちゃん「いちからよん」①＋「まずこれらやって」：ストーリーズのスタンプ（インスタのアプリで付ける＝疑似スマホ）
   var STK_NAME = { question: '❓ 質問', poll: '📊 アンケート', countdown: '⏰ カウントダウン', slider: '🎚 スライダー',
-                   mention: '＠ メンション', location: '📍 場所', hashtag: '＃ ハッシュタグ', addyours: '🔁 Add Yours' };
+                   mention: '＠ メンション', location: '📍 場所', hashtag: '＃ ハッシュタグ', addyours: '🔁 Add Yours',
+                   igtext: 'Aa インスタの文字', gif: '🎞 GIF', reaction: '😍 リアクション', notify: '🔔 お知らせ', highlight: '⭐ ハイライト',
+                   photo: '🖼 写真', frame: '🖼 フレーム', captions: '💬 字幕（動画の声を文字に）' };
+  // 2026-11-10 インスタの文字の書体と色（インスタのアプリと同じ並び）・ペン
+  var IG_FONTS = ['Modern', 'Classic', 'Signature', 'Editor', 'Poster', 'Bubble', 'Deco', 'SQUEEZE', 'Typewriter', 'Strong',
+                  'Meme', 'Elegant', 'DIRECTIONAL', 'Literature', 'Arcade', 'Gothic', 'Headline'];
+  var IG_COLORS = [['white', '#ffffff'], ['black', '#000000'], ['blue', '#3897f0'], ['green', '#70c050'], ['yellow', '#fdcb5c'],
+                   ['orange', '#fd8d32'], ['red', '#ed4956'], ['pink', '#d10869'], ['purple', '#a307ba']];
+  var IG_PENS = [['sharpie', 'ペン'], ['arrow', '矢印'], ['marker', 'マーカー'], ['neon', 'ネオン'], ['special', 'スペシャル'], ['eraser', '消しゴム']];
+  function drawPenE() {
+    var el = document.getElementById('igcPenE'); if (!el) return;
+    el.innerHTML = (CPEN.length ? '<div>✏️ ペン：<b>' + CPEN.length + '本の線</b> <button type="button" id="igcPenX" style="background:none;border:0;color:#0095f6;font:inherit;cursor:pointer">外す</button></div>' : '') +
+      (CEFF ? '<div>✨ 効果：<b>' + esc(CEFF) + '</b> <button type="button" id="igcEffX" style="background:none;border:0;color:#0095f6;font:inherit;cursor:pointer">外す</button></div>' : '');
+  }
+  // ペンで描く＝1080×1920 の画面に指で線を引く（インスタのアプリで同じ線を引いて付ける）
+  function openPen() {
+    var m = CMEDIA[0], lines = CPEN.slice(), pen = 'sharpie', col = 'white';
+    var e = document.createElement('div'); e.className = 'igc'; e.style.zIndex = 8600;
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igPnX">キャンセル</button><b>ペンで描く</b><button type="button" class="go" id="igPnGo">完了</button></div>' +
+      '<div style="position:relative;margin:8px auto;width:min(100%,360px);aspect-ratio:9/16;background:#111;touch-action:none">' +
+      (m.video ? '<video src="' + m.url + '" muted playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain"></video>' : '<img src="' + m.url + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">') +
+      '<canvas id="igPnC" width="1080" height="1920" style="position:absolute;inset:0;width:100%;height:100%;touch-action:none"></canvas></div>' +
+      '<div class="igcq"><div class="t">ペン</div><div class="seg" id="igPnP">' + IG_PENS.map(function (x) { return '<button type="button" data-pn="' + x[0] + '"' + (x[0] === pen ? ' class="on"' : '') + '>' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="t" style="margin-top:6px">色</div><div style="display:flex;gap:6px;flex-wrap:wrap" id="igPnK">' + IG_COLORS.map(function (x) {
+        return '<button type="button" data-pk="' + x[0] + '" style="width:30px;height:30px;border-radius:50%;background:' + x[1] + ';border:' + (x[0] === col ? '3px solid #0095f6' : '1px solid #999') + ';cursor:pointer"></button>'; }).join('') + '</div>' +
+      '<button type="button" id="igPnU" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer;margin-top:8px">↶ 1本戻す</button></div>' +
+      '<div class="igcnote">ここで引いた線を、インスタのアプリで同じように引いて付けます（30本まで）。</div></div>';
+    document.body.appendChild(e);
+    var cv = document.getElementById('igPnC'), g = cv.getContext('2d'), cur = null;
+    var hex = function (k) { return (IG_COLORS.filter(function (x) { return x[0] === k; })[0] || IG_COLORS[0])[1]; };
+    var draw = function () {
+      g.clearRect(0, 0, 1080, 1920);
+      lines.concat(cur ? [cur] : []).forEach(function (l) {
+        if (l.pen === 'eraser') return;
+        g.strokeStyle = hex(l.color); g.lineWidth = l.pen === 'marker' ? 36 : l.pen === 'neon' ? 22 : 14; g.lineCap = 'round'; g.lineJoin = 'round';
+        g.globalAlpha = l.pen === 'marker' ? 0.6 : 1; g.shadowBlur = l.pen === 'neon' ? 18 : 0; g.shadowColor = hex(l.color);
+        g.beginPath(); l.pts.forEach(function (q, i) { if (i) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); }); g.stroke();
+      });
+      g.globalAlpha = 1; g.shadowBlur = 0;
+    };
+    var pt = function (ev) { var r = cv.getBoundingClientRect(); return [Math.round((ev.clientX - r.left) * 1080 / r.width), Math.round((ev.clientY - r.top) * 1920 / r.height)]; };
+    cv.addEventListener('pointerdown', function (ev) {
+      if (lines.length >= 30) { warn('線は30本までです😊'); return; }
+      cv.setPointerCapture(ev.pointerId); cur = { pen: pen, color: col, pts: [pt(ev)] }; draw();
+    });
+    cv.addEventListener('pointermove', function (ev) {
+      if (!cur) return;
+      var q = pt(ev), l = cur.pts[cur.pts.length - 1];
+      if (Math.abs(q[0] - l[0]) + Math.abs(q[1] - l[1]) > 12) { cur.pts.push(q); draw(); }
+    });
+    var end = function () {
+      if (!cur) return;
+      if (cur.pts.length >= 2) {
+        if (cur.pts.length > 60) { var st = cur.pts.length / 60, k2 = []; for (var i = 0; i < 60; i++) k2.push(cur.pts[Math.floor(i * st)]); k2.push(cur.pts[cur.pts.length - 1]); cur.pts = k2; }
+        lines.push(cur);
+      }
+      cur = null; draw();
+    };
+    cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+    e.addEventListener('click', function (ev) {
+      var t = ev.target;
+      if (t.id === 'igPnX') { e.remove(); return; }
+      if (t.id === 'igPnGo') { CPEN = lines; e.remove(); drawPenE(); return; }
+      if (t.id === 'igPnU') { lines.pop(); draw(); return; }
+      var pb = t.closest && t.closest('[data-pn]');
+      if (pb) { pen = pb.getAttribute('data-pn'); e.querySelectorAll('[data-pn]').forEach(function (b) { b.className = b === pb ? 'on' : ''; }); return; }
+      var kb = t.closest && t.closest('[data-pk]');
+      if (kb) { col = kb.getAttribute('data-pk'); e.querySelectorAll('[data-pk]').forEach(function (b) { b.style.border = b === kb ? '3px solid #0095f6' : '1px solid #999'; }); }
+    });
+    draw();
+  }
   var STK_POS = ['上', 'やや上', '真ん中', 'やや下', '下'];
   var SLIDER_EMOJI = ['😍', '😂', '😀', '🔥', '😡', '😱', '😢', '🙌'];
   function drawStk() {
     var el = document.getElementById('igcStk'); if (!el) return;
     el.innerHTML = CSTK.map(function (x, i) {
-      var main = x.type === 'mention' ? '@' + (x.user || '') : x.type === 'hashtag' ? '#' + (x.q || '') : (x.q || '');
-      var d = x.type === 'poll' ? '（' + x.opts.join('／') + '）' : x.type === 'countdown' ? '（' + x.date.replace(/-/g, '/') + 'まで）' : x.type === 'slider' ? ' ' + x.emoji : '';
+      var main = x.type === 'mention' ? '@' + (x.user || '') : x.type === 'hashtag' ? '#' + (x.q || '') : (x.type === 'photo' || x.type === 'frame') ? '写真1枚' : (x.q || '');
+      var d = x.type === 'poll' ? '（' + x.opts.join('／') + '）' : x.type === 'countdown' ? '（' + x.date.replace(/-/g, '/') + 'まで）' : x.type === 'slider' ? ' ' + x.emoji : x.type === 'igtext' ? '（' + (x.font || 'Modern') + '）' : '';
       return '<div style="padding:4px 0">' + STK_NAME[x.type] + '：<b>' + esc(main) + '</b>' + esc(d) + '・' + esc(x.pos) +
         ' <button type="button" data-sx="' + i + '" style="background:none;border:0;color:#0095f6;font:inherit;cursor:pointer">外す</button></div>';
     }).join('');
@@ -15117,12 +15233,29 @@ function instaScript_(C) {
     var inp = function (id, ph, max, mode) { return '<input id="' + id + '" maxlength="' + max + '" placeholder="' + ph + '"' + (mode ? ' inputmode="' + mode + '" autocapitalize="off"' : '') + ' style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:8px 10px;font:inherit;margin:4px 0">'; };
     var q = { question: ['質問の文', '例：気になることを質問してください', 60], poll: ['問い', '例：どれが気になりますか？', 60], countdown: ['名前', '例：キャンペーン終了まで', 30],
               slider: ['問い', '例：施術の満足度は？', 60], mention: ['ユーザーネーム（英数字）', '例：taiwantomato_tw', 30], location: ['場所の名前', '例：TaiwanTomato', 40],
-              hashtag: ['ハッシュタグ（#は不要）', '例：台北脱毛', 30], addyours: ['お題', '例：みんなのおすすめ施術', 60] }[type];
+              hashtag: ['ハッシュタグ（#は不要）', '例：台北脱毛', 30], addyours: ['お題', '例：みんなのおすすめ施術', 60],
+              igtext: ['文字', '例：本日空きあります', 100], gif: ['GIFを探す言葉', '例：happy・love・sale（英語がよく見つかります）', 30],
+              highlight: ['ハイライトの名前', '', 30] }[type] || null;
+    var hls = ((DATA && DATA.views && DATA.views[CUR] && DATA.views[CUR].hl) || []).map(function (x) { return x.t; });
+    var font = 'Modern', color = 'white', pic = '';
     var today = new Date(), iso = function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
     var pos = '真ん中', emo = SLIDER_EMOJI[0];
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igStkX">キャンセル</button><b>' + STK_NAME[type] + '</b><button type="button" class="go" id="igStkGo">追加</button></div>' +
-      '<div class="igcq"><div class="t">' + q[0] + '</div>' + inp('igStkQ', q[1], q[2], type === 'mention' ? 'email' : '') +
-      (type === 'location' ? '<div style="font-size:12px;color:#737373">インスタで探して、いちばん上に出た場所を付けます。</div>' : '') + '</div>' +
+      (q && type !== 'highlight' ? '<div class="igcq"><div class="t">' + q[0] + '</div>' + inp('igStkQ', q[1], q[2], type === 'mention' ? 'email' : '') +
+      (type === 'location' ? '<div style="font-size:12px;color:#737373">インスタで探して、いちばん上に出た場所を付けます。</div>' : '') +
+      (type === 'gif' ? '<div style="font-size:12px;color:#737373">インスタで探して、いちばん上に出たGIFを付けます。</div>' : '') + '</div>' : '') +
+      (type === 'highlight' ? '<div class="igcq"><div class="t">追加するハイライト</div>' + (hls.length ? '<div class="seg" id="igStkH" style="flex-wrap:wrap">' + hls.map(function (x, k) {
+        return '<button type="button" data-hn="' + esc(x) + '"' + (k === 0 ? ' class="on"' : '') + '>' + esc(x) + '</button>'; }).join('') + '</div>' : '<div style="color:#737373">ハイライトがまだありません。</div>') +
+        '<div style="font-size:12px;color:#737373;margin-top:4px">スタンプを押すと、そのハイライトが開きます。このストーリーズもそのハイライトに入ります。</div></div>' : '') +
+      (type === 'igtext' ? '<div class="igcq"><div class="t">書体</div><select id="igStkF" style="border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit">' +
+        IG_FONTS.map(function (x) { return '<option>' + x + '</option>'; }).join('') + '</select>' +
+        '<div class="t" style="margin-top:6px">色</div><div style="display:flex;gap:6px;flex-wrap:wrap">' + IG_COLORS.map(function (x, k) {
+          return '<button type="button" data-tc="' + x[0] + '" style="width:30px;height:30px;border-radius:50%;background:' + x[1] + ';border:' + (k === 0 ? '3px solid #0095f6' : '1px solid #999') + ';cursor:pointer"></button>'; }).join('') + '</div>' +
+        '<label style="display:block;margin-top:6px"><input type="checkbox" id="igStkB"> 文字の後ろに色を付ける</label></div>' : '') +
+      ((type === 'photo' || type === 'frame') ? '<div class="igcq"><div class="t">写真</div><input type="file" id="igStkI" accept="image/*"><div id="igStkIP" style="margin-top:6px"></div>' +
+        (type === 'frame' ? '<div style="font-size:12px;color:#737373">写真をポラロイドのような枠で表示します。</div>' : '') + '</div>' : '') +
+      ((type === 'reaction' || type === 'notify' || type === 'captions') ? '<div class="igcq"><div style="color:#737373">' +
+        ({ reaction: '見た人が絵文字で反応できるスタンプです。', notify: '見た人が「お知らせを受け取る」を押せるスタンプです。', captions: '動画の声を、インスタが自動で文字にして出します。' })[type] + '</div></div>' : '') +
       (type === 'poll' ? '<div class="igcq"><div class="t">選択肢（2〜4つ）</div>' + [1, 2, 3, 4].map(function (k) { return inp('igStkO' + k, '選択肢' + k + (k > 2 ? '（なくても大丈夫です）' : ''), 25); }).join('') + '</div>' : '') +
       (type === 'countdown' ? '<div class="igcq"><div class="t">最終日（この日の夜24時に0になります）</div><input type="date" id="igStkD" min="' + iso(today) + '" style="border:1px solid #dbdbdb;border-radius:8px;padding:8px 10px;font:inherit;margin:4px 0"></div>' : '') +
       (type === 'slider' ? '<div class="igcq"><div class="t">絵文字</div><div style="display:flex;gap:4px;flex-wrap:wrap" id="igStkE">' + SLIDER_EMOJI.map(function (x, k) {
@@ -15130,16 +15263,50 @@ function instaScript_(C) {
       '<div class="igcq"><div class="t">置く場所</div><div class="seg" id="igStkP">' + STK_POS.map(function (x) { return '<button type="button" data-p="' + x + '"' + (x === '真ん中' ? ' class="on"' : '') + '>' + x + '</button>'; }).join('') + '</div></div>' +
       '<div class="igcnote">文字・絵文字は日本語でも大丈夫です。スタンプの見た目はインスタと同じになります。ほかのスタンプやリンクと置く場所が重ならないように配置してください😊</div></div>';
     document.body.appendChild(e);
+    var fi = document.getElementById('igStkI');
+    if (fi) fi.addEventListener('change', function () {
+      var f = fi.files && fi.files[0]; if (!f) return;
+      var fr = new FileReader();
+      fr.onload = function () {
+        var im = new Image();
+        im.onload = function () {
+          var w = im.width, h = im.height, mx = 1080;
+          if (w > mx || h > mx) { if (w >= h) { h = Math.round(h * mx / w); w = mx; } else { w = Math.round(w * mx / h); h = mx; } }
+          var cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(im, 0, 0, w, h);
+          pic = cv.toDataURL('image/jpeg', 0.88);
+          document.getElementById('igStkIP').innerHTML = '<img src="' + pic + '" alt="" style="max-width:120px;max-height:160px;border-radius:6px">';
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(f);
+    });
     e.addEventListener('click', function (ev) {
       var t = ev.target;
       if (t.id === 'igStkX') { e.remove(); return; }
+      var tc = t.closest && t.closest('[data-tc]');
+      if (tc) { color = tc.getAttribute('data-tc'); e.querySelectorAll('[data-tc]').forEach(function (b) { b.style.border = b === tc ? '3px solid #0095f6' : '1px solid #999'; }); return; }
+      var hn = t.closest && t.closest('[data-hn]');
+      if (hn) { e.querySelectorAll('[data-hn]').forEach(function (b) { b.className = b === hn ? 'on' : ''; }); return; }
       var pb = t.closest && t.closest('[data-p]');
       if (pb) { pos = pb.getAttribute('data-p'); e.querySelectorAll('[data-p]').forEach(function (b) { b.className = b === pb ? 'on' : ''; }); return; }
       var eb = t.closest && t.closest('[data-em2]');
       if (eb) { emo = eb.getAttribute('data-em2'); e.querySelectorAll('[data-em2]').forEach(function (b) { b.style.border = b === eb ? '2px solid #0095f6' : '1px solid #dbdbdb'; }); return; }
       if (t.id !== 'igStkGo') return;
-      var qq = (document.getElementById('igStkQ').value || '').trim();
+      var qi = document.getElementById('igStkQ'), qq = qi ? (qi.value || '').trim() : '';
       var x = { type: type, q: qq, pos: pos };
+      if (type === 'igtext') {
+        if (!qq) { warn('文字を入力してください😊'); return; }
+        x.font = document.getElementById('igStkF').value; x.color = color; x.bg = !!document.getElementById('igStkB').checked;
+      }
+      if (type === 'gif' && !qq) { warn('GIFを探す言葉を入力してください😊'); return; }
+      if (type === 'highlight') {
+        var hb = e.querySelector('[data-hn].on'); if (!hb) { warn('ハイライトを選択してください😊'); return; }
+        x.q = hb.getAttribute('data-hn');
+      }
+      if (type === 'photo' || type === 'frame') {
+        if (!pic) { warn('写真を選択してください😊'); return; }
+        x.b64 = pic.split(',')[1];
+      }
       if (type === 'poll') {
         x.opts = [1, 2, 3, 4].map(function (k) { return (document.getElementById('igStkO' + k).value || '').trim(); }).filter(Boolean);
         if (x.opts.length < 2) { warn('選択肢は2つ以上入力してください😊'); return; }
@@ -15167,6 +15334,13 @@ function instaScript_(C) {
       '<div class="igcnote">動画にも文字・スタンプを付けられます（✏️）。' + (CK === 'story' ? 'リンク・音楽・質問などのスタンプも付けられます。' : '音楽は下の「曲を選ぶ」で付けられます。') + '</div>' : '');
   }
   function share() {
+    var schOn = document.getElementById('igcSch'), schT = document.getElementById('igcSchT'), SCH = 0;
+    if (schOn && schOn.checked) {
+      SCH = schT.value ? new Date(schT.value).getTime() / 1000 : 0;
+      if (!SCH) { warn('予約の日時を選択してください😊'); return; }
+      if (SCH < Date.now() / 1000 + 15 * 60) { warn('予約の日時は、今から15分以上あとにしてください😊'); return; }
+      if (SCH > Date.now() / 1000 + 75 * 86400) { warn('予約できるのは75日先までです😊'); return; }
+    }
     if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してください😊' : '写真か動画を選択してください😊'); return; }
     var cap = document.getElementById('igcCap'), text = cap ? cap.value.trim() : '';
     if (text.length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです（絵文字は2文字に数えます）😊'); return; }
@@ -15179,11 +15353,12 @@ function instaScript_(C) {
     var m0 = CMEDIA[0];
     var sc = document.getElementById('igcSCap'), scap = sc ? sc.value.trim() : '', cfo = document.getElementById('igcCF'), cf = !!(cfo && cfo.checked);
     if (ltext && !link) { warn('スタンプに出す文字は、リンクを入力した時だけ使えます😊'); return; }
-    if (CK === 'story' && (link || CMUS || CSTK.length || scap || cf)) {
+    if (CK === 'story' && (link || CMUS || CSTK.length || scap || cf || CPEN.length || CEFF)) {
       if (link && !/^https?:\/\/[^\s]+$/.test(link)) { warn('リンクは https:// から始まる住所を入力してください😊'); return; }
       if (/[^\x00-\x7e]/.test(link)) { warn('リンクに日本語が入っています。英数字の住所にしてください😊'); return; }
       var dr = document.getElementById('igcDry');
-      var pf = { kind: 'phone_story', acct: CUR, media: CMEDIA.map(function (m) { return m.video && m.ov ? { b64: m.b64, ov: m.ov, bgc: m.bgc || '#111111' } : { b64: m.b64 }; }), link: link, link_text: ltext, link_pos: ((document.querySelector('#igcLinkP .on') || {}).getAttribute ? document.querySelector('#igcLinkP .on').getAttribute('data-lp') : '真ん中'), music: CMUS, stickers: CSTK, caption: scap, close_friends: cf, dry: !!(dr && dr.checked) };
+      var pf = { kind: 'phone_story', acct: CUR, media: CMEDIA.map(function (m) { return m.video && m.ov ? { b64: m.b64, ov: m.ov, bgc: m.bgc || '#111111' } : { b64: m.b64 }; }), link: link, link_text: ltext, link_pos: ((document.querySelector('#igcLinkP .on') || {}).getAttribute ? document.querySelector('#igcLinkP .on').getAttribute('data-lp') : '真ん中'), music: CMUS, stickers: CSTK, caption: scap, close_friends: cf, pen: CPEN, effect: CEFF, dry: !!(dr && dr.checked) };
+      if (SCH) { schedSend(pf, SCH); return; }
       phoneBig(pf, 'ストーリーズを作っています（3〜5分かかります）', function (err, rr) {
         if (err) { warn(err); return; }
         var c2 = document.getElementById('igCompose'); if (c2) c2.remove();
@@ -15200,7 +15375,9 @@ function instaScript_(C) {
     if (CK === 'reel' && CMUS) {
       var dr2 = document.getElementById('igcDry');
       var rf = { kind: 'phone_reel', acct: CUR, media: [m0.ov ? { b64: m0.b64, ov: m0.ov, bgc: m0.bgc || '#111111' } : { b64: m0.b64 }],
-                 music: CMUS, caption: text, hide_likes: CHIDE, dry: !!(dr2 && dr2.checked) };
+                 music: CMUS, caption: text, hide_likes: CHIDE, dry: !!(dr2 && dr2.checked),
+                 place: CLOC ? CLOC.name : '', tags: (function () { var tg2 = document.getElementById('igcTags'); return tg2 ? tg2.value.split(/[\s,、，]+/).map(function (x) { return x.replace(/^@/, '').trim(); }).filter(Boolean).slice(0, 20) : []; })() };
+      if (SCH) { schedSend(rf, SCH); return; }
       phoneBig(rf, 'リールを作っています（3〜5分かかります）', function (err, rr) {
         if (err) { warn(err); return; }
         var c3 = document.getElementById('igCompose'); if (c3) c3.remove();
@@ -15209,6 +15386,10 @@ function instaScript_(C) {
         if (db3) db3.addEventListener('click', function () { szOvHide_(); if (!rf.dry && rr && rr.hidden === false) warn('「いいね！」数の非表示ができませんでした。りゅうさんに連絡してください🙇'); TAB = 'reels'; loadWeb(CUR, false); });
       });
       return;
+    }
+    if (SCH) {      // 動画に重ねた文字・スタンプは、時間になってから焼き付ける
+      if ((CK === 'story' || CK === 'reel') && m0.video && m0.ov) fields.media = [{ b64: m0.b64, ov: m0.ov, bgc: m0.bgc || '#111111' }];
+      schedSend(fields, SCH); return;
     }
     if ((CK === 'story' || CK === 'reel') && m0.video && m0.ov) {
       phoneBig({ kind: 'video_burn', acct: CUR, media: [{ b64: m0.b64, ov: m0.ov, bgc: m0.bgc || '#111111' }] }, '動画に文字・スタンプを重ねています（1〜2分かかります）', function (err, d) {
@@ -15220,6 +15401,131 @@ function instaScript_(C) {
       return;
     }
     postNow(fields);
+  }
+  // ── 下書き（2026-11-10 まるちゃん「やって」）＝本物のインスタと同じく、この端末の中だけに保存する（1つのアカウントで20件まで・古い物から消す）──
+  var DRAFT_ID = '';
+  function localIso(d) { var z = function (n) { return ('0' + n).slice(-2); }; return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + 'T' + z(d.getHours()) + ':' + z(d.getMinutes()); }
+  function draftKey() { return 'ig_drafts_v1_' + CUR; }
+  function draftsGet(cb) { idb(function (db) { if (!db) { cb([]); return; } try { var q = db.transaction('kv').objectStore('kv').get(draftKey()); q.onsuccess = function () { cb(q.result || []); }; q.onerror = function () { cb([]); }; } catch (e) { cb([]); } }); }
+  function draftsPut(L, cb) {
+    idb(function (db) {
+      if (!db) { warn('この端末では下書きを保存できません😊'); return; }
+      try { var tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(L.slice(0, 20), draftKey()); tx.oncomplete = function () { if (cb) cb(); }; tx.onerror = function () { warn('下書きを保存できませんでした（端末の空きが足りないかもしれません）😊'); }; }
+      catch (e) { warn('下書きを保存できませんでした😊'); }
+    });
+  }
+  function draftThumb(cb) {
+    var m = CMEDIA[0]; if (!m || m.video) { cb(''); return; }
+    var im = new Image(); im.onload = function () { var cv = document.createElement('canvas'), w = 160, h = Math.round(160 * im.height / im.width); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(im, 0, 0, w, h); cb(cv.toDataURL('image/jpeg', 0.7)); };
+    im.onerror = function () { cb(''); }; im.src = m.url;
+  }
+  function saveDraft(c, done) {
+    var v = function (id) { var o = document.getElementById(id); return o ? (o.type === 'checkbox' ? o.checked : o.value) : null; };
+    draftThumb(function (th) {
+      var d = { id: DRAFT_ID || String(Date.now()), t: Date.now(), kind: CK, th: th,
+                media: CMEDIA.map(function (m) { return { b64: m.b64, video: !!m.video, url: m.video ? '' : m.url, orig: m.video ? '' : m.url, ov: m.ov || '', ovu: m.ovu || '', bgc: m.bgc || '', items: [] }; }),
+                hide: CHIDE, loc: CLOC, mus: CMUS, stk: CSTK, pen: CPEN, eff: CEFF, cap: v('igcCap'), link: v('igcLink'), linkt: v('igcLinkT'),
+                scap: v('igcSCap'), cf: v('igcCF'), tags: v('igcTags'),
+                lp: (document.querySelector('#igcLinkP .on') || { getAttribute: function () { return ''; } }).getAttribute('data-lp') };
+      draftsGet(function (L) { L = L.filter(function (x) { return x.id !== d.id; }); L.unshift(d); draftsPut(L, done); });
+    });
+  }
+  function restoreDraft(c, dr) {
+    CMEDIA = (dr.media || []).map(function (m) { var q = {}; for (var k in m) q[k] = m[k]; if (m.video) q.url = 'data:video/mp4;base64,' + m.b64; return q; });
+    CHIDE = dr.hide == null ? null : dr.hide; CLOC = dr.loc || null; CMUS = dr.mus || null; CSTK = dr.stk || []; CPEN = dr.pen || []; CEFF = dr.eff || '';
+    var sv = function (id, x) { var o = document.getElementById(id); if (o && x != null) { if (o.type === 'checkbox') o.checked = !!x; else o.value = x; } };
+    sv('igcCap', dr.cap); sv('igcLink', dr.link); sv('igcLinkT', dr.linkt); sv('igcSCap', dr.scap); sv('igcCF', dr.cf); sv('igcTags', dr.tags);
+    if (CHIDE !== null) c.querySelectorAll('[data-h]').forEach(function (x) { x.className = (x.getAttribute('data-h') === '1') === CHIDE ? 'on' : ''; });
+    if (dr.lp) c.querySelectorAll('#igcLinkP [data-lp]').forEach(function (b) { b.className = b.getAttribute('data-lp') === dr.lp ? 'on' : ''; });
+    var lb = document.getElementById('igcLocR');
+    if (CLOC && lb) lb.innerHTML = '<div style="padding:6px 0">📍 <b>' + esc(CLOC.name) + '</b> <button type="button" id="igcLocX" style="background:none;border:0;color:#0095f6;font:inherit;cursor:pointer">外す</button></div>';
+    var mb = document.getElementById('igcMus');
+    if (CMUS && mb) mb.innerHTML = '<div style="padding:4px 0">🎵 <b>' + esc(CMUS.title) + '</b> ／ ' + esc(CMUS.artist) + ' <button type="button" id="igcMusX" style="background:none;border:0;color:#0095f6;font:inherit;cursor:pointer">外す</button></div>';
+    drawPrev(); drawStk(); drawPenE();
+  }
+  function openDrafts() {
+    var el = document.createElement('div'); el.className = 'igp igdr';
+    var KN = { feed: '投稿', reel: 'リール', story: 'ストーリーズ' };
+    var draw = function (L) {
+      el.innerHTML = '<div class="w"><div class="igph"><button type="button" data-drback="1">‹</button><b>下書き</b><span></span></div>' +
+        (!L.length ? '<div class="igempty"><b>下書きはありません</b>作成中に「キャンセル」→「下書きを保存」で、ここに残せます。</div>' :
+          L.map(function (d) {
+            return '<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #efefef">' +
+              '<button type="button" data-dropen="' + esc(d.id) + '" style="display:flex;align-items:center;gap:12px;flex:1;text-align:left;background:none;border:0;font:inherit;cursor:pointer">' +
+              '<span style="width:56px;height:56px;flex:none;background:#efefef;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center">' +
+              (d.th ? '<img src="' + d.th + '" alt="" style="width:100%;height:100%;object-fit:cover">' : IC.reelK) + '</span>' +
+              '<span><b>' + (KN[d.kind] || '') + '</b><small style="display:block;color:#737373">' + esc(String(d.cap || d.scap || '').slice(0, 40) || '（文なし）') + '</small>' +
+              '<small style="display:block;color:#737373">' + esc(ago(new Date(d.t).toISOString())) + '</small></span></button>' +
+              '<button type="button" data-drdel="' + esc(d.id) + '" style="border:0;background:#efefef;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer">削除</button></div>';
+          }).join('')) +
+        '<div class="igcnote" style="margin:12px 16px">下書きは、この端末の中だけに保存されます（ほかのスマホ・パソコンからは見えません）。</div></div>';
+      el._L = L;
+    };
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-drback]')) { el.remove(); return; }
+      var o = t.closest('[data-dropen]');
+      if (o) { var d = (el._L || []).filter(function (x) { return x.id === o.getAttribute('data-dropen'); })[0]; if (d) { el.remove(); openCompose(d.kind, d); } return; }
+      var x = t.closest('[data-drdel]');
+      if (x) {
+        var id = x.getAttribute('data-drdel');
+        szPopup_('この下書きを削除しますか？😊', { cancel: true, onYes: function () { var L = (el._L || []).filter(function (y) { return y.id !== id; }); draftsPut(L, function () { draw(L); }); } });
+      }
+    });
+    document.body.appendChild(el);
+    draftsGet(draw);
+  }
+  // ── 予約投稿（2026-11-10 まるちゃん「やって」）＝投稿の中身を預け、その時間に自動で投稿する（kind=sched_add・insta_schedule.py）──
+  function schedSend(job, at) {
+    draftThumb(function (th) {
+      var cap = job.caption || job.scap || (document.getElementById('igcSCap') || {}).value || '';
+      phoneBig({ kind: 'sched_add', acct: CUR, at: at, job: job, label: { kind: CK, cap: String(cap).slice(0, 200), th: th } }, '予約しています', function (err) {
+        if (err) { warn(err); return; }
+        if (DRAFT_ID) draftsGet(function (L) { draftsPut(L.filter(function (x) { return x.id !== DRAFT_ID; })); });
+        var c2 = document.getElementById('igCompose'); if (c2) c2.remove();
+        var d = new Date(at * 1000);
+        szOvShow_(szDoneHtml_((d.getMonth() + 1) + '月' + d.getDate() + '日 ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2) + 'の予約投稿が完了しました'), '#16a34a');
+        var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); });
+      });
+    });
+  }
+  function openSched() {
+    if (!can('post')) { warn(NOPERM); return; }
+    var el = document.createElement('div'); el.className = 'igp igsc';
+    var KN = { feed: '投稿', reel: 'リール', story: 'ストーリーズ' };
+    var when = function (at) { var d = new Date(at * 1000); return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2); };
+    var head = '<div class="w"><div class="igph"><button type="button" data-scback="1">‹</button><b>予約投稿の一覧</b><span></span></div>';
+    var draw = function (d) {
+      var its = (d && d.items) || [], dn = (d && d.done) || [];
+      el.innerHTML = head + (!d ? '<div class="igempty">読み込み中です…</div>' :
+        (!its.length ? '<div class="igempty"><b>予約投稿はありません</b>作成の画面の「予約投稿」で日時を決めると、ここに並びます。</div>' :
+          its.map(function (x) {
+            var lb = x.label || {};
+            return '<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #efefef">' +
+              '<span style="width:56px;height:56px;flex:none;background:#efefef;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center">' +
+              (lb.th ? '<img src="' + lb.th + '" alt="" style="width:100%;height:100%;object-fit:cover">' : IC.reelK) + '</span>' +
+              '<span style="flex:1"><b>' + esc(when(x.at)) + '</b>　' + (KN[lb.kind] || '') + '<small style="display:block;color:#737373">' + esc(String(lb.cap || '').slice(0, 40) || '（文なし）') + '</small></span>' +
+              '<button type="button" data-scdel="' + esc(x.id) + '" style="border:0;background:#efefef;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer">取り消す</button></div>';
+          }).join('')) +
+        (dn.length ? '<div style="padding:16px 16px 4px;font-weight:700">これまでの予約投稿</div>' + dn.map(function (x) {
+          return '<div style="padding:6px 16px;border-bottom:1px solid #efefef"><b>' + esc(when(x.at)) + '</b>　' + (KN[(x.label || {}).kind] || '') +
+            '<small style="display:block;color:' + (x.ok ? '#16a34a' : '#ed4956') + '">' + esc(x.msg || '') + '</small></div>';
+        }).join('') : '')) + '</div>';
+    };
+    var load = function () {
+      draw(null);
+      phone({ kind: 'sched_list', acct: CUR }, '', function (err, d) { if (err) { el.remove(); warn(err); return; } draw(d); });
+    };
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-scback]')) { el.remove(); return; }
+      var x = t.closest('[data-scdel]');
+      if (x) szPopup_('この予約投稿を取り消しますか？😊', { cancel: true, onYes: function () {
+        phone({ kind: 'sched_del', acct: CUR, id: x.getAttribute('data-scdel') }, '予約を取り消しています', function (err) { if (err) { warn(err); return; } load(); });
+      } });
+    });
+    document.body.appendChild(el);
+    load();
   }
   function postNow(fields) {
     if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('投稿中です', '写真・動画をインスタに送っています。動画は数分かかることがあるので、少し待っててくださいね🥺'), '#2C7A99');
@@ -15516,6 +15822,7 @@ function instaScript_(C) {
     if (k === 'home') { TAB = 'posts'; drawApp(); window.scrollTo(0, 0); return; }
     if (k === 'reels') { TAB = 'reels'; drawApp(); var tb = document.querySelector('.igtabs'); if (tb) tb.scrollIntoView(); return; }
     if (k === 'search') { openSearch(); return; }
+    if (k === 'feed') { openFeed(); return; }
     if (k === 'banners') { openBanners(); return; }
     if (k === 'stories') { openStories(); return; }
     if (k === 'notifs') { openNotifs(); return; }
@@ -15892,35 +16199,119 @@ function instaScript_(C) {
     };
     readList();
   }
+  // ── 検索（2026-11-10 まるちゃん「やって」＝個人のアカウントも）──
+  //   名前で探す＝エミュレーターのインスタの検索（kind=phone_search・1分ほど）。押すと、お店のブラウザでその人のプロフィールを読む（kind=uprof）。
+  //   ユーザーネームが分かっている時は「@〜 を開く」ですぐ開ける（検索を待たない）。
   function openSearch() {
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igSr';
     el.innerHTML = '<div class="w"><div class="igph"><button type="button" data-srback="1">‹</button><b>検索</b><span></span></div>' +
-      '<div class="q"><input id="igSrQ" placeholder="ユーザーネームを入力" autocomplete="off" autocapitalize="off"><button type="button" id="igSrGo">検索</button></div>' +
-      '<div class="hint">ビジネス・クリエイターのアカウントを、ユーザーネーム（@のあと）で調べられます。</div><div id="igSrR"></div></div>';
+      '<div class="q"><input id="igSrQ" placeholder="検索" autocomplete="off" autocapitalize="off"><button type="button" id="igSrGo">検索</button></div>' +
+      '<div id="igSrOpen"></div><div class="hint">名前やユーザーネームで、個人のアカウントも探せます。検索には1分ほどかかります。</div><div id="igSrR"></div></div>';
     document.body.appendChild(el);
+    var q0 = function () { return document.getElementById('igSrQ').value.trim().replace(/^@/, ''); };
+    var row = function (u, name) {
+      return '<button type="button" class="row" data-uprof="' + esc(u) + '"><span class="av">' + IC.search + '</span><span><b>' + esc(u) + '</b>' +
+        (name ? '<small>' + esc(name) + '</small>' : '') + '</span></button>';
+    };
+    var hint = function () {
+      var q = q0(), o = document.getElementById('igSrOpen'); if (!o) return;
+      o.innerHTML = /^[A-Za-z0-9._]{1,30}$/.test(q) ? row(q, 'このユーザーネームのプロフィールを開く') : '';
+    };
     var go = function () {
-      var q = document.getElementById('igSrQ').value.trim(); if (!q) { warn('ユーザーネームを入力してください😊'); return; }
-      document.getElementById('igSrR').innerHTML = '<div class="igempty">読み込み中です…</div>';
-      ask({ kind: 'more_search', acct: CUR, q: q }, function (err, d) {
+      var q = q0(); if (!q) { warn('探す名前を入力してください😊'); return; }
+      document.getElementById('igSrR').innerHTML = '<div class="igempty">探しています…（1分ほどかかります）</div>';
+      phone({ kind: 'phone_search', acct: CUR, q: q }, '', function (err, d) {
         var r = document.getElementById('igSrR'); if (!r) return;
         if (err) { r.innerHTML = ''; warn(err); return; }
-        r.innerHTML = '<div class="pf">' + (d.pic ? '<img src="' + esc(d.pic) + '" referrerpolicy="no-referrer" alt="">' : '') +
-          '<div><b>' + esc(d.user) + '</b><div class="c"><div><b>' + num(d.posts_n) + '</b>投稿</div><div><b>' + num(d.followers) + '</b>フォロワー</div><div><b>' + num(d.following) + '</b>フォロー中</div></div></div></div>' +
-          '<div class="bio"><b>' + esc(d.name) + '</b>' + esc(d.bio) + (d.web ? '\n' + esc(d.web) : '') + '</div>' +
-          '<div class="iggrid">' + (d.posts || []).map(function (q2) {
-            var k = q2.k === 'car' ? IC.car : (q2.k === 'reel' || q2.k === 'video' ? IC.reelK : '');
-            return '<button type="button" data-srurl="' + esc(q2.url) + '">' + (q2.th ? '<img src="' + esc(q2.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
-              (k ? '<span class="k">' + k + '</span>' : '') + '</button>';
-          }).join('') + '</div>';
+        var us = (d && d.users) || [];
+        r.innerHTML = us.length ? us.map(function (x) { return row(x.user, x.name); }).join('') : '<div class="igempty">「' + esc(q) + '」の検索結果はありません。</div>';
       });
     };
     el.addEventListener('click', function (e) {
       var t = e.target;
       if (t.closest('[data-srback]')) { el.remove(); return; }
       if (t.id === 'igSrGo') { go(); return; }
-      var u = t.closest('[data-srurl]'); if (u) openUrl(u.getAttribute('data-srurl'));
+      var u = t.closest('[data-uprof]'); if (u) openUProf(u.getAttribute('data-uprof'));
     });
+    el.addEventListener('input', function (e) { if (e.target.id === 'igSrQ') hint(); });
     el.addEventListener('keydown', function (e) { if (e.target.id === 'igSrQ' && e.key === 'Enter') go(); });
+  }
+  // ── ホーム（2026-11-10 まるちゃん「やって」）＝フォロー中の人の投稿の流れ。お店のブラウザで読むだけ（kind=home・20秒ほど）──
+  //   広告は出さない。「すべてチェックしました」のあとは、インスタのおすすめの投稿（本物と同じ並び）。
+  function openFeed() {
+    var el = document.createElement('div'); el.className = 'igp igfd'; el.id = 'igFd';
+    var head = '<div class="w"><div class="igph"><button type="button" data-fdback="1">‹</button><b>ホーム</b><span></span></div>';
+    el.innerHTML = head + '<div class="igempty">読み込み中です…（20秒ほどかかります）</div></div>';
+    document.body.appendChild(el);
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-fdback]')) { el.remove(); return; }
+      var c = t.closest('.igpcap'); if (c) { c.classList.toggle('open'); return; }
+      var u = t.closest('[data-uprof]'); if (u) { openUProf(u.getAttribute('data-uprof')); return; }
+      var o = t.closest('[data-fdopen]'); if (o) openUrl('https://www.instagram.com/p/' + o.getAttribute('data-fdopen') + '/');
+    });
+    readAsk({ kind: 'home', acct: CUR }, function (err, d) {
+      if (!document.getElementById('igFd')) return;
+      if (err) { el.remove(); warn(err); return; }
+      var its = (d && d.items) || [], h = head, sep = false;
+      if (!its.length) h += '<div class="igempty"><b>まだ投稿はありません</b>フォロー中の人が投稿すると、ここに表示されます。</div>';
+      its.forEach(function (x) {
+        if (x.sug && !sep) {
+          sep = true;
+          h += '<div class="igfdsep"><b>すべてチェックしました</b>過去3日間の新しい投稿をすべてチェックしました。<div class="s">おすすめの投稿</div></div>';
+        }
+        var k = x.type === 2 ? IC.reelK : (x.car ? IC.car : '');
+        h += '<div class="igfdi"><div class="igpu" data-uprof="' + esc(x.user) + '" style="cursor:pointer">' +
+          (x.pic ? '<img src="' + esc(x.pic) + '" referrerpolicy="no-referrer" alt="">' : '') + '<b>' + esc(x.user) + '</b></div>' +
+          '<button type="button" class="m" data-fdopen="' + esc(x.code) + '">' + (x.img ? '<img src="' + esc(x.img) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
+          (k ? '<span class="k">' + k + '</span>' : '') + '</button>' +
+          (x.likes ? '<div class="igpl">いいね！' + num(x.likes) + '件</div>' : '') +
+          (x.cap ? '<div class="igpcap"><b>' + esc(x.user) + '</b> ' + esc(x.cap) + '</div>' : '') +
+          (x.comments ? '<div class="igpd" data-fdopen="' + esc(x.code) + '" style="cursor:pointer">コメント' + num(x.comments) + '件をすべて見る</div>' : '') +
+          '<div class="igpd">' + (x.at ? esc(ago(new Date(x.at * 1000).toISOString())) : '') + '</div></div>';
+      });
+      el.innerHTML = h + '</div>';
+    });
+  }
+  // ── ほかの人のプロフィール（2026-11-10 まるちゃん「やって」）＝お店のブラウザで読むだけ（kind=uprof・20秒ほど）──
+  //   名前・自己紹介・数・ハイライト・投稿の頭の12件。フォロー・メッセージのボタンは押せない（読むだけ）＝「インスタで開く」から。
+  function openUProf(u) {
+    u = String(u || '').replace(/^@/, '').trim();
+    if (!/^[A-Za-z0-9._]{1,30}$/.test(u)) { warn('ユーザーネームは英数字で入力してください😊'); return; }
+    var el = document.createElement('div'); el.className = 'igp igup';
+    var head = '<div class="w"><div class="igph"><button type="button" data-upback="1">‹</button><b>' + esc(u) + '</b><span></span></div>';
+    el.innerHTML = head + '<div class="igempty">読み込み中です…（20秒ほどかかります）</div></div>';
+    document.body.appendChild(el);
+    var url = 'https://www.instagram.com/' + u + '/';
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-upback]')) { el.remove(); return; }
+      if (t.closest('[data-upopen]')) { openUrl(url); return; }
+      var l = t.closest('[data-uplink]'); if (l) { openUrl(l.getAttribute('data-uplink')); return; }
+      var po = t.closest('[data-post]'); if (po) openUrl('https://www.instagram.com/p/' + po.getAttribute('data-post') + '/');
+    });
+    readAsk({ kind: 'uprof', acct: CUR, user: u }, function (err, d) {
+      if (!el.isConnected) return;
+      if (err) { el.remove(); warn(err); return; }
+      var p = (d && d.prof) || {}, links = p.links || [], h = head;
+      h += '<div class="igprof"><div class="igav"><img src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""></div>' +
+        '<div class="igr"><div class="nm">' + esc(p.name || p.user || u) + '</div>' +
+        '<div class="igcnt"><div><b>' + num(p.posts) + '</b>投稿</div><div><b>' + num(p.followers) + '</b>フォロワー</div>' +
+        '<div><b>' + num(p.following) + '</b>フォロー中</div></div></div></div>';
+      h += '<div class="igbio">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio || '') + '</div>';
+      if (links.length) h += '<button type="button" class="iglink" data-uplink="' + esc(links[0].u) + '">' + IC.link + '<span>' + esc(shortUrl(links[0].u)) +
+        (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') + '</span></button>';
+      h += '<div class="igbtns"><button type="button" data-upopen="1">インスタで開く</button></div>';
+      if ((d.hl || []).length) h += '<div class="ighl">' + d.hl.map(function (x) {
+        return '<button type="button"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
+      }).join('') + '</div>';
+      var ps = (d.posts || []).slice(0, 12);
+      h += '<div class="igtabs" style="grid-template-columns:1fr"><button type="button" class="on">' + IC.grid + '</button></div>';
+      if (p.private && !ps.length) h += '<div class="igempty"><b>このアカウントは非公開です</b>フォローすると写真や動画を見られます。</div>';
+      else if (!ps.length) h += '<div class="igempty"><b>まだ投稿がありません</b></div>';
+      else h += '<div class="iggrid">' + ps.map(function (x) { return tile(x, 'posts'); }).join('') + '</div>';
+      el.innerHTML = h + '</div>';
+    });
   }
   function openTagged(code) {
     var el = document.createElement('div'); el.className = 'igp igins igtg'; el.id = 'igTg';
