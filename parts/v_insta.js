@@ -1041,12 +1041,32 @@ function instaScript_(C) {
       '<div class="f"><div class="l">名前</div><input id="igpfName" maxlength="64"><div class="n">名前は14日以内に2回まで変更できます（インスタの決まり）。</div></div>' +
       '<div class="f ro"><div class="l">ユーザーネーム</div><div class="v">' + esc(p.user || '') + '</div><div class="n">ユーザーネームはここでは変更できません。</div></div>' +
       '<div class="f"><div class="l">自己紹介</div><textarea id="igpfBio"></textarea><div class="c" id="igpfCnt"></div></div>' +
-      '<div class="f ro"><div class="l">リンク</div><div class="v">' + (links.length ? esc(shortUrl(links[0].u)) + (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') : 'なし') + '</div>' +
-      '<div class="n">リンクはインスタのアプリから変更してください（インスタの決まりで、ここからは変更できません）。</div></div>' +
+      '<div class="f"><div class="l">リンク（5つまで）</div><div id="igpfLinks"></div>' +
+      '<button type="button" id="igpfLinkAdd" style="background:none;border:0;color:#0095f6;font:inherit;font-weight:700;padding:8px 0;cursor:pointer">＋ リンクを追加</button>' +
+      '<div class="n">タイトルは、プロフィールに表示されるリンクの名前です。</div></div>' +
       '<div class="igcnote">完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。</div></div>';
     document.body.appendChild(e);
     var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
     nm.value = p.name || ''; bio.value = p.bio || '';
+    var LK = links.map(function (x) { return { t: x.t || '', u: x.u || '' }; });
+    var lkKey = function (a) { return JSON.stringify(a.filter(function (x) { return String(x.u).trim(); }).map(function (x) { return [String(x.t).trim(), String(x.u).trim()]; })); };
+    var lk0 = lkKey(LK);
+    var drawLinks = function () {
+      document.getElementById('igpfLinks').innerHTML = LK.map(function (x, i) {
+        return '<div style="display:flex;gap:6px;align-items:center;margin:4px 0">' +
+          '<div style="flex:1;min-width:0"><input data-lt="' + i + '" placeholder="タイトル" maxlength="30" style="border-bottom:1px solid #efefef">' +
+          '<input data-lu="' + i + '" placeholder="https://…" inputmode="url" style="color:#00376b;border-bottom:1px solid #efefef"></div>' +
+          '<button type="button" data-lx="' + i + '" style="background:none;border:0;font-size:18px;color:#737373;cursor:pointer;padding:6px">✕</button></div>';
+      }).join('');
+      LK.forEach(function (x, i) { e.querySelector('[data-lt="' + i + '"]').value = x.t; e.querySelector('[data-lu="' + i + '"]').value = x.u; });
+      document.getElementById('igpfLinkAdd').style.display = LK.length >= 5 ? 'none' : '';
+    };
+    drawLinks();
+    e.addEventListener('input', function (ev) {
+      var t = ev.target, i;
+      if (t.hasAttribute('data-lt')) { i = Number(t.getAttribute('data-lt')); LK[i].t = t.value; }
+      if (t.hasAttribute('data-lu')) { i = Number(t.getAttribute('data-lu')); LK[i].u = t.value; }
+    });
     var cnt = function () { var n = bio.value.length, o = document.getElementById('igpfCnt'); o.textContent = n + ' / ' + BIO_MAX; o.className = 'c' + (n > BIO_MAX ? ' over' : ''); };
     bio.addEventListener('input', cnt); cnt();
     document.getElementById('igpfFile').addEventListener('change', function () {
@@ -1068,8 +1088,16 @@ function instaScript_(C) {
     });
     e.addEventListener('click', function (ev) {
       if (ev.target.id === 'igpfX') { e.remove(); return; }
+      if (ev.target.id === 'igpfLinkAdd') { if (LK.length < 5) { LK.push({ t: '', u: '' }); drawLinks(); } return; }
+      var lx = ev.target.closest && ev.target.closest('[data-lx]');
+      if (lx) { LK.splice(Number(lx.getAttribute('data-lx')), 1); drawLinks(); return; }
       if (ev.target.id !== 'igpfGo') return;
       var f = { kind: 'prof_save', acct: acct }, ch = [];
+      var lkNew = LK.filter(function (x) { return String(x.u).trim(); }).map(function (x) { return { t: String(x.t).trim(), u: String(x.u).trim() }; });
+      var lkCh = lkKey(LK) !== lk0;
+      for (var li = 0; li < lkNew.length; li++) {
+        if (!/^(https?:\/\/)?[^\s\/]+\.[^\s]+$/.test(lkNew[li].u)) { warn('リンクの住所が正しくありません：' + lkNew[li].u + '\n確認してから、もう一度保存してください😊'); return; }
+      }
       var nv = nm.value.trim(), bv = bio.value.replace(/\r/g, '').trim();
       if (nv !== String(p.name || '').trim()) {
         if (!nv) { warn('名前を入力してください😊'); return; }
@@ -1080,16 +1108,34 @@ function instaScript_(C) {
         f.bio = bv; ch.push('自己紹介');
       }
       if (PIC) { f.media = [{ b64: PIC }]; ch.push('写真'); }
+      var prof = ch.length > 0;
+      if (lkCh) ch.push('リンク');
       if (!ch.length) { e.remove(); return; }
+      var saveLinks = function (after) {
+        if (!lkCh) { after(null); return; }
+        busyAsk({ kind: 'links_save', acct: acct, links: lkNew }, false, 'リンクを保存しています', '1分ほどかかるので、少し待っててくださいね🥺', function (err, d) {
+          if (err) { after(err); return; }
+          var vv = DATA && DATA.views && DATA.views[acct], pp = (vv && vv.prof) || p;
+          pp.links = (d && d.links) || lkNew; cacheSet(DATA); after(null);
+        });
+      };
       szPopup_('お店のインスタの' + ch.join('・') + 'を変更します。\nよろしいでしょうか？😊', { cancel: true, onYes: function () {
+        if (!prof) {
+          saveLinks(function (err) { if (err) { warn(err); return; } e.remove(); if (acct === CUR) drawApp(); doneBox('プロフィールの変更が完了しました'); });
+          return;
+        }
         busyAsk(f, !!PIC, 'プロフィールを保存しています', '1〜2分かかるので、少し待っててくださいね🥺', function (err, d) {
           if (err) { warn(err); return; }
           var dn = (d && d.done) || [], vv = DATA && DATA.views && DATA.views[acct], pp = (vv && vv.prof) || p;
           if (dn.indexOf('name') >= 0) pp.name = nv;
           if (dn.indexOf('bio') >= 0) pp.bio = bv;
           if (dn.indexOf('pic') >= 0) pp.pic = (d && d.pic) || document.getElementById('igpfPic').src;
-          cacheSet(DATA); e.remove(); if (acct === CUR) drawApp();
-          doneBox('プロフィールの変更が完了しました', function () { if (d && d.partial) warn(d.partial); });
+          cacheSet(DATA);
+          saveLinks(function (lerr) {
+            e.remove(); if (acct === CUR) drawApp();
+            var notes = [d && d.partial, lerr].filter(Boolean).join('\n');
+            doneBox('プロフィールの変更が完了しました', function () { if (notes) warn(notes); });
+          });
         });
       } });
     });
