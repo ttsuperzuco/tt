@@ -299,10 +299,10 @@ function instaScript_(C) {
       cb({ zdv: dv, zdh: h });
     }, function () { cb({}); });
   }
-  function ask(fields, done) {
+  function ask(fields, done, op) {
     devKey(function (ex) {
       for (var k in ex) fields[k] = ex[k];
-      jsonp({ action: 'submit', key: C.key, op: 'insta', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) },
+      jsonp({ action: 'submit', key: C.key, op: op || 'insta', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) },
         function (r) {
           if (!r || !r.ok || !r.id) { done((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           var n = 0;
@@ -752,6 +752,17 @@ function instaScript_(C) {
     var ok = function () { warn('リンクをコピーしました😊'); };
     try { navigator.clipboard.writeText(u).then(ok, function () { window.prompt('リンク', u); }); } catch (e) { window.prompt('リンク', u); }
   }
+  var PHONE_OFF = '現在その機能は使用できません。りゅうさんに連絡してください。';
+  function phone(fields, busy, done) {
+    jsonp({ action: 'data', key: C.key, name: 'instaphone_alive.json' }, function (y) {
+      var v = null;
+      try { v = (y && typeof y.result === 'string') ? JSON.parse(y.result) : (y && y.at ? y : (y && y.result)); } catch (e) {}
+      var age = (v && v.at) ? Date.now() / 1000 - Number(v.at) : 1e9;
+      if (!(age < 150)) { warn(PHONE_OFF); return; }
+      if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
+      ask(fields, function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); }, 'instaphone');
+    });
+  }
   function togglePost(k) {
     var cur = k === 'like' ? !!POST.liked : !!POST.saved, code = POST.code;
     var busy = k === 'like' ? (cur ? '「いいね！」を取り消しています' : '「いいね！」しています') : (cur ? '保存を取り消しています' : '保存しています');
@@ -998,6 +1009,16 @@ function instaScript_(C) {
           } });
         } },
         { t: '編集', go: openEdit },
+        { t: 'アーカイブ', go: function () {
+          szPopup_('この投稿をアーカイブしますか？😊（あとで戻せます）', { cancel: true, onYes: function () {
+            var code = POST.code;
+            phone({ kind: 'phone_archive', acct: CUR, code: code }, 'アーカイブしています（2分ほどかかります）', function (err) {
+              if (err) { warn(err); return; }
+              closePost(); szOvShow_(szDoneHtml_('アーカイブが完了しました'), '#16a34a');
+              var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); loadWeb(CUR, true); });
+            });
+          } });
+        } },
         { t: lh ? '「いいね！」数を他の人に表示する' : '「いいね！」数を他の人に表示しない', go: function () {
           simple({ kind: 'likes', acct: CUR, code: POST.code, hide: !lh }, '切り替えています', function (err, d) {
             if (err) { warn(err); return; } POST.likes_hidden = !!d.hidden; drawPost();
