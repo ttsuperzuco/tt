@@ -14361,7 +14361,7 @@ function instaScript_(C) {
   function openProfEdit() {
     var v = DATA && DATA.views && DATA.views[CUR], p = (v && v.prof) || {};
     if (!p.user) { warn('プロフィールの読み込みが終わるまで、少し待っててくださいね🥺'); return; }
-    var PIC = null, links = p.links || [];
+    var PIC = null, links = p.links || [], acct = CUR;
     var e = document.createElement('div'); e.className = 'igc igpf'; e.id = 'igProf';
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igpfX">キャンセル</button><b>プロフィールを編集</b><button type="button" class="go" id="igpfGo">完了</button></div>' +
       '<div class="av"><img id="igpfPic" src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><label>写真を変更<input type="file" id="igpfFile" accept="image/*"></label></div>' +
@@ -14398,7 +14398,7 @@ function instaScript_(C) {
     e.addEventListener('click', function (ev) {
       if (ev.target.id === 'igpfX') { e.remove(); return; }
       if (ev.target.id !== 'igpfGo') return;
-      var f = { kind: 'prof_save', acct: CUR }, ch = [];
+      var f = { kind: 'prof_save', acct: acct }, ch = [];
       var nv = nm.value.trim(), bv = bio.value.replace(/\r/g, '').trim();
       if (nv !== String(p.name || '').trim()) {
         if (!nv) { warn('名前を入力してください😊'); return; }
@@ -14413,11 +14413,12 @@ function instaScript_(C) {
       szPopup_('お店のインスタの' + ch.join('・') + 'を変更します。\nよろしいでしょうか？😊', { cancel: true, onYes: function () {
         busyAsk(f, !!PIC, 'プロフィールを保存しています', '1〜2分かかるので、少し待っててくださいね🥺', function (err, d) {
           if (err) { warn(err); return; }
-          var dn = (d && d.done) || [];
-          if (dn.indexOf('name') >= 0) p.name = nv;
-          if (dn.indexOf('bio') >= 0) p.bio = bv;
-          if (dn.indexOf('pic') >= 0) p.pic = (d && d.pic) || document.getElementById('igpfPic').src;
-          cacheSet(DATA); e.remove(); drawApp();
+          // ★開いた後に裏の読み直しが届くと DATA の中身が新しい物に入れ替わる（2026-11-09 実際に起きた）＝今の物に書く
+          var dn = (d && d.done) || [], vv = DATA && DATA.views && DATA.views[acct], pp = (vv && vv.prof) || p;
+          if (dn.indexOf('name') >= 0) pp.name = nv;
+          if (dn.indexOf('bio') >= 0) pp.bio = bv;
+          if (dn.indexOf('pic') >= 0) pp.pic = (d && d.pic) || document.getElementById('igpfPic').src;
+          cacheSet(DATA); e.remove(); if (acct === CUR) drawApp();
           doneBox('プロフィールの変更が完了しました', function () { if (d && d.partial) warn(d.partial); });
         });
       } });
