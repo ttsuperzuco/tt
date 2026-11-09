@@ -14402,7 +14402,7 @@ function instaScript_(C) {
     var el = document.createElement('div'); el.className = 'igp igdm'; el.id = 'igDmT'; document.body.appendChild(el);
     el.addEventListener('click', function (e) { if (e.target.closest('[data-dmtback]')) closeDmThread(); });
     drawDmThread();
-    ask({ kind: 'dm_thread', acct: CUR, id: id }, function (err, d) {
+    ask({ kind: 'dm_thread', acct: CUR, cid: id }, function (err, d) {
       if (!DMT || DMT.id !== id) return;
       if (err) { closeDmThread(); warn(err); return; }
       DMT = d; drawDmThread();
@@ -14445,7 +14445,7 @@ function instaScript_(C) {
         var tx = document.getElementById('igDmTx'), m = tx.value.trim();
         if (!m) { warn('メッセージを入力してください😊'); return; }
         var id = DMT.id;
-        simple({ kind: 'dm_send', acct: CUR, id: id, text: m }, DMT.can_send ? 'メッセージを送信しています' : 'メッセージを送信しています（30秒ほどかかります）', function (err, d) {
+        simple({ kind: 'dm_send', acct: CUR, cid: id, text: m }, DMT.can_send ? 'メッセージを送信しています' : 'メッセージを送信しています（30秒ほどかかります）', function (err, d) {
           if (err) { warn(err); return; }
           tx.value = '';
           if (DMT && DMT.id === id) { DMT = d; drawDmThread(); }
