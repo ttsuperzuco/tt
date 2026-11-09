@@ -638,14 +638,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var k=0;k<KT.length;k++){var ln=SG.kaeshiLineOf(tx,KT[k]);if(ln===null)continue;' +
         'var pk=kPick(KT[k]),ps=SG.kaeshiParts(KT[k]);' +
         'h+="<div class=\\"ktcard"+(ln?" done":"")+"\\"><div class=\\"ktlast\\">⚠️ 次が最終回です</div>"+' +
-          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめ回数は？</div>"+' +
-          '(SG.KAESHI_BTNS?"<div class=\\"kthint\\">複数選択できます。</div>":"");' +
-        'if(!ps.length){h+=kOpts(k,"__all",pk.all||"");}' +
+          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめ回数は？</div>";var HN=(SG.KAESHI_BTNS?"<div class=\\"kthint\\">複数選択できます。</div>":"");' +
+        'if(!ps.length){h+=HN+kOpts(k,"__all",pk.all||"");}' +
         'else{h+="<div class=\\"ktmode\\"><button type=\\"button\\" data-k=\\""+k+"\\" data-mode=\\"same\\" class=\\""+' +
             '(pk.mode==="same"?"on":"")+"\\">全部位が<br>同じおすすめ回数</button><button type=\\"button\\" data-k=\\""+k+' +
             '"\\" data-mode=\\"diff\\" class=\\""+(pk.mode==="diff"?"on":"")+"\\">部位によって<br>おすすめ回数が違う</button></div>";' +
-          'if(pk.mode==="same"){h+=kOpts(k,"__all",pk.all||"");}' +
-          'else if(pk.mode==="diff"){var ea=pk.each||{};for(var q=0;q<ps.length;q++){' +
+          'if(pk.mode==="same"){h+=HN+kOpts(k,"__all",pk.all||"");}' +
+          'else if(pk.mode==="diff"){h+=HN;var ea=pk.each||{};for(var q=0;q<ps.length;q++){' +
             'h+="<div class=\\"pl\\">"+esc(ps[q].word)+"</div>"+kOpts(k,ps[q].word,ea[ps[q].word]||"");}}}' +
         'h+="</div>";}' +
       '$("sgkcards").innerHTML=h;$("sgkpre").textContent=tx;' +
@@ -760,7 +759,7 @@ var KAESHICSS_ =
   '.ktcard .q{font-size:20px;font-weight:900;color:#0f172a;margin:4px 0 10px;}' +
   '.ktcard .pl{font-size:16px;font-weight:900;margin:12px 0 6px;}' +
   '.ktopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}' +
-  '.kthint{font-size:14px;font-weight:700;color:#475569;line-height:1.5;margin:0 0 10px;}' +
+  '.kthint{font-size:14px;font-weight:700;color:#475569;line-height:1.5;margin:4px 0 8px;}' +
   '.ktopts button{background:#f1f5f9;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 2px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
   '.ktopts button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.ktmode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 12px;}' +
