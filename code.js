@@ -179,6 +179,9 @@ function doGet(e) {
   } else if (view === 'uriagebook') {
     title = 'TT売上帳簿';                               // ★今日の売上表を触る（純JS・書くのは受付係→売上帳簿の係）
     html = renderUriageBookPage_(base, staff, dev);
+  } else if (view === 'shomeisho') {
+    title = '購入証明書作成';                                 // ★画面と紙は係から受け取って枠に出す（純JS・計算は受付係 op=shomeisho）
+    html = renderShomeishoPage_(base, staff, dev);
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       // ★静的アプリが oshirase_mita.json を取って描く
     html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
@@ -1062,7 +1065,9 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★お知らせ見てくれた？（2026-11-06 まるちゃん依頼）＝前日お知らせのあと、お客様が反応してくれたかの一覧。
   //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝確かめたら人ごとの表示でスタッフにONにする。
   // ★2026-11-06 まるちゃん「①だす」＝全スタッフにON（人ごとの表示で入切できる）。
-  mita:       { exec: true, staff: true }
+  mita:       { exec: true, staff: true },
+  // ★購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ」）。既定は開発者だけ（共通ルール16）＝人ごとの表示でトマトだけON。
+  shomeisho:  { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1070,7 +1075,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'mita', 'uriagebook'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'mita', 'uriagebook', 'shomeisho'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1896,7 +1901,11 @@ var TILE_DEFS_ = [
   // ★お知らせ見てくれた？（2026-11-06）＝前日お知らせへの反応（返事・確認リンクを押した）を今日・明日・過去の履歴で見る。
   //   分け方はサーバーが oshirase_mita.json に入れる（前日お知らせ確認リンクの お知らせ見てくれた.py）。
   { id: 'mita', cls: 'mita', view: 'mita',
-    icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' }
+    icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
+  // ★購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」）＝TOMATO画面。テストのお客様トモトラス様だけ。
+  //   画面と紙はパソコン版と同じ1本を係から受け取って出す（受付係 op=shomeisho → まとめ購入証明書\programs\zuko_shomeisho.py）。
+  { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
+    icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -1915,6 +1924,7 @@ var TILE_GROUP_ = {
   procell: 'keiei', shophist: 'keiei',
   // ★2026-10-26 まるちゃん決定：幹部(🍅トマト)にだけ出すボタンはスタッフ画面の下の「TOMATO画面」（PC版 super_pc.py と同じ）。
   uriage: 'tomato',
+  shomeisho: 'tomato',   // ★2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」（PC版 super_pc.py と同じ）
   // ★2026-10-21 まるちゃん決定：「実務者用」を「スタッフ画面」に改名し、中身をみかんさんの画面と同じにした。
   //   みかんさんに出ないボタンは、開発中なら開発者用・それ以外は管理者用へ（PC版 super_pc.py の GROUP_OF と同じ）。
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
@@ -11823,6 +11833,143 @@ function renderUriageBookPage_(base, staff, dev) {
 // ★どの画面を開いた時も：まだ結果を知らせていない売上帳簿の書き込みがあれば、見張りを動かす（2026-11-07）
 try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined' && ubPendList_().length) setTimeout(ubWatch_, 1500); } catch (e) {}
 
+// ========== 購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」） ==========
+// ★画面と紙はパソコン版と同じ1本（まとめ購入証明書\programs\gui.py の build_html(web=True)）を係から受け取り、
+//   枠の中に出すだけ＝画面を二重に持たない（2026-11-09 まるちゃん「１２３OK」）。
+// ★枠の中の画面が「計算して」と頼む → ここが op=shomeisho（fields＝{fn,args}）で受付係へ渡す
+//   → 係（まとめ購入証明書\programs\zuko_shomeisho.py）の答えを枠へ返す。
+// ★テスト用のお客様トモトラス様（F000・日本人女性・VIO脱毛）だけ。本物の予約・お客様には触らない
+//   （まるちゃん「ここ一切全部ださずに」「この人だけのデータをトマトにだす。まずVIOだけを社長にテストさせる」）。
+// ★ボタンはスタッフ画面の下の「TOMATO画面」。人ごとの表示でトマトだけON（売上転記と同じ扱い）。
+// ★紙はこの画面いっぱいに出す（紙の上の「🖨 印刷する」で印刷・iPhoneは共有からPDFにもできる）。
+var SMCSS_ =
+  '.smwrap{position:fixed;left:0;top:0;right:0;bottom:0;background:#2C7A99;z-index:5;}' +
+  '.smwrap iframe{position:absolute;left:0;top:0;width:100%;height:100%;border:0;background:#2C7A99;}' +
+  '#smCertBox{display:none;position:absolute;left:0;top:0;right:0;bottom:0;background:#2C7A99;}' +
+  '#smCertBox .smbar{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;padding:0 10px;box-sizing:border-box;}' +
+  '#smCertBox .smbar .ubar{margin:0;}' +
+  '.smzoom{margin-left:auto;background:#fff;color:#2C7A99;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;}' +
+  // ★紙はパソコンの窓と同じ広さ（1180）で作り、画面の幅に縮めて見せる（スマホの幅のまま作ると紙が縦につぶれる）
+  '#smCertPane{position:absolute;left:0;right:0;top:58px;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;}' +
+  '#smCertSizer{position:relative;overflow:hidden;margin:0 auto;}' +
+  '#smCertSizer iframe{position:absolute;left:0;top:0;width:1180px;height:1000px;transform-origin:0 0;background:#fff;}' +
+  '.smmsg{color:#fff;font-weight:800;font-size:18px;line-height:1.7;text-align:center;padding:48px 16px;}' +
+  '.smmsg button{margin-top:16px;background:#fff;color:#2C7A99;border:0;border-radius:999px;padding:10px 22px;font:inherit;font-weight:900;cursor:pointer;}';
+function shomeishoScript_(C) {
+  function $(id) { return document.getElementById(id); }
+  function jsonp(p, cb) {
+    var n = '__smk' + Date.now() + Math.floor(Math.random() * 100000);
+    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+    var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
+    s.onerror = function () { cb({ ok: false, error: '通信エラーです' }); }; document.body.appendChild(s);
+  }
+  // 開発版だけ：この窓の鍵の指紋を添える（パソコンの窓は端末番号が窓ごとにばらばら＝受付係が指紋で見分ける・Threads投稿と同じ）
+  function devKey(cb) {
+    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    var dv = '', dk = '';
+    try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
+    if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(dk)).then(function (b) {
+      var h = Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      cb({ zdv: dv, zdh: h });
+    }, function () { cb({}); });
+  }
+  // 係に頼む → 済んだら答え（{ok,result}）を受け取る。長い答え（画面・紙）は置き場に別に置いた所を読みに行く。
+  function ask(fn, args, done) {
+    devKey(function (ex) {
+      var f = { fn: fn, args: args || [] }; for (var k in ex) f[k] = ex[k];
+      jsonp({ action: 'submit', key: C.key, op: 'shomeisho', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
+              device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(f) }, function (r) {
+        if (!r || !r.ok || !r.id) { done('通信エラーです。もう一度試してもらえると嬉しいです🙇'); return; }
+        var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('shomeisho', 700) : 300;
+        (function poll() {
+          n++;
+          if (n > max) { done('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
+          jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
+            if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 700); return; }
+            if (s.status !== 'done') { done(s.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
+            var d = null; try { d = JSON.parse(s.result || '{}'); } catch (e) {}
+            if (d && d.__bigres) {
+              jsonp({ action: 'data', key: C.key, name: d.__bigres }, function (y) {
+                var v = null; try { v = JSON.parse(y && y.result); } catch (e) {}
+                if (!v || !v.ok) { done('読み込みに失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
+                done(null, v.result);
+              });
+              return;
+            }
+            if (!d || !d.ok) { done('エラーが発生しました。りゅうさんに連絡しました。'); return; }
+            done(null, d.result);
+          });
+        })();
+      });
+    });
+  }
+  var frame = $('smFrame'), cert = $('smCert'), box = $('smCertBox'), sizer = $('smCertSizer'), zoom = false;
+  // 紙の大きさ合わせ＝全体を見る時は画面の幅に縮める／拡大は実寸（指で動かして見る）
+  function fit() {
+    if (box.style.display !== 'block') return;
+    var h = 1000;
+    try { h = Math.max(600, cert.contentDocument.documentElement.scrollHeight); } catch (e) {}
+    var s = zoom ? 1 : Math.min(1, ($('smCertPane').clientWidth - 8) / 1180);
+    cert.style.height = h + 'px'; cert.style.transform = 'scale(' + s + ')';
+    sizer.style.width = Math.ceil(1180 * s) + 'px'; sizer.style.height = Math.ceil(h * s) + 'px';
+    $('smZoom').textContent = zoom ? '全体を表示' : '拡大して表示';
+  }
+  cert.onload = function () { setTimeout(fit, 60); setTimeout(fit, 1500); };
+  window.addEventListener('resize', fit);
+  $('smZoom').onclick = function () { zoom = !zoom; fit(); };
+  function exit() { var a = document.querySelector('#smHome a'); if (a) a.click(); }
+  function load() {
+    $('smMsg').innerHTML = '購入証明書の画面を読み込んでいます…<br>少し待っててくださいね🥺';
+    $('smMsg').style.display = ''; frame.style.display = 'none';
+    ask('page', [], function (err, r) {
+      if (err || !r || !r.html) {
+        $('smMsg').innerHTML = (err || '読み込みに失敗しました。') + '<br><button type="button" id="smRetry">もう一度読み込む</button>' +
+          '<br><button type="button" id="smExit">← 戻る</button>';
+        $('smRetry').onclick = load; $('smExit').onclick = exit;
+        return;
+      }
+      frame.srcdoc = r.html; frame.style.display = ''; $('smMsg').style.display = 'none';
+    });
+  }
+  // 枠の中の画面からの頼み（計算して／紙を出して／ズコのホームへ戻る）
+  if (window.__smMsgH) window.removeEventListener('message', window.__smMsgH);
+  window.__smMsgH = function (ev) {
+    if (!frame.contentWindow || ev.source !== frame.contentWindow) return;
+    var d = ev.data || {};
+    if (d.szsm === 'call') {
+      ask(String(d.name || ''), d.args || [], function (err, res) {
+        try { frame.contentWindow.postMessage({ szsm: 'ret', id: d.id, ok: !err, error: err || '', result: res }, '*'); } catch (e) {}
+      });
+    } else if (d.szsm === 'cert') {
+      zoom = false; box.style.display = 'block'; cert.srcdoc = String(d.html || ''); fit();
+    } else if (d.szsm === 'exit') {
+      exit();
+    }
+  };
+  window.addEventListener('message', window.__smMsgH);
+  $('smCertBack').onclick = function () { box.style.display = 'none'; cert.srcdoc = ''; };
+  load();
+}
+function renderShomeishoPage_(base, staff, dev) {
+  var C = {
+    exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
+    key: 'kx7Q2p9mVt4Zr8'
+  };
+  return '<style>' + HOMECSS_ + SMCSS_ + '</style>' +
+    // ズコのホームへ戻る道（見せない）＝ズコ共通の戻る（アプリの中から来ていれば1つ前に戻る）をそのまま使う
+    '<div id="smHome" style="display:none">' + backBar_(base, staff, dev) + '</div>' +
+    '<div class="smwrap">' +
+      '<div id="smMsg" class="smmsg"></div>' +
+      '<iframe id="smFrame" title="購入証明書作成" style="display:none"></iframe>' +
+      '<div id="smCertBox"><div class="smbar"><div class="ubar"><a class="uhome" id="smCertBack" href="javascript:void(0)">← 戻る</a></div>' +
+          '<button type="button" class="smzoom" id="smZoom">拡大して表示</button></div>' +
+        '<div id="smCertPane"><div id="smCertSizer"><iframe id="smCert" title="購入証明書"></iframe></div></div></div>' +
+    '</div>' +
+    '<script>(' + shomeishoScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
+
 // ========== Claudeに聞く（2026-10-27 まるちゃん依頼） ==========
 // ズコで打った文を、事務所PCで動いている「会話のClaude」へ届けて、返事をこの画面に出す。
 //  送る＝依頼置き場へ op=claude_chat（fields＝{text}）。受付係は手を付けない（素通り）。
@@ -18851,6 +18998,7 @@ var HOMECSS_ =
 '  .tile.procamp::before { background:#9333ea; }' +
 '  .tile.procstock::before { background:#7a5c2e; }' +
 '  .tile.uriagebook::before { background:#0f766e; }' +
+'  .tile.shomeisho::before { background:#b5757e; }' +   // ★購入証明書＝PC版と同じ色（super_pc.py）
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -18878,6 +19026,7 @@ var HOMECSS_ =
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
 '  .tile.procstock .ticon { background:rgba(122,92,46,.16); }' +
 '  .tile.uriagebook .ticon { background:rgba(15,118,110,.16); }' +
+'  .tile.shomeisho .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
