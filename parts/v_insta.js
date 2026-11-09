@@ -474,7 +474,8 @@ function instaScript_(C) {
       '<input type="file" id="igcFile" accept="' + acc + '"' + (kind === 'feed' ? ' multiple' : '') + '></label>' +
       (kind === 'story' ? '<div class="igcq"><div class="t">リンク（押せるスタンプ）</div>' +
         '<input id="igcLink" inputmode="url" placeholder="https://…（LINEの予約のリンクなど）" style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit;margin:4px 0">' +
-        '<input id="igcLinkT" maxlength="30" placeholder="スタンプに出す文字（空ならサイトの名前・例：ご予約はこちら）" style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit;margin:0 0 4px"></div>' +
+        '<input id="igcLinkT" maxlength="30" placeholder="スタンプに出す文字（空ならサイトの名前・例：ご予約はこちら）" style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit;margin:0 0 4px">' +
+        '<div style="font-size:13px;margin:2px 0">置く場所</div><div class="seg" id="igcLinkP"><button type="button" data-lp="上">上</button><button type="button" data-lp="真ん中" class="on">真ん中</button><button type="button" data-lp="下">下</button></div></div>' +
         '<div class="igcq"><div class="t">質問・アンケート・カウントダウン</div><div id="igcStk"></div>' +
         '<button type="button" id="igcStkAdd" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer;margin-top:4px">＋ スタンプを追加</button></div>' +
         '<div class="igcq"><div class="t">音楽</div><div id="igcMus" style="margin:4px 0"></div>' +
@@ -533,6 +534,8 @@ function instaScript_(C) {
       }
       if (t.id === 'igcLocX') { CLOC = null; document.getElementById('igcLocR').innerHTML = ''; return; }
       if (t.id === 'igcMusX') { CMUS = null; document.getElementById('igcMus').innerHTML = ''; return; }
+      var lpb = t.closest && t.closest('[data-lp]');
+      if (lpb) { document.querySelectorAll('#igcLinkP [data-lp]').forEach(function (b) { b.className = b === lpb ? 'on' : ''; }); return; }
       if (t.id === 'igcStkAdd') {
         if (CSTK.length >= 3) { warn('スタンプは3つまでです😊'); return; }
         sheet([{ t: '❓ 質問', go: function () { openStk('question'); } }, { t: '📊 アンケート', go: function () { openStk('poll'); } },
@@ -759,7 +762,7 @@ function instaScript_(C) {
       (type === 'poll' ? '<div class="igcq"><div class="t">選択肢（2〜4つ）</div>' + [1, 2, 3, 4].map(function (k) { return inp('igStkO' + k, '選択肢' + k + (k > 2 ? '（なくても大丈夫です）' : ''), 25); }).join('') + '</div>' : '') +
       (type === 'countdown' ? '<div class="igcq"><div class="t">最終日（この日の夜24時に0になります）</div><input type="date" id="igStkD" min="' + iso(today) + '" style="border:1px solid #dbdbdb;border-radius:8px;padding:8px 10px;font:inherit;margin:4px 0"></div>' : '') +
       '<div class="igcq"><div class="t">置く場所</div><div class="seg" id="igStkP"><button type="button" data-p="上">上</button><button type="button" data-p="真ん中" class="on">真ん中</button><button type="button" data-p="下">下</button></div></div>' +
-      '<div class="igcnote">文字・絵文字は日本語でも大丈夫です。スタンプの見た目はインスタと同じになります。</div></div>';
+      '<div class="igcnote">文字・絵文字は日本語でも大丈夫です。スタンプの見た目はインスタと同じになります。ほかのスタンプやリンクと置く場所が重ならないようにしてください。</div></div>';
     document.body.appendChild(e);
     e.addEventListener('click', function (ev) {
       var t = ev.target;
@@ -808,7 +811,7 @@ function instaScript_(C) {
       if (link && !/^https?:\/\/[^\s]+$/.test(link)) { warn('リンクは https:// から始まる住所を入力してください😊'); return; }
       if (/[^\x00-\x7e]/.test(link)) { warn('リンクに日本語が入っています。英数字の住所にしてください😊'); return; }
       var dr = document.getElementById('igcDry');
-      var pf = { kind: 'phone_story', acct: CUR, media: CMEDIA.map(function (m) { return { b64: m.b64 }; }), link: link, link_text: ltext, music: CMUS, stickers: CSTK, dry: !!(dr && dr.checked) };
+      var pf = { kind: 'phone_story', acct: CUR, media: CMEDIA.map(function (m) { return { b64: m.b64 }; }), link: link, link_text: ltext, link_pos: ((document.querySelector('#igcLinkP .on') || {}).getAttribute ? document.querySelector('#igcLinkP .on').getAttribute('data-lp') : '真ん中'), music: CMUS, stickers: CSTK, dry: !!(dr && dr.checked) };
       phoneBig(pf, 'ストーリーズを作っています（3〜5分かかります）', function (err) {
         if (err) { warn(err); return; }
         var c2 = document.getElementById('igCompose'); if (c2) c2.remove();
