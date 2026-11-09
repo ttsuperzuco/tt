@@ -402,7 +402,7 @@ function instaScript_(C) {
     h += '<div class="igchips">' +
       (p.threads ? '<button type="button" data-go="threads">' + IC.thS + esc(p.threads) + '</button>' : '') +
       (p.fb ? '<button type="button" data-go="fb">' + IC.fb + esc(p.fb) + '</button>' : '') +
-      '<button type="button" class="add" data-soon="1">' + IC.plusS + '追加</button></div>';
+      '<button type="button" class="add" data-go="banners">' + IC.plusS + '追加</button></div>';
     h += '<button type="button" class="igdash" data-go="dash"><span><b>プロフェッショナルダッシュボード</b><small>新しいツールが利用できるようになりました。</small></span><i></i></button>';
     h += '<div class="igbtns"><button type="button" data-pedit="1">プロフィールを編集</button><button type="button" data-go="pshare">プロフィールをシェア</button></div>';
     h += '<div class="ighl"><button type="button" data-hlnew="1"><div class="c new">' + IC.plus + '</div><div class="t">新規</div></button>' +
@@ -788,6 +788,7 @@ function instaScript_(C) {
     if (k === 'home') { TAB = 'posts'; drawApp(); window.scrollTo(0, 0); return; }
     if (k === 'reels') { TAB = 'reels'; drawApp(); var tb = document.querySelector('.igtabs'); if (tb) tb.scrollIntoView(); return; }
     if (k === 'search') { openSearch(); return; }
+    if (k === 'banners') { openBanners(); return; }
     if (k === 'dash') { openDash(30); return; }
     if (k === 'menu') {
       sheet([{ t: 'インサイト', go: function () { openDash(30); } }, { t: 'メッセージ', go: openDm }, { t: '検索', go: openSearch },
@@ -805,6 +806,55 @@ function instaScript_(C) {
   function pinCount() {
     var v = DATA && DATA.views && DATA.views[CUR];
     return ((v && v.posts) || []).filter(function (x) { return x.pin; }).length;
+  }
+  function openBanners() {
+    var acct = CUR;
+    var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igBn';
+    var head = '<div class="w"><div class="igph"><button type="button" data-bnback="1">‹</button><b>バナー</b><span></span></div>';
+    var KN = { 'Threads': 'スレッズ', 'Facebook Page': 'Facebookページ', 'Facebook profile': 'Facebookの個人のプロフィール' };
+    var row = function (x, add) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #efefef">' +
+        '<span style="flex:1;min-width:0"><b>' + esc(x.name) + '</b><span style="color:#737373"> ・' + esc(KN[x.kind] || x.kind || '') + '</span></span>' +
+        '<button type="button" data-bn="' + esc(x.name) + '" data-bnadd="' + (add ? '1' : '0') + '" style="background:' + (add ? '#0095f6' : '#efefef') + ';color:' + (add ? '#fff' : '#000') +
+        ';border:0;border-radius:8px;padding:7px 14px;font:inherit;font-weight:700;cursor:pointer">' + (add ? '追加' : '外す') + '</button></div>';
+    };
+    var draw = function (d, note) {
+      if (!document.getElementById('igBn')) return;
+      el.innerHTML = head + (note ? '<div class="hint">' + esc(note) + '</div>' : '') +
+        '<div class="hint" style="font-weight:700;color:#000">プロフィールに表示中</div>' +
+        ((d.on || []).length ? d.on.map(function (x) { return row(x, false); }).join('') : '<div class="hint">ありません</div>') +
+        '<div class="hint" style="font-weight:700;color:#000">追加できるバナー</div>' +
+        ((d.add || []).length ? d.add.map(function (x) { return row(x, true); }).join('') : '<div class="hint">ありません</div>') +
+        '<div class="hint">変更には1〜2分かかります。「文章の穴埋め」のバナーは、インスタのアプリから追加してください😊</div>' +
+        '<button type="button" class="iglink" data-bnre="1" style="display:block;margin:10px auto;color:#0095f6;font-weight:700;background:none;border:0;font:inherit;cursor:pointer">最新の内容に更新（1〜2分かかります）</button></div>';
+    };
+    var load = function () {
+      phone({ kind: 'phone_banners', acct: acct }, 'バナーを読み込んでいます（1〜2分かかります）', function (err, d) {
+        if (err) { warn(err); return; }
+        draw(d || {});
+      });
+    };
+    el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
+    document.body.appendChild(el);
+    el.addEventListener('click', function (e) {
+      if (e.target.closest('[data-bnback]')) { el.remove(); return; }
+      if (e.target.closest('[data-bnre]')) { load(); return; }
+      var b = e.target.closest('[data-bn]'); if (!b) return;
+      var name = b.getAttribute('data-bn'), add = b.getAttribute('data-bnadd') === '1';
+      szPopup_(add ? '「' + name + '」のバナーをプロフィールに追加しますか？😊' : '「' + name + '」のバナーをプロフィールから外しますか？😊', { cancel: true, onYes: function () {
+        phone({ kind: 'phone_banner', acct: acct, name: name, add: add }, (add ? 'バナーを追加しています' : 'バナーを外しています') + '（2分ほどかかります）', function (err, d) {
+          if (err) { warn(err); return; }
+          if (d && (d.on || d.add)) draw(d);
+          szOvShow_(szDoneHtml_(add ? 'バナーの追加が完了しました' : 'バナーを外しました'), '#16a34a');
+          var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); loadWeb(acct, true); });
+        });
+      } });
+    });
+    jsonp({ action: 'data', key: C.key, name: 'instaphone_banners_' + acct + '.json' }, function (y) {
+      var v = null;
+      try { v = (y && typeof y.result === 'string') ? JSON.parse(y.result) : (y && (y.on || y.add) ? y : (y && y.result)); } catch (e2) {}
+      if (v && (v.on || v.add)) draw(v); else load();
+    });
   }
   function openArch() {
     var acct = CUR;
