@@ -57,13 +57,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '</div>' +
     '<div class="sg" id="sgPF" style="display:none">' +
       '<div class="sgwho">本日、<span class="sgem">顔の</span>プロセルをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span>YES（<span class="sgemr">顔の</span>プロセルをやった）</button>' +
-      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span>NO（<span class="sgemr">顔の</span>プロセルをやっていない）</button>' +
+      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span><span>YES（<span class="sgemr">顔の</span>プロセルをやった）</span></button>' +
+      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span><span>NO（<span class="sgemr">顔の</span>プロセルをやっていない）</span></button>' +
     '</div>' +
     '<div class="sg" id="sgPH" style="display:none">' +
       '<div class="sgwho">本日、<span class="sgem">頭皮の</span>プロセルをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span>YES（<span class="sgemr">頭皮の</span>プロセルをやった）</button>' +
-      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（<span class="sgemr">頭皮の</span>プロセルをやっていない）</button>' +
+      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span><span>YES（<span class="sgemr">頭皮の</span>プロセルをやった）</span></button>' +
+      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span><span>NO（<span class="sgemr">頭皮の</span>プロセルをやっていない）</span></button>' +
     '</div>' +
     '<div class="sg" id="sgCheck" style="display:none">' +
       '<div class="sgwho">ここからは、お客様が退店された後に行ってください。</div>' +
