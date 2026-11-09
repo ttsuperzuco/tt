@@ -432,7 +432,7 @@ function instaScript_(C) {
     document.body.appendChild(c);
     var cap = document.getElementById('igcCap');
     if (cap) cap.addEventListener('input', function () {
-      var n = Array.from(cap.value).length, o = document.getElementById('igcCnt');
+      var n = cap.value.length, o = document.getElementById('igcCnt');   
       o.textContent = n + ' / ' + MAXCAP; o.className = 'igccnt' + (n > MAXCAP ? ' over' : '');
     });
     c.addEventListener('click', function (e) {
@@ -497,7 +497,7 @@ function instaScript_(C) {
   function share() {
     if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してください😊' : '写真か動画を選択してください😊'); return; }
     var cap = document.getElementById('igcCap'), text = cap ? cap.value.trim() : '';
-    if (Array.from(text).length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです😊'); return; }
+    if (text.length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです（絵文字は2文字に数えます）😊'); return; }
     if ((text.match(/#/g) || []).length > 30) { warn('ハッシュタグは30個までです😊'); return; }
     if (CK !== 'story' && CHIDE === null) { warn('「いいね！」数を非表示にするか選択してください😊'); return; }
     var fields = { kind: 'post', acct: CUR, type: CK, caption: text, hide_likes: CK === 'story' ? false : CHIDE,
@@ -730,13 +730,13 @@ function instaScript_(C) {
       '<textarea id="igeTx"></textarea><div class="igccnt" id="igeCnt"></div></div>';
     document.body.appendChild(e);
     var tx = document.getElementById('igeTx'); tx.value = POST.caption || '';
-    var cnt = function () { var n = Array.from(tx.value).length, o = document.getElementById('igeCnt'); o.textContent = n + ' / ' + MAXCAP; o.className = 'igccnt' + (n > MAXCAP ? ' over' : ''); };
+    var cnt = function () { var n = tx.value.length, o = document.getElementById('igeCnt'); o.textContent = n + ' / ' + MAXCAP; o.className = 'igccnt' + (n > MAXCAP ? ' over' : ''); };
     tx.addEventListener('input', cnt); cnt();
     e.addEventListener('click', function (ev) {
       if (ev.target.id === 'igeX') { e.remove(); return; }
       if (ev.target.id !== 'igeGo') return;
       var v = tx.value.trim();
-      if (Array.from(v).length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです😊'); return; }
+      if (v.length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです（絵文字は2文字に数えます）😊'); return; }
       simple({ kind: 'edit', acct: CUR, code: POST.code, caption: v }, 'キャプションを修正しています', function (err, d) {
         if (err) { warn(err); return; }
         e.remove(); POST.caption = d.caption; drawPost();
@@ -921,10 +921,14 @@ function instaScript_(C) {
         drawGrid(); return;
       }
       if (t.id === 'igheCv') {
+        var was = isNew ? {} : (keys0 ? keys0.split(',') : []).reduce(function (o, k) { o[k] = 1; return o; }, {});
+        var cands = SEL.filter(function (s) { return !was[s.key]; });
         if (!SEL.length) { warn('先にストーリーズを選択してください😊'); return; }
+        if (!cands.length) { warn('カバーは、新しく追加するストーリーから選択してください😊\n（インスタの決まりで、もともと入っているストーリーは、ここではカバーにできません）'); return; }
         var sh = document.createElement('div'); sh.className = 'igsheet';
         sh.innerHTML = '<div class="in ighe" style="max-height:80vh;overflow-y:auto"><div class="bar"></div><b>カバーにする写真を選択してください😊</b>' +
-          '<div class="gr">' + SEL.map(function (s) { return cell(s, 'cv'); }).join('') + '</div></div>';
+          (isNew ? '' : '<div class="em" style="padding:8px 16px">新しく追加したストーリーだけが並びます。</div>') +
+          '<div class="gr">' + cands.map(function (s) { return cell(s, 'cv'); }).join('') + '</div></div>';
         sh.addEventListener('click', function (x) {
           var c = x.target.closest && x.target.closest('[data-cv]');
           if (c) { COVER = c.getAttribute('data-cv'); sh.remove(); drawGrid(); return; }
