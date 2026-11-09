@@ -141,6 +141,9 @@ function doGet(e) {
   } else if (view === 'uriagebook') {
     title = 'TT売上帳簿';                               
     html = renderUriageBookPage_(base, staff, dev);
+  } else if (view === 'shomeisho') {
+    title = '購入証明書作成';                                 
+    html = renderShomeishoPage_(base, staff, dev);
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       
     html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
@@ -812,9 +815,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   claudechat: { exec: false, staff: false },
   threads:    { exec: false, staff: false },
   insta:      { exec: false, staff: false },
-  mita:       { exec: true, staff: true }
+  mita:       { exec: true, staff: true },
+  shomeisho:  { exec: false, staff: false }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'mita', 'uriagebook'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'mita', 'uriagebook', 'shomeisho'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1355,13 +1359,16 @@ var TILE_DEFS_ = [
   { id: 'insta', cls: 'insta', view: 'insta',
     icon: '<span class="ticon">📸</span>', label: 'インスタ' },
   { id: 'mita', cls: 'mita', view: 'mita',
-    icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' }
+    icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
+  { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
+    icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' }
 ];
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'keiei', koukoku: 'keiei', imglink: 'kanri',
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
+  shomeisho: 'tomato',   
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', uriagebook: 'kaihatsu'
 };
@@ -2277,6 +2284,9 @@ try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined'
 
 
 
+
+
+
 function renderPcStatus_(base, staff, dev) {
   try {
     return renderPcStatusPage_(
@@ -2730,6 +2740,7 @@ var HOMECSS_ =
 '  .tile.procamp::before { background:#9333ea; }' +
 '  .tile.procstock::before { background:#7a5c2e; }' +
 '  .tile.uriagebook::before { background:#0f766e; }' +
+'  .tile.shomeisho::before { background:#b5757e; }' +   
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -2757,6 +2768,7 @@ var HOMECSS_ =
 '  .tile.procamp .ticon { background:rgba(147,51,234,.14); }' +
 '  .tile.procstock .ticon { background:rgba(122,92,46,.16); }' +
 '  .tile.uriagebook .ticon { background:rgba(15,118,110,.16); }' +
+'  .tile.shomeisho .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
