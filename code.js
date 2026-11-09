@@ -18625,7 +18625,12 @@ var KANSHISCRIPT_ =
 '    TILEROW_=m;' +
 '    h+="<button type=\\"button\\" class=\\"kbtn\\" data-editor=\\"tiles\\">ひらいて設定する</button>";' +
 '  }' +
-'  if(has(m.on?"off":"on")){' +
+/* ★2026-11-09 まるちゃん「サーバーと自宅PCの両方のオンオフスイッチ」：まとめ実行の中の作業以外は2台分のボタンを出す（宛先の機械が実行） */
+'  if(m.where&&m.where!=="chain"&&has("on")){' +
+'    [["server","サーバー"],["pc","自宅PC"]].forEach(function(x){ var v=(x[0]==="server")?m.on_server:m.on_pc;' +
+'      if(v===null||v===undefined){ h+="<button type=\\"button\\" class=\\"kbtn\\" disabled>"+x[1]+"：様子がまだ届いていません</button>"; return; }' +
+'      h+="<button type=\\"button\\" class=\\"kbtn "+(v?"on":"off")+"\\" data-act=\\""+(v?"off":"on")+"\\" data-key=\\""+esc(m.key)+"\\" data-machine=\\""+x[0]+"\\">"+x[1]+"："+(v?"ONにしてある → OFFにする":"OFFにしてある → ONにする")+"</button>"; });' +
+'  } else if(has(m.on?"off":"on")){' +
 '    h+="<button type=\\"button\\" class=\\"kbtn "+(m.on?"on":"off")+"\\" data-act=\\""+(m.on?"off":"on")+"\\" data-key=\\""+esc(m.key)+"\\">"+(m.on?"ONにしてある → OFFにする":"OFFにしてある → ONにする")+"</button>";' +
 '  }' +
 '  if(has("run")){' +
@@ -18656,7 +18661,8 @@ var KANSHISCRIPT_ =
 '  var h="<div class=\\"kcard\\"><div class=\\"khead nohit\\"><span class=\\"kmark\\">"+mark_(m.status)+"</span>";' +
 '  h+="<span class=\\"klabel\\">"+esc(m.label)+' +
 '    "<div class=\\"kslabel k_"+esc(m.status||"")+"\\">"+esc(m.slabel||"")+"</div>"+' +
-'    "<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div></span></div>";' +
+'    "<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div>"+' +
+'    (m.where_note?"<div class=\\"kdetail\\" style=\\"color:#f87171\\">⚠ "+esc(m.where_note)+"</div>":"")+"</span></div>";' +
 '  h+=ctlBtns_(m);' +
 '  h+="</div>";' +
 '  if(m.members&&m.members.length){' +
@@ -18929,11 +18935,11 @@ var KANSHISCRIPT_ =
 '  return false;' +
 '}' +
 // 依頼を送る。合言葉は無い＝**登録した1台のスマホ**であることをサーバー側が見る（kanshiGate_）。
-'function send_(key, act, val, busy){' +
+'function send_(key, act, val, busy, mach){' +
 '  if(busy){ szOvShow_(szBusyHtml_(busy.title, "書き終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99"); }' +
 '  else { toast_("受け付けました。自宅PCが実行します（最大1分）…"); }' +
 '  jsonp_({action:"submit", key:KEY_, op:"kanshi_ctl", device:DEV_,' +
-'    fields:JSON.stringify({ctl_key:key, ctl_act:act, ctl_val:(val||"")})},' +
+'    fields:JSON.stringify({ctl_key:key, ctl_act:act, ctl_val:(val||""), ctl_machine:(mach||"")})},' +
 '    function(r){' +
 '      if(!r||!r.ok){' +
 '        if(busy){ szOvHide_(); szPopup_("エラーが発生しました。"+((r&&r.error)||"依頼できませんでした")); }' +
@@ -18966,7 +18972,7 @@ var KANSHISCRIPT_ =
 '    val=input?input.value:"";' +
 '  }' +
 '  if(CONFIRM_[key]&&!confirm(CONFIRM_[key])) return;' +   // お金・電源・データ復元は押す前に必ず確認
-'  send_(key, act, val);' +
+'  send_(key, act, val, undefined, b.getAttribute("data-machine")||"");' +
 '});' +
 'var ref=document.getElementById("kRef");' +
 'if(ref) ref.addEventListener("click", function(){ toast_("最新を取りに行っています…"); reload_(); });' +
