@@ -14868,6 +14868,8 @@ function instaScript_(C) {
       '<div class="f"><div class="l">リンク（5つまで）</div><div id="igpfLinks"></div>' +
       '<button type="button" id="igpfLinkAdd" style="background:none;border:0;color:#0095f6;font:inherit;font-weight:700;padding:8px 0;cursor:pointer">＋ リンクを追加</button>' +
       '<div class="n">タイトルは、プロフィールに表示されるリンクの名前です。</div></div>' +
+      // ★2026-11-09：お店の公開情報（メール・住所・電話・表示の切り替え）＝受付係がメタの管理画面で読む・保存する
+      '<div class="f"><div class="l">お店の公開情報</div><div id="igpfBiz"><button type="button" id="igpfBizOpen" style="background:none;border:0;color:#0095f6;font:inherit;font-weight:700;padding:6px 0;cursor:pointer">表示・変更する（読み込みに40秒ほどかかります）</button></div></div>' +
       '<div class="igcnote">完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。</div></div>';
     document.body.appendChild(e);
     var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
@@ -14886,6 +14888,34 @@ function instaScript_(C) {
       document.getElementById('igpfLinkAdd').style.display = LK.length >= 5 ? 'none' : '';
     };
     drawLinks();
+    var BIZ = null;
+    var bizOpen = function () {
+      var box = document.getElementById('igpfBiz');
+      box.innerHTML = '<div class="n">読み込み中です…（40秒ほどかかります）</div>';
+      ask({ kind: 'biz_get', acct: acct }, function (err, d) {
+        if (err) { box.innerHTML = '<div class="n">' + esc(err) + '</div>'; return; }
+        BIZ = d || {};
+        var inp = function (id, ph, v, im) { return '<input id="' + id + '" placeholder="' + ph + '"' + (im ? ' inputmode="' + im + '"' : '') + ' style="border-bottom:1px solid #efefef;margin:4px 0" value="' + esc(v || '') + '">'; };
+        box.innerHTML = '<div class="n">カテゴリ：' + esc(BIZ.category || 'なし') + '（カテゴリはインスタのアプリから変更してください）</div>' +
+          '<div class="n" style="margin-top:8px">メールアドレス</div>' + inp('igbEmail', 'メールアドレス（空にすると削除）', BIZ.email, 'email') +
+          '<div class="n" style="margin-top:8px">住所（今：' + esc(BIZ.address || 'なし') + '）</div>' +
+          inp('igbStreet', '町名・番地（変更する時だけ入力）', '') + inp('igbCity', '市区町村（例：台北市）', '') + inp('igbZip', '郵便番号', '', 'numeric') +
+          '<div class="n" style="margin-top:8px">電話番号（台湾 +886）</div>' + inp('igbPhone', '例：0987654321', BIZ.phone, 'tel') +
+          '<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px"><input type="checkbox" id="igbShowContact" style="width:auto"' + (BIZ.show_contact ? ' checked' : '') + '>メール・住所・電話番号をプロフィールに表示する</label>' +
+          '<label style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:14px"><input type="checkbox" id="igbShowCat" style="width:auto"' + (BIZ.show_category ? ' checked' : '') + '>カテゴリをプロフィールに表示する</label>';
+      });
+    };
+    var bizChanges = function () {
+      if (!BIZ) return null;
+      var g = {}, v = function (id) { return (document.getElementById(id).value || '').trim(); };
+      if (v('igbEmail') !== String(BIZ.email || '').trim()) g.email = v('igbEmail');
+      if (v('igbStreet') || v('igbCity') || v('igbZip')) { g.street = v('igbStreet'); g.city = v('igbCity'); g.zip = v('igbZip'); }
+      if (v('igbPhone').replace(/[^0-9]/g, '') !== String(BIZ.phone || '').replace(/[^0-9]/g, '')) g.phone = v('igbPhone');
+      var sc = document.getElementById('igbShowContact').checked, sk = document.getElementById('igbShowCat').checked;
+      if (sc !== !!BIZ.show_contact) g.show_contact = sc;
+      if (sk !== !!BIZ.show_category) g.show_category = sk;
+      return Object.keys(g).length ? g : null;
+    };
     e.addEventListener('input', function (ev) {
       var t = ev.target, i;
       if (t.hasAttribute('data-lt')) { i = Number(t.getAttribute('data-lt')); LK[i].t = t.value; }
@@ -14915,6 +14945,7 @@ function instaScript_(C) {
     e.addEventListener('click', function (ev) {
       if (ev.target.id === 'igpfX') { e.remove(); return; }
       if (ev.target.id === 'igpfLinkAdd') { if (LK.length < 5) { LK.push({ t: '', u: '' }); drawLinks(); } return; }
+      if (ev.target.id === 'igpfBizOpen') { bizOpen(); return; }
       var lx = ev.target.closest && ev.target.closest('[data-lx]');
       if (lx) { LK.splice(Number(lx.getAttribute('data-lx')), 1); drawLinks(); return; }
       if (ev.target.id !== 'igpfGo') return;
@@ -14936,6 +14967,8 @@ function instaScript_(C) {
       if (PIC) { f.media = [{ b64: PIC }]; ch.push('写真'); }
       var prof = ch.length > 0;
       if (lkCh) ch.push('リンク');
+      var bz = bizChanges();
+      if (bz) ch.push('お店の公開情報');
       if (!ch.length) { e.remove(); return; }
       // リンクは別の画面（メタの管理画面）で保存する＝プロフィールのあとに続けて頼む
       var saveLinks = function (after) {
@@ -14946,9 +14979,17 @@ function instaScript_(C) {
           pp.links = (d && d.links) || lkNew; cacheSet(DATA); after(null);
         });
       };
+      var saveBiz = function (after) {
+        if (!bz) { after(null); return; }
+        var g = { kind: 'biz_save', acct: acct }; for (var k in bz) g[k] = bz[k];
+        busyAsk(g, false, 'お店の公開情報を保存しています', '1分ほどかかるので、少し待っててくださいね🥺', function (err, d) {
+          after(err || (d && d.partial) || null);
+        });
+      };
+      var saveRest = function (after) { saveLinks(function (err) { if (err) { after(err); return; } saveBiz(after); }); };
       szPopup_('お店のインスタの' + ch.join('・') + 'を変更します。\nよろしいでしょうか？😊', { cancel: true, onYes: function () {
         if (!prof) {
-          saveLinks(function (err) { if (err) { warn(err); return; } e.remove(); if (acct === CUR) drawApp(); doneBox('プロフィールの変更が完了しました'); });
+          saveRest(function (err) { if (err) { warn(err); return; } e.remove(); if (acct === CUR) drawApp(); doneBox('プロフィールの変更が完了しました'); });
           return;
         }
         busyAsk(f, !!PIC, 'プロフィールを保存しています', '1〜2分かかるので、少し待っててくださいね🥺', function (err, d) {
@@ -14959,7 +15000,7 @@ function instaScript_(C) {
           if (dn.indexOf('bio') >= 0) pp.bio = bv;
           if (dn.indexOf('pic') >= 0) pp.pic = (d && d.pic) || document.getElementById('igpfPic').src;
           cacheSet(DATA);
-          saveLinks(function (lerr) {
+          saveRest(function (lerr) {
             e.remove(); if (acct === CUR) drawApp();
             var notes = [d && d.partial, lerr].filter(Boolean).join('\n');
             doneBox('プロフィールの変更が完了しました', function () { if (notes) warn(notes); });
