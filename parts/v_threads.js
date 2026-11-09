@@ -1027,7 +1027,16 @@ function threadsScript_(C) {
   var WKEY = 'th_web_v1', IKEY = 'th_ins_v1', FRESH = 30 * 60000;   
   try { WEB = JSON.parse(localStorage.getItem(WKEY) || '{}') || {}; INS = JSON.parse(localStorage.getItem(IKEY) || '{}') || {}; } catch (e) {}
   function webOf(a, d) { return WEB[a + '_' + d] || (d === 30 ? null : null); }
-  function saveWI() { try { localStorage.setItem(WKEY, JSON.stringify(WEB)); localStorage.setItem(IKEY, JSON.stringify(INS)); } catch (e) {} }
+  function mergeNewer(mine, key) {
+    var st = {};
+    try { st = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) {}
+    for (var k in st) if (st[k] && (!mine[k] || (st[k]._t || 0) > (mine[k]._t || 0))) mine[k] = st[k];
+    return mine;
+  }
+  function saveWI() {
+    try { localStorage.setItem(WKEY, JSON.stringify(mergeNewer(WEB, WKEY))); } catch (e) {}
+    try { localStorage.setItem(IKEY, JSON.stringify(mergeNewer(INS, IKEY))); } catch (e) {}
+  }
   function slim(r, d) { return d === 30 ? r : { ok: r.ok, ins: r.ins || {}, login: r.login || '', _t: r._t }; }
   function redrawFor(kind, a, d) {
     if (a !== CUR) return;

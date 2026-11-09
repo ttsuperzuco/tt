@@ -14032,7 +14032,18 @@ function threadsScript_(C) {
   var WKEY = 'th_web_v1', IKEY = 'th_ins_v1', FRESH = 30 * 60000;   // 30分以内に読んだ物は読み直さない
   try { WEB = JSON.parse(localStorage.getItem(WKEY) || '{}') || {}; INS = JSON.parse(localStorage.getItem(IKEY) || '{}') || {}; } catch (e) {}
   function webOf(a, d) { return WEB[a + '_' + d] || (d === 30 ? null : null); }
-  function saveWI() { try { localStorage.setItem(WKEY, JSON.stringify(WEB)); localStorage.setItem(IKEY, JSON.stringify(INS)); } catch (e) {} }
+  // ★2026-11-09：同じ端末でこの画面を2つ開いていると、あとから覚えた方が丸ごと上書きして、もう片方が読んだ物を消していた
+  //   （試し用の窓で実際に起きた）。覚える前に端末の中身と合わせ、期間ごとに新しく読んだ方を残す。
+  function mergeNewer(mine, key) {
+    var st = {};
+    try { st = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) {}
+    for (var k in st) if (st[k] && (!mine[k] || (st[k]._t || 0) > (mine[k]._t || 0))) mine[k] = st[k];
+    return mine;
+  }
+  function saveWI() {
+    try { localStorage.setItem(WKEY, JSON.stringify(mergeNewer(WEB, WKEY))); } catch (e) {}
+    try { localStorage.setItem(IKEY, JSON.stringify(mergeNewer(INS, IKEY))); } catch (e) {}
+  }
   // ★2026-11-09：7・14・90日の分は、期間で変わる数字（閲覧者など）だけを覚える。フォロワー一覧・投稿の数・再投稿は
   //   どの期間でも同じ＝30日の分だけ持つ（ズコ全体で端末に覚えられる量は約5MB。ほかの画面の控えを押し出さないため）。
   function slim(r, d) { return d === 30 ? r : { ok: r.ok, ins: r.ins || {}, login: r.login || '', _t: r._t }; }
