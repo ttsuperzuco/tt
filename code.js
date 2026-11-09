@@ -13810,6 +13810,16 @@ var INSTACSS_ =
   '.igpl{padding:2px 12px;font-weight:700;}' +
   '.igpcap{padding:4px 12px;white-space:pre-wrap;word-break:break-word;}' +
   '.igpd{padding:6px 12px;color:#737373;font-size:12px;}' +
+  '.igpins{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid #efefef;}' +
+  '.igpins button{color:#0095f6 !important;font-weight:600 !important;font-size:14px !important;}' +
+  '.igins{z-index:8500;}' +
+  '.igins .big{text-align:center;padding:22px 12px 14px;}' +
+  '.igins .big b{display:block;font-size:30px;font-weight:700;}' +
+  '.igins .big span{color:#737373;font-size:13px;}' +
+  '.igins h3{margin:0;padding:18px 16px 6px;font-size:16px;font-weight:700;border-top:8px solid #f5f5f5;}' +
+  '.igins .row{display:flex;justify-content:space-between;padding:11px 16px;font-size:15px;}' +
+  '.igins .row.top{font-weight:700;}' +
+  '.igins .note{padding:16px;color:#737373;font-size:12px;}' +
   '.igpcs{border-top:1px solid #efefef;margin-top:8px;padding:8px 12px;}' +
   '.igpc{display:flex;gap:10px;padding:8px 0;}' +
   '.igpc .tx{flex:1;white-space:pre-wrap;word-break:break-word;}' +
@@ -14303,6 +14313,7 @@ function instaScript_(C) {
       return it.type === 'VIDEO' ? '<video src="' + esc(it.url) + '" poster="' + esc(it.th) + '" controls playsinline></video>'
         : '<img src="' + esc(it.url) + '" referrerpolicy="no-referrer" alt="">';
     }).join('') + '</div>';
+    h += '<div class="igpins"><button type="button" data-pins="1">インサイトを見る</button></div>';
     h += '<div class="igpa"><button type="button" data-soon="1">' + S('<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', 26) + '</button>' +
       '<button type="button" data-pcom="1">' + S('<path d="M20.7 12a8.7 8.7 0 01-12.6 7.8L3.5 21l1.3-4.4A8.7 8.7 0 1120.7 12z"/>', 26) + '</button>' +
       '<button type="button" data-soon="1">' + IC.send + '</button><span class="sp"></span>' +
@@ -14315,6 +14326,33 @@ function instaScript_(C) {
     }).join('') : '<div class="igpd">まだコメントはありません。</div>') + '</div></div>';
     el.innerHTML = h;
     drawInput();
+  }
+  // 2026-11-09 投稿の「インサイトを見る」＝メタ公式の数（サーバーの insta_views.py・kind=insights）。並びは本物のインサイトの画面と同じ。
+  function openIns(code) {
+    var el = document.createElement('div'); el.className = 'igp igins'; el.id = 'igIns';
+    var head = '<div class="w"><div class="igph"><button type="button" data-iback="1">‹</button><b>インサイト</b><span></span></div>';
+    el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
+    el.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-iback]')) el.remove(); });
+    document.body.appendChild(el);
+    ask({ kind: 'insights', acct: CUR, code: code }, function (err, d) {
+      if (!document.getElementById('igIns')) return;
+      if (err) { el.remove(); warn(err); return; }
+      var n = function (k) { return d[k] == null ? '－' : num(d[k]); };
+      var row = function (t, k, top) { return '<div class="row' + (top ? ' top' : '') + '"><span>' + t + '</span><span>' + n(k) + '</span></div>'; };
+      var h = head + '<div class="big"><b>' + n('views') + '</b><span>ビュー</span></div>' +
+        row('ビュー', 'views') + row('リーチしたアカウント', 'reach') +
+        '<h3>インタラクション</h3>' + row('投稿でのインタラクション', 'total_interactions', true) +
+        row('「いいね！」', 'likes') + row('コメント', 'comments') + row('保存数', 'saved') + row('シェア数', 'shares');
+      if (d.reel) {
+        var w = d.ig_reels_avg_watch_time;
+        h += '<h3>再生</h3><div class="row"><span>平均再生時間</span><span>' + (w == null ? '－' : (Math.round(w / 100) / 10) + '秒') + '</span></div>';
+      } else {
+        h += '<h3>プロフィール</h3>' + row('プロフィールのアクティビティ', 'profile_activity', true) +
+          row('プロフィールへのアクセス', 'profile_visits') + row('外部リンクのタップ数', 'link_taps') + row('フォロー数', 'follows');
+      }
+      h += '<div class="note">※広告から見られた分は含まれていません（インスタのアプリの数より少なくなることがあります）。</div></div>';
+      el.innerHTML = h;
+    });
   }
   function cmt(c, rep, parent) {
     return '<div class="igpc' + (rep ? ' rep' : '') + (c.hidden ? ' hid' : '') + '"><div class="tx"><b>' + esc(c.u) + '</b>' + esc(c.t) +
@@ -14364,6 +14402,7 @@ function instaScript_(C) {
   function postClick(e) {
     var t = e.target, cl = function (q) { return t.closest && t.closest(q); };
     if (cl('[data-pback]')) { closePost(); return; }
+    if (cl('[data-pins]') && POST && !POST.loading) { openIns(POST.code); return; }
     if (cl('[data-soon]')) { warn(SOON); return; }
     if (cl('[data-pcom]')) { var tx = document.getElementById('igpTx'); if (tx) tx.focus(); else warn('この投稿はコメントがオフです😊'); return; }
     var rp = cl('[data-rep]');
