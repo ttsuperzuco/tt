@@ -305,9 +305,9 @@ function instaScript_(C) {
       jsonp({ action: 'submit', key: C.key, op: op || 'insta', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) },
         function (r) {
           if (!r || !r.ok || !r.id) { done((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
-          var n = 0;
+          var n = 0, LIM = op === 'instaphone' ? 600 : 240;   
           var tick = function () {
-            n++; if (n > 240) { done('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
+            n++; if (n > LIM) { done('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
             jsonp({ action: 'status', key: C.key, id: r.id }, function (x) {
               if (!x || !x.ok) { done((x && x.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
               if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1000); return; }
@@ -791,11 +791,55 @@ function instaScript_(C) {
     if (k === 'dash') { openDash(30); return; }
     if (k === 'menu') {
       sheet([{ t: 'インサイト', go: function () { openDash(30); } }, { t: 'メッセージ', go: openDm }, { t: '検索', go: openSearch },
+             { t: 'アーカイブ', go: openArch },
              { t: '最新の内容に更新', go: function () { loadWeb(CUR, true); } },
              { t: 'インスタで開く', go: function () { openUrl('https://www.instagram.com/' + (p.user || '') + '/'); } }]);
       return;
     }
     warn(SOON);
+  }
+  function gridPost(code) {
+    var v = DATA && DATA.views && DATA.views[CUR];
+    return ((v && v.posts) || []).filter(function (x) { return x.code === code; })[0] || null;
+  }
+  function pinCount() {
+    var v = DATA && DATA.views && DATA.views[CUR];
+    return ((v && v.posts) || []).filter(function (x) { return x.pin; }).length;
+  }
+  function openArch() {
+    var acct = CUR;
+    var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igArch';
+    var head = '<div class="w"><div class="igph"><button type="button" data-arback="1">‹</button><b>アーカイブ</b><span></span></div>';
+    el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
+    document.body.appendChild(el);
+    var ITEMS = [];
+    el.addEventListener('click', function (e) {
+      if (e.target.closest('[data-arback]')) { el.remove(); return; }
+      var r = e.target.closest('[data-arcode]'); if (!r) return;
+      var it = ITEMS.filter(function (x) { return x.code === r.getAttribute('data-arcode'); })[0]; if (!it) return;
+      sheet([{ t: 'プロフィールに表示', go: function () {
+        szPopup_('この投稿をプロフィールに表示しますか？😊（お客様からも見えるようになります）', { cancel: true, onYes: function () {
+          phone({ kind: 'phone_unarchive', acct: acct, code: it.code, cap: it.cap, at: it.at }, 'プロフィールに戻しています（2分ほどかかります）', function (err) {
+            if (err) { warn(err); return; }
+            el.remove(); szOvShow_(szDoneHtml_('プロフィールへの表示が完了しました'), '#16a34a');
+            var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); loadWeb(acct, true); });
+          });
+        } });
+      } }]);
+    });
+    jsonp({ action: 'data', key: C.key, name: 'instaphone_archived_' + acct + '.json' }, function (y) {
+      if (!document.getElementById('igArch')) return;
+      var v = null;
+      try { v = (y && typeof y.result === 'string') ? JSON.parse(y.result) : (y && y.items ? y : (y && y.result)); } catch (e2) {}
+      ITEMS = (v && v.items) || [];
+      var d = function (t) { if (!t) return ''; var x = new Date(t * 1000); return (x.getMonth() + 1) + '月' + x.getDate() + '日'; };
+      el.innerHTML = head + '<div class="hint">ズコでアーカイブした投稿です。押すとプロフィールに戻せます。</div>' + (ITEMS.length ? ITEMS.map(function (x) {
+        return '<button type="button" data-arcode="' + esc(x.code) + '" style="display:flex;gap:12px;align-items:center;width:100%;padding:8px 16px;background:none;border:0;border-bottom:1px solid #efefef;text-align:left;font:inherit;cursor:pointer">' +
+          (x.th ? '<img src="' + esc(x.th) + '" referrerpolicy="no-referrer" alt="" style="width:56px;height:56px;object-fit:cover;flex:none;background:#efefef">' : '<span style="width:56px;height:56px;flex:none;background:#efefef"></span>') +
+          '<span style="min-width:0"><span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(x.cap || '（文のない投稿）') + '</span>' +
+          '<span style="color:#737373;font-size:12px">投稿 ' + d(x.at) + '・アーカイブ ' + d(x.when) + '</span></span></button>';
+      }).join('') : '<div class="igempty"><b>まだありません</b>ズコでアーカイブした投稿が、ここに表示されます。</div>') + '</div>';
+    });
   }
   function openSearch() {
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igSr';
@@ -997,7 +1041,13 @@ function instaScript_(C) {
       sheet(its); return;
     }
     if (cl('[data-pmenu]') && POST && !POST.loading) {
-      var lh = POST.likes_hidden;
+      var lh = POST.likes_hidden, gi = gridPost(POST.code) || {}, pinned = !!gi.pin;
+      var meta = { cap: String(POST.caption || gi.cap || '').slice(0, 200), at: Math.floor(Date.parse(POST.at || '') / 1000) || gi.at || 0,
+                   th: gi.th || POST.thumb || '', k: gi.k || 'img' };
+      var phoneDone = function (msg) {
+        closePost(); szOvShow_(szDoneHtml_(msg), '#16a34a');
+        var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); loadWeb(CUR, true); });
+      };
       sheet([
         { t: '削除', red: true, go: function () {
           szPopup_('この投稿をインスタから削除しますか？😊', { cancel: true, onYes: function () {
@@ -1009,10 +1059,20 @@ function instaScript_(C) {
           } });
         } },
         { t: '編集', go: openEdit },
+        { t: pinned ? '固定を解除' : 'プロフィールに固定', go: function () {
+          if (!pinned && pinCount() >= 3) { warn('固定できるのは3つまでです。先にほかの投稿の固定を解除してください😊'); return; }
+          szPopup_(pinned ? 'この投稿の固定を解除しますか？😊' : 'この投稿をプロフィールの一番上に固定しますか？😊', { cancel: true, onYes: function () {
+            phone({ kind: pinned ? 'phone_unpin' : 'phone_pin', acct: CUR, code: POST.code, cap: meta.cap, at: meta.at },
+              (pinned ? '固定を解除しています' : '固定しています') + '（2分ほどかかります）', function (err) {
+                if (err) { warn(err); return; }
+                phoneDone(pinned ? '固定の解除が完了しました' : '固定が完了しました');
+              });
+          } });
+        } },
         { t: 'アーカイブ', go: function () {
           szPopup_('この投稿をアーカイブしますか？😊（あとで戻せます）', { cancel: true, onYes: function () {
             var code = POST.code;
-            phone({ kind: 'phone_archive', acct: CUR, code: code }, 'アーカイブしています（2分ほどかかります）', function (err) {
+            phone({ kind: 'phone_archive', acct: CUR, code: code, cap: meta.cap, at: meta.at, th: meta.th, k: meta.k }, 'アーカイブしています（2分ほどかかります）', function (err) {
               if (err) { warn(err); return; }
               closePost(); szOvShow_(szDoneHtml_('アーカイブが完了しました'), '#16a34a');
               var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); loadWeb(CUR, true); });
