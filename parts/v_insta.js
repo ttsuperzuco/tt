@@ -308,7 +308,8 @@ function instaScript_(C) {
     if (mode !== 'reels') {
       if (p.pin) k = IC.pin; else if (p.k === 'car') k = IC.car; else if (p.k === 'reel' || p.k === 'video') k = IC.reelK;
     } else if (p.pin) k = IC.pin;
-    var v = (p.plays != null && p.plays !== '') ? '<span class="v">' + IC.eye + num(p.plays) + '</span>' : '';
+    var pv = (p.plays != null && p.plays !== '') ? p.plays : p.vw;
+    var v = (pv != null && pv !== '') ? '<span class="v">' + IC.eye + num(pv) + '</span>' : '';
     return '<button type="button" data-post="' + esc(p.code) + '">' +
       (p.th ? '<img src="' + esc(p.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
       (k ? '<span class="k">' + k + '</span>' : '') + v + '</button>';
