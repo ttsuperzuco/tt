@@ -893,7 +893,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<button type="button" data-addimg="\'+sk+\'">🖼 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="\'+sk+\'">✍ 文章を追加</button></div>\';}' +
   'if(n>=MAXP)h+=\'<div class="bcwho">\'+MAXP+\'つまで送れます（いっぱいです）。\'+' +
-  '\'入れ替える時は「消去」してから追加してください。</div>\';}' +
+  '\'入れ替える時は「消去」してから追加してください😊</div>\';}' +
   'if(mode==="img"){' +
   'h+=\'<div class="bchr"></div><div class="bcleft">\'+(ADDAT+1)+\'つ目に追加する画像を選ぶ</div><div class="bcgrid">\'+' +
   'picks().map(function(p){return \'<div class="bcpick\'+(p.made?" new":"")+\'">\'+' +
@@ -907,7 +907,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var cur=(TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(t);' +
   'h+=\'<div class="bchr"></div><div class="bcleft">送るタグをえらぶ（いくつでも選べます。もう一度押すと外れます）</div>\';' +
   'if(TAGBUSY){h+=\'<div class="bcouttx">タグの一覧を読んでいます…</div>\';}' +
-  'else if(!TAGLIST.length){h+=\'<div class="bcouttx">タグの一覧を読めませんでした。</div>\';}' +
+  'else if(!TAGLIST.length){h+=\'<div class="bcouttx">タグの一覧を読み込めませんでした。</div>\';}' +
   'else{h+=\'<div class="bctaglist">\'+TAGLIST.map(function(x){' +
   'return \'<button type="button" data-tag="\'+esc(x)+\'" class="\'+' +
   '((cur.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';}' +
@@ -988,7 +988,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var x=b.getAttribute("data-tag"),a=((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).slice(),k=a.indexOf(x);' +
   'if(k>=0)a.splice(k,1);else a.push(x);TAGS[step]=a;saveNow();draw();};});' +
   'if(e=document.getElementById("bctagok"))e.onclick=function(){' +
-  'if(!(TAGS[step]||[]).length){status("タグを1つ以上えらんでください。",true);return;}' +
+  'if(!(TAGS[step]||[]).length){status("タグを1つ以上選択してください😊",true);return;}' +
   'if(sameSet(TAGS[step],defTags(TPL[step])))TAGS[step]=[];' +
   'mode="";saveNow();status("タグを確定しました。");draw();};' +
   'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];saveNow();status("");draw();};' +
@@ -1011,7 +1011,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var ta=document.getElementById("bctxt"),cnt=document.getElementById("bccnt"),ad=document.getElementById("bcaddtxt");' +
   'function growTa(){if(!ta)return;ta.style.height="0px";ta.style.height=(ta.scrollHeight+12)+"px";}' +
   'if(ta){ta.focus();growTa();setTimeout(growTa,0);setTimeout(growTa,200);' +
-  'ta.oninput=function(){var L=ulen(ta.value.replace(/^\\s+|\\s+$/g,""));cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください）"):"");' +
+  'ta.oninput=function(){var L=ulen(ta.value.replace(/^\\s+|\\s+$/g,""));cnt.textContent=L+" / "+MAXT+" 文字"+(L>MAXT?("（あと"+(L-MAXT)+"文字減らしてください😊）"):"");' +
   'cnt.className="bccount"+(L>MAXT?" over":"");growTa();};' +
   'ad.onclick=function(){var v=(ta.value||"").trim();' +
   'if(!v){status("文章が空です。",true);return;}' +
@@ -1055,10 +1055,10 @@ function renderBroadcastPage_(base, staff, dev) {
   'items.push({name:t.name,tags:(TAGS[i]||[]),' +
   'parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
   'if(!n){status("文章か画像を入力した対象が1つもありません。",true);return;}' +
-  'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいですか？")' +
-  ':(d0+" "+t0+" から、"+n+"通りの配信を予約します。よろしいですか？"),{cancel:true,onYes:function(){try{' +
+  'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいでしょうか？😊")' +
+  ':(d0+" "+t0+" から、"+n+"通りの配信を予約します。よろしいでしょうか？😊"),{cancel:true,onYes:function(){try{' +
   'var go=document.getElementById(now?"bcnow":"bcplace");if(go)go.disabled=true;' +
-  'szOvShow_(szBusyHtml_(now?"配信を送っています":"配信を予約しています","LINEへの登録が終わったら自動で切り替わりますので、しばらくお待ちください。"),"#2C7A99");' +
+  'szOvShow_(szBusyHtml_(now?"配信を送っています":"配信を予約しています","LINEへの登録が終わったら自動で切り替わります。少し待っててくださいね🥺"),"#2C7A99");' +
   'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
   'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
   'delete p.b64;});});' +
@@ -1085,7 +1085,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'function loadList(){var el=document.getElementById("bclist");if(!el)return;' +
   'ask("bc_list",{},function(d){' +
   'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,function(p){LPOSTS=p;drawList(LPOSTS);});},' +
-  'function(m){el.innerHTML=\'<div class="bcouttx">読めませんでした。</div>\';status(m,true);});}' +
+  'function(m){el.innerHTML=\'<div class="bcouttx">読み込めませんでした。</div>\';status(m,true);});}' +
   'function drawList(posts){var el=document.getElementById("bclist");if(!el)return;' +
   'LPOSTS=posts||LPOSTS;' +
   'var wait=(posts||[]).filter(function(r){' +
@@ -1108,21 +1108,21 @@ function renderBroadcastPage_(base, staff, dev) {
   '(r.cancelable?(\'<button type="button" class="bccx" data-cx="\'+r.broadcast_id+\'">取り消し</button>\'):"")+' +
   '\'</div>\';}).join("");' +
   '[].slice.call(el.querySelectorAll("[data-cx]")).forEach(function(b){b.onclick=function(){' +
-  'szPopup_("この配信を取り消しますか？",{cancel:true,onYes:function(){status("取り消しています…");' +
+  'szPopup_("この配信を取り消しますか？😊",{cancel:true,onYes:function(){status("取り消しています…");' +
   'ask("bc_cancel",{fields:JSON.stringify({bid:b.getAttribute("data-cx")})},function(d){' +
   'status(d.note||"取り消しました。",!d.ok);LBATCH=((d.batch&&d.batch.n)||LBATCH);' +
   'postsOf(d,drawList);},function(m3){status(m3,true);});}});};});' +
   'bindList();}' +
   'function bindList(){' +
   'var a=document.getElementById("bcallcx");' +
-  'if(a)a.onclick=function(){szPopup_("配信待ちを全部取り消しますか？\\n"+' +
+  'if(a)a.onclick=function(){szPopup_("配信待ちを全部取り消しますか？😊\\n"+' +
   '"（内容は控えに残るため、後で元に戻せます）",{cancel:true,onYes:function(){' +
   'a.disabled=true;status("取り消しています…");' +
   'ask("bc_cancel_all",{},function(d){status(d.note||"取り消しました。",!d.ok);' +
   'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,drawList);},' +
   'function(m){a.disabled=false;status(m,true);});}});};' +
   'var u=document.getElementById("bcundo");' +
-  'if(u)u.onclick=function(){szPopup_("取り消した配信を元に戻しますか？",{cancel:true,' +
+  'if(u)u.onclick=function(){szPopup_("取り消した配信を元に戻しますか？😊",{cancel:true,' +
   'onYes:function(){u.disabled=true;status("戻しています…");' +
   'ask("bc_restore",{},function(d){status(d.note||"戻しました。",!d.ok);' +
   'LBATCH=((d.batch&&d.batch.n)||0);postsOf(d,drawList);},' +

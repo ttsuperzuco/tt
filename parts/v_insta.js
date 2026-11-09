@@ -781,7 +781,7 @@ function instaScript_(C) {
       (type === 'slider' ? '<div class="igcq"><div class="t">絵文字</div><div style="display:flex;gap:4px;flex-wrap:wrap" id="igStkE">' + SLIDER_EMOJI.map(function (x, k) {
         return '<button type="button" data-em2="' + x + '" style="font-size:26px;border:' + (k === 0 ? '2px solid #0095f6' : '1px solid #dbdbdb') + ';background:#fff;border-radius:10px;padding:4px 8px;cursor:pointer">' + x + '</button>'; }).join('') + '</div></div>' : '') +
       '<div class="igcq"><div class="t">置く場所</div><div class="seg" id="igStkP">' + STK_POS.map(function (x) { return '<button type="button" data-p="' + x + '"' + (x === '真ん中' ? ' class="on"' : '') + '>' + x + '</button>'; }).join('') + '</div></div>' +
-      '<div class="igcnote">文字・絵文字は日本語でも大丈夫です。スタンプの見た目はインスタと同じになります。ほかのスタンプやリンクと置く場所が重ならないようにしてください。</div></div>';
+      '<div class="igcnote">文字・絵文字は日本語でも大丈夫です。スタンプの見た目はインスタと同じになります。ほかのスタンプやリンクと置く場所が重ならないように配置してください😊</div></div>';
     document.body.appendChild(e);
     e.addEventListener('click', function (ev) {
       var t = ev.target;
@@ -817,7 +817,7 @@ function instaScript_(C) {
         (CMEDIA.length > 1 ? '<span class="n">' + (i + 1) + '</span>' : '') + '<button type="button" data-del="' + i + '">✕</button>' +
         ((CK === 'story' || (CK === 'reel' && m.video)) ? '<button type="button" data-sedit="' + i + '" style="position:absolute;left:6px;bottom:6px;top:auto;right:auto;width:auto;height:auto;border-radius:14px;padding:4px 10px;font-size:12px;font-weight:700;background:rgba(0,0,0,.6);color:#fff;border:0">✏️ 文字・スタンプ</button>' : '') + '</div>';
     }).join('') + ((CK === 'story' || CK === 'reel') && CMEDIA.length && CMEDIA[0].video ?
-      '<div class="igcnote">動画にも文字・スタンプを付けられます（✏️）。' + (CK === 'story' ? 'リンク・音楽・質問などのスタンプは、写真のストーリーズだけに付けられます。' : '音楽はインスタのアプリから付けてください（ズコからは付けられません）。') + '</div>' : '');
+      '<div class="igcnote">動画にも文字・スタンプを付けられます（✏️）。' + (CK === 'story' ? 'リンク・音楽・質問などのスタンプは、写真のストーリーズだけに付けられます。' : 'ズコからは音楽を付けられません。インスタのアプリから付けてください🙇') + '</div>' : '');
   }
   function share() {
     if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してください😊' : '写真か動画を選択してください😊'); return; }
@@ -831,7 +831,7 @@ function instaScript_(C) {
     var lt = document.getElementById('igcLinkT'), ltext = lt ? lt.value.trim() : '';
     var m0 = CMEDIA[0];
     var sc = document.getElementById('igcSCap'), scap = sc ? sc.value.trim() : '', cfo = document.getElementById('igcCF'), cf = !!(cfo && cfo.checked);
-    if (CK === 'story' && m0.video && (link || CMUS || CSTK.length || scap || cf)) { warn('説明文・親しい友達・リンク・音楽・スタンプは写真のストーリーズだけに使えます😊（動画の時は外してください）'); return; }
+    if (CK === 'story' && m0.video && (link || CMUS || CSTK.length || scap || cf)) { warn('説明文・親しい友達・リンク・音楽・スタンプは写真のストーリーズだけに使えます。動画の時は外してください🙇'); return; }
     if (ltext && !link) { warn('スタンプに出す文字は、リンクを入力した時だけ使えます😊'); return; }
     if (CK === 'story' && (link || CMUS || CSTK.length || scap || cf)) {
       if (link && !/^https?:\/\/[^\s]+$/.test(link)) { warn('リンクは https:// から始まる住所を入力してください😊'); return; }
@@ -1090,7 +1090,7 @@ function instaScript_(C) {
     var ok = function () { warn('リンクをコピーしました😊'); };
     try { navigator.clipboard.writeText(u).then(ok, function () { window.prompt('リンク', u); }); } catch (e) { window.prompt('リンク', u); }
   }
-  var PHONE_OFF = '現在その機能は使用できません。りゅうさんに連絡してください。';
+  var PHONE_OFF = '現在その機能は使用できません。りゅうさんに連絡してください🙇';
   function phone(fields, busy, done) {
     jsonp({ action: 'data', key: C.key, name: 'instaphone_alive.json' }, function (y) {
       var v = null;
@@ -1840,7 +1840,7 @@ function instaScript_(C) {
         if (err) { box.innerHTML = '<div class="n">' + esc(err) + '</div>'; return; }
         BIZ = d || {};
         var inp = function (id, ph, v, im) { return '<input id="' + id + '" placeholder="' + ph + '"' + (im ? ' inputmode="' + im + '"' : '') + ' style="border-bottom:1px solid #efefef;margin:4px 0" value="' + esc(v || '') + '">'; };
-        box.innerHTML = '<div class="n">カテゴリ：' + esc(BIZ.category || 'なし') + '（カテゴリはインスタのアプリから変更してください）</div>' +
+        box.innerHTML = '<div class="n">カテゴリ：' + esc(BIZ.category || 'なし') + '（カテゴリはインスタのアプリから変更してください😊）</div>' +
           '<div class="n" style="margin-top:8px">メールアドレス</div>' + inp('igbEmail', 'メールアドレス（空にすると削除）', BIZ.email, 'email') +
           '<div class="n" style="margin-top:8px">住所（今：' + esc(BIZ.address || 'なし') + '）</div>' +
           inp('igbStreet', '町名・番地（変更する時だけ入力）', '') + inp('igbCity', '市区町村（例：台北市）', '') + inp('igbZip', '郵便番号', '', 'numeric') +
@@ -2036,7 +2036,7 @@ function instaScript_(C) {
       '<div class="cv"><div class="c"><img id="igheCvImg" src="' + esc(coverSrc()) + '" referrerpolicy="no-referrer" alt=""></div><button type="button" id="igheCv">カバーを編集</button></div>' +
       '<input class="nm" id="igheNm" placeholder="ハイライト名" maxlength="' + HL_MAX + '">' +
       '<div class="tabs" id="igheTabs"></div><div id="igheGrid"></div>' +
-      '<div class="igcnote">「ストーリーズ」には、保存したストーリーズ（アーカイブ）の新しい方から90件が出ます（いちばん下のボタンで300件まで読み込めます）。新しい写真を入れる時は、先に＋の「ストーリーズ」から投稿してください😊<br>' +
+      '<div class="igcnote">「ストーリーズ」には、保存したストーリーズ（アーカイブ）の新しい方から90件が出ます（いちばん下のボタンで300件まで読み込めます）。新しい写真を追加する時は、先に＋の「ストーリーズ」から投稿してください😊<br>' +
       '保存には1〜2分かかります。ハイライトの削除は、ハイライトを開いて右上の「⋯」からできます。</div></div>';
     document.body.appendChild(e);
     var nmEl = document.getElementById('igheNm'); nmEl.value = NAME;
