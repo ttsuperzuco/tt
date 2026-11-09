@@ -14027,25 +14027,40 @@ function threadsScript_(C) {
   //   公式の数字（閲覧数・インタラクション・フォロワー数・日ごとの閲覧数）＝ kind=insights（速い）。
   //   公式に無い物（閲覧者・純フォロワー・閲覧者タイプ・フォロワー一覧・リンク）＝ kind=web（本物の画面を読む・30〜40秒）。
   //   どちらも端末に覚えておき、まず覚えた物を出す（待たない）。本物の画面の数字が届いたら、そちらを優先（本物と完全に同じ）。
-  var WEB = {}, INS = {}, WEBBUSY = {}, VIEW = 'feed', DAYS = 30;
-  var WKEY = 'th_web_v1', IKEY = 'th_ins_v1';
+  var WEB = {}, INS = {}, WEBBUSY = {}, INSBUSY = {}, VIEW = 'feed', DAYS = 30;
+  var WKEY = 'th_web_v1', IKEY = 'th_ins_v1', FRESH = 30 * 60000;   // 30分以内に読んだ物は読み直さない
   try { WEB = JSON.parse(localStorage.getItem(WKEY) || '{}') || {}; INS = JSON.parse(localStorage.getItem(IKEY) || '{}') || {}; } catch (e) {}
   function webOf(a, d) { return WEB[a + '_' + d] || (d === 30 ? null : null); }
   function saveWI() { try { localStorage.setItem(WKEY, JSON.stringify(WEB)); localStorage.setItem(IKEY, JSON.stringify(INS)); } catch (e) {} }
-  function loadWeb(a, d, force) {
+  // ★2026-11-09：7・14・90日の分は、期間で変わる数字（閲覧者など）だけを覚える。フォロワー一覧・投稿の数・再投稿は
+  //   どの期間でも同じ＝30日の分だけ持つ（ズコ全体で端末に覚えられる量は約5MB。ほかの画面の控えを押し出さないため）。
+  function slim(r, d) { return d === 30 ? r : { ok: r.ok, ins: r.ins || {}, login: r.login || '', _t: r._t }; }
+  // 届いた物が今出ている画面に関係する時だけ描き直す（裏の読み込みのたびに、開いているコメント欄などが閉じないように）。
+  function redrawFor(kind, a, d) {
+    if (a !== CUR) return;
+    if (kind === 'web' && d === 30) { redraw(); return; }
+    if (VIEW === 'ins' && DAYS === d) drawIns();
+  }
+  function loadWeb(a, d, force, cb) {
     var k = a + '_' + d, w = WEB[k];
-    if (WEBBUSY[k] || (!force && w && Date.now() - (w._t || 0) < 30 * 60000)) return;   // 30分以内に読んだ物は読み直さない
+    if (WEBBUSY[k] || (!force && w && Date.now() - (w._t || 0) < FRESH)) { if (cb) cb(false); return; }
     WEBBUSY[k] = true;
     ask({ kind: 'web', acct: a, days: d }, '', function (err, r) {
       WEBBUSY[k] = false;
-      if (err || !r) return;
-      r._t = Date.now(); WEB[k] = r; saveWI(); redraw();
+      if (err || !r) { if (cb) cb(false, err || 'x'); return; }
+      r._t = Date.now(); WEB[k] = slim(r, d); saveWI(); redrawFor('web', a, d);
+      if (cb) cb(true);
     });
   }
-  function loadIns(a, d) {
+  function loadIns(a, d, cb) {
+    var k = a + '_' + d;
+    if (INSBUSY[k]) { if (cb) cb(false); return; }
+    INSBUSY[k] = true;
     ask({ kind: 'insights', acct: a, days: d }, '', function (err, r) {
-      if (err || !r) return;
-      r._t = Date.now(); INS[a + '_' + d] = r; saveWI(); redraw();
+      INSBUSY[k] = false;
+      if (err || !r) { if (cb) cb(false, err || 'x'); return; }
+      r._t = Date.now(); INS[k] = r; saveWI(); redrawFor('ins', a, d);
+      if (cb) cb(true);
     });
   }
   function redraw() {
@@ -14178,9 +14193,101 @@ function threadsScript_(C) {
   function loadAll() {
     ask({ kind: 'open' }, '', function (err, d) {
       if (err) { if (!DATA) $('thLoad').textContent = err; return; }
+      // ★裏で読み足した続きの投稿は、新しい1ページ目の後ろに残す（新しい中身が届くたびに一覧が短くならない）。続きは裏で読み直す。
+      var old = DATA && DATA.feeds;
+      for (var a in (d.feeds || {})) {
+        var nf = d.feeds[a];
+        if (!nf || !nf.ok) continue;
+        nf.after0 = nf.after || ''; nf.n0 = (nf.posts || []).length;
+        var of = old && old[a];
+        if (nf.after0 && of && of.ok && of.posts && of.posts.length > nf.n0) {
+          var ids = {};
+          nf.posts.forEach(function (p) { ids[p.id] = 1; });
+          nf.posts = nf.posts.concat(of.posts.filter(function (p) { return !ids[p.id]; }));
+          nf.after = of.after || '';
+        }
+      }
+      PF.done = {};
       d.cur = CUR; cacheSet(d); apply(d, true);
+      setTimeout(pfRun, 1500);
     });
   }
+
+  // ── 裏の読み込み（2026-11-09 まるちゃん「最初に表示したあと、できる限り裏でデータを読んでおく。終わらなければ次に開いた時に続きを」）──
+  //   新しい中身が届いたら、使いそうな順に残りを1つずつ読んで端末に覚える＝いざ開いた時に待たない。
+  //   順番＝今のアカウントの続きの投稿 → インサイトの数字（30・7・14・90日）→ 本物の画面の数字（30・7・14・90日）→ ほかのアカウントも同じ順。
+  //   ★一度に1つだけ頼む（サーバーはメモリに余裕が無い）。本物の画面を読む物（1つ30〜60秒・サーバーのインスタ用のブラウザを使う）は、
+  //     1つ読み終わるごとに20秒あけて、ほかの仕事が割り込めるようにする。30分以内に読んだ物は読み直さない。
+  //   ★まだ一度も読んでいない物を先に読む（毎回途中で閉じても、開くたびに少しずつ全部そろう）。
+  //   ★失敗した種類（アカウントごと）は、その回はもう頼まない（失敗はりゅうさんのLINEに届くので、何度も送らない）。
+  var PF = { on: false, done: {}, bad: {} };
+  function pfList() {
+    var order = [CUR].concat(ACCTS.map(function (x) { return x.acct; }).filter(function (a) { return a !== CUR; }));
+    var L = [];
+    order.forEach(function (a) {
+      L.push({ t: 'more', a: a });
+      [30, 7, 14, 90].forEach(function (d) { L.push({ t: 'ins', a: a, d: d }); });
+      [30, 7, 14, 90].forEach(function (d) { L.push({ t: 'web', a: a, d: d }); });
+    });
+    return L;
+  }
+  function pfAge(it) {   // 最後に読んだ時刻（0＝まだ読んでいない）。続きの投稿は「この回に読んだか」だけを見る
+    if (it.t === 'more') {
+      var fd = DATA && DATA.feeds && DATA.feeds[it.a];
+      return (PF.done['more_' + it.a] || !fd || !fd.ok || !fd.after0) ? Date.now() : 0;
+    }
+    var o = (it.t === 'ins' ? INS : WEB)[it.a + '_' + it.d];
+    return (o && o._t) || 0;
+  }
+  function pfNext() {
+    var now = Date.now(), L = pfList(), miss = null, old = null;
+    for (var i = 0; i < L.length; i++) {
+      var it = L[i];
+      if (PF.bad[it.t + '_' + it.a]) continue;
+      if ((it.t === 'web' ? WEBBUSY : INSBUSY)[it.a + '_' + it.d]) continue;
+      var t = pfAge(it);
+      if (!t) { if (!miss) miss = it; } else if (now - t >= FRESH && !old) old = it;
+    }
+    return miss || old;
+  }
+  function pfRun() {
+    if (PF.on) return;
+    var it = pfNext();
+    if (!it) return;
+    PF.on = true;
+    var fin = function (ok, err) {
+      PF.on = false;
+      if (!ok && err) PF.bad[it.t + '_' + it.a] = 1;
+      setTimeout(pfRun, it.t === 'web' ? 20000 : 300);
+    };
+    if (it.t === 'more') pfMore(it.a, fin);
+    else if (it.t === 'ins') loadIns(it.a, it.d, fin);
+    else loadWeb(it.a, it.d, false, function (ok, err) {
+      var w = WEB[it.a + '_' + it.d];   // サーバーのThreadsのログインが切れている時は、そのアカウントの残りの期間も読めない＝頼まない
+      if (ok && w && w.login && !/入りました/.test(w.login)) PF.bad['web_' + it.a] = 1;   // 入れた時の知らせ以外＝入れなかった
+      fin(ok, err);
+    });
+  }
+  function pfMore(a, fin) {   // 続きの投稿を最後まで（1回に20ページ＝300件まで）
+    var fd = DATA && DATA.feeds && DATA.feeds[a], cur = fd && fd.after0, got = [], n = 0;
+    if (!cur) { PF.done['more_' + a] = 1; fin(true); return; }
+    var step = function () {
+      ask({ kind: 'feed', acct: a, after: cur }, '', function (err, d) {
+        if (err || !d || !d.ok) { fin(false, err || 'x'); return; }
+        got = got.concat(d.posts || []); cur = d.after || ''; n++;
+        if (cur && n < 20) { setTimeout(step, 300); return; }
+        var f2 = DATA && DATA.feeds && DATA.feeds[a];
+        if (f2 && f2.after0 === fd.after0) {   // 途中で新しい中身に入れ替わっていたら捨てる（次の回に読み直す）
+          f2.posts = f2.posts.slice(0, f2.n0).concat(got); f2.after = cur;
+          cacheSet(DATA);
+          if (CUR === a && VIEW === 'feed' && !(FEED && FEED.more)) showFeedFromData();
+        }
+        PF.done['more_' + a] = 1; fin(true);
+      });
+    };
+    step();
+  }
+
   var _c = cacheGet();
   if (_c) apply(_c, false);
   loadAll();
