@@ -42,7 +42,15 @@ for f in $targets; do
     rc=1
     continue
   fi
-  sum=$(git hash-object "$f" | cut -c1-10)
+  # ★2026-11-09 直した：前は手元のファイル（git hash-object）から作っていたため、別の会話がまだ保存していない直しが
+  #   あると、その中身の番号を入口に書いてしまった（公開される中身と番号がずれ、後でスマホが古いまま残るおそれ）。
+  #   → コミットの時は「コミットに入る中身（:ファイル）」、押し出す前の確かめでは「押し出す中身（HEAD:ファイル）」から作る。
+  if [ "$mode" = "--check" ]; then
+    sum=$(git rev-parse "HEAD:$f" 2>/dev/null | cut -c1-10)
+  else
+    sum=$(git rev-parse ":$f" 2>/dev/null | cut -c1-10)
+  fi
+  [ -z "$sum" ] && sum=$(git hash-object "$f" | cut -c1-10)
   cur=$(sed -n "s|.*src=\"$f?v=\([^\"]*\)\".*|\1|p" index.html | head -1)
 
   if [ -z "$cur" ]; then
