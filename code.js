@@ -6679,13 +6679,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        パリジェンヌの次に出す。押すとすぐ次へ。YES＝☆次回の文にプロセルのアフターケアの一文を入れ、紙を付ける。 */
     '<div class="sg" id="sgPF" style="display:none">' +
       '<div class="sgwho">本日、<span class="sgem">顔の</span>プロセルをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span>YES（<span class="sgemr">顔の</span>プロセルをやった）</button>' +
-      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span>NO（<span class="sgemr">顔の</span>プロセルをやっていない）</button>' +
+      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span><span>YES（<span class="sgemr">顔の</span>プロセルをやった）</span></button>' +
+      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span><span>NO（<span class="sgemr">顔の</span>プロセルをやっていない）</span></button>' +
     '</div>' +
     '<div class="sg" id="sgPH" style="display:none">' +
       '<div class="sgwho">本日、<span class="sgem">頭皮の</span>プロセルをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span>YES（<span class="sgemr">頭皮の</span>プロセルをやった）</button>' +
-      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（<span class="sgemr">頭皮の</span>プロセルをやっていない）</button>' +
+      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span><span>YES（<span class="sgemr">頭皮の</span>プロセルをやった）</span></button>' +
+      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span><span>NO（<span class="sgemr">頭皮の</span>プロセルをやっていない）</span></button>' +
     '</div>' +
     /* 15枚目＝確認の一覧（2026-11-09 まるちゃん決定・受付の端末だけ・今は開発版だけ）。予約メモの確定のあとに出す。
        お客様が退店された後に、担当した施術者へ聞く物を全部並べる。「全て確認しました」で各確認の画面へ。文は共通の判断（SG.checkItems）。 */
