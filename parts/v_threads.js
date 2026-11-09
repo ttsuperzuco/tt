@@ -1023,25 +1023,37 @@ function threadsScript_(C) {
     if (g('data-ig')) { var r4 = g('data-ig'); szPopup_('このコメントを無視しますか？（表示しません）', { cancel: true, onYes: function () { act({ kind: 'approve', acct: CUR, reply_id: r4, approve: false }, '処理中です', '無視しました', mid); } }); return; }
   });
 
-  var WEB = {}, INS = {}, WEBBUSY = {}, VIEW = 'feed', DAYS = 30;
-  var WKEY = 'th_web_v1', IKEY = 'th_ins_v1';
+  var WEB = {}, INS = {}, WEBBUSY = {}, INSBUSY = {}, VIEW = 'feed', DAYS = 30;
+  var WKEY = 'th_web_v1', IKEY = 'th_ins_v1', FRESH = 30 * 60000;   
   try { WEB = JSON.parse(localStorage.getItem(WKEY) || '{}') || {}; INS = JSON.parse(localStorage.getItem(IKEY) || '{}') || {}; } catch (e) {}
   function webOf(a, d) { return WEB[a + '_' + d] || (d === 30 ? null : null); }
   function saveWI() { try { localStorage.setItem(WKEY, JSON.stringify(WEB)); localStorage.setItem(IKEY, JSON.stringify(INS)); } catch (e) {} }
-  function loadWeb(a, d, force) {
+  function slim(r, d) { return d === 30 ? r : { ok: r.ok, ins: r.ins || {}, login: r.login || '', _t: r._t }; }
+  function redrawFor(kind, a, d) {
+    if (a !== CUR) return;
+    if (kind === 'web' && d === 30) { redraw(); return; }
+    if (VIEW === 'ins' && DAYS === d) drawIns();
+  }
+  function loadWeb(a, d, force, cb) {
     var k = a + '_' + d, w = WEB[k];
-    if (WEBBUSY[k] || (!force && w && Date.now() - (w._t || 0) < 30 * 60000)) return;   
+    if (WEBBUSY[k] || (!force && w && Date.now() - (w._t || 0) < FRESH)) { if (cb) cb(false); return; }
     WEBBUSY[k] = true;
     ask({ kind: 'web', acct: a, days: d }, '', function (err, r) {
       WEBBUSY[k] = false;
-      if (err || !r) return;
-      r._t = Date.now(); WEB[k] = r; saveWI(); redraw();
+      if (err || !r) { if (cb) cb(false, err || 'x'); return; }
+      r._t = Date.now(); WEB[k] = slim(r, d); saveWI(); redrawFor('web', a, d);
+      if (cb) cb(true);
     });
   }
-  function loadIns(a, d) {
+  function loadIns(a, d, cb) {
+    var k = a + '_' + d;
+    if (INSBUSY[k]) { if (cb) cb(false); return; }
+    INSBUSY[k] = true;
     ask({ kind: 'insights', acct: a, days: d }, '', function (err, r) {
-      if (err || !r) return;
-      r._t = Date.now(); INS[a + '_' + d] = r; saveWI(); redraw();
+      INSBUSY[k] = false;
+      if (err || !r) { if (cb) cb(false, err || 'x'); return; }
+      r._t = Date.now(); INS[k] = r; saveWI(); redrawFor('ins', a, d);
+      if (cb) cb(true);
     });
   }
   function redraw() {
@@ -1167,9 +1179,93 @@ function threadsScript_(C) {
   function loadAll() {
     ask({ kind: 'open' }, '', function (err, d) {
       if (err) { if (!DATA) $('thLoad').textContent = err; return; }
+      var old = DATA && DATA.feeds;
+      for (var a in (d.feeds || {})) {
+        var nf = d.feeds[a];
+        if (!nf || !nf.ok) continue;
+        nf.after0 = nf.after || ''; nf.n0 = (nf.posts || []).length;
+        var of = old && old[a];
+        if (nf.after0 && of && of.ok && of.posts && of.posts.length > nf.n0) {
+          var ids = {};
+          nf.posts.forEach(function (p) { ids[p.id] = 1; });
+          nf.posts = nf.posts.concat(of.posts.filter(function (p) { return !ids[p.id]; }));
+          nf.after = of.after || '';
+        }
+      }
+      PF.done = {};
       d.cur = CUR; cacheSet(d); apply(d, true);
+      setTimeout(pfRun, 1500);
     });
   }
+
+  var PF = { on: false, done: {}, bad: {} };
+  function pfList() {
+    var order = [CUR].concat(ACCTS.map(function (x) { return x.acct; }).filter(function (a) { return a !== CUR; }));
+    var L = [];
+    order.forEach(function (a) {
+      L.push({ t: 'more', a: a });
+      [30, 7, 14, 90].forEach(function (d) { L.push({ t: 'ins', a: a, d: d }); });
+      [30, 7, 14, 90].forEach(function (d) { L.push({ t: 'web', a: a, d: d }); });
+    });
+    return L;
+  }
+  function pfAge(it) {   
+    if (it.t === 'more') {
+      var fd = DATA && DATA.feeds && DATA.feeds[it.a];
+      return (PF.done['more_' + it.a] || !fd || !fd.ok || !fd.after0) ? Date.now() : 0;
+    }
+    var o = (it.t === 'ins' ? INS : WEB)[it.a + '_' + it.d];
+    return (o && o._t) || 0;
+  }
+  function pfNext() {
+    var now = Date.now(), L = pfList(), miss = null, old = null;
+    for (var i = 0; i < L.length; i++) {
+      var it = L[i];
+      if (PF.bad[it.t + '_' + it.a]) continue;
+      if ((it.t === 'web' ? WEBBUSY : INSBUSY)[it.a + '_' + it.d]) continue;
+      var t = pfAge(it);
+      if (!t) { if (!miss) miss = it; } else if (now - t >= FRESH && !old) old = it;
+    }
+    return miss || old;
+  }
+  function pfRun() {
+    if (PF.on) return;
+    var it = pfNext();
+    if (!it) return;
+    PF.on = true;
+    var fin = function (ok, err) {
+      PF.on = false;
+      if (!ok && err) PF.bad[it.t + '_' + it.a] = 1;
+      setTimeout(pfRun, it.t === 'web' ? 20000 : 300);
+    };
+    if (it.t === 'more') pfMore(it.a, fin);
+    else if (it.t === 'ins') loadIns(it.a, it.d, fin);
+    else loadWeb(it.a, it.d, false, function (ok, err) {
+      var w = WEB[it.a + '_' + it.d];   
+      if (ok && w && w.login && !/入りました/.test(w.login)) PF.bad['web_' + it.a] = 1;   
+      fin(ok, err);
+    });
+  }
+  function pfMore(a, fin) {   
+    var fd = DATA && DATA.feeds && DATA.feeds[a], cur = fd && fd.after0, got = [], n = 0;
+    if (!cur) { PF.done['more_' + a] = 1; fin(true); return; }
+    var step = function () {
+      ask({ kind: 'feed', acct: a, after: cur }, '', function (err, d) {
+        if (err || !d || !d.ok) { fin(false, err || 'x'); return; }
+        got = got.concat(d.posts || []); cur = d.after || ''; n++;
+        if (cur && n < 20) { setTimeout(step, 300); return; }
+        var f2 = DATA && DATA.feeds && DATA.feeds[a];
+        if (f2 && f2.after0 === fd.after0) {   
+          f2.posts = f2.posts.slice(0, f2.n0).concat(got); f2.after = cur;
+          cacheSet(DATA);
+          if (CUR === a && VIEW === 'feed' && !(FEED && FEED.more)) showFeedFromData();
+        }
+        PF.done['more_' + a] = 1; fin(true);
+      });
+    };
+    step();
+  }
+
   var _c = cacheGet();
   if (_c) apply(_c, false);
   loadAll();
