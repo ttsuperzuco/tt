@@ -118,6 +118,34 @@ var INSTACSS_ =
   '.igins .row{display:flex;justify-content:space-between;padding:11px 16px;font-size:15px;}' +
   '.igins .row.top{font-weight:700;}' +
   '.igins .note{padding:16px;color:#737373;font-size:12px;}' +
+  '.igdm{z-index:8450;}' +
+  '.igdm .ttl{padding:14px 16px 6px;font-size:16px;font-weight:700;}' +
+  '.igdm .q{margin:8px 16px;background:#efefef;border-radius:10px;padding:9px 12px;color:#737373;}' +
+  '.igdm .q input{border:0;background:none;outline:0;font:inherit;width:100%;}' +
+  '.igdmr{display:flex !important;align-items:center;gap:12px;width:100%;padding:8px 16px !important;text-align:left;}' +
+  '.igdmr .av,.igdmh .av{flex:0 0 auto;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#feda75,#d62976 60%,#4f5bd5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;}' +
+  '.igdmr .tx{flex:1;min-width:0;}' +
+  '.igdmr .tx b{display:block;font-weight:400;}' +
+  '.igdmr .tx span{display:block;color:#737373;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+  '.igdmr.new .tx b,.igdmr.new .tx span{font-weight:700;color:#000;}' +
+  '.igdmr .dot{width:8px;height:8px;border-radius:50%;background:#0095f6;flex:0 0 auto;}' +
+  '.igdmh{display:flex;align-items:center;gap:10px;}' +
+  '.igdmh .av{width:28px;height:28px;font-size:13px;}' +
+  '.igdmt{padding:10px 12px 110px;}' +
+  '.igdmt .day{text-align:center;color:#737373;font-size:12px;margin:14px 0 6px;}' +
+  '.igdmt .m{display:flex;margin:3px 0;}' +
+  '.igdmt .m.me{justify-content:flex-end;}' +
+  '.igdmt .b{max-width:72%;padding:8px 12px;border-radius:20px;background:#efefef;white-space:pre-wrap;word-break:break-word;}' +
+  '.igdmt .m.me .b{background:#3797f0;color:#fff;}' +
+  '.igdmt .b.n{font-style:italic;color:#737373;background:none;border:1px solid #dbdbdb;}' +
+  '.igdmt .b img{display:block;max-width:220px;border-radius:14px;}' +
+  '.igdmt .b a{color:inherit;}' +
+  '.igdmin{position:fixed;left:0;right:0;bottom:0;z-index:8460;background:#fff;border-top:1px solid #efefef;}' +
+  '.igdmin .in{max-width:560px;margin:0 auto;padding:8px 12px 14px;}' +
+  '.igdmin .row{display:flex;align-items:flex-end;gap:8px;border:1px solid #dbdbdb;border-radius:22px;padding:6px 6px 6px 14px;}' +
+  '.igdmin textarea{flex:1;border:0;outline:0;resize:none;font:inherit;font-size:15px;max-height:120px;min-height:22px;background:none;}' +
+  '.igdmin button{border:0;background:none;color:#0095f6;font:inherit;font-weight:700;padding:6px 10px;cursor:pointer;}' +
+  '.igdmin .w{font-size:12px;color:#737373;padding:0 4px 6px;}' +
   '.igpcs{border-top:1px solid #efefef;margin-top:8px;padding:8px 12px;}' +
   '.igpc{display:flex;gap:10px;padding:8px 0;}' +
   '.igpc .tx{flex:1;white-space:pre-wrap;word-break:break-word;}' +
@@ -372,7 +400,7 @@ function instaScript_(C) {
       }).join('') + '</div>';
     h += drawGrid(v);
     h += '<div class="ignav"><button type="button" data-soon="1">' + IC.home + '</button><button type="button" data-soon="1">' + IC.reels + '</button>' +
-      '<button type="button" data-soon="1">' + IC.send + '</button><button type="button" data-soon="1">' + IC.search + '</button>' +
+      '<button type="button" data-dm="1">' + IC.send + '</button><button type="button" data-soon="1">' + IC.search + '</button>' +
       '<button type="button" data-soon="1"><img class="me" src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""></button></div>';
     $('igApp').innerHTML = h;
   }
@@ -383,6 +411,7 @@ function instaScript_(C) {
     if (t.closest && t.closest('[data-create]')) { openCreate(); return; }
     if (t.closest && t.closest('[data-pedit]')) { openProfEdit(); return; }
     if (t.closest && t.closest('[data-hlnew]')) { openHlEdit(null, []); return; }
+    if (t.closest && t.closest('[data-dm]')) { openDm(); return; }
     var hb = t.closest && t.closest('[data-hl]');
     if (hb) { var vv = DATA && DATA.views && DATA.views[CUR]; var hx = vv && (vv.hl || [])[Number(hb.getAttribute('data-hl'))]; if (hx) openHlView(hx); return; }
     var po = t.closest && t.closest('[data-post]');
@@ -601,6 +630,103 @@ function instaScript_(C) {
     el.innerHTML = h;
     drawInput();
   }
+  var DMC = null, DMT = null;
+  function iso(sec) { return sec ? new Date(sec * 1000).toISOString() : ''; }
+  function ini(u) { var c = String(u || '?').replace(/^[._]+/, '').charAt(0); return esc((c || '?').toUpperCase()); }
+  function openDm() {
+    var el = document.createElement('div'); el.className = 'igp igdm'; el.id = 'igDm';
+    document.body.appendChild(el);
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-dmback]')) { el.remove(); return; }
+      var r = t.closest('[data-dmc]'); if (r) { openDmThread(r.getAttribute('data-dmc')); return; }
+    });
+    el.addEventListener('input', function (e) { if (e.target.id === 'igDmQ') drawDm(); });
+    var key = 'ig_dm_v1_' + CUR;
+    try { var c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && c.acct === CUR) DMC = c; else DMC = null; } catch (e) { DMC = null; }
+    drawDm(true);
+    ask({ kind: 'dm_list', acct: CUR }, function (err, d) {
+      if (!document.getElementById('igDm')) return;
+      if (err) { if (!DMC) { el.remove(); warn(err); } return; }
+      DMC = d; try { localStorage.setItem(key, JSON.stringify(d)); } catch (e) {}
+      drawDm();
+    });
+  }
+  function drawDm(first) {
+    var el = document.getElementById('igDm'); if (!el) return;
+    var qEl = document.getElementById('igDmQ'), q = qEl ? qEl.value.trim().toLowerCase() : '';
+    var me = (DMC && DMC.me) || ((DATA && DATA.views && DATA.views[CUR] && DATA.views[CUR].prof) || {}).user || '';
+    var list = ((DMC && DMC.list) || []).filter(function (x) { return !q || String(x.user).toLowerCase().indexOf(q) >= 0; });
+    var rows = !DMC ? '<div class="igempty">読み込み中です…</div>' : (list.length ? list.map(function (x) {
+      return '<button type="button" class="igdmr' + (x.mine ? '' : ' new') + '" data-dmc="' + esc(x.id) + '"><div class="av">' + ini(x.user) + '</div>' +
+        '<div class="tx"><b>' + esc(x.user) + '</b><span>' + (x.mine ? 'あなた: ' : '') + esc(String(x.last || '').replace(/\n/g, ' ')) + ' · ' + esc(ago(iso(x.at))) + '</span></div>' +
+        (x.mine ? '' : '<i class="dot"></i>') + '</button>';
+    }).join('') : '<div class="igempty">メッセージはありません。</div>');
+    if (!first && qEl) { el.querySelector('.rows').innerHTML = rows; return; }
+    el.innerHTML = '<div class="w"><div class="igph"><button type="button" data-dmback="1">‹</button><b>' + esc(me) + '</b><span></span></div>' +
+      '<div class="q"><input id="igDmQ" placeholder="検索" autocomplete="off"></div><div class="ttl">メッセージ</div><div class="rows">' + rows + '</div></div>';
+  }
+  function openDmThread(id) {
+    var x = ((DMC && DMC.list) || []).filter(function (y) { return y.id === id; })[0] || {};
+    DMT = { id: id, user: x.user || '', loading: true };
+    var el = document.createElement('div'); el.className = 'igp igdm'; el.id = 'igDmT'; document.body.appendChild(el);
+    el.addEventListener('click', function (e) { if (e.target.closest('[data-dmtback]')) closeDmThread(); });
+    drawDmThread();
+    ask({ kind: 'dm_thread', acct: CUR, id: id }, function (err, d) {
+      if (!DMT || DMT.id !== id) return;
+      if (err) { closeDmThread(); warn(err); return; }
+      DMT = d; drawDmThread();
+    });
+  }
+  function closeDmThread() {
+    ['igDmT', 'igDmIn'].forEach(function (k) { var e = document.getElementById(k); if (e) e.remove(); }); DMT = null;
+  }
+  function drawDmThread() {
+    var el = document.getElementById('igDmT'); if (!el || !DMT) return;
+    var h = '<div class="w"><div class="igph"><button type="button" data-dmtback="1">‹</button>' +
+      '<b class="igdmh" style="justify-content:center"><span class="av">' + ini(DMT.user) + '</span>' + esc(DMT.user) + '</b><span></span></div><div class="igdmt">';
+    if (DMT.loading) h += '<div class="igempty">読み込み中です…</div>';
+    else {
+      var lastDay = '';
+      (DMT.msgs || []).forEach(function (m) {
+        var dt = new Date(m.at * 1000), day = (dt.getMonth() + 1) + '月' + dt.getDate() + '日';
+        if (day !== lastDay) { h += '<div class="day">' + day + ' ' + dt.getHours() + ':' + ('0' + dt.getMinutes()).slice(-2) + '</div>'; lastDay = day; }
+        var body = m.img ? '<img src="' + esc(m.img) + '" referrerpolicy="no-referrer" alt="">' : '';
+        if (m.t) body += esc(m.t);
+        if (!m.t && !m.img) body += esc(m.note || '');
+        if (m.link) body += (body ? '\n' : '') + '<a href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link) + '</a>';
+        h += '<div class="m' + (m.mine ? ' me' : '') + '"><div class="b' + (!m.t && !m.img && m.note ? ' n' : '') + '">' + body + '</div></div>';
+      });
+      if (!(DMT.msgs || []).length) h += '<div class="igempty">メッセージはありません。</div>';
+    }
+    el.innerHTML = h + '</div></div>';
+    el.scrollTop = el.scrollHeight;
+    drawDmInput();
+  }
+  function drawDmInput() {
+    var i = document.getElementById('igDmIn');
+    if (!DMT || DMT.loading) { if (i) i.remove(); return; }
+    if (!i) {
+      i = document.createElement('div'); i.className = 'igdmin'; i.id = 'igDmIn'; document.body.appendChild(i);
+      i.innerHTML = '<div class="in"><div class="w" id="igDmW"></div><div class="row"><textarea id="igDmTx" rows="1" placeholder="メッセージ…"></textarea>' +
+        '<button type="button" id="igDmGo">送信</button></div></div>';
+      i.addEventListener('click', function (e) {
+        if (e.target.id !== 'igDmGo') return;
+        var tx = document.getElementById('igDmTx'), m = tx.value.trim();
+        if (!m) { warn('メッセージを入力してください😊'); return; }
+        var id = DMT.id;
+        simple({ kind: 'dm_send', acct: CUR, id: id, text: m }, DMT.can_send ? 'メッセージを送信しています' : 'メッセージを送信しています（30秒ほどかかります）', function (err, d) {
+          if (err) { warn(err); return; }
+          tx.value = '';
+          if (DMT && DMT.id === id) { DMT = d; drawDmThread(); }
+          if (DMC) DMC.list.forEach(function (x) { if (x.id === id) { x.mine = true; x.last = m; x.at = Math.floor(Date.now() / 1000); } });
+          drawDm();
+        });
+      });
+    }
+    var w = document.getElementById('igDmW');
+    if (w) w.textContent = DMT.can_send ? '' : 'お客様の最後のメッセージから24時間を過ぎています。送信まで30秒ほどかかります。';
+  }
   function openIns(code) {
     var el = document.createElement('div'); el.className = 'igp igins'; el.id = 'igIns';
     var head = '<div class="w"><div class="igph"><button type="button" data-iback="1">‹</button><b>インサイト</b><span></span></div>';
@@ -746,7 +872,7 @@ function instaScript_(C) {
     });
   }
 
-  var BIO_MAX = 150, HL_MAX = 30, ARCH = {}, ARCH_ERR = {};
+  var BIO_MAX = 150, HL_MAX = 30, ARCH = {}, ARCH_ERR = {}, ARCH_MORE = {};
   function busyAsk(fields, big, title, sub, done) {
     if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(title, sub || false), '#2C7A99');
     (big ? askBig : ask)(fields, function (err, d) { if (typeof szOvHide_ === 'function') szOvHide_(); done(err, d); });
@@ -780,7 +906,7 @@ function instaScript_(C) {
       fr.onload = function () {
         var im = new Image();
         im.onload = function () {
-          var s = Math.min(im.width, im.height), sx = Math.round((im.width - s) / 2), sy = Math.round((im.height - s) / 2), w = Math.min(720, s);
+          var s = Math.min(im.width, im.height), sx = Math.round((im.width - s) / 2), sy = Math.round((im.height - s) / 2), w = Math.min(1080, s);
           var cv = document.createElement('canvas'); cv.width = w; cv.height = w;
           cv.getContext('2d').drawImage(im, sx, sy, s, s, 0, 0, w, w);
           var d = cv.toDataURL('image/jpeg', 0.9); PIC = d.split(',')[1];
@@ -881,7 +1007,9 @@ function instaScript_(C) {
         g.innerHTML = '<div class="em">' + (TABH === 'sel' ? 'まだ選択されていません。<br>「ストーリーズ」から選択してください😊' : '保存したストーリーズがありません。') + '</div>';
         return;
       }
-      g.innerHTML = '<div class="gr">' + list.map(function (s) { return cell(s, 'sel'); }).join('') + '</div>';
+      g.innerHTML = '<div class="gr">' + list.map(function (s) { return cell(s, 'sel'); }).join('') + '</div>' +
+        (TABH === 'all' && list.length >= 90 && !ARCH_MORE[acct] ? '<button type="button" class="iglink" data-amore="1" style="display:block;margin:14px auto;color:#0095f6;font-weight:700;background:none;border:0;font-size:14px;cursor:pointer">さらに古いストーリーズを読み込む（2〜3分かかります）</button>' : '') +
+        (TABH === 'all' && ARCH_MORE[acct] === 'loading' ? '<div class="em">さらに古いストーリーズを読み込み中です…<br>2〜3分かかるので、少し待っててくださいね🥺</div>' : '');
       var ci = document.getElementById('igheCvImg'); if (ci) ci.src = coverSrc();
     };
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igheX">キャンセル</button><b>' + (isNew ? '新しいハイライト' : 'ハイライトを編集') + '</b>' +
@@ -889,17 +1017,20 @@ function instaScript_(C) {
       '<div class="cv"><div class="c"><img id="igheCvImg" src="' + esc(coverSrc()) + '" referrerpolicy="no-referrer" alt=""></div><button type="button" id="igheCv">カバーを編集</button></div>' +
       '<input class="nm" id="igheNm" placeholder="ハイライト名" maxlength="' + HL_MAX + '">' +
       '<div class="tabs" id="igheTabs"></div><div id="igheGrid"></div>' +
-      '<div class="igcnote">「ストーリーズ」には、保存したストーリーズ（アーカイブ）の新しい方から90件が出ます。新しい写真を入れる時は、先に＋の「ストーリーズ」から投稿してください😊<br>' +
+      '<div class="igcnote">「ストーリーズ」には、保存したストーリーズ（アーカイブ）の新しい方から90件が出ます（いちばん下のボタンで300件まで読み込めます）。新しい写真を入れる時は、先に＋の「ストーリーズ」から投稿してください😊<br>' +
       '保存には1〜2分かかります。ハイライトの削除は、ここからはできません。</div></div>';
     document.body.appendChild(e);
     var nmEl = document.getElementById('igheNm'); nmEl.value = NAME;
     nmEl.addEventListener('input', function () { NAME = nmEl.value; });
     drawGrid();
-    var loadArch = function (force) {
-      if (ARCH[acct] && !force) return;
+    var loadArch = function (force, more) {
+      if (ARCH[acct] && !force && !more) return;
       ARCH_ERR[acct] = '';
-      ask({ kind: 'hl_arch', acct: acct, force: !!force }, function (err, d) {
-        if (err) ARCH_ERR[acct] = err; else ARCH[acct] = (d && d.arch) || [];
+      if (more) ARCH_MORE[acct] = 'loading';
+      ask({ kind: 'hl_arch', acct: acct, force: !!force, more: !!more }, function (err, d) {
+        if (more) ARCH_MORE[acct] = err ? '' : 'done';
+        if (err) { if (more) warn(err); else ARCH_ERR[acct] = err; }
+        else ARCH[acct] = (d && d.arch) || [];
         drawGrid();
       });
     };
@@ -913,6 +1044,7 @@ function instaScript_(C) {
       var t = ev.target;
       var tb = t.closest && t.closest('[data-ht]');
       if (tb) { TABH = tb.getAttribute('data-ht'); drawGrid(); return; }
+      if (t.closest && t.closest('[data-amore]')) { loadArch(false, true); drawGrid(); return; }
       var sk = t.closest && t.closest('[data-sk]');
       if (sk) {
         var k = sk.getAttribute('data-sk'), i = idx(k);
