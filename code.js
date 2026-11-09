@@ -14264,6 +14264,8 @@ function instaScript_(C) {
       }
       var h = t.closest && t.closest('[data-h]');
       if (h) { CHIDE = h.getAttribute('data-h') === '1'; c.querySelectorAll('[data-h]').forEach(function (x) { x.className = x === h ? 'on' : ''; }); return; }
+      var se = t.closest && t.closest('[data-sedit]');
+      if (se) { openStoryEditor(CMEDIA[Number(se.getAttribute('data-sedit'))]); return; }
       var del = t.closest && t.closest('[data-del]');
       if (del) { CMEDIA.splice(Number(del.getAttribute('data-del')), 1); drawPrev(); return; }
       if (t.id === 'igcGo') share();
@@ -14320,7 +14322,8 @@ function instaScript_(C) {
             cv.getContext('2d').drawImage(im, sx, sy, sw, sh, 0, 0, w, h);
             if (CMEDIA.length >= max) return;
             var d = cv.toDataURL('image/jpeg', 0.9);
-            CMEDIA.push({ b64: d.split(',')[1], url: d }); drawPrev();
+            CMEDIA.push({ b64: d.split(',')[1], url: d, orig: d, items: [] }); drawPrev();
+            if (kind === 'story') openStoryEditor(CMEDIA[CMEDIA.length - 1]);
           };
           im.src = fr.result;
         };
@@ -14328,12 +14331,141 @@ function instaScript_(C) {
       });
     });
   }
+  // ── ストーリーズの文字・スタンプ（2026-11-09 まるちゃん「ストーリーズを作る時のスタンプ・文字・音楽　これは必要だよ」）──
+  //   本物のアプリと同じく、縦長（1080×1920）の画面に写真を置き、文字とスタンプを指で動かして置く。シェアの時に写真へ焼き付ける。
+  //   ★リンク・音楽・メンションのような「押せるスタンプ」はアプリにしか無い（疑似スマホで行う＝次の段階）。
+  var ST_COLORS = ['#ffffff', '#000000', '#ff3040', '#ffd400', '#ff8ac8', '#2c7a99', '#3ec46d'];
+  var ST_EMOJI = ['😊', '✨', '💖', '❤️', '🎉', '🔥', '👍', '🙏', '🌸', '⭐', '📍', '📅', '💰', '🆕', '‼️', '💆‍♀️', '💅', '🇯🇵', '🇹🇼', '🍅'];
+  var ST_LABELS = ['予約受付中', '本日空きあり', 'キャンペーン中', 'NEW', '残りわずか', 'LINEで予約', '日本人スタッフ', '本日OPEN'];
+  function openStoryEditor(m) {
+    if (!m || m.video) return;
+    var W = 1080, H = 1920, items = (m.items || []).map(function (x) { return JSON.parse(JSON.stringify(x)); });
+    var sel = -1, bgc = m.bgc || '#111111', img = new Image(), drag = null;
+    var e = document.createElement('div'); e.className = 'igc'; e.id = 'igSe'; e.style.zIndex = 8600;
+    var sw = Math.min(window.innerWidth - 32, 360), sc = sw / W;
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igseX">キャンセル</button><b>文字・スタンプ</b><button type="button" class="go" id="igseGo">完了</button></div>' +
+      '<div style="display:flex;justify-content:center;padding:8px 0"><canvas id="igseC" width="' + W + '" height="' + H + '" style="width:' + sw + 'px;height:' + Math.round(H * sc) + 'px;border-radius:12px;touch-action:none;background:#111"></canvas></div>' +
+      '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:4px 12px">' +
+      '<button type="button" data-st="text" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">Aa 文字</button>' +
+      '<button type="button" data-st="emoji" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">😊 スタンプ</button>' +
+      '<button type="button" data-st="label" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">🏷 文字の札</button>' +
+      '<button type="button" data-st="bg" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">🎨 背景の色</button></div>' +
+      '<div id="igseSel" style="display:none;gap:8px;justify-content:center;padding:6px 12px">' +
+      '<button type="button" data-ss="up" style="border:0;background:#efefef;border-radius:18px;padding:7px 14px;font:inherit;cursor:pointer">大きく</button>' +
+      '<button type="button" data-ss="down" style="border:0;background:#efefef;border-radius:18px;padding:7px 14px;font:inherit;cursor:pointer">小さく</button>' +
+      '<button type="button" data-ss="edit" style="border:0;background:#efefef;border-radius:18px;padding:7px 14px;font:inherit;cursor:pointer">文字を変更</button>' +
+      '<button type="button" data-ss="del" style="border:0;background:#fee2e2;color:#b91c1c;border-radius:18px;padding:7px 14px;font:inherit;cursor:pointer">削除</button></div>' +
+      '<div id="igsePanel" style="padding:6px 12px"></div>' +
+      '<div class="igcnote">文字やスタンプは指で動かせます。押すと、大きさの変更・削除ができます。</div></div>';
+    document.body.appendChild(e);
+    var cv = document.getElementById('igseC'), cx = cv.getContext('2d');
+    var lines = function (it) { return String(it.text || '').split('\n'); };
+    var font = function (it) { return (it.type === 'emoji' ? '' : '700 ') + it.size + 'px "Hiragino Sans","Noto Sans JP","Apple Color Emoji","Segoe UI Emoji",sans-serif'; };
+    var box = function (it) {
+      cx.font = font(it);
+      var ls = lines(it), w = 0;
+      ls.forEach(function (l) { w = Math.max(w, cx.measureText(l).width); });
+      var lh = it.size * 1.25, h = lh * ls.length, pad = it.bg || it.type === 'label' ? it.size * 0.45 : 0;
+      return { x: it.x - w / 2 - pad, y: it.y - h / 2 - pad, w: w + pad * 2, h: h + pad * 2, lh: lh, ls: ls };
+    };
+    var rr = function (x, y, w, h, r) { cx.beginPath(); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); };
+    var draw = function (final) {
+      cx.fillStyle = bgc; cx.fillRect(0, 0, W, H);
+      if (img.width) {   // 写真は全部が見えるように真ん中に置く（本物と同じ）
+        var r = Math.min(W / img.width, H / img.height), iw = img.width * r, ih = img.height * r;
+        cx.drawImage(img, (W - iw) / 2, (H - ih) / 2, iw, ih);
+      }
+      items.forEach(function (it, i) {
+        var b = box(it);
+        if (it.bg || it.type === 'label') {
+          cx.fillStyle = it.type === 'label' ? it.color : (it.color === '#ffffff' ? 'rgba(0,0,0,.75)' : '#ffffff');
+          rr(b.x, b.y, b.w, b.h, it.size * 0.35); cx.fill();
+        }
+        cx.font = font(it); cx.textAlign = 'center'; cx.textBaseline = 'middle';
+        cx.fillStyle = it.type === 'label' ? (it.color === '#ffffff' || it.color === '#ffd400' ? '#000000' : '#ffffff') : it.color;
+        if (it.type === 'text' && !it.bg) { cx.shadowColor = 'rgba(0,0,0,.35)'; cx.shadowBlur = 8; }
+        b.ls.forEach(function (l, k) { cx.fillText(l, it.x, b.y + (b.h - b.lh * b.ls.length) / 2 + b.lh * (k + 0.5)); });
+        cx.shadowBlur = 0;
+        if (!final && i === sel) { cx.strokeStyle = '#0095f6'; cx.lineWidth = 6; cx.setLineDash([18, 12]); cx.strokeRect(b.x - 10, b.y - 10, b.w + 20, b.h + 20); cx.setLineDash([]); }
+      });
+      document.getElementById('igseSel').style.display = sel >= 0 ? 'flex' : 'none';
+    };
+    var panel = function (h) { document.getElementById('igsePanel').innerHTML = h; };
+    var textPanel = function (it) {
+      var cur = it || { text: '', color: '#ffffff', bg: false };
+      panel('<textarea id="igseT" rows="2" placeholder="文字を入力…" style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:8px;font:inherit">' + esc(cur.text) + '</textarea>' +
+        '<div style="display:flex;gap:6px;align-items:center;margin:6px 0">' + ST_COLORS.map(function (c) {
+          return '<button type="button" data-tc="' + c + '" style="width:28px;height:28px;border-radius:50%;border:' + (c === cur.color ? '3px solid #0095f6' : '1px solid #ccc') + ';background:' + c + ';cursor:pointer"></button>';
+        }).join('') + '<label style="margin-left:8px;font-size:13px"><input type="checkbox" id="igseBg"' + (cur.bg ? ' checked' : '') + '> 背景つき</label></div>' +
+        '<button type="button" id="igseTOk" style="border:0;background:#0095f6;color:#fff;border-radius:8px;padding:8px 16px;font:inherit;font-weight:700;cursor:pointer">' + (it ? '変更' : '追加') + '</button>');
+      var color = cur.color;
+      document.getElementById('igsePanel').onclick = function (ev) {
+        var c = ev.target.closest('[data-tc]');
+        if (c) { color = c.getAttribute('data-tc'); document.querySelectorAll('#igsePanel [data-tc]').forEach(function (b) { b.style.border = b === c ? '3px solid #0095f6' : '1px solid #ccc'; }); return; }
+        if (ev.target.id !== 'igseTOk') return;
+        var t = document.getElementById('igseT').value.replace(/\s+$/, '');
+        if (!t) { warn('文字を入力してください😊'); return; }
+        if (it) { it.text = t; it.color = color; it.bg = document.getElementById('igseBg').checked; }
+        else { items.push({ type: 'text', text: t, color: color, bg: document.getElementById('igseBg').checked, size: 80, x: W / 2, y: H * 0.3 }); sel = items.length - 1; }
+        panel(''); draw();
+      };
+      var ta = document.getElementById('igseT'); if (ta) ta.focus();
+    };
+    e.addEventListener('click', function (ev) {
+      var t = ev.target;
+      if (t.id === 'igseX') { e.remove(); return; }
+      if (t.id === 'igseGo') {
+        sel = -1; draw(true);
+        var d = cv.toDataURL('image/jpeg', 0.9);
+        m.b64 = d.split(',')[1]; m.url = d; m.items = items; m.bgc = bgc;
+        e.remove(); drawPrev(); return;
+      }
+      var b = t.closest('[data-st]');
+      if (b) {
+        var k = b.getAttribute('data-st');
+        if (k === 'text') textPanel(null);
+        if (k === 'emoji') panel('<div style="display:flex;flex-wrap:wrap;gap:6px;font-size:28px">' + ST_EMOJI.map(function (x) { return '<button type="button" data-em="' + x + '" style="border:0;background:none;font-size:30px;cursor:pointer">' + x + '</button>'; }).join('') + '</div>');
+        if (k === 'label') panel('<div style="display:flex;flex-wrap:wrap;gap:6px">' + ST_LABELS.map(function (x) { return '<button type="button" data-lb="' + esc(x) + '" style="border:0;background:#ff3040;color:#fff;border-radius:8px;padding:6px 10px;font:inherit;font-weight:700;cursor:pointer">' + esc(x) + '</button>'; }).join('') +
+          '</div><div style="display:flex;gap:6px;margin-top:8px">' + ST_COLORS.map(function (c) { return '<button type="button" data-lc="' + c + '" style="width:26px;height:26px;border-radius:50%;border:1px solid #ccc;background:' + c + ';cursor:pointer"></button>'; }).join('') + '<span style="font-size:12px;color:#737373;align-self:center">選んだ札の色</span></div>');
+        if (k === 'bg') panel('<div style="display:flex;gap:6px">' + ['#111111', '#ffffff', '#f3ede6', '#ffd6e7', '#d6ecf3', '#2c7a99', '#ff3040'].map(function (c) { return '<button type="button" data-bgc="' + c + '" style="width:30px;height:30px;border-radius:50%;border:1px solid #ccc;background:' + c + ';cursor:pointer"></button>'; }).join('') + '</div>');
+        return;
+      }
+      var em = t.closest('[data-em]'); if (em) { items.push({ type: 'emoji', text: em.getAttribute('data-em'), color: '#000', size: 180, x: W / 2, y: H * 0.5 }); sel = items.length - 1; panel(''); draw(); return; }
+      var lb = t.closest('[data-lb]'); if (lb) { items.push({ type: 'label', text: lb.getAttribute('data-lb'), color: '#ff3040', size: 70, x: W / 2, y: H * 0.7 }); sel = items.length - 1; draw(); return; }
+      var lc = t.closest('[data-lc]'); if (lc && sel >= 0 && items[sel].type === 'label') { items[sel].color = lc.getAttribute('data-lc'); draw(); return; }
+      var bc = t.closest('[data-bgc]'); if (bc) { bgc = bc.getAttribute('data-bgc'); draw(); return; }
+      var ss = t.closest('[data-ss]');
+      if (ss && sel >= 0) {
+        var a = ss.getAttribute('data-ss'), it = items[sel];
+        if (a === 'up') it.size = Math.min(400, Math.round(it.size * 1.2));
+        if (a === 'down') it.size = Math.max(24, Math.round(it.size / 1.2));
+        if (a === 'del') { items.splice(sel, 1); sel = -1; }
+        if (a === 'edit' && it.type === 'text') { textPanel(it); return; }
+        draw();
+      }
+    });
+    var pt = function (ev) { var r = cv.getBoundingClientRect(); return { x: (ev.clientX - r.left) / r.width * W, y: (ev.clientY - r.top) / r.height * H }; };
+    cv.addEventListener('pointerdown', function (ev) {
+      var q = pt(ev); sel = -1;
+      for (var i = items.length - 1; i >= 0; i--) { var b = box(items[i]); if (q.x >= b.x && q.x <= b.x + b.w && q.y >= b.y && q.y <= b.y + b.h) { sel = i; break; } }
+      if (sel >= 0) { drag = { dx: q.x - items[sel].x, dy: q.y - items[sel].y }; cv.setPointerCapture(ev.pointerId); }
+      draw();
+    });
+    cv.addEventListener('pointermove', function (ev) {
+      if (!drag || sel < 0) return;
+      var q = pt(ev); items[sel].x = Math.max(0, Math.min(W, q.x - drag.dx)); items[sel].y = Math.max(0, Math.min(H, q.y - drag.dy)); draw();
+    });
+    cv.addEventListener('pointerup', function () { drag = null; });
+    img.onload = function () { draw(); };
+    img.src = m.orig || m.url;
+  }
   function drawPrev() {
     var el = document.getElementById('igcPrev'); if (!el) return;
     el.innerHTML = CMEDIA.map(function (m, i) {
       return '<div>' + (m.video ? '<video src="' + m.url + '" muted playsinline></video>' : '<img src="' + m.url + '" alt="">') +
-        (CMEDIA.length > 1 ? '<span class="n">' + (i + 1) + '</span>' : '') + '<button type="button" data-del="' + i + '">✕</button></div>';
-    }).join('');
+        (CMEDIA.length > 1 ? '<span class="n">' + (i + 1) + '</span>' : '') + '<button type="button" data-del="' + i + '">✕</button>' +
+        (CK === 'story' && !m.video ? '<button type="button" data-sedit="' + i + '" style="position:absolute;left:6px;bottom:6px;top:auto;right:auto;width:auto;height:auto;border-radius:14px;padding:4px 10px;font-size:12px;font-weight:700;background:rgba(0,0,0,.6);color:#fff;border:0">✏️ 文字・スタンプ</button>' : '') + '</div>';
+    }).join('') + (CK === 'story' && CMEDIA.length && CMEDIA[0].video ? '<div class="igcnote">動画への文字・スタンプ・音楽・リンクは準備中です。</div>' : '');
   }
   function share() {
     if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してください😊' : '写真か動画を選択してください😊'); return; }
