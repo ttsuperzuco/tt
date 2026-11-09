@@ -14709,7 +14709,19 @@ function instaScript_(C) {
       if (t.closest('[data-hx]')) { el.remove(); return; }
       if (t.closest('[data-hm]')) {
         if (!st.items) { warn('読み込みが終わるまで、少し待っててくださいね🥺'); return; }
-        sheet([{ t: 'ハイライトを編集', go: function () { openHlEdit(h, st.items); } }]); return;
+        sheet([{ t: 'ハイライトを編集', go: function () { openHlEdit(h, st.items); } },
+               { t: 'ハイライトを削除', red: true, go: function () {
+                 szPopup_('ハイライト「' + h.t + '」を削除しますか？😊\n（中のストーリーはアーカイブに残ります）', { cancel: true, onYes: function () {
+                   var acct = CUR;
+                   busyAsk({ kind: 'hl_delete', acct: acct, hid: hlId(h) }, false, 'ハイライトを削除しています', '1分ほどかかるので、少し待っててくださいね🥺', function (err) {
+                     if (err) { warn(err); return; }
+                     var v = DATA && DATA.views && DATA.views[acct];
+                     if (v) { v.hl = (v.hl || []).filter(function (x) { return hlId(x) !== hlId(h); }); cacheSet(DATA); }
+                     el.remove(); if (acct === CUR) drawApp();
+                     doneBox('ハイライトの削除が完了しました');
+                   });
+                 } });
+               } }]); return;
       }
       if (t.closest('[data-next]')) { if (st.i < st.items.length - 1) { st.i++; draw(); } else el.remove(); return; }
       if (t.closest('[data-prev]')) { if (st.i > 0) { st.i--; draw(); } }
@@ -14759,7 +14771,7 @@ function instaScript_(C) {
       '<input class="nm" id="igheNm" placeholder="ハイライト名" maxlength="' + HL_MAX + '">' +
       '<div class="tabs" id="igheTabs"></div><div id="igheGrid"></div>' +
       '<div class="igcnote">「ストーリーズ」には、保存したストーリーズ（アーカイブ）の新しい方から90件が出ます（いちばん下のボタンで300件まで読み込めます）。新しい写真を入れる時は、先に＋の「ストーリーズ」から投稿してください😊<br>' +
-      '保存には1〜2分かかります。ハイライトの削除は、ここからはできません。</div></div>';
+      '保存には1〜2分かかります。ハイライトの削除は、ハイライトを開いて右上の「⋯」からできます。</div></div>';
     document.body.appendChild(e);
     var nmEl = document.getElementById('igheNm'); nmEl.value = NAME;
     nmEl.addEventListener('input', function () { NAME = nmEl.value; });
