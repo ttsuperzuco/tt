@@ -125,7 +125,51 @@ var INSTACSS_ =
   '.igpin .go{color:#0095f6;font-weight:700;font-size:15px;}' +
   '.igpe{position:fixed;inset:0;z-index:8600;background:#fff;}' +
   '.igpe textarea{display:block;width:calc(100% - 24px);box-sizing:border-box;margin:12px;min-height:60vh;border:1px solid #efefef;border-radius:10px;padding:10px;font:inherit;font-size:15px;}' +
-  '.igsheet button.red{color:#ed4956;font-weight:700;}';
+  '.igsheet button.red{color:#ed4956;font-weight:700;}' +
+  '.igpf .av{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 0 10px;}' +
+  '.igpf .av img{width:86px;height:86px;border-radius:50%;object-fit:cover;background:#efefef;}' +
+  '.igpf .av label{position:relative;color:#0095f6;font-weight:700;font-size:14px;cursor:pointer;}' +
+  '.igpf .av input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer;}' +
+  '.igpf .f{margin:0 16px;padding:10px 0;border-bottom:1px solid #efefef;}' +
+  '.igpf .f .l{font-size:12px;color:#737373;margin-bottom:4px;}' +
+  '.igpf .f input,.igpf .f textarea{display:block;width:100%;box-sizing:border-box;border:0;font:inherit;font-size:15px;outline:none;background:none;padding:2px 0;}' +
+  '.igpf .f textarea{min-height:110px;resize:vertical;}' +
+  '.igpf .f.ro .v{color:#737373;font-size:15px;word-break:break-all;}' +
+  '.igpf .f .n{font-size:12px;color:#737373;margin-top:4px;}' +
+  '.igpf .f .c{text-align:right;font-size:12px;color:#737373;}' +
+  '.igpf .f .c.over{color:#ed4956;}' +
+  '.ighv{position:fixed;inset:0;z-index:8450;background:#000;color:#fff;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Roboto,"Noto Sans JP",sans-serif;}' +
+  '.ighv .bars{display:flex;gap:3px;padding:8px 8px 0;}' +
+  '.ighv .bars i{flex:1;height:2px;border-radius:1px;background:rgba(255,255,255,.35);}' +
+  '.ighv .bars i.on{background:#fff;}' +
+  '.ighv .hd{display:flex;align-items:center;gap:10px;padding:10px 12px;}' +
+  '.ighv .hd img{width:32px;height:32px;border-radius:50%;object-fit:cover;}' +
+  '.ighv .hd b{flex:1;font-size:14px;}' +
+  '.ighv .hd button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;padding:0 6px;}' +
+  '.ighv .bd{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}' +
+  '.ighv .bd img{max-width:100%;max-height:100%;object-fit:contain;}' +
+  '.ighv .bd .vd{position:absolute;bottom:16px;left:16px;font-size:12px;background:rgba(0,0,0,.5);padding:3px 8px;border-radius:10px;}' +
+  '.ighv .bd .lt,.ighv .bd .rt{position:absolute;top:0;bottom:0;width:40%;}' +
+  '.ighv .bd .lt{left:0;}.ighv .bd .rt{right:0;}' +
+  '.ighv .msg{color:#bbb;font-size:14px;padding:20px;text-align:center;}' +
+  '.ighe .cv{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 0 6px;}' +
+  '.ighe .cv .c{width:86px;height:86px;border-radius:50%;border:1px solid #dbdbdb;padding:3px;box-sizing:border-box;}' +
+  '.ighe .cv .c img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:#efefef;display:block;}' +
+  '.ighe .cv button{background:none;border:0;color:#0095f6;font:inherit;font-size:14px;font-weight:700;cursor:pointer;}' +
+  '.ighe .nm{display:block;width:calc(100% - 32px);box-sizing:border-box;margin:6px 16px 0;text-align:center;border:0;border-bottom:1px solid #efefef;font:inherit;font-size:16px;padding:8px 0;outline:none;}' +
+  '.ighe .tabs{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;border-bottom:1px solid #efefef;}' +
+  '.ighe .tabs button{background:none;border:0;border-bottom:1px solid transparent;font:inherit;font-size:14px;font-weight:700;color:#737373;padding:12px 0;cursor:pointer;}' +
+  '.ighe .tabs button.on{color:#000;border-bottom-color:#000;}' +
+  '.ighe .gr{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}' +
+  '.ighe .gr button{position:relative;aspect-ratio:9/16;border:0;padding:0;background:#efefef;cursor:pointer;overflow:hidden;}' +
+  '.ighe .gr img{width:100%;height:100%;object-fit:cover;display:block;}' +
+  '.ighe .gr .d{position:absolute;left:6px;top:6px;background:#fff;color:#000;border-radius:6px;padding:2px 6px;font-size:11px;line-height:1.3;text-align:center;font-weight:700;}' +
+  '.ighe .gr .ck{position:absolute;right:6px;bottom:6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;box-sizing:border-box;}' +
+  '.ighe .gr button.on .ck{background:#0095f6;}' +
+  '.ighe .gr button.on img{opacity:.75;}' +
+  '.ighe .gr .vd{position:absolute;right:6px;top:6px;color:#fff;font-size:12px;text-shadow:0 0 3px #000;}' +
+  '.ighe .gr .cvm{position:absolute;left:0;right:0;bottom:0;background:rgba(0,149,246,.9);color:#fff;font-size:11px;text-align:center;padding:2px 0;}' +
+  '.ighe .em{padding:30px 16px;text-align:center;color:#737373;font-size:14px;line-height:1.6;}';
 function renderInstaPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">📸</span><span class="bname">インスタ</span></div>';
   var C = {
@@ -306,10 +350,10 @@ function instaScript_(C) {
       (p.fb ? '<button type="button" data-soon="1">' + IC.fb + esc(p.fb) + '</button>' : '') +
       '<button type="button" class="add" data-soon="1">' + IC.plusS + '追加</button></div>';
     h += '<button type="button" class="igdash" data-soon="1"><span><b>プロフェッショナルダッシュボード</b><small>新しいツールが利用できるようになりました。</small></span><i></i></button>';
-    h += '<div class="igbtns"><button type="button" data-soon="1">プロフィールを編集</button><button type="button" data-soon="1">プロフィールをシェア</button></div>';
-    h += '<div class="ighl"><button type="button" data-soon="1"><div class="c new">' + IC.plus + '</div><div class="t">新規</div></button>' +
-      (v.hl || []).map(function (x) {
-        return '<button type="button" data-soon="1"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
+    h += '<div class="igbtns"><button type="button" data-pedit="1">プロフィールを編集</button><button type="button" data-soon="1">プロフィールをシェア</button></div>';
+    h += '<div class="ighl"><button type="button" data-hlnew="1"><div class="c new">' + IC.plus + '</div><div class="t">新規</div></button>' +
+      (v.hl || []).map(function (x, i) {
+        return '<button type="button" data-hl="' + i + '"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
       }).join('') + '</div>';
     h += '<div class="igtabs">' +
       [['posts', IC.grid], ['reels', IC.reels], ['reposts', IC.repost], ['tagged', IC.tagged]].map(function (t) {
@@ -326,6 +370,10 @@ function instaScript_(C) {
     var tb = t.closest && t.closest('[data-tab]');
     if (tb) { TAB = tb.getAttribute('data-tab'); drawApp(); return; }
     if (t.closest && t.closest('[data-create]')) { openCreate(); return; }
+    if (t.closest && t.closest('[data-pedit]')) { openProfEdit(); return; }
+    if (t.closest && t.closest('[data-hlnew]')) { openHlEdit(null, []); return; }
+    var hb = t.closest && t.closest('[data-hl]');
+    if (hb) { var vv = DATA && DATA.views && DATA.views[CUR]; var hx = vv && (vv.hl || [])[Number(hb.getAttribute('data-hl'))]; if (hx) openHlView(hx); return; }
     var po = t.closest && t.closest('[data-post]');
     if (po && TAB !== 'tagged') { openPost(po.getAttribute('data-post'), (po.querySelector('img') || {}).src || ''); return; }
     if (t.closest && (t.closest('[data-soon]') || t.closest('[data-post]'))) { warn(SOON); return; }
@@ -339,14 +387,16 @@ function instaScript_(C) {
       '<button type="button" data-k="reel">' + IC.reels + 'リール</button>' +
       '<button type="button" data-k="feed">' + IC.grid + '投稿</button>' +
       '<button type="button" data-k="story">' + IC.plus + 'ストーリーズ</button>' +
-      '<button type="button" class="off" data-k="">' + IC.plus + 'ハイライト</button>' +
+      '<button type="button" data-k="hl">' + IC.plus + 'ハイライト</button>' +
       '<button type="button" class="off" data-k="">' + IC.reels + 'ライブ</button></div>';
     sh.addEventListener('click', function (e) {
       var b = e.target.closest('button');
       if (!b) { if (e.target === sh) sh.remove(); return; }
       var k = b.getAttribute('data-k');
       if (!k) { warn(SOON); return; }
-      sh.remove(); openCompose(k);
+      sh.remove();
+      if (k === 'hl') { openHlEdit(null, []); return; }
+      openCompose(k);
     });
     document.body.appendChild(sh);
   }
@@ -652,6 +702,224 @@ function instaScript_(C) {
         szOvShow_(szDoneHtml_('修正が完了しました'), '#16a34a');
         var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); });
       });
+    });
+  }
+
+  var BIO_MAX = 150, HL_MAX = 30, ARCH = {}, ARCH_ERR = {};
+  function busyAsk(fields, big, title, sub, done) {
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(title, sub || false), '#2C7A99');
+    (big ? askBig : ask)(fields, function (err, d) { if (typeof szOvHide_ === 'function') szOvHide_(); done(err, d); });
+  }
+  function doneBox(msg, after) {
+    szOvShow_(szDoneHtml_(msg), '#16a34a');
+    var db = document.getElementById('szDoneBack'); if (db) db.addEventListener('click', function () { szOvHide_(); if (after) after(); });
+  }
+  function openProfEdit() {
+    var v = DATA && DATA.views && DATA.views[CUR], p = (v && v.prof) || {};
+    if (!p.user) { warn('プロフィールの読み込みが終わるまで、少し待っててくださいね🥺'); return; }
+    var PIC = null, links = p.links || [];
+    var e = document.createElement('div'); e.className = 'igc igpf'; e.id = 'igProf';
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igpfX">キャンセル</button><b>プロフィールを編集</b><button type="button" class="go" id="igpfGo">完了</button></div>' +
+      '<div class="av"><img id="igpfPic" src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><label>写真を変更<input type="file" id="igpfFile" accept="image/*"></label></div>' +
+      '<div class="f"><div class="l">名前</div><input id="igpfName" maxlength="64"><div class="n">名前は14日以内に2回まで変更できます（インスタの決まり）。</div></div>' +
+      '<div class="f ro"><div class="l">ユーザーネーム</div><div class="v">' + esc(p.user || '') + '</div><div class="n">ユーザーネームはここでは変更できません。</div></div>' +
+      '<div class="f"><div class="l">自己紹介</div><textarea id="igpfBio"></textarea><div class="c" id="igpfCnt"></div></div>' +
+      '<div class="f ro"><div class="l">リンク</div><div class="v">' + (links.length ? esc(shortUrl(links[0].u)) + (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') : 'なし') + '</div>' +
+      '<div class="n">リンクはインスタのアプリから変更してください（インスタの決まりで、ここからは変更できません）。</div></div>' +
+      '<div class="igcnote">完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。</div></div>';
+    document.body.appendChild(e);
+    var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
+    nm.value = p.name || ''; bio.value = p.bio || '';
+    var cnt = function () { var n = Array.from(bio.value).length, o = document.getElementById('igpfCnt'); o.textContent = n + ' / ' + BIO_MAX; o.className = 'c' + (n > BIO_MAX ? ' over' : ''); };
+    bio.addEventListener('input', cnt); cnt();
+    document.getElementById('igpfFile').addEventListener('change', function () {
+      var f = (this.files || [])[0]; this.value = '';
+      if (!f || !/^image\//.test(f.type)) return;
+      var fr = new FileReader();
+      fr.onload = function () {
+        var im = new Image();
+        im.onload = function () {
+          var s = Math.min(im.width, im.height), sx = Math.round((im.width - s) / 2), sy = Math.round((im.height - s) / 2), w = Math.min(720, s);
+          var cv = document.createElement('canvas'); cv.width = w; cv.height = w;
+          cv.getContext('2d').drawImage(im, sx, sy, s, s, 0, 0, w, w);
+          var d = cv.toDataURL('image/jpeg', 0.9); PIC = d.split(',')[1];
+          document.getElementById('igpfPic').src = d;
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(f);
+    });
+    e.addEventListener('click', function (ev) {
+      if (ev.target.id === 'igpfX') { e.remove(); return; }
+      if (ev.target.id !== 'igpfGo') return;
+      var f = { kind: 'prof_save', acct: CUR }, ch = [];
+      var nv = nm.value.trim(), bv = bio.value.replace(/\r/g, '').trim();
+      if (nv !== String(p.name || '').trim()) {
+        if (!nv) { warn('名前を入力してください😊'); return; }
+        f.name = nv; ch.push('名前');
+      }
+      if (bv !== String(p.bio || '').replace(/\r/g, '').trim()) {
+        if (Array.from(bv).length > BIO_MAX) { warn('自己紹介は' + BIO_MAX + '文字までです😊'); return; }
+        f.bio = bv; ch.push('自己紹介');
+      }
+      if (PIC) { f.media = [{ b64: PIC }]; ch.push('写真'); }
+      if (!ch.length) { e.remove(); return; }
+      szPopup_('お店のインスタの' + ch.join('・') + 'を変更します。\nよろしいでしょうか？😊', { cancel: true, onYes: function () {
+        busyAsk(f, !!PIC, 'プロフィールを保存しています', '1〜2分かかるので、少し待っててくださいね🥺', function (err, d) {
+          if (err) { warn(err); return; }
+          var dn = (d && d.done) || [];
+          if (dn.indexOf('name') >= 0) p.name = nv;
+          if (dn.indexOf('bio') >= 0) p.bio = bv;
+          if (dn.indexOf('pic') >= 0) p.pic = (d && d.pic) || document.getElementById('igpfPic').src;
+          cacheSet(DATA); e.remove(); drawApp();
+          doneBox('プロフィールの変更が完了しました', function () { if (d && d.partial) warn(d.partial); });
+        });
+      } });
+    });
+  }
+
+  function hlId(h) { return String((h && h.id) || '').replace('highlight:', ''); }
+  function openHlView(h) {
+    var st = { items: null, i: 0, err: '' };
+    var el = document.createElement('div'); el.className = 'ighv'; el.id = 'igHv';
+    document.body.appendChild(el);
+    var draw = function () {
+      var its = st.items || [], it = its[st.i] || {};
+      el.innerHTML = '<div class="bars">' + (its.length ? its.map(function (x, k) { return '<i' + (k <= st.i ? ' class="on"' : '') + '></i>'; }).join('') : '<i></i>') + '</div>' +
+        '<div class="hd"><img src="' + esc(h.cv) + '" referrerpolicy="no-referrer" alt=""><b>' + esc(h.t) + '</b>' +
+        '<button type="button" data-hm="1">⋯</button><button type="button" data-hx="1">✕</button></div>' +
+        '<div class="bd">' + (st.err ? '<div class="msg">' + esc(st.err) + '</div>' : !st.items ? '<div class="msg">読み込み中です…（20秒ほどかかります）</div>' :
+          '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '') +
+          '<span class="lt" data-prev="1"></span><span class="rt" data-next="1"></span>') + '</div>';
+    };
+    draw();
+    ask({ kind: 'hl_items', acct: CUR, hid: hlId(h) }, function (err, d) {
+      if (!document.getElementById('igHv')) return;
+      if (err) { st.err = err; draw(); return; }
+      st.items = (d && d.items) || []; draw();
+    });
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-hx]')) { el.remove(); return; }
+      if (t.closest('[data-hm]')) {
+        if (!st.items) { warn('読み込みが終わるまで、少し待っててくださいね🥺'); return; }
+        sheet([{ t: 'ハイライトを編集', go: function () { openHlEdit(h, st.items); } }]); return;
+      }
+      if (t.closest('[data-next]')) { if (st.i < st.items.length - 1) { st.i++; draw(); } else el.remove(); return; }
+      if (t.closest('[data-prev]')) { if (st.i > 0) { st.i--; draw(); } }
+    });
+  }
+  function openHlEdit(h, items) {
+    var isNew = !h, acct = CUR;
+    var SEL = (items || []).slice(), COVER = '', NAME = isNew ? '' : String(h.t || ''), TABH = isNew ? 'all' : 'sel';
+    var keys0 = SEL.map(function (s) { return s.key; }).join(','), name0 = NAME;
+    var e = document.createElement('div'); e.className = 'igc ighe'; e.id = 'igHe';
+    var idx = function (k) { for (var i = 0; i < SEL.length; i++) if (SEL[i].key === k) return i; return -1; };
+    var coverSrc = function () {
+      var i = idx(COVER); if (i >= 0) return SEL[i].th;
+      if (!isNew && h.cv) return h.cv;
+      return SEL[0] ? SEL[0].th : '';
+    };
+    var cell = function (s, mode) {
+      var i = idx(s.key), d = new Date(s.at * 1000);
+      var attr = mode === 'cv' ? 'data-cv="' + esc(s.key) + '"' : 'data-sk="' + esc(s.key) + '"';
+      return '<button type="button" ' + attr + (mode !== 'cv' && i >= 0 ? ' class="on"' : '') + '><img src="' + esc(s.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' +
+        '<span class="d">' + d.getDate() + '<br>' + (d.getMonth() + 1) + '月</span>' + (s.v ? '<span class="vd">▶</span>' : '') +
+        (mode === 'cv' ? (s.key === COVER ? '<span class="cvm">カバー</span>' : '') : '<span class="ck">' + (i >= 0 ? i + 1 : '') + '</span>') + '</button>';
+    };
+    var drawGrid = function () {
+      var tb = document.getElementById('igheTabs'), g = document.getElementById('igheGrid'); if (!tb || !g) return;
+      tb.innerHTML = '<button type="button" data-ht="sel"' + (TABH === 'sel' ? ' class="on"' : '') + '>選択済み（' + SEL.length + '）</button>' +
+        '<button type="button" data-ht="all"' + (TABH === 'all' ? ' class="on"' : '') + '>ストーリーズ</button>';
+      var list = TABH === 'sel' ? SEL : ARCH[acct];
+      if (TABH === 'all' && !list) {
+        g.innerHTML = '<div class="em">' + (ARCH_ERR[acct] ? esc(ARCH_ERR[acct]) : '保存したストーリーズを読み込み中です…<br>1分ほどかかるので、少し待っててくださいね🥺') + '</div>';
+        return;
+      }
+      if (!list.length) {
+        g.innerHTML = '<div class="em">' + (TABH === 'sel' ? 'まだ選択されていません。<br>「ストーリーズ」から選択してください😊' : '保存したストーリーズがありません。') + '</div>';
+        return;
+      }
+      g.innerHTML = '<div class="gr">' + list.map(function (s) { return cell(s, 'sel'); }).join('') + '</div>';
+      var ci = document.getElementById('igheCvImg'); if (ci) ci.src = coverSrc();
+    };
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igheX">キャンセル</button><b>' + (isNew ? '新しいハイライト' : 'ハイライトを編集') + '</b>' +
+      '<button type="button" class="go" id="igheGo">' + (isNew ? '追加' : '完了') + '</button></div>' +
+      '<div class="cv"><div class="c"><img id="igheCvImg" src="' + esc(coverSrc()) + '" referrerpolicy="no-referrer" alt=""></div><button type="button" id="igheCv">カバーを編集</button></div>' +
+      '<input class="nm" id="igheNm" placeholder="ハイライト名" maxlength="' + HL_MAX + '">' +
+      '<div class="tabs" id="igheTabs"></div><div id="igheGrid"></div>' +
+      '<div class="igcnote">「ストーリーズ」には、保存したストーリーズ（アーカイブ）の新しい方から90件が出ます。新しい写真を入れる時は、先に＋の「ストーリーズ」から投稿してください😊<br>' +
+      '保存には1〜2分かかります。ハイライトの削除は、ここからはできません。</div></div>';
+    document.body.appendChild(e);
+    var nmEl = document.getElementById('igheNm'); nmEl.value = NAME;
+    nmEl.addEventListener('input', function () { NAME = nmEl.value; });
+    drawGrid();
+    var loadArch = function (force) {
+      if (ARCH[acct] && !force) return;
+      ARCH_ERR[acct] = '';
+      ask({ kind: 'hl_arch', acct: acct, force: !!force }, function (err, d) {
+        if (err) ARCH_ERR[acct] = err; else ARCH[acct] = (d && d.arch) || [];
+        drawGrid();
+      });
+    };
+    loadArch(false);
+    var find = function (k) {
+      var all = SEL.concat(ARCH[acct] || []);
+      for (var i = 0; i < all.length; i++) if (all[i].key === k) return all[i];
+      return null;
+    };
+    e.addEventListener('click', function (ev) {
+      var t = ev.target;
+      var tb = t.closest && t.closest('[data-ht]');
+      if (tb) { TABH = tb.getAttribute('data-ht'); drawGrid(); return; }
+      var sk = t.closest && t.closest('[data-sk]');
+      if (sk) {
+        var k = sk.getAttribute('data-sk'), i = idx(k);
+        if (i >= 0) { SEL.splice(i, 1); if (COVER === k) COVER = ''; }
+        else { var s = find(k); if (s) SEL.push(s); }
+        drawGrid(); return;
+      }
+      if (t.id === 'igheCv') {
+        if (!SEL.length) { warn('先にストーリーズを選択してください😊'); return; }
+        var sh = document.createElement('div'); sh.className = 'igsheet';
+        sh.innerHTML = '<div class="in ighe" style="max-height:80vh;overflow-y:auto"><div class="bar"></div><b>カバーにする写真を選択してください😊</b>' +
+          '<div class="gr">' + SEL.map(function (s) { return cell(s, 'cv'); }).join('') + '</div></div>';
+        sh.addEventListener('click', function (x) {
+          var c = x.target.closest && x.target.closest('[data-cv]');
+          if (c) { COVER = c.getAttribute('data-cv'); sh.remove(); drawGrid(); return; }
+          if (x.target === sh) sh.remove();
+        });
+        document.body.appendChild(sh); return;
+      }
+      if (t.id === 'igheX') {
+        var changed = NAME !== name0 || SEL.map(function (s) { return s.key; }).join(',') !== keys0 || COVER;
+        if (!changed) { e.remove(); return; }
+        szPopup_('変更を破棄しますか？😊', { cancel: true, onYes: function () { e.remove(); } });
+        return;
+      }
+      if (t.id !== 'igheGo') return;
+      var title = NAME.trim();
+      if (!title) { warn('ハイライト名を入力してください😊'); return; }
+      if (Array.from(title).length > HL_MAX) { warn('ハイライト名は' + HL_MAX + '文字までです😊'); return; }
+      if (!SEL.length) { warn('ストーリーズを1つ以上選択してください😊'); return; }
+      szPopup_('お店のインスタのハイライト「' + title + '」を' + (isNew ? '作成' : '変更') + 'します。\nよろしいでしょうか？😊', { cancel: true, onYes: function () {
+        busyAsk({ kind: 'hl_save', acct: acct, hid: isNew ? '' : hlId(h), title: title,
+                  keys: SEL.map(function (s) { return s.key; }), cover: COVER },
+          false, 'ハイライトを保存しています', '1〜2分かかるので、少し待っててくださいね🥺', function (err, d) {
+            if (err) { warn(err); return; }
+            var v = DATA && DATA.views && DATA.views[acct];
+            if (v) {
+              var cvu = COVER ? coverSrc() : (isNew ? (SEL[0] || {}).th : h.cv);
+              var hit = (v.hl || []).filter(function (x) { return hlId(x) === String(d.id || ''); })[0];
+              if (hit) { hit.t = d.title || title; if (COVER) hit.cv = cvu; }
+              else { v.hl = [{ id: 'highlight:' + d.id, t: d.title || title, cv: cvu }].concat(v.hl || []); }
+              cacheSet(DATA);
+            }
+            e.remove(); var hv = document.getElementById('igHv'); if (hv) hv.remove();
+            if (acct === CUR) drawApp();
+            doneBox('ハイライトの保存が完了しました', function () { if (d && d.note) warn(d.note); });
+          });
+      } });
     });
   }
 
