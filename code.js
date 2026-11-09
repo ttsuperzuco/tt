@@ -11019,7 +11019,12 @@ var UBCSS_ =
   '.ubdel{display:block;margin:8px 0 0 auto;background:none;border:0;color:#b91c1c;font:inherit;font-size:14px;font-weight:800;cursor:pointer;text-decoration:underline;}' +
   '.ubnone{color:#eaf6fb;font-weight:800;font-size:17px;text-align:center;margin:14px 0;}' +
   '.ubmenu{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0;}' +
-  '.ubmenu button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:16px 10px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  // ★2026-11-09 まるちゃん「ボタンの太さを縦に1.5倍」＝上下の余白16px→34px（高さ約72px→約108px）
+  '.ubmenu button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:34px 10px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  // ★2026-11-09 まるちゃん「あり　なし　の文字を目立つように」＝大きく・色付き（あり＝青、なし＝赤）
+  '.ubmenu .ubem{font-size:1.35em;padding:0 2px;}' +
+  '.ubmenu .ubem.ari{color:#0369a1;}' +
+  '.ubmenu .ubem.nashi{color:#dc2626;}' +
   '.ubf label{display:block;color:#fff;font-weight:800;font-size:16px;margin:10px 4px 4px;}' +
   '.ubf input{display:block;width:100%;box-sizing:border-box;border:0;border-radius:12px;padding:12px;font:inherit;font-size:19px;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubf input.sel{outline:4px solid #fde047;}' +
@@ -11561,8 +11566,8 @@ function renderUriageBookPage_(base, staff, dev) {
       '<div id="ubMenu">' + head('📒', 'TT売上帳簿') +
         '<div class="ubtest" id="ubTest" style="display:none">テスト中：本番の売上表には書きません（2026_帳簿_テスト に書きます）</div>' +
         '<div class="ubmenu">' +
-          '<button type="button" id="ubGoInv">🧾 發票ありの売上</button>' +
-          '<button type="button" id="ubGoNoInv">📝 發票なしの売上</button>' +
+          '<button type="button" id="ubGoInv">🧾 發票<span class="ubem ari">あり</span>の売上</button>' +
+          '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
         '</div>' +
       '</div>' +
