@@ -634,10 +634,11 @@ function instaScript_(C) {
         : '<img src="' + esc(it.url) + '" referrerpolicy="no-referrer" alt="">';
     }).join('') + '</div>';
     h += '<div class="igpins"><button type="button" data-pins="1">インサイトを見る</button></div>';
-    h += '<div class="igpa"><button type="button" data-soon="1">' + S('<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', 26) + '</button>' +
+    var HEART = '<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', BM = '<path d="M19 21l-7-5-7 5V4a1 1 0 011-1h12a1 1 0 011 1z"/>';
+    h += '<div class="igpa"><button type="button" data-go="plike">' + (POST.liked ? S(HEART, 26).replace('fill="none"', 'fill="#ff3040"').replace('stroke="currentColor"', 'stroke="#ff3040"') : S(HEART, 26)) + '</button>' +
       '<button type="button" data-pcom="1">' + S('<path d="M20.7 12a8.7 8.7 0 01-12.6 7.8L3.5 21l1.3-4.4A8.7 8.7 0 1120.7 12z"/>', 26) + '</button>' +
       '<button type="button" data-go="postshare">' + IC.send + '</button><span class="sp"></span>' +
-      '<button type="button" data-soon="1">' + S('<path d="M19 21l-7-5-7 5V4a1 1 0 011-1h12a1 1 0 011 1z"/>', 26) + '</button></div>';
+      '<button type="button" data-go="psave">' + (POST.saved ? S(BM, 26).replace('fill="none"', 'fill="currentColor"') : S(BM, 26)) + '</button></div>';
     h += '<div class="igpl">' + (POST.likes_hidden ? '「いいね！」数は非表示です' : 'いいね！' + num(POST.likes || 0) + '件') + '</div>';
     if (POST.caption) h += '<div class="igpcap"><b>' + esc(p.user || '') + '</b> ' + esc(POST.caption) + '</div>';
     h += '<div class="igpd">' + esc(ago(POST.at)) + (POST.comments_on ? '' : '　・　コメントはオフです') + '</div>';
@@ -750,6 +751,14 @@ function instaScript_(C) {
   function copy(u) {
     var ok = function () { warn('リンクをコピーしました😊'); };
     try { navigator.clipboard.writeText(u).then(ok, function () { window.prompt('リンク', u); }); } catch (e) { window.prompt('リンク', u); }
+  }
+  function togglePost(k) {
+    var cur = k === 'like' ? !!POST.liked : !!POST.saved, code = POST.code;
+    var busy = k === 'like' ? (cur ? '「いいね！」を取り消しています' : '「いいね！」しています') : (cur ? '保存を取り消しています' : '保存しています');
+    simple({ kind: 'more_' + k, acct: CUR, code: code, want: cur ? 0 : 1 }, busy, function (err, d) {
+      if (err) { warn(err); return; }
+      if (POST && POST.code === code) { if (k === 'like') POST.liked = !!d.state; else POST.saved = !!d.state; drawPost(); }
+    });
   }
   function shareSheet(u) {
     sheet([{ t: 'リンクをコピー', go: function () { copy(u); } }, { t: 'インスタで開く', go: function () { openUrl(u); } }]);
@@ -953,6 +962,8 @@ function instaScript_(C) {
     var t = e.target, cl = function (q) { return t.closest && t.closest(q); };
     if (cl('[data-pback]')) { closePost(); return; }
     if (cl('[data-pins]') && POST && !POST.loading) { openIns(POST.code); return; }
+    if (cl('[data-go="plike"]') && POST && !POST.loading) { togglePost('like'); return; }
+    if (cl('[data-go="psave"]') && POST && !POST.loading) { togglePost('save'); return; }
     if (cl('[data-go="postshare"]') && POST) { shareSheet('https://www.instagram.com/p/' + POST.code + '/'); return; }
     if (cl('[data-soon]')) { warn(SOON); return; }
     if (cl('[data-pcom]')) { var tx = document.getElementById('igpTx'); if (tx) tx.focus(); else warn('この投稿はコメントがオフです😊'); return; }
