@@ -1381,8 +1381,9 @@ function szPopup_(msg, opts) {
   mask.innerHTML =
     "<div style='background:#12303c;border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:26px 24px;max-width:560px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-sizing:border-box;box-shadow:0 14px 44px rgba(0,0,0,.45);text-align:center;'>" +
       // ★2026-09-16まるちゃん：長い文でも「OK／閉じる」は下に止めておく（文の部分だけが動く）。
+      // ★2026-11-09：文が欄の幅ぎりぎりの時、横にずらす帯が出ていた（中身は折り返すので横には動かさない＝縦だけ）。
       (icon ? "<div style='flex:0 0 auto;font-size:56px;line-height:1;margin-bottom:14px;'>" + icon + "</div>" : "") +
-      "<div class='szpopmsg' style='flex:1 1 auto;min-height:0;overflow:auto;color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;word-break:auto-phrase;overflow-wrap:break-word;text-wrap:pretty;margin-bottom:22px;'></div>" +
+      "<div class='szpopmsg' style='flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;color:#fff;font-size:1.5rem;font-weight:700;line-height:1.9;white-space:pre-wrap;word-break:auto-phrase;overflow-wrap:break-word;text-wrap:pretty;margin-bottom:22px;'></div>" +
       // ★2026-09-23 まるちゃん「これ閉じるボタンあるのはおかしい　けして」＝待っている間の知らせは
       //   終われば自分で消えるので、押すボタンを出さない（押せると「何が起きるの？」と迷わせる）。
       (opts.noButtons ? "" :
