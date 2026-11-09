@@ -14774,7 +14774,7 @@ function instaScript_(C) {
 
   // ── 作成（＋）＝リール／投稿／ストーリーズ（2026-11-09 まるちゃん「投稿を作る」）──
   //   投稿は受付係（op=insta・kind=post）→ メタ公式の仕組みで出す。写真はAIの記録を抜いてから上げ、
-  //   上げたあと「いいねの数を非表示（選んだ時）」「AIの札が付いていないか」を受付係が専用ブラウザで行う（決まり 4-0／4-0b）。
+  //   上げたあと「いいねの数を非表示（選んだ時）」「AIラベルが付いていないか」を受付係が専用ブラウザで行う（決まり 4-0／4-0b）。
   // ★2026-11-09 権限の表（受付係が開く時に返す {アカウント: [機能]}）。画面は入口で止めるだけ＝本当の守りは受付係。
   // ★2026-11-09 まるちゃん決定の6つ＝view（お客様が見る画面）／post（投稿・ストーリーズ）／highlight／profile／reply（お客様に返事）／insights（分析）
   var PERM = {}, ISDEV = false, NOPERM = 'この操作の権限がありません。りゅうさんに連絡してください🙇';
@@ -14840,7 +14840,7 @@ function instaScript_(C) {
         '<button type="button" id="igcLocGo" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer">探す</button></div><div id="igcLocR"></div></div></div>' +
         '<div class="igcq"><div class="t">人をタグ付け</div><input id="igcTags" placeholder="ユーザーネーム（複数ある時はスペースで区切る）" style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit;margin:4px 0">' +
         '<div style="font-size:12px;color:#737373">写真のタグは1枚目の写真の下の方に並びます。</div></div>') +
-      '<div class="igcnote">写真に入っているAIの記録は、投稿の前に自動で取り除きます。投稿のあと、AIの札が付いていないかも自動で確認します。' +
+      '<div class="igcnote">写真に入っているAIの記録は、投稿の前に自動で取り除きます。投稿のあと、AIラベルが付いていないかも自動で確認します。' +
       (kind !== 'feed' ? '' : '<br>写真の縦横が合わない時は、インスタと同じく中央で切り取ります。') + '</div></div>';
     document.body.appendChild(c);
     var cap = document.getElementById('igcCap');
@@ -15227,11 +15227,11 @@ function instaScript_(C) {
       if (typeof szOvHide_ === 'function') szOvHide_();
       if (err) { warn(err); return; }
       var c = document.getElementById('igCompose'); if (c) c.remove();
-      // ★2026-11-09 いいね非表示・AIの札の確認は受付係が投稿のあと裏で行い、問題があればりゅうさんのLINEへ知らせる
+      // ★2026-11-09 いいね非表示・AIラベルの確認は受付係が投稿のあと裏で行い、問題があればりゅうさんのLINEへ知らせる
       //   （d.after_bg）。ここで「できませんでした」と出すと、まだ裏で動いている途中なのに毎回まちがいの注意が出る。
       var notes = [], af = (d && d.after) || {};
       if (!(d && d.after_bg)) {
-        if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIの札が付いています。りゅうさんに連絡してください🙇');
+        if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIラベルが付いています。りゅうさんに連絡してください🙇');
         if (CK !== 'story' && fields.hide_likes && !af.hidden) notes.push('「いいね！」数の非表示ができませんでした。りゅうさんに連絡してください🙇');
       }
       szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
