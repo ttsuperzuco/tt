@@ -1112,12 +1112,15 @@ function instaScript_(C) {
     });
   }
 
+  var AGAIN = {};
   function loadWeb(acct, force) {
-    if (!acct || BUSY[acct]) return;
+    if (acct && BUSY[acct]) { if (force) AGAIN[acct] = true; return; }
+    if (!acct) return;
     BUSY[acct] = true; if (acct === CUR) drawWhen();
     if (acct === CUR && !(DATA && DATA.views && DATA.views[acct])) drawApp();
     ask({ kind: 'web', acct: acct, force: !!force }, function (err, d) {
       BUSY[acct] = false;
+      if (AGAIN[acct]) { delete AGAIN[acct]; setTimeout(function () { loadWeb(acct, true); }, 0); }
       if (err) { if (acct === CUR) { drawWhen(); warn(err); } return; }
       if (!DATA) DATA = { accounts: ACCTS, views: {} };
       DATA.views = DATA.views || {};
