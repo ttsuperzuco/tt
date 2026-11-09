@@ -14205,7 +14205,7 @@ function instaScript_(C) {
   // ── 作成（＋）＝リール／投稿／ストーリーズ（2026-11-09 まるちゃん「投稿を作る」）──
   //   投稿は受付係（op=insta・kind=post）→ メタ公式の仕組みで出す。写真はAIの記録を抜いてから上げ、
   //   上げたあと「いいねの数を非表示（選んだ時）」「AIの札が付いていないか」を受付係が専用ブラウザで行う（決まり 4-0／4-0b）。
-  var CK = 'feed', CMEDIA = [], CHIDE = null, CLOC = null, MAXI = 10, VIDEO_MB = 18, TOTAL_MB = 18, MAXCAP = 2200;
+  var CK = 'feed', CMEDIA = [], CHIDE = null, CLOC = null, CMUS = null, MAXI = 10, VIDEO_MB = 18, TOTAL_MB = 18, MAXCAP = 2200;
   function openCreate() {
     var sh = document.createElement('div'); sh.className = 'igsheet';
     sh.innerHTML = '<div class="in"><div class="bar"></div><b>作成</b>' +
@@ -14227,7 +14227,7 @@ function instaScript_(C) {
   }
   function totalMB() { return CMEDIA.reduce(function (a, m) { return a + m.b64.length * 3 / 4 / 1048576; }, 0); }
   function openCompose(kind) {
-    CK = kind; CMEDIA = []; CHIDE = null; CLOC = null;
+    CK = kind; CMEDIA = []; CHIDE = null; CLOC = null; CMUS = null;
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0] || {};
     var title = { feed: '新規投稿', reel: '新規リール動画', story: 'ストーリーズに追加' }[kind];
     var acc = kind === 'reel' ? 'video/mp4,video/quicktime' : 'image/*,video/mp4,video/quicktime';
@@ -14238,6 +14238,13 @@ function instaScript_(C) {
       '<div class="igcprev" id="igcPrev"></div>' +
       '<label class="igcpick">' + IC.plus + (kind === 'reel' ? '動画を選択' : kind === 'story' ? '写真・動画を選択' : '写真・動画を選択（10個まで）') +
       '<input type="file" id="igcFile" accept="' + acc + '"' + (kind === 'feed' ? ' multiple' : '') + '></label>' +
+      (kind === 'story' ? '<div class="igcq"><div class="t">リンク（押せるスタンプ）</div>' +
+        '<input id="igcLink" inputmode="url" placeholder="https://…（LINEの予約のリンクなど）" style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit;margin:4px 0"></div>' +
+        '<div class="igcq"><div class="t">音楽</div><div id="igcMus" style="margin:4px 0"></div>' +
+        '<div style="display:flex;gap:6px"><input id="igcMusQ" placeholder="英語で曲を探す（空ならおすすめ）" style="flex:1;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit">' +
+        '<button type="button" id="igcMusGo" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer">曲を選ぶ</button></div>' +
+        '<div style="font-size:12px;color:#737373;margin-top:4px">リンク・音楽を付けると、事務所の疑似スマホで上げます（3〜5分かかります）。</div>' +
+        (window.__SZ_ROLE_ === '開発' ? '<label style="font-size:12px;color:#737373"><input type="checkbox" id="igcDry"> 開発：試しだけ（上げる直前まで作って破棄する）</label>' : '') + '</div>' : '') +
       (kind === 'story' ? '' : '<textarea class="igccap" id="igcCap" placeholder="キャプションを入力…"></textarea><div class="igccnt" id="igcCnt">0 / ' + MAXCAP + '</div>' +
         '<div class="igcq"><div class="t">「いいね！」数を他の人に非表示にしますか？😊</div><div class="seg">' +
         '<button type="button" data-h="1">非表示にする（おすすめ）</button><button type="button" data-h="0">そのまま表示する</button></div></div>' +
@@ -14289,6 +14296,24 @@ function instaScript_(C) {
         return;
       }
       if (t.id === 'igcLocX') { CLOC = null; document.getElementById('igcLocR').innerHTML = ''; return; }
+      if (t.id === 'igcMusX') { CMUS = null; document.getElementById('igcMus').innerHTML = ''; return; }
+      if (t.id === 'igcMusGo') {
+        var mq = (document.getElementById('igcMusQ').value || '').trim();
+        if (/[^\x00-\x7e]/.test(mq)) { warn('曲は英語で探してください😊（疑似スマホは日本語を入力できません）'); return; }
+        phone({ kind: 'phone_music', acct: CUR, q: mq }, '曲の一覧を読み込んでいます（2分ほどかかります）', function (err, d) {
+          if (err) { warn(err); return; }
+          var tr = (d && d.tracks) || [];
+          if (!tr.length) { warn('曲が見つかりませんでした。別の言葉で探してください😊'); return; }
+          sheet(tr.map(function (x) {
+            return { t: '🎵 ' + x.title + ' ／ ' + x.artist + (x.dur ? '（' + x.dur + '）' : ''), go: function () {
+              CMUS = { title: x.title, artist: x.artist, q: mq, tab: 'For you' };
+              document.getElementById('igcMus').innerHTML = '<div style="padding:4px 0">🎵 <b>' + esc(x.title) + '</b> ／ ' + esc(x.artist) +
+                ' <button type="button" id="igcMusX" style="background:none;border:0;color:#0095f6;font:inherit;cursor:pointer">外す</button></div>';
+            } };
+          }));
+        });
+        return;
+      }
     });
     document.getElementById('igcFile').addEventListener('change', function () {
       var files = Array.prototype.slice.call(this.files || []); this.value = '';
@@ -14465,7 +14490,7 @@ function instaScript_(C) {
       return '<div>' + (m.video ? '<video src="' + m.url + '" muted playsinline></video>' : '<img src="' + m.url + '" alt="">') +
         (CMEDIA.length > 1 ? '<span class="n">' + (i + 1) + '</span>' : '') + '<button type="button" data-del="' + i + '">✕</button>' +
         (CK === 'story' && !m.video ? '<button type="button" data-sedit="' + i + '" style="position:absolute;left:6px;bottom:6px;top:auto;right:auto;width:auto;height:auto;border-radius:14px;padding:4px 10px;font-size:12px;font-weight:700;background:rgba(0,0,0,.6);color:#fff;border:0">✏️ 文字・スタンプ</button>' : '') + '</div>';
-    }).join('') + (CK === 'story' && CMEDIA.length && CMEDIA[0].video ? '<div class="igcnote">動画への文字・スタンプ・音楽・リンクは準備中です。</div>' : '');
+    }).join('') + (CK === 'story' && CMEDIA.length && CMEDIA[0].video ? '<div class="igcnote">動画への文字・スタンプは準備中です（リンク・音楽は付けられます）。</div>' : '');
   }
   function share() {
     if (!CMEDIA.length) { warn(CK === 'reel' ? '動画を選択してください😊' : '写真か動画を選択してください😊'); return; }
@@ -14475,6 +14500,20 @@ function instaScript_(C) {
     if (CK !== 'story' && CHIDE === null) { warn('「いいね！」数を非表示にするか選択してください😊'); return; }
     var fields = { kind: 'post', acct: CUR, type: CK, caption: text, hide_likes: CK === 'story' ? false : CHIDE,
                    media: CMEDIA.map(function (m) { return { b64: m.b64 }; }) };
+    var lk = document.getElementById('igcLink'), link = lk ? lk.value.trim() : '';
+    if (CK === 'story' && (link || CMUS)) {
+      if (link && !/^https?:\/\/[^\s]+$/.test(link)) { warn('リンクは https:// から始まる住所を入力してください😊'); return; }
+      if (/[^\x00-\x7e]/.test(link)) { warn('リンクに日本語が入っています。英数字の住所にしてください😊'); return; }
+      var dr = document.getElementById('igcDry');
+      var pf = { kind: 'phone_story', acct: CUR, media: CMEDIA.map(function (m) { return { b64: m.b64 }; }), link: link, music: CMUS, dry: !!(dr && dr.checked) };
+      phoneBig(pf, 'ストーリーズを作っています（リンク・音楽つき・3〜5分かかります）', function (err) {
+        if (err) { warn(err); return; }
+        var c2 = document.getElementById('igCompose'); if (c2) c2.remove();
+        szOvShow_(szDoneHtml_(pf.dry ? '試しが完了しました（上げていません）' : 'ストーリーズの投稿が完了しました'), '#16a34a');
+        var db2 = document.getElementById('szDoneBack'); if (db2) db2.addEventListener('click', function () { szOvHide_(); });
+      });
+      return;
+    }
     var tg = document.getElementById('igcTags');
     if (CLOC && CK !== 'story') fields.location_id = CLOC.id;
     if (tg && CK !== 'story') fields.tags = tg.value.split(/[\s,、，]+/).map(function (x) { return x.replace(/^@/, '').trim(); }).filter(Boolean).slice(0, 20);
@@ -14496,7 +14535,8 @@ function instaScript_(C) {
     });
   }
   // 写真・動画つきの依頼は大きいので、共通の BIG で別に預ける（Threads投稿と同じ）。動画は準備に数分かかる＝約10分まで待つ。
-  function askBig(fields, done) {
+  function askBig(fields, done, op) {
+    op = op || 'insta';
     devKey(function (ex) {
       for (var k in ex) fields[k] = ex[k];
       var me = { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' };
@@ -14515,13 +14555,13 @@ function instaScript_(C) {
         setTimeout(tick, 1500);
       };
       var send = function (ft) {
-        jsonp({ action: 'submit', key: C.key, op: 'insta', who: me.who, role: me.role, device: me.device, fields: ft }, function (r) {
+        jsonp({ action: 'submit', key: C.key, op: op, who: me.who, role: me.role, device: me.device, fields: ft }, function (r) {
           if (!r || !r.ok || !r.id) { done((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           poll(r.id);
         });
       };
       if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
-      BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'insta', op: 'insta',
+      BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'insta', op: op,
                     who: me.who, role: me.role, device: me.device, fields: fields },
         send, function () { done('写真・動画を送れませんでした。数を減らして、もう一度試してもらえると嬉しいです🙇'); });
     });
@@ -14732,6 +14772,16 @@ function instaScript_(C) {
       if (!(age < 150)) { warn(PHONE_OFF); return; }
       if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
       ask(fields, function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); }, 'instaphone');
+    });
+  }
+  function phoneBig(fields, busy, done) {
+    jsonp({ action: 'data', key: C.key, name: 'instaphone_alive.json' }, function (y) {
+      var v = null;
+      try { v = (y && typeof y.result === 'string') ? JSON.parse(y.result) : (y && y.at ? y : (y && y.result)); } catch (e) {}
+      var age = (v && v.at) ? Date.now() / 1000 - Number(v.at) : 1e9;
+      if (!(age < 150)) { warn(PHONE_OFF); return; }
+      if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
+      askBig(fields, function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); }, 'instaphone');
     });
   }
   function togglePost(k) {
