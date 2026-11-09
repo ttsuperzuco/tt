@@ -15276,7 +15276,7 @@ function instaScript_(C) {
     var el = document.getElementById('igPost');
     if (!el) { el = document.createElement('div'); el.className = 'igp'; el.id = 'igPost'; document.body.appendChild(el); el.addEventListener('click', postClick); }
     drawPost();
-    ask({ kind: 'detail', acct: CUR, code: code }, function (err, d) {
+    readAsk({ kind: 'detail', acct: CUR, code: code }, function (err, d) {
       if (!POST || POST.code !== code) return;
       if (err) { closePost(); warn(err); return; }
       POST = d; drawPost();
@@ -15360,7 +15360,7 @@ function instaScript_(C) {
     var el = document.createElement('div'); el.className = 'igp igdm'; el.id = 'igDmT'; document.body.appendChild(el);
     el.addEventListener('click', function (e) { if (e.target.closest('[data-dmtback]')) closeDmThread(); });
     drawDmThread();
-    ask({ kind: 'dm_thread', acct: CUR, cid: id }, function (err, d) {
+    readAsk({ kind: 'dm_thread', acct: CUR, cid: id }, function (err, d) {
       if (!DMT || DMT.id !== id) return;
       if (err) { closeDmThread(); warn(err); return; }
       DMT = d; drawDmThread();
@@ -15659,7 +15659,7 @@ function instaScript_(C) {
       pg.addEventListener('click', function (e) { if (e.target.closest('[data-svback]')) pg.remove(); });
     };
     draw();
-    ask({ kind: 'stories', acct: acct }, function (err, d) {
+    readAsk({ kind: 'stories', acct: acct }, function (err, d) {
       if (!document.getElementById('igSt')) return;
       if (err) { st.err = err; draw(); return; }
       st.items = (d && d.stories) || []; st.nov = !!(d && d.nov); draw();
@@ -15722,7 +15722,7 @@ function instaScript_(C) {
       }
       var u = e.target.closest('[data-ntu]'); if (u) openUrl('https://www.instagram.com/' + u.getAttribute('data-ntu') + '/');
     });
-    ask({ kind: 'notifs', acct: acct }, function (err, d) {
+    readAsk({ kind: 'notifs', acct: acct }, function (err, d) {
       if (!document.getElementById('igNt')) return;
       if (err) { el.remove(); warn(err); return; }
       var its = (d && d.items) || [], sec = '';
@@ -15753,7 +15753,8 @@ function instaScript_(C) {
     };
     var load = function () {
       BUSYF = true; draw();
-      ask({ kind: 'follows', acct: acct, which: which, max_id: NEXT }, function (err, d) {
+      // 最初の1ページだけ覚えた物を使う（続きを足していく画面なので、2回は描かない）
+      (NEXT ? ask : function (f, cb) { readAsk(f, cb, true); })({ kind: 'follows', acct: acct, which: which, max_id: NEXT }, function (err, d) {
         BUSYF = false;
         if (!document.getElementById('igFl')) return;
         if (err) { draw(); warn(err); return; }
@@ -15912,7 +15913,7 @@ function instaScript_(C) {
       var o = e.target.closest('[data-tgopen]'); if (o) openUrl(o.getAttribute('data-tgopen'));
     });
     document.body.appendChild(el);
-    ask({ kind: 'more_tagged', acct: CUR, code: code }, function (err, d) {
+    readAsk({ kind: 'more_tagged', acct: CUR, code: code }, function (err, d) {
       if (!document.getElementById('igTg')) return;
       if (err) { el.remove(); warn(err); return; }
       el.innerHTML = head + '<div class="igpu"><b>' + esc(d.user) + '</b></div>' +
@@ -15940,7 +15941,7 @@ function instaScript_(C) {
     var head = '<div class="w"><div class="igph"><button type="button" data-dback="1">‹</button><b>プロフェッショナルダッシュボード</b><span></span></div>' +
       '<div class="per">' + [7, 14, 30].map(function (n) { return '<button type="button" data-days="' + n + '"' + (n === days ? ' class="on"' : '') + '>過去' + n + '日間</button>'; }).join('') + '</div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
-    ask({ kind: 'more_dash', acct: CUR, days: days }, function (err, d) {
+    readAsk({ kind: 'more_dash', acct: CUR, days: days }, function (err, d) {
       if (!document.getElementById('igDash')) return;
       if (err) { el.remove(); warn(err); return; }
       var n = function (v) { return v == null ? '－' : num(v); };
@@ -15982,7 +15983,7 @@ function instaScript_(C) {
     el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
     el.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-iback]')) el.remove(); });
     document.body.appendChild(el);
-    ask({ kind: 'insights', acct: CUR, code: code }, function (err, d) {
+    readAsk({ kind: 'insights', acct: CUR, code: code }, function (err, d) {
       if (!document.getElementById('igIns')) return;
       if (err) { el.remove(); warn(err); return; }
       var n = function (k) { return d[k] == null ? '－' : num(d[k]); };
@@ -16355,7 +16356,7 @@ function instaScript_(C) {
           '<span class="lt" data-prev="1"></span><span class="rt" data-next="1"></span>') + '</div>';
     };
     draw();
-    ask({ kind: 'hl_items', acct: CUR, hid: hlId(h) }, function (err, d) {
+    readAsk({ kind: 'hl_items', acct: CUR, hid: hlId(h) }, function (err, d) {
       if (!document.getElementById('igHv')) return;
       if (err) { st.err = err; draw(); return; }
       st.items = (d && d.items) || []; draw();
@@ -16550,8 +16551,143 @@ function instaScript_(C) {
       if (err) { if (!DATA) $('igLoad').textContent = err; return; }
       d.cur = CUR; apply(d, true); cacheSet(DATA);
       loadWeb(CUR, false);
+      PF.done = {}; setTimeout(pfRun, 1500);
     });
   }
+
+  // ── 裏の読み込み（2026-11-09 まるちゃん「インスタもThreadsと同じ仕組みに」）──
+  //   最初に表示したあと、開きそうな画面の中身を1つずつ読んで端末に覚える＝いざ開いた時は覚えた物をすぐ出し、
+  //   裏で読み直して変わっていれば入れ替える（readAsk）。途中で閉じても、次に開いた時に続きから読む。
+  //   順番＝投稿の詳細（コメント）→ メッセージの一覧と会話 → 投稿のインサイト → ダッシュボード（30・7・14日）→ タグ付けの投稿
+  //        → ここから専用ブラウザを使う重い物：お知らせ → ストーリーズ → フォロワー・フォロー中 → ハイライトの中身。今のアカウントから、ほかのアカウントへ。
+  //   ★一度に1つだけ頼む。専用ブラウザを使う物は1つ読み終わるごとに20秒あける（サーバーはメモリに余裕が無い）。30分以内に読んだ物は読まない。
+  //   ★まだ一度も読んでいない物を先に読む。失敗した種類（アカウントごと）はその回はもう頼まない（失敗はりゅうさんのLINEに届くので何度も送らない）。
+  //   ★覚える場所は IndexedDB（大きく使える）。ズコ全体で約5MBの localStorage は使わない＝ほかの画面の控えを押し出さない。
+  //     7日より前に読んだ物は開いた時に消す（たまり続けない）。権限が無い物は頼まない。
+  var IG_FRESH = 30 * 60000, IG_KEEP = 7 * 86400000;
+  var PFP = 'ig|' + (window.__SZ_ROLE_ || '') + '|' + (window.__SZ_WHO_ || '') + '|';
+  var PF = { on: false, done: {}, bad: {} }, PFT = null, PFTQ = [], IDB = null, IDBQ = [];
+  function idb(cb) {
+    if (IDB !== null) { cb(IDB || null); return; }
+    IDBQ.push(cb); if (IDBQ.length > 1) return;
+    var fin = function (db) { if (IDB !== null) return; IDB = db || false; var q = IDBQ; IDBQ = []; q.forEach(function (f) { f(IDB || null); }); };
+    try {
+      var r = indexedDB.open('zuko_insta_pf', 1);
+      r.onupgradeneeded = function () { try { r.result.createObjectStore('kv'); } catch (e) {} };
+      r.onsuccess = function () { fin(r.result); };
+      r.onerror = r.onblocked = function () { fin(null); };
+      setTimeout(function () { fin(null); }, 5000);
+    } catch (e) { fin(null); }
+  }
+  function pfGet(k, cb) {
+    idb(function (db) {
+      if (!db) { cb(null); return; }
+      try { var q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = function () { cb(q.result || null); }; q.onerror = function () { cb(null); }; }
+      catch (e) { cb(null); }
+    });
+  }
+  function pfPut(k, d) {
+    var v = { t: Date.now(), d: d };
+    pfTimes(function (T) {
+      T[k] = v.t;
+      idb(function (db) {
+        if (!db) return;
+        try { var s = db.transaction('kv', 'readwrite').objectStore('kv'); s.put(v, k); s.put(T, PFP + '__t'); } catch (e) {}
+      });
+    });
+  }
+  function pfTimes(cb) {   // 読んだ時刻の一覧（1つにまとめて覚えてある）。最初の1回だけ読み、7日より前の物を消す
+    if (PFT) { cb(PFT); return; }
+    PFTQ.push(cb); if (PFTQ.length > 1) return;   // 読んでいる最中に頼まれた分は、読み終わってからまとめて返す
+    pfGet(PFP + '__t', function (v) {
+      PFT = (v && v.t == null && v) || {};
+      var old = Object.keys(PFT).filter(function (k) { return Date.now() - PFT[k] > IG_KEEP; });
+      old.forEach(function (k) { delete PFT[k]; });
+      if (old.length) idb(function (db) {
+        if (!db) return;
+        try { var s = db.transaction('kv', 'readwrite').objectStore('kv'); old.forEach(function (k) { s.delete(k); }); s.put(PFT, PFP + '__t'); } catch (e) {}
+      });
+      var q = PFTQ; PFTQ = [];
+      q.forEach(function (f) { f(PFT); });
+    });
+  }
+  // ★ストーリーズは「見た人」を出せるか（分析の権限）で中身が変わる＝権限ごとに分けて覚える（権限が変わっても前の中身を出さない）
+  function pfKey(f) { return PFP + [f.kind, f.acct, f.code || f.cid || f.hid || f.which || '', f.days || '', f.kind === 'stories' ? (canA(f.acct, 'insights') ? 'i' : 'n') : ''].join('|'); }
+  // 読むだけの画面はこれで頼む：覚えた物があればすぐ出す → 裏で読み直し、変わっていた時だけもう一度描く。
+  //   once＝続きを足していく画面（フォロワー）用。覚えた物が30分以内ならそれだけ、古ければ読み直してから出す（2回描かない）。
+  function readAsk(fields, done, once) {
+    var k = pfKey(fields);
+    pfGet(k, function (c) {
+      var age = c ? Date.now() - c.t : 1e15;
+      if (once) {
+        if (c && age < IG_FRESH) { done(null, c.d); return; }
+        ask(fields, function (err, d) { if (!err && d) pfPut(k, d); done(err, d); });
+        return;
+      }
+      if (c) done(null, c.d);
+      if (c && age < 60000) return;   // 1分以内に読んだばかり＝読み直さない
+      ask(fields, function (err, d) {
+        if (err) { if (!c) done(err); return; }   // 覚えた物を出している時は、そのまま
+        var same = c && JSON.stringify(c.d) === JSON.stringify(d);
+        pfPut(k, d);
+        if (!same) done(null, d);
+      });
+    });
+  }
+  function canA(a, f) { var p = PERM && PERM[a]; return !p || p.indexOf(f) >= 0; }
+  function dmCached(a) { try { var c = JSON.parse(localStorage.getItem('ig_dm_v1_' + a) || 'null'); return (c && c.list) || []; } catch (e) { return []; } }
+  function pfList() {
+    var order = [CUR].concat(ACCTS.map(function (x) { return x.acct; }).filter(function (a) { return a !== CUR; }));
+    var L = [], add = function (it) { it.key = pfKey(it.f); L.push(it); };
+    order.forEach(function (a) {
+      var v = (DATA && DATA.views && DATA.views[a]) || {};
+      (v.posts || []).forEach(function (p) { if (p.code) add({ t: 'detail', a: a, f: { kind: 'detail', acct: a, code: p.code } }); });
+      if (canA(a, 'reply')) {
+        add({ t: 'dm_list', a: a, f: { kind: 'dm_list', acct: a } });
+        dmCached(a).forEach(function (x) { if (x.id) add({ t: 'dm_thread', a: a, f: { kind: 'dm_thread', acct: a, cid: x.id } }); });
+      }
+      if (canA(a, 'insights')) {
+        (v.posts || []).forEach(function (p) { if (p.code) add({ t: 'insights', a: a, f: { kind: 'insights', acct: a, code: p.code } }); });
+        [30, 7, 14].forEach(function (d) { add({ t: 'more_dash', a: a, f: { kind: 'more_dash', acct: a, days: d } }); });
+      }
+      (v.tagged || []).forEach(function (p) { if (p.code) add({ t: 'more_tagged', a: a, f: { kind: 'more_tagged', acct: a, code: p.code } }); });
+      // ここから専用ブラウザを使う物
+      if (canA(a, 'reply')) add({ t: 'notifs', a: a, f: { kind: 'notifs', acct: a }, heavy: 1 });
+      add({ t: 'stories', a: a, f: { kind: 'stories', acct: a }, heavy: 1 });
+      if (v.prof && v.prof.id) ['followers', 'following'].forEach(function (w) { add({ t: 'follows', a: a, f: { kind: 'follows', acct: a, which: w, max_id: '' }, heavy: 1 }); });
+      (v.hl || []).forEach(function (h) { var id = hlId(h); if (id) add({ t: 'hl_items', a: a, f: { kind: 'hl_items', acct: a, hid: id }, heavy: 1 }); });
+    });
+    return L;
+  }
+  function pfNext(T) {
+    var now = Date.now(), L = pfList(), miss = null, old = null;
+    for (var i = 0; i < L.length; i++) {
+      var it = L[i];
+      if (PF.bad[it.t + '_' + it.a] || PF.done[it.key]) continue;
+      var t = T[it.key] || 0;
+      if (!t) { if (!miss) miss = it; } else if (now - t >= IG_FRESH && !old) old = it;
+    }
+    return miss || old;
+  }
+  function pfRun() {
+    if (PF.on) return;
+    PF.on = true;
+    pfTimes(function (T) {
+      if (!IDB) { PF.on = false; return; }   // 覚える場所が使えない端末では裏の読み込みをしない
+      var it = pfNext(T);
+      if (!it) { PF.on = false; return; }
+      ask(JSON.parse(JSON.stringify(it.f)), function (err, d) {
+        PF.on = false; PF.done[it.key] = 1;
+        if (err || !d) PF.bad[it.t + '_' + it.a] = 1;
+        else {
+          pfPut(it.key, d);
+          if (it.t === 'dm_list') { try { localStorage.setItem('ig_dm_v1_' + it.a, JSON.stringify(d)); } catch (e) {} }   // メッセージの画面が先に出す控え
+        }
+        setTimeout(pfRun, it.heavy ? 20000 : 300);
+      });
+    });
+  }
+
   var _c = cacheGet();
   if (_c) apply(_c, false);
   loadAll();
