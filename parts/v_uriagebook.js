@@ -92,6 +92,7 @@ var UBCSS_ =
   '.ubf input.sel{outline:4px solid #fde047;}' +
   '.ubnamerow{display:flex;align-items:center;gap:8px;}.ubnamerow input{flex:1 1 auto;min-width:0;}' +
   '.ubnf{margin:6px 0 0;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
+  '.ubpn{margin:6px 0 0;background:#e0f2fe;color:#0c4a6e;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
   '.ubcoin{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 8px;margin-top:4px;}' +
   '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
@@ -133,7 +134,7 @@ function uriageBookScript_(C) {
         if (f.action === 'pay') x.pay = f.value;
         else if (f.action === 'delete') x._del = true;
         else if (f.action === 'edit') {
-          if (f.col === 'B') x.num = String(f.value).toUpperCase();
+          if (f.col === 'B') { x.num = String(f.value).toUpperCase(); if (f.name) x.name = f.name; }
           else if (f.col === 'C') x.name = f.value;
           else if (f.col === 'E') x.detail = f.value;
           else if (f.col === 'F') { var n = parseInt(String(f.value).replace(/[^\d\-]/g, ''), 10); if (!isNaN(n)) x.amount = n; }
@@ -347,7 +348,8 @@ function uriageBookScript_(C) {
     } else {
       var cur = { B: x.num, C: x.name, E: x.detail, F: (x.amount == null ? '' : String(x.amount)) }[col] || '';
       var isPad = (col === 'B' || col === 'F');   
-      body = (isPad ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください😊"></div></div>'
+      body = (isPad ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください😊"></div></div>' +
+          (col === 'B' ? '<div class="ubpn" id="ubPickName" style="display:none"></div>' : '')
         : col === 'E' ? '<textarea id="ubEd" rows="3"></textarea>' : '<input id="ubEd">') +
         '<button type="button" class="go" data-a="save" style="margin-top:12px">以上の内容で修正する</button>';
     }
@@ -357,7 +359,13 @@ function uriageBookScript_(C) {
     var ed = $('ubEd'), PK = null;
     if (ed) { ed.value = cur; try { ed.focus(); } catch (e2) {} }
     if (isPad) {
-      PK = padKit(m.querySelector('.ubpick'), { v: col === 'B' ? { kind: 'num', max: 4, open: true } : { kind: 'int', max: 7, comma: true, open: true } });
+      PK = padKit(m.querySelector('.ubpick'), { v: col === 'B' ? { kind: 'num', max: 4, open: true } : { kind: 'int', max: 7, comma: true, open: true } },
+        function () { if (col !== 'B') return; var el = $('ubPickName'); if (!el) return;
+          if (!PK || !PK.raw('v')) { el.style.display = 'none'; return; }
+          var fn = nameOf(PK.get('v'));
+          if (fn) { el.className = 'ubpn'; el.textContent = '顧客名：' + fn; el.style.display = ''; }
+          else if (NAMES) { el.className = 'ubnf'; el.textContent = '該当する顧客が存在しません'; el.style.display = ''; }
+          else el.style.display = 'none'; });
       PK.set('v', cur); PK.open('v');
     }
     m.addEventListener('click', function (ev) {
@@ -376,7 +384,9 @@ function uriageBookScript_(C) {
       if (col === 'F' && !/\d/.test(nv)) { popup('合計は数字で入力してください😊'); return; }
       closePick();
       if (nv === cur) return;
-      ask({ action: 'edit', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x), col: col, value: nv }, CNAME[col] + 'を修正しています');
+      var nn = (col === 'B') ? nameOf(nv) : '';
+      ask({ action: 'edit', row: x.r, no: x.no, num: x.num, amount: x.amount, _k: rk(x), col: col, value: nv,
+            name: (nn && nn !== x.name) ? nn : '' }, CNAME[col] + 'を修正しています');
     });
   }
   $('ubList').addEventListener('click', function (e) {
