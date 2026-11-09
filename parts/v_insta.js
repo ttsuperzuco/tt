@@ -966,7 +966,7 @@ function instaScript_(C) {
   function iso(sec) { return sec ? new Date(sec * 1000).toISOString() : ''; }
   function ini(u) { var c = String(u || '?').replace(/^[._]+/, '').charAt(0); return esc((c || '?').toUpperCase()); }
   function openDm() {
-    if (!can('dm')) { warn(NOPERM); return; }
+    if (!can('reply')) { warn(NOPERM); return; }
     var el = document.createElement('div'); el.className = 'igp igdm'; el.id = 'igDm';
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
@@ -1112,6 +1112,7 @@ function instaScript_(C) {
     });
   }
   function togglePost(k) {
+    if (!can('reply')) { warn(NOPERM); return; }
     var cur = k === 'like' ? !!POST.liked : !!POST.saved, code = POST.code;
     var busy = k === 'like' ? (cur ? '「いいね！」を取り消しています' : '「いいね！」しています') : (cur ? '保存を取り消しています' : '保存しています');
     simple({ kind: 'more_' + k, acct: CUR, code: code, want: cur ? 0 : 1 }, busy, function (err, d) {
@@ -1205,7 +1206,7 @@ function instaScript_(C) {
     });
   }
   function openCF() {
-    if (!can('profile')) { warn(NOPERM); return; }
+    if (!can('post')) { warn(NOPERM); return; }
     var e = document.createElement('div'); e.className = 'igc'; e.id = 'igCF'; e.style.zIndex = 8500;
     var users = null;
     var draw = function () {
@@ -1272,7 +1273,7 @@ function instaScript_(C) {
           (it.v && it.vid ? '<video src="' + esc(it.vid) + '" poster="' + esc(it.big || it.th) + '" autoplay playsinline controls style="max-width:100%;max-height:100%"></video>' :
             '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '')) +
           '<span class="lt" data-sprev="1"></span><span class="rt" data-snext="1"></span>') + '</div>' +
-        (its.length ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
+        (its.length && !st.nov ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
           '👁 見た人 ' + num(n || 0) + '人</button>' : '');
     };
     var viewers = function (it) {
@@ -1294,7 +1295,7 @@ function instaScript_(C) {
     ask({ kind: 'stories', acct: acct }, function (err, d) {
       if (!document.getElementById('igSt')) return;
       if (err) { st.err = err; draw(); return; }
-      st.items = (d && d.stories) || []; draw();
+      st.items = (d && d.stories) || []; st.nov = !!(d && d.nov); draw();
     });
     el.addEventListener('click', function (e) {
       var t = e.target;
@@ -1336,6 +1337,7 @@ function instaScript_(C) {
       '<span style="flex:1;min-width:0">' + right + '</span></div>';
   }
   function openNotifs() {
+    if (!can('reply')) { warn(NOPERM); return; }
     var acct = CUR;
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igNt';
     var head = '<div class="w"><div class="igph"><button type="button" data-ntback="1">‹</button><b>お知らせ</b><span></span></div>';
@@ -1448,6 +1450,7 @@ function instaScript_(C) {
     });
   }
   function openArch() {
+    if (!can('post')) { warn(NOPERM); return; }
     var acct = CUR;
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igArch';
     var head = '<div class="w"><div class="igph"><button type="button" data-arback="1">‹</button><b>アーカイブ</b><span></span></div>';
@@ -1549,6 +1552,7 @@ function instaScript_(C) {
   var CITY = { 'Taipei': '台北市', 'Xinbei': '新北市', 'New Taipei': '新北市', 'Taoyüan': '桃園市', 'Taoyuan': '桃園市', 'Hsinchu': '新竹', 'Zhubei': '竹北',
                'Taichung': '台中市', 'Kaohsiung': '高雄市', 'Tainan': '台南市', 'Keelung': '基隆市', 'Yilan City': '宜蘭市', 'Hualien City': '花蓮市' };
   function openDash(days) {
+    if (!can('insights')) { warn(NOPERM); return; }
     var el = document.getElementById('igDash');
     if (!el) {
       el = document.createElement('div'); el.className = 'igp igins igdash2'; el.id = 'igDash'; document.body.appendChild(el);
@@ -1597,6 +1601,7 @@ function instaScript_(C) {
     });
   }
   function openIns(code) {
+    if (!can('insights')) { warn(NOPERM); return; }
     var el = document.createElement('div'); el.className = 'igp igins'; el.id = 'igIns';
     var head = '<div class="w"><div class="igph"><button type="button" data-iback="1">‹</button><b>インサイト</b><span></span></div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
@@ -1763,7 +1768,7 @@ function instaScript_(C) {
     }
   }
   function openEdit() {
-    if (!can('manage')) { warn(NOPERM); return; }
+    if (!can('post')) { warn(NOPERM); return; }
     var e = document.createElement('div'); e.className = 'igpe igc'; e.id = 'igEdit';
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igeX">キャンセル</button><b>情報を編集</b><button type="button" class="go" id="igeGo">完了</button></div>' +
       '<textarea id="igeTx"></textarea><div class="igccnt" id="igeCnt"></div></div>';
@@ -1990,6 +1995,7 @@ function instaScript_(C) {
     });
   }
   function openHlEdit(h, items) {
+    if (!can('highlight')) { warn(NOPERM); return; }
     var isNew = !h, acct = CUR;
     var SEL = (items || []).slice(), COVER = '', NAME = isNew ? '' : String(h.t || ''), TABH = isNew ? 'all' : 'sel';
     var keys0 = SEL.map(function (s) { return s.key; }).join(','), name0 = NAME;
