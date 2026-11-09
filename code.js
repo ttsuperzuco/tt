@@ -1265,6 +1265,69 @@ function staffColor_(fruit) {
 // ★共通ルール(2026-08-05まるちゃん)：書き込み系ボタンは全部〈全画面で処理中→完了〉表示に統一。
 //   どのページのスクリプトからも window.szOvShow_/szOvHide_/szBusyHtml_/szDoneHtml_ で呼べる。
 //   処理中＝青緑(#2C7A99)・⏳／成功＝緑(#16a34a)・✓＋戻る／失敗＝小さな警告(ccPopup_)＋事務所PCがRYUへ通知。
+// ── 顧客番号→顧客名（★ズコ全体の共通部品・2026-11-09 まるちゃん）──────────────────────────
+//  「顧客番号を入れたら、自動で入った顧客名をそこに表示させよう。じゃないとわかんない」
+//  「該当する顧客がいない場合は『該当する顧客が存在しません』っていうメッセージを出そう」「（他の画面も）そろえて」
+//  ＝売上帳簿・既存の予約（予約変更）・施術後の予約のリピート入力・販売管理は、全部これで番号→顧客名を出す（自分で探さない）。
+//  一覧はパソコン側の共通部品（共通\顧客名.py）が作って置き場へ送る customer_names.json
+//  （帳簿でその番号を最後に使った時の書き方。帳簿に無い新しい方は名簿の名前。名簿が変われば15分以内・帳簿は毎晩）。
+//  この画面を開いた時に1回だけ読み、番号を入れた瞬間に探す（待たせない）。前に読んだ一覧を覚えておき、届くまではそれを使う。
+//    szName_.of('F865') → '楊様'（無ければ ''）／ szName_.ready() → 一覧が使えるか
+//    szName_.show(欄, 番号) → 欄に「顧客名：〇〇様」か「該当する顧客が存在しません」を出す（番号が空なら隠す）
+//    szName_.load(関数) → 一覧が届いたら呼ぶ（届いていればすぐ呼ぶ）
+var szName_ = (function () {
+  var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
+  var LS = 'sz_customer_names', N = null, fresh = false, asked = false, waits = [], shown = [];
+  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) N = c.names; } catch (e) {}
+  function key(s) { var v = String(s || '').toUpperCase().replace(/\s/g, ''), m = v.match(/^([FMD])0*(\d+)$/); return m ? m[1] + parseInt(m[2], 10) : v; }
+  function fire() { var w = waits; waits = []; for (var i = 0; i < w.length; i++) { try { w[i](); } catch (e) {} } redraw(); }
+  function ask() {
+    if (asked) return; asked = true;
+    var n = '__szn' + Date.now() + Math.floor(Math.random() * 1000);
+    window[n] = function (p) {
+      try { delete window[n]; } catch (e) {}
+      if (p && p.names) { N = p.names; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N })); } catch (e) {} }
+      fire();
+    };
+    var s = document.createElement('script');
+    s.src = EXEC + '?action=data&name=customer_names.json&callback=' + n + '&cb=' + Date.now();
+    s.onerror = function () { fire(); };
+    (document.body || document.documentElement).appendChild(s);
+  }
+  function css() {
+    if (document.getElementById('sznameCss')) return;
+    var st = document.createElement('style'); st.id = 'sznameCss';
+    st.textContent = '.szname{margin:8px 0 0;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;text-align:left;}' +
+      '.szname.ok{background:#e0f2fe;color:#0c4a6e;}.szname.ng{background:#fee2e2;color:#b91c1c;}';
+    (document.head || document.documentElement).appendChild(st);
+  }
+  function of(num) { var k = key(num); return (k && N && N[k]) || ''; }
+  function paint(el, num) {
+    if (!el) return;
+    var k = key(num);
+    if (!k || !/\d/.test(k)) { el.style.display = 'none'; el.textContent = ''; return; }
+    css();
+    var nm = of(num);
+    if (nm) { el.className = 'szname ok'; el.textContent = '顧客名：' + nm; el.style.display = ''; }
+    else if (N) { el.className = 'szname ng'; el.textContent = '該当する顧客が存在しません'; el.style.display = ''; }
+    else { el.style.display = 'none'; }        // 一覧がまだ無い間は「存在しません」と言わない
+  }
+  function redraw() { for (var i = 0; i < shown.length; i++) paint(shown[i].el, shown[i].num); }
+  function show(el, num) {
+    if (!el) return;
+    ask();
+    var hit = false;
+    for (var i = 0; i < shown.length; i++) if (shown[i].el === el) { shown[i].num = num; hit = true; }
+    if (!hit) shown.push({ el: el, num: num });
+    paint(el, num);
+  }
+  return {
+    key: key, of: of, show: show,
+    ready: function () { return !!N; },
+    load: function (cb) { ask(); if (fresh) { if (cb) cb(); } else if (cb) waits.push(cb); }
+  };
+})();
+
 function szOvShow_(html, bg) {
   var ov = document.getElementById('szBusyOv');
   if (!ov) { ov = document.createElement('div'); ov.id = 'szBusyOv'; document.body.appendChild(ov); }
@@ -6638,6 +6701,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '<div class="sg" id="sgRNum" style="display:none">' +
       '<div class="sgwho">お客様番号から検索</div>' +
       '<div class="exbox" id="sgrdisp"></div>' +
+      '<div id="sgrname" style="display:none"></div>' +   /* ★2026-11-09 番号を入れた瞬間に顧客名（共通部品 szName_） */
       '<div class="ktmode" id="sgrseg"><button type="button" data-v="M" class="on">M（男）</button>' +
         '<button type="button" data-v="F">F（女）</button></div>' +
       '<div class="expad" id="sgrpad">' + EXPADHTML_ + '</div>' +
@@ -7310,7 +7374,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(RLOADED){if(step===2)drawList();return;}RLOADED=true;cb();});}' +
     'function repBack(){if(step===8){if(RFROM===22){goRNum();}else{goList();}return true;}' +
       'if(step===2||step===22){goRChoose();return true;}if(step===21){goPick();return true;}return false;}' +
-    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入力してください😊";}' +
+    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入力してください😊";szName_.show($("sgrname"),RDIG?(RPRE+RDIG):"");}' +
     'function repBind(){' +
       '$("sgrtoday").onclick=function(){if(!tapOK())return;repLoadToday(goList);};' +
       '$("sgrnum").onclick=function(){if(!tapOK())return;goRNum();};' +
@@ -7394,6 +7458,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var KPICK={};' +
     'function kPick(t){var key=t.head||"";if(!KPICK[key])KPICK[key]={};return KPICK[key];}' +
     'function kOpts(k,pw,cur){var h="<div class=\\"ktopts\\">";' +
+      'if(SG.KAESHI_BTNS&&typeof SG.kaeshiToggle==="function"){for(var o2=0;o2<SG.KAESHI_BTNS.length;o2++){var bk=SG.KAESHI_BTNS[o2][1];' +
+        'h+="<button type=\\"button\\" data-k=\\""+k+"\\" data-p=\\""+esc(pw)+"\\" data-b=\\""+esc(bk)+"\\" class=\\""+' +
+          '(SG.kaeshiOn(cur,bk)?"on":"")+"\\">"+esc(SG.KAESHI_BTNS[o2][0])+"</button>";}return h+"</div>";}' +
       'for(var o=0;o<SG.KAESHI_OPTS.length;o++){var w=SG.KAESHI_OPTS[o][1];' +
         'h+="<button type=\\"button\\" data-k=\\""+k+"\\" data-p=\\""+esc(pw)+"\\" data-v=\\""+esc(w)+"\\" class=\\""+' +
           '(cur===w?"on":"")+"\\">"+esc(SG.KAESHI_OPTS[o][0])+"</button>";}' +
@@ -7404,7 +7471,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var k=0;k<KT.length;k++){var ln=SG.kaeshiLineOf(tx,KT[k]);if(ln===null)continue;' +
         'var pk=kPick(KT[k]),ps=SG.kaeshiParts(KT[k]);' +
         'h+="<div class=\\"ktcard"+(ln?" done":"")+"\\"><div class=\\"ktlast\\">⚠️ 次が最終回です</div>"+' +
-          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめ回数は？</div>";' +
+          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめ回数は？</div>"+' +
+          '(SG.KAESHI_BTNS?"<div class=\\"kthint\\">5回と8回は両方選べます。5回・8回を選ぶと、都度（1回の値段）も一緒にお知らせに出ます。</div>":"");' +
         'if(!ps.length){h+=kOpts(k,"__all",pk.all||"");}' +
         'else{h+="<div class=\\"ktmode\\"><button type=\\"button\\" data-k=\\""+k+"\\" data-mode=\\"same\\" class=\\""+' +
             '(pk.mode==="same"?"on":"")+"\\">全部位が<br>同じおすすめ回数</button><button type=\\"button\\" data-k=\\""+k+' +
@@ -7421,8 +7489,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var bs=$("sgkcards").querySelectorAll(".ktopts button");' +
       'for(var j=0;j<bs.length;j++)bs[j].onclick=function(){if(sending)return;' +
         'var t=KT[parseInt(this.getAttribute("data-k"),10)],pk=kPick(t),pw=this.getAttribute("data-p");' +
-        'if(pw==="__all"){pk.all=this.getAttribute("data-v");if(!pk.mode)pk.mode="same";}' +
-        'else{pk.each=pk.each||{};pk.each[pw]=this.getAttribute("data-v");}' +
+        'var bb=this.getAttribute("data-b"),nv=(bb!==null&&typeof SG.kaeshiToggle==="function")?' +
+          'SG.kaeshiToggle(pw==="__all"?pk.all:((pk.each||{})[pw]||""),bb):this.getAttribute("data-v");' +
+        'if(pw==="__all"){pk.all=nv;if(!pk.mode)pk.mode="same";}' +
+        'else{pk.each=pk.each||{};pk.each[pw]=nv;}' +
         'kApply(t);drawKaeshi();};' +
       'var n=SG.kaeshiMissing(tx,KT);$("sgkgo").disabled=n>0||sending;' +
       '$("sgkwarn").textContent=n>0?"🔁を選択していない施術があと"+n+"つあります":"";}' +
@@ -8470,6 +8540,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<div class="ubar"><a class="uhome" href="' + topHref + '" target="_top">← 戻る</a></div>' +
       '<div class="hhead"><span class="bmark">📝</span><span class="bname">' + head + '</span></div>' +
       '<textarea class="exbox" id="exdisp" rows="2" placeholder="ここにお客様番号を貼り付けるか、下のボタンでお客様番号を入力する"></textarea>' +
+      '<div id="exname" style="display:none"></div>' +   // ★2026-11-09 番号を入れた瞬間に顧客名（共通部品 szName_）
       '<div class="exseg" id="exseg"><span class="thumb"></span>' +
         '<button data-v="M" aria-pressed="true">M（男）</button>' +
         '<button data-v="F">F（女）</button>' +
@@ -8745,7 +8816,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function loadNewPicks(){isNewCust=true;document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="新規のお客様（番号なし）";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="新規のお客様の予約を検索しています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"new_customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
     'function goDate(){hideSteps();document.getElementById("exDate").style.display="";document.getElementById("exwho").textContent="日付を選択してください😊";calY=today.getFullYear();calM=today.getMonth();drawCal();window.scrollTo(0,0);}' +
     'function disp(){return (prefix||"")+digits;}' +
-    'function upd(){document.getElementById("exdisp").value=disp();}' +
+    'function upd(){document.getElementById("exdisp").value=disp();szName_.show(document.getElementById("exname"),digits?disp():"");}' +
     'var seg=document.getElementById("exseg"),sb=seg.querySelectorAll("button"),thumb=seg.querySelector(".thumb");' +
     'function selSeg(i){for(var j=0;j<sb.length;j++)sb[j].setAttribute("aria-pressed",j===i);thumb.style.transform="translateX("+(i*100)+"%)";prefix=sb[i].getAttribute("data-v");upd();}' +
     'for(var i=0;i<sb.length;i++){(function(k){sb[k].addEventListener("click",function(){selSeg(k);});})(i);}' +
@@ -11021,7 +11092,8 @@ var UBCSS_ =
   '.ubnone{color:#eaf6fb;font-weight:800;font-size:17px;text-align:center;margin:14px 0;}' +
   '.ubmenu{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0;}' +
   // ★2026-11-09 まるちゃん「ボタンの太さを縦に1.5倍」＝上下の余白16px→34px（高さ約72px→約108px）
-  '.ubmenu button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:34px 10px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  // ★2026-11-09 まるちゃん「ボタンの文字が小さいから大きくして」＝19px→26px
+  '.ubmenu button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:34px 10px;font:inherit;font-size:26px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   // ★2026-11-09 まるちゃん「あり　なし　の文字を目立つように」＝大きく・色付き（あり＝青、なし＝赤）
   '.ubmenu .ubem{font-size:1.35em;padding:0 2px;}' +
   '.ubmenu .ubem.ari{color:#0369a1;}' +
@@ -11392,7 +11464,7 @@ function uriageBookScript_(C) {
           if (!PK || !PK.raw('v')) { el.style.display = 'none'; return; }
           var fn = nameOf(PK.get('v'));
           if (fn) { el.className = 'ubpn'; el.textContent = '顧客名：' + fn; el.style.display = ''; }
-          else if (NAMES) { el.className = 'ubnf'; el.textContent = '該当する顧客が存在しません'; el.style.display = ''; }
+          else if (szName_.ready()) { el.className = 'ubnf'; el.textContent = '該当する顧客が存在しません'; el.style.display = ''; }
           else el.style.display = 'none'; });
       PK.set('v', cur); PK.open('v');
     }
@@ -11489,16 +11561,17 @@ function uriageBookScript_(C) {
   function p2(n) { return ('0' + n).slice(-2); }
   // ── 顧客番号→顧客名（★2026-11-09 まるちゃん「顧客番号を入れたら、自動で入った顧客名をそこに表示させよう。じゃないとわかんない」
   //   「該当する顧客がいない場合は『該当する顧客が存在しません』っていうメッセージを出そう」）──
-  //   一覧はパソコン側が作って送る（uriagebook_names.json＝帳簿でその番号を最後に使った時の書き方。帳簿に無い新しい方は名簿の名前）。
+  //   一覧はパソコン側が作って送る（customer_names.json＝共通部品 szName_ 経由・帳簿でその番号を最後に使った時の書き方。帳簿に無い新しい方は名簿の名前）。
   //   今日の売上表に同じ番号があれば、そちらを先に使う（今日書いた一番新しい書き方）。番号を入れた瞬間に探す（待たせない）。
   //   自動で入った名前はそのまま修正できる。手で入力した名前は、番号を変えても上書きしない。
-  var NAMES = null, NAMEW = [];
-  function numKey(s) { var v = String(s || '').toUpperCase().replace(/\s/g, ''), m = v.match(/^([FMD])0*(\d+)$/); return m ? m[1] + parseInt(m[2], 10) : v; }
+  //   ★探し方・一覧はズコ全体の共通部品 szName_（ほかの画面と同じ答え）。ここは今日の売上表の行を先に見るだけ足す。
+  var NAMEW = [];
+  var numKey = szName_.key;
   function nameOf(num) {
     var k = numKey(num); if (!k) return '';
     var rs = (D && D.rows) || [];
     for (var i = rs.length - 1; i >= 0; i--) if (rs[i].name && numKey(rs[i].num) === k) return rs[i].name;
-    return (NAMES && NAMES[k]) || '';
+    return szName_.of(k);
   }
   function nameWatch(kit, inId, msgId) {
     var W = { auto: '', full: '' };
@@ -11513,7 +11586,7 @@ function uriageBookScript_(C) {
       } else {
         if (W.auto && inp.value === W.auto) inp.value = '';
         W.auto = W.full = '';
-        msg.style.display = NAMES ? '' : 'none';     // 一覧がまだ届いていない間は「存在しません」と言わない
+        msg.style.display = szName_.ready() ? '' : 'none';     // 一覧がまだ無い間は「存在しません」と言わない
       }
     };
     W.reset = function () { $(inId).value = ''; W.auto = W.full = ''; $(msgId).style.display = 'none'; };
@@ -11522,9 +11595,7 @@ function uriageBookScript_(C) {
     NAMEW.push(W);
     return W;
   }
-  jsonp({ action: 'data', name: 'uriagebook_names.json' }, function (p) {
-    if (p && p.names) { NAMES = p.names; for (var i = 0; i < NAMEW.length; i++) NAMEW[i].run(); }
-  });
+  szName_.load(function () { for (var i = 0; i < NAMEW.length; i++) NAMEW[i].run(); });
 
   var AK = padKit($('ubAdd'), {
     h: { kind: 'int', max: 2, lim: 23, next: 'm' }, m: { kind: 'int', max: 2, lim: 59 }, no: { kind: 'int', max: 3, auto: true },
@@ -12243,6 +12314,7 @@ function hanbaiScript_(C) {
     $('hbNumBox').innerHTML = (NPRE || NDIG) ? esc(NPRE + NDIG) : '<span class="ph">お客様番号を入力してください😊</span>';
     var sg = $('hbNumSeg').querySelectorAll('button');
     for (var j = 0; j < sg.length; j++) sg[j].className = (sg[j].getAttribute('data-v') === NPRE) ? 'on' : '';
+    szName_.show($('hbNumName'), (NPRE && NDIG) ? NPRE + NDIG : '');   // ★2026-11-09 顧客名／該当する顧客が存在しません
   }
   $('hbNumBtn').addEventListener('click', function () { S.kind = 'number'; NPRE = ''; NDIG = ''; numDraw(); show('hbNum'); });
   // ★2026-10-20 まるちゃん「蝦皮で販売ボタンを付けたい。次は名前入力画面」＝お客様番号は無く、お名前だけ入れる。
@@ -12634,6 +12706,7 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       '<div id="hbNum" style="display:none">' + inBack + head('🔢', 'お客様番号検索') + sum +
         '<div class="exbox psbox" id="hbNumBox"></div>' +
+        '<div id="hbNumName" style="display:none"></div>' +   // ★2026-11-09 番号を入れた瞬間に顧客名（共通部品 szName_）
         '<div class="hbseg" id="hbNumSeg"><button type="button" data-v="F">F（女性）</button><button type="button" data-v="M">M（男性）</button></div>' +
         pad('hbNumPad') +
         '<button type="button" class="exgo" id="hbNumGo">検索</button>' +
@@ -14639,7 +14712,8 @@ var KAESHICSS_ =
   '.ktcard h4{margin:0 0 6px;font-size:17px;font-weight:800;color:#334155;}' +
   '.ktcard .q{font-size:20px;font-weight:900;color:#0f172a;margin:4px 0 10px;}' +
   '.ktcard .pl{font-size:16px;font-weight:900;margin:12px 0 6px;}' +
-  '.ktopts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}' +
+  '.ktopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}' +
+  '.kthint{font-size:14px;font-weight:700;color:#475569;line-height:1.5;margin:0 0 10px;}' +
   '.ktopts button{background:#f1f5f9;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 2px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
   '.ktopts button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.ktmode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 12px;}' +

@@ -945,6 +945,7 @@ function staffColor_(fruit) {
 
 
 
+
 function szSentenceBreak_(t) {
   return t.replace(/([。？！])(?=[^\s。？！」』）)\]\uD800-\uDFFF\u2600-\u27BF\uFE0F])/g, '$1\n');
 }

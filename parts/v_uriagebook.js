@@ -83,7 +83,7 @@ var UBCSS_ =
   '.ubdel{display:block;margin:8px 0 0 auto;background:none;border:0;color:#b91c1c;font:inherit;font-size:14px;font-weight:800;cursor:pointer;text-decoration:underline;}' +
   '.ubnone{color:#eaf6fb;font-weight:800;font-size:17px;text-align:center;margin:14px 0;}' +
   '.ubmenu{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0;}' +
-  '.ubmenu button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:34px 10px;font:inherit;font-size:19px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.ubmenu button{background:#fff;color:#0f172a;border:0;border-radius:14px;padding:34px 10px;font:inherit;font-size:26px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.ubmenu .ubem{font-size:1.35em;padding:0 2px;}' +
   '.ubmenu .ubem.ari{color:#0369a1;}' +
   '.ubmenu .ubem.nashi{color:#dc2626;}' +
@@ -364,7 +364,7 @@ function uriageBookScript_(C) {
           if (!PK || !PK.raw('v')) { el.style.display = 'none'; return; }
           var fn = nameOf(PK.get('v'));
           if (fn) { el.className = 'ubpn'; el.textContent = '顧客名：' + fn; el.style.display = ''; }
-          else if (NAMES) { el.className = 'ubnf'; el.textContent = '該当する顧客が存在しません'; el.style.display = ''; }
+          else if (szName_.ready()) { el.className = 'ubnf'; el.textContent = '該当する顧客が存在しません'; el.style.display = ''; }
           else el.style.display = 'none'; });
       PK.set('v', cur); PK.open('v');
     }
@@ -452,13 +452,13 @@ function uriageBookScript_(C) {
   });
 
   function p2(n) { return ('0' + n).slice(-2); }
-  var NAMES = null, NAMEW = [];
-  function numKey(s) { var v = String(s || '').toUpperCase().replace(/\s/g, ''), m = v.match(/^([FMD])0*(\d+)$/); return m ? m[1] + parseInt(m[2], 10) : v; }
+  var NAMEW = [];
+  var numKey = szName_.key;
   function nameOf(num) {
     var k = numKey(num); if (!k) return '';
     var rs = (D && D.rows) || [];
     for (var i = rs.length - 1; i >= 0; i--) if (rs[i].name && numKey(rs[i].num) === k) return rs[i].name;
-    return (NAMES && NAMES[k]) || '';
+    return szName_.of(k);
   }
   function nameWatch(kit, inId, msgId) {
     var W = { auto: '', full: '' };
@@ -473,7 +473,7 @@ function uriageBookScript_(C) {
       } else {
         if (W.auto && inp.value === W.auto) inp.value = '';
         W.auto = W.full = '';
-        msg.style.display = NAMES ? '' : 'none';     
+        msg.style.display = szName_.ready() ? '' : 'none';     
       }
     };
     W.reset = function () { $(inId).value = ''; W.auto = W.full = ''; $(msgId).style.display = 'none'; };
@@ -481,9 +481,7 @@ function uriageBookScript_(C) {
     NAMEW.push(W);
     return W;
   }
-  jsonp({ action: 'data', name: 'uriagebook_names.json' }, function (p) {
-    if (p && p.names) { NAMES = p.names; for (var i = 0; i < NAMEW.length; i++) NAMEW[i].run(); }
-  });
+  szName_.load(function () { for (var i = 0; i < NAMEW.length; i++) NAMEW[i].run(); });
 
   var AK = padKit($('ubAdd'), {
     h: { kind: 'int', max: 2, lim: 23, next: 'm' }, m: { kind: 'int', max: 2, lim: 59 }, no: { kind: 'int', max: 3, auto: true },

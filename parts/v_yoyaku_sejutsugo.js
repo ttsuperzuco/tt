@@ -29,6 +29,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '<div class="sg" id="sgRNum" style="display:none">' +
       '<div class="sgwho">お客様番号から検索</div>' +
       '<div class="exbox" id="sgrdisp"></div>' +
+      '<div id="sgrname" style="display:none"></div>' +    
       '<div class="ktmode" id="sgrseg"><button type="button" data-v="M" class="on">M（男）</button>' +
         '<button type="button" data-v="F">F（女）</button></div>' +
       '<div class="expad" id="sgrpad">' + EXPADHTML_ + '</div>' +
@@ -553,7 +554,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(RLOADED){if(step===2)drawList();return;}RLOADED=true;cb();});}' +
     'function repBack(){if(step===8){if(RFROM===22){goRNum();}else{goList();}return true;}' +
       'if(step===2||step===22){goRChoose();return true;}if(step===21){goPick();return true;}return false;}' +
-    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入力してください😊";}' +
+    'function rUpd(){$("sgrdisp").textContent=RDIG?(RPRE+RDIG):"番号を入力してください😊";szName_.show($("sgrname"),RDIG?(RPRE+RDIG):"");}' +
     'function repBind(){' +
       '$("sgrtoday").onclick=function(){if(!tapOK())return;repLoadToday(goList);};' +
       '$("sgrnum").onclick=function(){if(!tapOK())return;goRNum();};' +
@@ -624,6 +625,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var KPICK={};' +
     'function kPick(t){var key=t.head||"";if(!KPICK[key])KPICK[key]={};return KPICK[key];}' +
     'function kOpts(k,pw,cur){var h="<div class=\\"ktopts\\">";' +
+      'if(SG.KAESHI_BTNS&&typeof SG.kaeshiToggle==="function"){for(var o2=0;o2<SG.KAESHI_BTNS.length;o2++){var bk=SG.KAESHI_BTNS[o2][1];' +
+        'h+="<button type=\\"button\\" data-k=\\""+k+"\\" data-p=\\""+esc(pw)+"\\" data-b=\\""+esc(bk)+"\\" class=\\""+' +
+          '(SG.kaeshiOn(cur,bk)?"on":"")+"\\">"+esc(SG.KAESHI_BTNS[o2][0])+"</button>";}return h+"</div>";}' +
       'for(var o=0;o<SG.KAESHI_OPTS.length;o++){var w=SG.KAESHI_OPTS[o][1];' +
         'h+="<button type=\\"button\\" data-k=\\""+k+"\\" data-p=\\""+esc(pw)+"\\" data-v=\\""+esc(w)+"\\" class=\\""+' +
           '(cur===w?"on":"")+"\\">"+esc(SG.KAESHI_OPTS[o][0])+"</button>";}' +
@@ -634,7 +638,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var k=0;k<KT.length;k++){var ln=SG.kaeshiLineOf(tx,KT[k]);if(ln===null)continue;' +
         'var pk=kPick(KT[k]),ps=SG.kaeshiParts(KT[k]);' +
         'h+="<div class=\\"ktcard"+(ln?" done":"")+"\\"><div class=\\"ktlast\\">⚠️ 次が最終回です</div>"+' +
-          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめ回数は？</div>";' +
+          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめ回数は？</div>"+' +
+          '(SG.KAESHI_BTNS?"<div class=\\"kthint\\">5回と8回は両方選べます。5回・8回を選ぶと、都度（1回の値段）も一緒にお知らせに出ます。</div>":"");' +
         'if(!ps.length){h+=kOpts(k,"__all",pk.all||"");}' +
         'else{h+="<div class=\\"ktmode\\"><button type=\\"button\\" data-k=\\""+k+"\\" data-mode=\\"same\\" class=\\""+' +
             '(pk.mode==="same"?"on":"")+"\\">全部位が<br>同じおすすめ回数</button><button type=\\"button\\" data-k=\\""+k+' +
@@ -651,8 +656,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var bs=$("sgkcards").querySelectorAll(".ktopts button");' +
       'for(var j=0;j<bs.length;j++)bs[j].onclick=function(){if(sending)return;' +
         'var t=KT[parseInt(this.getAttribute("data-k"),10)],pk=kPick(t),pw=this.getAttribute("data-p");' +
-        'if(pw==="__all"){pk.all=this.getAttribute("data-v");if(!pk.mode)pk.mode="same";}' +
-        'else{pk.each=pk.each||{};pk.each[pw]=this.getAttribute("data-v");}' +
+        'var bb=this.getAttribute("data-b"),nv=(bb!==null&&typeof SG.kaeshiToggle==="function")?' +
+          'SG.kaeshiToggle(pw==="__all"?pk.all:((pk.each||{})[pw]||""),bb):this.getAttribute("data-v");' +
+        'if(pw==="__all"){pk.all=nv;if(!pk.mode)pk.mode="same";}' +
+        'else{pk.each=pk.each||{};pk.each[pw]=nv;}' +
         'kApply(t);drawKaeshi();};' +
       'var n=SG.kaeshiMissing(tx,KT);$("sgkgo").disabled=n>0||sending;' +
       '$("sgkwarn").textContent=n>0?"🔁を選択していない施術があと"+n+"つあります":"";}' +
@@ -752,7 +759,8 @@ var KAESHICSS_ =
   '.ktcard h4{margin:0 0 6px;font-size:17px;font-weight:800;color:#334155;}' +
   '.ktcard .q{font-size:20px;font-weight:900;color:#0f172a;margin:4px 0 10px;}' +
   '.ktcard .pl{font-size:16px;font-weight:900;margin:12px 0 6px;}' +
-  '.ktopts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}' +
+  '.ktopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}' +
+  '.kthint{font-size:14px;font-weight:700;color:#475569;line-height:1.5;margin:0 0 10px;}' +
   '.ktopts button{background:#f1f5f9;color:#0f172a;border:3px solid transparent;border-radius:12px;padding:12px 2px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;}' +
   '.ktopts button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.ktmode{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 12px;}' +
