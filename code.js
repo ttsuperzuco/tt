@@ -13819,6 +13819,9 @@ var INSTACSS_ =
   '.igins .row{display:flex;justify-content:space-between;padding:11px 16px;font-size:15px;}' +
   '.igins .row.top{font-weight:700;}' +
   '.igins .note{padding:16px;color:#737373;font-size:12px;}' +
+  '.igdash2 .per{display:flex;gap:8px;padding:10px 16px;}' +
+  '.igdash2 .per button{border:1px solid #dbdbdb !important;border-radius:16px;padding:6px 12px !important;font-size:13px !important;}' +
+  '.igdash2 .per button.on{background:#000 !important;color:#fff !important;border-color:#000 !important;}' +
   '.igsr{z-index:8450;}' +
   '.igsr .q{margin:8px 16px;background:#efefef;border-radius:10px;padding:9px 12px;display:flex;gap:8px;}' +
   '.igsr .q input{border:0;background:none;outline:0;font:inherit;flex:1;}' +
@@ -14114,7 +14117,7 @@ function instaScript_(C) {
       (p.threads ? '<button type="button" data-go="threads">' + IC.thS + esc(p.threads) + '</button>' : '') +
       (p.fb ? '<button type="button" data-go="fb">' + IC.fb + esc(p.fb) + '</button>' : '') +
       '<button type="button" class="add" data-soon="1">' + IC.plusS + '追加</button></div>';
-    h += '<button type="button" class="igdash" data-soon="1"><span><b>プロフェッショナルダッシュボード</b><small>新しいツールが利用できるようになりました。</small></span><i></i></button>';
+    h += '<button type="button" class="igdash" data-go="dash"><span><b>プロフェッショナルダッシュボード</b><small>新しいツールが利用できるようになりました。</small></span><i></i></button>';
     h += '<div class="igbtns"><button type="button" data-pedit="1">プロフィールを編集</button><button type="button" data-go="pshare">プロフィールをシェア</button></div>';
     h += '<div class="ighl"><button type="button" data-hlnew="1"><div class="c new">' + IC.plus + '</div><div class="t">新規</div></button>' +
       (v.hl || []).map(function (x, i) {
@@ -14495,8 +14498,9 @@ function instaScript_(C) {
     if (k === 'home') { TAB = 'posts'; drawApp(); window.scrollTo(0, 0); return; }
     if (k === 'reels') { TAB = 'reels'; drawApp(); var tb = document.querySelector('.igtabs'); if (tb) tb.scrollIntoView(); return; }
     if (k === 'search') { openSearch(); return; }
+    if (k === 'dash') { openDash(30); return; }
     if (k === 'menu') {
-      sheet([{ t: 'メッセージ', go: openDm }, { t: '検索', go: openSearch },
+      sheet([{ t: 'インサイト', go: function () { openDash(30); } }, { t: 'メッセージ', go: openDm }, { t: '検索', go: openSearch },
              { t: '最新の内容に更新', go: function () { loadWeb(CUR, true); } },
              { t: 'インスタで開く', go: function () { openUrl('https://www.instagram.com/' + (p.user || '') + '/'); } }]);
       return;
@@ -14550,6 +14554,58 @@ function instaScript_(C) {
         '<div class="igpl">' + (d.likes == null ? '' : 'いいね！' + num(d.likes) + '件') + '</div>' +
         (d.caption ? '<div class="igpcap"><b>' + esc(d.user) + '</b> ' + esc(d.caption) + '</div>' : '') +
         '<div class="igpd">' + esc(ago(d.at)) + '</div><div class="igpins"><button type="button" data-tgopen="' + esc(d.url) + '">インスタで開く</button></div></div>';
+    });
+  }
+  // ── プロフェッショナルダッシュボード＝アカウント全体の数字（2026-11-09 まるちゃん「アカウント全体の数字」）──
+  //   サーバーの insta_more.py（kind=more_dash）。期間は7・14・30日（メタの決まりで1回30日まで）。広告の分も入る。
+  var CITY = { 'Taipei': '台北市', 'Xinbei': '新北市', 'New Taipei': '新北市', 'Taoyüan': '桃園市', 'Taoyuan': '桃園市', 'Hsinchu': '新竹', 'Zhubei': '竹北',
+               'Taichung': '台中市', 'Kaohsiung': '高雄市', 'Tainan': '台南市', 'Keelung': '基隆市', 'Yilan City': '宜蘭市', 'Hualien City': '花蓮市' };
+  function openDash(days) {
+    var el = document.getElementById('igDash');
+    if (!el) {
+      el = document.createElement('div'); el.className = 'igp igins igdash2'; el.id = 'igDash'; document.body.appendChild(el);
+      el.addEventListener('click', function (e) {
+        if (e.target.closest('[data-dback]')) { el.remove(); return; }
+        var d = e.target.closest('[data-days]'); if (d) openDash(Number(d.getAttribute('data-days')));
+      });
+    }
+    days = days || 30;
+    var head = '<div class="w"><div class="igph"><button type="button" data-dback="1">‹</button><b>プロフェッショナルダッシュボード</b><span></span></div>' +
+      '<div class="per">' + [7, 14, 30].map(function (n) { return '<button type="button" data-days="' + n + '"' + (n === days ? ' class="on"' : '') + '>過去' + n + '日間</button>'; }).join('') + '</div>';
+    el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
+    ask({ kind: 'more_dash', acct: CUR, days: days }, function (err, d) {
+      if (!document.getElementById('igDash')) return;
+      if (err) { el.remove(); warn(err); return; }
+      var n = function (v) { return v == null ? '－' : num(v); };
+      var pct = function (a, all) { return all ? Math.round(a * 1000 / all) / 10 + '%' : '－'; };
+      var row = function (t, v, top) { return '<div class="row' + (top ? ' top' : '') + '"><span>' + t + '</span><span>' + v + '</span></div>'; };
+      var vb = d.views_by || {}, vAll = (vb.FOLLOWER || 0) + (vb.NON_FOLLOWER || 0);
+      var rb = d.reach_by || {}, rAll = (rb.FOLLOWER || 0) + (rb.NON_FOLLOWER || 0);
+      var h = head + '<div class="big"><b>' + n(d.views) + '</b><span>ビュー</span></div>' +
+        row('フォロワー', pct(vb.FOLLOWER || 0, vAll)) + row('フォロワー以外', pct(vb.NON_FOLLOWER || 0, vAll)) +
+        '<h3>概要</h3>' + row('リーチしたアカウント', n(d.reach), true) +
+        row('　フォロワー', pct(rb.FOLLOWER || 0, rAll)) + row('　フォロワー以外', pct(rb.NON_FOLLOWER || 0, rAll)) +
+        row('エンゲージメントのあったアカウント', n(d.accounts_engaged)) + row('合計フォロワー', n(d.followers));
+      var vt = d.views_type || {}, vtAll = 0; for (var k in vt) vtAll += vt[k];
+      h += '<h3>コンテンツタイプ別のビュー</h3>' + Object.keys(vt).sort(function (a, b) { return vt[b] - vt[a]; }).map(function (k) {
+        return row(esc(k), num(vt[k]) + '（' + pct(vt[k], vtAll) + '）');
+      }).join('');
+      h += '<h3>インタラクション</h3>' + row('インタラクション', n(d.total_interactions), true) +
+        [['保存数', d.saves], ['シェア数', d.shares], ['「いいね！」', d.likes], ['コメント', d.comments]]
+          .sort(function (a, b) { return (b[1] || 0) - (a[1] || 0); }).map(function (x) { return row(x[0], n(x[1])); }).join('');
+      var fo = d.follows || {};
+      h += '<h3>プロフィール</h3>' + row('プロフィールへのアクセス', n(d.profile_views)) + row('外部リンクのタップ数', n(d.profile_links_taps)) +
+        row('フォロー', n(fo.FOLLOWER)) + row('フォロー解除', n(fo.NON_FOLLOWER));
+      var g = d.fol_gender || {}, gAll = (g.F || 0) + (g.M || 0) + (g.U || 0);
+      h += '<h3>フォロワー</h3>' + row('女性', pct(g.F || 0, gAll)) + row('男性', pct(g.M || 0, gAll)) + row('その他・不明', pct(g.U || 0, gAll));
+      var ag = d.fol_age || {}, aAll = 0; for (var a in ag) aAll += ag[a];
+      h += '<h3>年齢層（フォロワー）</h3>' + Object.keys(ag).map(function (k) { return row(esc(k) + '歳', pct(ag[k], aAll)); }).join('');
+      var ct = d.fol_city || {}, cAll = d.followers || 0;
+      h += '<h3>主な都市（フォロワー）</h3>' + Object.keys(ct).map(function (k) {
+        var nm = String(k).split(',')[0].trim(); return row(esc(CITY[nm] || nm), pct(ct[k], cAll));
+      }).join('');
+      h += '<div class="note">※広告から見られた分も含まれます（「コンテンツタイプ別のビュー」の広告）。</div></div>';
+      el.innerHTML = h;
     });
   }
   function openIns(code) {
