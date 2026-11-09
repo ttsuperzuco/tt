@@ -505,7 +505,7 @@ function instaScript_(C) {
         '<button type="button" id="igcLocGo" style="border:0;background:#efefef;border-radius:8px;padding:7px 12px;font:inherit;font-weight:700;cursor:pointer">探す</button></div><div id="igcLocR"></div></div></div>' +
         '<div class="igcq"><div class="t">人をタグ付け</div><input id="igcTags" placeholder="ユーザーネーム（複数ある時はスペースで区切る）" style="width:100%;box-sizing:border-box;border:1px solid #dbdbdb;border-radius:8px;padding:7px 10px;font:inherit;margin:4px 0">' +
         '<div style="font-size:12px;color:#737373">写真のタグは1枚目の写真の下の方に並びます。</div></div>') +
-      '<div class="igcnote">写真に入っているAIの記録は、投稿の前に自動で取り除きます。投稿のあと、AIの札が付いていないかも自動で確認します。' +
+      '<div class="igcnote">写真に入っているAIの記録は、投稿の前に自動で取り除きます。投稿のあと、AIラベルが付いていないかも自動で確認します。' +
       (kind !== 'feed' ? '' : '<br>写真の縦横が合わない時は、インスタと同じく中央で切り取ります。') + '</div></div>';
     document.body.appendChild(c);
     var cap = document.getElementById('igcCap');
@@ -885,7 +885,7 @@ function instaScript_(C) {
       var c = document.getElementById('igCompose'); if (c) c.remove();
       var notes = [], af = (d && d.after) || {};
       if (!(d && d.after_bg)) {
-        if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIの札が付いています。りゅうさんに連絡してください🙇');
+        if (af.ai_label && af.ai_label.indexOf('あり') === 0) notes.push('AIラベルが付いています。りゅうさんに連絡してください🙇');
         if (CK !== 'story' && fields.hide_likes && !af.hidden) notes.push('「いいね！」数の非表示ができませんでした。りゅうさんに連絡してください🙇');
       }
       szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
