@@ -615,13 +615,15 @@ function instaScript_(C) {
       var h = head + '<div class="big"><b>' + n('views') + '</b><span>ビュー</span></div>' +
         row('ビュー', 'views') + row('リーチしたアカウント', 'reach') +
         '<h3>インタラクション</h3>' + row('投稿でのインタラクション', 'total_interactions', true) +
-        row('「いいね！」', 'likes') + row('コメント', 'comments') + row('保存数', 'saved') + row('シェア数', 'shares');
+        [['保存数', 'saved'], ['「いいね！」', 'likes'], ['コメント', 'comments'], ['シェア数', 'shares']]
+          .sort(function (a, b) { return (d[b[1]] || 0) - (d[a[1]] || 0); }).map(function (x) { return row(x[0], x[1]); }).join('');
       if (d.reel) {
         var w = d.ig_reels_avg_watch_time;
         h += '<h3>再生</h3><div class="row"><span>平均再生時間</span><span>' + (w == null ? '－' : (Math.round(w / 100) / 10) + '秒') + '</span></div>';
       } else {
         h += '<h3>プロフィール</h3>' + row('プロフィールのアクティビティ', 'profile_activity', true) +
-          row('プロフィールへのアクセス', 'profile_visits') + row('外部リンクのタップ数', 'link_taps') + row('フォロー数', 'follows');
+          row('プロフィールへのアクセス', 'profile_visits') + row('外部リンクのタップ数', 'link_taps') +
+          row('ビジネスの住所のタップ数', 'addr_taps') + row('フォロー数', 'follows');
       }
       h += '<div class="note">※広告から見られた分は含まれていません（インスタのアプリの数より少なくなることがあります）。</div></div>';
       el.innerHTML = h;
