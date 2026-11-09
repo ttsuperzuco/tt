@@ -555,7 +555,8 @@
     var f = finals || [];
     for (var j = 0; j < f.length; j++) {
       var w = ((f[j] && f[j].parts) || []).map(function (p) { return p && p.word; }).filter(function (x) { return x; });
-      var nm = w.length ? w.join('、') : ((f[j] && (f[j].name || f[j].head)) || '');
+      /* 部位が1つの施術は parts が空＝見出し（name＝「脇　おまとめ：次回が全5回の5回目」2026-11-09〜）の部位の所だけ使う。 */
+      var nm = w.length ? w.join('、') : String((f[j] && (f[j].name || f[j].head)) || '').split('　おまとめ：')[0].replace(/＋/g, '、');
       /* ★2026-11-09 まるちゃん「ちゃんと考えて」＝「本日」ではなく「次回の予約で」。🔁は最終回の1つ前の来店（＝今日）の担当が
          次回（最終回）のお知らせ用に決める物なので、最終回は今日ではなく次回の予約。言葉はおすすめの画面（⚠️ 次が最終回です・
          お知らせのおすすめ回数は？）とそろえ、選べる物もボタンと同じ並び（5回・8回・都度・なし）にする。 */

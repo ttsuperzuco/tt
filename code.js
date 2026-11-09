@@ -7472,7 +7472,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var pk=kPick(KT[k]),ps=SG.kaeshiParts(KT[k]);' +
         'h+="<div class=\\"ktcard"+(ln?" done":"")+"\\"><div class=\\"ktlast\\">⚠️ 次が最終回です</div>"+' +
           '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめ回数は？</div>"+' +
-          '(SG.KAESHI_BTNS?"<div class=\\"kthint\\">5回と8回は両方選べます。5回・8回を選ぶと、都度（1回の値段）も一緒にお知らせに出ます。</div>":"");' +
+          '(SG.KAESHI_BTNS?"<div class=\\"kthint\\">複数選択できます。</div>":"");' +
         'if(!ps.length){h+=kOpts(k,"__all",pk.all||"");}' +
         'else{h+="<div class=\\"ktmode\\"><button type=\\"button\\" data-k=\\""+k+"\\" data-mode=\\"same\\" class=\\""+' +
             '(pk.mode==="same"?"on":"")+"\\">全部位が<br>同じおすすめ回数</button><button type=\\"button\\" data-k=\\""+k+' +
@@ -7480,7 +7480,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'if(pk.mode==="same"){h+=kOpts(k,"__all",pk.all||"");}' +
           'else if(pk.mode==="diff"){var ea=pk.each||{};for(var q=0;q<ps.length;q++){' +
             'h+="<div class=\\"pl\\">"+esc(ps[q].word)+"</div>"+kOpts(k,ps[q].word,ea[ps[q].word]||"");}}}' +
-        'h+="<div class=\\"ktline\\">"+(ln?"入っている行： "+esc(ln):"")+"</div></div>";}' +
+        'h+="</div>";}' +
       '$("sgkcards").innerHTML=h;$("sgkpre").textContent=tx;' +
       'var mb=$("sgkcards").querySelectorAll(".ktmode button");' +
       'for(var m=0;m<mb.length;m++)mb[m].onclick=function(){if(sending)return;' +
