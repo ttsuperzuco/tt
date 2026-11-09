@@ -730,7 +730,7 @@ function instaScript_(C) {
     document.body.appendChild(e);
     var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
     nm.value = p.name || ''; bio.value = p.bio || '';
-    var cnt = function () { var n = Array.from(bio.value).length, o = document.getElementById('igpfCnt'); o.textContent = n + ' / ' + BIO_MAX; o.className = 'c' + (n > BIO_MAX ? ' over' : ''); };
+    var cnt = function () { var n = bio.value.length, o = document.getElementById('igpfCnt'); o.textContent = n + ' / ' + BIO_MAX; o.className = 'c' + (n > BIO_MAX ? ' over' : ''); };
     bio.addEventListener('input', cnt); cnt();
     document.getElementById('igpfFile').addEventListener('change', function () {
       var f = (this.files || [])[0]; this.value = '';
@@ -759,7 +759,7 @@ function instaScript_(C) {
         f.name = nv; ch.push('名前');
       }
       if (bv !== String(p.bio || '').replace(/\r/g, '').trim()) {
-        if (Array.from(bv).length > BIO_MAX) { warn('自己紹介は' + BIO_MAX + '文字までです😊'); return; }
+        if (bv.length > BIO_MAX) { warn('自己紹介は' + BIO_MAX + '文字までです（絵文字は2文字に数えます）😊'); return; }
         f.bio = bv; ch.push('自己紹介');
       }
       if (PIC) { f.media = [{ b64: PIC }]; ch.push('写真'); }

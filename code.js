@@ -6678,14 +6678,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 13枚目・14枚目＝本日、顔／頭皮のプロセルをやりましたか？（2026-11-01 まるちゃん決定）。今日の予約メモにある日だけ、
        パリジェンヌの次に出す。押すとすぐ次へ。YES＝☆次回の文にプロセルのアフターケアの一文を入れ、紙を付ける。 */
     '<div class="sg" id="sgPF" style="display:none">' +
-      '<div class="sgwho">本日、顔のプロセルをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span>YES（顔のプロセルをやった）</button>' +
-      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span>NO（顔のプロセルをやっていない）</button>' +
+      '<div class="sgwho">本日、<span class="sgem">顔の</span>プロセルをやりましたか？</div>' +
+      '<button type="button" class="sgrbig sgpf" data-k="yes"><span class="sgrbi">✨</span>YES（<span class="sgemr">顔の</span>プロセルをやった）</button>' +
+      '<button type="button" class="sgrbig sgpf" data-k="no"><span class="sgrbi">🙅</span>NO（<span class="sgemr">顔の</span>プロセルをやっていない）</button>' +
     '</div>' +
     '<div class="sg" id="sgPH" style="display:none">' +
-      '<div class="sgwho">本日、頭皮のプロセルをやりましたか？</div>' +
-      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span>YES（頭皮のプロセルをやった）</button>' +
-      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（頭皮のプロセルをやっていない）</button>' +
+      '<div class="sgwho">本日、<span class="sgem">頭皮の</span>プロセルをやりましたか？</div>' +
+      '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span>YES（<span class="sgemr">頭皮の</span>プロセルをやった）</button>' +
+      '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span>NO（<span class="sgemr">頭皮の</span>プロセルをやっていない）</button>' +
     '</div>' +
     /* 15枚目＝確認の一覧（2026-11-09 まるちゃん決定・受付の端末だけ・今は開発版だけ）。予約メモの確定のあとに出す。
        お客様が退店された後に、担当した施術者へ聞く物を全部並べる。「全て確認しました」で各確認の画面へ。文は共通の判断（SG.checkItems）。 */
@@ -6730,7 +6730,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
        次が最終回の施術がある時だけ出す。全部の施術で選ぶまで登録ボタンは押せない。
        どの施術が最終回かは事務所パソコンが決める（共通\kaeshi_target.py）。🔁を入れる場所は共通の判断（SG.kaeshi〜）。 */
     '<div class="sg" id="sgKaeshi" style="display:none">' +
-      '<div class="sgwho">お知らせのおすすめ</div>' +
+      '<div class="sgwho">お知らせのおすすめ回数</div>' +
       '<div class="sgmnote" id="sgrinfo" style="display:none"></div>' +
       '<div id="sgkcards"></div>' +
       '<div class="sgtimebox">' +
@@ -7144,7 +7144,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function rcp(){return DEVMODE&&!REP&&!LN&&typeof SG.asksAfterMemo==="function"&&SG.asksAfterMemo(WHO);}' +
     'function goCheck(){step=15;show();' +
       'var it=SG.checkItems(seqv(),(ELJ&&ELJ.parts)||[],KT),NB="①②③④⑤⑥⑦⑧⑨",h="";' +
-      'for(var i=0;i<it.length;i++)h+="<div class=\\"sgckrow\\"><span class=\\"sgckn\\">"+(NB.charAt(i)||"・")+"</span><span>"+esc(it[i])+"</span></div>";' +
+      'for(var i=0;i<it.length;i++)h+="<div class=\\"sgckrow\\"><span class=\\"sgckn\\">"+(NB.charAt(i)||"・")+"</span><span>"+esc(it[i]).replace(/(顔の|頭皮の)/g,"<span class=\\"sgemr\\">$1</span>")+"</span></div>";' +
       '$("sgcklist").innerHTML=h;window.scrollTo(0,0);}' +
     /* 確認が全部済んだ＝最終回の施術があればお知らせのおすすめ、無ければ登録。 */
     'function rcpFinish(){if(KT.length){step=8;show();drawKaeshi();window.scrollTo(0,0);return;}sendMemo();}' +
@@ -7404,11 +7404,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var k=0;k<KT.length;k++){var ln=SG.kaeshiLineOf(tx,KT[k]);if(ln===null)continue;' +
         'var pk=kPick(KT[k]),ps=SG.kaeshiParts(KT[k]);' +
         'h+="<div class=\\"ktcard"+(ln?" done":"")+"\\"><div class=\\"ktlast\\">⚠️ 次が最終回です</div>"+' +
-          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめは？</div>";' +
+          '"<h4>"+esc(KT[k].name||KT[k].head)+"</h4><div class=\\"q\\">お知らせのおすすめ回数は？</div>";' +
         'if(!ps.length){h+=kOpts(k,"__all",pk.all||"");}' +
         'else{h+="<div class=\\"ktmode\\"><button type=\\"button\\" data-k=\\""+k+"\\" data-mode=\\"same\\" class=\\""+' +
-            '(pk.mode==="same"?"on":"")+"\\">全部位が<br>同じおすすめ</button><button type=\\"button\\" data-k=\\""+k+' +
-            '"\\" data-mode=\\"diff\\" class=\\""+(pk.mode==="diff"?"on":"")+"\\">部位によって<br>おすすめが違う</button></div>";' +
+            '(pk.mode==="same"?"on":"")+"\\">全部位が<br>同じおすすめ回数</button><button type=\\"button\\" data-k=\\""+k+' +
+            '"\\" data-mode=\\"diff\\" class=\\""+(pk.mode==="diff"?"on":"")+"\\">部位によって<br>おすすめ回数が違う</button></div>";' +
           'if(pk.mode==="same"){h+=kOpts(k,"__all",pk.all||"");}' +
           'else if(pk.mode==="diff"){var ea=pk.each||{};for(var q=0;q<ps.length;q++){' +
             'h+="<div class=\\"pl\\">"+esc(ps[q].word)+"</div>"+kOpts(k,ps[q].word,ea[ps[q].word]||"");}}}' +
@@ -7520,6 +7520,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '#sglgo:disabled{opacity:.45;}' +
     /* ★確認の一覧（15枚目）：1つずつ白いカードで並べる（大きい選ぶボタンと同じ大きさの字・押せる物ではない）。 */
     '.sgcklist{margin:12px 0 18px;}' +
+    '.sgem{color:#ffd400;}.sgemr{color:#dc2626;}' +
     '.sgckrow{display:flex;gap:12px;align-items:flex-start;margin:12px 0;padding:18px;border-radius:18px;background:#fff;color:#0f172a;font-size:22px;font-weight:900;line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
     '.sgckn{flex:none;font-size:26px;color:#2C7A99;}' +
     '#sgrdisp{text-align:center;font-size:34px;font-weight:900;min-height:1.35em;}' : '') +
@@ -14322,7 +14323,8 @@ function instaScript_(C) {
     document.body.appendChild(e);
     var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
     nm.value = p.name || ''; bio.value = p.bio || '';
-    var cnt = function () { var n = Array.from(bio.value).length, o = document.getElementById('igpfCnt'); o.textContent = n + ' / ' + BIO_MAX; o.className = 'c' + (n > BIO_MAX ? ' over' : ''); };
+    // ★インスタは絵文字を2文字に数える（2026-11-09 実物：日本人IGの自己紹介をインスタは155、1文字ずつ数えると148）＝同じ数え方にする
+    var cnt = function () { var n = bio.value.length, o = document.getElementById('igpfCnt'); o.textContent = n + ' / ' + BIO_MAX; o.className = 'c' + (n > BIO_MAX ? ' over' : ''); };
     bio.addEventListener('input', cnt); cnt();
     document.getElementById('igpfFile').addEventListener('change', function () {
       var f = (this.files || [])[0]; this.value = '';
@@ -14352,7 +14354,7 @@ function instaScript_(C) {
         f.name = nv; ch.push('名前');
       }
       if (bv !== String(p.bio || '').replace(/\r/g, '').trim()) {
-        if (Array.from(bv).length > BIO_MAX) { warn('自己紹介は' + BIO_MAX + '文字までです😊'); return; }
+        if (bv.length > BIO_MAX) { warn('自己紹介は' + BIO_MAX + '文字までです（絵文字は2文字に数えます）😊'); return; }
         f.bio = bv; ch.push('自己紹介');
       }
       if (PIC) { f.media = [{ b64: PIC }]; ch.push('写真'); }
