@@ -14154,7 +14154,7 @@ function instaScript_(C) {
     h += '<div class="igtop"><button type="button" data-create="1">' + IC.plus + '</button>' +
       '<div class="u"><span>' + esc(p.user) + '</span>' + IC.down + '<i></i></div>' +
       '<div class="r"><button type="button" data-go="threads">' + IC.threads + '</button><button type="button" data-go="menu">' + IC.menu + '</button></div></div>';
-    h += '<div class="igprof"><div class="igav"><img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></div>' +
+    h += '<div class="igprof"><div class="igav" data-go="stories" style="cursor:pointer"><img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></div>' +
       '<div class="igr"><div class="nm">' + esc(p.name || p.user) + '</div>' +
       '<div class="igcnt"><div><b>' + num(p.posts) + '</b>投稿</div><div><b>' + num(p.followers) + '</b>フォロワー</div><div><b>' + num(p.following) + '</b>フォロー中</div></div></div></div>';
     h += '<div class="igbio">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '</div>';
@@ -14573,9 +14573,11 @@ function instaScript_(C) {
     if (k === 'reels') { TAB = 'reels'; drawApp(); var tb = document.querySelector('.igtabs'); if (tb) tb.scrollIntoView(); return; }
     if (k === 'search') { openSearch(); return; }
     if (k === 'banners') { openBanners(); return; }
+    if (k === 'stories') { openStories(); return; }
     if (k === 'dash') { openDash(30); return; }
     if (k === 'menu') {
       sheet([{ t: 'インサイト', go: function () { openDash(30); } }, { t: 'メッセージ', go: openDm }, { t: '検索', go: openSearch },
+             { t: 'ストーリーズ（見た人）', go: openStories },
              { t: 'アーカイブ', go: openArch },
              { t: '最新の内容に更新', go: function () { loadWeb(CUR, true); } },
              { t: 'インスタで開く', go: function () { openUrl('https://www.instagram.com/' + (p.user || '') + '/'); } }]);
@@ -14591,6 +14593,58 @@ function instaScript_(C) {
   function pinCount() {
     var v = DATA && DATA.views && DATA.views[CUR];
     return ((v && v.posts) || []).filter(function (x) { return x.pin; }).length;
+  }
+  // ── ストーリーズと見た人（2026-11-09 まるちゃん「すといーりーずはぜったいやる」）──
+  //   プロフィールの写真（または≡→ストーリーズ）で開く。48時間以内のストーリーズを1枚ずつ見せ、下の「見た人」で一覧を出す。
+  //   見た人の一覧はインスタの決まりで出してから48時間だけ残る。受付係（kind=stories）がお店の専用ブラウザで読む（読むだけ）。
+  function openStories() {
+    var acct = CUR, v0 = DATA && DATA.views && DATA.views[acct], p = (v0 && v0.prof) || {};
+    var st = { items: null, i: 0, err: '' };
+    var el = document.createElement('div'); el.className = 'ighv'; el.id = 'igSt';
+    document.body.appendChild(el);
+    var draw = function () {
+      var its = st.items || [], it = its[st.i] || {};
+      var n = it.count == null ? (it.viewers || []).length : it.count;
+      el.innerHTML = '<div class="bars">' + (its.length ? its.map(function (x, k) { return '<i' + (k <= st.i ? ' class="on"' : '') + '></i>'; }).join('') : '<i></i>') + '</div>' +
+        '<div class="hd"><img src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><b>' + esc(p.user || '') +
+        (it.at ? '<span style="font-weight:400;opacity:.8;margin-left:8px">' + esc(ago(new Date(it.at * 1000).toISOString())) + (it.live === false ? '・表示は終了' : '') + '</span>' : '') +
+        '</b><span></span><button type="button" data-sx="1">✕</button></div>' +
+        '<div class="bd">' + (st.err ? '<div class="msg">' + esc(st.err) + '</div>' :
+          !st.items ? '<div class="msg">読み込み中です…（1分ほどかかります）</div>' :
+          !its.length ? '<div class="msg">48時間以内のストーリーズはありません。<br>見た人は、ストーリーズを出してから48時間まで確認できます。</div>' :
+          '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '') +
+          '<span class="lt" data-sprev="1"></span><span class="rt" data-snext="1"></span>') + '</div>' +
+        (its.length ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
+          '👁 見た人 ' + num(n || 0) + '人</button>' : '');
+    };
+    var viewers = function (it) {
+      var lst = it.viewers || [], n = it.count == null ? lst.length : it.count;
+      var pg = document.createElement('div'); pg.className = 'igp igsr'; pg.id = 'igStV';
+      pg.innerHTML = '<div class="w"><div class="igph"><button type="button" data-svback="1">‹</button><b>見た人 ' + num(n || 0) + '人</b><span></span></div>' +
+        (it.err ? '<div class="hint">' + esc(it.err) + '</div>' : '') +
+        (lst.length ? lst.map(function (u) {
+          return '<div style="display:flex;align-items:center;gap:12px;padding:8px 16px">' +
+            (u.pic ? '<img src="' + esc(u.pic) + '" referrerpolicy="no-referrer" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none">' : '<span style="width:44px;height:44px;border-radius:50%;background:#efefef;flex:none"></span>') +
+            '<span style="flex:1;min-width:0"><b style="display:block">' + esc(u.u) + '</b><span style="color:#737373;font-size:13px">' + esc(u.name || '') + '</span></span>' +
+            (u.like ? '<span style="color:#ff3040;font-size:18px">♥</span>' : '') + '</div>';
+        }).join('') : '<div class="igempty"><b>まだいません</b>' + (it.expired ? '見た人の一覧は、出してから48時間で消えます。' : 'まだ誰も見ていません。') + '</div>') +
+        (lst.length && n > lst.length ? '<div class="hint">ほかに' + num(n - lst.length) + '人が見ています（インスタが名前を出さない分です）。</div>' : '') + '</div>';
+      document.body.appendChild(pg);
+      pg.addEventListener('click', function (e) { if (e.target.closest('[data-svback]')) pg.remove(); });
+    };
+    draw();
+    ask({ kind: 'stories', acct: acct }, function (err, d) {
+      if (!document.getElementById('igSt')) return;
+      if (err) { st.err = err; draw(); return; }
+      st.items = (d && d.stories) || []; draw();
+    });
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-sx]')) { el.remove(); return; }
+      if (t.closest('[data-sv]')) { var it = (st.items || [])[st.i]; if (it) viewers(it); return; }
+      if (t.closest('[data-sprev]')) { if (st.i > 0) { st.i--; draw(); } return; }
+      if (t.closest('[data-snext]')) { if (st.items && st.i < st.items.length - 1) { st.i++; draw(); } else el.remove(); return; }
+    });
   }
   // ── プロフィールの「＋追加」＝バナー（2026-11-09 まるちゃん「３ついかつくる」）──
   //   本物のアプリと同じ「バナー」の画面：上＝プロフィールに表示中（外せる）／下＝追加できる（スレッズ・フェイスブック）。
