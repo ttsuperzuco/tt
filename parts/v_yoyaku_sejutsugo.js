@@ -216,7 +216,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     'function back(){if(REP&&repBack())return;' +
       'if(rcp()&&step===8){var sv8=seqv();if(sv8.length){goStep(sv8[sv8.length-1]);}else{goCheck();}return;}' +
-      'if(rcp()&&step===15){step=7;show();growMemo();window.scrollTo(0,0);return;}' +
+      'if(rcp()&&step===15){if(RB2){RB2=null;goPick();return;}step=7;show();growMemo();window.scrollTo(0,0);return;}' +
       'if(rcp()&&step===3){goList();return;}' +
       'if(rcp()&&step>=9&&step<=14){if(!prevOf(step))goCheck();return;}' +
       'if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
@@ -416,7 +416,48 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var it=SG.checkItems(seqv(),(ELJ&&ELJ.parts)||[],KT),NB="①②③④⑤⑥⑦⑧⑨",h="";' +
       'for(var i=0;i<it.length;i++)h+="<div class=\\"sgckrow\\"><span class=\\"sgckn\\">"+(NB.charAt(i)||"・")+"</span><span>"+esc(it[i]).replace(/(顔の|頭皮の)/g,"<span class=\\"sgemr\\">$1</span>")+"</span></div>";' +
       '$("sgcklist").innerHTML=h;window.scrollTo(0,0);}' +
-    'function rcpFinish(){if(KT.length){step=8;show();drawKaeshi();window.scrollTo(0,0);return;}sendMemo();}' +
+    'function rcpFinish(){if(KT.length){step=8;show();$("sgkgo").textContent=RB2?"この内容で確定":"この内容で予約を登録";drawKaeshi();window.scrollTo(0,0);return;}if(RB2){rcpAnswers();}else{sendMemo();}}' +
+    'function rcpHoldDone(u){szOvShow_(szDoneHtml_("次回の予約を登録しました"+' +
+      '"<div style=\\"font-size:20px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">お客様が退店されたら、担当した施術者に確認してください😊</div>","確認に進む",u||""),"#16a34a");' +
+      'var cb=document.getElementById("szDoneBack");if(cb)cb.addEventListener("click",function(){szOvHide_();goCheck();});}' +
+    'function rcpKaeshi(){if(sending||!RB2)return;sending=true;$("sgkgo").disabled=true;' +
+      'if(RB2.dummy){RB2.note=$("sgmtext").value||"";rcpAnswers();return;}' +
+      'if(!RB2.cal||!RB2.event){memoFail("予約は登録しましたが、🔁を書き込めませんでした。りゅうさんに伝えてください🙇");return;}' +
+      'szOvShow_(szBusyHtml_("予約メモに🔁を書き込み中です"),"#2C7A99");rcpKSubmit($("sgmtext").value||"",RB2.note||"",0);}' +
+    'function rcpKSubmit(note,expect,tries){var n=0;' +
+      'jsonp({action:"submit",key:KEY,op:"change_reservation",who:idn.who,role:idn.role,device:idn.device,' +
+        'fields:JSON.stringify({cal:RB2.cal,event:RB2.event,note:note,expect_note:expect})},' +
+      'function(r){if(!r||!r.ok||!r.id){memoFail();return;}' +
+        'var poll=function(){n++;if(n>350){memoFail();return;}' +
+          'jsonp({action:"status",key:KEY,id:r.id},function(x){' +
+            'if(!x||!x.ok){memoFail();return;}' +
+            'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(poll,600);return;}' +
+            'if(x.status!=="done"){memoFail("エラーが発生しました。りゅうさんに連絡しました。");return;}' +
+            'var d=null;try{d=JSON.parse(x.result||"{}");}catch(e){}' +
+            'if(d&&d.ok){RB2.note=note;rcpAnswers();return;}' +
+            'if(d&&d.conflict&&tries<1){var live=String(d.note||""),t2=live;' +
+              'for(var i=0;i<KT.length;i++){var ln=SG.kaeshiSetLine(KT[i],kPick(KT[i]),kMark());if(ln)t2=SG.kaeshiPutLine(t2,KT[i],ln);}' +
+              '$("sgmtext").value=t2;rcpKSubmit(t2,live,tries+1);return;}' +
+            'memoFail("予約メモが他の端末で修正されていました。もう一度押してください🙇");});};' +
+        'setTimeout(poll,1200);});}' +
+    'function rcpDone(la,dummy){sending=false;$("sgmgo").disabled=false;$("sgkgo").disabled=false;RB2=null;' +
+      'szOvShow_(szDoneHtml_("確認の内容を送りました"+(la?"<div style=\\"font-size:22px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">サンキューLINEを"+la+"に自動送信します</div>":"")+' +
+        '(dummy?"<div style=\\"font-size:16px;line-height:1.6;margin-top:10px;color:#ecfdf5;\\">（ダミーの試し：タイムツリーには書いていません・LINEも送りません）</div>":""),"TOP画面に戻る"),"#16a34a");' +
+      'var bb=document.getElementById("szDoneBack");if(bb)bb.addEventListener("click",function(){szOvHide_();var ta=document.querySelector("#sgtopbar a");if(ta){ta.click();}else{goPick();}});}' +
+    'function rcpAnswers(){if(!RB2)return;sending=true;' +
+      'if(RB2.dummy){rcpDone("",1);return;}' +
+      'szOvShow_(szBusyHtml_("確認の内容を送っています"),"#2C7A99");' +
+      'var a=sgAns(),f={event:RB2.event,title:RB2.title,date:RB2.date,start:RB2.start,memo:RB2.note||"",' +
+        'today_title:(CUST&&CUST.title)||"",ta:1,elight:a.el?1:0,el_parts:a.el_parts,first_dat:a.first?1:0,after_kinds:a.after.join(",")},n=0;' +
+      'jsonp({action:"submit",key:KEY,op:"sejutsugo_answers",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify(f)},' +
+      'function(r){if(!r||!r.ok||!r.id){memoFail("予約は登録しましたが、確認の内容を送れませんでした。もう一度押してください🙇");return;}' +
+        'var poll=function(){n++;if(n>350){memoFail();return;}' +
+          'jsonp({action:"status",key:KEY,id:r.id},function(x){' +
+            'if(!x||!x.ok){memoFail();return;}' +
+            'if(x.status==="pending"||x.status==="running"||x.status==="queued"||x.status===""){setTimeout(poll,600);return;}' +
+            'var d=null;try{d=JSON.parse(x.result||"{}");}catch(e){}' +
+            'rcpDone((d&&d.send_at)||"",0);});};' +
+        'setTimeout(poll,1000);});}' +
     'function prevOf(n){var i=SEQ.indexOf(n);for(var j=i-1;j>=0;j--){if(seqShown(SEQ[j])){goStep(SEQ[j]);return true;}}return false;}' +
     'function afterElight(){nextOf(9);}' +
     'function goLash(){step=12;show();' +
@@ -469,6 +510,8 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var f={date:PICKDATE,start:m2hm(TS),end:m2hm(TE),room:ROOM,title:ti,memo:$("sgmtext").value||""};' +
       'if(!REP&&!LN){f.ta=1;f.today_title=(CUST&&CUST.title)||"";' +
         'var a=sgAns();f.elight=a.el?1:0;f.el_parts=a.el_parts;f.first_dat=a.first?1:0;f.after_kinds=a.after.join(",");}' +
+      'if(rcp()&&HOLD){f.hold_line=1;delete f.ta;delete f.elight;delete f.el_parts;delete f.first_dat;delete f.after_kinds;}' +
+      'if(CUST&&CUST.dummy&&rcp()&&HOLD){HOLD=0;RB2={cal:"",event:"DUMMY",note:f.memo,title:ti,date:PICKDATE,start:m2hm(TS),dummy:1};rcpHoldDone("");return;}' +
       'if(CUST&&CUST.dummy){var dn=new Date(Date.now()+15*60000),dla=dn.getHours()+":"+("0"+dn.getMinutes()).slice(-2);' +
         'szOvShow_(szDoneHtml_("次回の予約を登録しました"+"<div style=\\"font-size:22px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">サンキューLINEを"+dla+"に自動送信します</div>"+' +
           '"<div style=\\"font-size:16px;line-height:1.7;margin-top:12px;color:#ecfdf5;text-align:left;\\">【選んだ答え】<br>"+dummyAnswers()+"</div>"+' +
@@ -494,6 +537,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'if(r.status!=="done"){memoFail(esc(r.result)||"エラーが発生しました。りゅうさんに伝えてください🙇");return;}' +
         'var u=(String(r.result||"").match(/https?:\\/\\/\\S+/)||[""])[0];' +
         'var la=(String(r.result||"").match(/LINE送信:(\\d{1,2}:\\d{2})/)||["",""])[1];' +
+        'if(rcp()&&HOLD){var rn=(String(r.result||"").match(/予約番号:([^\\/\\s]+)\\/(\\S+)/)||[]);' +
+          'RB2={cal:rn[1]||"",event:rn[2]||"",note:$("sgmtext").value||"",title:($("sgmtitle").value||"").trim(),date:PICKDATE,start:m2hm(TS)};' +
+          'HOLD=0;sending=false;$("sgmgo").disabled=false;$("sgkgo").disabled=false;rcpHoldDone(u);return;}' +
         'sending=false;$("sgmgo").disabled=false;$("sgkgo").disabled=false;' +
         'szOvShow_(szDoneHtml_("次回の予約を登録しました"+(la?"<div style=\\"font-size:22px;font-weight:700;line-height:1.6;margin-top:12px;color:#ecfdf5;\\">サンキューLINEを"+la+"に自動送信します</div>":""),"TOP画面に戻る",u),"#16a34a");' +
         'var bb=document.getElementById("szDoneBack");' +
@@ -619,10 +665,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'var old=(typeof SG.kaeshiLineOf!=="function"||typeof SG.kaeshiSetLine!=="function");KT=[];' +
       'if(!old){var tx=$("sgmtext").value||"";' +
         'for(var i=0;i<(list||[]).length;i++){if(SG.kaeshiLineOf(tx,list[i])!==null)KT.push(list[i]);}}' +
-      'if(rcp()){if(KT.length||seqv().length){goCheck();}else{sendMemo();}return;}' +
+      'if(rcp()){HOLD=(KT.length||seqv().length)?1:0;sendMemo();return;}' +
       'if(old||!KT.length){sendMemo();return;}' +
       'step=8;show();drawKaeshi();window.scrollTo(0,0);}' +
     'var KPICK={};' +
+    'var RB2=null,HOLD=0;' +
     'function kPick(t){var key=t.head||"";if(!KPICK[key])KPICK[key]={};return KPICK[key];}' +
     'function kOpts(k,pw,cur){var h="<div class=\\"ktopts\\">";' +
       'if(SG.KAESHI_BTNS&&typeof SG.kaeshiToggle==="function"){for(var o2=0;o2<SG.KAESHI_BTNS.length;o2++){var bk=SG.KAESHI_BTNS[o2][1];' +
@@ -723,7 +770,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgckgo").onclick=function(){if(!tapOK())return;var sv=seqv();if(sv.length){goStep(sv[0]);}else{rcpFinish();}};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
-        'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else{sendMemo();}};' +
+        'if(SG.kaeshiMissing($("sgmtext").value||"",KT)>0)return;if(REP){repSend();}else if(rcp()&&RB2){rcpKaeshi();}else{sendMemo();}};' +
       'if(REP)repBind();' +
       '$("sgmtext").addEventListener("input",function(){MEMOTOUCHED=true;growMemo();});})();' +
     'window.addEventListener("resize",function(){if(step===2){fitNames();gapAfterNow();}' +
