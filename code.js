@@ -14359,6 +14359,7 @@ function instaScript_(C) {
   //   投稿は受付係（op=insta・kind=post）→ メタ公式の仕組みで出す。写真はAIの記録を抜いてから上げ、
   //   上げたあと「いいねの数を非表示（選んだ時）」「AIの札が付いていないか」を受付係が専用ブラウザで行う（決まり 4-0／4-0b）。
   // ★2026-11-09 権限の表（受付係が開く時に返す {アカウント: [機能]}）。画面は入口で止めるだけ＝本当の守りは受付係。
+  // ★2026-11-09 まるちゃん決定の6つ＝view（お客様が見る画面）／post（投稿・ストーリーズ）／highlight／profile／reply（お客様に返事）／insights（分析）
   var PERM = {}, ISDEV = false, NOPERM = 'この操作の権限がありません。りゅうさんに連絡してください🙇';
   function can(f) { var p = PERM && PERM[CUR]; return !p || p.indexOf(f) >= 0; }
   var CK = 'feed', CMEDIA = [], CHIDE = null, CLOC = null, CMUS = null, CSTK = [], MAXI = 10, VIDEO_MB = 18, TOTAL_MB = 18, MAXCAP = 2200;
@@ -14903,7 +14904,7 @@ function instaScript_(C) {
   function iso(sec) { return sec ? new Date(sec * 1000).toISOString() : ''; }
   function ini(u) { var c = String(u || '?').replace(/^[._]+/, '').charAt(0); return esc((c || '?').toUpperCase()); }
   function openDm() {
-    if (!can('dm')) { warn(NOPERM); return; }
+    if (!can('reply')) { warn(NOPERM); return; }
     var el = document.createElement('div'); el.className = 'igp igdm'; el.id = 'igDm';
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
@@ -15055,6 +15056,7 @@ function instaScript_(C) {
     });
   }
   function togglePost(k) {
+    if (!can('reply')) { warn(NOPERM); return; }
     var cur = k === 'like' ? !!POST.liked : !!POST.saved, code = POST.code;
     var busy = k === 'like' ? (cur ? '「いいね！」を取り消しています' : '「いいね！」しています') : (cur ? '保存を取り消しています' : '保存しています');
     simple({ kind: 'more_' + k, acct: CUR, code: code, want: cur ? 0 : 1 }, busy, function (err, d) {
@@ -15150,7 +15152,7 @@ function instaScript_(C) {
   }
   // ── 親しい友達の名簿（2026-11-09 まるちゃん「まずこれらやって」）＝疑似スマホのアプリで読む・入れる・外す（相手に知らせは行かない）──
   function openCF() {
-    if (!can('profile')) { warn(NOPERM); return; }
+    if (!can('post')) { warn(NOPERM); return; }
     var e = document.createElement('div'); e.className = 'igc'; e.id = 'igCF'; e.style.zIndex = 8500;
     var users = null;
     var draw = function () {
@@ -15221,7 +15223,7 @@ function instaScript_(C) {
           (it.v && it.vid ? '<video src="' + esc(it.vid) + '" poster="' + esc(it.big || it.th) + '" autoplay playsinline controls style="max-width:100%;max-height:100%"></video>' :
             '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '')) +
           '<span class="lt" data-sprev="1"></span><span class="rt" data-snext="1"></span>') + '</div>' +
-        (its.length ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
+        (its.length && !st.nov ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
           '👁 見た人 ' + num(n || 0) + '人</button>' : '');
     };
     var viewers = function (it) {
@@ -15243,7 +15245,7 @@ function instaScript_(C) {
     ask({ kind: 'stories', acct: acct }, function (err, d) {
       if (!document.getElementById('igSt')) return;
       if (err) { st.err = err; draw(); return; }
-      st.items = (d && d.stories) || []; draw();
+      st.items = (d && d.stories) || []; st.nov = !!(d && d.nov); draw();
     });
     el.addEventListener('click', function (e) {
       var t = e.target;
@@ -15287,6 +15289,7 @@ function instaScript_(C) {
       '<span style="flex:1;min-width:0">' + right + '</span></div>';
   }
   function openNotifs() {
+    if (!can('reply')) { warn(NOPERM); return; }
     var acct = CUR;
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igNt';
     var head = '<div class="w"><div class="igph"><button type="button" data-ntback="1">‹</button><b>お知らせ</b><span></span></div>';
@@ -15403,6 +15406,7 @@ function instaScript_(C) {
   }
   // ズコでアーカイブした投稿の一覧（疑似スマホのある機械がグーグルの置き場に置く instaphone_archived_<acct>.json）
   function openArch() {
+    if (!can('post')) { warn(NOPERM); return; }
     var acct = CUR;
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igArch';
     var head = '<div class="w"><div class="igph"><button type="button" data-arback="1">‹</button><b>アーカイブ</b><span></span></div>';
@@ -15506,6 +15510,7 @@ function instaScript_(C) {
   var CITY = { 'Taipei': '台北市', 'Xinbei': '新北市', 'New Taipei': '新北市', 'Taoyüan': '桃園市', 'Taoyuan': '桃園市', 'Hsinchu': '新竹', 'Zhubei': '竹北',
                'Taichung': '台中市', 'Kaohsiung': '高雄市', 'Tainan': '台南市', 'Keelung': '基隆市', 'Yilan City': '宜蘭市', 'Hualien City': '花蓮市' };
   function openDash(days) {
+    if (!can('insights')) { warn(NOPERM); return; }
     var el = document.getElementById('igDash');
     if (!el) {
       el = document.createElement('div'); el.className = 'igp igins igdash2'; el.id = 'igDash'; document.body.appendChild(el);
@@ -15554,6 +15559,7 @@ function instaScript_(C) {
     });
   }
   function openIns(code) {
+    if (!can('insights')) { warn(NOPERM); return; }
     var el = document.createElement('div'); el.className = 'igp igins'; el.id = 'igIns';
     var head = '<div class="w"><div class="igph"><button type="button" data-iback="1">‹</button><b>インサイト</b><span></span></div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
@@ -15723,7 +15729,7 @@ function instaScript_(C) {
     }
   }
   function openEdit() {
-    if (!can('manage')) { warn(NOPERM); return; }
+    if (!can('post')) { warn(NOPERM); return; }
     var e = document.createElement('div'); e.className = 'igpe igc'; e.id = 'igEdit';
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igeX">キャンセル</button><b>情報を編集</b><button type="button" class="go" id="igeGo">完了</button></div>' +
       '<textarea id="igeTx"></textarea><div class="igccnt" id="igeCnt"></div></div>';
@@ -15962,6 +15968,7 @@ function instaScript_(C) {
   }
   // ハイライトの作成・編集（本物のアプリと同じく：カバー・ハイライト名・「選択済み」「ストーリーズ」）
   function openHlEdit(h, items) {
+    if (!can('highlight')) { warn(NOPERM); return; }
     var isNew = !h, acct = CUR;
     var SEL = (items || []).slice(), COVER = '', NAME = isNew ? '' : String(h.t || ''), TABH = isNew ? 'all' : 'sel';
     var keys0 = SEL.map(function (s) { return s.key; }).join(','), name0 = NAME;
