@@ -14856,9 +14856,9 @@ function instaScript_(C) {
     el.addEventListener('click', function (e) {
       if (e.target.closest('[data-arback]')) { el.remove(); return; }
       if (e.target.closest('[data-arall]')) {
-        phone({ kind: 'phone_archive_list', acct: acct }, 'インスタのアーカイブを読み込んでいます（1件30秒ほどかかります）', function (err, d) {
+        phone({ kind: 'phone_archive_list', acct: acct }, 'インスタのアーカイブを読み込んでいます（1件30秒ほどかかります）', function (err) {
           if (err) { warn(err); return; }
-          drawList((d && d.items) || []);
+          readList();      // 一覧は大きいので答えには入れず、置き場に置いてある（2026-11-09）
         });
         return;
       }
@@ -14887,11 +14887,14 @@ function instaScript_(C) {
           '<span style="color:#737373;font-size:12px">投稿 ' + d(x.at) + (x.when ? '・アーカイブ ' + d(x.when) : '') + '</span></span></button>';
       }).join('') : '<div class="igempty"><b>まだありません</b>上のボタンで、インスタのアーカイブを読み込めます。</div>') + '</div>';
     };
-    jsonp({ action: 'data', key: C.key, name: 'instaphone_archived_' + acct + '.json' }, function (y) {
-      var v = null;
-      try { v = (y && typeof y.result === 'string') ? JSON.parse(y.result) : (y && y.items ? y : (y && y.result)); } catch (e2) {}
-      drawList((v && v.items) || []);
-    });
+    var readList = function () {
+      jsonp({ action: 'data', key: C.key, name: 'instaphone_archived_' + acct + '.json' }, function (y) {
+        var v = null;
+        try { v = (y && typeof y.result === 'string') ? JSON.parse(y.result) : (y && y.items ? y : (y && y.result)); } catch (e2) {}
+        drawList((v && v.items) || []);
+      });
+    };
+    readList();
   }
   function openSearch() {
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igSr';
