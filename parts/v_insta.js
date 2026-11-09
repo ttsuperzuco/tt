@@ -1272,14 +1272,10 @@ function instaScript_(C) {
         drawGrid(); return;
       }
       if (t.id === 'igheCv') {
-        var was = isNew ? {} : (keys0 ? keys0.split(',') : []).reduce(function (o, k) { o[k] = 1; return o; }, {});
-        var cands = SEL.filter(function (s) { return !was[s.key]; });
         if (!SEL.length) { warn('先にストーリーズを選択してください😊'); return; }
-        if (!cands.length) { warn('カバーは、新しく追加するストーリーから選択してください😊\n（インスタの決まりで、もともと入っているストーリーは、ここではカバーにできません）'); return; }
         var sh = document.createElement('div'); sh.className = 'igsheet';
         sh.innerHTML = '<div class="in ighe" style="max-height:80vh;overflow-y:auto"><div class="bar"></div><b>カバーにする写真を選択してください😊</b>' +
-          (isNew ? '' : '<div class="em" style="padding:8px 16px">新しく追加したストーリーだけが並びます。</div>') +
-          '<div class="gr">' + cands.map(function (s) { return cell(s, 'cv'); }).join('') + '</div></div>';
+          '<div class="gr">' + SEL.map(function (s) { return cell(s, 'cv'); }).join('') + '</div></div>';
         sh.addEventListener('click', function (x) {
           var c = x.target.closest && x.target.closest('[data-cv]');
           if (c) { COVER = c.getAttribute('data-cv'); sh.remove(); drawGrid(); return; }
