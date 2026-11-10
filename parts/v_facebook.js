@@ -220,6 +220,10 @@ var FBCSS_ =
   '.fbch .bb{max-width:100%;border-radius:20px;font-size:16px;}' +
   '.fbchb{position:sticky;bottom:0;background:#fff;display:flex;align-items:center;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));}' +
   '.fbchb > button,.fbchb > label{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:none;border:0;color:#0866ff;cursor:pointer;}' +
+  '.fbsch{padding:6px 16px 16px;}.fbsch label{display:flex;align-items:center;gap:8px;font-weight:600;}.fbsch input[type=checkbox]{width:20px;height:20px;}' +
+  '.fbsch input[type=datetime-local]{display:block;margin-top:8px;width:100%;box-sizing:border-box;border:1px solid #ced0d4;border-radius:8px;padding:10px;font:inherit;font-size:16px;}' +
+  '.fbpf{padding:8px 16px;}.fbpf label{display:block;font-weight:600;margin:12px 0 4px;}' +
+  '.fbpf textarea,.fbpf input{display:block;width:100%;box-sizing:border-box;border:1px solid #ced0d4;border-radius:8px;padding:10px;font:inherit;font-size:16px;}.fbpf textarea{min-height:140px;resize:vertical;}' +
   '.fbalbs{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px;}' +
   '.fbalbs button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:none;border:0;padding:0;text-align:left;cursor:pointer;font:inherit;color:#080809;}' +
   '.fbalbs .th{display:block;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#e4e6eb;}.fbalbs .th img{width:100%;height:100%;object-fit:cover;}' +
@@ -722,10 +726,11 @@ function fbScript_(C) {
   function compose(edit) {
     if (!can('post')) { warn(NOPERM); return; }
     var v = DATA.views[CUR], pf = (v && v.prof) || {};
-    var media = [];
+    var media = [], SCH = '';
     var d = document.createElement('div'); d.className = 'fbov';
     var draw = function () {
       var txt = (document.getElementById('fbCpT') || {}).value;
+      var sd = document.getElementById('fbCpD'), sc = document.getElementById('fbCpS'); if (sc) SCH = sc.checked ? ((sd && sd.value) || SCH || ' ') : '';
       if (txt == null) txt = edit ? (edit.msg || '') : '';
       d.innerHTML = '<div class="in fbcp"><div class="fbtop"><button type="button" data-x="1">' + IC.back + '</button><div class="t">' + (edit ? '投稿を編集' : '投稿を作成') + '</div>' +
         '<button type="button" class="go" data-go="1">' + (edit ? '保存' : '投稿') + '</button></div>' +
@@ -738,7 +743,9 @@ function fbScript_(C) {
           }).join('') + '</div>' +
           '<label class="add"><input type="file" id="fbCpF" accept="image/*,video/mp4,video/quicktime" multiple style="display:none">' +
           '<span class="ic">🖼️</span>写真・動画</label>' +
-          '<div class="note">写真は10枚まで・動画は1本（写真と一緒には投稿できません）。写真のAIの記録は自動で削除してから投稿します。</div>') +
+          '<div class="note">写真は10枚まで・動画は1本（写真と一緒には投稿できません）。写真のAIの記録は自動で削除してから投稿します。</div>' +
+          '<div class="fbsch"><label><input type="checkbox" id="fbCpS"' + (SCH ? ' checked' : '') + '> 日時を指定して予約する</label>' +
+          '<input type="datetime-local" id="fbCpD" value="' + esc(SCH || '') + '"' + (SCH ? '' : ' style="display:none"') + '></div>') +
         '</div>';
     };
     draw();
@@ -760,18 +767,24 @@ function fbScript_(C) {
           });
           return;
         }
-        confirmGo(an + 'のFacebookに投稿しますか？😊', function () {
-          var f = { kind: 'post', acct: CUR, msg: msg, media: media.map(function (m) { return { b64: m.b64 }; }) };
+        var sOn = document.getElementById('fbCpS') && document.getElementById('fbCpS').checked, sVal = (document.getElementById('fbCpD') || {}).value || '';
+        var sAt = sOn ? Math.floor(new Date(sVal).getTime() / 1000) : 0;
+        if (sOn && !sAt) { warn('予約する日時を選択してください😊'); return; }
+        if (sOn && (sAt < Date.now() / 1000 + 600 || sAt > Date.now() / 1000 + 75 * 86400)) { warn('予約できるのは10分後から75日後までです😊'); return; }
+        var sTx = sOn ? (new Date(sAt * 1000).getMonth() + 1) + '月' + new Date(sAt * 1000).getDate() + '日 ' + ('0' + new Date(sAt * 1000).getHours()).slice(-2) + ':' + ('0' + new Date(sAt * 1000).getMinutes()).slice(-2) : '';
+        confirmGo(an + 'のFacebookに' + (sOn ? sTx + 'の予約で' : '') + '投稿しますか？😊', function () {
+          var f = { kind: 'post', acct: CUR, msg: msg, schedule_at: sAt, media: media.map(function (m) { return { b64: m.b64 }; }) };
           if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('Facebookに投稿しています', false), '#2C7A99');
           (media.length ? askBig : ask)(f, function (err) {
             if (typeof szOvHide_ === 'function') szOvHide_();
             if (err) { warn(err); return; }
-            d.remove(); doneShow('投稿が完了しました', afterWrite);
+            d.remove(); doneShow(sAt ? '予約投稿が完了しました' : '投稿が完了しました', afterWrite);
           });
         });
       }
     });
     d.addEventListener('change', function (e) {
+      if (e.target.id === 'fbCpS') { var dd = document.getElementById('fbCpD'); if (dd) { dd.style.display = e.target.checked ? '' : 'none'; if (e.target.checked && !dd.value) { var t1 = new Date(Date.now() + 3600 * 1000); t1.setMinutes(0, 0, 0); dd.value = new Date(t1.getTime() - t1.getTimezoneOffset() * 60000).toISOString().slice(0, 16); } } return; }
       if (e.target.id !== 'fbCpF') return;
       var fs = Array.prototype.slice.call(e.target.files || []);
       var left = fs.length; if (!left) return;
@@ -1009,9 +1022,85 @@ function fbScript_(C) {
     });
   }
 
+  function openProf() {
+    if (!can('profile')) { warn(NOPERM); return; }
+    var d = document.createElement('div'); d.className = 'fbov';
+    var put = function (body) {
+      d.innerHTML = '<div class="in fbcp"><div class="fbtop"><button type="button" data-x="1">' + IC.back + '</button><div class="t">ページ情報を編集</div><button type="button" class="go" data-psave="1">保存</button></div>' + body + '</div>';
+    };
+    put('<div class="fbcm"><div class="none">読み込み中です…</div></div>');
+    var P = null;
+    d.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-x]')) { d.remove(); return; }
+      if (t.closest('[data-psave]') && P) {
+        var f = { kind: 'prof_save', acct: CUR, about: $('fbPfA').value, website: $('fbPfW').value, phone: $('fbPfP').value };
+        if (f.about === P.about && f.website === P.website && f.phone === P.phone) { warn('変更はありません😊'); return; }
+        confirmGo('ページの情報をこの内容で保存しますか？😊', function () {
+          simple(f, 'ページの情報を保存しています', function (err) {
+            if (err) { warn(err); return; }
+            d.remove(); doneShow('ページの情報の保存が完了しました', function () { loadWeb(CUR, true); });
+          });
+        });
+      }
+    });
+    document.body.appendChild(d);
+    ask({ kind: 'prof_get', acct: CUR }, function (err, r) {
+      if (err) { put('<div class="fbcm"><div class="none">' + esc(err) + '</div></div>'); return; }
+      P = r;
+      put('<div class="fbpf"><label>自己紹介（255文字まで）</label><textarea id="fbPfA" maxlength="255">' + esc(r.about) + '</textarea>' +
+        '<label>ウェブサイト</label><input id="fbPfW" value="' + esc(r.website) + '" placeholder="https://…">' +
+        '<label>電話</label><input id="fbPfP" value="' + esc(r.phone) + '" placeholder="+886 …"></div>' +
+        '<div class="note">プロフィール写真・カバー写真・名前はFacebookのアプリから変更してください😊</div>');
+    });
+  }
+  function openSched() {
+    if (!can('post')) { warn(NOPERM); return; }
+    var v = DATA.views[CUR], pf = (v && v.prof) || {};
+    var d = document.createElement('div'); d.className = 'fbov';
+    var put = function (body) {
+      d.innerHTML = '<div class="in"><div class="fbtop"><button type="button" data-x="1">' + IC.back + '</button><div class="t">予約投稿</div><span></span></div>' + body + '</div>';
+    };
+    var load = function () {
+      put('<div class="fbcm"><div class="none">読み込み中です…</div></div>');
+      ask({ kind: 'sched_list', acct: CUR }, function (err, r) {
+        if (err) { put('<div class="fbcm"><div class="none">' + esc(err) + '</div></div>'); return; }
+        var L = (r && r.posts) || [];
+        put(L.length ? L.map(function (p) {
+          var dt = new Date(p.at * 1000);
+          return '<div class="fbpost"><div class="fbph">' + img(pf.pic) + '<div class="who"><div class="n"><b>' + esc(pf.name) + '</b></div>' +
+            '<div class="d">予約：' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日 ' + ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2) + '</div></div>' +
+            '<button type="button" class="dots" data-sdel="' + esc(p.id) + '">' + IC.dots + '</button></div>' +
+            (p.msg ? '<div class="fbtx">' + esc(p.msg) + '</div>' : '') +
+            (p.pics.length ? '<div class="fbmedia n1"><button type="button" data-pic="' + esc(p.pics[0]) + '">' + img(p.pics[0]) + '</button></div>' : '') + '<div style="height:10px"></div></div>';
+        }).join('') : '<div class="fbempty">予約中の投稿はありません</div>');
+      });
+    };
+    d.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-x]')) { d.remove(); return; }
+      var pc = t.closest('[data-pic]'); if (pc) { showPic(pc.getAttribute('data-pic')); return; }
+      var sd = t.closest('[data-sdel]');
+      if (sd) {
+        var id = sd.getAttribute('data-sdel');
+        sheet([{ t: '予約を取り消す（削除）', red: true, go: function () {
+          confirmGo('この予約投稿を削除しますか？😊\n（公開されません）', function () {
+            simple({ kind: 'delete', acct: CUR, post: id }, '予約投稿を削除しています', function (err) {
+              if (err) { warn(err); return; }
+              doneShow('予約投稿の削除が完了しました', load);
+            });
+          });
+        } }]);
+      }
+    });
+    document.body.appendChild(d); load();
+  }
+
   function pageMenu() {
     var v = DATA.views[CUR], pf = (v && v.prof) || {};
     var items = [];
+    if (can('profile')) items.push({ t: 'ページ情報を編集', go: openProf });
+    if (can('post')) items.push({ t: '予約投稿', go: openSched });
     if (can('insights')) items.push({ t: 'インサイト', go: pageInsights });
     if (can('reply')) items.push({ t: 'メッセージ', go: openInbox });
     if (DATA.dev) items.push({ t: '権限（スタッフごと）', go: openPerm });
