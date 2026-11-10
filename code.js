@@ -2290,9 +2290,10 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     if (!placed[TILE_DEFS_[ok].id]) orderedDefs.push(TILE_DEFS_[ok]);
   }
   // ★2026-11-10 まるちゃん「ボタンを長押しして場所を入れ替えたい」＝そのスマホだけの並び（全員共通の並びは変えない）。
-  //   最初は開発版だけ（新しい機能のいつもの決まり）。ほかの人にも出す時は、この1行を変えるだけ。
-  var canSort = !!dev;
-  var defIdx = {};   // 全員共通の並びでの順番（「元の並びに戻す」で使う）
+  //   最初は開発版だけだった。★2026-11-10 まるちゃん「トマトさんやら、みかんさんやら、オリーブさんやら、
+  //   他の全スタッフにも反映して」＝全員のホーム（スタッフ版・TOMATOさん版・開発版）で使える。
+  var canSort = true;
+  var defIdx = {};   // 全員共通の並びでの順番（「初期の並びに戻す」で使う）
   for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
   var mine = canSort ? homeMyOrder_() : null;
   if (mine) {   // 自分の並びに有る物を先に、無い物（あとから増えたボタン等）は共通の並びのまま後ろへ
