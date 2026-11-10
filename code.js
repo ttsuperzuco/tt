@@ -14918,6 +14918,7 @@ var FBCSS_ =
   '.fbibt button i{font-style:normal;font-size:13px;background:#f0f2f5;border-radius:10px;padding:1px 7px;margin-left:6px;}' +
   '.fbin .a{position:relative;flex:0 0 56px;height:56px;}.fbin .a em{position:absolute;right:-2px;bottom:-2px;line-height:0;}' +
   '.fbin .b b{font-weight:400;}.fbin .s{display:flex;gap:6px;}.fbin .s .sx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.fbin .s .tm{flex:0 0 auto;}' +
+  '.fbin .b .spm{font-style:normal;font-size:12px;font-weight:600;color:#b45309;background:#fef3c7;border-radius:8px;padding:1px 6px;margin-left:6px;}' +
   '.fbin .un .b b,.fbin .un .s .sx{font-weight:700;color:#080809;}.fbin i{width:8px;height:8px;background:#e41e3f;flex:0 0 8px;}' +
   // ── 会話（本物：戻る・写真・名前・︙／相手は左の灰色・こちらは右の青・下にカメラ・写真・「Aa」・送信）──
   '.fbchh{position:sticky;top:0;z-index:5;background:#fff;display:flex;align-items:center;gap:8px;padding:8px 8px;border-bottom:1px solid #e4e6eb;}' +
@@ -14929,7 +14930,14 @@ var FBCSS_ =
   '.fbch .mb{display:flex;flex-direction:column;align-items:flex-start;max-width:78%;}.fbch .me .mb{align-items:flex-end;}' +
   '.fbch .bb{max-width:100%;border-radius:20px;font-size:16px;}' +
   '.fbchb{position:sticky;bottom:0;background:#fff;display:flex;align-items:center;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));}' +
-  '.fbchb > button{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:none;border:0;color:#0866ff;cursor:pointer;}';
+  '.fbchb > button,.fbchb > label{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:none;border:0;color:#0866ff;cursor:pointer;}' +
+  '.fbalbs{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px;}' +
+  '.fbalbs button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:none;border:0;padding:0;text-align:left;cursor:pointer;font:inherit;color:#080809;}' +
+  '.fbalbs .th{display:block;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#e4e6eb;}.fbalbs .th img{width:100%;height:100%;object-fit:cover;}' +
+  '.fbalbs b{font-weight:600;}.fbalbs span{color:#65686c;font-size:13px;}' +
+  '.fbsr{position:sticky;top:0;z-index:5;background:#fff;display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #e4e6eb;}' +
+  '.fbsr > button{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;color:#080809;}' +
+  '.fbsr .pill{flex:1;background:#f0f2f5;border-radius:20px;padding:0 14px;}.fbsr input{width:100%;border:0;background:none;outline:0;font:inherit;font-size:16px;padding:9px 0;}';
 
 function renderFacebookPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">📘</span><span class="bname">Facebook</span></div>';
@@ -15158,7 +15166,7 @@ function fbScript_(C) {
     if (v.nokey) { A.innerHTML = '<div class="fbempty">このページは準備中です😊</div>'; return; }
     var pf = v.prof || {};
     var topIcons = '<button type="button" data-soon="1">' + IC.back + '</button><span class="sp"></span>' +
-      '<button type="button" data-soon="1">' + IC.search + '</button><button type="button" data-pgmenu="1">' + IC.dotsC + '</button>' +
+      '<button type="button" data-search="1">' + IC.search + '</button><button type="button" data-pgmenu="1">' + IC.dotsC + '</button>' +
       '<button type="button" data-share="' + esc(pf.link || '') + '">' + IC.share + '</button>';
     var cats = (pf.cats || []).slice(0, 1);
     var line = [];
@@ -15187,7 +15195,7 @@ function fbScript_(C) {
         (can('post') ? '<button type="button" class="fbnew" data-compose="1">' + img(pf.pic) + '<span>その気持ち、シェアしよう</span><i>' + IC.photo + '</i></button>' : '') + '</div>';
       h += posts.length ? posts.map(function (p) { return postCard(p, pf, false); }).join('') : '<div class="fbempty">まだ投稿はありません</div>';
     } else if (TAB === 'photos') {
-      h += '<div class="fbsec"><div class="fbchips"><button type="button" data-soon="1">プロフィール写真</button><button type="button" data-soon="1">カバー写真</button><button type="button" data-soon="1">すべてのアルバム</button></div>' +
+      h += '<div class="fbsec"><div class="fbchips"><button type="button" data-albk="profile">プロフィール写真</button><button type="button" data-albk="cover">カバー写真</button><button type="button" data-albk="all">すべてのアルバム</button></div>' +
         (photos.length ? '<div class="fbphotos big">' + photos.map(function (x) {
           return '<button type="button" data-pic="' + esc(x.th) + '">' + img(x.th) + '</button>';
         }).join('') + '</div>' : '<div class="fbempty">写真はまだありません</div>') + '</div>';
@@ -15224,6 +15232,8 @@ function fbScript_(C) {
     if (t.closest('[data-inbox]')) { openInbox(); return; }
     if (t.closest('[data-pgmenu]')) { pageMenu(); return; }
     if (t.closest('[data-compose]')) { compose(null); return; }
+    var ak = t.closest('[data-albk]'); if (ak) { openAlbums(ak.getAttribute('data-albk')); return; }
+    if (t.closest('[data-search]')) { openSearch(); return; }
     if (t.closest('[data-soon]')) { warn(SOON); return; }
     var po = t.closest('[data-post]'); if (po) openPost(po.getAttribute('data-post'));
   });
@@ -15255,7 +15265,7 @@ function fbScript_(C) {
             '<div class="ft"><span>' + esc(when(c.at)) + '</span><span data-clike="' + esc(c.id) + '"' + (LIKED[c.id] ? ' class="on"' : '') + '>いいね！' + (c.lk ? ' ' + num(c.lk) : '') + '</span>' +
             '<span data-crep="' + esc(c.id) + '">返信する</span><span data-cmenu="' + esc(c.id) + '">…</span></div></div></div>';
         }).join(''));
-      d.innerHTML = '<div class="in"><div class="fbtop fbpt"><button type="button" data-close="1">' + IC.close + '</button><div class="t">' + esc(pf.name) + '</div><button type="button" data-soon="1">' + IC.search + '</button></div>' +
+      d.innerHTML = '<div class="in"><div class="fbtop fbpt"><button type="button" data-close="1">' + IC.close + '</button><div class="t">' + esc(pf.name) + '</div><button type="button" data-search="1">' + IC.search + '</button></div>' +
         postCard(p, pf, true) + '<div class="fbcm">' + body + '</div>' +
         (can('reply') ? '<div class="fbcb">' + (REP ? '<div class="rto">' + esc(REP.who) + 'さんに返信<span data-repx="1">✕</span></div>' : '') +
           '<div class="emo">' + ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'].map(function (x) { return '<button type="button" data-emo="' + x + '">' + x + '</button>'; }).join('') + '</div>' +
@@ -15273,6 +15283,7 @@ function fbScript_(C) {
       var pm = t.closest('[data-pmenu]'); if (pm) { postMenu(pm.getAttribute('data-pmenu')); return; }
       if (t.closest('[data-cfocus]')) { var ta = document.getElementById('fbCmT'); if (ta) ta.focus(); else warn(NOPERM); return; }
       if (t.closest('[data-repx]')) { REP = null; draw(); return; }
+      if (t.closest('[data-search]')) { openSearch(); return; }
       var em = t.closest('[data-emo]'); if (em) { var ta3 = document.getElementById('fbCmT'); if (ta3) { ta3.value += em.getAttribute('data-emo'); ta3.focus(); } return; }
       var cr = t.closest('[data-crep]');
       if (cr) { if (!can('reply')) { warn(NOPERM); return; } var c0 = cOf(cr.getAttribute('data-crep')); REP = { id: c0.parent || c0.id, who: c0.page ? pf.name : (c0.who || 'Facebookユーザー') }; draw(); var ta2 = document.getElementById('fbCmT'); if (ta2) ta2.focus(); return; }
@@ -15586,22 +15597,27 @@ function fbScript_(C) {
       var un = (L || []).filter(function (c) { return c.unread; }).length;
       d.innerHTML = '<div class="in"><div class="fbibh"><button type="button" data-x="1">' + IC.back + '</button><b>受信箱</b><span class="sp"></span>' +
         '<button type="button" data-soon="1">' + IC.search + '</button><button type="button" data-soon="1">' + IC.dots + '</button></div>' +
-        '<div class="fbibt"><button type="button" class="on">メッセージ' + (un ? '<i>' + un + '</i>' : '') + '</button><button type="button" data-soon="1">コメント</button></div>' +
+        '<div class="fbibt"><button type="button" data-ibt="m"' + (IBT === 'm' ? ' class="on"' : '') + '>メッセージ' + (un ? '<i>' + un + '</i>' : '') + '</button><button type="button" data-ibt="c"' + (IBT === 'c' ? ' class="on"' : '') + '>コメント</button></div>' +
+        (IBT === 'c' ? '<div id="fbIbC"></div>' :
         (err ? '<div class="fbcm"><div class="none">' + esc(err) + '</div></div>' : L == null ? '<div class="fbcm"><div class="none">読み込み中です…</div></div>' :
           !L.length ? '<div class="fbcm"><div class="none">メッセージはまだありません</div></div>' :
           '<div class="fbin">' + L.map(function (c) {
             return '<button type="button" data-cid="' + esc(c.cid) + '"' + (c.unread ? ' class="un"' : '') + '><span class="a">' + esc((c.name || '?').slice(0, 1)) + '<em>' + IC.msgrB + '</em></span>' +
-              '<span class="b"><b>' + esc(c.name) + '</b><span class="s"><span class="sx">' + (c.me ? 'あなた: ' : '') + esc(c.snip) + '</span><span class="tm">' + esc(ago2(c.at)) + '</span></span></span>' + (c.unread ? '<i></i>' : '') + '</button>';
-          }).join('') + '</div>') + '</div>';
+              '<span class="b"><b>' + esc(c.name) + (c.spam ? '<em class="spm">🚫 スパムかも</em>' : '') + '</b><span class="s"><span class="sx">' + (c.me ? 'あなた: ' : '') + esc(c.snip) + '</span><span class="tm">' + esc(ago2(c.at)) + '</span></span></span>' + (c.unread ? '<i></i>' : '') + '</button>';
+          }).join('') + '</div>')) + '</div>';
+      if (IBT === 'c') inboxComments(document.getElementById('fbIbC'));
     };
+    var IBT = 'm', LL = null, LE = null;
     draw(null);
     d.addEventListener('click', function (e) {
       if (e.target.closest('[data-x]')) { d.remove(); return; }
+      var tb = e.target.closest('[data-ibt]'); if (tb) { IBT = tb.getAttribute('data-ibt'); draw(LL, LE); return; }
+      var cp = e.target.closest('[data-cpost]'); if (cp) { openPost(cp.getAttribute('data-cpost')); return; }
       if (e.target.closest('[data-soon]')) { warn(SOON); return; }
       var b = e.target.closest('[data-cid]'); if (b) openThread(b.getAttribute('data-cid'));
     });
     document.body.appendChild(d);
-    ask({ kind: 'dm_list', acct: CUR }, function (err, r) { draw(err ? null : (r.convs || []), err); });
+    ask({ kind: 'dm_list', acct: CUR }, function (err, r) { LL = err ? null : (r.convs || []); LE = err; draw(LL, LE); });
   }
   function openThread(cid) {
     var d = document.createElement('div'); d.className = 'fbov fbchat';
@@ -15618,7 +15634,7 @@ function fbScript_(C) {
               (m.img || []).map(function (u) { return '<button type="button" data-pic="' + esc(u) + '">' + img(u) + '</button>'; }).join('') +
               (last ? '<div class="tm">' + esc(when(m.at)) + '</div>' : '') + '</div></div>';
           }).join('')) + '</div>' +
-        (T ? (T.can_reply ? '<div class="fbchb"><button type="button" data-soon="1">' + IC.camera + '</button><button type="button" data-soon="1">' + IC.photo + '</button>' +
+        (T ? (T.can_reply ? '<div class="fbchb"><label><input type="file" accept="image/*" capture="environment" data-dmimg="1" style="display:none">' + IC.camera + '</label><label><input type="file" accept="image/*" data-dmimg="1" style="display:none">' + IC.photo + '</label>' +
             '<div class="pill"><textarea id="fbDmT" rows="1" placeholder="Aa"></textarea></div><button type="button" class="snd" data-send="1">' + IC.send + '</button></div>' :
           '<div class="fbnote" style="padding:12px 16px">お客様の最後のメッセージから24時間を過ぎたため、ズコからは返信できません。Facebookのアプリから返信してください🙇</div>') : '') + '</div>';
       setTimeout(function () { d.scrollTop = d.scrollHeight; }, 0);
@@ -15640,8 +15656,95 @@ function fbScript_(C) {
         });
       }
     });
+    d.addEventListener('change', function (e) {
+      if (!e.target.hasAttribute('data-dmimg')) return;
+      var fl = (e.target.files || [])[0]; if (!fl) return;
+      readPic(fl, function (m) {
+        if (!m) { warn('写真を読み込めませんでした。もう一度選択してください😊'); return; }
+        confirmGo((T.name || 'お客様') + 'さんにこの写真を送信しますか？😊', function () {
+          if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('写真を送信しています', false), '#2C7A99');
+          askBig({ kind: 'dm_send_image', acct: CUR, cid: cid, media: [{ b64: m.b64 }] }, function (err) {
+            if (typeof szOvHide_ === 'function') szOvHide_();
+            if (err) { warn(err); return; }
+            T.msgs.push({ me: true, t: '', at: Date.now() / 1000, img: [m.url] }); draw();
+          });
+        });
+      });
+    });
     document.body.appendChild(d);
     ask({ kind: 'dm_thread', acct: CUR, cid: cid }, function (err, r) { if (err) { draw(err); return; } T = r; draw(); });
+  }
+
+  // ── 2026-11-10 準備中だったボタン：アルバム・ページ内の検索・受信箱のコメント ──
+  function openAlbums(kind) {
+    var d = document.createElement('div'); d.className = 'fbov';
+    var title = kind === 'profile' ? 'プロフィール写真' : kind === 'cover' ? 'カバー写真' : 'アルバム';
+    var put = function (body, t) {
+      d.innerHTML = '<div class="in"><div class="fbtop"><button type="button" data-x="1">' + IC.back + '</button><div class="t">' + esc(t || title) + '</div><span></span></div>' + body + '</div>';
+    };
+    var grid = function (al) {
+      put('<div class="fbcm"><div class="none">読み込み中です…</div></div>', al.name);
+      ask({ kind: 'album_photos', acct: CUR, album: al.id }, function (err, r) {
+        if (err) { put('<div class="fbcm"><div class="none">' + esc(err) + '</div></div>', al.name); return; }
+        var ph = (r && r.photos) || [];
+        put(ph.length ? '<div class="fbphotos big">' + ph.map(function (x) { return '<button type="button" data-pic="' + esc(x.big || x.th) + '">' + img(x.th) + '</button>'; }).join('') + '</div>' :
+          '<div class="fbempty">写真はまだありません</div>', al.name);
+      });
+    };
+    put('<div class="fbcm"><div class="none">読み込み中です…</div></div>');
+    d.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-x]')) { d.remove(); return; }
+      var pc = t.closest('[data-pic]'); if (pc) { showPic(pc.getAttribute('data-pic')); return; }
+      var ab = t.closest('[data-alb]'); if (ab) { grid({ id: ab.getAttribute('data-alb'), name: ab.getAttribute('data-name') }); }
+    });
+    document.body.appendChild(d);
+    ask({ kind: 'albums', acct: CUR }, function (err, r) {
+      if (err) { put('<div class="fbcm"><div class="none">' + esc(err) + '</div></div>'); return; }
+      var al = (r && r.albums) || [];
+      if (kind === 'profile' || kind === 'cover') {
+        var one = al.filter(function (a) { return a.type === kind; })[0];
+        if (one) grid(one); else put('<div class="fbempty">写真はまだありません</div>');
+        return;
+      }
+      put(al.length ? '<div class="fbalbs">' + al.map(function (a) {
+        return '<button type="button" data-alb="' + esc(a.id) + '" data-name="' + esc(a.name) + '"><span class="th">' + img(a.th) + '</span><b>' + esc(a.name) + '</b><span>' + num(a.n) + '件</span></button>';
+      }).join('') + '</div>' : '<div class="fbempty">アルバムはまだありません</div>');
+    });
+  }
+  function openSearch() {
+    var v = DATA && DATA.views && DATA.views[CUR], pf = (v && v.prof) || {};
+    var d = document.createElement('div'); d.className = 'fbov';
+    d.innerHTML = '<div class="in"><div class="fbsr"><button type="button" data-x="1">' + IC.back + '</button><div class="pill"><input id="fbSrQ" placeholder="' + esc(pf.name) + 'を検索" autocomplete="off"></div></div><div id="fbSrR"></div></div>';
+    var go = function () {
+      var q = String(document.getElementById('fbSrQ').value || '').trim().toLowerCase(), R = document.getElementById('fbSrR');
+      if (!q) { R.innerHTML = ''; return; }
+      var hit = ((v && v.posts) || []).filter(function (p) { return (String(p.msg || '') + ' ' + String(p.story || '')).toLowerCase().indexOf(q) >= 0; });
+      R.innerHTML = hit.length ? '<div class="fbcm" style="padding-bottom:4px"><div class="none" style="text-align:left;padding:4px 0">' + hit.length + '件の投稿</div></div>' + hit.map(function (p) { return postCard(p, pf, false); }).join('') :
+        '<div class="fbcm"><div class="none">「' + esc(q) + '」の投稿は見つかりませんでした</div></div>';
+    };
+    d.addEventListener('input', function (e) { if (e.target.id === 'fbSrQ') go(); });
+    d.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-x]')) { d.remove(); return; }
+      var pm = t.closest('[data-pmenu]'); if (pm) { postMenu(pm.getAttribute('data-pmenu')); return; }
+      var pc = t.closest('[data-pic]'); if (pc) { showPic(pc.getAttribute('data-pic')); return; }
+      var po = t.closest('[data-post]'); if (po) openPost(po.getAttribute('data-post'));
+    });
+    document.body.appendChild(d);
+    setTimeout(function () { var q = document.getElementById('fbSrQ'); if (q) q.focus(); }, 50);
+  }
+  function inboxComments(box) {
+    box.innerHTML = '<div class="fbcm"><div class="none">読み込み中です…</div></div>';
+    ask({ kind: 'cm_list', acct: CUR }, function (err, r) {
+      if (err) { box.innerHTML = '<div class="fbcm"><div class="none">' + esc(err) + '</div></div>'; return; }
+      var L = ((r && r.comments) || []).filter(function (c) { return !c.page; });
+      box.innerHTML = L.length ? '<div class="fbin">' + L.map(function (c) {
+        return '<button type="button" data-cpost="' + esc(c.post) + '"><span class="a">' + esc((c.who || '?').slice(0, 1)) + '</span>' +
+          '<span class="b"><b>' + esc(c.who) + '</b><span class="s"><span class="sx">' + esc(c.msg) + '</span><span class="tm">' + esc(ago2(c.at)) + '</span></span>' +
+          (c.ptext ? '<span class="s"><span class="sx" style="color:#65686c">投稿：' + esc(c.ptext) + '</span></span>' : '') + '</span></button>';
+      }).join('') + '</div>' : '<div class="fbcm"><div class="none">新しいコメントはありません</div></div>';
+    });
   }
 
   // ── ページの「…」（インサイト・権限・Facebookで開く）──
@@ -15935,6 +16038,7 @@ var INSTACSS_ =
   '.igsr .q.top{position:sticky;top:0;z-index:2;margin:0;border-radius:0;background:#fff;padding:8px 12px;}' +
   '.igsr .q.top input{background:#efefef;border-radius:22px;padding:10px 14px 10px 40px;margin-left:-32px;color:#000;}' +
   '.igsr .q.top svg{position:relative;z-index:1;margin-left:12px;}' +
+  '.igsr .q.top #igSrGo{display:none;}' +
   '.igsr .q input{border:0;background:none;outline:0;font:inherit;flex:1;}' +
   '.igsr .q button{color:#0095f6 !important;font-weight:700 !important;}' +
   '.igsr .hint{padding:10px 16px;color:#737373;font-size:13px;}' +
@@ -17593,9 +17697,11 @@ function instaScript_(C) {
   }
   // ── お知らせ（ハート）・フォロワーの一覧（2026-11-09 まるちゃん「全部推奨」）──
   //   受付係（kind=notifs／follows）がお店の専用ブラウザで、インスタのパソコン版と同じ問い合わせで読む（読むだけ）。
+  // ★2026-11-10 写真が読めなかった時は、壊れた絵の印ではなく灰色の丸にする（本物も読み込み前は灰色）
+  var IMGERR = ' onerror="this.removeAttribute(&quot;src&quot;);this.style.background=&quot;#efefef&quot;"';
   function userRow(u, right) {
     return '<div style="display:flex;align-items:center;gap:12px;padding:8px 16px">' +
-      (u.pic ? '<img src="' + esc(u.pic) + '" referrerpolicy="no-referrer" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none">' : '<span style="width:44px;height:44px;border-radius:50%;background:#efefef;flex:none"></span>') +
+      (u.pic ? '<img src="' + esc(u.pic) + '" referrerpolicy="no-referrer" alt=""' + IMGERR + ' style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none">' : '<span style="width:44px;height:44px;border-radius:50%;background:#efefef;flex:none"></span>') +
       '<span style="flex:1;min-width:0">' + right + '</span></div>';
   }
   function openNotifs() {
@@ -17853,7 +17959,7 @@ function instaScript_(C) {
         }
         var k = x.type === 2 ? '<span class="k">' + IC.reelK + '</span>' : (x.car > 1 ? '<span class="k n">1/' + x.car + '</span>' : '');
         h += '<div class="igfdi"><div class="igpu" data-uprof="' + esc(x.user) + '" style="cursor:pointer">' +
-          (x.pic ? '<img src="' + esc(x.pic) + '" referrerpolicy="no-referrer" alt="">' : '<span class="nop"></span>') +
+          (x.pic ? '<img src="' + esc(x.pic) + '" referrerpolicy="no-referrer" alt=""' + IMGERR + '>' : '<span class="nop"></span>') +
           '<span class="un"><b>' + esc(x.user) + '</b>' + (x.sug ? '<small>おすすめ</small>' : '') + '</span></div>' +
           '<button type="button" class="m" data-fdopen="' + esc(x.code) + '">' + (x.img ? '<img src="' + esc(x.img) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
           k + '</button>' +

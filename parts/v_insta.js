@@ -179,6 +179,7 @@ var INSTACSS_ =
   '.igsr .q.top{position:sticky;top:0;z-index:2;margin:0;border-radius:0;background:#fff;padding:8px 12px;}' +
   '.igsr .q.top input{background:#efefef;border-radius:22px;padding:10px 14px 10px 40px;margin-left:-32px;color:#000;}' +
   '.igsr .q.top svg{position:relative;z-index:1;margin-left:12px;}' +
+  '.igsr .q.top #igSrGo{display:none;}' +
   '.igsr .q input{border:0;background:none;outline:0;font:inherit;flex:1;}' +
   '.igsr .q button{color:#0095f6 !important;font-weight:700 !important;}' +
   '.igsr .hint{padding:10px 16px;color:#737373;font-size:13px;}' +
@@ -1764,9 +1765,10 @@ function instaScript_(C) {
       if (t.closest('[data-snext]')) { if (st.items && st.i < st.items.length - 1) { st.i++; draw(); } else el.remove(); return; }
     });
   }
+  var IMGERR = ' onerror="this.removeAttribute(&quot;src&quot;);this.style.background=&quot;#efefef&quot;"';
   function userRow(u, right) {
     return '<div style="display:flex;align-items:center;gap:12px;padding:8px 16px">' +
-      (u.pic ? '<img src="' + esc(u.pic) + '" referrerpolicy="no-referrer" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none">' : '<span style="width:44px;height:44px;border-radius:50%;background:#efefef;flex:none"></span>') +
+      (u.pic ? '<img src="' + esc(u.pic) + '" referrerpolicy="no-referrer" alt=""' + IMGERR + ' style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none">' : '<span style="width:44px;height:44px;border-radius:50%;background:#efefef;flex:none"></span>') +
       '<span style="flex:1;min-width:0">' + right + '</span></div>';
   }
   function openNotifs() {
@@ -2009,7 +2011,7 @@ function instaScript_(C) {
         }
         var k = x.type === 2 ? '<span class="k">' + IC.reelK + '</span>' : (x.car > 1 ? '<span class="k n">1/' + x.car + '</span>' : '');
         h += '<div class="igfdi"><div class="igpu" data-uprof="' + esc(x.user) + '" style="cursor:pointer">' +
-          (x.pic ? '<img src="' + esc(x.pic) + '" referrerpolicy="no-referrer" alt="">' : '<span class="nop"></span>') +
+          (x.pic ? '<img src="' + esc(x.pic) + '" referrerpolicy="no-referrer" alt=""' + IMGERR + '>' : '<span class="nop"></span>') +
           '<span class="un"><b>' + esc(x.user) + '</b>' + (x.sug ? '<small>おすすめ</small>' : '') + '</span></div>' +
           '<button type="button" class="m" data-fdopen="' + esc(x.code) + '">' + (x.img ? '<img src="' + esc(x.img) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
           k + '</button>' +
