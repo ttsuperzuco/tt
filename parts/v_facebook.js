@@ -532,7 +532,7 @@ function fbScript_(C) {
     if (t.closest('[data-compose]')) { compose(null); return; }
     var ak = t.closest('[data-albk]'); if (ak) { openAlbums(ak.getAttribute('data-albk')); return; }
     if (t.closest('[data-search]')) { openSearch(); return; }
-    if (t.closest('[data-story]')) { openStories(); return; }
+    if (t.closest('[data-story]')) { var pf0 = (DATA.views[CUR] && DATA.views[CUR].prof) || {}; sheet([{ t: 'ストーリーズを見る', go: openStories }, { t: 'プロフィール写真を見る', go: function () { showPic(pf0.pic); } }]); return; }
     if (t.closest('[data-soon]')) { warn(SOON); return; }
     var po = t.closest('[data-post]'); if (po) openPost(po.getAttribute('data-post'));
   });
