@@ -15233,8 +15233,12 @@ function fbScript_(C) {
     var r = hero.getBoundingClientRect(), b = bt ? bt.getBoundingClientRect() : r;
     stk.classList.toggle('on', r.top < -120);
     bar.classList.toggle('on', b.bottom < 0);
+    // ★2026-11-10 パソコン版（広い窓）で帯がページより広くはみ出した＝ページの幅に合わせる
+    var ar = $('fbApp').getBoundingClientRect();
+    [stk, bar].forEach(function (e) { e.style.left = ar.left + 'px'; e.style.width = ar.width + 'px'; e.style.transform = 'none'; e.style.maxWidth = 'none'; });
   }
   window.addEventListener('scroll', stick, { passive: true });
+  window.addEventListener('resize', stick);
 
   // ── 押した所 ──
   $('fbApp').addEventListener('click', function (e) {

@@ -498,8 +498,11 @@ function fbScript_(C) {
     var r = hero.getBoundingClientRect(), b = bt ? bt.getBoundingClientRect() : r;
     stk.classList.toggle('on', r.top < -120);
     bar.classList.toggle('on', b.bottom < 0);
+    var ar = $('fbApp').getBoundingClientRect();
+    [stk, bar].forEach(function (e) { e.style.left = ar.left + 'px'; e.style.width = ar.width + 'px'; e.style.transform = 'none'; e.style.maxWidth = 'none'; });
   }
   window.addEventListener('scroll', stick, { passive: true });
+  window.addEventListener('resize', stick);
 
   $('fbApp').addEventListener('click', function (e) {
     var t = e.target;
