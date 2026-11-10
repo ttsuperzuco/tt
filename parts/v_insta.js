@@ -215,6 +215,7 @@ var INSTACSS_ =
   '.igdmr{display:flex !important;align-items:center;gap:12px;width:100%;padding:8px 16px !important;text-align:left;}' +
   '.igdmr .av,.igdmh .av{flex:0 0 auto;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#feda75,#d62976 60%,#4f5bd5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;}' +
   '.igdmr .av img{width:56px;height:56px;border-radius:50%;object-fit:cover;display:block;}' +
+  '.igdmh .av img{width:28px;height:28px;border-radius:50%;object-fit:cover;display:block;}' +
   '.igdmr .tx{flex:1;min-width:0;}' +
   '.igdmr .tx b{display:block;font-weight:400;}' +
   '.igdmr .tx span{display:block;color:#737373;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
@@ -1484,7 +1485,7 @@ function instaScript_(C) {
   function drawDmThread() {
     var el = document.getElementById('igDmT'); if (!el || !DMT) return;
     var h = '<div class="w"><div class="igph"><button type="button" data-dmtback="1">' + IC.back + '</button>' +
-      '<b class="igdmh"><span class="av">' + ini(DMT.user) + '</span>' + esc(DMT.user) + '</b><span></span></div><div class="igdmt">';
+      '<b class="igdmh"><span class="av">' + ((DMPICS[CUR] || {})[DMT.user] ? '<img src="' + esc(DMPICS[CUR][DMT.user]) + '" alt="">' : ini(DMT.user)) + '</span>' + esc(DMT.user) + '</b><span></span></div><div class="igdmt">';
     if (DMT.loading) h += '<div class="igempty">読み込み中です…</div>';
     else {
       var lastDay = '';
