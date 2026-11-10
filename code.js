@@ -13037,7 +13037,7 @@ var THREADSCSS_ =
   '.thw{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
   // 公開前の予告（題名の下に大きい字だけ）
   '.thteaser{margin:18vh 0 0;text-align:center;color:#fff;font-weight:900;font-size:2.1rem;line-height:1.6;letter-spacing:.02em;text-shadow:0 3px 10px rgba(0,0,0,.25);}' +
-  '.thteaser span{display:block;}' +
+  '.thteaser span{display:block;}.thteaser span.s{font-size:1.3rem;font-weight:800;white-space:nowrap;}' +
   '.thacct{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px;}' +
   '.thacct button,.thseg button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:14px 4px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.thacct button.on,.thseg button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
@@ -13334,7 +13334,8 @@ function renderThreadsPage_(base, staff, dev) {
     return '<style>' + HOMECSS_ + EXPADCSS_ + HANBAICSS_ + THREADSCSS_ + '</style>' +
       '<div class="home">' + backBarUnlessSolo_(base, staff, dev) +
       '<div class="thw">' + head +
-        '<div class="thteaser"><span>11月11日</span><span>リーダーズ会議にて</span><span>公開！</span></div>' +
+        // ★2026-11-10 まるちゃん「本体は、１１月１１日リーダーズ会議にて公開（を目指して頑張ってます）！　にして」
+        '<div class="thteaser"><span>本体は、</span><span>11月11日</span><span>リーダーズ会議にて</span><span>公開</span><span class="s">（を目指して頑張ってます）！</span></div>' +
       '</div></div>';
   }
   var C = {
