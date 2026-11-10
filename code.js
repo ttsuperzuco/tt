@@ -2361,7 +2361,14 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
     // 戻るボタンの無いホーム（開発版以外）では、ボタンの並びの上の右端に置く。
     (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
-    tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : []) +
+    // ★2026-11-10 まるちゃん「パインさんの画面にはまだ何も出さない。この画面が開いたら完了、りゅうさんに連絡と出して」
+    //   ＝スタッフで出すボタンが1つも無い時は、ボタンの並びの代わりに完了の案内を出す（ほかの人にも同じく効く）。
+    (staff && !shown.length
+      ? '<div class="hdone" style="background:#fff;color:#12303c;border-radius:18px;padding:22px 18px;margin:18px 4px 0;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.15);">' +
+          '<div style="font-size:26px;font-weight:900;line-height:1.5;">ズコの準備ができました🎉</div>' +
+          '<div style="font-size:18px;font-weight:700;line-height:1.8;margin-top:10px;">この画面が開いたら、完了です。<br>りゅうさんに「完了しました」と<br>連絡してください😊</div>' +
+        '</div>'
+      : tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : [])) +
   '</div>' + EXTLINK_SCRIPT_ + sortScript;
 }
 
