@@ -109,7 +109,7 @@ function renderFacebookPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + FBCSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="home">' + backBarUnlessSolo_(base, staff, dev) +
     '<div class="fbw">' + head +
       '<div class="hbhint" id="fbLoad">読み込み中です…</div>' +
       '<div id="fbMain" style="display:none">' +
