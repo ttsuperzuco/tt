@@ -125,7 +125,11 @@ var INSTACSS_ =
   '.igpcap{padding:4px 12px;white-space:pre-wrap;word-break:break-word;}' +
   '.igpd{padding:6px 12px;color:#737373;font-size:12px;}' +
   '.igpins{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid #efefef;}' +
-  '.igpins button{color:#0095f6 !important;font-weight:600 !important;font-size:14px !important;}' +
+  '.igpins button{color:#000 !important;font-weight:400 !important;font-size:14px !important;display:flex;align-items:center;gap:4px;}' +
+  '.igup .igbtns .blue{background:#4a5df9 !important;color:#fff !important;}' +
+  '.igup .igaddr{padding:2px 16px 0;color:#4150f7;font-size:14px;}' +
+  '.igup .igbtns button{display:flex;align-items:center;justify-content:center;gap:4px;}' +
+  '.igup .igchips .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #dbdbdb;border-radius:18px;padding:5px 12px;font-size:13px;font-weight:600;}' +
   '.igins{z-index:8500;}' +
   '.igins .big{text-align:center;padding:22px 12px 14px;}' +
   '.igins .big b{display:block;font-size:30px;font-weight:700;}' +
@@ -1371,7 +1375,7 @@ function instaScript_(C) {
     var v = DATA && DATA.views && DATA.views[CUR], p = (v && v.prof) || {};
     var h = '<div class="w"><div class="igph"><button type="button" data-pback="1">' + IC.back + '</button><b>投稿</b><span></span></div>' +
       '<div class="igpu"><img src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><b>' + esc(p.user || '') + '</b>' +
-      '<button type="button" data-pmenu="1" style="font-size:20px">⋯</button></div>';
+      '<button type="button" data-pmenu="1" title="メニュー">' + S('<path d="M5 9h14M5 15h14"/>', 24) + '</button></div>';
     if (POST.loading) {
       h += '<div class="igpm">' + (POST.thumb ? '<img src="' + esc(POST.thumb) + '" referrerpolicy="no-referrer" alt="">' : '') + '</div><div class="igempty">読み込み中です…</div></div>';
       el.innerHTML = h; return;
@@ -1380,11 +1384,11 @@ function instaScript_(C) {
       return it.type === 'VIDEO' ? '<video src="' + esc(it.url) + '" poster="' + esc(it.th) + '" controls playsinline></video>'
         : '<img src="' + esc(it.url) + '" referrerpolicy="no-referrer" alt="">';
     }).join('') + '</div>';
-    h += '<div class="igpins"><button type="button" data-pins="1">インサイトを見る</button></div>';
+    h += '<div class="igpins"><button type="button" data-pins="1">' + IC.eye + (POST.views != null ? ' ' + num(POST.views) + '・' : ' ') + 'インサイトを表示</button></div>';
     var HEART = '<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', BM = '<path d="M19 21l-7-5-7 5V4a1 1 0 011-1h12a1 1 0 011 1z"/>';
     h += '<div class="igpa"><button type="button" data-go="plike">' + (POST.liked ? S(HEART, 26).replace('fill="none"', 'fill="#ff3040"').replace('stroke="currentColor"', 'stroke="#ff3040"') : S(HEART, 26)) + '</button>' +
       '<button type="button" data-pcom="1">' + S('<path d="M20.7 12a8.7 8.7 0 01-12.6 7.8L3.5 21l1.3-4.4A8.7 8.7 0 1120.7 12z"/>', 26) + '</button>' +
-      '<button type="button" data-go="postshare">' + IC.send + '</button><span class="sp"></span>' +
+      '<span style="display:flex">' + IC.rep + '</span><button type="button" data-go="postshare">' + IC.send + '</button><span class="sp"></span>' +
       '<button type="button" data-go="psave">' + (POST.saved ? S(BM, 26).replace('fill="none"', 'fill="currentColor"') : S(BM, 26)) + '</button></div>';
     h += '<div class="igpl">' + (POST.likes_hidden ? '「いいね！」数は非表示です' : 'いいね！' + num(POST.likes || 0) + '件') + '</div>';
     if (POST.caption) h += '<div class="igpcap"><b>' + esc(p.user || '') + '</b> ' + esc(POST.caption) + '</div>';
@@ -2050,7 +2054,11 @@ function instaScript_(C) {
       h += '<div class="igbio cl">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio || '') + '<span class="mo">… 続きを読む</span></div>';
       if (links.length) h += '<button type="button" class="iglink" data-uplink="' + esc(links[0].u) + '">' + IC.link + '<span>' + esc(shortUrl(links[0].u)) +
         (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') + '</span></button>';
-      h += '<div class="igbtns"><button type="button" data-upopen="1">インスタで開く</button></div>';
+      if (p.addr) h += '<div class="igaddr">' + esc(p.addr) + '</div>';
+      if (p.threads || p.fb) h += '<div class="igchips">' + (p.threads ? '<span class="chip">' + IC.thS + esc(p.threads) + '</span>' : '') +
+        (p.fb ? '<span class="chip">' + IC.fb + esc(p.fb) + '</span>' : '') + '</div>';
+      h += '<div class="igbtns"><button type="button" data-upopen="1"' + (p.following ? '' : ' class="blue"') + '>' + (p.following ? 'フォロー中 ' + IC.down : 'フォローする') + '</button>' +
+        '<button type="button" data-upopen="1">メッセージ</button></div>';
       if ((d.hl || []).length) h += '<div class="ighl">' + d.hl.map(function (x) {
         return '<button type="button"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
       }).join('') + '</div>';
