@@ -11971,6 +11971,11 @@ function shomeishoScript_(C) {
     });
   }
   function bundleGet(cb) { if (bundle.done) cb(bundle.err, bundle.res); else bundle.waits.push(cb); }
+  // 枠の中の画面が、まだ何も入力していない所（最初の画面・部位を選ぶ画面で1行も入れていない）にいるか
+  function notStarted() {
+    try { return !!frame.contentWindow.eval("typeof S==='object' && (S.step==='home' || (S.step==='pick' && !S.lines.length))"); }
+    catch (e) { return false; }
+  }
   function load() {
     bundleStart();
     var c = cached();
@@ -11991,7 +11996,9 @@ function shomeishoScript_(C) {
       }
       if (r.html === c) return;
       remember(r.html);
-      if (!c || !touched) showPage(r.html);
+      // ★覚えていた画面が古かった時＝まだ何も入力していなければ（最初の画面か、部位を選ぶ画面）、押したあとでも最新に差し替える
+      //   （2026-11-10 まるちゃん「かわってないよPC」＝開いてすぐ押すと、直す前の画面のまま進んでしまっていた）。
+      if (!c || !touched || notStarted()) showPage(r.html);
     });
   }
   // 枠の中の画面からの頼み（計算して／紙を出して／ズコのホームへ戻る）

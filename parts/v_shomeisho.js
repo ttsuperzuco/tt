@@ -93,6 +93,10 @@ function shomeishoScript_(C) {
     });
   }
   function bundleGet(cb) { if (bundle.done) cb(bundle.err, bundle.res); else bundle.waits.push(cb); }
+  function notStarted() {
+    try { return !!frame.contentWindow.eval("typeof S==='object' && (S.step==='home' || (S.step==='pick' && !S.lines.length))"); }
+    catch (e) { return false; }
+  }
   function load() {
     bundleStart();
     var c = cached();
@@ -113,7 +117,7 @@ function shomeishoScript_(C) {
       }
       if (r.html === c) return;
       remember(r.html);
-      if (!c || !touched) showPage(r.html);
+      if (!c || !touched || notStarted()) showPage(r.html);
     });
   }
   if (window.__smMsgH) window.removeEventListener('message', window.__smMsgH);
