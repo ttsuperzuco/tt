@@ -451,6 +451,27 @@
   var _idmkey = params.get('idmkey');
   if (_idmkey) { lsSet(LS_IDMPW, _idmkey); }
 
+  // ★2026-11-10 まるちゃん「ズコにログイン済みの人が1回押せば、別に入れたスレッズコのアイコンはもう許可済み、にできない？」
+  //   iPhoneはホーム画面のアイコンごとに覚えている物が別＝新しいアイコンはまっさら（新しいスマホ扱い＝許可待ち・
+  //   スタッフは自分の名前が使用中で選べない）。そこで、ログイン済みのズコが「このスマホの番号と鍵・端末の番号・
+  //   選んだ名前」を住所に付けた自分専用のリンクを作り（下の zkCarryUrl_）、そのリンクをホーム画面に入れる。
+  //   新しいアイコンは開くたびに住所からそれを受け取る＝窓口と受付係から見て同じスマホ・同じ人（許可も名前選びも要らない）。
+  //   番号と鍵（zdv・zdk）は上の鍵の所がパソコン版と同じ形で受け取る。ここは残り（端末の番号・名前・選んだ時刻）を受け取る。
+  //   ★グーグル側は無改修。名前は「窓口に許可済みの端末」と「名前選択で確保した端末」が同じ時だけ受付係が通す＝今までと同じ守り。
+  function zkCarryIn_(q, isStaff) {
+    var out = {};
+    var sd = q.get('zsd') || '';
+    if (!(q.get('zdv') && q.get('zdk') && /^d[0-9a-z]{6,40}$/.test(sd))) return out;
+    out.sz_device = sd;
+    var w = q.get('zwho') || '', at = q.get('zat') || '';
+    if (isStaff && /^[0-9a-z_]{1,40}$/.test(w)) {
+      out.sz_who = w; out.sz_role = 'スタッフ';
+      if (/^\d{1,16}$/.test(at)) out.sz_picked_at = at;
+    }
+    return out;
+  }
+  (function () { var c = zkCarryIn_(params, staff); for (var k in c) { if (c.hasOwnProperty(k)) lsSet(k, c[k]); } })();
+
   var device = lsGet(LS_DEV);
   if (!device) { device = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); lsSet(LS_DEV, device); }
   var who  = staff ? lsGet(LS_WHO) : '';
@@ -473,10 +494,15 @@
     var manifestFile = (soloThreads ? 'manifest-threads-' : 'manifest-') + kind + '.json';
     var head = document.head;
 
-    var manifestLink = document.createElement('link');
-    manifestLink.rel = 'manifest';
-    manifestLink.href = manifestFile;
-    head.appendChild(manifestLink);
+    // ★iPhoneは、設定（manifest）が付いているとその開き先でアイコンを作る＝住所に付けた引き継ぎ（上の zkCarryIn_）が落ちる。
+    //   引き継ぎ付きの住所をiPhoneで開いた時だけ設定を付けない＝今開いている住所のままアイコンになる。
+    var iosCarry = soloThreads && /iPhone|iPad|iPod/.test(navigator.userAgent || '') && !!params.get('zdv');
+    if (!iosCarry) {
+      var manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = manifestFile;
+      head.appendChild(manifestLink);
+    }
 
     if ('serviceWorker' in navigator) {
       // ★2026-07-18：スタッフが手で「完全に閉じて開き直す」「アイコンを削除して入れ直す」等を
@@ -951,7 +977,84 @@
   }
 
   // ★Threads投稿（2026-11-05）。出せるアカウント・一覧は画面の中から受付係に聞く＝ここでは描くだけ。
-  function showThreads() { mount(renderThreadsPage_(base, staff, dev)); }
+  function showThreads() { mount(renderThreadsPage_(base, staff, dev)); zkCarryUi_(); }
+
+  // ===== スレッズコをホーム画面に入れる（2026-11-10 まるちゃん）=====
+  //   ズコの中のスレッズコ（スマホ）に「ホーム画面に追加」を出す → 自分専用のリンク（上の zkCarryIn_ が受け取る形）を
+  //   ブラウザで開く → ブラウザ側には「共有 → ホーム画面に追加」の案内を出す。独立した画面（solo=1）にはボタンを出さない。
+  function zkCarryUrl_(o) {
+    if (!(o.dv && o.dk && o.device)) return '';
+    var u = o.origin + o.path + '?' + (o.staff ? 'staff=1&' : (o.dev ? 'dev=1&' : '')) + 'view=threads&solo=1&zin=1' +
+      '&zdv=' + o.dv + '&zdk=' + o.dk + '&zsd=' + encodeURIComponent(o.device);
+    if (o.staff && o.who) u += '&zwho=' + encodeURIComponent(o.who) + '&zat=' + encodeURIComponent(o.at || '0');
+    return u;
+  }
+  function zkCarryUi_() {
+    var ua = navigator.userAgent || '';
+    var ios = /iPhone|iPad|iPod/.test(ua), android = /Android/.test(ua);
+    if (!(ios || android)) return;
+    var headEl = document.querySelector('.thw .hhead');
+    if (!headEl) return;
+    var solo = params.get('solo') === '1';
+    var app = false;
+    try { app = (navigator.standalone === true) || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); } catch (e) {}
+    var browser = ios ? 'Safari' : 'Chrome';
+    var how = ios ? '共有ボタン →「ホーム画面に追加」' : '右上の「⋮」→「アプリをインストール」';
+
+    // ①ブラウザで自分専用のリンクを開いた所＝次に押す所の案内（アイコンから開いた時は出さない）
+    if (solo) {
+      if (params.get('zin') !== '1' || app) return;
+      var bar = document.createElement('div');
+      bar.id = 'zkCarryBar';
+      bar.style.cssText = 'background:#fff;color:#12303c;font-weight:800;font-size:15px;line-height:1.6;padding:10px 12px;border-radius:12px;margin:0 0 8px;text-align:center;';
+      bar.textContent = how + 'を押してください😊';
+      headEl.parentNode.insertBefore(bar, headEl);
+      return;
+    }
+
+    // ②ズコの中のスレッズコ＝「ホーム画面に追加」ボタン
+    var url = zkCarryUrl_({ origin: location.origin, path: location.pathname, staff: staff, dev: dev,
+      dv: lsGet('zk_dv'), dk: lsGet('zk_dk'), device: device, who: who, at: lsGet('sz_picked_at') });
+    if (!url || typeof szPopup_ !== 'function') return;
+    function copyLink() {
+      function done() {
+        szPopup_('リンクをコピーしました。' + browser + 'のアドレスの欄に貼り付けて開いてください😊\nこのリンクは、ほかの人に送らないでください🙇', { icon: '📋' });
+      }
+      function fail() {
+        var m = szPopup_('<div style="font-size:1.1rem;line-height:1.7;margin-bottom:10px">下のリンクをコピーして、' + browser + 'のアドレスの欄に貼り付けてください🙇</div>' +
+          '<textarea readonly style="width:100%;height:120px;font-size:13px;box-sizing:border-box;border-radius:8px;padding:8px;"></textarea>', { icon: '📋', isHtml: true });
+        try { var t = m.querySelector('textarea'); t.value = url; t.focus(); t.select(); } catch (e) {}
+      }
+      try { navigator.clipboard.writeText(url).then(done, fail); } catch (e) { fail(); }
+    }
+    function openBrowser() {
+      if (!app) { location.href = url; return; }   // もうブラウザで開いている＝そのまま進む
+      var left = false;
+      function onVis() { if (document.hidden) left = true; }
+      document.addEventListener('visibilitychange', onVis);
+      try {
+        location.href = ios ? ('x-safari-' + url)
+          : ('intent://' + url.replace(/^https:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end');
+      } catch (e) {}
+      setTimeout(function () {
+        document.removeEventListener('visibilitychange', onVis);
+        if (left) return;   // ブラウザへ切り替わった＝開けた
+        szPopup_(browser + 'が開かない時は、リンクをコピーして、' + browser + 'のアドレスの欄に貼り付けてください🙇',
+          { icon: '📲', cancel: true, noLabel: '閉じる', yesLabel: 'リンクをコピー', onYes: copyLink });
+      }, 2500);
+    }
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.id = 'zkCarryBtn';
+    b.textContent = 'ホーム画面に追加';
+    b.style.cssText = 'position:absolute;right:0;top:50%;transform:translateY(-50%);font:inherit;font-size:11px;font-weight:700;line-height:1.4;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;cursor:pointer;';
+    b.addEventListener('click', function () {
+      szPopup_('スレッズコをホーム画面に追加しますか？😊\n' + browser + 'が開いたら、' + how + 'を押してください😊',
+        { icon: '📲', cancel: true, yesLabel: browser + 'で開く', onYes: openBrowser });
+    });
+    headEl.style.position = 'relative';
+    headEl.appendChild(b);
+  }
   function showInsta() { mount(renderInstaPage_(base, staff, dev)); }
   // ★📘Facebook（2026-11-10）。見られるページ・中身は画面の中から受付係（op=facebook）に聞く＝ここでは描くだけ。
   function showFacebook() { mount(renderFacebookPage_(base, staff, dev)); }
