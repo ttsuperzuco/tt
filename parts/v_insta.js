@@ -70,7 +70,8 @@ var INSTACSS_ =
   '.igempty{padding:48px 20px;text-align:center;color:#737373;font-size:14px;}' +
   '.igempty b{display:block;color:#000;font-size:20px;font-weight:800;margin-bottom:6px;}' +
   '.ignav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #dbdbdb;height:56px;}' +
-  '.ignav button{display:flex;align-items:center;justify-content:center;}' +
+  '.ignav button{display:flex;align-items:center;justify-content:center;position:relative;}' +
+  '.ignav .dmdot{position:absolute;width:7px;height:7px;border-radius:50%;background:#ff3040;left:calc(50% + 9px);bottom:10px;}' +
   '.ignav .me{width:28px;height:28px;border-radius:50%;object-fit:cover;}' +
   '.ignav .on{width:46px;height:46px;border-radius:50%;background:#e6edf3;display:flex;align-items:center;justify-content:center;}' +
   '.igsheet{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;}' +
@@ -412,6 +413,7 @@ function instaScript_(C) {
     }
     return '<div class="iggrid">' + list.map(function (p) { return tile(p, mode); }).join('') + '</div>';
   }
+  var NOTE_ON = { jp: 1, tw: 1 };
   function bioFit(root) {
     var bs = (root && root.querySelectorAll) ? root.querySelectorAll('.igbio.cl') : [];
     for (var i = 0; i < bs.length; i++) {
@@ -428,15 +430,16 @@ function instaScript_(C) {
     var p = v.prof, links = p.links || [];
     var h = '';
     h += '<div class="igtop"><button type="button" data-create="1">' + IC.plus + '</button>' +
-      '<div class="u"><span>' + esc(p.user) + '</span>' + IC.down + '<i></i></div>' +
+      '<div class="u"><span>' + esc(p.user) + '</span>' + IC.down + '</div>' +
       '<div class="r"><button type="button" data-go="threads">' + IC.threads + '</button><button type="button" data-go="menu">' + IC.menu + '</button></div></div>';
-    h += '<div class="igprof hasnote"><div class="igav" data-go="stories" style="cursor:pointer"><div class="ignote">夢中になっていること…</div>' +
+    var note = !!NOTE_ON[CUR];
+    h += '<div class="igprof' + (note ? ' hasnote' : '') + '"><div class="igav" data-go="stories" style="cursor:pointer">' + (note ? '<div class="ignote">夢中になっていること…</div>' : '') +
       '<img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></div>' +
       '<div class="igr"><div class="nmw"><div class="nm">' + esc(p.name || p.user) + '</div>' +
       S('<circle cx="12" cy="12" r="9" stroke-dasharray="2.2 2.2"/><path d="M8 12.3l2.7 2.7L16 9.7"/>', 18) + '</div>' +
       '<div class="igcnt"><div><b>' + num(p.posts) + '</b>投稿</div><div data-go="followers" style="cursor:pointer"><b>' + num(p.followers) + '</b>フォロワー</div>' +
       '<div data-go="following" style="cursor:pointer"><b>' + num(p.following) + '</b>フォロー中</div></div></div></div>';
-    h += '<div class="igbio">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '</div>';
+    h += '<div class="igbio cl">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '<span class="mo">… さらに表示</span></div>';
     if (links.length) {
       h += '<button type="button" class="iglink" data-go="link">' + IC.link + '<span>' + esc(shortUrl(links[0].u)) +
         (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') + '</span></button>';
@@ -446,19 +449,24 @@ function instaScript_(C) {
       (p.threads ? '<button type="button" data-go="threads">' + IC.thS + esc(p.threads) + '</button>' : '') +
       (p.fb ? '<button type="button" data-go="fb">' + IC.fb + esc(p.fb) + '</button>' : '') +
       '<button type="button" class="add" data-go="banners">' + IC.plusS + '追加</button></div>';
-    h += '<button type="button" class="igdash" data-go="dash"><span><b>ダッシュボード</b><small id="igDashN"></small></span></button>';
+    var dashOld = ''; try { dashOld = localStorage.getItem('ig_dash_' + CUR) || ''; } catch (e) {}
+    h += '<button type="button" class="igdash" data-go="dash"><span><b>ダッシュボード</b><small id="igDashN">' + (can('insights') ? esc(dashOld) : '') + '</small></span></button>';
     h += '<div class="igbtns"><button type="button" data-pedit="1">プロフィールを編集</button><button type="button" data-go="pshare">プロフィールをシェア</button></div>';
     h += '<div class="ighl"><button type="button" data-hlnew="1"><div class="c new">' + IC.plus + '</div><div class="t">New</div></button>' +
       (v.hl || []).map(function (x, i) {
         return '<button type="button" data-hl="' + i + '"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
       }).join('') + '</div>';
-    h += '<div class="igtabs">' +
-      [['posts', IC.grid], ['reels', IC.reels], ['tagged', IC.tagged]].map(function (t) {
+    var tabs = [['posts', IC.grid], ['reels', IC.reels]];
+    if ((v.reposts || []).length) tabs.push(['reposts', IC.repost]);
+    tabs.push(['tagged', IC.tagged]);
+    if (TAB === 'reposts' && !(v.reposts || []).length) TAB = 'posts';
+    h += '<div class="igtabs" style="grid-template-columns:repeat(' + tabs.length + ',1fr)">' +
+      tabs.map(function (t) {
         return '<button type="button" data-tab="' + t[0] + '"' + (TAB === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>';
       }).join('') + '</div>';
     h += drawGrid(v);
     h += '<div class="ignav"><button type="button" data-go="feed">' + IC.home + '</button><button type="button" data-go="reels">' + IC.reels + '</button>' +
-      '<button type="button" data-dm="1">' + IC.send + '</button><button type="button" data-go="search">' + IC.search + '</button>' +
+      '<button type="button" data-dm="1">' + IC.send + (p.dm_unread ? '<i class="dmdot"></i>' : '') + '</button><button type="button" data-go="search">' + IC.search + '</button>' +
       '<button type="button" data-go="home"><span class="on"><img class="me" src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""></span></button></div>';
     $('igApp').innerHTML = h;
     bioFit($('igApp'));
@@ -466,7 +474,10 @@ function instaScript_(C) {
       var dn = CUR;
       readAsk({ kind: 'more_dash', acct: dn, days: 30 }, function (err, d) {
         var e2 = document.getElementById('igDashN');
-        if (!err && e2 && dn === CUR && d && d.views != null) e2.textContent = '過去30日間に' + num(d.views) + '回閲覧されました。';
+        if (!err && e2 && dn === CUR && d && d.views != null) {
+          e2.textContent = '過去30日間に' + num(d.views) + '回閲覧されました。';
+          try { localStorage.setItem('ig_dash_' + dn, e2.textContent); } catch (e) {}
+        }
       });
     }
   }
