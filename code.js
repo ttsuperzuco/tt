@@ -14947,6 +14947,18 @@ var FBCSS_ =
   '.fbsch input[type=datetime-local]{display:block;margin-top:8px;width:100%;box-sizing:border-box;border:1px solid #ced0d4;border-radius:8px;padding:10px;font:inherit;font-size:16px;}' +
   '.fbpf{padding:8px 16px;}.fbpf label{display:block;font-weight:600;margin:12px 0 4px;}' +
   '.fbpf textarea,.fbpf input{display:block;width:100%;box-sizing:border-box;border:1px solid #ced0d4;border-radius:8px;padding:10px;font:inherit;font-size:16px;}.fbpf textarea{min-height:140px;resize:vertical;}' +
+  '.fbstp{position:relative;margin:8px 16px;}.fbstp img{display:block;width:100%;max-height:60vh;object-fit:contain;border-radius:12px;background:#000;}' +
+  '.fbstp .vv{display:flex;flex-direction:column;align-items:center;justify-content:center;height:220px;border-radius:12px;background:#e4e6eb;color:#65686c;}' +
+  '.fbstp > button{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:0;cursor:pointer;}' +
+  '.fbstp .add{margin:0;}' +
+  '.fbsv{background:#000;}.fbsv .in{color:#fff;position:relative;min-height:100vh;display:flex;flex-direction:column;}' +
+  '.fbsv .bars{display:flex;gap:4px;padding:8px 10px 0;}.fbsv .bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35);}.fbsv .bars i.on{background:#fff;}' +
+  '.fbsv .hd{display:flex;align-items:center;gap:8px;padding:8px 10px;}.fbsv .hd .sp{flex:1;}' +
+  '.fbsv .hd button{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;border:0;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}' +
+  '.fbsv .bd{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;}' +
+  '.fbsv .bd img,.fbsv .bd video{max-width:100%;max-height:80vh;object-fit:contain;}.fbsv .bd .tm{margin-top:8px;color:#ccc;font-size:13px;}' +
+  '.fbsv .bd .none{color:#ddd;text-align:center;padding:40px 16px;}' +
+  '.fbsv .pv,.fbsv .nx{position:absolute;top:45%;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;border:0;font-size:24px;cursor:pointer;}.fbsv .pv{left:8px;}.fbsv .nx{right:8px;}' +
   '.fbalbs{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px;}' +
   '.fbalbs button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:none;border:0;padding:0;text-align:left;cursor:pointer;font:inherit;color:#080809;}' +
   '.fbalbs .th{display:block;width:100%;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#e4e6eb;}.fbalbs .th img{width:100%;height:100%;object-fit:cover;}' +
@@ -15195,7 +15207,7 @@ function fbScript_(C) {
         '<div class="fbcover">' + (pf.cover ? '<button type="button" data-pic="' + esc(pf.cover) + '" class="cv">' + img(pf.cover) + '</button>' : '') +
           '<div class="fbcvic">' + topIcons + '</div></div>' +
         '<div class="fbsheet">' +
-          '<div class="fbav">' + (pf.pic ? '<button type="button" data-pic="' + esc(pf.pic) + '">' + img(pf.pic) + '</button>' : '') + '</div>' +
+          '<div class="fbav">' + (pf.pic ? '<button type="button" data-story="1">' + img(pf.pic) + '</button>' : '') + '</div>' +
           '<div class="nm">' + esc(pf.name) + (pf.verified ? '<span class="vf">' + IC.verified + '</span>' : '') + '</div>' +
           '<div class="fl">フォロワー' + num(pf.followers) + '人 · フォロー中0人</div>' +
           (pf.about ? '<div class="ab" id="fbAb">' + esc(pf.about) + '</div><div class="abm" data-abmore="1">... もっと見る</div>' : '') +
@@ -15254,6 +15266,7 @@ function fbScript_(C) {
     if (t.closest('[data-compose]')) { compose(null); return; }
     var ak = t.closest('[data-albk]'); if (ak) { openAlbums(ak.getAttribute('data-albk')); return; }
     if (t.closest('[data-search]')) { openSearch(); return; }
+    if (t.closest('[data-story]')) { openStories(); return; }
     if (t.closest('[data-soon]')) { warn(SOON); return; }
     var po = t.closest('[data-post]'); if (po) openPost(po.getAttribute('data-post'));
   });
@@ -15851,12 +15864,90 @@ function fbScript_(C) {
     document.body.appendChild(d); load();
   }
 
+  // ── 2026-11-10 ストーリーズ（作る・今出ている物を見る・削除）──
+  function composeStory() {
+    if (!can('post')) { warn(NOPERM); return; }
+    var v = DATA.views[CUR], pf = (v && v.prof) || {};
+    var M = null, d = document.createElement('div'); d.className = 'fbov';
+    var draw = function () {
+      d.innerHTML = '<div class="in fbcp"><div class="fbtop"><button type="button" data-x="1">' + IC.back + '</button><div class="t">ストーリーズを作成</div>' +
+        '<button type="button" class="go" data-sgo="1">シェア</button></div>' +
+        '<div class="me">' + img(pf.pic) + '<div><b>' + esc(pf.name) + '</b><div class="au">' + IC.globe + ' 公開・24時間で消えます</div></div></div>' +
+        '<div class="fbstp">' + (M ? (M.video ? '<div class="vv">' + IC.play + '<span>' + esc(M.name || '動画') + '</span></div>' : '<img src="' + M.url + '" alt="">') +
+          '<button type="button" data-srm="1">✕</button>' : '<label class="add"><input type="file" id="fbStF" accept="image/*,video/mp4,video/quicktime" style="display:none"><span class="ic">🖼️</span>写真・動画を選択</label>') + '</div>' +
+        '<div class="note">写真か動画を1つだけ。写真のAIの記録は自動で削除してから投稿します。</div></div>';
+    };
+    draw();
+    d.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-x]')) { d.remove(); return; }
+      if (t.closest('[data-srm]')) { M = null; draw(); return; }
+      if (t.closest('[data-sgo]')) {
+        if (!M) { warn('写真か動画を選択してください😊'); return; }
+        var an = (ACCTS.filter(function (a) { return a.acct === CUR; })[0] || {}).label || '';
+        confirmGo(an + 'のFacebookのストーリーズにシェアしますか？😊', function () {
+          if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('ストーリーズをシェアしています', false), '#2C7A99');
+          askBig({ kind: 'story_post', acct: CUR, media: [{ b64: M.b64 }] }, function (err) {
+            if (typeof szOvHide_ === 'function') szOvHide_();
+            if (err) { warn(err); return; }
+            d.remove(); doneShow('ストーリーズのシェアが完了しました', function () { openStories(); });
+          });
+        });
+      }
+    });
+    d.addEventListener('change', function (e) {
+      if (e.target.id !== 'fbStF') return;
+      var fl = (e.target.files || [])[0]; if (!fl) return;
+      var add = function (m) {
+        if (!m) { warn('読み込めませんでした。もう一度選択してください😊'); return; }
+        if (m.video && m.size > MAXBYTES) { warn('動画が大きすぎます（18MBまで）'); return; }
+        M = m; draw();
+      };
+      if (/^video\//.test(fl.type)) readVid(fl, add); else readPic(fl, add);
+    });
+    document.body.appendChild(d);
+  }
+  function openStories() {
+    var d = document.createElement('div'); d.className = 'fbov fbsv';
+    var L = null, i = 0;
+    var draw = function (err) {
+      var x = L && L[i];
+      d.innerHTML = '<div class="in"><div class="bars">' + (L || []).map(function (_, k) { return '<i' + (k <= i ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' +
+        '<div class="hd"><button type="button" data-x="1">✕</button><b>ストーリーズ</b><span class="sp"></span>' + (x && can('post') ? '<button type="button" data-sdl="1">' + IC.dots + '</button>' : '') + '</div>' +
+        '<div class="bd">' + (err ? '<div class="none">' + esc(err) + '</div>' : !L ? '<div class="none">読み込み中です…</div>' : !x ? '<div class="none">今出ているストーリーズはありません' + (can('post') ? '<br><button type="button" class="fbgo" data-new="1" style="max-width:260px;margin:16px auto 0">ストーリーズを作成</button>' : '') + '</div>' :
+          (x.type === 'video' && x.src ? '<video src="' + esc(x.src) + '" autoplay playsinline controls></video>' : img(x.th)) +
+          '<div class="tm">' + esc(when(x.at)) + '</div>' + (L.length > 1 ? '<button type="button" class="pv" data-mv="-1">‹</button><button type="button" class="nx" data-mv="1">›</button>' : '')) + '</div></div>';
+    };
+    draw();
+    d.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-x]')) { d.remove(); return; }
+      if (t.closest('[data-new]')) { d.remove(); composeStory(); return; }
+      var mv = t.closest('[data-mv]'); if (mv) { i = Math.max(0, Math.min(L.length - 1, i + Number(mv.getAttribute('data-mv')))); draw(); return; }
+      if (t.closest('[data-sdl]')) {
+        var x = L[i];
+        sheet([{ t: 'ストーリーズを削除', red: true, go: function () {
+          confirmGo('このストーリーズを削除しますか？😊', function () {
+            simple({ kind: 'story_delete', acct: CUR, story: x.id }, 'ストーリーズを削除しています', function (err) {
+              if (err) { warn(err); return; }
+              L.splice(i, 1); i = Math.max(0, i - 1); doneShow('ストーリーズの削除が完了しました', function () { draw(); });
+            });
+          });
+        } }]);
+      }
+    });
+    document.body.appendChild(d);
+    ask({ kind: 'story_list', acct: CUR }, function (err, r) { if (err) { draw(err); return; } L = (r && r.stories) || []; i = 0; draw(); });
+  }
+
   // ── ページの「…」（インサイト・権限・Facebookで開く）──
   function pageMenu() {
     var v = DATA.views[CUR], pf = (v && v.prof) || {};
     var items = [];
     if (can('profile')) items.push({ t: 'ページ情報を編集', go: openProf });
     if (can('post')) items.push({ t: '予約投稿', go: openSched });
+    if (can('post')) items.push({ t: 'ストーリーズを作成', go: composeStory });
+    items.push({ t: 'ストーリーズ（今出ている物）', go: openStories });
     if (can('insights')) items.push({ t: 'インサイト', go: pageInsights });
     if (can('reply')) items.push({ t: 'メッセージ', go: openInbox });
     if (DATA.dev) items.push({ t: '権限（スタッフごと）', go: openPerm });
