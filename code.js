@@ -22580,7 +22580,9 @@ var KANSHISCRIPT_ =
 '  if(ev.target.closest("#kTiles")){ if(tilesClick_(ev)) return; }' +
 '  var ed=ev.target.closest("[data-editor]");' +
 '  if(ed){ openTiles_(); return; }' +
-'  if(ev.target.closest("#kBackItem")){ item_=null; render_(); window.scrollTo(0,0); return; }' +
+/* ★2026-11-10 ズコ全体の戻るの点検で見つけた：項目の中の項目（例＝スーパーズコApp関連 → ①… → その中の1つ）の「詳細」から戻ると、
+   1つ前の項目ではなく、まとまりの中の一覧まで戻っていた（当てはまる項目は54個）。＝1段ずつ上の項目へ戻す。 */
+'  if(ev.target.closest("#kBackItem")){ var ps_=String(item_||"").split("."); item_=(ps_.length>2)?ps_.slice(0,-1).join("."):null; render_(); window.scrollTo(0,0); return; }' +
 '  if(ev.target.closest("#kBack")){ cur_=null; item_=null; render_(); window.scrollTo(0,0); return; }' +
 '  var it=ev.target.closest("[data-item]");' +
 '  if(it){ item_=it.getAttribute("data-item"); render_(); window.scrollTo(0,0); return; }' +

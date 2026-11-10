@@ -504,7 +504,7 @@ var KANSHISCRIPT_ =
 '  if(ev.target.closest("#kTiles")){ if(tilesClick_(ev)) return; }' +
 '  var ed=ev.target.closest("[data-editor]");' +
 '  if(ed){ openTiles_(); return; }' +
-'  if(ev.target.closest("#kBackItem")){ item_=null; render_(); window.scrollTo(0,0); return; }' +
+'  if(ev.target.closest("#kBackItem")){ var ps_=String(item_||"").split("."); item_=(ps_.length>2)?ps_.slice(0,-1).join("."):null; render_(); window.scrollTo(0,0); return; }' +
 '  if(ev.target.closest("#kBack")){ cur_=null; item_=null; render_(); window.scrollTo(0,0); return; }' +
 '  var it=ev.target.closest("[data-item]");' +
 '  if(it){ item_=it.getAttribute("data-item"); render_(); window.scrollTo(0,0); return; }' +
