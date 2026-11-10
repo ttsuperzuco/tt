@@ -14626,6 +14626,7 @@ var FBCSS_ =
   '.fbbar.on{display:block;}' +
   '.fbbar .fbbtns{margin-top:0;}' +
   '.fbapp .fbtabs{position:sticky;top:46px;z-index:40;}' +
+  '.fbapp{overflow:clip;}' +
   '.fbapp .fbtabs button{font-weight:500;}' +
   '.fbinfo .row > div{display:flex;min-width:0;gap:6px;align-items:baseline;}' +
   '.fbinfo .row .one{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
