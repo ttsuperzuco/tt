@@ -13046,6 +13046,9 @@ var THREADSCSS_ =
   '.thacct button,.thseg button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:14px 4px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.thacct button.on,.thseg button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.thacct.one{grid-template-columns:1fr;}' +
+  // ★2026-11-10 まるちゃん「見るだけ許す」＝閲覧のみのアカウント（ボタンの下に小さく「閲覧のみ」・表示の上に案内）
+  '.thacct button small{display:block;font-size:11px;font-weight:700;line-height:1.15;opacity:.85;}' +
+  '.thf .ronote{background:#262626;color:#f3f5f7;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.5;margin:12px 0 2px;}' +
   // ★2026-11-10 まるちゃん「タイトルはかなり小さく・投稿するアカウントはいらない・ボタンの縦幅はうすく。本編を表示するのがメインだから」
   '.thw .hhead{margin:0 0 3px;gap:4px;}.thw .hhead .bmark{font-size:12px;}.thw .hhead .bmark svg{width:16px;height:16px;display:block;}.thw .hhead .bname{font-size:.85rem;}' +
   '.thacct{gap:8px;margin:2px 0 8px;}' +
@@ -13502,7 +13505,7 @@ function threadsScript_(C) {
   function drawAcct() {
     var h = '';
     for (var i = 0; i < ACCTS.length; i++) {
-      h += '<button type="button" data-a="' + esc(ACCTS[i].acct) + '"' + (ACCTS[i].acct === CUR ? ' class="on"' : '') + '>' + esc(ACCTS[i].label) + '</button>';
+      h += '<button type="button" data-a="' + esc(ACCTS[i].acct) + '"' + (ACCTS[i].acct === CUR ? ' class="on"' : '') + '>' + esc(ACCTS[i].label) + (ACCTS[i].ro ? '<small>閲覧のみ</small>' : '') + '</button>';
     }
     $('thAcct').innerHTML = h;
     $('thAcct').className = 'thacct' + (ACCTS.length === 1 ? ' one' : '');
@@ -13510,6 +13513,9 @@ function threadsScript_(C) {
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
     $('thUser').textContent = a && a.username ? '@' + a.username : '';
   }
+  // ★2026-11-10 まるちゃん決定「見るだけ許す」：閲覧のみのアカウント（受付側が ro を付けて返す）では、投稿・削除・返信・
+  //   コメントの非表示・承認のボタンを出さない。受付側でも止めている（threads_post._check）＝二重の守り。
+  function curRo() { var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0]; return !!(a && a.ro); }
   $('thAcct').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     CUR = b.getAttribute('data-a'); drawAcct();
@@ -13827,7 +13833,7 @@ function threadsScript_(C) {
     drawLong(); drawThumbs();
   }
   $('thGo').addEventListener('click', function () {
-    if (this.disabled) return;
+    if (this.disabled || curRo()) return;
     var text = $('thText').value.trim();
     var pv = vals(['thP1', 'thP2', 'thP3', 'thP4']);
     var usePoll = $('thPoll').style.display !== 'none';
@@ -13903,7 +13909,7 @@ function threadsScript_(C) {
   var TAB = 'th';
   function myRole() { return window.__SZ_ROLE_ || ''; }
   function drawFeed() {
-    var pf = FEED.profile || {}, h = '', isDev = myRole() === '開発';
+    var pf = FEED.profile || {}, h = '', isDev = myRole() === '開発', ro = curRo();
     h += '<div class="top"><span>' + esc(pf.username || '') + '</span><button type="button" data-reload="1" title="最新にする">⟳</button></div>';
     h += '<div class="ph"><div class="nm"><div class="n">' + esc(pf.name || '') + '</div><div class="u">' + esc(pf.username || '') + '</div></div>' +
       (pf.pic ? '<img src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '') + '</div>';
@@ -13919,7 +13925,8 @@ function threadsScript_(C) {
       '<button type="button" id="thInsOpen">インサイトを見る</button></div>';
     var TABS = [['th', 'スレッド'], ['rp', '返信'], ['md', 'メディア'], ['rs', '再投稿']];
     h += '<div class="tabs">' + TABS.map(function (t) { return '<div data-tab="' + t[0] + '"' + (t[0] === TAB ? ' class="on"' : '') + '>' + t[1] + '</div>'; }).join('') + '</div>';
-    if (TAB === 'th') {
+    if (ro) h += '<div class="ronote">このアカウントは閲覧のみです😊<br>投稿・削除・返信はできません。</div>';
+    if (TAB === 'th' && !ro) {
       h += '<div class="cmp" data-compose="1">' + (pf.pic ? '<img src="' + esc(pf.pic) + '" referrerpolicy="no-referrer">' : '<div class="av0"></div>') +
         '<span>最近どう？</span><button type="button" data-compose="1">投稿</button></div>';
     }
@@ -13954,7 +13961,7 @@ function threadsScript_(C) {
             : '<img src="' + esc(m.u) + '" loading="lazy" referrerpolicy="no-referrer">';
         }).join('') + '</div>';
       }
-      var st = p.st || null, canDel = TAB !== 'rp' && (p.zuko || isDev);
+      var st = p.st || null, canDel = !ro && TAB !== 'rp' && (p.zuko || isDev);
       // ★本物と見比べて直した（2026-11-05）：インスタから回した投稿は公式の仕組みが写真・動画を返さない＝本物の画面から読んだ物で補う。
       var wp = wb && wb.posts && p.code ? wb.posts[p.code] : null;
       if ((!p.media || !p.media.length) && !p.card && wp) {
@@ -13994,7 +14001,7 @@ function threadsScript_(C) {
           (canDel ? '<button type="button" class="del" data-fdel="' + esc(p.id) + '">削除</button>' : '') + '</div>' +
         (p.text ? '<div class="tx">' + linkify(p.text) + '</div>' : (p.type === 'REPOST_FACADE' ? '<div class="tx" style="color:#888">🔁 再投稿（内容はThreadsの画面から読み込んでいます…）</div>' : '')) + md + card +
         (cnt4 ? '<div class="st"><span>♡ ' + nz(cnt4[0]) + '</span><span>💬 ' + nz(cnt4[1]) + '</span><span>🔁 ' + nz(cnt4[2]) + '</span><span>➤ ' + nz(cnt4[3]) + '</span></div>' : '') +
-        (TAB !== 'rp' ? '<button type="button" class="cmb" data-cm="' + esc(p.id) + '">💬 コメントを見る・返信する</button>' +
+        (TAB !== 'rp' ? '<button type="button" class="cmb" data-cm="' + esc(p.id) + '">' + (ro ? '💬 コメントを見る' : '💬 コメントを見る・返信する') + '</button>' +
           '<div class="cms" id="cm_' + esc(p.id) + '" style="display:none"></div>' : '') +
         '</div></div>';
     });
@@ -14036,7 +14043,9 @@ function threadsScript_(C) {
   // ── コメント（見る・返信・非表示・承認）＝お店の投稿についたコメントだけ ──
   function cmRow(r, sub, pending) {
     var a = '';
-    if (pending) {
+    if (curRo()) {
+      a = '';   // 閲覧のみ＝返信・非表示・承認のボタンを出さない
+    } else if (pending) {
       a = '<button type="button" class="ok" data-ap="' + esc(r.id) + '">承認する</button><button type="button" class="ng" data-ig="' + esc(r.id) + '">無視する</button>';
     } else {
       a = '<button type="button" data-rp="' + esc(r.id) + '">↩ 返信</button>';
@@ -14070,7 +14079,7 @@ function threadsScript_(C) {
       if (pd.length) { h += '<div class="pd">承認待ちのコメント ' + pd.length + '件</div>' + pd.map(function (r) { return cmRow(r, false, true); }).join(''); }
       if (!rs.length && !pd.length) h += '<div class="fl">まだコメントはありません</div>';
       h += rs.map(function (r) { return cmRow(r, !!(r.to && r.to !== mid), false); }).join('');
-      h += '<div class="cm"><div class="a"><button type="button" data-rp="' + esc(mid) + '">↩ この投稿に返信</button></div><div class="rpbox" id="rb_' + esc(mid) + '" style="display:none"></div></div>';
+      if (!curRo()) h += '<div class="cm"><div class="a"><button type="button" data-rp="' + esc(mid) + '">↩ この投稿に返信</button></div><div class="rpbox" id="rb_' + esc(mid) + '" style="display:none"></div></div>';
       box.innerHTML = h; box.setAttribute('data-mid', mid);
     })();
   }
@@ -14101,6 +14110,7 @@ function threadsScript_(C) {
       if (box && box.style.display !== 'none') { box.style.display = 'none'; return; }
       loadCm(g('data-cm')); return;
     }
+    if (curRo()) return;   // 閲覧のみ＝ここから下（返信・削除・非表示・承認）は何もしない
     if (g('data-rp')) { openReply(g('data-rp')); return; }
     if (g('data-fdel')) {
       var dmid = g('data-fdel');
@@ -14245,7 +14255,7 @@ function threadsScript_(C) {
   $('thFeed').addEventListener('click', function (e) {
     var t = e.target;
     var cl = function (sel) { return t.closest && t.closest(sel); };
-    if (cl('[data-compose]')) { openCompose(); return; }
+    if (cl('[data-compose]')) { if (!curRo()) openCompose(); return; }
     if (cl('[data-back]')) { VIEW = 'feed'; if (FEED) drawFeed(); window.scrollTo(0, 0); return; }
     if (cl('[data-reload]')) { loadAll(); loadWeb(CUR, 30, true); return; }
     var tb = cl('[data-tab]');
@@ -14327,7 +14337,10 @@ function threadsScript_(C) {
         }
       }
       PF.done = {};
-      d.cur = CUR; cacheSet(d); apply(d, true);
+      // ★2026-11-10 直し：まだ何も選んでいない時（初めて開いた時）は、受付側が決めた「最初に出すアカウント」（d.cur）を残す。
+      //   前は空で上書きしていて、一番左のアカウントが出ていた（みかんさん＝台湾男性のはずが台湾女性になる）。
+      if (CUR) d.cur = CUR;
+      cacheSet(d); apply(d, true);
       setTimeout(pfRun, 1500);
     });
   }
