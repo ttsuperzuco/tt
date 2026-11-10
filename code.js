@@ -11871,7 +11871,10 @@ var SMCSS_ =
   '#smCertPane{position:absolute;left:0;right:0;top:58px;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;}' +
   '#smCertSizer{position:relative;overflow:hidden;margin:0 auto;}' +
   '#smCertSizer iframe{position:absolute;left:0;top:0;width:1180px;height:1000px;transform-origin:0 0;background:#fff;}' +
-  '.smmsg{color:#fff;font-weight:800;font-size:18px;line-height:1.7;text-align:center;padding:48px 16px;}' +
+  // ★待つ画面＝ほかのズコの待つ画面と同じ（画面のまん中に大きな⏳と大きな字・szBusyHtml_）。2026-11-10 まるちゃん
+  //   「スマホでみたらすごくちいさい　なぜ　ほかのめっせーじのようにまんなかにおおきめにならないの？」
+  '.smmsg{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+  'padding:30px;box-sizing:border-box;text-align:center;color:#fff;font-weight:800;font-size:20px;line-height:1.7;}' +
   '.smmsg button{margin-top:16px;background:#fff;color:#2C7A99;border:0;border-radius:999px;padding:10px 22px;font:inherit;font-weight:900;cursor:pointer;}';
 function shomeishoScript_(C) {
   function $(id) { return document.getElementById(id); }
@@ -11964,7 +11967,9 @@ function shomeishoScript_(C) {
     var c = cached();
     if (c) showPage(c);
     else {
-      $('smMsg').innerHTML = '購入証明書の画面を読み込んでいます…<br>少し待っててくださいね🥺';
+      $('smMsg').innerHTML = (typeof szBusyHtml_ === 'function')
+        ? szBusyHtml_('購入証明書を準備しています', '準備が終わったら自動で切り替わりますので、少し待っててくださいね🥺')
+        : '購入証明書を準備しています…<br>少し待っててくださいね🥺';
       $('smMsg').style.display = ''; frame.style.display = 'none';
     }
     ask('page', [], function (err, r) {
