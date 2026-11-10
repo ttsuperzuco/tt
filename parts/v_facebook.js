@@ -139,7 +139,53 @@ var FBCSS_ =
   '.fbpm{padding:12px 16px 24px;}.fbpm .who{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}' +
   '.fbpm .who button{border:1px solid #ced0d4;background:#fff;border-radius:16px;padding:6px 12px;font:inherit;cursor:pointer;}.fbpm .who button.on{border-color:#0866ff;background:#ebf5ff;}' +
   '.fbpm table{width:100%;border-collapse:collapse;font-size:13px;}.fbpm th{padding:6px 4px;}.fbpm td{padding:8px 4px;border-top:1px solid #e4e6eb;}.fbpm td input{width:22px;height:22px;}.fbpm td+td{text-align:center;}' +
-  '.fbgo{display:block;width:100%;margin-top:12px;height:44px;border:0;border-radius:8px;background:#0866ff;color:#fff;font:inherit;font-weight:700;font-size:16px;cursor:pointer;}';
+  '.fbgo{display:block;width:100%;margin-top:12px;height:44px;border:0;border-radius:8px;background:#0866ff;color:#fff;font:inherit;font-weight:700;font-size:16px;cursor:pointer;}' +
+  '.fbhero{background:#fff;position:relative;}' +
+  '.fbhero .fbcover{aspect-ratio:auto;height:0;padding-bottom:56%;position:relative;overflow:hidden;}' +
+  '.fbhero .fbcover .cv{position:absolute;inset:0;width:100%;height:100%;display:block;}' +
+  '.fbhero .fbcover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}' +
+  '.fbcvic{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:6px;padding:8px 10px;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,0));}' +
+  '.fbcvic button,.fbstk button{width:38px;height:38px;display:flex;align-items:center;justify-content:center;color:#fff;background:none;border:0;padding:0;cursor:pointer;}' +
+  '.fbcvic svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}' +
+  '.fbcvic .sp{flex:1;}' +
+  '.fbsheet{position:relative;margin-top:-32px;background:#fff;border-radius:28px 28px 0 0;padding:0 16px 16px;text-align:center;}' +
+  '.fbsheet .fbav{position:relative;margin:-100px auto 0;width:168px;height:168px;}' +
+  '.fbsheet .fbav img{width:168px;height:168px;border-radius:50%;object-fit:cover;border:4px solid #fff;box-sizing:border-box;background:#e4e6eb;display:block;}' +
+  '.fbsheet .nm{margin-top:10px;font-size:26px;font-weight:700;line-height:1.2;word-break:break-word;}' +
+  '.fbsheet .nm .vf{display:inline-block;vertical-align:middle;margin-left:4px;}' +
+  '.fbsheet .fl{margin-top:6px;font-size:15px;font-weight:700;}' +
+  '.fbsheet .ab{margin-top:14px;font-size:15px;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}' +
+  '.fbsheet .ab.full{display:block;}' +
+  '.fbsheet .abm{color:#65686c;font-weight:600;cursor:pointer;}' +
+  '.fbsheet .ct{margin-top:14px;font-size:14px;font-weight:700;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px 4px;}' +
+  '.fbsheet .ct svg{display:inline-block;vertical-align:-2px;margin-right:3px;}' +
+  '.fbsheet .ct i{font-style:normal;color:#65686c;font-weight:400;margin:0 2px;}' +
+  '.fbapp .fbbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px;}' +
+  '.fbapp .fbbtns button{height:40px;border-radius:8px;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;min-width:0;}' +
+  '.fbapp .fbbtns .fol{background:#0866ff;color:#fff;}' +
+  '.fbapp .fbbtns .msg{background:#e2e5e9;color:#080809;}' +
+  '.fbapp .fbtabs{display:flex;gap:6px;padding:10px 12px;background:#fff;border-top:8px solid #c9ccd1;border-bottom:1px solid #e4e6eb;overflow-x:auto;}' +
+  '.fbapp .fbtabs button{padding:8px 16px;border-radius:20px;font-size:16px;font-weight:600;color:#65686c;white-space:nowrap;}' +
+  '.fbapp .fbtabs button.on{background:#ebf5ff;color:#0064d1;}' +
+  '.fbh3{padding:16px 16px 4px;font-size:19px;font-weight:700;}' +
+  '.fbinfo .row .at{font-size:20px;line-height:1;color:#080809;}' +
+  '.fbinfo .row a{color:#080809;font-weight:400;}' +
+  '.fbapp .fbnew{margin:8px 16px 12px;}' +
+  '.fbph .who .n .st{color:#65686c;font-weight:400;}' +
+  '.fbmore{padding:0 16px;color:#65686c;font-weight:600;}' +
+  '.fbact2{display:flex;gap:22px;padding:10px 16px 12px;}' +
+  '.fbact2 button{display:flex;align-items:center;gap:6px;color:#65686c;font-size:15px;background:none;border:0;padding:0;cursor:pointer;}' +
+  '.fbact2 svg{width:24px;height:24px;}' +
+  '.fbchips{display:flex;gap:8px;padding:10px 12px;overflow-x:auto;}' +
+  '.fbchips button{background:#e2e5e9;border-radius:18px;padding:7px 14px;font-weight:600;white-space:nowrap;}' +
+  '.fbphotos.big{gap:2px;padding:0;}' +
+  '.fbstk{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;z-index:50;display:none;align-items:center;gap:6px;padding:4px 10px;background:#fff;border-bottom:1px solid #e4e6eb;box-sizing:border-box;}' +
+  '.fbstk.on{display:flex;}' +
+  '.fbstk button{color:#080809;}' +
+  '.fbstk .t{flex:1;font-size:17px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}' +
+  '.fbbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;z-index:50;display:none;background:#fff;border-top:1px solid #e4e6eb;padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-sizing:border-box;}' +
+  '.fbbar.on{display:block;}' +
+  '.fbbar .fbbtns{margin-top:0;}';
 function renderFacebookPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">📘</span><span class="bname">Facebook</span></div>';
   var C = {
@@ -188,6 +234,11 @@ function fbScript_(C) {
     pin: S('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2.5a7 7 0 017 7C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', 20),
     star: S('<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>', 20),
     ig: S('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>', 20),
+    dotsC: S('<circle cx="12" cy="12" r="9.5"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/>', 26),
+    cat: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4h6a2 2 0 012 2v1h3a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2h3V6a2 2 0 012-2zm0 3h6V6H9z"/></svg>',
+    pinS: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 00-7 7c0 5.3 7 13 7 13s7-7.7 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6.5a2.5 2.5 0 010 5z"/></svg>',
+    igS: S('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>', 15),
+    photo: S('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>', 24),
     verified: '<svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0866ff"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
   };
 
@@ -288,14 +339,15 @@ function fbScript_(C) {
     var name = esc(pf.name || '');
     var st = p.story || '';
     var hd = '<b>' + name + '</b>';
-    if (st && pf.name && st.indexOf(pf.name) === 0) hd = '<b>' + name + '</b>' + esc(st.slice(pf.name.length));
-    else if (st) hd = esc(st);
+    if (st && pf.name && st.indexOf(pf.name) === 0) hd = '<b>' + name + '</b><span class="st">' + esc(st.slice(pf.name.length)) + '</span>';
+    else if (st) hd = '<span class="st">' + esc(st) + '</span>';
     var h = '<div class="fbpost"' + (full ? '' : ' data-post="' + esc(p.id) + '"') + '>' +
       '<div class="fbph">' + img(pf.pic) + '<div class="who"><div class="n">' + hd + '</div>' +
       '<div class="d">' + esc(when(p.at)) + ' · ' + IC.globe + '</div></div><button type="button" class="dots" data-pmenu="' + esc(p.id) + '">' + IC.dots + '</button></div>';
     if (p.msg) {
-      h += '<div class="fbtx' + (full ? '' : ' cl') + '">' + esc(p.msg) + '</div>';
-      if (!full && (p.msg.split('\n').length > 5 || p.msg.length > 180)) h += '<div class="fbmore">もっと見る</div>';
+      var long = !full && (p.msg.split('\n').length > 3 || p.msg.length > 90);
+      h += '<div class="fbtx' + (long ? ' cl' : '') + '">' + esc(p.msg) + '</div>';
+      if (long) h += '<div class="fbmore">... もっと見る</div>';
     }
     var pics = p.pics || [];
     if (p.k === 'link' && p.link && (p.link.t || p.link.d)) {
@@ -309,29 +361,30 @@ function fbScript_(C) {
           (i === 3 && pics.length > 4 ? '<span class="plus">+' + (pics.length - 4) + '</span>' : '') + '</button>';
       }).join('') + '</div>';
     }
-    var right = [];
-    if (p.c) right.push('コメント' + num(p.c) + '件');
-    if (p.s) right.push('シェア' + num(p.s) + '件');
-    if (p.r || right.length) {
-      h += '<div class="fbcnt"><span class="rx">' + (p.r ? '<i>' + IC.thumb + '</i>' + num(p.r) : '') + '</span><span>' + right.join('　') + '</span></div>';
-    } else h += '<div style="height:10px"></div>';
-    h += '<div class="fbact"><button type="button" data-soon="1">' + IC.like + 'いいね！</button><button type="button"' + (full ? ' data-cfocus="1"' : ' data-post="' + esc(p.id) + '"') + '>' + IC.comment + 'コメントする</button><button type="button" data-soon="1">' + IC.share + 'シェア</button></div>';
+    h += '<div class="fbact2"><button type="button" data-soon="1">' + IC.like + (p.r ? '<span>' + num(p.r) + '</span>' : '') + '</button>' +
+      '<button type="button"' + (full ? ' data-cfocus="1"' : ' data-post="' + esc(p.id) + '"') + '>' + IC.comment + (p.c ? '<span>' + num(p.c) + '</span>' : '') + '</button>' +
+      '<button type="button" data-share="' + esc(p.url || '') + '">' + IC.share + (p.s ? '<span>' + num(p.s) + '</span>' : '') + '</button></div>';
     return h + '</div>';
   }
 
-  function infoRows(pf, all) {
-    var r = [];
-    var row = function (ic, html) { r.push('<div class="row"><span class="ic">' + ic + '</span><div>' + html + '</div></div>'); };
-    if (pf.cats && pf.cats.length) row(IC.info, '<b>ページ</b> · ' + esc(pf.cats.join(' · ')));
-    if (pf.ig) row(IC.ig, '<a href="https://www.instagram.com/' + esc(pf.ig) + '/" target="_blank" rel="noopener">' + esc(pf.ig) + '</a>');
-    (pf.web || []).forEach(function (u) { row(IC.link, '<a href="' + esc(/^https?:/.test(u) ? u : 'https://' + u) + '" target="_blank" rel="noopener">' + esc(shortUrl(u).replace(/\?.*$/, '')) + '</a>'); });
-    if (all) {
-      if (pf.addr) row(IC.pin, esc(pf.addr) + '<span class="sub">住所</span>');
-      if (pf.phone) row(IC.phone, esc(pf.phone) + '<span class="sub">携帯</span>');
-      (pf.emails || []).forEach(function (m) { row(IC.mail, esc(m) + '<span class="sub">メールアドレス</span>'); });
+  function infoBlocks(pf) {
+    var sec = function (title, rows) { return rows.length ? '<div class="fbh3">' + title + '</div><div class="fbinfo">' + rows.join('') + '</div>' : ''; };
+    var row = function (ic, html) { return '<div class="row"><span class="ic">' + ic + '</span><div>' + html + '</div></div>'; };
+    var me = [], det = [], lk = [], ct = [];
+    if (pf.city) me.push(row(IC.pin, esc(pf.city)));
+    det.push(row(IC.star, pf.rcount ? ('評価' + esc(pf.rating) + '（レビュー' + num(pf.rcount) + '件）') : 'まだ評価はありません(レビュー0件)'));
+    if (pf.addr) det.push(row(IC.pin, esc(pf.addr)));
+    else if (pf.cityen) det.push(row(IC.pin, esc(pf.cityen)));
+    var web = pf.web || [];
+    if (web.length) {
+      var u0 = web[0];
+      lk.push(row(IC.link, '<a href="' + esc(/^https?:/.test(u0) ? u0 : 'https://' + u0) + '" target="_blank" rel="noopener">' + esc(shortUrl(u0)) + '</a>' + (web.length > 1 ? ' + ' + (web.length - 1) : '')));
     }
-    row(IC.star, pf.rcount ? ('評価' + esc(pf.rating) + '（レビュー' + num(pf.rcount) + '件）') : 'まだ評価はありません(レビュー0件)');
-    return r.join('');
+    if (pf.ig) ct.push(row('<b class="at">@</b>', '<a href="https://www.instagram.com/' + esc(pf.ig) + '/" target="_blank" rel="noopener">' + esc(pf.ig) + '</a>'));
+    if (pf.phone) ct.push(row(IC.phone, esc(pf.phone)));
+    (pf.emails || []).forEach(function (m) { ct.push(row(IC.mail, esc(m))); });
+    ct.push(row(IC.msgr, esc(pf.name)));
+    return sec('個人の情報', me) + sec('詳細', det) + sec('リンク', lk) + sec('連絡先情報', ct);
   }
 
   function drawApp() {
@@ -341,43 +394,59 @@ function fbScript_(C) {
     if (!v) { A.innerHTML = '<div class="fbempty">' + (BUSY[CUR] ? 'Facebookから読み込み中です…' : '') + '</div>'; return; }
     if (v.nokey) { A.innerHTML = '<div class="fbempty">このページは準備中です😊</div>'; return; }
     var pf = v.prof || {};
-    var h = '<div class="fbsec">' +
-      '<div class="fbtop"><button type="button" data-soon="1">' + IC.back + '</button><div class="t">' + esc(pf.name) + '</div><button type="button" data-soon="1">' + IC.search + '</button></div>' +
-      '<div class="fbcover">' + (pf.cover ? '<button type="button" data-pic="' + esc(pf.cover) + '" style="display:block;width:100%;height:100%">' + img(pf.cover) + '</button>' : '') + '</div>' +
-      '<div class="fbav">' + (pf.pic ? '<button type="button" data-pic="' + esc(pf.pic) + '">' + img(pf.pic) + '</button>' : '') + '</div>' +
-      '<div class="fbhead"><div class="nm">' + esc(pf.name) + (pf.verified ? '<span class="vf">' + IC.verified + '</span>' : '') + '</div>' +
-        '<div class="fl">フォロワー<b>' + num(pf.followers) + '人</b> • フォロー中<b>0人</b></div>' +
-        (pf.about ? '<div class="ab">' + esc(pf.about) + '</div>' : '') +
-        '<div class="fbbtns"><button type="button" class="msg" data-inbox="1">' + IC.msgr + 'メッセージ</button><button type="button" class="fol" data-soon="1">' + IC.follow + 'フォローする</button><button type="button" class="more" data-pgmenu="1">' + IC.dots + '</button></div>' +
-      '</div>' +
-      '<div class="fbtabs">' + [['posts', '投稿'], ['about', '基本データ'], ['reels', 'リール'], ['photos', '写真']].map(function (t) {
+    var topIcons = '<button type="button" data-soon="1">' + IC.back + '</button><span class="sp"></span>' +
+      '<button type="button" data-soon="1">' + IC.search + '</button><button type="button" data-pgmenu="1">' + IC.dotsC + '</button>' +
+      '<button type="button" data-share="' + esc(pf.link || '') + '">' + IC.share + '</button>';
+    var cats = (pf.cats || []).slice(0, 1);
+    var line = [];
+    if (cats.length) line.push(IC.cat + esc(cats[0]));
+    if (pf.cityen) line.push(IC.pinS + esc(pf.cityen.split(',')[0]));
+    if (pf.ig) line.push(IC.igS + esc(pf.ig));
+    var btns = '<button type="button" class="fol" data-soon="1">' + IC.follow + 'フォローする</button><button type="button" class="msg" data-inbox="1">' + IC.msgr + 'メッセージ</button>';
+    var h = '<div class="fbstk" id="fbStk">' + topIcons.replace('<span class="sp"></span>', '<div class="t">' + esc(pf.name) + '</div>') + '</div>' +
+      '<div class="fbhero" id="fbHero">' +
+        '<div class="fbcover">' + (pf.cover ? '<button type="button" data-pic="' + esc(pf.cover) + '" class="cv">' + img(pf.cover) + '</button>' : '') +
+          '<div class="fbcvic">' + topIcons + '</div></div>' +
+        '<div class="fbsheet">' +
+          '<div class="fbav">' + (pf.pic ? '<button type="button" data-pic="' + esc(pf.pic) + '">' + img(pf.pic) + '</button>' : '') + '</div>' +
+          '<div class="nm">' + esc(pf.name) + (pf.verified ? '<span class="vf">' + IC.verified + '</span>' : '') + '</div>' +
+          '<div class="fl">フォロワー' + num(pf.followers) + '人 · フォロー中0人</div>' +
+          (pf.about ? '<div class="ab" id="fbAb">' + esc(pf.about) + '</div><div class="abm" data-abmore="1">... もっと見る</div>' : '') +
+          (line.length ? '<div class="ct">' + line.join('<i>·</i>') + '</div>' : '') +
+          '<div class="fbbtns" id="fbBtns">' + btns + '</div>' +
+        '</div></div>' +
+      '<div class="fbtabs" id="fbTabs">' + [['posts', 'すべて'], ['photos', '写真'], ['reels', 'リール'], ['mentions', 'メンション']].map(function (t) {
         return '<button type="button" data-tab="' + t[0] + '"' + (TAB === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>';
-      }).join('') + '</div></div>';
+      }).join('') + '</div>';
     var posts = v.posts || [], photos = v.photos || [], reels = v.reels || [];
-    if (TAB === 'posts') {
-      h += '<div class="fbsec"><div class="fbh2"><b>詳細</b></div><div class="fbinfo">' + infoRows(pf, false) + '</div></div>';
-      if (photos.length) {
-        h += '<div class="fbsec"><div class="fbh2"><b>写真</b></div><div class="fbphotos">' + photos.slice(0, 6).map(function (x) {
-          return '<button type="button" data-pic="' + esc(x.th) + '">' + img(x.th) + '</button>';
-        }).join('') + '</div><button type="button" class="fbseeall" data-tab="photos">すべての写真を見る</button></div>';
-      }
-      h += '<div class="fbsec"><div class="fbh2" style="padding-bottom:12px"><b>投稿</b><span>フィルター</span></div>' +
-        (can('post') ? '<button type="button" class="fbnew" data-compose="1">' + img(pf.pic) + '<span>その気持ち、シェアしよう</span><i>🖼️</i></button>' : '') + '</div>';
+    if (TAB === 'posts' || TAB === 'about') {
+      h += '<div class="fbsec">' + infoBlocks(pf) + '<div class="fbh3">すべての投稿</div>' +
+        (can('post') ? '<button type="button" class="fbnew" data-compose="1">' + img(pf.pic) + '<span>その気持ち、シェアしよう</span><i>' + IC.photo + '</i></button>' : '') + '</div>';
       h += posts.length ? posts.map(function (p) { return postCard(p, pf, false); }).join('') : '<div class="fbempty">まだ投稿はありません</div>';
-    } else if (TAB === 'about') {
-      h += '<div class="fbsec"><div class="fbh2"><b>基本データ</b></div><div class="fbinfo">' + infoRows(pf, true) + '</div>' +
-        (pf.about ? '<div class="fbh2"><b>自己紹介</b></div><div class="fbinfo"><div class="row" style="white-space:pre-wrap">' + esc(pf.about) + '</div></div>' : '') + '</div>';
+    } else if (TAB === 'photos') {
+      h += '<div class="fbsec"><div class="fbchips"><button type="button" data-soon="1">プロフィール写真</button><button type="button" data-soon="1">カバー写真</button><button type="button" data-soon="1">すべてのアルバム</button></div>' +
+        (photos.length ? '<div class="fbphotos big">' + photos.map(function (x) {
+          return '<button type="button" data-pic="' + esc(x.th) + '">' + img(x.th) + '</button>';
+        }).join('') + '</div>' : '<div class="fbempty">写真はまだありません</div>') + '</div>';
     } else if (TAB === 'reels') {
       h += '<div class="fbsec">' + (reels.length ? '<div class="fbreels">' + reels.map(function (x) {
-        return '<button type="button" data-url="' + esc(x.url) + '">' + img(x.th) + (x.vw != null ? '<span class="v">' + IC.playS + num(x.vw) + '</span>' : '') + '</button>';
+        return '<button type="button" data-url="' + esc(x.url) + '">' + img(x.th) + '</button>';
       }).join('') + '</div>' : '<div class="fbempty">リールはまだありません</div>') + '</div>';
-    } else if (TAB === 'photos') {
-      h += '<div class="fbsec">' + (photos.length ? '<div class="fbphotos big">' + photos.map(function (x) {
-        return '<button type="button" data-pic="' + esc(x.th) + '">' + img(x.th) + '</button>';
-      }).join('') + '</div>' : '<div class="fbempty">写真はまだありません</div>') + '</div>';
+    } else if (TAB === 'mentions') {
+      h += '<div class="fbsec"><div class="fbempty">メンションはまだありません</div></div>';
     }
+    h += '<div class="fbbar" id="fbBar"><div class="fbbtns">' + btns + '</div></div>';
     A.innerHTML = h;
+    stick();
   }
+  function stick() {
+    var hero = $('fbHero'), stk = $('fbStk'), bar = $('fbBar'), bt = $('fbBtns');
+    if (!hero || !stk || !bar) return;
+    var r = hero.getBoundingClientRect(), b = bt ? bt.getBoundingClientRect() : r;
+    stk.classList.toggle('on', r.top < -120);
+    bar.classList.toggle('on', b.bottom < 0);
+  }
+  window.addEventListener('scroll', stick, { passive: true });
 
   $('fbApp').addEventListener('click', function (e) {
     var t = e.target;
@@ -385,6 +454,8 @@ function fbScript_(C) {
     var pc = t.closest('[data-pic]'); if (pc) { showPic(pc.getAttribute('data-pic')); return; }
     var ur = t.closest('[data-url]'); if (ur) { openUrl(ur.getAttribute('data-url')); return; }
     var pm = t.closest('[data-pmenu]'); if (pm) { postMenu(pm.getAttribute('data-pmenu')); return; }
+    var sh = t.closest('[data-share]'); if (sh) { var su = sh.getAttribute('data-share'); if (su) openUrl(su); else warn(SOON); return; }
+    if (t.closest('[data-abmore]')) { var ab = $('fbAb'); if (ab) ab.classList.add('full'); t.closest('[data-abmore]').remove(); return; }
     if (t.closest('[data-inbox]')) { openInbox(); return; }
     if (t.closest('[data-pgmenu]')) { pageMenu(); return; }
     if (t.closest('[data-compose]')) { compose(null); return; }
