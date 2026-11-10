@@ -999,20 +999,37 @@
     var app = false;
     try { app = (navigator.standalone === true) || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); } catch (e) {}
     var browser = ios ? 'Safari' : 'Chrome';
-    var how = ios ? '共有ボタン →「ホーム画面に追加」' : '右上の「⋮」→「アプリをインストール」';
+    // iPhoneの共有ボタンの絵（□に↑）。言葉だけだと分からないので、同じ絵を文の中に出す。
+    var shareIco = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-5px"><path d="M12 15V3M8 7l4-4 4 4M7 11H5v10h14V11h-2"/></svg>';
+    // ブラウザが開いたあとに押す所（番号付き・1行に1つ）
+    var steps = ios
+      ? ['共有ボタン（' + shareIco + '）を押してください😊', '「ホーム画面に追加」を押してください😊']
+      : ['右上の「⋮」を押してください😊', '「アプリをインストール」を押してください😊'];
+    var note = ios ? '共有ボタンが見つからない時は、「…」を押すと出てきます。' : '「アプリをインストール」が無い時は、「ホーム画面に追加」を押してください😊';
+    var NUM = ['①', '②', '③'];
+    function stepsHtml(list, size) {
+      var h = '';
+      for (var i = 0; i < list.length; i++) {
+        h += '<div style="display:flex;gap:8px;text-align:left;font-size:' + size + ';line-height:1.6;margin:6px 0;"><span style="flex:0 0 auto;">' + NUM[i] + '</span><span>' + list[i] + '</span></div>';
+      }
+      return h;
+    }
 
     // ①ブラウザで自分専用のリンクを開いた所＝次に押す所の案内（アイコンから開いた時は出さない）
     if (solo) {
       if (params.get('zin') !== '1' || app) return;
       var bar = document.createElement('div');
       bar.id = 'zkCarryBar';
-      bar.style.cssText = 'background:#fff;color:#12303c;font-weight:800;font-size:15px;line-height:1.6;padding:10px 12px;border-radius:12px;margin:0 0 8px;text-align:center;';
-      bar.textContent = how + 'を押してください😊';
+      bar.style.cssText = 'background:#fff;color:#12303c;font-weight:800;padding:12px 14px;border-radius:12px;margin:0 0 10px;box-shadow:0 4px 10px rgba(0,0,0,.18);';
+      bar.innerHTML = '<div style="font-size:16px;line-height:1.6;text-align:center;margin-bottom:4px;">スレッズコをホーム画面に追加します😊</div>' +
+        stepsHtml(steps, '15px') +
+        '<div style="font-size:12px;font-weight:600;line-height:1.6;color:#4b6470;margin-top:4px;">' + note + '</div>';
       headEl.parentNode.insertBefore(bar, headEl);
       return;
     }
 
-    // ②ズコの中のスレッズコ＝「ホーム画面に追加」ボタン
+    // ②ズコの中のスレッズコ＝「← 戻る」の右に、同じ大きさの「📲 ホーム画面に追加」ボタン
+    //   ★2026-11-10 まるちゃん「スタッフにわかるようしろ」＝初めは題名の横の小さい字で、気づけなかった。
     var url = zkCarryUrl_({ origin: location.origin, path: location.pathname, staff: staff, dev: dev,
       dv: lsGet('zk_dv'), dk: lsGet('zk_dk'), device: device, who: who, at: lsGet('sz_picked_at') });
     if (!url || typeof szPopup_ !== 'function') return;
@@ -1046,14 +1063,18 @@
     var b = document.createElement('button');
     b.type = 'button';
     b.id = 'zkCarryBtn';
-    b.textContent = 'ホーム画面に追加';
-    b.style.cssText = 'position:absolute;right:0;top:50%;transform:translateY(-50%);font:inherit;font-size:11px;font-weight:700;line-height:1.4;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;cursor:pointer;';
+    b.className = 'uhome';
+    b.textContent = '📲 ホーム画面に追加';
+    b.style.cssText = 'margin-left:auto;font-family:inherit;cursor:pointer;';
     b.addEventListener('click', function () {
-      szPopup_('スレッズコをホーム画面に追加しますか？😊\n' + browser + 'が開いたら、' + how + 'を押してください😊',
-        { icon: '📲', cancel: true, yesLabel: browser + 'で開く', onYes: openBrowser });
+      szPopup_('<div style="font-size:1.25rem;line-height:1.6;margin-bottom:10px;">スレッズコのアイコンを、このスマホのホーム画面に追加します😊</div>' +
+        stepsHtml(['下の「' + browser + 'で開く」を押してください😊'].concat(steps), '1.1rem') +
+        '<div style="font-size:.85rem;font-weight:600;line-height:1.6;text-align:left;color:#b9d0da;margin-top:6px;">' + note + '</div>',
+        { icon: '📲', isHtml: true, cancel: true, yesLabel: browser + 'で開く', onYes: openBrowser });
     });
-    headEl.style.position = 'relative';
-    headEl.appendChild(b);
+    var ubar = document.querySelector('.home .ubar');
+    if (ubar) { ubar.appendChild(b); }
+    else { b.style.cssText += 'display:block;margin:0 0 8px auto;'; headEl.parentNode.insertBefore(b, headEl); }
   }
   function showInsta() { mount(renderInstaPage_(base, staff, dev)); }
   // ★📘Facebook（2026-11-10）。見られるページ・中身は画面の中から受付係（op=facebook）に聞く＝ここでは描くだけ。
