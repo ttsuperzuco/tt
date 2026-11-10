@@ -158,15 +158,18 @@ function uriageBookScript_(C) {
     var L = '';
     if (!D.rows.length) L = '<div class="ubnone">まだ売上の行がありません</div>';
     else {
-      L = '<div class="ubtbl"><table><colgroup><col style="width:11%"><col style="width:8%"><col style="width:12%"><col style="width:13%">' +
-        '<col style="width:11%"><col><col style="width:14%"><col style="width:9%"></colgroup>' +
-        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="c">削除</th></tr></thead><tbody>';
+      L = '<div class="ubtbl"><table><colgroup><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:12%">' +
+        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:8%"></colgroup>' +
+        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">削除</th></tr></thead><tbody>';
+      var run = 0;
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
+        if (!x._del) run += Number(x.amount) || 0;
         L += '<tr class="r' + (x._pend ? ' pend' : '') + (x._del ? ' del' : '') + '" data-j="' + j + '"><td class="w">' + esc(x.time || '') + '</td><td class="w">' + esc(x.no) + '</td>' +
           '<td class="w e" data-c="B">' + esc(x.num) + '</td><td class="e" data-c="C">' + esc(x.name) + '</td>' +
           '<td class="p e' + (x.pay ? '' : ' np') + '" data-c="D">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '未選択') + '</td>' +
           '<td class="d e" data-c="E">' + esc(x.detail) + '</td><td class="n e" data-c="F">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td>' +
+          '<td class="n">' + (x._del ? '' : run.toLocaleString('ja-JP')) + '</td>' +
           '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
       }
       L += '</tbody></table></div>';
