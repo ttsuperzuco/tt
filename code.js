@@ -189,7 +189,7 @@ function doGet(e) {
     title = 'Facebook';                                       // ★お店のFacebookページを本物そっくりに見せる（純JS・中身は受付係 op=facebook）
     html = renderFacebookPage_(base, staff, dev);
   } else if (view === 'insta') {
-    title = 'インスタ';                                       // ★お店のインスタを本物そっくりに見せる（純JS・中身は受付係 op=insta）
+    title = 'インズコグラム';                                 // ★お店のインスタを本物そっくりに見せる（純JS・中身は受付係 op=insta）★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
     html = renderInstaPage_(base, staff, dev);
   } else if (view === 'threads') {
     title = 'スレッズコ';                                   // ★お店のThreadsに投稿・削除（純JS・投稿は受付係 op=threads）
@@ -1908,7 +1908,7 @@ var TILE_DEFS_ = [
   // ★📸インスタ（2026-11-08 まるちゃん決定「ぜんぶすいしょう」）＝お店のインスタ3つのプロフィールを本物そっくりに見せる。
   //   中身は受付係（op=insta → Instagram投稿\programs\insta_zuko.py）が専用ブラウザで読む。既定は開発者だけ（共通ルール16）。
   { id: 'insta', cls: 'insta', view: 'insta',
-    icon: '<span class="ticon">📸</span>', label: 'インスタ' },
+    icon: '<span class="ticon">📸</span>', label: 'インズコグラム' },   // ★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
   // ★📘Facebook（2026-11-10 まるちゃん決定「全部推奨で」）＝お店のFacebookページ3つを本物そっくりに見せる（第1段階＝読むだけ）。
   //   中身は受付係（op=facebook → Facebook投稿\programsb_zuko.py）がメタ公式の窓口で読む。既定は開発者だけ（共通ルール16）。
   { id: 'facebook', cls: 'facebook', view: 'facebook',
@@ -16353,7 +16353,7 @@ var INSTACSS_ =
   '.ighe .em{padding:30px 16px;text-align:center;color:#737373;font-size:14px;line-height:1.6;}';
 
 function renderInstaPage_(base, staff, dev) {
-  var head = '<div class="hhead"><span class="bmark">📸</span><span class="bname">インスタ</span></div>';
+  var head = '<div class="hhead"><span class="bmark">📸</span><span class="bname">インズコグラム</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8'

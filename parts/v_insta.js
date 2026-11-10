@@ -289,7 +289,7 @@ var INSTACSS_ =
   '.ighe .gr .cvm{position:absolute;left:0;right:0;bottom:0;background:rgba(0,149,246,.9);color:#fff;font-size:11px;text-align:center;padding:2px 0;}' +
   '.ighe .em{padding:30px 16px;text-align:center;color:#737373;font-size:14px;line-height:1.6;}';
 function renderInstaPage_(base, staff, dev) {
-  var head = '<div class="hhead"><span class="bmark">📸</span><span class="bname">インスタ</span></div>';
+  var head = '<div class="hhead"><span class="bmark">📸</span><span class="bname">インズコグラム</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8'
