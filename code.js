@@ -2082,25 +2082,34 @@ function homeSortBoot_(KEY) {
     }, 240);
   }
   // 持ち上げたボタンを指の下に置く。
-  function place() {
-    var el = st.el;
-    el.style.transform = 'none';
-    var r = el.getBoundingClientRect();
-    el.style.transform = 'translate(' + (st.x - st.gx - r.left) + 'px,' + (st.y - st.gy - r.top) + 'px) scale(1.05)';
+  //   ★場所は「動いている途中の見た目」でなく「本来のマス」で測る（箱の左上からの距離）。
+  //     見た目で測ると、すっと動いている最中のボタンを指の下にあると見まちがえて、行ったり来たりする。
+  function boxOrigin(box) {
+    var b = box.getBoundingClientRect();
+    return { x: b.left + box.clientLeft, y: b.top + box.clientTop };
   }
-  // 指の下に別のボタンがあれば、そこへ割り込む。
+  function place() {
+    var el = st.el, o = boxOrigin(st.box);
+    el.style.transform = 'translate(' + (st.x - st.gx - o.x - el.offsetLeft) + 'px,' +
+      (st.y - st.gy - o.y - el.offsetTop) + 'px) scale(1.05)';
+  }
+  // 指の下のマスに別のボタンがあれば、そこへ割り込む。
   function over() {
     if (Date.now() < st.lock) return;
-    var hit = document.elementFromPoint(st.x, st.y);
-    var t = (hit && hit.closest) ? hit.closest('a.tile') : null;
-    if (!t || t === st.el || t.parentNode !== st.box) return;
+    var o = boxOrigin(st.box), fx = st.x - o.x, fy = st.y - o.y;
+    var all = tilesOf(st.box), t = null;
+    for (var i = 0; i < all.length; i++) {
+      var a = all[i];
+      if (a !== st.el && fx >= a.offsetLeft && fx <= a.offsetLeft + a.offsetWidth &&
+          fy >= a.offsetTop && fy <= a.offsetTop + a.offsetHeight) { t = a; break; }
+    }
+    if (!t) return;
     var before = rectsOf(st.box, st.el);
-    var all = tilesOf(st.box);
     if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
     else st.box.insertBefore(st.el, t);
     regap(st.box);
     slide(before);
-    st.lock = Date.now() + 190;
+    st.lock = Date.now() + 120;
     place();
   }
   // 画面の上下の端に近づいたら、画面を少しずつ送る。
@@ -2137,8 +2146,8 @@ function homeSortBoot_(KEY) {
   }
   function lift() {
     if (!st || st.drag) return;
-    var r = st.el.getBoundingClientRect();
-    st.gx = st.x - r.left; st.gy = st.y - r.top;
+    var o = boxOrigin(st.box);
+    st.gx = st.x - o.x - st.el.offsetLeft; st.gy = st.y - o.y - st.el.offsetTop;
     st.drag = true; st.start = idsOf(st.box).join(',');
     st.el.style.transition = 'box-shadow .12s ease';
     st.el.classList.add('tdrag'); home.classList.add('hsorting');
@@ -2229,7 +2238,7 @@ function homeSortBoot_(KEY) {
   var rb = home.querySelectorAll('.hresetbtn');
   for (var i = 0; i < rb.length; i++) {
     rb[i].addEventListener('click', function () {
-      if (typeof szPopup_ === 'function') szPopup_('ボタンの並びを元に戻しますか？😊', { cancel: true, icon: '', onYes: resetOrder });
+      if (typeof szPopup_ === 'function') szPopup_('ボタンの並びを\n元に戻しますか？😊', { cancel: true, icon: '', onYes: resetOrder });
       else resetOrder();
     });
   }
@@ -21409,6 +21418,7 @@ var HOMECSS_ =
 '  .tile::before { content:""; position:absolute; left:0; top:0; bottom:0; width:6px; height:auto; }' +
 // ★長押しで場所を入れ替えられるホーム（.hsort）だけの決まり。押すだけのボタンなので、長押しで文字の選択・
 //   リンクの見本・ブラウザのメニューが出ないようにする（出ると持ち上げられない）。
+'  .hsort .tiles { position:relative; }' +
 '  .hsort .tile { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; -webkit-user-drag:none; }' +
 '  .hsort .tile.tdrag { z-index:60; pointer-events:none; opacity:.97; box-shadow:0 18px 40px rgba(0,0,0,.34); }' +
 '  .hsorting .tile:hover, .hsorting .tile:active { box-shadow:0 6px 18px rgba(0,0,0,.07); }' +
