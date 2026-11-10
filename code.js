@@ -14904,11 +14904,13 @@ function fbScript_(C) {
       if (cm) {
         if (!can('reply')) { warn(NOPERM); return; }
         var cid2 = cm.getAttribute('data-cmenu');
-        sheet([
+        // ★2026-11-10 本物の試し：お店自身のコメントはメタが非表示にさせない（#200）＝お客様のコメントだけ非表示を出す
+        sheet((cOf(cid2).page ? [] : [
           { t: 'コメントを非表示', go: function () { simple({ kind: 'chide', acct: CUR, post: id, cid: cid2, hide: true }, 'コメントを非表示にしています', function (err) { if (err) { warn(err); return; } doneShow('コメントを非表示にしました', reload); }); } },
-          { t: '非表示を解除', go: function () { simple({ kind: 'chide', acct: CUR, post: id, cid: cid2, hide: false }, 'コメントを表示に戻しています', function (err) { if (err) { warn(err); return; } doneShow('コメントを表示に戻しました', reload); }); } },
+          { t: '非表示を解除', go: function () { simple({ kind: 'chide', acct: CUR, post: id, cid: cid2, hide: false }, 'コメントを表示に戻しています', function (err) { if (err) { warn(err); return; } doneShow('コメントを表示に戻しました', reload); }); } }
+        ]).concat([
           { t: 'コメントを削除', red: true, go: function () { confirmGo('このコメントを削除しますか？😊\n（元に戻せません）', function () { simple({ kind: 'cdel', acct: CUR, post: id, cid: cid2 }, 'コメントを削除しています', function (err) { if (err) { warn(err); return; } doneShow('コメントの削除が完了しました', reload); }); }); } }
-        ]);
+        ]));
         return;
       }
       if (t.closest('[data-csend]')) {
@@ -14918,7 +14920,9 @@ function fbScript_(C) {
         confirmGo((REP ? REP.who + 'さんに返信' : pageName() + 'としてコメント') + 'しますか？😊', function () {
           simple(f, REP ? '返信しています' : 'コメントしています', function (err) {
             if (err) { warn(err); return; }
-            REP = null; p.c = (p.c || 0) + 1; cacheSet(DATA); doneShow(f.kind === 'reply' ? '返信が完了しました' : 'コメントが完了しました', reload);
+            // ★2026-11-10 本物の試し：書いた直後はメタの一覧に数秒出てこない＝先に画面へ足し、少し待ってから読み直す
+            CM[id] = CM[id] || []; CM[id].push({ id: 'tmp' + Date.now(), msg: tx, at: Date.now() / 1000, page: true, who: pageName(), lk: 0, parent: REP ? REP.id : '' });
+            REP = null; p.c = (p.c || 0) + 1; cacheSet(DATA); doneShow(f.kind === 'reply' ? '返信が完了しました' : 'コメントが完了しました', function () { draw(); setTimeout(reload, 5000); });
           });
         });
         return;
