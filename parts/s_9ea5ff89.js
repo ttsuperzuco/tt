@@ -1001,7 +1001,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'var SG_TOKU=true;' +
       SG_STEPS_JS_ +
       'function back(){if(step===6){goFree();}else if(step===5){goDay();}else if(step===4){goMonth();}' +
-        'else{step=0;hideSteps();$("exNum").style.display="";window.scrollTo(0,0);}}' +
+        'else{step=0;if(EXFLOW){exShowDur();}else{hideSteps();$("exNum").style.display="";}window.scrollTo(0,0);}}' +
       '$("sgback").onclick=function(){if(!tapOK())return;back();};' +
       'sgBindSteps();' +
       '$("sgtgo").onclick=function(){if(!tapOK())return;' +
