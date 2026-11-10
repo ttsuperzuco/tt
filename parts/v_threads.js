@@ -6,7 +6,7 @@ var THREADSCSS_ =
   '.thacct button,.thseg button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:14px 4px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.thacct button.on,.thseg button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.thacct.one{grid-template-columns:1fr;}' +
-  '.thw .hhead{margin:0 0 3px;gap:4px;}.thw .hhead .bmark{font-size:12px;}.thw .hhead .bname{font-size:.85rem;}' +
+  '.thw .hhead{margin:0 0 3px;gap:4px;}.thw .hhead .bmark{font-size:12px;}.thw .hhead .bmark svg{width:16px;height:16px;display:block;}.thw .hhead .bname{font-size:.85rem;}' +
   '.thacct{gap:8px;margin:2px 0 8px;}' +
   '.thacct button{padding:3px 4px;font-size:15px;border-width:2px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.15);}' +
   '.thname{color:#fde047;font-size:15px;font-weight:800;margin:-4px 4px 10px;}' +
@@ -272,7 +272,7 @@ var THICO_ = {
 };
 function thIco_(k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" width="' + (sz || 20) + '" height="' + (sz || 20) + '" aria-hidden="true">' + THICO_[k] + '</svg>'; }
 function renderThreadsPage_(base, staff, dev) {
-  var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">スレッズコ</span></div>';
+  var head = '<div class="hhead"><span class="bmark">' + THREADS_LOGO_ + '</span><span class="bname">スレッズコ</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8',
