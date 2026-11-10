@@ -14350,7 +14350,7 @@ var FBCSS_ =
   '.fbhead .fl b{color:#080809;font-weight:700;}' +
   '.fbhead .ab{margin-top:10px;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}' +
   '.fbbtns{display:flex;gap:8px;margin-top:14px;}' +
-  '.fbbtns button{height:36px;border-radius:6px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;}' +
+  '.fbbtns button{height:36px;border-radius:6px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;font-size:15px;white-space:nowrap;min-width:0;}' +
   '.fbapp .fbbtns .msg{flex:1;background:#0866ff;color:#fff;}' +
   '.fbapp .fbbtns .fol{flex:1;background:#e2e5e9;color:#080809;}' +
   '.fbapp .fbbtns .more{width:44px;flex:0 0 44px;background:#e2e5e9;color:#080809;}' +
@@ -14404,7 +14404,7 @@ var FBCSS_ =
   '.fbcnt .rx{display:flex;align-items:center;gap:4px;}' +
   '.fbcnt .rx i{width:18px;height:18px;border-radius:50%;background:#0866ff;display:inline-flex;align-items:center;justify-content:center;}' +
   '.fbact{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid #e4e6eb;margin:0 12px;padding:2px 0;}' +
-  '.fbact button{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;color:#65686c;font-weight:600;font-size:15px;border-radius:6px;background:none;border:0;cursor:pointer;}' +
+  '.fbact button{display:flex;align-items:center;justify-content:center;gap:4px;height:40px;color:#65686c;font-weight:600;font-size:14px;border-radius:6px;background:none;border:0;cursor:pointer;white-space:nowrap;min-width:0;}' +
   '.fbempty{background:#fff;padding:40px 16px;text-align:center;color:#65686c;font-size:15px;}' +
   // ── 投稿を開いた画面・写真を開いた画面 ──
   '.fbov{position:fixed;inset:0;z-index:9000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;text-align:left;}' +
@@ -14589,7 +14589,7 @@ function fbScript_(C) {
       '<div class="d">' + esc(when(p.at)) + ' · ' + IC.globe + '</div></div><button type="button" class="dots" data-soon="1">' + IC.dots + '</button></div>';
     if (p.msg) {
       h += '<div class="fbtx' + (full ? '' : ' cl') + '">' + esc(p.msg) + '</div>';
-      if (!full && (p.msg.split('\n').length > 5 || p.msg.length > 180)) h += '<div class="fbmore">…もっと見る</div>';
+      if (!full && (p.msg.split('\n').length > 5 || p.msg.length > 180)) h += '<div class="fbmore">もっと見る</div>';
     }
     var pics = p.pics || [];
     if (p.k === 'link' && p.link && (p.link.t || p.link.d)) {
