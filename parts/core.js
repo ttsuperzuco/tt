@@ -1733,7 +1733,12 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
     (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
-    tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : []) +
+    (staff && !shown.length
+      ? '<div class="hdone" style="background:#fff;color:#12303c;border-radius:18px;padding:22px 18px;margin:18px 4px 0;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.15);">' +
+          '<div style="font-size:26px;font-weight:900;line-height:1.5;">ズコの準備ができました🎉</div>' +
+          '<div style="font-size:18px;font-weight:700;line-height:1.8;margin-top:10px;">この画面が開いたら、完了です。<br>りゅうさんに「完了しました」と<br>連絡してください😊</div>' +
+        '</div>'
+      : tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : [])) +
   '</div>' + EXTLINK_SCRIPT_ + sortScript;
 }
 function renderLT_(base, staff, dev) {
