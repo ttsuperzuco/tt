@@ -15071,8 +15071,11 @@ function fbScript_(C) {
   function ask(fields, done) {
     devKey(function (ex) {
       for (var k in ex) fields[k] = ex[k];
-      jsonp({ action: 'submit', key: C.key, op: 'facebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) },
+      var tries = 0;
+      var sub = function () { jsonp({ action: 'submit', key: C.key, op: 'facebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) },
         function (r) {
+          // ★2026-11-10 窓口は全体で短い間の依頼の数に上限がある＝「依頼が集中」の時は数秒待って自分で出し直す（最大5回）
+          if (r && !r.ok && /依頼が集中/.test(String(r.error || '')) && tries < 5) { tries++; setTimeout(sub, 3000 + tries * 1500); return; }
           if (!r || !r.ok || !r.id) { done((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           var n = 0;
           var tick = function () {
@@ -15094,7 +15097,8 @@ function fbScript_(C) {
             });
           };
           setTimeout(tick, 1200);
-        });
+        }); };
+      sub();
     });
   }
 
@@ -15406,8 +15410,10 @@ function fbScript_(C) {
         };
         setTimeout(tick, 1500);
       };
+      var tries = 0;
       var send = function (ft) {
         jsonp({ action: 'submit', key: C.key, op: 'facebook', who: me.who, role: me.role, device: me.device, fields: ft }, function (r) {
+          if (r && !r.ok && /依頼が集中/.test(String(r.error || '')) && tries < 5) { tries++; setTimeout(function () { send(ft); }, 3000 + tries * 1500); return; }
           if (!r || !r.ok || !r.id) { done((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           poll(r.id);
         });
