@@ -1904,7 +1904,9 @@ var TILE_DEFS_ = [
   // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
   //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
   { id: 'threads', cls: 'threads', view: 'threads',
-    icon: '<span class="ticon">' + THREADS_LOGO_ + '</span>', label: 'スレッズコ' },   // ★2026-11-10 まるちゃん「なまえを スレッズコ にする」
+    // ★2026-11-10 まるちゃん「スレッズコのボタンのアイコンを、スマホのアイコンに入れ替えて」＝金魚がThreadsのマークをくぐる絵（icons/threads-192.png・パソコン版も同じ）。
+    //   画面の見出し・独立した窓のアイコンは本物のThreadsのマークのまま。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-192.png"></span>', label: 'スレッズコ' },   // ★2026-11-10 まるちゃん「なまえを スレッズコ にする」
   // ★📸インスタ（2026-11-08 まるちゃん決定「ぜんぶすいしょう」）＝お店のインスタ3つのプロフィールを本物そっくりに見せる。
   //   中身は受付係（op=insta → Instagram投稿\programs\insta_zuko.py）が専用ブラウザで読む。既定は開発者だけ（共通ルール16）。
   { id: 'insta', cls: 'insta', view: 'insta',
