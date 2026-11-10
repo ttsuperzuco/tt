@@ -853,7 +853,15 @@ function _peopleFromCfg_(d) {
   }
   return ids;
 }
-
+function _labelsFromCfg_(d) {
+  var labels = {};
+  for (var k in PERSON_LABEL_) labels[k] = PERSON_LABEL_[k];
+  var extra = (d && d.extraPeople && d.extraPeople.length) ? d.extraPeople : [];
+  for (var i = 0; i < extra.length; i++) {
+    if (extra[i] && extra[i].id) labels[extra[i].id] = extra[i].label || extra[i].id;
+  }
+  return labels;
+}
 function _claimedFromCfg_(d) {
   var c = d && d.claimed;
   return (c && typeof c === 'object') ? c : {};
