@@ -11930,17 +11930,46 @@ function shomeishoScript_(C) {
   window.addEventListener('resize', fit);
   $('smZoom').onclick = function () { zoom = !zoom; fit(); };
   function exit() { var a = document.querySelector('#smHome a'); if (a) a.click(); }
+  // ★画面はスマホに覚えておき、2回目からは開いた瞬間に出す（2026-11-10 まるちゃん「できるだけはやく表示するように」
+  //   「スタッフがいらいらしちゃう」）。裏で最新を取り、変わっていたら覚え直す。まだ何も押していなければその場で差し替える。
+  var LSK = 'sz_shomeisho_page', touched = false;
+  function cached() { try { return localStorage.getItem(LSK) || ''; } catch (e) { return ''; } }
+  function remember(h) { try { localStorage.setItem(LSK, h); } catch (e) {} }
+  function showPage(h) { frame.srcdoc = h; frame.style.display = ''; $('smMsg').style.display = 'none'; }
+  // 画面の中を1回でも押したら「使い始めた」＝裏で最新が届いても差し替えない（押した所が消えないように）
+  frame.addEventListener('load', function () {
+    try { frame.contentDocument.addEventListener('click', function () { touched = true; }, true); } catch (e) {}
+  });
+  // ★まとめた答え（bundle）は、画面を取るのと同時に頼んでおく＝画面が出たあとに頼むより約10秒早く届く。
+  //   画面が「まとめて取って」と頼んできたら、頼んである物をそのまま渡す（2回頼まない）。
+  var bundle = { done: false, err: null, res: null, waits: [] };
+  function bundleStart() {
+    ask('bundle', [], function (err, res) {
+      bundle.done = true; bundle.err = err; bundle.res = res;
+      var w = bundle.waits; bundle.waits = [];
+      for (var i = 0; i < w.length; i++) w[i](err, res);
+    });
+  }
+  function bundleGet(cb) { if (bundle.done) cb(bundle.err, bundle.res); else bundle.waits.push(cb); }
   function load() {
-    $('smMsg').innerHTML = '購入証明書の画面を読み込んでいます…<br>少し待っててくださいね🥺';
-    $('smMsg').style.display = ''; frame.style.display = 'none';
+    bundleStart();
+    var c = cached();
+    if (c) showPage(c);
+    else {
+      $('smMsg').innerHTML = '購入証明書の画面を読み込んでいます…<br>少し待っててくださいね🥺';
+      $('smMsg').style.display = ''; frame.style.display = 'none';
+    }
     ask('page', [], function (err, r) {
       if (err || !r || !r.html) {
+        if (c) return;            // 覚えている画面で使えるので、そのまま
         $('smMsg').innerHTML = (err || '読み込みに失敗しました。') + '<br><button type="button" id="smRetry">もう一度読み込む</button>' +
           '<br><button type="button" id="smExit">← 戻る</button>';
         $('smRetry').onclick = load; $('smExit').onclick = exit;
         return;
       }
-      frame.srcdoc = r.html; frame.style.display = ''; $('smMsg').style.display = 'none';
+      if (r.html === c) return;
+      remember(r.html);
+      if (!c || !touched) showPage(r.html);
     });
   }
   // 枠の中の画面からの頼み（計算して／紙を出して／ズコのホームへ戻る）
@@ -11949,9 +11978,12 @@ function shomeishoScript_(C) {
     if (!frame.contentWindow || ev.source !== frame.contentWindow) return;
     var d = ev.data || {};
     if (d.szsm === 'call') {
-      ask(String(d.name || ''), d.args || [], function (err, res) {
+      if (d.name !== 'bundle') touched = true;   // 何か押した＝画面を差し替えない
+      var reply = function (err, res) {
         try { frame.contentWindow.postMessage({ szsm: 'ret', id: d.id, ok: !err, error: err || '', result: res }, '*'); } catch (e) {}
-      });
+      };
+      if (d.name === 'bundle') bundleGet(reply);
+      else ask(String(d.name || ''), d.args || [], reply);
     } else if (d.szsm === 'cert') {
       zoom = false; box.style.display = 'block'; cert.srcdoc = String(d.html || ''); fit();
     } else if (d.szsm === 'exit') {
