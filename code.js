@@ -2311,8 +2311,8 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       tilesGap_(list, gaps, tileA_) + '</div>';
   }
   var resetHtml = canSort
-    ? '<div class="hreset"' + (mine ? '' : ' style="display:none"') + '><button type="button" class="hresetbtn">↺ 元の並びに戻す</button></div>'
-    : '';
+    ? '<span class="hreset"' + (mine ? '' : ' style="display:none"') + '><button type="button" class="hresetbtn">↺ 元の並びに戻す</button></span>'
+    : '';   // ★2026-11-10 まるちゃん「戻るボタンの一番右隅」＝「← 戻る」と同じ行の右端に置く（並べ替えた後だけ出る）
   var homeCls = canSort ? 'home hsort' : 'home';
   var sortScript = canSort ? HOMESORT_SCRIPT_ : '';
   var head =
@@ -2330,13 +2330,13 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
-        '<div class="backbar"><button type="button" class="backbtn">← 戻る</button></div>' +
+        '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' + resetHtml + '</div>' +
         '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
         tilesBox_(list, BLANK_AFTER_[R.id]) + subs.map(function (S) {
           var sl = byG[S.id] || [];
           return sl.length ? ('<div class="grouptitle" style="margin-top:22px">' + S.icon + ' ' + S.title + '</div>' +
             tilesBox_(sl, [])) : '';
-        }).join('') + resetHtml + '</div>';
+        }).join('') + '</div>';
     }
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="' + homeCls + '">' + head +
@@ -2347,7 +2347,9 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
     // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
-    tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : []) + resetHtml +
+    // 戻るボタンの無いホーム（開発版以外）では、ボタンの並びの上の右端に置く。
+    (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
+    tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : []) +
   '</div>' + EXTLINK_SCRIPT_ + sortScript;
 }
 
@@ -21526,9 +21528,12 @@ var HOMECSS_ =
 '  .hsort .tile.tdrag { z-index:60; pointer-events:none; opacity:.97; box-shadow:0 18px 40px rgba(0,0,0,.34); }' +
 '  .hsorting .tile:hover, .hsorting .tile:active { box-shadow:0 6px 18px rgba(0,0,0,.07); }' +
 '  .hsort .tile.tdrag:hover, .hsort .tile.tdrag:active { box-shadow:0 18px 40px rgba(0,0,0,.34); }' +
-'  .hreset { text-align:center; margin:22px 0 0; }' +
-'  .hresetbtn { font:inherit; font-size:.92rem; font-weight:800; color:#fff; background:rgba(255,255,255,.16);' +
-'    border:1px solid rgba(255,255,255,.55); border-radius:999px; padding:9px 18px; cursor:pointer; }' +
+'  .hsort .backbar { display:flex; align-items:center; }' +
+'  .hsort .backbar.hbaronly { margin:0; }' +
+'  .hsort .backbar.hbaronly .hreset { margin-bottom:14px; }' +
+'  .hreset { margin-left:auto; }' +
+'  .hresetbtn { font:inherit; font-size:.9rem; font-weight:800; color:#fff; background:rgba(255,255,255,.16); white-space:nowrap;' +
+'    border:1px solid rgba(255,255,255,.55); border-radius:999px; padding:9px 14px; cursor:pointer; }' +
 '  .hresetbtn:active { transform:translateY(1px); }' +
 // ★タイルの色は全部見分けが付くように離した色相を使う（共通ルール・新タイル追加時も守る）：
 //   rose #e11d48(350°)／indigo #6366f1(239°)／amber #f59e0b(38°)／emerald #0d9b6c(160°)／
