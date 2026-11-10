@@ -1372,7 +1372,7 @@ var TILE_DEFS_ = [
   { id: 'threads', cls: 'threads', view: 'threads',
     icon: '<span class="ticon">' + THREADS_LOGO_ + '</span>', label: 'スレッズコ' },   
   { id: 'insta', cls: 'insta', view: 'insta',
-    icon: '<span class="ticon">📸</span>', label: 'インズコグラム' },   
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>', label: 'インズコグラム' },   
   { id: 'facebook', cls: 'facebook', view: 'facebook',
     icon: '<span class="ticon">📘</span>', label: 'Facebook' },
   { id: 'mita', cls: 'mita', view: 'mita',
@@ -3027,6 +3027,7 @@ var HOMECSS_ =
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
 '    display:grid; place-items:center; overflow:hidden; }' +
 '  .ticon svg { width:100%; height:100%; display:block; }' +
+'  .ticon img { width:100%; height:100%; display:block; object-fit:cover; }' +
 '  .tile.conflict .ticon { background:rgba(225,29,72,.12); }' +
 '  .tile.lt .ticon { background:rgba(148,163,184,.14); }' +
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
