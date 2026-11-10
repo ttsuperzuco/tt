@@ -6,6 +6,9 @@ var FBCSS_ =
   '.fbacct button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:14px 4px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.fbacct button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.fbacct.one{grid-template-columns:1fr;}' +
+  '.fbw .hhead{margin:0 0 3px;gap:4px;}.fbw .hhead .bmark{font-size:12px;}.fbw .hhead .bname{font-size:.85rem;}' +
+  '.fbacct{gap:8px;margin:2px 0 6px;}' +
+  '.fbacct button{padding:3px 4px;font-size:15px;border-width:2px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.15);}' +
   '.fbstat{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#eaf6fb;font-size:14px;font-weight:700;margin:0 4px 8px;}' +
   '.fbstat button{background:#fff;color:#0f172a;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
   '.fbapp{background:#c9ccd1;color:#080809;border-radius:16px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI Historic","Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN",Roboto,"Noto Sans JP",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.34;-webkit-font-smoothing:antialiased;}' +

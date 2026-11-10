@@ -6,6 +6,9 @@ var INSTACSS_ =
   '.igacct button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:14px 4px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.igacct button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.igacct.one{grid-template-columns:1fr;}' +
+  '.igw .hhead{margin:0 0 3px;gap:4px;}.igw .hhead .bmark{font-size:12px;}.igw .hhead .bname{font-size:.85rem;}' +
+  '.igacct{gap:8px;margin:2px 0 6px;}' +
+  '.igacct button{padding:3px 4px;font-size:15px;border-width:2px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.15);}' +
   '.igstat{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#eaf6fb;font-size:14px;font-weight:700;margin:0 4px 8px;}' +
   '.igstat button{background:#fff;color:#0f172a;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
   '.igapp{background:#fff;color:#000;border-radius:16px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN",Roboto,"Noto Sans JP",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.35;-webkit-font-smoothing:antialiased;}' +
