@@ -147,6 +147,9 @@ function doGet(e) {
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       
     html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
+  } else if (view === 'facebook') {
+    title = 'Facebook';                                       
+    html = renderFacebookPage_(base, staff, dev);
   } else if (view === 'insta') {
     title = 'インスタ';                                       
     html = renderInstaPage_(base, staff, dev);
@@ -815,10 +818,11 @@ var DEFAULT_TILE_SETTINGS_ = {
   claudechat: { exec: false, staff: false },
   threads:    { exec: false, staff: false },
   insta:      { exec: false, staff: false },
+  facebook:   { exec: false, staff: false },
   mita:       { exec: true, staff: true },
   shomeisho:  { exec: false, staff: false }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'mita', 'uriagebook', 'shomeisho'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1358,6 +1362,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🧵</span>', label: 'Threads\n投稿' },
   { id: 'insta', cls: 'insta', view: 'insta',
     icon: '<span class="ticon">📸</span>', label: 'インスタ' },
+  { id: 'facebook', cls: 'facebook', view: 'facebook',
+    icon: '<span class="ticon">📘</span>', label: 'Facebook' },
   { id: 'mita', cls: 'mita', view: 'mita',
     icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
@@ -1370,7 +1376,7 @@ var TILE_GROUP_ = {
   uriage: 'tomato',
   shomeisho: 'tomato',   
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', uriagebook: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', facebook: 'kaihatsu', uriagebook: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
@@ -2289,6 +2295,9 @@ try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined'
 
 
 
+
+
+
 function renderPcStatus_(base, staff, dev) {
   try {
     return renderPcStatusPage_(
@@ -2732,6 +2741,7 @@ var HOMECSS_ =
 '  .tile.claudechat::before { background:#d97757; }' +
 '  .tile.threads::before { background:#101010; }' +
 '  .tile.insta::before { background:#d62976; }' +
+'  .tile.facebook::before { background:#0866ff; }' +
 '  .tile.mita::before { background:#0f766e; }' +
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
