@@ -151,7 +151,7 @@ function doGet(e) {
     title = 'Facebook';                                       
     html = renderFacebookPage_(base, staff, dev);
   } else if (view === 'insta') {
-    title = 'インスタ';                                       
+    title = 'インズコグラム';                                 
     html = renderInstaPage_(base, staff, dev);
   } else if (view === 'threads') {
     title = 'スレッズコ';                                   
@@ -1372,7 +1372,7 @@ var TILE_DEFS_ = [
   { id: 'threads', cls: 'threads', view: 'threads',
     icon: '<span class="ticon">' + THREADS_LOGO_ + '</span>', label: 'スレッズコ' },   
   { id: 'insta', cls: 'insta', view: 'insta',
-    icon: '<span class="ticon">📸</span>', label: 'インスタ' },
+    icon: '<span class="ticon">📸</span>', label: 'インズコグラム' },   
   { id: 'facebook', cls: 'facebook', view: 'facebook',
     icon: '<span class="ticon">📘</span>', label: 'Facebook' },
   { id: 'mita', cls: 'mita', view: 'mita',
