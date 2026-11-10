@@ -2027,21 +2027,29 @@ function homeMyOrder_() {
     return (a && a.length) ? a : null;
   } catch (e) { return null; }
 }
-// ★この関数は、中身をそのまま文字にしてホームの画面に差し込む（下の HOMESORT_SCRIPT_）。
-//   ふつうの関数として書いてあるので、引用符の数えまちがいで画面が無反応になる事故が起きない。
-//   画面の中で単独で動くので、外の変数は使わない（KEY も引数で受け取る）。
-function homeSortBoot_(KEY) {
+// SZ-HOMESORT-BEGIN ★ここから END の行までは 共通\画面\ホーム並べ替え.js の写し。手で直さない（直すのは正本。写すのは 共通\画面\スマホへ配る.py）
+// ★ホームのボタンを長押しして場所を入れ替える（2026-11-10 まるちゃん決定）。スマホ版とパソコン版で同じ1本。
+//   正本＝AI自動プログラム\共通\画面\ホーム並べ替え.js（直すのはここだけ）。
+//   ・スマホ版（ttsuperzuco/tt の code.js）には、共通\画面\スマホへ配る.py がこの中身をそのまま写す（手で写さない）。
+//   ・パソコン版（PC版スーパーズコ\programs\super_pc.py）は、ホームを作る時にこのファイルを読んで差し込む。
+//   中身をそのまま文字にして画面に差し込むので、外の変数は使わない（要る物は引数 KEY・OPT で受け取る）。
+//   OPT（書かなければスマホ版の形）：
+//     tile＝ボタンの見つけ方（'a.tile'）／idAttr＝ボタンの名前の入っている所（'data-tid'）／boxes＝入れ替える箱（'.tiles'）
+//     save(並び)＝並びの覚え方／clear()＝並びの忘れ方／confirm(文, はいの時にやる事)＝確認の小窓の出し方
+function homeSortBoot_(KEY, OPT) {
+  OPT = OPT || {};
+  var SEL = OPT.tile || 'a.tile', IDATTR = OPT.idAttr || 'data-tid';
   var home = document.querySelector('.home.hsort');
   if (!home) return;
   var HOLD = 450;   // 何ミリ秒押し続けたら持ち上げるか
   var SLOP = 10;    // 持ち上げる前にこれ以上動いたら、画面を送る操作とみなしてやめる
   var st = null;    // 今押しているボタンの状態
   var lastDragAt = 0, lastTouchAt = 0;
-  var boxes = Array.prototype.slice.call(home.querySelectorAll('.tiles'));
+  var boxes = Array.prototype.slice.call(home.querySelectorAll(OPT.boxes || '.tiles'));
 
-  function tilesOf(box) { return Array.prototype.slice.call(box.querySelectorAll('a.tile')); }
-  function idsOf(box) { return tilesOf(box).map(function (a) { return a.getAttribute('data-tid'); }); }
-  // 「右を空けるボタン」の空きマスを、今の並びに合わせて置き直す（code.js の tilesGap_ と同じ決まり）。
+  function tilesOf(box) { return Array.prototype.slice.call(box.querySelectorAll(SEL)); }
+  function idsOf(box) { return tilesOf(box).map(function (a) { return a.getAttribute(IDATTR); }); }
+  // 「右を空けるボタン」の空きマスを、今の並びに合わせて置き直す（ホームを作る時と同じ決まり）。
   function regap(box) {
     var old = box.querySelectorAll('.tilegap');
     for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
@@ -2049,7 +2057,7 @@ function homeSortBoot_(KEY) {
     var t = tilesOf(box), n = 0;
     for (var j = 0; j < t.length; j++) {
       n++;
-      if (gaps.indexOf(t[j].getAttribute('data-tid')) >= 0 && n % 2 === 1) {
+      if (gaps.indexOf(t[j].getAttribute(IDATTR)) >= 0 && n % 2 === 1) {
         var g = document.createElement('div'); g.className = 'tilegap';
         box.insertBefore(g, t[j].nextSibling); n++;
       }
@@ -2133,7 +2141,7 @@ function homeSortBoot_(KEY) {
   function save() {
     var all = [];
     for (var i = 0; i < boxes.length; i++) all = all.concat(idsOf(boxes[i]));
-    try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
+    try { if (OPT.save) OPT.save(all); else localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
     showReset(true);
   }
   function unbind(s) {
@@ -2183,7 +2191,7 @@ function homeSortBoot_(KEY) {
     if (idsOf(s.box).join(',') !== s.start) save();
   }
   function tileAt(box, target) {
-    var t = (target && target.closest) ? target.closest('a.tile') : null;
+    var t = (target && target.closest) ? target.closest(SEL) : null;
     return (t && t.parentNode === box) ? t : null;
   }
   boxes.forEach(function (box) {
@@ -2221,9 +2229,9 @@ function homeSortBoot_(KEY) {
     });
     box.addEventListener('dragstart', function (ev) { if (tileAt(box, ev.target)) ev.preventDefault(); });
   });
-  // 「元の並びに戻す」＝このスマホが覚えている並びを消して、全員共通の並びに戻す。
+  // 「元の並びに戻す」＝覚えている並びを消して、全員共通の並びに戻す。
   function resetOrder() {
-    try { localStorage.removeItem(KEY); } catch (e) {}
+    try { if (OPT.clear) OPT.clear(); else localStorage.removeItem(KEY); } catch (e) {}
     boxes.forEach(function (box) {
       var before = rectsOf(box, null);
       var t = tilesOf(box).sort(function (a, b) {
@@ -2238,11 +2246,14 @@ function homeSortBoot_(KEY) {
   var rb = home.querySelectorAll('.hresetbtn');
   for (var i = 0; i < rb.length; i++) {
     rb[i].addEventListener('click', function () {
-      if (typeof szPopup_ === 'function') szPopup_('ボタンの並びを\n元に戻しますか？😊', { cancel: true, icon: '', onYes: resetOrder });
+      var msg = 'ボタンの並びを\n元に戻しますか？😊';
+      if (OPT.confirm) OPT.confirm(msg, resetOrder);
+      else if (typeof szPopup_ === 'function') szPopup_(msg, { cancel: true, icon: '', onYes: resetOrder });
       else resetOrder();
     });
   }
 }
+// SZ-HOMESORT-END
 var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stringify(HOME_MY_ORDER_KEY_) + ');</' + 'script>';
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで

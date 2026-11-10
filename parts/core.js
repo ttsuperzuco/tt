@@ -1438,17 +1438,19 @@ function homeMyOrder_() {
     return (a && a.length) ? a : null;
   } catch (e) { return null; }
 }
-function homeSortBoot_(KEY) {
+function homeSortBoot_(KEY, OPT) {
+  OPT = OPT || {};
+  var SEL = OPT.tile || 'a.tile', IDATTR = OPT.idAttr || 'data-tid';
   var home = document.querySelector('.home.hsort');
   if (!home) return;
   var HOLD = 450;   
   var SLOP = 10;    
   var st = null;    
   var lastDragAt = 0, lastTouchAt = 0;
-  var boxes = Array.prototype.slice.call(home.querySelectorAll('.tiles'));
+  var boxes = Array.prototype.slice.call(home.querySelectorAll(OPT.boxes || '.tiles'));
 
-  function tilesOf(box) { return Array.prototype.slice.call(box.querySelectorAll('a.tile')); }
-  function idsOf(box) { return tilesOf(box).map(function (a) { return a.getAttribute('data-tid'); }); }
+  function tilesOf(box) { return Array.prototype.slice.call(box.querySelectorAll(SEL)); }
+  function idsOf(box) { return tilesOf(box).map(function (a) { return a.getAttribute(IDATTR); }); }
   function regap(box) {
     var old = box.querySelectorAll('.tilegap');
     for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
@@ -1456,7 +1458,7 @@ function homeSortBoot_(KEY) {
     var t = tilesOf(box), n = 0;
     for (var j = 0; j < t.length; j++) {
       n++;
-      if (gaps.indexOf(t[j].getAttribute('data-tid')) >= 0 && n % 2 === 1) {
+      if (gaps.indexOf(t[j].getAttribute(IDATTR)) >= 0 && n % 2 === 1) {
         var g = document.createElement('div'); g.className = 'tilegap';
         box.insertBefore(g, t[j].nextSibling); n++;
       }
@@ -1534,7 +1536,7 @@ function homeSortBoot_(KEY) {
   function save() {
     var all = [];
     for (var i = 0; i < boxes.length; i++) all = all.concat(idsOf(boxes[i]));
-    try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
+    try { if (OPT.save) OPT.save(all); else localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
     showReset(true);
   }
   function unbind(s) {
@@ -1584,7 +1586,7 @@ function homeSortBoot_(KEY) {
     if (idsOf(s.box).join(',') !== s.start) save();
   }
   function tileAt(box, target) {
-    var t = (target && target.closest) ? target.closest('a.tile') : null;
+    var t = (target && target.closest) ? target.closest(SEL) : null;
     return (t && t.parentNode === box) ? t : null;
   }
   boxes.forEach(function (box) {
@@ -1619,7 +1621,7 @@ function homeSortBoot_(KEY) {
     box.addEventListener('dragstart', function (ev) { if (tileAt(box, ev.target)) ev.preventDefault(); });
   });
   function resetOrder() {
-    try { localStorage.removeItem(KEY); } catch (e) {}
+    try { if (OPT.clear) OPT.clear(); else localStorage.removeItem(KEY); } catch (e) {}
     boxes.forEach(function (box) {
       var before = rectsOf(box, null);
       var t = tilesOf(box).sort(function (a, b) {
@@ -1634,7 +1636,9 @@ function homeSortBoot_(KEY) {
   var rb = home.querySelectorAll('.hresetbtn');
   for (var i = 0; i < rb.length; i++) {
     rb[i].addEventListener('click', function () {
-      if (typeof szPopup_ === 'function') szPopup_('ボタンの並びを\n元に戻しますか？😊', { cancel: true, icon: '', onYes: resetOrder });
+      var msg = 'ボタンの並びを\n元に戻しますか？😊';
+      if (OPT.confirm) OPT.confirm(msg, resetOrder);
+      else if (typeof szPopup_ === 'function') szPopup_(msg, { cancel: true, icon: '', onYes: resetOrder });
       else resetOrder();
     });
   }
