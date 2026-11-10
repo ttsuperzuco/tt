@@ -1668,7 +1668,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   for (var ok = 0; ok < TILE_DEFS_.length; ok++) {   
     if (!placed[TILE_DEFS_[ok].id]) orderedDefs.push(TILE_DEFS_[ok]);
   }
-  var canSort = !!dev;
+  var canSort = true;
   var defIdx = {};   
   for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
   var mine = canSort ? homeMyOrder_() : null;
