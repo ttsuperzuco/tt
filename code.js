@@ -2014,6 +2014,228 @@ var EXTLINK_SCRIPT_ =
 '});})(a[i]);}' +
 '})();</script>';
 
+// ===== ホームのボタンを長押しして場所を入れ替える（2026-11-10 まるちゃん「長押しして下にずらすと入れ替えられるやつ」）=====
+//   ・並びは「そのスマホだけ」が覚える（下の HOME_MY_ORDER_KEY_）。全員共通の並び（設定画面の▲▼）もパソコン版も変えない。
+//   ・自分の並びがある間は、共通の並びを変えてもそのスマホには効かない（「元の並びに戻す」で共通の並びに戻る）。
+//   ・「右を空けるボタン」（BLANK_AFTER_）の決まりは入れ替えの最中も後も同じ＝そのボタンが左の列に来た時だけ右を空ける。
+//   ・入れ替えられるのは同じ箱の中だけ（スタッフ画面のボタンを管理者用へ移す、はできない＝部屋分けは変えない）。
+var HOME_MY_ORDER_KEY_ = 'sz_my_tile_order';
+function homeMyOrder_() {
+  try {
+    if (typeof localStorage === 'undefined') return null;
+    var a = JSON.parse(localStorage.getItem(HOME_MY_ORDER_KEY_) || 'null');
+    return (a && a.length) ? a : null;
+  } catch (e) { return null; }
+}
+// ★この関数は、中身をそのまま文字にしてホームの画面に差し込む（下の HOMESORT_SCRIPT_）。
+//   ふつうの関数として書いてあるので、引用符の数えまちがいで画面が無反応になる事故が起きない。
+//   画面の中で単独で動くので、外の変数は使わない（KEY も引数で受け取る）。
+function homeSortBoot_(KEY) {
+  var home = document.querySelector('.home.hsort');
+  if (!home) return;
+  var HOLD = 450;   // 何ミリ秒押し続けたら持ち上げるか
+  var SLOP = 10;    // 持ち上げる前にこれ以上動いたら、画面を送る操作とみなしてやめる
+  var st = null;    // 今押しているボタンの状態
+  var lastDragAt = 0, lastTouchAt = 0;
+  var boxes = Array.prototype.slice.call(home.querySelectorAll('.tiles'));
+
+  function tilesOf(box) { return Array.prototype.slice.call(box.querySelectorAll('a.tile')); }
+  function idsOf(box) { return tilesOf(box).map(function (a) { return a.getAttribute('data-tid'); }); }
+  // 「右を空けるボタン」の空きマスを、今の並びに合わせて置き直す（code.js の tilesGap_ と同じ決まり）。
+  function regap(box) {
+    var old = box.querySelectorAll('.tilegap');
+    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    var gaps = (box.getAttribute('data-gaps') || '').split(',');
+    var t = tilesOf(box), n = 0;
+    for (var j = 0; j < t.length; j++) {
+      n++;
+      if (gaps.indexOf(t[j].getAttribute('data-tid')) >= 0 && n % 2 === 1) {
+        var g = document.createElement('div'); g.className = 'tilegap';
+        box.insertBefore(g, t[j].nextSibling); n++;
+      }
+    }
+  }
+  // 並びを変える前の見えている場所を覚える → 変えた後、そこから新しい場所へすっと動かす。
+  function rectsOf(box, skip) {
+    var out = [], t = tilesOf(box);
+    for (var i = 0; i < t.length; i++) { if (t[i] !== skip) out.push([t[i], t[i].getBoundingClientRect()]); }
+    return out;
+  }
+  function slide(before) {
+    var moved = [];
+    for (var i = 0; i < before.length; i++) {
+      var el = before[i][0], r0 = before[i][1];
+      el.style.transition = 'none'; el.style.transform = 'none';
+      var r1 = el.getBoundingClientRect();
+      var dx = r0.left - r1.left, dy = r0.top - r1.top;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'; moved.push(el);
+      } else { el.style.transform = ''; el.style.transition = ''; }
+    }
+    if (!moved.length) return;
+    void home.offsetWidth;   // ここで一度描かせてから動かす
+    for (var k = 0; k < moved.length; k++) {
+      moved[k].style.transition = 'transform .17s ease'; moved[k].style.transform = '';
+    }
+    setTimeout(function () {
+      for (var m = 0; m < moved.length; m++) { if (!moved[m].style.transform) moved[m].style.transition = ''; }
+    }, 240);
+  }
+  // 持ち上げたボタンを指の下に置く。
+  function place() {
+    var el = st.el;
+    el.style.transform = 'none';
+    var r = el.getBoundingClientRect();
+    el.style.transform = 'translate(' + (st.x - st.gx - r.left) + 'px,' + (st.y - st.gy - r.top) + 'px) scale(1.05)';
+  }
+  // 指の下に別のボタンがあれば、そこへ割り込む。
+  function over() {
+    if (Date.now() < st.lock) return;
+    var hit = document.elementFromPoint(st.x, st.y);
+    var t = (hit && hit.closest) ? hit.closest('a.tile') : null;
+    if (!t || t === st.el || t.parentNode !== st.box) return;
+    var before = rectsOf(st.box, st.el);
+    var all = tilesOf(st.box);
+    if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
+    else st.box.insertBefore(st.el, t);
+    regap(st.box);
+    slide(before);
+    st.lock = Date.now() + 190;
+    place();
+  }
+  // 画面の上下の端に近づいたら、画面を少しずつ送る。
+  function tick() {
+    if (!st || !st.drag) return;
+    var h = window.innerHeight, v = 0, EDGE = 84;
+    if (st.y < EDGE) v = -Math.ceil((EDGE - st.y) / 6);
+    else if (st.y > h - EDGE) v = Math.ceil((st.y - (h - EDGE)) / 6);
+    if (v) {
+      var y0 = window.pageYOffset;
+      window.scrollBy(0, v);
+      if (window.pageYOffset !== y0) place();
+    }
+    over();   // 指を止めたままでも、下のボタンとの入れ替えを見直す（動かした直後の待ちで取りこぼさないため）
+    st.raf = requestAnimationFrame(tick);
+  }
+  function showReset(on) {
+    var r = home.querySelectorAll('.hreset');
+    for (var i = 0; i < r.length; i++) r[i].style.display = on ? '' : 'none';
+  }
+  function save() {
+    var all = [];
+    for (var i = 0; i < boxes.length; i++) all = all.concat(idsOf(boxes[i]));
+    try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
+    showReset(true);
+  }
+  function unbind(s) {
+    if (s.tm) { s.el.removeEventListener('touchmove', s.tm); s.el.removeEventListener('touchend', s.te); s.el.removeEventListener('touchcancel', s.te); }
+    if (s.mm) { document.removeEventListener('mousemove', s.mm); document.removeEventListener('mouseup', s.mu); }
+  }
+  function down(tile, x, y) {
+    st = { el: tile, box: tile.parentNode, x: x, y: y, x0: x, y0: y, drag: false, lock: 0 };
+    st.timer = setTimeout(lift, HOLD);
+  }
+  function lift() {
+    if (!st || st.drag) return;
+    var r = st.el.getBoundingClientRect();
+    st.gx = st.x - r.left; st.gy = st.y - r.top;
+    st.drag = true; st.start = idsOf(st.box).join(',');
+    st.el.style.transition = 'box-shadow .12s ease';
+    st.el.classList.add('tdrag'); home.classList.add('hsorting');
+    try { if (navigator.vibrate) navigator.vibrate(25); } catch (e) {}
+    place();
+    st.raf = requestAnimationFrame(tick);
+  }
+  function move(x, y, ev) {
+    if (!st) return;
+    st.x = x; st.y = y;
+    if (!st.drag) {
+      if (Math.abs(x - st.x0) > SLOP || Math.abs(y - st.y0) > SLOP) { clearTimeout(st.timer); unbind(st); st = null; }
+      return;
+    }
+    if (ev && ev.cancelable) ev.preventDefault();   // 持ち上げている間は、画面を送らない
+    place(); over();
+  }
+  function up(ev) {
+    if (!st) return;
+    clearTimeout(st.timer);
+    var s = st; st = null;
+    unbind(s);
+    if (!s.drag) return;
+    try { cancelAnimationFrame(s.raf); } catch (e) {}
+    if (ev && ev.cancelable) ev.preventDefault();   // 指を離した時に、ボタンの先の画面へ行かない
+    lastDragAt = Date.now();
+    var el = s.el;
+    el.style.zIndex = '60';
+    el.style.transition = 'transform .17s ease, box-shadow .17s ease';
+    el.style.transform = '';
+    el.classList.remove('tdrag'); home.classList.remove('hsorting');
+    setTimeout(function () { el.style.transition = ''; el.style.zIndex = ''; }, 240);
+    if (idsOf(s.box).join(',') !== s.start) save();
+  }
+  function tileAt(box, target) {
+    var t = (target && target.closest) ? target.closest('a.tile') : null;
+    return (t && t.parentNode === box) ? t : null;
+  }
+  boxes.forEach(function (box) {
+    box.addEventListener('touchstart', function (ev) {
+      lastTouchAt = Date.now();
+      if (ev.touches.length !== 1) { if (st && !st.drag) { clearTimeout(st.timer); unbind(st); st = null; } return; }
+      if (st) return;
+      var t = tileAt(box, ev.target); if (!t) return;
+      var p = ev.touches[0];
+      down(t, p.clientX, p.clientY);
+      st.tm = function (e) { var q = e.touches[0]; if (q) move(q.clientX, q.clientY, e); };
+      st.te = function (e) { lastTouchAt = Date.now(); up(e); };
+      // 指を置いたボタンそのものに付ける（並びを変えている最中も、指の動きを取りこぼさないため）。
+      t.addEventListener('touchmove', st.tm, { passive: false });
+      t.addEventListener('touchend', st.te);
+      t.addEventListener('touchcancel', st.te);
+    }, { passive: true });
+    // パソコンのマウスでも同じ動き（押したまま少し待つ → 動かす）。
+    box.addEventListener('mousedown', function (ev) {
+      if (ev.button !== 0 || st || Date.now() - lastTouchAt < 1200) return;
+      var t = tileAt(box, ev.target); if (!t) return;
+      down(t, ev.clientX, ev.clientY);
+      st.mm = function (e) { move(e.clientX, e.clientY, e); };
+      st.mu = function (e) { up(e); };
+      document.addEventListener('mousemove', st.mm);
+      document.addEventListener('mouseup', st.mu);
+    });
+    // 入れ替えた直後は、離した所のボタンを押した事にしない。
+    box.addEventListener('click', function (ev) {
+      if (Date.now() - lastDragAt < 700) { ev.preventDefault(); ev.stopPropagation(); }
+    }, true);
+    // 長押しで出るブラウザのメニュー・リンクの持ち出しを止める（押している間だけ）。
+    box.addEventListener('contextmenu', function (ev) {
+      if ((st || Date.now() - lastDragAt < 900) && tileAt(box, ev.target)) ev.preventDefault();
+    });
+    box.addEventListener('dragstart', function (ev) { if (tileAt(box, ev.target)) ev.preventDefault(); });
+  });
+  // 「元の並びに戻す」＝このスマホが覚えている並びを消して、全員共通の並びに戻す。
+  function resetOrder() {
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    boxes.forEach(function (box) {
+      var before = rectsOf(box, null);
+      var t = tilesOf(box).sort(function (a, b) {
+        return Number(a.getAttribute('data-def')) - Number(b.getAttribute('data-def'));
+      });
+      for (var i = 0; i < t.length; i++) box.appendChild(t[i]);
+      regap(box);
+      slide(before);
+    });
+    showReset(false);
+  }
+  var rb = home.querySelectorAll('.hresetbtn');
+  for (var i = 0; i < rb.length; i++) {
+    rb[i].addEventListener('click', function () {
+      if (typeof szPopup_ === 'function') szPopup_('ボタンの並びを元に戻しますか？😊', { cancel: true, icon: '', onYes: resetOrder });
+      else resetOrder();
+    });
+  }
+}
+var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stringify(HOME_MY_ORDER_KEY_) + ');</' + 'script>';
+
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
  *  perms/labels(追加スタッフ込み)を renderHomePage_ に渡す。 */
 function renderHome_(base, staff, dev, who) {
@@ -2046,6 +2268,20 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   for (var ok = 0; ok < TILE_DEFS_.length; ok++) {   // orderに無い(消し忘れ等)ものは元の並びで末尾に足す
     if (!placed[TILE_DEFS_[ok].id]) orderedDefs.push(TILE_DEFS_[ok]);
   }
+  // ★2026-11-10 まるちゃん「ボタンを長押しして場所を入れ替えたい」＝そのスマホだけの並び（全員共通の並びは変えない）。
+  //   最初は開発版だけ（新しい機能のいつもの決まり）。ほかの人にも出す時は、この1行を変えるだけ。
+  var canSort = !!dev;
+  var defIdx = {};   // 全員共通の並びでの順番（「元の並びに戻す」で使う）
+  for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
+  var mine = canSort ? homeMyOrder_() : null;
+  if (mine) {   // 自分の並びに有る物を先に、無い物（あとから増えたボタン等）は共通の並びのまま後ろへ
+    var mineDefs = [], minePlaced = {};
+    for (var mi = 0; mi < mine.length; mi++) {
+      if (byId[mine[mi]] && !minePlaced[mine[mi]]) { mineDefs.push(byId[mine[mi]]); minePlaced[mine[mi]] = true; }
+    }
+    for (var mj = 0; mj < orderedDefs.length; mj++) { if (!minePlaced[orderedDefs[mj].id]) mineDefs.push(orderedDefs[mj]); }
+    orderedDefs = mineDefs;
+  }
   var shown = orderedDefs.filter(function (t) {
     if (t.always) return true;        // 外部リンクだけのボタン等＝権限に関係なく常に表示
     if (!allow) return true;          // dev＝全部
@@ -2056,9 +2292,20 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     var href = t.url ? t.url : (base + '?view=' + t.view + sfx);
     var target = t.url ? '_blank' : '_top';
     var rel = t.url ? ' rel="noopener"' : '';
-    return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + '>' +
+    var sortAttr = canSort ? (' data-tid="' + esc_(t.id) + '" data-def="' + defIdx[t.id] + '" draggable="false"') : '';
+    return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + sortAttr + '>' +
       t.icon + '<span class="tname">' + esc_(t.label) + '</span></a>';
   }
+  // ボタンの並ぶ箱。入れ替えのあとも「右を空けるボタン」の決まりを同じに保つため、箱に名前を持たせる。
+  function tilesBox_(list, gaps) {
+    return '<div class="tiles"' + (canSort && gaps && gaps.length ? ' data-gaps="' + esc_(gaps.join(',')) + '"' : '') + '>' +
+      tilesGap_(list, gaps, tileA_) + '</div>';
+  }
+  var resetHtml = canSort
+    ? '<div class="hreset"' + (mine ? '' : ' style="display:none"') + '><button type="button" class="hresetbtn">↺ 元の並びに戻す</button></div>'
+    : '';
+  var homeCls = canSort ? 'home hsort' : 'home';
+  var sortScript = canSort ? HOMESORT_SCRIPT_ : '';
   var head =
     '<div class="hhead"><img class="bmark" src="https://ttsuperzuco.github.io/tt/icons/icon-180.png" alt=""><span class="bname">TTスーパーズコ</span></div>' +
     '<div class="hsub">' + subtitle + '</div>';
@@ -2076,23 +2323,23 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button></div>' +
         '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
-        '<div class="tiles">' + tilesGap_(list, BLANK_AFTER_[R.id], tileA_) + '</div>' + subs.map(function (S) {
+        tilesBox_(list, BLANK_AFTER_[R.id]) + subs.map(function (S) {
           var sl = byG[S.id] || [];
           return sl.length ? ('<div class="grouptitle" style="margin-top:22px">' + S.icon + ' ' + S.title + '</div>' +
-            '<div class="tiles">' + sl.map(tileA_).join('') + '</div>') : '';
-        }).join('') + '</div>';
+            tilesBox_(sl, [])) : '';
+        }).join('') + resetHtml + '</div>';
     }
     return '<style>' + HOMECSS_ + '</style>' +
-      '<div class="home">' + head +
+      '<div class="' + homeCls + '">' + head +
         '<div class="rolemenu" id="rolemenu">' + menuHtml + '</div>' +
         groupsHtml +
-      '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_;
+      '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript;
   }
   return '<style>' + HOMECSS_ + '</style>' +
-  '<div class="home">' + head +
+  '<div class="' + homeCls + '">' + head +
     // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
-    '<div class="tiles">' + tilesGap_(shown, staff ? BLANK_AFTER_.jitsumu : [], tileA_) + '</div>' +
-  '</div>' + EXTLINK_SCRIPT_;
+    tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : []) + resetHtml +
+  '</div>' + EXTLINK_SCRIPT_ + sortScript;
 }
 
 /** L⇔T予約照合（LINEの予約 と TimeTree の予定を突き合わせた結果を表示）。
@@ -14631,7 +14878,36 @@ var FBCSS_ =
   '.fbinfo .row > div{display:flex;min-width:0;gap:6px;align-items:baseline;}' +
   '.fbinfo .row .one{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
   '.fbinfo .row .plusn{flex:0 0 auto;}' +
-  '.fbintro{padding:14px 16px 4px;text-align:center;white-space:pre-wrap;word-break:break-word;font-size:15px;}';
+  '.fbintro{padding:14px 16px 4px;text-align:center;white-space:pre-wrap;word-break:break-word;font-size:15px;}' +
+  // ── 投稿を開いた画面（本物：✕・ページ名・検索／下に絵文字の列と「〇〇としてコメント」）──
+  '.fbpt{position:sticky;top:0;z-index:5;}' +
+  '.fbcb{flex-direction:column;align-items:stretch;gap:6px;padding:6px 10px 10px;}' +
+  '.fbcb .emo{display:flex;justify-content:space-between;}' +
+  '.fbcb .emo button{font-size:26px;line-height:1;padding:4px;background:none;border:0;cursor:pointer;}' +
+  '.fbcb .pill,.fbchb .pill{display:flex;align-items:center;background:#f0f2f5;border-radius:22px;padding:2px 6px 2px 14px;flex:1;min-width:0;}' +
+  '.fbcb .pill textarea,.fbchb .pill textarea{flex:1;border:0;background:none;outline:0;font:inherit;font-size:16px;resize:none;min-height:38px;max-height:140px;padding:9px 0;}' +
+  '.fbcb .pill button{color:#0866ff;padding:6px;}' +
+  // ── 受信箱（本物：大きな「受信箱」・メッセージ／コメント・丸い写真の右下にMessengerの印・「あなた:」・短い時刻・未読の赤い点）──
+  '.fbibh{display:flex;align-items:center;gap:6px;padding:10px 10px 4px;}.fbibh b{font-size:30px;font-weight:700;}.fbibh .sp{flex:1;}' +
+  '.fbibh button,.fbchh button{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;color:#080809;}' +
+  '.fbibt{display:flex;gap:28px;padding:4px 16px 0;border-bottom:1px solid #e4e6eb;}' +
+  '.fbibt button{background:none;border:0;padding:10px 0;font:inherit;font-size:17px;font-weight:600;color:#65686c;cursor:pointer;border-bottom:3px solid transparent;}' +
+  '.fbibt button.on{color:#080809;border-bottom-color:#080809;}' +
+  '.fbibt button i{font-style:normal;font-size:13px;background:#f0f2f5;border-radius:10px;padding:1px 7px;margin-left:6px;}' +
+  '.fbin .a{position:relative;flex:0 0 56px;height:56px;}.fbin .a em{position:absolute;right:-2px;bottom:-2px;line-height:0;}' +
+  '.fbin .b b{font-weight:400;}.fbin .s{display:flex;gap:6px;}.fbin .s .sx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.fbin .s .tm{flex:0 0 auto;}' +
+  '.fbin .un .b b,.fbin .un .s .sx{font-weight:700;color:#080809;}.fbin i{width:8px;height:8px;background:#e41e3f;flex:0 0 8px;}' +
+  // ── 会話（本物：戻る・写真・名前・︙／相手は左の灰色・こちらは右の青・下にカメラ・写真・「Aa」・送信）──
+  '.fbchh{position:sticky;top:0;z-index:5;background:#fff;display:flex;align-items:center;gap:8px;padding:8px 8px;border-bottom:1px solid #e4e6eb;}' +
+  '.fbchh .ca{width:40px;height:40px;border-radius:50%;background:#e4e6eb;color:#65686c;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 40px;}' +
+  '.fbchh b{font-size:18px;}.fbchh .sp{flex:1;}' +
+  '.fbch .m{flex-direction:row;align-items:flex-end;gap:6px;margin:2px 0;}.fbch .m.me{justify-content:flex-end;}' +
+  '.fbch .m .ma{flex:0 0 28px;height:28px;border-radius:50%;background:#e4e6eb;color:#65686c;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;}' +
+  '.fbch .m .ma:empty{background:none;}' +
+  '.fbch .mb{display:flex;flex-direction:column;align-items:flex-start;max-width:78%;}.fbch .me .mb{align-items:flex-end;}' +
+  '.fbch .bb{max-width:100%;border-radius:20px;font-size:16px;}' +
+  '.fbchb{position:sticky;bottom:0;background:#fff;display:flex;align-items:center;gap:6px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));}' +
+  '.fbchb > button{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:none;border:0;color:#0866ff;cursor:pointer;}';
 
 function renderFacebookPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">📘</span><span class="bname">Facebook</span></div>';
@@ -14683,6 +14959,11 @@ function fbScript_(C) {
     pin: S('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0112 2.5a7 7 0 017 7C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', 20),
     star: S('<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>', 20),
     ig: S('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>', 20),
+    close: S('<path d="M6 6l12 12M18 6L6 18"/>', 26),
+    dotsV: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>',
+    camera: '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4l-1.5 2H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2h-3.5L15 4zm3 4.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9z"/></svg>',
+    send: '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5l18-8.5L3 3.5l2.5 7L15 12l-9.5 1.5z"/></svg>',
+    msgrB: '<svg width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#fff"/><path fill="#0866ff" d="M12 3C7 3 3 6.7 3 11.4c0 2.6 1.3 5 3.4 6.5V21l3-1.7c.8.2 1.7.3 2.6.3 5 0 9-3.7 9-8.2S17 3 12 3zm.9 11L10.6 11.6 6.2 14l4.9-5.2 2.3 2.4 4.4-2.4z"/></svg>',
     dotsC: S('<circle cx="12" cy="12" r="9.5"/><circle cx="8" cy="12" r=".9" fill="currentColor"/><circle cx="12" cy="12" r=".9" fill="currentColor"/><circle cx="16" cy="12" r=".9" fill="currentColor"/>', 26),
     cat: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4h6a2 2 0 012 2v1h3a2 2 0 012 2v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2h3V6a2 2 0 012-2zm0 3h6V6H9z"/></svg>',
     pinS: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 00-7 7c0 5.3 7 13 7 13s7-7.7 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6.5a2.5 2.5 0 010 5z"/></svg>',
@@ -14944,7 +15225,7 @@ function fbScript_(C) {
     var draw = function () {
       var cm = CM[id];
       var body = cm == null ? '<div class="none">コメントを読み込み中です…</div>' :
-        (!cm.length ? '<div class="none">まだコメントはありません</div>' : cm.map(function (c) {
+        (!cm.length ? '' : cm.map(function (c) {
           var av = c.page ? img(pf.pic) : esc((c.who || '?').slice(0, 1));
           return '<div class="c' + (c.parent ? ' rp' : '') + '"><div class="a">' + av + '</div><div style="min-width:0">' +
             '<div class="bb"><b>' + esc(c.page ? pf.name : (c.who || 'Facebookユーザー')) + '</b>' + esc(c.msg) + '</div>' +
@@ -14952,10 +15233,11 @@ function fbScript_(C) {
             '<div class="ft"><span>' + esc(when(c.at)) + '</span><span data-clike="' + esc(c.id) + '"' + (LIKED[c.id] ? ' class="on"' : '') + '>いいね！' + (c.lk ? ' ' + num(c.lk) : '') + '</span>' +
             '<span data-crep="' + esc(c.id) + '">返信する</span><span data-cmenu="' + esc(c.id) + '">…</span></div></div></div>';
         }).join(''));
-      d.innerHTML = '<div class="in"><div class="fbtop"><button type="button" data-close="1">' + IC.back + '</button><div class="t">' + esc(pf.name) + 'さんの投稿</div><span></span></div>' +
+      d.innerHTML = '<div class="in"><div class="fbtop fbpt"><button type="button" data-close="1">' + IC.close + '</button><div class="t">' + esc(pf.name) + '</div><button type="button" data-soon="1">' + IC.search + '</button></div>' +
         postCard(p, pf, true) + '<div class="fbcm">' + body + '</div>' +
         (can('reply') ? '<div class="fbcb">' + (REP ? '<div class="rto">' + esc(REP.who) + 'さんに返信<span data-repx="1">✕</span></div>' : '') +
-          '<textarea id="fbCmT" rows="1" placeholder="' + (REP ? '返信を入力' : 'コメントする') + '"></textarea><button type="button" data-csend="1">送信</button></div>' : '') + '</div>';
+          '<div class="emo">' + ['❤️', '🙌', '🔥', '👏', '😢', '😍', '😮', '😂'].map(function (x) { return '<button type="button" data-emo="' + x + '">' + x + '</button>'; }).join('') + '</div>' +
+          '<div class="pill"><textarea id="fbCmT" rows="1" placeholder="' + (REP ? esc(REP.who) + 'さんに返信' : esc(pf.name) + 'としてコメント') + '"></textarea><button type="button" data-csend="1">' + IC.send + '</button></div></div>' : '') + '</div>';
     };
     if (!p.c) CM[id] = CM[id] || [];
     draw();
@@ -14969,6 +15251,7 @@ function fbScript_(C) {
       var pm = t.closest('[data-pmenu]'); if (pm) { postMenu(pm.getAttribute('data-pmenu')); return; }
       if (t.closest('[data-cfocus]')) { var ta = document.getElementById('fbCmT'); if (ta) ta.focus(); else warn(NOPERM); return; }
       if (t.closest('[data-repx]')) { REP = null; draw(); return; }
+      var em = t.closest('[data-emo]'); if (em) { var ta3 = document.getElementById('fbCmT'); if (ta3) { ta3.value += em.getAttribute('data-emo'); ta3.focus(); } return; }
       var cr = t.closest('[data-crep]');
       if (cr) { if (!can('reply')) { warn(NOPERM); return; } var c0 = cOf(cr.getAttribute('data-crep')); REP = { id: c0.parent || c0.id, who: c0.page ? pf.name : (c0.who || 'Facebookユーザー') }; draw(); var ta2 = document.getElementById('fbCmT'); if (ta2) ta2.focus(); return; }
       var cl = t.closest('[data-clike]');
@@ -15265,22 +15548,34 @@ function fbScript_(C) {
     document.body.appendChild(d); load();
   }
 
-  // ── メッセージ（Messengerの受信箱・会話・返信）──
+  // ── メッセージ（2026-11-10 本物（エミュレーターの Meta Business Suite の受信箱）に合わせた）──
+  function ago2(t) {      // 受信箱の短い時刻（本物：1日・4日・1週間）
+    var s = Date.now() / 1000 - (t || 0);
+    if (s < 3600) return Math.max(1, Math.floor(s / 60)) + '分';
+    if (s < 86400) return Math.floor(s / 3600) + '時間';
+    if (s < 7 * 86400) return Math.floor(s / 86400) + '日';
+    if (s < 365 * 86400) return Math.floor(s / (7 * 86400)) + '週間';
+    return Math.floor(s / (365 * 86400)) + '年';
+  }
   function openInbox() {
     if (!can('reply')) { warn(NOPERM); return; }
-    var d = document.createElement('div'); d.className = 'fbov';
+    var d = document.createElement('div'); d.className = 'fbov fbinbox';
     var draw = function (L, err) {
-      d.innerHTML = '<div class="in"><div class="fbtop"><button type="button" data-x="1">' + IC.back + '</button><div class="t">メッセージ</div><span></span></div>' +
+      var un = (L || []).filter(function (c) { return c.unread; }).length;
+      d.innerHTML = '<div class="in"><div class="fbibh"><button type="button" data-x="1">' + IC.back + '</button><b>受信箱</b><span class="sp"></span>' +
+        '<button type="button" data-soon="1">' + IC.search + '</button><button type="button" data-soon="1">' + IC.dots + '</button></div>' +
+        '<div class="fbibt"><button type="button" class="on">メッセージ' + (un ? '<i>' + un + '</i>' : '') + '</button><button type="button" data-soon="1">コメント</button></div>' +
         (err ? '<div class="fbcm"><div class="none">' + esc(err) + '</div></div>' : L == null ? '<div class="fbcm"><div class="none">読み込み中です…</div></div>' :
           !L.length ? '<div class="fbcm"><div class="none">メッセージはまだありません</div></div>' :
           '<div class="fbin">' + L.map(function (c) {
-            return '<button type="button" data-cid="' + esc(c.cid) + '"' + (c.unread ? ' class="un"' : '') + '><span class="a">' + esc((c.name || '?').slice(0, 1)) + '</span>' +
-              '<span class="b"><b>' + esc(c.name) + '</b><span class="s">' + esc(c.snip) + ' · ' + esc(when(c.at)) + '</span></span>' + (c.unread ? '<i></i>' : '') + '</button>';
+            return '<button type="button" data-cid="' + esc(c.cid) + '"' + (c.unread ? ' class="un"' : '') + '><span class="a">' + esc((c.name || '?').slice(0, 1)) + '<em>' + IC.msgrB + '</em></span>' +
+              '<span class="b"><b>' + esc(c.name) + '</b><span class="s"><span class="sx">' + (c.me ? 'あなた: ' : '') + esc(c.snip) + '</span><span class="tm">' + esc(ago2(c.at)) + '</span></span></span>' + (c.unread ? '<i></i>' : '') + '</button>';
           }).join('') + '</div>') + '</div>';
     };
     draw(null);
     d.addEventListener('click', function (e) {
       if (e.target.closest('[data-x]')) { d.remove(); return; }
+      if (e.target.closest('[data-soon]')) { warn(SOON); return; }
       var b = e.target.closest('[data-cid]'); if (b) openThread(b.getAttribute('data-cid'));
     });
     document.body.appendChild(d);
@@ -15290,22 +15585,27 @@ function fbScript_(C) {
     var d = document.createElement('div'); d.className = 'fbov fbchat';
     var T = null;
     var draw = function (err) {
-      var msgs = (T && T.msgs) || [];
-      d.innerHTML = '<div class="in"><div class="fbtop"><button type="button" data-x="1">' + IC.back + '</button><div class="t">' + esc((T && T.name) || '') + '</div><span></span></div>' +
+      var msgs = (T && T.msgs) || [], nm = (T && T.name) || '';
+      var av = '<span class="ca">' + esc(nm.slice(0, 1) || '?') + '</span>';
+      d.innerHTML = '<div class="in"><div class="fbchh"><button type="button" data-x="1">' + IC.back + '</button>' + av + '<b>' + esc(nm) + '</b><span class="sp"></span><button type="button" data-soon="1">' + IC.dotsV + '</button></div>' +
         '<div class="fbch">' + (err ? '<div class="none">' + esc(err) + '</div>' : !T ? '<div class="none">読み込み中です…</div>' :
-          msgs.map(function (m) {
-            return '<div class="m' + (m.me ? ' me' : '') + '">' + (m.t ? '<div class="bb">' + esc(m.t) + '</div>' : '') +
+          msgs.map(function (m, i) {
+            var nx = msgs[i + 1], last = !nx || nx.me !== m.me;
+            return '<div class="m' + (m.me ? ' me' : '') + '">' + (!m.me ? '<span class="ma">' + (last ? esc(nm.slice(0, 1) || '?') : '') + '</span>' : '') + '<div class="mb">' +
+              (m.t ? '<div class="bb">' + esc(m.t) + '</div>' : '') +
               (m.img || []).map(function (u) { return '<button type="button" data-pic="' + esc(u) + '">' + img(u) + '</button>'; }).join('') +
-              '<div class="tm">' + esc(when(m.at)) + '</div></div>';
+              (last ? '<div class="tm">' + esc(when(m.at)) + '</div>' : '') + '</div></div>';
           }).join('')) + '</div>' +
-        (T ? (T.can_reply ? '<div class="fbcb"><textarea id="fbDmT" rows="1" placeholder="メッセージ"></textarea><button type="button" data-send="1">送信</button></div>' :
+        (T ? (T.can_reply ? '<div class="fbchb"><button type="button" data-soon="1">' + IC.camera + '</button><button type="button" data-soon="1">' + IC.photo + '</button>' +
+            '<div class="pill"><textarea id="fbDmT" rows="1" placeholder="Aa"></textarea></div><button type="button" class="snd" data-send="1">' + IC.send + '</button></div>' :
           '<div class="fbnote" style="padding:12px 16px">お客様の最後のメッセージから24時間を過ぎたため、ズコからは返信できません。Facebookのアプリから返信してください🙇</div>') : '') + '</div>';
-      var ch = d.querySelector('.fbch'); if (ch) setTimeout(function () { d.scrollTop = d.scrollHeight; }, 0);
+      setTimeout(function () { d.scrollTop = d.scrollHeight; }, 0);
     };
     draw();
     d.addEventListener('click', function (e) {
       var t = e.target;
       if (t.closest('[data-x]')) { d.remove(); return; }
+      if (t.closest('[data-soon]')) { warn(SOON); return; }
       var pc = t.closest('[data-pic]'); if (pc) { showPic(pc.getAttribute('data-pic')); return; }
       if (t.closest('[data-send]')) {
         var tx = String(document.getElementById('fbDmT').value || '').trim();
@@ -21107,6 +21407,16 @@ var HOMECSS_ =
 '    box-shadow:0 6px 18px rgba(0,0,0,.07); position:relative; overflow:hidden;' +
 '    transition:transform .12s ease, box-shadow .12s ease; }' +
 '  .tile::before { content:""; position:absolute; left:0; top:0; bottom:0; width:6px; height:auto; }' +
+// ★長押しで場所を入れ替えられるホーム（.hsort）だけの決まり。押すだけのボタンなので、長押しで文字の選択・
+//   リンクの見本・ブラウザのメニューが出ないようにする（出ると持ち上げられない）。
+'  .hsort .tile { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; -webkit-user-drag:none; }' +
+'  .hsort .tile.tdrag { z-index:60; pointer-events:none; opacity:.97; box-shadow:0 18px 40px rgba(0,0,0,.34); }' +
+'  .hsorting .tile:hover, .hsorting .tile:active { box-shadow:0 6px 18px rgba(0,0,0,.07); }' +
+'  .hsort .tile.tdrag:hover, .hsort .tile.tdrag:active { box-shadow:0 18px 40px rgba(0,0,0,.34); }' +
+'  .hreset { text-align:center; margin:22px 0 0; }' +
+'  .hresetbtn { font:inherit; font-size:.92rem; font-weight:800; color:#fff; background:rgba(255,255,255,.16);' +
+'    border:1px solid rgba(255,255,255,.55); border-radius:999px; padding:9px 18px; cursor:pointer; }' +
+'  .hresetbtn:active { transform:translateY(1px); }' +
 // ★タイルの色は全部見分けが付くように離した色相を使う（共通ルール・新タイル追加時も守る）：
 //   rose #e11d48(350°)／indigo #6366f1(239°)／amber #f59e0b(38°)／emerald #0d9b6c(160°)／
 //   sky #0ea5e9(199°)。新しく足す時は上の5色と色相が近い色（±30°以内）を避けて選ぶこと
