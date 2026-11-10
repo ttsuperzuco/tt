@@ -2164,9 +2164,8 @@ function instaScript_(C) {
       var e0 = new Date(); e0.setHours(0, 0, 0, 0); e0.setDate(e0.getDate() - 1);
       var s0 = new Date(e0.getTime()); s0.setDate(s0.getDate() - (days - 1));
       var md = function (x) { return (x.getMonth() + 1) + '月' + x.getDate() + '日'; };
-      var mine = ((DATA && DATA.views && DATA.views[CUR] && DATA.views[CUR].posts) || []).filter(function (x) { return x.at && x.at * 1000 >= s0.getTime(); }).length;
       var top = '<div class="igdtop"><b>インサイト</b><span>' + md(s0) + '〜' + md(e0) + '</span></div>' +
-        row('閲覧数', n(d.views)) + row('新規フォロワー', n((d.follows || {}).FOLLOWER)) + row('あなたがシェアしたコンテンツ', num(mine));
+        row('閲覧数', n(d.views)) + row('新規フォロワー', n((d.follows || {}).FOLLOWER));
       var h = head + top + '<h3>閲覧数の内訳</h3>' +
         row('フォロワー', pct(vb.FOLLOWER || 0, vAll)) + row('フォロワー以外', pct(vb.NON_FOLLOWER || 0, vAll)) +
         '<h3>概要</h3>' + row('リーチしたアカウント', n(d.reach), true) +
