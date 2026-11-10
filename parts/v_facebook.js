@@ -1165,10 +1165,11 @@ function fbScript_(C) {
     var draw = function (err) {
       var x = L && L[i];
       d.innerHTML = '<div class="in"><div class="bars">' + (L || []).map(function (_, k) { return '<i' + (k <= i ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' +
-        '<div class="hd"><button type="button" data-x="1">✕</button><b>ストーリーズ</b><span class="sp"></span>' + (x && can('post') ? '<button type="button" data-sdl="1">' + IC.dots + '</button>' : '') + '</div>' +
+        '<div class="hd"><button type="button" data-x="1">✕</button><b>ストーリーズ</b><span class="sp"></span></div>' +
         '<div class="bd">' + (err ? '<div class="none">' + esc(err) + '</div>' : !L ? '<div class="none">読み込み中です…</div>' : !x ? '<div class="none">今出ているストーリーズはありません' + (can('post') ? '<br><button type="button" class="fbgo" data-new="1" style="max-width:260px;margin:16px auto 0">ストーリーズを作成</button>' : '') + '</div>' :
           (x.type === 'video' && x.src ? '<video src="' + esc(x.src) + '" autoplay playsinline controls></video>' : img(x.th)) +
-          '<div class="tm">' + esc(when(x.at)) + '</div>' + (L.length > 1 ? '<button type="button" class="pv" data-mv="-1">‹</button><button type="button" class="nx" data-mv="1">›</button>' : '')) + '</div></div>';
+          '<div class="tm">' + esc(when(x.at)) + '</div>' +
+          (can('post') ? '<div class="tm">削除はFacebookのアプリからできます（24時間で自動で消えます）</div>' : '') + (L.length > 1 ? '<button type="button" class="pv" data-mv="-1">‹</button><button type="button" class="nx" data-mv="1">›</button>' : '')) + '</div></div>';
     };
     draw();
     d.addEventListener('click', function (e) {
@@ -1176,17 +1177,6 @@ function fbScript_(C) {
       if (t.closest('[data-x]')) { d.remove(); return; }
       if (t.closest('[data-new]')) { d.remove(); composeStory(); return; }
       var mv = t.closest('[data-mv]'); if (mv) { i = Math.max(0, Math.min(L.length - 1, i + Number(mv.getAttribute('data-mv')))); draw(); return; }
-      if (t.closest('[data-sdl]')) {
-        var x = L[i];
-        sheet([{ t: 'ストーリーズを削除', red: true, go: function () {
-          confirmGo('このストーリーズを削除しますか？😊', function () {
-            simple({ kind: 'story_delete', acct: CUR, story: x.id }, 'ストーリーズを削除しています', function (err) {
-              if (err) { warn(err); return; }
-              L.splice(i, 1); i = Math.max(0, i - 1); doneShow('ストーリーズの削除が完了しました', function () { draw(); });
-            });
-          });
-        } }]);
-      }
     });
     document.body.appendChild(d);
     ask({ kind: 'story_list', acct: CUR }, function (err, r) { if (err) { draw(err); return; } L = (r && r.stories) || []; i = 0; draw(); });
