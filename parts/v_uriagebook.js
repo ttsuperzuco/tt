@@ -159,7 +159,7 @@ function uriageBookScript_(C) {
     if (!D.rows.length) L = '<div class="ubnone">まだ売上の行がありません</div>';
     else {
       L = '<div class="ubtbl"><table><colgroup><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:12%">' +
-        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:8%"></colgroup>' +
+        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:9%"></colgroup>' +
         '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">削除</th></tr></thead><tbody>';
       var run = 0;
       for (var j = 0; j < D.rows.length; j++) {

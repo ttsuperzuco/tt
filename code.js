@@ -11608,7 +11608,7 @@ function uriageBookScript_(C) {
       //   足し方は売上表の式と同じ（上の行から順に合計を足していく）。画面の中で数えるので、裏で修正・削除中の行もすぐ反映される
       //   （削除中の行は足さない）。
       L = '<div class="ubtbl"><table><colgroup><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:12%">' +
-        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:8%"></colgroup>' +
+        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:9%"></colgroup>' +
         '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">削除</th></tr></thead><tbody>';
       var run = 0;
       for (var j = 0; j < D.rows.length; j++) {
