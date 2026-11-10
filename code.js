@@ -192,7 +192,7 @@ function doGet(e) {
     title = 'インスタ';                                       // ★お店のインスタを本物そっくりに見せる（純JS・中身は受付係 op=insta）
     html = renderInstaPage_(base, staff, dev);
   } else if (view === 'threads') {
-    title = 'Threads投稿';                                   // ★お店のThreadsに投稿・削除（純JS・投稿は受付係 op=threads）
+    title = 'スレッズコ';                                   // ★お店のThreadsに投稿・削除（純JS・投稿は受付係 op=threads）
     html = renderThreadsPage_(base, staff, dev);
   } else if (view === 'hanbai') {
     title = 'No31 販売管理';                                 // ★日本・台湾の販売を入れる／一覧（純JS・登録は受付係）
@@ -1899,7 +1899,7 @@ var TILE_DEFS_ = [
   // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
   //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
   { id: 'threads', cls: 'threads', view: 'threads',
-    icon: '<span class="ticon">🧵</span>', label: 'Threads\n投稿' },
+    icon: '<span class="ticon">🧵</span>', label: 'スレッズコ' },   // ★2026-11-10 まるちゃん「なまえを スレッズコ にする」
   // ★📸インスタ（2026-11-08 まるちゃん決定「ぜんぶすいしょう」）＝お店のインスタ3つのプロフィールを本物そっくりに見せる。
   //   中身は受付係（op=insta → Instagram投稿\programs\insta_zuko.py）が専用ブラウザで読む。既定は開発者だけ（共通ルール16）。
   { id: 'insta', cls: 'insta', view: 'insta',
@@ -13242,7 +13242,7 @@ function thIco_(k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" wi
 function renderThreadsPage_(base, staff, dev) {
   // ★2026-11-05 まるちゃん「スレッズを表示の部分からは、本物のスレッズを再現したい。最近どうを押すと新しいスレッドが出る」
   //   ＝アカウントのボタンの下は本物のThreadsのプロフィール画面そのもの。投稿の入力は「新しいスレッド」の小窓の中。
-  var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">Threads投稿</span></div>';
+  var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">スレッズコ</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8',
