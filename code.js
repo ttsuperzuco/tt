@@ -20428,7 +20428,7 @@ function renderLinksPage_(d, base, staff, dev) {
       '<div class="lkimgtitle" id="lktopicshead"></div>' +
       '<div class="lkimgcats">' +
         topics.map(function (t, i) {
-          var k = (t.kind === '商品' || t.kind === 'オンラインショップ') ? t.kind : 'キャンペーン';
+          var k = (t.kind === '商品' || t.kind === 'オンラインショップ' || t.kind === 'サービス') ? t.kind : 'キャンペーン';
           return '<button type="button" class="lkcatbtn lktopicbtn" data-t="' + i + '" data-k="' + k + '">' + esc_(t.name || '') + '</button>';
         }).join('') +
       '</div>' +
@@ -20452,6 +20452,8 @@ function renderLinksPage_(d, base, staff, dev) {
     '<button type="button" class="lkhubbtn lkgotopics" data-k="商品"><span class="lkhubico">🛍️</span><span>商品</span></button>' +
     // ★2026-11-06（まるちゃん）：商品の右に「オンラインショップ」（D列に「オンラインショップ」と書いた案内）。
     '<button type="button" class="lkhubbtn lkgotopics" data-k="オンラインショップ"><span class="lkhubico">🛒</span><span>オンラインショップ</span></button>' +
+    // ★2026-11-10（まるちゃん「サービスをつくろう」）：入口に「サービス」（D列に「サービス」と書いた案内。最初の例＝数秘セッションのLINE）。
+    '<button type="button" class="lkhubbtn lkgotopics" data-k="サービス"><span class="lkhubico">🛎️</span><span>サービス</span></button>' +
   '</div>' +
   // ── URLリンク（元の各種LINK） ──
   '<div id="lkurlsec" class="lksec" hidden>' +
@@ -23008,10 +23010,11 @@ function bcCampCode_() {
       h += '<div class="bccard"><div class="bcouttx">各種LINKを読んでいます…</div></div>';
     } else {
       var ts = CLINKS.topics || [];
-      ['キャンペーン', '商品', 'オンラインショップ'].forEach(function (k) {
-        var list = ts.filter(function (t) { return ((t.kind === '商品' || t.kind === 'オンラインショップ') ? t.kind : 'キャンペーン') === k; });
-        if (k === 'オンラインショップ' && !list.length) return;
-        h += '<div class="bccamph">' + (k === '商品' ? '🛍️ 商品' : k === 'オンラインショップ' ? '🛒 オンラインショップ' : '🎁 キャンペーン') + '</div>';
+      // ★2026-11-10：各種LINKの入口に「サービス」を足したので、ここにも同じ見出しで出す（登録が無い時は見出しごと出さない）。
+      ['キャンペーン', '商品', 'オンラインショップ', 'サービス'].forEach(function (k) {
+        var list = ts.filter(function (t) { return ((t.kind === '商品' || t.kind === 'オンラインショップ' || t.kind === 'サービス') ? t.kind : 'キャンペーン') === k; });
+        if ((k === 'オンラインショップ' || k === 'サービス') && !list.length) return;
+        h += '<div class="bccamph">' + (k === '商品' ? '🛍️ 商品' : k === 'オンラインショップ' ? '🛒 オンラインショップ' : k === 'サービス' ? '🛎️ サービス' : '🎁 キャンペーン') + '</div>';
         if (!list.length) { h += '<div class="bccard"><div class="bcempty">各種LINKに登録がありません。</div></div>'; return; }
         h += '<div class="bccampkinds">' + list.map(function (t) {
           return '<button type="button" class="bccampkind' + (t.name === CKIND ? ' on' : '') + '" data-ck="' + esc(t.name) + '">' +

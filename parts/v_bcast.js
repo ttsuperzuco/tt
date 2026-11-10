@@ -1312,10 +1312,10 @@ function bcCampCode_() {
       h += '<div class="bccard"><div class="bcouttx">各種LINKを読んでいます…</div></div>';
     } else {
       var ts = CLINKS.topics || [];
-      ['キャンペーン', '商品', 'オンラインショップ'].forEach(function (k) {
-        var list = ts.filter(function (t) { return ((t.kind === '商品' || t.kind === 'オンラインショップ') ? t.kind : 'キャンペーン') === k; });
-        if (k === 'オンラインショップ' && !list.length) return;
-        h += '<div class="bccamph">' + (k === '商品' ? '🛍️ 商品' : k === 'オンラインショップ' ? '🛒 オンラインショップ' : '🎁 キャンペーン') + '</div>';
+      ['キャンペーン', '商品', 'オンラインショップ', 'サービス'].forEach(function (k) {
+        var list = ts.filter(function (t) { return ((t.kind === '商品' || t.kind === 'オンラインショップ' || t.kind === 'サービス') ? t.kind : 'キャンペーン') === k; });
+        if ((k === 'オンラインショップ' || k === 'サービス') && !list.length) return;
+        h += '<div class="bccamph">' + (k === '商品' ? '🛍️ 商品' : k === 'オンラインショップ' ? '🛒 オンラインショップ' : k === 'サービス' ? '🛎️ サービス' : '🎁 キャンペーン') + '</div>';
         if (!list.length) { h += '<div class="bccard"><div class="bcempty">各種LINKに登録がありません。</div></div>'; return; }
         h += '<div class="bccampkinds">' + list.map(function (t) {
           return '<button type="button" class="bccampkind' + (t.name === CKIND ? ' on' : '') + '" data-ck="' + esc(t.name) + '">' +

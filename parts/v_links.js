@@ -18,7 +18,7 @@ function renderLinksPage_(d, base, staff, dev) {
       '<div class="lkimgtitle" id="lktopicshead"></div>' +
       '<div class="lkimgcats">' +
         topics.map(function (t, i) {
-          var k = (t.kind === '商品' || t.kind === 'オンラインショップ') ? t.kind : 'キャンペーン';
+          var k = (t.kind === '商品' || t.kind === 'オンラインショップ' || t.kind === 'サービス') ? t.kind : 'キャンペーン';
           return '<button type="button" class="lkcatbtn lktopicbtn" data-t="' + i + '" data-k="' + k + '">' + esc_(t.name || '') + '</button>';
         }).join('') +
       '</div>' +
@@ -40,6 +40,7 @@ function renderLinksPage_(d, base, staff, dev) {
     '<button type="button" class="lkhubbtn" id="lkGoImg"><span class="lkhubico">🖼️</span><span>施術前＆後の画像</span></button>' +
     '<button type="button" class="lkhubbtn lkgotopics" data-k="商品"><span class="lkhubico">🛍️</span><span>商品</span></button>' +
     '<button type="button" class="lkhubbtn lkgotopics" data-k="オンラインショップ"><span class="lkhubico">🛒</span><span>オンラインショップ</span></button>' +
+    '<button type="button" class="lkhubbtn lkgotopics" data-k="サービス"><span class="lkhubico">🛎️</span><span>サービス</span></button>' +
   '</div>' +
   '<div id="lkurlsec" class="lksec" hidden>' +
     '<button type="button" class="lkback2" id="lkUrlBack">← 戻る</button>' +
