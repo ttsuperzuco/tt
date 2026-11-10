@@ -1908,7 +1908,8 @@ var TILE_DEFS_ = [
   // ★📸インスタ（2026-11-08 まるちゃん決定「ぜんぶすいしょう」）＝お店のインスタ3つのプロフィールを本物そっくりに見せる。
   //   中身は受付係（op=insta → Instagram投稿\programs\insta_zuko.py）が専用ブラウザで読む。既定は開発者だけ（共通ルール16）。
   { id: 'insta', cls: 'insta', view: 'insta',
-    icon: '<span class="ticon">📸</span>', label: 'インズコグラム' },   // ★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
+    // ★2026-11-10 まるちゃん「A-2採用・ボタンの右もそれにできる？」＝ボタンの絵も金魚がレンズをくぐる絵（icons/insta-192.png・パソコン版も同じ）
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>', label: 'インズコグラム' },   // ★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
   // ★📘Facebook（2026-11-10 まるちゃん決定「全部推奨で」）＝お店のFacebookページ3つを本物そっくりに見せる（第1段階＝読むだけ）。
   //   中身は受付係（op=facebook → Facebook投稿\programsb_zuko.py）がメタ公式の窓口で読む。既定は開発者だけ（共通ルール16）。
   { id: 'facebook', cls: 'facebook', view: 'facebook',
@@ -21905,6 +21906,7 @@ var HOMECSS_ =
 '  .ticon { flex:none; width:36px; height:36px; border-radius:9px; font-size:21px;' +
 '    display:grid; place-items:center; overflow:hidden; }' +
 '  .ticon svg { width:100%; height:100%; display:block; }' +
+'  .ticon img { width:100%; height:100%; display:block; object-fit:cover; }' +
 '  .tile.conflict .ticon { background:rgba(225,29,72,.12); }' +
 '  .tile.lt .ticon { background:rgba(148,163,184,.14); }' +
 '  .tile.uriage .ticon { background:rgba(245,158,11,.16); }' +
