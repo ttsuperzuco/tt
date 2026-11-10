@@ -7,6 +7,7 @@ var SMCSS_ =
   '#smCertBox .smbar{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;padding:0 10px;box-sizing:border-box;}' +
   '#smCertBox .smbar .ubar{margin:0;}' +
   '.smzoom{margin-left:auto;background:#fff;color:#2C7A99;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;}' +
+  '.smprint{margin-left:8px;background:#16a34a;color:#fff;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;white-space:nowrap;}' +
   '#smCertPane{position:absolute;left:0;right:0;top:58px;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;}' +
   '#smCertSizer{position:relative;overflow:hidden;margin:0 auto;}' +
   '#smCertSizer iframe{position:absolute;left:0;top:0;width:1180px;height:1000px;transform-origin:0 0;background:#fff;}' +
@@ -74,6 +75,7 @@ function shomeishoScript_(C) {
   cert.onload = function () { setTimeout(fit, 60); setTimeout(fit, 1500); };
   window.addEventListener('resize', fit);
   $('smZoom').onclick = function () { zoom = !zoom; fit(); };
+  $('smPrint').onclick = function () { try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
   function exit() { var a = document.querySelector('#smHome a'); if (a) a.click(); }
   var LSK = 'sz_shomeisho_page', touched = false;
   function cached() { try { return localStorage.getItem(LSK) || ''; } catch (e) { return ''; } }
@@ -146,7 +148,8 @@ function renderShomeishoPage_(base, staff, dev) {
       '<div id="smMsg" class="smmsg"></div>' +
       '<iframe id="smFrame" title="購入証明書作成" style="display:none"></iframe>' +
       '<div id="smCertBox"><div class="smbar"><div class="ubar"><a class="uhome" id="smCertBack" href="javascript:void(0)">← 戻る</a></div>' +
-          '<button type="button" class="smzoom" id="smZoom">拡大して表示</button></div>' +
+          '<button type="button" class="smzoom" id="smZoom">拡大して表示</button>' +
+          '<button type="button" class="smprint" id="smPrint">🖨 印刷する</button></div>' +
         '<div id="smCertPane"><div id="smCertSizer"><iframe id="smCert" title="購入証明書"></iframe></div></div></div>' +
     '</div>' +
     '<script>(' + shomeishoScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
