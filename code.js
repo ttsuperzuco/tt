@@ -2134,15 +2134,16 @@ function homeSortBoot_(KEY, OPT) {
     over();   // 指を止めたままでも、下のボタンとの入れ替えを見直す（動かした直後の待ちで取りこぼさないため）
     st.raf = requestAnimationFrame(tick);
   }
-  function showReset(on) {
+  // ★2026-11-10 まるちゃん「①あ」＝「初期の並びに戻す」は入れ替える前からいつも出す（隠さない）。
+  function showReset() {
     var r = home.querySelectorAll('.hreset');
-    for (var i = 0; i < r.length; i++) r[i].style.display = on ? '' : 'none';
+    for (var i = 0; i < r.length; i++) r[i].style.display = '';
   }
   function save() {
     var all = [];
     for (var i = 0; i < boxes.length; i++) all = all.concat(idsOf(boxes[i]));
     try { if (OPT.save) OPT.save(all); else localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
-    showReset(true);
+    showReset();
   }
   function unbind(s) {
     if (s.tm) { s.el.removeEventListener('touchmove', s.tm); s.el.removeEventListener('touchend', s.te); s.el.removeEventListener('touchcancel', s.te); }
@@ -2229,7 +2230,7 @@ function homeSortBoot_(KEY, OPT) {
     });
     box.addEventListener('dragstart', function (ev) { if (tileAt(box, ev.target)) ev.preventDefault(); });
   });
-  // 「元の並びに戻す」＝覚えている並びを消して、全員共通の並びに戻す。
+  // 「初期の並びに戻す」＝覚えている並びを消して、全員共通の並びに戻す。
   function resetOrder() {
     try { if (OPT.clear) OPT.clear(); else localStorage.removeItem(KEY); } catch (e) {}
     boxes.forEach(function (box) {
@@ -2241,12 +2242,12 @@ function homeSortBoot_(KEY, OPT) {
       regap(box);
       slide(before);
     });
-    showReset(false);
+    showReset();
   }
   var rb = home.querySelectorAll('.hresetbtn');
   for (var i = 0; i < rb.length; i++) {
     rb[i].addEventListener('click', function () {
-      var msg = 'ボタンの並びを\n元に戻しますか？😊';
+      var msg = 'ボタンを\n初期の並びに戻しますか？😊';   // ★2026-11-10 まるちゃん「初期の並びに戻す にする」
       if (OPT.confirm) OPT.confirm(msg, resetOrder);
       else if (typeof szPopup_ === 'function') szPopup_(msg, { cancel: true, icon: '', onYes: resetOrder });
       else resetOrder();
@@ -2322,8 +2323,8 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       tilesGap_(list, gaps, tileA_) + '</div>';
   }
   var resetHtml = canSort
-    ? '<span class="hreset"' + (mine ? '' : ' style="display:none"') + '><button type="button" class="hresetbtn">↺ 元の並びに戻す</button></span>'
-    : '';   // ★2026-11-10 まるちゃん「戻るボタンの一番右隅」＝「← 戻る」と同じ行の右端に置く（並べ替えた後だけ出る）
+    ? '<span class="hreset"><button type="button" class="hresetbtn">↺ 初期の並びに戻す</button></span>'
+    : '';   // ★2026-11-10 まるちゃん「戻るボタンの一番右隅」＝「← 戻る」と同じ行の右端に置く／「①あ」＝入れ替える前からいつも出す／「初期の並びに戻す にする」
   var homeCls = canSort ? 'home hsort' : 'home';
   var sortScript = canSort ? HOMESORT_SCRIPT_ : '';
   var head =

@@ -1529,15 +1529,15 @@ function homeSortBoot_(KEY, OPT) {
     over();   
     st.raf = requestAnimationFrame(tick);
   }
-  function showReset(on) {
+  function showReset() {
     var r = home.querySelectorAll('.hreset');
-    for (var i = 0; i < r.length; i++) r[i].style.display = on ? '' : 'none';
+    for (var i = 0; i < r.length; i++) r[i].style.display = '';
   }
   function save() {
     var all = [];
     for (var i = 0; i < boxes.length; i++) all = all.concat(idsOf(boxes[i]));
     try { if (OPT.save) OPT.save(all); else localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {}
-    showReset(true);
+    showReset();
   }
   function unbind(s) {
     if (s.tm) { s.el.removeEventListener('touchmove', s.tm); s.el.removeEventListener('touchend', s.te); s.el.removeEventListener('touchcancel', s.te); }
@@ -1631,12 +1631,12 @@ function homeSortBoot_(KEY, OPT) {
       regap(box);
       slide(before);
     });
-    showReset(false);
+    showReset();
   }
   var rb = home.querySelectorAll('.hresetbtn');
   for (var i = 0; i < rb.length; i++) {
     rb[i].addEventListener('click', function () {
-      var msg = 'ボタンの並びを\n元に戻しますか？😊';
+      var msg = 'ボタンを\n初期の並びに戻しますか？😊';   
       if (OPT.confirm) OPT.confirm(msg, resetOrder);
       else if (typeof szPopup_ === 'function') szPopup_(msg, { cancel: true, icon: '', onYes: resetOrder });
       else resetOrder();
@@ -1698,7 +1698,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       tilesGap_(list, gaps, tileA_) + '</div>';
   }
   var resetHtml = canSort
-    ? '<span class="hreset"' + (mine ? '' : ' style="display:none"') + '><button type="button" class="hresetbtn">↺ 元の並びに戻す</button></span>'
+    ? '<span class="hreset"><button type="button" class="hresetbtn">↺ 初期の並びに戻す</button></span>'
     : '';   
   var homeCls = canSort ? 'home hsort' : 'home';
   var sortScript = canSort ? HOMESORT_SCRIPT_ : '';
