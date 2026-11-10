@@ -9689,8 +9689,12 @@ function renderExistingPage_(base, staff, dev, mode) {
       /* ★2026-10-25：空き状況の下に「空きの外で入れる（特例）」を出す（既存の予約だけ）。 */
       'var SG_TOKU=true;' +
       SG_STEPS_JS_ +
+      /* ★2026-11-10 月の画面から戻る＝1つ前の「施術時間」の画面へ（まるちゃん「ズコシステム全体で戻るボタンが機能してるか全部チェックして」
+         で見つけた）。2026-09-25 に流れを「番号→日付」から「番号→今回の施術→担当→施術時間→日付」に変えた時、ここだけ
+         古いまま（お客様番号の画面へ戻る）だった＝戻るを押すと、決めた施術・担当・時間を全部やり直しになっていた。
+         前回の予約を使う流れ（EXFLOW）の時は施術時間の画面へ。そうでない時だけ今までどおり番号の画面へ。 */
       'function back(){if(step===6){goFree();}else if(step===5){goDay();}else if(step===4){goMonth();}' +
-        'else{step=0;hideSteps();$("exNum").style.display="";window.scrollTo(0,0);}}' +
+        'else{step=0;if(EXFLOW){exShowDur();}else{hideSteps();$("exNum").style.display="";}window.scrollTo(0,0);}}' +
       '$("sgback").onclick=function(){if(!tapOK())return;back();};' +
       'sgBindSteps();' +
       '$("sgtgo").onclick=function(){if(!tapOK())return;' +
