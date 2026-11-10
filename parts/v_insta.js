@@ -11,10 +11,10 @@ var INSTACSS_ =
   '.igacct button{padding:3px 4px;font-size:15px;border-width:2px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.15);}' +
   '.igstat{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#eaf6fb;font-size:14px;font-weight:700;margin:0 4px 8px;}' +
   '.igstat button{background:#fff;color:#0f172a;border:0;border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
-  '.igapp{background:#fff;color:#000;border-radius:16px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN",Roboto,"Noto Sans JP",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.35;-webkit-font-smoothing:antialiased;}' +
+  '.igapp{background:#fff;color:#000;border-radius:16px;overflow:clip;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Hiragino Kaku Gothic ProN",Roboto,"Noto Sans JP",Helvetica,Arial,sans-serif;font-size:14px;line-height:1.35;-webkit-font-smoothing:antialiased;}' +
   '.igapp svg{display:block;}' +
   '.igapp button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;}' +
-  '.igtop{display:grid;grid-template-columns:44px 1fr 88px;align-items:center;height:52px;padding:0 12px;}' +
+  '.igtop{display:grid;grid-template-columns:44px 1fr 76px;align-items:center;height:52px;padding:0 12px;}' +
   '.igtop .u{display:flex;align-items:center;justify-content:center;gap:4px;font-size:20px;font-weight:700;min-width:0;}' +
   '.igtop .u span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
   '.igtop .u i{width:7px;height:7px;border-radius:50%;background:#ff3040;margin-left:2px;flex:0 0 auto;}' +
@@ -22,6 +22,11 @@ var INSTACSS_ =
   '.igprof{display:flex;align-items:center;gap:18px;padding:6px 16px 0;}' +
   '.igav{position:relative;width:86px;height:86px;flex:0 0 86px;}' +
   '.igav img{width:86px;height:86px;border-radius:50%;object-fit:cover;background:#efefef;}' +
+  '.ignote{position:absolute;left:-6px;top:-30px;max-width:100px;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.18);padding:6px 10px;font-size:11px;line-height:1.3;color:#737373;text-align:center;z-index:2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}' +
+  '.igprof.hasnote{padding-top:38px;}' +
+  '.igr .nmw{display:flex;align-items:flex-end;gap:4px;margin-bottom:8px;}' +
+  '.igr .nmw .nm{margin-bottom:0;flex:1;min-width:0;}' +
+  '.igr .nmw svg{flex:0 0 auto;color:#737373;margin-bottom:2px;}' +
   '.igav b{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:#000;color:#fff;border:3px solid #fff;display:flex;align-items:center;justify-content:center;}' +
   '.igr{flex:1;min-width:0;}' +
   '.igr .nm{font-size:15px;font-weight:700;line-height:1.3;word-break:break-word;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}' +
@@ -42,7 +47,8 @@ var INSTACSS_ =
   '.igapp .igdash{display:flex;align-items:center;justify-content:space-between;margin:12px 16px 0;padding:12px 14px;background:#f3f5f7;border-radius:12px;text-align:left;width:calc(100% - 32px);box-sizing:border-box;}' +
   '.igdash b{display:block;font-size:14px;font-weight:700;}' +
   '.igdash small{display:block;color:#737373;font-size:12px;margin-top:2px;}' +
-  '.igdash i{width:8px;height:8px;border-radius:50%;background:#4a5df9;flex:0 0 auto;}' +
+  '.igdash small:empty{display:none;}' +
+  '.igapp .igaddr{padding:2px 16px 0;color:#4150f7;font-size:14px;}' +
   '.igbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:12px 16px 0;}' +
   '.igbtns button{background:#efefef;border-radius:8px;height:34px;font-size:14px;font-weight:700;}' +
   '.ighl{display:flex;gap:14px;padding:16px 16px 4px;overflow-x:auto;scrollbar-width:none;}' +
@@ -52,7 +58,7 @@ var INSTACSS_ =
   '.ighl .c img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:#efefef;}' +
   '.ighl .c.new{border:1px solid #000;}' +
   '.ighl .t{font-size:12px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
-  '.igtabs{display:grid;grid-template-columns:repeat(4,1fr);margin-top:12px;}' +
+  '.igtabs{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;}' +
   '.igtabs button{height:46px;display:flex;align-items:center;justify-content:center;color:#737373;border-bottom:1px solid transparent;}' +
   '.igtabs button.on{color:#000;border-bottom:1px solid #000;}' +
   '.iggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}' +
@@ -63,9 +69,10 @@ var INSTACSS_ =
   '.iggrid .v svg{filter:drop-shadow(0 0 2px rgba(0,0,0,.5));}' +
   '.igempty{padding:48px 20px;text-align:center;color:#737373;font-size:14px;}' +
   '.igempty b{display:block;color:#000;font-size:20px;font-weight:800;margin-bottom:6px;}' +
-  '.ignav{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #dbdbdb;height:50px;}' +
+  '.ignav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #dbdbdb;height:56px;}' +
   '.ignav button{display:flex;align-items:center;justify-content:center;}' +
-  '.ignav .me{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #000;}' +
+  '.ignav .me{width:28px;height:28px;border-radius:50%;object-fit:cover;}' +
+  '.ignav .on{width:46px;height:46px;border-radius:50%;background:#e6edf3;display:flex;align-items:center;justify-content:center;}' +
   '.igsheet{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;}' +
   '.igsheet .in{background:#fff;color:#000;width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:8px 0 24px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Roboto,"Noto Sans JP",sans-serif;}' +
   '.igsheet .bar{width:40px;height:4px;border-radius:2px;background:#c7c7c7;margin:4px auto 10px;}' +
@@ -422,37 +429,46 @@ function instaScript_(C) {
     var h = '';
     h += '<div class="igtop"><button type="button" data-create="1">' + IC.plus + '</button>' +
       '<div class="u"><span>' + esc(p.user) + '</span>' + IC.down + '<i></i></div>' +
-      '<div class="r"><button type="button" data-go="notifs" title="お知らせ">' + S('<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', 24) + '</button>' +
-      '<button type="button" data-go="threads">' + IC.threads + '</button><button type="button" data-go="menu">' + IC.menu + '</button></div></div>';
-    h += '<div class="igprof"><div class="igav" data-go="stories" style="cursor:pointer"><img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></div>' +
-      '<div class="igr"><div class="nm">' + esc(p.name || p.user) + '</div>' +
+      '<div class="r"><button type="button" data-go="threads">' + IC.threads + '</button><button type="button" data-go="menu">' + IC.menu + '</button></div></div>';
+    h += '<div class="igprof hasnote"><div class="igav" data-go="stories" style="cursor:pointer"><div class="ignote">夢中になっていること…</div>' +
+      '<img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></div>' +
+      '<div class="igr"><div class="nmw"><div class="nm">' + esc(p.name || p.user) + '</div>' +
+      S('<circle cx="12" cy="12" r="9" stroke-dasharray="2.2 2.2"/><path d="M8 12.3l2.7 2.7L16 9.7"/>', 18) + '</div>' +
       '<div class="igcnt"><div><b>' + num(p.posts) + '</b>投稿</div><div data-go="followers" style="cursor:pointer"><b>' + num(p.followers) + '</b>フォロワー</div>' +
       '<div data-go="following" style="cursor:pointer"><b>' + num(p.following) + '</b>フォロー中</div></div></div></div>';
-    h += '<div class="igbio cl">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '<span class="mo">… 続きを読む</span></div>';
+    h += '<div class="igbio">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '</div>';
     if (links.length) {
       h += '<button type="button" class="iglink" data-go="link">' + IC.link + '<span>' + esc(shortUrl(links[0].u)) +
         (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') + '</span></button>';
     }
+    if (p.addr) h += '<div class="igaddr">' + esc(p.addr) + '</div>';
     h += '<div class="igchips">' +
       (p.threads ? '<button type="button" data-go="threads">' + IC.thS + esc(p.threads) + '</button>' : '') +
       (p.fb ? '<button type="button" data-go="fb">' + IC.fb + esc(p.fb) + '</button>' : '') +
       '<button type="button" class="add" data-go="banners">' + IC.plusS + '追加</button></div>';
-    h += '<button type="button" class="igdash" data-go="dash"><span><b>プロフェッショナルダッシュボード</b><small>新しいツールが利用できるようになりました。</small></span><i></i></button>';
+    h += '<button type="button" class="igdash" data-go="dash"><span><b>ダッシュボード</b><small id="igDashN"></small></span></button>';
     h += '<div class="igbtns"><button type="button" data-pedit="1">プロフィールを編集</button><button type="button" data-go="pshare">プロフィールをシェア</button></div>';
-    h += '<div class="ighl"><button type="button" data-hlnew="1"><div class="c new">' + IC.plus + '</div><div class="t">新規</div></button>' +
+    h += '<div class="ighl"><button type="button" data-hlnew="1"><div class="c new">' + IC.plus + '</div><div class="t">New</div></button>' +
       (v.hl || []).map(function (x, i) {
         return '<button type="button" data-hl="' + i + '"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
       }).join('') + '</div>';
     h += '<div class="igtabs">' +
-      [['posts', IC.grid], ['reels', IC.reels], ['reposts', IC.repost], ['tagged', IC.tagged]].map(function (t) {
+      [['posts', IC.grid], ['reels', IC.reels], ['tagged', IC.tagged]].map(function (t) {
         return '<button type="button" data-tab="' + t[0] + '"' + (TAB === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>';
       }).join('') + '</div>';
     h += drawGrid(v);
     h += '<div class="ignav"><button type="button" data-go="feed">' + IC.home + '</button><button type="button" data-go="reels">' + IC.reels + '</button>' +
       '<button type="button" data-dm="1">' + IC.send + '</button><button type="button" data-go="search">' + IC.search + '</button>' +
-      '<button type="button" data-go="home"><img class="me" src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""></button></div>';
+      '<button type="button" data-go="home"><span class="on"><img class="me" src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""></span></button></div>';
     $('igApp').innerHTML = h;
     bioFit($('igApp'));
+    if (can('insights')) {
+      var dn = CUR;
+      readAsk({ kind: 'more_dash', acct: dn, days: 30 }, function (err, d) {
+        var e2 = document.getElementById('igDashN');
+        if (!err && e2 && dn === CUR && d && d.views != null) e2.textContent = '過去30日間に' + num(d.views) + '回閲覧されました。';
+      });
+    }
   }
   $('igApp').addEventListener('click', function (e) {
     var t = e.target;
@@ -1871,12 +1887,14 @@ function instaScript_(C) {
   }
   function openFeed() {
     var el = document.createElement('div'); el.className = 'igp igfd'; el.id = 'igFd';
-    var head = '<div class="w"><div class="igph"><button type="button" data-fdback="1">‹</button><b>ホーム</b><span></span></div>';
+    var head = '<div class="w"><div class="igph"><button type="button" data-fdback="1">‹</button><b>ホーム</b>' +
+      '<button type="button" data-fdnotif="1" title="お知らせ">' + S('<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', 24) + '</button></div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…（20秒ほどかかります）</div></div>';
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
       var t = e.target;
       if (t.closest('[data-fdback]')) { el.remove(); return; }
+      if (t.closest('[data-fdnotif]')) { openNotifs(); return; }
       var c = t.closest('.igpcap'); if (c) { c.classList.toggle('open'); return; }
       var u = t.closest('[data-uprof]'); if (u) { openUProf(u.getAttribute('data-uprof')); return; }
       var o = t.closest('[data-fdopen]'); if (o) openUrl('https://www.instagram.com/p/' + o.getAttribute('data-fdopen') + '/');
