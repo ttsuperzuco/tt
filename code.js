@@ -2339,6 +2339,14 @@ function backBar_(base, staff, dev) {
   return '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +
     roleSfx_(staff, dev) + '" target="_top">← 戻る</a></div>';
 }
+// ★2026-11-10 まるちゃん「インスタもFBも独立画面にして。だから戻るボタンもいらない」
+//   ＝パソコンの独立した窓（住所に solo=1・PC版 super_pc.py の appwin）で開いた時は、上の「← 戻る」を出さない。
+//   スマホと、ホームの中で開く時は今までどおり出す。使っている画面＝スレッズコ・インスタ・Facebook。
+function backBarUnlessSolo_(base, staff, dev) {
+  var solo = false;
+  try { solo = /[?&]solo=1(&|$)/.test(location.search); } catch (e) {}
+  return solo ? '' : backBar_(base, staff, dev);
+}
 
 // 前日お知らせ画面のCSS。カードの中に「日付を選ぶ」＋作るボタン＋知らせの帯、その下に確認画面の枠。
 // ★★見た目はパソコン版の同じ画面（LINE前日お知らせ送信\programs\notice_home.py）と同じにそろえる。
@@ -13285,7 +13293,7 @@ function renderThreadsPage_(base, staff, dev) {
     ico: THICO_
   };
   return '<style>' + HOMECSS_ + EXPADCSS_ + HANBAICSS_ + THREADSCSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="home">' + backBarUnlessSolo_(base, staff, dev) +
     '<div class="thw">' + head +
       '<div class="hbhint" id="thLoad">読み込み中です…</div>' +
       '<div id="thMain" style="display:none">' +
@@ -14471,7 +14479,7 @@ function renderFacebookPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + FBCSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="home">' + backBarUnlessSolo_(base, staff, dev) +
     '<div class="fbw">' + head +
       '<div class="hbhint" id="fbLoad">読み込み中です…</div>' +
       '<div id="fbMain" style="display:none">' +
@@ -15071,7 +15079,7 @@ function renderInstaPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + INSTACSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="home">' + backBarUnlessSolo_(base, staff, dev) +
     '<div class="igw">' + head +
       '<div class="hbhint" id="igLoad">読み込み中です…</div>' +
       '<div id="igMain" style="display:none">' +

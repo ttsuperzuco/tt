@@ -279,7 +279,7 @@ function renderThreadsPage_(base, staff, dev) {
     ico: THICO_
   };
   return '<style>' + HOMECSS_ + EXPADCSS_ + HANBAICSS_ + THREADSCSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="home">' + backBarUnlessSolo_(base, staff, dev) +
     '<div class="thw">' + head +
       '<div class="hbhint" id="thLoad">読み込み中です…</div>' +
       '<div id="thMain" style="display:none">' +

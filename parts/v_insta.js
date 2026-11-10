@@ -249,7 +249,7 @@ function renderInstaPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + INSTACSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="home">' + backBarUnlessSolo_(base, staff, dev) +
     '<div class="igw">' + head +
       '<div class="hbhint" id="igLoad">読み込み中です…</div>' +
       '<div id="igMain" style="display:none">' +
