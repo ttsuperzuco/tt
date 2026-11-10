@@ -11872,6 +11872,8 @@ var SMCSS_ =
   '#smCertBox .smbar{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;padding:0 10px;box-sizing:border-box;}' +
   '#smCertBox .smbar .ubar{margin:0;}' +
   '.smzoom{margin-left:auto;background:#fff;color:#2C7A99;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;}' +
+  // ★「拡大して表示」の右に「印刷する」（2026-11-10 まるちゃん「印刷画面までいったら拡大して表示の右に印刷するボタンをつけちゃう」）
+  '.smprint{margin-left:8px;background:#16a34a;color:#fff;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;white-space:nowrap;}' +
   // ★紙はパソコンの窓と同じ広さ（1180）で作り、画面の幅に縮めて見せる（スマホの幅のまま作ると紙が縦につぶれる）
   '#smCertPane{position:absolute;left:0;right:0;top:58px;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;}' +
   '#smCertSizer{position:relative;overflow:hidden;margin:0 auto;}' +
@@ -11945,6 +11947,8 @@ function shomeishoScript_(C) {
   cert.onload = function () { setTimeout(fit, 60); setTimeout(fit, 1500); };
   window.addEventListener('resize', fit);
   $('smZoom').onclick = function () { zoom = !zoom; fit(); };
+  // 紙の中の「印刷する」と同じ＝紙のページそのものを印刷する（ズコの画面は刷らない）
+  $('smPrint').onclick = function () { try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
   function exit() { var a = document.querySelector('#smHome a'); if (a) a.click(); }
   // ★画面はスマホに覚えておき、2回目からは開いた瞬間に出す（2026-11-10 まるちゃん「できるだけはやく表示するように」
   //   「スタッフがいらいらしちゃう」）。裏で最新を取り、変わっていたら覚え直す。まだ何も押していなければその場で差し替える。
@@ -12024,7 +12028,8 @@ function renderShomeishoPage_(base, staff, dev) {
       '<div id="smMsg" class="smmsg"></div>' +
       '<iframe id="smFrame" title="購入証明書作成" style="display:none"></iframe>' +
       '<div id="smCertBox"><div class="smbar"><div class="ubar"><a class="uhome" id="smCertBack" href="javascript:void(0)">← 戻る</a></div>' +
-          '<button type="button" class="smzoom" id="smZoom">拡大して表示</button></div>' +
+          '<button type="button" class="smzoom" id="smZoom">拡大して表示</button>' +
+          '<button type="button" class="smprint" id="smPrint">🖨 印刷する</button></div>' +
         '<div id="smCertPane"><div id="smCertSizer"><iframe id="smCert" title="購入証明書"></iframe></div></div></div>' +
     '</div>' +
     '<script>(' + shomeishoScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
