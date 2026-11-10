@@ -72,8 +72,10 @@ var INSTACSS_ =
   '.ignav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #dbdbdb;height:56px;}' +
   '.ignav button{display:flex;align-items:center;justify-content:center;position:relative;}' +
   '.ignav .dmdot{position:absolute;width:7px;height:7px;border-radius:50%;background:#ff3040;left:calc(50% + 9px);bottom:10px;}' +
-  '.ignav .me{width:28px;height:28px;border-radius:50%;object-fit:cover;}' +
-  '.ignav .on{width:46px;height:46px;border-radius:50%;background:#e6edf3;display:flex;align-items:center;justify-content:center;}' +
+  '.ignav .me{width:28px;height:28px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px #dbdbdb;}' +
+  '.ignav .on{width:72px;height:40px;border-radius:20px;background:#f0f2f5;display:flex;align-items:center;justify-content:center;}' +
+  '.ignav .on .me{box-shadow:0 0 0 2px #000;}' +
+  '.igp>.ignav{position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;border-top:0;}' +
   '.igsheet{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;}' +
   '.igsheet .in{background:#fff;color:#000;width:100%;max-width:560px;border-radius:16px 16px 0 0;padding:8px 0 24px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Roboto,"Noto Sans JP",sans-serif;}' +
   '.igsheet .bar{width:40px;height:4px;border-radius:2px;background:#c7c7c7;margin:4px auto 10px;}' +
@@ -108,9 +110,9 @@ var INSTACSS_ =
   '.igp{position:fixed;inset:0;z-index:8400;background:#fff;color:#000;overflow-y:auto;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",Roboto,"Noto Sans JP",sans-serif;font-size:14px;line-height:1.4;}' +
   '.igp .w{max-width:560px;margin:0 auto;padding-bottom:90px;}' +
   '.igp button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;}' +
-  '.igph{position:sticky;top:0;z-index:2;background:#fff;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;height:48px;padding:0 8px;border-bottom:1px solid #efefef;}' +
-  '.igph b{text-align:center;font-size:16px;}' +
-  '.igph button{font-size:28px;line-height:1;}' +
+  '.igph{position:sticky;top:0;z-index:2;background:#fff;display:grid;grid-template-columns:48px 1fr auto;align-items:center;height:56px;padding:0 8px 0 4px;}' +
+  '.igph b{text-align:left;font-size:20px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+  '.igph button{font-size:28px;line-height:1;display:flex;align-items:center;justify-content:center;min-width:44px;height:44px;}' +
   '.igpu{display:flex;align-items:center;gap:10px;padding:10px 12px;}' +
   '.igpu img{width:32px;height:32px;border-radius:50%;object-fit:cover;}' +
   '.igpu b{flex:1;font-size:14px;}' +
@@ -137,22 +139,52 @@ var INSTACSS_ =
   '.igdash2 .per button.on{background:#000 !important;color:#fff !important;border-color:#000 !important;}' +
   '.igsr{z-index:8450;}' +
   '.igfd{z-index:8440;}.igup{z-index:8460;}' +
-  '.igfdi{border-bottom:1px solid #efefef;padding-bottom:8px;}' +
+  '.igfdi{padding-bottom:8px;}' +
+  '.igfdtop{position:sticky;top:0;z-index:2;background:#fff;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;height:56px;padding:0 4px;}' +
+  '.igfdtop b{text-align:center;font-family:"Grand Hotel","Brush Script MT","Segoe Script",cursive;font-size:30px;font-weight:400;letter-spacing:.5px;}' +
+  '.igfdtop button{display:flex;align-items:center;justify-content:center;height:44px;}' +
+  '.igfdst{display:flex;gap:14px;padding:4px 12px 10px;overflow-x:auto;}' +
+  '.igfdst button{display:flex;flex-direction:column;align-items:center;width:84px;}' +
+  '.igfdst .a{position:relative;width:80px;height:80px;}' +
+  '.igfdst .a img{width:80px;height:80px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px #dbdbdb;}' +
+  '.igfdst .a b{position:absolute;right:0;bottom:0;width:24px;height:24px;border-radius:50%;background:#000;color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;}' +
+  '.igfdst .t{margin-top:4px;font-size:12px;width:84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}' +
+  '.igfd .igpu .un{flex:1;min-width:0;display:flex;flex-direction:column;}' +
+  '.igfd .igpu .un b{font-size:14px;}' +
+  '.igfd .igpu .un small{font-size:12px;color:#000;}' +
+  '.igfd .igpu .nop{width:32px;height:32px;border-radius:50%;background:#efefef;flex:none;}' +
+  '.igfda{display:flex;align-items:center;gap:16px;padding:10px 12px 2px;}' +
+  '.igfda span{display:flex;align-items:center;gap:6px;}' +
+  '.igfda i{font-style:normal;font-weight:600;font-size:14px;}' +
+  '.igfda .sp{flex:1;}' +
+  '.igfdl{padding:4px 12px 0;}' +
+  '.igfd .igpcap.c1{display:flex;gap:4px;}' +
+  '.igfd .igpcap.c1 .t{flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+  '.igfd .igpcap.c1 .mo{flex:none;color:#737373;}' +
+  '.igfd .igpcap.c1.open{display:block;}' +
+  '.igfd .igpcap.c1.open .t{white-space:pre-wrap;}' +
+  '.igfd .igpcap.c1.open .mo{display:none;}' +
+  '.igfdi .m .k.n{background:rgba(18,18,18,.7);color:#fff;border-radius:12px;padding:3px 9px;font-size:13px;font-weight:600;filter:none;}' +
+  '.igfdrec{padding:14px 16px 10px;font-size:17px;font-weight:700;}' +
   '.igfdi .m{display:block;position:relative;width:100%;background:#fafafa;}' +
   '.igfdi .m img{display:block;width:100%;height:auto;}' +
   '.igfdi .m .k{position:absolute;top:10px;right:10px;color:#fff;filter:drop-shadow(0 0 2px rgba(0,0,0,.5));}' +
-  '.igfdi .igpcap{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;}' +
-  '.igfdi .igpcap.open{display:block;}' +
-  '.igfdsep{text-align:center;padding:28px 16px;color:#737373;border-bottom:1px solid #efefef;}' +
-  '.igfdsep b{display:block;color:#000;font-size:16px;margin-bottom:4px;}' +
-  '.igfdsep .s{margin-top:18px;color:#000;font-weight:700;text-align:left;}' +
+  '.igfdi .igpcap{cursor:pointer;}' +
+  '.igfdsep{display:flex;align-items:center;gap:12px;padding:14px 16px;color:#737373;font-size:14px;border-bottom:1px solid #efefef;}' +
+  '.igfdsep .ck{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid #d62976;color:#d62976;display:flex;align-items:center;justify-content:center;}' +
   '.igsr .row{display:flex;align-items:center;gap:12px;width:100%;padding:8px 16px;text-align:left;}' +
   '.igsr .row .av{width:44px;height:44px;border-radius:50%;background:#efefef;display:flex;align-items:center;justify-content:center;flex:none;}' +
   '.igsr .row small{display:block;color:#737373;}' +
-  '.igsr .q{margin:8px 16px;background:#efefef;border-radius:10px;padding:9px 12px;display:flex;gap:8px;}' +
+  '.igsr .q{margin:8px 16px;background:#efefef;border-radius:22px;padding:10px 14px;display:flex;align-items:center;gap:10px;color:#737373;}' +
+  '.igsr .q.top{position:sticky;top:0;z-index:2;margin:0;border-radius:0;background:#fff;padding:8px 12px;}' +
+  '.igsr .q.top input{background:#efefef;border-radius:22px;padding:10px 14px 10px 40px;margin-left:-32px;color:#000;}' +
+  '.igsr .q.top svg{position:relative;z-index:1;margin-left:12px;}' +
   '.igsr .q input{border:0;background:none;outline:0;font:inherit;flex:1;}' +
   '.igsr .q button{color:#0095f6 !important;font-weight:700 !important;}' +
   '.igsr .hint{padding:10px 16px;color:#737373;font-size:13px;}' +
+  '.igfltab{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #dbdbdb;}' +
+  '.igfltab button{padding:12px 4px !important;font-size:14px !important;color:#737373 !important;border-bottom:2px solid transparent !important;margin-bottom:-1px;}' +
+  '.igfltab button.on{color:#000 !important;font-weight:700 !important;border-bottom-color:#000 !important;}' +
   '.igsr .pf{display:flex;gap:16px;align-items:center;padding:14px 16px 6px;}' +
   '.igsr .pf img{width:80px;height:80px;border-radius:50%;object-fit:cover;}' +
   '.igsr .pf .c{display:flex;gap:16px;text-align:center;}' +
@@ -161,8 +193,9 @@ var INSTACSS_ =
   '.igsr .bio b{display:block;}' +
   '.igtg img,.igtg video{display:block;width:100%;}' +
   '.igdm{z-index:8450;}' +
-  '.igdm .ttl{padding:14px 16px 6px;font-size:16px;font-weight:700;}' +
-  '.igdm .q{margin:8px 16px;background:#efefef;border-radius:10px;padding:9px 12px;color:#737373;}' +
+  '.igdmtop{position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:center;justify-content:center;gap:4px;height:56px;padding:0 16px;}' +
+  '.igdmtop b{font-size:18px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+  '.igdm .q{margin:4px 16px 10px;background:#efefef;border-radius:22px;padding:10px 14px;color:#737373;display:flex;align-items:center;gap:10px;}' +
   '.igdm .q input{border:0;background:none;outline:0;font:inherit;width:100%;}' +
   '.igdmr{display:flex !important;align-items:center;gap:12px;width:100%;padding:8px 16px !important;text-align:left;}' +
   '.igdmr .av,.igdmh .av{flex:0 0 auto;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#feda75,#d62976 60%,#4f5bd5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;}' +
@@ -297,7 +330,20 @@ function instaScript_(C) {
     eye: S('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', 16),
     home: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 10.5L12 3l8.5 7.5V20a1 1 0 01-1 1H15v-6H9v6H4.5a1 1 0 01-1-1z"/></svg>',
     send: S('<path d="M21.5 3L10.5 13.5M21.5 3l-6.5 18-4.5-7.5L3 9z"/>', 26),
-    search: S('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/>', 26)
+    search: S('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/>', 26),
+    homeF: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3.5 10.5L12 3l8.5 7.5V20a1 1 0 01-1 1h-5v-6h-5v6h-5a1 1 0 01-1-1z"/></svg>',
+    sendF: '<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21.5 3l-6.5 18-4.5-7.5L3 9z"/><path d="M21.5 3L10.5 13.5" stroke="#fff"/></svg>',
+    searchF: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/></svg>',
+    back: S('<path d="M20 12H4.5M10.5 5.5L4 12l6.5 6.5"/>', 26),
+    heart: S('<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', 24),
+    cmt: S('<path d="M20.7 12a8.7 8.7 0 01-12.6 7.8L3.5 21l1.3-4.4A8.7 8.7 0 1120.7 12z"/>', 24),
+    bm: S('<path d="M19 21l-7-5-7 5V4a1 1 0 011-1h12a1 1 0 011 1z"/>', 24),
+    rep: S('<path d="M17 3l3 3-3 3"/><path d="M4 11V9a3 3 0 013-3h13"/><path d="M7 21l-3-3 3-3"/><path d="M20 13v2a3 3 0 01-3 3H4"/>', 22),
+    story: S('<circle cx="12" cy="12" r="9" stroke-dasharray="3 2.2"/><path d="M12 8v8M8 12h8"/>', 26),
+    hlI: S('<circle cx="12" cy="12" r="9"/><path d="M12 16.5s-4-2.4-4-5.3A2.2 2.2 0 0112 10a2.2 2.2 0 014 1.2c0 2.9-4 5.3-4 5.3z"/>', 26),
+    live: S('<circle cx="12" cy="12" r="2"/><path d="M8 8a5.6 5.6 0 000 8M16 8a5.6 5.6 0 010 8M5 5a9.9 9.9 0 000 14M19 5a9.9 9.9 0 010 14"/>', 26),
+    draft: S('<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/>', 26),
+    clock: S('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', 26)
   };
 
   function num(n) {
@@ -465,9 +511,7 @@ function instaScript_(C) {
         return '<button type="button" data-tab="' + t[0] + '"' + (TAB === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>';
       }).join('') + '</div>';
     h += drawGrid(v);
-    h += '<div class="ignav"><button type="button" data-go="feed">' + IC.home + '</button><button type="button" data-go="reels">' + IC.reels + '</button>' +
-      '<button type="button" data-dm="1">' + IC.send + (p.dm_unread ? '<i class="dmdot"></i>' : '') + '</button><button type="button" data-go="search">' + IC.search + '</button>' +
-      '<button type="button" data-go="home"><span class="on"><img class="me" src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""></span></button></div>';
+    h += navHtml('prof');
     $('igApp').innerHTML = h;
     bioFit($('igApp'));
     if (can('insights')) {
@@ -498,6 +542,33 @@ function instaScript_(C) {
     if (t.closest && (t.closest('[data-soon]') || t.closest('[data-post]'))) { warn(SOON); return; }
   });
   $('igReload').addEventListener('click', function () { loadWeb(CUR, true); });
+  var NAV_PAGES = ['igFd', 'igDm', 'igSr'];
+  function navHtml(act) {
+    var p = prof();
+    var b = function (k, ic, icOn, extra) {
+      return '<button type="button" data-ignav="' + k + '">' + (act === k ? '<span class="on">' + icOn + '</span>' : ic) + (extra || '') + '</button>';
+    };
+    var me = '<img class="me" src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt="">';
+    return '<div class="ignav">' + b('feed', IC.home, IC.homeF) + b('reels', IC.reels, IC.reels) +
+      b('dm', IC.send, IC.sendF, p.dm_unread ? '<i class="dmdot"></i>' : '') + b('search', IC.search, IC.searchF) +
+      b('prof', me, me) + '</div>';
+  }
+  function navGo(k) {
+    var cur = NAV_PAGES.filter(function (id) { return document.getElementById(id); })[0] || '';
+    if ((k === 'feed' && cur === 'igFd') || (k === 'dm' && cur === 'igDm') || (k === 'search' && cur === 'igSr')) {
+      var pg = document.getElementById(cur); if (pg) pg.scrollTop = 0; return;
+    }
+    NAV_PAGES.forEach(function (id) { var e = document.getElementById(id); if (e) e.remove(); });
+    if (k === 'feed') openFeed();
+    else if (k === 'dm') openDm();
+    else if (k === 'search') openSearch();
+    else if (k === 'reels') goTo('reels');
+    else { TAB = 'posts'; drawApp(); window.scrollTo(0, 0); }
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest && e.target.closest('[data-ignav]');
+    if (b) navGo(b.getAttribute('data-ignav'));
+  });
 
   var PERM = {}, ISDEV = false, NOPERM = 'この操作の権限がありません。りゅうさんに連絡してください🙇';
   function can(f) { var p = PERM && PERM[CUR]; return !p || p.indexOf(f) >= 0; }
@@ -507,11 +578,11 @@ function instaScript_(C) {
     sh.innerHTML = '<div class="in"><div class="bar"></div><b>作成</b>' +
       '<button type="button" data-k="reel">' + IC.reels + 'リール</button>' +
       '<button type="button" data-k="feed">' + IC.grid + '投稿</button>' +
-      '<button type="button" data-k="story">' + IC.plus + 'ストーリーズ</button>' +
-      '<button type="button" data-k="hl">' + IC.plus + 'ハイライト</button>' +
-      '<button type="button" data-k="drafts">' + IC.grid + '下書き</button>' +
-      '<button type="button" data-k="sched">' + IC.plus + '予約投稿の一覧</button>' +
-      '<button type="button" class="off" data-k="">' + IC.reels + 'ライブ</button></div>';
+      '<button type="button" data-k="story">' + IC.story + 'ストーリーズ</button>' +
+      '<button type="button" data-k="hl">' + IC.hlI + 'ハイライト</button>' +
+      '<button type="button" data-k="drafts">' + IC.draft + '下書き</button>' +
+      '<button type="button" data-k="sched">' + IC.clock + '予約投稿の一覧</button>' +
+      '<button type="button" class="off" data-k="">' + IC.live + 'ライブ</button></div>';
     sh.addEventListener('click', function (e) {
       var b = e.target.closest('button');
       if (!b) { if (e.target === sh) sh.remove(); return; }
@@ -1142,7 +1213,7 @@ function instaScript_(C) {
     var el = document.createElement('div'); el.className = 'igp igdr';
     var KN = { feed: '投稿', reel: 'リール', story: 'ストーリーズ' };
     var draw = function (L) {
-      el.innerHTML = '<div class="w"><div class="igph"><button type="button" data-drback="1">‹</button><b>下書き</b><span></span></div>' +
+      el.innerHTML = '<div class="w"><div class="igph"><button type="button" data-drback="1">' + IC.back + '</button><b>下書き</b><span></span></div>' +
         (!L.length ? '<div class="igempty"><b>下書きはありません</b>作成中に「キャンセル」→「下書きを保存」で、ここに残せます。</div>' :
           L.map(function (d) {
             return '<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #efefef">' +
@@ -1188,7 +1259,7 @@ function instaScript_(C) {
     var el = document.createElement('div'); el.className = 'igp igsc';
     var KN = { feed: '投稿', reel: 'リール', story: 'ストーリーズ' };
     var when = function (at) { var d = new Date(at * 1000); return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2); };
-    var head = '<div class="w"><div class="igph"><button type="button" data-scback="1">‹</button><b>予約投稿の一覧</b><span></span></div>';
+    var head = '<div class="w"><div class="igph"><button type="button" data-scback="1">' + IC.back + '</button><b>予約投稿の一覧</b><span></span></div>';
     var draw = function (d) {
       var its = (d && d.items) || [], dn = (d && d.done) || [];
       el.innerHTML = head + (!d ? '<div class="igempty">読み込み中です…</div>' :
@@ -1297,7 +1368,7 @@ function instaScript_(C) {
   function drawPost() {
     var el = document.getElementById('igPost'); if (!el || !POST) return;
     var v = DATA && DATA.views && DATA.views[CUR], p = (v && v.prof) || {};
-    var h = '<div class="w"><div class="igph"><button type="button" data-pback="1">‹</button><b>投稿</b><span></span></div>' +
+    var h = '<div class="w"><div class="igph"><button type="button" data-pback="1">' + IC.back + '</button><b>投稿</b><span></span></div>' +
       '<div class="igpu"><img src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><b>' + esc(p.user || '') + '</b>' +
       '<button type="button" data-pmenu="1" style="font-size:20px">⋯</button></div>';
     if (POST.loading) {
@@ -1353,12 +1424,12 @@ function instaScript_(C) {
     var list = ((DMC && DMC.list) || []).filter(function (x) { return !q || String(x.user).toLowerCase().indexOf(q) >= 0; });
     var rows = !DMC ? '<div class="igempty">読み込み中です…</div>' : (list.length ? list.map(function (x) {
       return '<button type="button" class="igdmr' + (x.mine ? '' : ' new') + '" data-dmc="' + esc(x.id) + '"><div class="av">' + ini(x.user) + '</div>' +
-        '<div class="tx"><b>' + esc(x.user) + '</b><span>' + (x.mine ? 'あなた: ' : '') + esc(String(x.last || '').replace(/\n/g, ' ')) + ' · ' + esc(ago(iso(x.at))) + '</span></div>' +
+        '<div class="tx"><b>' + esc(x.user) + '</b><span>' + (x.mine ? '送信済み · ' + esc(ago(iso(x.at))) : esc(String(x.last || '').replace(/\n/g, ' ')) + ' · ' + esc(ago(iso(x.at)))) + '</span></div>' +
         (x.mine ? '' : '<i class="dot"></i>') + '</button>';
     }).join('') : '<div class="igempty">メッセージはありません。</div>');
     if (!first && qEl) { el.querySelector('.rows').innerHTML = rows; return; }
-    el.innerHTML = '<div class="w"><div class="igph"><button type="button" data-dmback="1">‹</button><b>' + esc(me) + '</b><span></span></div>' +
-      '<div class="q"><input id="igDmQ" placeholder="検索" autocomplete="off"></div><div class="ttl">メッセージ</div><div class="rows">' + rows + '</div></div>';
+    el.innerHTML = '<div class="w"><div class="igdmtop"><b>' + esc(me) + '</b>' + IC.down + '</div>' +
+      '<div class="q">' + S('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/>', 18) + '<input id="igDmQ" placeholder="検索" autocomplete="off"></div><div class="rows">' + rows + '</div></div>' + navHtml('dm');
   }
   function openDmThread(id) {
     var x = ((DMC && DMC.list) || []).filter(function (y) { return y.id === id; })[0] || {};
@@ -1377,8 +1448,8 @@ function instaScript_(C) {
   }
   function drawDmThread() {
     var el = document.getElementById('igDmT'); if (!el || !DMT) return;
-    var h = '<div class="w"><div class="igph"><button type="button" data-dmtback="1">‹</button>' +
-      '<b class="igdmh" style="justify-content:center"><span class="av">' + ini(DMT.user) + '</span>' + esc(DMT.user) + '</b><span></span></div><div class="igdmt">';
+    var h = '<div class="w"><div class="igph"><button type="button" data-dmtback="1">' + IC.back + '</button>' +
+      '<b class="igdmh"><span class="av">' + ini(DMT.user) + '</span>' + esc(DMT.user) + '</b><span></span></div><div class="igdmt">';
     if (DMT.loading) h += '<div class="igempty">読み込み中です…</div>';
     else {
       var lastDay = '';
@@ -1641,7 +1712,7 @@ function instaScript_(C) {
     var viewers = function (it) {
       var lst = it.viewers || [], n = it.count == null ? lst.length : it.count;
       var pg = document.createElement('div'); pg.className = 'igp igsr'; pg.id = 'igStV';
-      pg.innerHTML = '<div class="w"><div class="igph"><button type="button" data-svback="1">‹</button><b>見た人 ' + num(n || 0) + '人</b><span></span></div>' +
+      pg.innerHTML = '<div class="w"><div class="igph"><button type="button" data-svback="1">' + IC.back + '</button><b>見た人 ' + num(n || 0) + '人</b><span></span></div>' +
         (it.err ? '<div class="hint">' + esc(it.err) + '</div>' : '') +
         (lst.length ? lst.map(function (u) {
           return '<div style="display:flex;align-items:center;gap:12px;padding:8px 16px">' +
@@ -1702,7 +1773,7 @@ function instaScript_(C) {
     if (!can('reply')) { warn(NOPERM); return; }
     var acct = CUR;
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igNt';
-    var head = '<div class="w"><div class="igph"><button type="button" data-ntback="1">‹</button><b>お知らせ</b><span></span></div>';
+    var head = '<div class="w"><div class="igph"><button type="button" data-ntback="1">' + IC.back + '</button><b>お知らせ</b><span></span></div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…（30秒ほどかかります）</div></div>';
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
@@ -1720,10 +1791,11 @@ function instaScript_(C) {
       if (err) { el.remove(); warn(err); return; }
       var its = (d && d.items) || [], sec = '';
       var when = function (t) { return t ? ago(new Date(t * 1000).toISOString()) : ''; };
-      var grp = function (t) { var a = Date.now() / 1000 - t; return a < 86400 ? '今日' : a < 7 * 86400 ? '今週' : a < 30 * 86400 ? '今月' : 'それ以前'; };
+      var day0 = new Date(); day0.setHours(0, 0, 0, 0); day0 = day0.getTime() / 1000;
+      var grp = function (t) { return t >= day0 ? '今日' : t >= day0 - 86400 ? '昨日' : t >= day0 - 7 * 86400 ? '過去7日間' : t >= day0 - 30 * 86400 ? '過去30日間' : 'それ以前'; };
       el.innerHTML = head + (its.length ? its.map(function (x) {
         var g = grp(x.at), h = '';
-        if (g !== sec) { sec = g; h += '<div class="hint" style="font-weight:700;color:#000;margin-top:6px">' + g + '</div>'; }
+        if (g !== sec) { sec = g; h += '<div style="font-weight:700;font-size:16px;padding:16px 16px 6px">' + g + '</div>'; }
         return h + '<div' + (x.code ? ' data-ntc="' + esc(x.code) + '" style="cursor:pointer"' : x.u ? ' data-ntu="' + esc(x.u) + '" style="cursor:pointer"' : '') + '>' + userRow(x, '<span style="font-size:14px">' + esc(x.text) +
           ' <span style="color:#737373">' + esc(when(x.at)) + '</span></span>') .replace('</span></div>', '</span>' +
           (x.th ? '<img src="' + esc(x.th) + '" referrerpolicy="no-referrer" alt="" style="width:44px;height:44px;object-fit:cover;flex:none">' : '') + '</div>') + '</div>';
@@ -1734,11 +1806,14 @@ function instaScript_(C) {
     var acct = CUR, p = prof();
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igFl';
     var title = which === 'following' ? 'フォロー中' : 'フォロワー';
-    var head = '<div class="w"><div class="igph"><button type="button" data-flback="1">‹</button><b>' + esc(p.user || '') + '</b><span></span></div>' +
-      '<div class="hint" style="font-weight:700;color:#000">' + title + ' ' + num(which === 'following' ? p.following : p.followers) + '人</div>';
-    var USERS = [], NEXT = '', BUSYF = false;
+    var head = '<div class="w"><div class="igph"><button type="button" data-flback="1">' + IC.back + '</button><b>' + esc(p.user || '') + '</b><span></span></div>' +
+      '<div class="igfltab"><button type="button" data-flsw="followers"' + (which === 'following' ? '' : ' class="on"') + '>フォロワー' + num(p.followers) + '人</button>' +
+      '<button type="button" data-flsw="following"' + (which === 'following' ? ' class="on"' : '') + '>フォロー中' + num(p.following) + '人</button></div>' +
+      '<div class="q">' + S('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/>', 18) + '<input id="igFlQ" placeholder="検索" autocomplete="off" autocapitalize="off"></div>';
+    var USERS = [], NEXT = '', BUSYF = false, FQ = '';
     var draw = function () {
-      el.innerHTML = head + USERS.map(function (u) {
+      var qq = FQ.toLowerCase();
+      el.innerHTML = head + USERS.filter(function (u) { return !qq || String(u.u).toLowerCase().indexOf(qq) >= 0 || String(u.name || '').toLowerCase().indexOf(qq) >= 0; }).map(function (u) {
         return '<div data-flu="' + esc(u.u) + '" style="cursor:pointer">' + userRow(u, '<b style="display:block">' + esc(u.u) + (u.verified ? ' ✔' : '') + '</b>' +
           '<span style="color:#737373;font-size:13px">' + esc(u.name || '') + (u.private ? '（非公開）' : '') + '</span>') + '</div>';
       }).join('') + (BUSYF ? '<div class="igempty">読み込み中です…（30秒ほどかかります）</div>' :
@@ -1756,8 +1831,15 @@ function instaScript_(C) {
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
       if (e.target.closest('[data-flback]')) { el.remove(); return; }
+      var sw = e.target.closest('[data-flsw]');
+      if (sw) { if (sw.getAttribute('data-flsw') !== which) { el.remove(); openFollows(sw.getAttribute('data-flsw')); } return; }
       if (e.target.closest('[data-flmore]')) { load(); return; }
       var u = e.target.closest('[data-flu]'); if (u) openUrl('https://www.instagram.com/' + u.getAttribute('data-flu') + '/');
+    });
+    el.addEventListener('input', function (e) {
+      if (e.target.id !== 'igFlQ') return;
+      FQ = e.target.value.trim(); var pos = e.target.selectionStart; draw();
+      var q2 = document.getElementById('igFlQ'); if (q2) { q2.value = FQ; q2.focus(); try { q2.setSelectionRange(pos, pos); } catch (e2) {} }
     });
     load();
   }
@@ -1765,7 +1847,7 @@ function instaScript_(C) {
     if (!can('profile')) { warn(NOPERM); return; }
     var acct = CUR;
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igBn';
-    var head = '<div class="w"><div class="igph"><button type="button" data-bnback="1">‹</button><b>バナー</b><span></span></div>';
+    var head = '<div class="w"><div class="igph"><button type="button" data-bnback="1">' + IC.back + '</button><b>バナー</b><span></span></div>';
     var KN = { 'Threads': 'スレッズ', 'Facebook Page': 'Facebookページ', 'Facebook profile': 'Facebookの個人のプロフィール' };
     var row = function (x, add) {
       return '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #efefef">' +
@@ -1815,7 +1897,7 @@ function instaScript_(C) {
     if (!can('post')) { warn(NOPERM); return; }
     var acct = CUR;
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igArch';
-    var head = '<div class="w"><div class="igph"><button type="button" data-arback="1">‹</button><b>アーカイブ</b><span></span></div>';
+    var head = '<div class="w"><div class="igph"><button type="button" data-arback="1">' + IC.back + '</button><b>アーカイブ</b><span></span></div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
     document.body.appendChild(el);
     var ITEMS = [];
@@ -1864,9 +1946,9 @@ function instaScript_(C) {
   }
   function openSearch() {
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igSr';
-    el.innerHTML = '<div class="w"><div class="igph"><button type="button" data-srback="1">‹</button><b>検索</b><span></span></div>' +
-      '<div class="q"><input id="igSrQ" placeholder="検索" autocomplete="off" autocapitalize="off"><button type="button" id="igSrGo">検索</button></div>' +
-      '<div id="igSrOpen"></div><div class="hint">名前やユーザーネームで、個人のアカウントも探せます。検索には1分ほどかかります。</div><div id="igSrR"></div></div>';
+    el.innerHTML = '<div class="w"><div class="q top">' + S('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/>', 18) +
+      '<input id="igSrQ" type="search" enterkeyhint="search" placeholder="検索" autocomplete="off" autocapitalize="off"><button type="button" id="igSrGo">検索</button></div>' +
+      '<div id="igSrOpen"></div><div class="hint">名前やユーザーネームで、個人のアカウントも探せます。検索には1分ほどかかります。</div><div id="igSrR"></div></div>' + navHtml('search');
     document.body.appendChild(el);
     var q0 = function () { return document.getElementById('igSrQ').value.trim().replace(/^@/, ''); };
     var row = function (u, name) {
@@ -1898,13 +1980,17 @@ function instaScript_(C) {
   }
   function openFeed() {
     var el = document.createElement('div'); el.className = 'igp igfd'; el.id = 'igFd';
-    var head = '<div class="w"><div class="igph"><button type="button" data-fdback="1">‹</button><b>ホーム</b>' +
-      '<button type="button" data-fdnotif="1" title="お知らせ">' + S('<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', 24) + '</button></div>';
-    el.innerHTML = head + '<div class="igempty">読み込み中です…（20秒ほどかかります）</div></div>';
+    var me = prof();
+    var head = '<div class="w"><div class="igfdtop"><button type="button" data-fdcreate="1">' + IC.plus + '</button><b>Instagram</b>' +
+      '<button type="button" data-fdnotif="1" title="お知らせ">' + S('<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', 26) + '</button></div>' +
+      '<div class="igfdst"><button type="button" data-fdst="1"><span class="a"><img src="' + esc(me.pic || '') + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></span><span class="t">あなたのストーリーズ</span></button></div>';
+    var foot = '</div>' + navHtml('feed');
+    el.innerHTML = head + '<div class="igempty">読み込み中です…（20秒ほどかかります）</div>' + foot;
     document.body.appendChild(el);
     el.addEventListener('click', function (e) {
       var t = e.target;
-      if (t.closest('[data-fdback]')) { el.remove(); return; }
+      if (t.closest('[data-fdcreate]')) { openCreate(); return; }
+      if (t.closest('[data-fdst]')) { openStories(); return; }
       if (t.closest('[data-fdnotif]')) { openNotifs(); return; }
       var c = t.closest('.igpcap'); if (c) { c.classList.toggle('open'); return; }
       var u = t.closest('[data-uprof]'); if (u) { openUProf(u.getAttribute('data-uprof')); return; }
@@ -1918,26 +2004,29 @@ function instaScript_(C) {
       its.forEach(function (x) {
         if (x.sug && !sep) {
           sep = true;
-          h += '<div class="igfdsep"><b>すべてチェックしました</b>過去3日間の新しい投稿をすべてチェックしました。<div class="s">おすすめの投稿</div></div>';
+          h += '<div class="igfdsep"><span class="ck">' + S('<path d="M7 12.5l3.2 3.2L17 9"/>', 18) + '</span><span>フォロー中のアカウントからの最新投稿はすべて既読になりました。</span></div>' +
+            '<div class="igfdrec">おすすめ</div>';
         }
-        var k = x.type === 2 ? IC.reelK : (x.car ? IC.car : '');
+        var k = x.type === 2 ? '<span class="k">' + IC.reelK + '</span>' : (x.car > 1 ? '<span class="k n">1/' + x.car + '</span>' : '');
         h += '<div class="igfdi"><div class="igpu" data-uprof="' + esc(x.user) + '" style="cursor:pointer">' +
-          (x.pic ? '<img src="' + esc(x.pic) + '" referrerpolicy="no-referrer" alt="">' : '') + '<b>' + esc(x.user) + '</b></div>' +
+          (x.pic ? '<img src="' + esc(x.pic) + '" referrerpolicy="no-referrer" alt="">' : '<span class="nop"></span>') +
+          '<span class="un"><b>' + esc(x.user) + '</b>' + (x.sug ? '<small>おすすめ</small>' : '') + '</span></div>' +
           '<button type="button" class="m" data-fdopen="' + esc(x.code) + '">' + (x.img ? '<img src="' + esc(x.img) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
-          (k ? '<span class="k">' + k + '</span>' : '') + '</button>' +
-          (x.likes ? '<div class="igpl">いいね！' + num(x.likes) + '件</div>' : '') +
-          (x.cap ? '<div class="igpcap"><b>' + esc(x.user) + '</b> ' + esc(x.cap) + '</div>' : '') +
-          (x.comments ? '<div class="igpd" data-fdopen="' + esc(x.code) + '" style="cursor:pointer">コメント' + num(x.comments) + '件をすべて見る</div>' : '') +
+          k + '</button>' +
+          '<div class="igfda"><span>' + IC.heart + (x.likes ? '<i>' + num(x.likes) + '</i>' : '') + '</span><span data-fdopen="' + esc(x.code) + '" style="cursor:pointer">' + IC.cmt +
+          (x.comments ? '<i>' + num(x.comments) + '</i>' : '') + '</span><span>' + IC.rep + '</span><span>' + IC.send.replace(/width="26" height="26"/, 'width="24" height="24"') + '</span><span class="sp"></span><span>' + IC.bm + '</span></div>' +
+          (x.liker ? '<div class="igfdl"><b>' + esc(x.liker) + '</b>他が「いいね！」しました</div>' : '') +
+          (x.cap ? '<div class="igpcap c1"><span class="t"><b>' + esc(x.user) + '</b> ' + esc(x.cap) + '</span><span class="mo">さらに表示</span></div>' : '') +
           '<div class="igpd">' + (x.at ? esc(ago(new Date(x.at * 1000).toISOString())) : '') + '</div></div>';
       });
-      el.innerHTML = h + '</div>';
+      el.innerHTML = h + foot;
     });
   }
   function openUProf(u) {
     u = String(u || '').replace(/^@/, '').trim();
     if (!/^[A-Za-z0-9._]{1,30}$/.test(u)) { warn('ユーザーネームは英数字で入力してください😊'); return; }
     var el = document.createElement('div'); el.className = 'igp igup';
-    var head = '<div class="w"><div class="igph"><button type="button" data-upback="1">‹</button><b>' + esc(u) + '</b><span></span></div>';
+    var head = '<div class="w"><div class="igph"><button type="button" data-upback="1">' + IC.back + '</button><b>' + esc(u) + '</b><span></span></div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…（20秒ほどかかります）</div></div>';
     document.body.appendChild(el);
     var url = 'https://www.instagram.com/' + u + '/';
@@ -1974,7 +2063,7 @@ function instaScript_(C) {
   }
   function openTagged(code) {
     var el = document.createElement('div'); el.className = 'igp igins igtg'; el.id = 'igTg';
-    var head = '<div class="w"><div class="igph"><button type="button" data-tgback="1">‹</button><b>投稿</b><span></span></div>';
+    var head = '<div class="w"><div class="igph"><button type="button" data-tgback="1">' + IC.back + '</button><b>投稿</b><span></span></div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
     el.addEventListener('click', function (e) {
       if (e.target.closest('[data-tgback]')) { el.remove(); return; }
@@ -2004,7 +2093,7 @@ function instaScript_(C) {
       });
     }
     days = days || 30;
-    var head = '<div class="w"><div class="igph"><button type="button" data-dback="1">‹</button><b>プロフェッショナルダッシュボード</b><span></span></div>' +
+    var head = '<div class="w"><div class="igph"><button type="button" data-dback="1">' + IC.back + '</button><b>ダッシュボード</b><span></span></div>' +
       '<div class="per">' + [7, 14, 30].map(function (n) { return '<button type="button" data-days="' + n + '"' + (n === days ? ' class="on"' : '') + '>過去' + n + '日間</button>'; }).join('') + '</div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
     readAsk({ kind: 'more_dash', acct: CUR, days: days }, function (err, d) {
@@ -2045,7 +2134,7 @@ function instaScript_(C) {
   function openIns(code) {
     if (!can('insights')) { warn(NOPERM); return; }
     var el = document.createElement('div'); el.className = 'igp igins'; el.id = 'igIns';
-    var head = '<div class="w"><div class="igph"><button type="button" data-iback="1">‹</button><b>インサイト</b><span></span></div>';
+    var head = '<div class="w"><div class="igph"><button type="button" data-iback="1">' + IC.back + '</button><b>インサイト</b><span></span></div>';
     el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
     el.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('[data-iback]')) el.remove(); });
     document.body.appendChild(el);
