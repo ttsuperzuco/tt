@@ -14624,7 +14624,13 @@ var FBCSS_ =
   '.fbstk .t{flex:1;font-size:17px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}' +
   '.fbbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;z-index:50;display:none;background:#fff;border-top:1px solid #e4e6eb;padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-sizing:border-box;}' +
   '.fbbar.on{display:block;}' +
-  '.fbbar .fbbtns{margin-top:0;}';
+  '.fbbar .fbbtns{margin-top:0;}' +
+  '.fbapp .fbtabs{position:sticky;top:46px;z-index:40;}' +
+  '.fbapp .fbtabs button{font-weight:500;}' +
+  '.fbinfo .row > div{display:flex;min-width:0;gap:6px;align-items:baseline;}' +
+  '.fbinfo .row .one{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+  '.fbinfo .row .plusn{flex:0 0 auto;}' +
+  '.fbintro{padding:14px 16px 4px;text-align:center;white-space:pre-wrap;word-break:break-word;font-size:15px;}';
 
 function renderFacebookPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">📘</span><span class="bname">Facebook</span></div>';
@@ -14798,7 +14804,10 @@ function fbScript_(C) {
       if (long) h += '<div class="fbmore">... もっと見る</div>';
     }
     var pics = p.pics || [];
-    if (p.k === 'link' && p.link && (p.link.t || p.link.d)) {
+    var fbin = p.k === 'link' && p.link && /(^|\.)facebook\.com/.test(shortUrl(p.link.u).split('/')[0]);
+    if (fbin && (p.link.d || p.link.t)) {
+      h += '<div class="fbintro">' + esc(p.link.d || p.link.t) + '</div>';
+    } else if (p.k === 'link' && p.link && (p.link.t || p.link.d)) {
       h += '<div class="fblink"><div class="u">' + esc(shortUrl(p.link.u).split('/')[0]) + '</div>' +
         (p.link.t ? '<div class="t">' + esc(p.link.t) + '</div>' : '') + (p.link.d ? '<div class="s">' + esc(p.link.d) + '</div>' : '') + '</div>';
     } else if (pics.length) {
@@ -14827,7 +14836,7 @@ function fbScript_(C) {
     var web = pf.web || [];
     if (web.length) {
       var u0 = web[0];
-      lk.push(row(IC.link, '<a href="' + esc(/^https?:/.test(u0) ? u0 : 'https://' + u0) + '" target="_blank" rel="noopener">' + esc(shortUrl(u0)) + '</a>' + (web.length > 1 ? ' + ' + (web.length - 1) : '')));
+      lk.push(row(IC.link, '<span class="one"><a href="' + esc(/^https?:/.test(u0) ? u0 : 'https://' + u0) + '" target="_blank" rel="noopener">' + esc(shortUrl(u0)) + '</a></span>' + (web.length > 1 ? '<span class="plusn">+ ' + (web.length - 1) + '</span>' : '')));
     }
     if (pf.ig) ct.push(row('<b class="at">@</b>', '<a href="https://www.instagram.com/' + esc(pf.ig) + '/" target="_blank" rel="noopener">' + esc(pf.ig) + '</a>'));
     if (pf.phone) ct.push(row(IC.phone, esc(pf.phone)));
