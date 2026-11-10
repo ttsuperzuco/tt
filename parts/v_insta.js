@@ -21,12 +21,15 @@ var INSTACSS_ =
   '.igav img{width:86px;height:86px;border-radius:50%;object-fit:cover;background:#efefef;}' +
   '.igav b{position:absolute;right:-2px;bottom:-2px;width:26px;height:26px;border-radius:50%;background:#000;color:#fff;border:3px solid #fff;display:flex;align-items:center;justify-content:center;}' +
   '.igr{flex:1;min-width:0;}' +
-  '.igr .nm{font-size:15px;font-weight:700;line-height:1.3;word-break:break-word;margin-bottom:8px;}' +
+  '.igr .nm{font-size:15px;font-weight:700;line-height:1.3;word-break:break-word;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}' +
   '.igcnt{display:flex;justify-content:space-between;gap:10px;}' +
   '.igcnt div{font-size:13px;line-height:1.25;white-space:nowrap;}' +
   '.igcnt b{display:block;font-size:17px;font-weight:700;}' +
   '.igbio{padding:10px 16px 0;white-space:pre-wrap;word-break:break-word;}' +
   '.igbio .cat{color:#737373;}' +
+  '.igbio.cl{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;position:relative;cursor:pointer;}' +
+  '.igbio .mo{display:none;}' +
+  '.igbio.cl.ov .mo{display:block;position:absolute;right:16px;bottom:0;background:#fff;padding-left:6px;color:#737373;}' +
   '.igapp .iglink{display:flex;align-items:center;gap:6px;padding:4px 16px 0;font-weight:700;color:#00376b;max-width:100%;box-sizing:border-box;}' +
   '.iglink span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
   '.igchips{display:flex;gap:8px;padding:10px 16px 0;overflow-x:auto;scrollbar-width:none;}' +
@@ -399,6 +402,15 @@ function instaScript_(C) {
     }
     return '<div class="iggrid">' + list.map(function (p) { return tile(p, mode); }).join('') + '</div>';
   }
+  function bioFit(root) {
+    var bs = (root && root.querySelectorAll) ? root.querySelectorAll('.igbio.cl') : [];
+    for (var i = 0; i < bs.length; i++) {
+      (function (b) {
+        if (b.scrollHeight > b.clientHeight + 2) b.classList.add('ov'); else { b.classList.remove('cl'); return; }
+        b.addEventListener('click', function () { b.classList.remove('cl'); b.classList.remove('ov'); });
+      })(bs[i]);
+    }
+  }
   function drawApp() {
     var v = DATA && DATA.views && DATA.views[CUR];
     drawWhen();
@@ -413,7 +425,7 @@ function instaScript_(C) {
       '<div class="igr"><div class="nm">' + esc(p.name || p.user) + '</div>' +
       '<div class="igcnt"><div><b>' + num(p.posts) + '</b>投稿</div><div data-go="followers" style="cursor:pointer"><b>' + num(p.followers) + '</b>フォロワー</div>' +
       '<div data-go="following" style="cursor:pointer"><b>' + num(p.following) + '</b>フォロー中</div></div></div></div>';
-    h += '<div class="igbio">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '</div>';
+    h += '<div class="igbio cl">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '<span class="mo">… 続きを読む</span></div>';
     if (links.length) {
       h += '<button type="button" class="iglink" data-go="link">' + IC.link + '<span>' + esc(shortUrl(links[0].u)) +
         (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') + '</span></button>';
@@ -437,6 +449,7 @@ function instaScript_(C) {
       '<button type="button" data-dm="1">' + IC.send + '</button><button type="button" data-go="search">' + IC.search + '</button>' +
       '<button type="button" data-go="home"><img class="me" src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""></button></div>';
     $('igApp').innerHTML = h;
+    bioFit($('igApp'));
   }
   $('igApp').addEventListener('click', function (e) {
     var t = e.target;
@@ -1911,7 +1924,7 @@ function instaScript_(C) {
         '<div class="igr"><div class="nm">' + esc(p.name || p.user || u) + '</div>' +
         '<div class="igcnt"><div><b>' + num(p.posts) + '</b>投稿</div><div><b>' + num(p.followers) + '</b>フォロワー</div>' +
         '<div><b>' + num(p.following) + '</b>フォロー中</div></div></div></div>';
-      h += '<div class="igbio">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio || '') + '</div>';
+      h += '<div class="igbio cl">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio || '') + '<span class="mo">… 続きを読む</span></div>';
       if (links.length) h += '<button type="button" class="iglink" data-uplink="' + esc(links[0].u) + '">' + IC.link + '<span>' + esc(shortUrl(links[0].u)) +
         (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') + '</span></button>';
       h += '<div class="igbtns"><button type="button" data-upopen="1">インスタで開く</button></div>';
@@ -1924,6 +1937,7 @@ function instaScript_(C) {
       else if (!ps.length) h += '<div class="igempty"><b>まだ投稿がありません</b></div>';
       else h += '<div class="iggrid">' + ps.map(function (x) { return tile(x, 'posts'); }).join('') + '</div>';
       el.innerHTML = h + '</div>';
+      bioFit(el);
     });
   }
   function openTagged(code) {
