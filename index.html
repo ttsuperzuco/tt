@@ -463,8 +463,14 @@
   // ===== ホーム画面インストール可否（PWA化）。幹部用/スタッフ用/開発用の全URLで共通。=====
   // 自動の案内帯は出さない。Android=Chromeの「⋮」メニュー→「アプリをインストール」、
   // iPhone=共有ボタン→「ホーム画面に追加」、どちらも手動のみ。名前とアイコンは3つとも同じ。
+  // ★2026-11-10 まるちゃん決定：スレッズコだけは、ズコとは別のアイコン（黒地のThreadsのマークを金魚がくぐる絵）で
+  //   ホーム画面に入れられる。スレッズコを独立した画面の住所（?view=threads&solo=1）で開いている時だけ、
+  //   名前「スレッズコ」・専用のアイコン・専用の開き先（その人の種類のまま スレッズコがいきなり開く）に切り替える。
+  //   ふつうのズコの住所で開いた時は今までと1つも変わらない。
   (function () {
-    var manifestFile = staff ? 'manifest-staff.json' : (dev ? 'manifest-dev.json' : 'manifest-kanbu.json');
+    var soloThreads = (view === 'threads' && params.get('solo') === '1');
+    var kind = staff ? 'staff' : (dev ? 'dev' : 'kanbu');
+    var manifestFile = (soloThreads ? 'manifest-threads-' : 'manifest-') + kind + '.json';
     var head = document.head;
 
     var manifestLink = document.createElement('link');
@@ -503,7 +509,7 @@
 
     var appleTitle = document.createElement('meta');
     appleTitle.name = 'apple-mobile-web-app-title';
-    appleTitle.content = 'TTズコ';
+    appleTitle.content = soloThreads ? 'スレッズコ' : 'TTズコ';
     head.appendChild(appleTitle);
 
     var appleStatusBar = document.createElement('meta');
@@ -514,7 +520,7 @@
     var appleIcon = document.createElement('link');
     appleIcon.rel = 'apple-touch-icon';
     appleIcon.sizes = '180x180';
-    appleIcon.href = 'icons/icon-180.png';
+    appleIcon.href = soloThreads ? 'icons/threads-180.png' : 'icons/icon-180.png';
     head.appendChild(appleIcon);
   })();
 
