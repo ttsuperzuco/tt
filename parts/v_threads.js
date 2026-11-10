@@ -269,7 +269,7 @@ var THICO_ = {
 };
 function thIco_(k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" width="' + (sz || 20) + '" height="' + (sz || 20) + '" aria-hidden="true">' + THICO_[k] + '</svg>'; }
 function renderThreadsPage_(base, staff, dev) {
-  var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">Threads投稿</span></div>';
+  var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">スレッズコ</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8',

@@ -154,7 +154,7 @@ function doGet(e) {
     title = 'インスタ';                                       
     html = renderInstaPage_(base, staff, dev);
   } else if (view === 'threads') {
-    title = 'Threads投稿';                                   
+    title = 'スレッズコ';                                   
     html = renderThreadsPage_(base, staff, dev);
   } else if (view === 'hanbai') {
     title = 'No31 販売管理';                                 
@@ -1359,7 +1359,7 @@ var TILE_DEFS_ = [
   { id: 'claudechat', cls: 'claudechat', view: 'claudechat',
     icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' },
   { id: 'threads', cls: 'threads', view: 'threads',
-    icon: '<span class="ticon">🧵</span>', label: 'Threads\n投稿' },
+    icon: '<span class="ticon">🧵</span>', label: 'スレッズコ' },   
   { id: 'insta', cls: 'insta', view: 'insta',
     icon: '<span class="ticon">📸</span>', label: 'インスタ' },
   { id: 'facebook', cls: 'facebook', view: 'facebook',
