@@ -13035,6 +13035,9 @@ function renderHanbaiPage_(base, staff, dev) {
 // ════════════════════════════════════════════════════════════════════════════
 var THREADSCSS_ =
   '.thw{width:100%;box-sizing:border-box;max-width:560px;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
+  // 公開前の予告（題名の下に大きい字だけ）
+  '.thteaser{margin:18vh 0 0;text-align:center;color:#fff;font-weight:900;font-size:2.1rem;line-height:1.6;letter-spacing:.02em;text-shadow:0 3px 10px rgba(0,0,0,.25);}' +
+  '.thteaser span{display:block;}' +
   '.thacct{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px;}' +
   '.thacct button,.thseg button{background:#fff;color:#0f172a;border:3px solid transparent;border-radius:14px;padding:14px 4px;font:inherit;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.thacct button.on,.thseg button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
@@ -13309,10 +13312,31 @@ var THICO_ = {
 };
 function thIco_(k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" width="' + (sz || 20) + '" height="' + (sz || 20) + '" aria-hidden="true">' + THICO_[k] + '</svg>'; }
 
+// ★2026-11-10 まるちゃん「みかんさんとオリーブさんは、スレッズコの上の部分だけ見て、下は『11月11日リーダーズ会議にて公開！』の字を
+//   大きめに出す。本体は見せない」＝公開前の予告。下の名前の人には、題名と予告の字だけを出す（中身は読みに行かない）。
+//   ★公開する時（11/11のリーダーズ会議）＝THREADS_TEASER_WHO_ を空にする。それだけで、いつものスレッズコが出る。
+//   ★開発の住所に &teaser=1 を付けると、まるちゃんが予告の画面を見られる（確認用）。
+var THREADS_TEASER_WHO_ = ['mikan', 'olive'];
+function threadsTeaser_(staff, dev) {
+  try {
+    if (typeof window === 'undefined') return false;
+    if (staff && THREADS_TEASER_WHO_.indexOf(String(window.__SZ_WHO_ || '')) >= 0) return true;
+    if (dev && /[?&]teaser=1(&|$)/.test(location.search)) return true;
+  } catch (e) {}
+  return false;
+}
+
 function renderThreadsPage_(base, staff, dev) {
   // ★2026-11-05 まるちゃん「スレッズを表示の部分からは、本物のスレッズを再現したい。最近どうを押すと新しいスレッドが出る」
   //   ＝アカウントのボタンの下は本物のThreadsのプロフィール画面そのもの。投稿の入力は「新しいスレッド」の小窓の中。
   var head = '<div class="hhead"><span class="bmark">' + THREADS_LOGO_ + '</span><span class="bname">スレッズコ</span></div>';
+  if (threadsTeaser_(staff, dev)) {
+    return '<style>' + HOMECSS_ + EXPADCSS_ + HANBAICSS_ + THREADSCSS_ + '</style>' +
+      '<div class="home">' + backBarUnlessSolo_(base, staff, dev) +
+      '<div class="thw">' + head +
+        '<div class="thteaser"><span>11月11日</span><span>リーダーズ会議にて</span><span>公開！</span></div>' +
+      '</div></div>';
+  }
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8',
