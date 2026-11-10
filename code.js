@@ -1768,6 +1768,11 @@ function renderError_(err, base, staff, dev) {
 var LINE_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
   '<rect width="24" height="24" rx="7" fill="#06C755"/>' +
   '<path d="M12 6.2c-3.3 0-6 2.1-6 4.7 0 2.3 2 4.2 4.8 4.6.5.1.4.35.3.85l-.08.5c-.05.3.2.42.48.3 1.9-.8 4-2.55 5.3-4.05.68-.8 1.2-1.6 1.2-2.7 0-2.6-2.7-4.7-6-4.7z" fill="#fff"/></svg>';
+// ★2026-11-10 まるちゃん「これのマークいれて」＝スレッズコのボタン・画面のタイトルに、本物のThreadsのマーク（黒地に白）。
+//   パソコン版の同じ絵＝PC版スーパーズコ\icons	hreads_logo.svg（ボタンとタスクバーのアイコンの元）。形を直す時は両方。
+var THREADS_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
+  '<rect width="24" height="24" rx="5.4" fill="#101010"/>' +
+  '<path transform="translate(4.56 4.56) scale(.62)" fill="#fff" d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.18 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.783 3.631 2.698 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.752-2.964-.065-1.19.408-2.285 1.33-3.082.88-.76 2.119-1.207 3.583-1.291a13.853 13.853 0 0 1 3.02.142c-.126-.742-.375-1.332-.75-1.757-.513-.586-1.308-.883-2.359-.89h-.029c-.844 0-1.992.232-2.721 1.32L7.734 7.847c.98-1.454 2.568-2.256 4.478-2.256h.044c3.194.02 5.097 1.975 5.287 5.388.108.046.216.094.321.142 1.49.7 2.58 1.761 3.154 3.07.797 1.82.871 4.79-1.548 7.158-1.85 1.81-4.094 2.628-7.277 2.65Zm1.003-11.69c-.242 0-.487.007-.739.021-1.836.103-2.98.946-2.916 2.143.067 1.256 1.452 1.839 2.784 1.767 1.224-.065 2.818-.543 3.086-3.71a10.5 10.5 0 0 0-2.215-.221z"/></svg>';
 var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
   '<rect width="24" height="24" rx="7" fill="#2bad6f"/>' +
   '<rect x="5.5" y="7.4" width="13" height="10.6" rx="2" fill="#fff"/>' +
@@ -1899,7 +1904,7 @@ var TILE_DEFS_ = [
   // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
   //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
   { id: 'threads', cls: 'threads', view: 'threads',
-    icon: '<span class="ticon">🧵</span>', label: 'スレッズコ' },   // ★2026-11-10 まるちゃん「なまえを スレッズコ にする」
+    icon: '<span class="ticon">' + THREADS_LOGO_ + '</span>', label: 'スレッズコ' },   // ★2026-11-10 まるちゃん「なまえを スレッズコ にする」
   // ★📸インスタ（2026-11-08 まるちゃん決定「ぜんぶすいしょう」）＝お店のインスタ3つのプロフィールを本物そっくりに見せる。
   //   中身は受付係（op=insta → Instagram投稿\programs\insta_zuko.py）が専用ブラウザで読む。既定は開発者だけ（共通ルール16）。
   { id: 'insta', cls: 'insta', view: 'insta',
@@ -13019,7 +13024,7 @@ var THREADSCSS_ =
   '.thacct button.on,.thseg button.on{background:#16a34a;color:#fff;border-color:#15803d;}' +
   '.thacct.one{grid-template-columns:1fr;}' +
   // ★2026-11-10 まるちゃん「タイトルはかなり小さく・投稿するアカウントはいらない・ボタンの縦幅はうすく。本編を表示するのがメインだから」
-  '.thw .hhead{margin:0 0 3px;gap:4px;}.thw .hhead .bmark{font-size:12px;}.thw .hhead .bname{font-size:.85rem;}' +
+  '.thw .hhead{margin:0 0 3px;gap:4px;}.thw .hhead .bmark{font-size:12px;}.thw .hhead .bmark svg{width:16px;height:16px;display:block;}.thw .hhead .bname{font-size:.85rem;}' +
   '.thacct{gap:8px;margin:2px 0 8px;}' +
   '.thacct button{padding:3px 4px;font-size:15px;border-width:2px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,.15);}' +
   '.thname{color:#fde047;font-size:15px;font-weight:800;margin:-4px 4px 10px;}' +
@@ -13291,7 +13296,7 @@ function thIco_(k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" wi
 function renderThreadsPage_(base, staff, dev) {
   // ★2026-11-05 まるちゃん「スレッズを表示の部分からは、本物のスレッズを再現したい。最近どうを押すと新しいスレッドが出る」
   //   ＝アカウントのボタンの下は本物のThreadsのプロフィール画面そのもの。投稿の入力は「新しいスレッド」の小窓の中。
-  var head = '<div class="hhead"><span class="bmark">🧵</span><span class="bname">スレッズコ</span></div>';
+  var head = '<div class="hhead"><span class="bmark">' + THREADS_LOGO_ + '</span><span class="bname">スレッズコ</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8',
