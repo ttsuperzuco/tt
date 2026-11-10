@@ -14951,7 +14951,8 @@ var INSTACSS_ =
   // ★2026-11-10 まるちゃん「いちばん致命的な違いはここ」＝本物は下のメニューがいつも画面の一番下にある。
   //   前は .igapp の overflow:hidden のせいで sticky が効かず、写真の並びを一番下まで送らないと出てこなかった（overflow:clip にした）。
   '.ignav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid #dbdbdb;height:56px;}' +
-  '.ignav button{display:flex;align-items:center;justify-content:center;}' +
+  '.ignav button{display:flex;align-items:center;justify-content:center;position:relative;}' +
+  '.ignav .dmdot{position:absolute;width:7px;height:7px;border-radius:50%;background:#ff3040;left:calc(50% + 9px);bottom:10px;}' +
   '.ignav .me{width:28px;height:28px;border-radius:50%;object-fit:cover;}' +
   '.ignav .on{width:46px;height:46px;border-radius:50%;background:#e6edf3;display:flex;align-items:center;justify-content:center;}' +
   // ── 作成（＋）の小窓＝本物のインスタの「作成」と同じ並び ──
@@ -15311,7 +15312,8 @@ function instaScript_(C) {
     }
     return '<div class="iggrid">' + list.map(function (p) { return tile(p, mode); }).join('') + '</div>';
   }
-  // ★2026-11-10 自己紹介が4行を超えた時だけ「… 続きを読む」を出す。押したら全部出す（本物と同じ）。
+  // ★2026-11-10 自己紹介が4行を超えた時だけ「… さらに表示」を出す。押したら全部出す（本物と同じ）。
+  var NOTE_ON = { jp: 1, tw: 1 };
   function bioFit(root) {
     var bs = (root && root.querySelectorAll) ? root.querySelectorAll('.igbio.cl') : [];
     for (var i = 0; i < bs.length; i++) {
@@ -15328,16 +15330,19 @@ function instaScript_(C) {
     var p = v.prof, links = p.links || [];
     var h = '';
     h += '<div class="igtop"><button type="button" data-create="1">' + IC.plus + '</button>' +
-      '<div class="u"><span>' + esc(p.user) + '</span>' + IC.down + '<i></i></div>' +
+      '<div class="u"><span>' + esc(p.user) + '</span>' + IC.down + '</div>' +
       '<div class="r"><button type="button" data-go="threads">' + IC.threads + '</button><button type="button" data-go="menu">' + IC.menu + '</button></div></div>';
     // ★2026-11-10 エミュレーターの本物の画面に合わせた：写真の上にノートの吹き出し・名前の後ろにMeta認証の点線の丸
-    h += '<div class="igprof hasnote"><div class="igav" data-go="stories" style="cursor:pointer"><div class="ignote">夢中になっていること…</div>' +
+    //   ★本物の台湾男性にはノートの吹き出しが出ていない（2026-11-10 エミュレーターで3つを比較）＝NOTE_ON のアカウントだけ出す
+    var note = !!NOTE_ON[CUR];
+    h += '<div class="igprof' + (note ? ' hasnote' : '') + '"><div class="igav" data-go="stories" style="cursor:pointer">' + (note ? '<div class="ignote">夢中になっていること…</div>' : '') +
       '<img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></div>' +
       '<div class="igr"><div class="nmw"><div class="nm">' + esc(p.name || p.user) + '</div>' +
       S('<circle cx="12" cy="12" r="9" stroke-dasharray="2.2 2.2"/><path d="M8 12.3l2.7 2.7L16 9.7"/>', 18) + '</div>' +
       '<div class="igcnt"><div><b>' + num(p.posts) + '</b>投稿</div><div data-go="followers" style="cursor:pointer"><b>' + num(p.followers) + '</b>フォロワー</div>' +
       '<div data-go="following" style="cursor:pointer"><b>' + num(p.following) + '</b>フォロー中</div></div></div></div>';
-    h += '<div class="igbio">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '</div>';
+    // ★2026-11-10 本物と同じく自己紹介は4行で止めて「… さらに表示」（押したら全部出す＝bioFit）
+    h += '<div class="igbio cl">' + (p.showcat && p.cat ? '<span class="cat">' + esc(p.cat) + '</span>\n' : '') + esc(p.bio) + '<span class="mo">… さらに表示</span></div>';
     if (links.length) {
       h += '<button type="button" class="iglink" data-go="link">' + IC.link + '<span>' + esc(shortUrl(links[0].u)) +
         (links.length > 1 ? '、他' + (links.length - 1) + '件' : '') + '</span></button>';
@@ -15348,19 +15353,26 @@ function instaScript_(C) {
       (p.fb ? '<button type="button" data-go="fb">' + IC.fb + esc(p.fb) + '</button>' : '') +
       '<button type="button" class="add" data-go="banners">' + IC.plusS + '追加</button></div>';
     // ⑥ ダッシュボード＝本物は「ダッシュボード／過去30日間に◯回閲覧されました。」（数は分析を見られる人だけ・後から入れる）
-    h += '<button type="button" class="igdash" data-go="dash"><span><b>ダッシュボード</b><small id="igDashN"></small></span></button>';
+    //   ★2026-11-10 前回の数をこの端末に覚えておき、開いた瞬間から出す（読み直しを待つ間に空になっていた）
+    var dashOld = ''; try { dashOld = localStorage.getItem('ig_dash_' + CUR) || ''; } catch (e) {}
+    h += '<button type="button" class="igdash" data-go="dash"><span><b>ダッシュボード</b><small id="igDashN">' + (can('insights') ? esc(dashOld) : '') + '</small></span></button>';
     h += '<div class="igbtns"><button type="button" data-pedit="1">プロフィールを編集</button><button type="button" data-go="pshare">プロフィールをシェア</button></div>';
     h += '<div class="ighl"><button type="button" data-hlnew="1"><div class="c new">' + IC.plus + '</div><div class="t">New</div></button>' +
       (v.hl || []).map(function (x, i) {
         return '<button type="button" data-hl="' + i + '"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
       }).join('') + '</div>';
-    h += '<div class="igtabs">' +
-      [['posts', IC.grid], ['reels', IC.reels], ['tagged', IC.tagged]].map(function (t) {
+    // ★2026-11-10 本物はシェアした投稿があるアカウントだけ「リポスト」のタブが出る（台湾女性・台湾男性＝4つ、日本人＝3つ）
+    var tabs = [['posts', IC.grid], ['reels', IC.reels]];
+    if ((v.reposts || []).length) tabs.push(['reposts', IC.repost]);
+    tabs.push(['tagged', IC.tagged]);
+    if (TAB === 'reposts' && !(v.reposts || []).length) TAB = 'posts';
+    h += '<div class="igtabs" style="grid-template-columns:repeat(' + tabs.length + ',1fr)">' +
+      tabs.map(function (t) {
         return '<button type="button" data-tab="' + t[0] + '"' + (TAB === t[0] ? ' class="on"' : '') + '>' + t[1] + '</button>';
       }).join('') + '</div>';
     h += drawGrid(v);
     h += '<div class="ignav"><button type="button" data-go="feed">' + IC.home + '</button><button type="button" data-go="reels">' + IC.reels + '</button>' +
-      '<button type="button" data-dm="1">' + IC.send + '</button><button type="button" data-go="search">' + IC.search + '</button>' +
+      '<button type="button" data-dm="1">' + IC.send + (p.dm_unread ? '<i class="dmdot"></i>' : '') + '</button><button type="button" data-go="search">' + IC.search + '</button>' +
       '<button type="button" data-go="home"><span class="on"><img class="me" src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""></span></button></div>';
     $('igApp').innerHTML = h;
     bioFit($('igApp'));
@@ -15368,7 +15380,10 @@ function instaScript_(C) {
       var dn = CUR;
       readAsk({ kind: 'more_dash', acct: dn, days: 30 }, function (err, d) {
         var e2 = document.getElementById('igDashN');
-        if (!err && e2 && dn === CUR && d && d.views != null) e2.textContent = '過去30日間に' + num(d.views) + '回閲覧されました。';
+        if (!err && e2 && dn === CUR && d && d.views != null) {
+          e2.textContent = '過去30日間に' + num(d.views) + '回閲覧されました。';
+          try { localStorage.setItem('ig_dash_' + dn, e2.textContent); } catch (e) {}
+        }
       });
     }
   }
