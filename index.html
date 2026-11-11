@@ -989,6 +989,8 @@
     if (o.staff && o.who) u += '&zwho=' + encodeURIComponent(o.who) + '&zat=' + encodeURIComponent(o.at || '0');
     return u;
   }
+  // ホーム画面への追加が済んだスタッフ（2026-11-10 オリーブ 18:15・みかん 19:30 にボタンから追加済み＝開いた記録で確認）
+  var ZK_CARRY_DONE_WHO_ = ['olive', 'mikan'];
   function zkCarryUi_() {
     var ua = navigator.userAgent || '';
     var ios = /iPhone|iPad|iPod/.test(ua), android = /Android/.test(ua);
@@ -1030,6 +1032,10 @@
 
     // ②ズコの中のスレッズコ＝「← 戻る」の右に、同じ大きさの「📲 ホーム画面に追加」ボタン
     //   ★2026-11-10 まるちゃん「スタッフにわかるようしろ」＝初めは題名の横の小さい字で、気づけなかった。
+    //   ★2026-11-11 まるちゃん「その二人にはホーム追加はもう消してよくない？」＝追加が済んだスタッフには出さない。
+    //     iPhoneはズコとアイコンの記憶が別なので、済んだかを画面から知る道が無い＝名前で外す。
+    //     スマホを替えた等でもう一度要る時は、ZK_CARRY_DONE_WHO_ から外す。
+    if (staff && ZK_CARRY_DONE_WHO_.indexOf(who) >= 0) return;
     var url = zkCarryUrl_({ origin: location.origin, path: location.pathname, staff: staff, dev: dev,
       dv: lsGet('zk_dv'), dk: lsGet('zk_dk'), device: device, who: who, at: lsGet('sz_picked_at') });
     if (!url || typeof szPopup_ !== 'function') return;
