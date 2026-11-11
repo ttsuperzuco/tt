@@ -146,6 +146,8 @@ function doGet(e) {
   } else if (view === 'claudechat') {
     title = 'Claudeに聞く';                            // ★開発URL(?dev=1)専用。静的アプリの中で動く
     html = renderClaudeChatPage_(base, staff, dev);
+  } else if (view === 'hachimitsu') {
+    html = renderHoneyPage_(base, staff, dev);
   } else if (view === 'shophist') {
     title = 'T＆Tショップ履歴';                        // ★開発URL(?dev=1)専用。静的アプリが shop_history.json を取って描く
     html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
@@ -1062,6 +1064,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   //   既定は開発者だけ（共通ルール16）。まるちゃん「スタッフ全員に触らせる」＝試して大丈夫なら tile_settings.py の
   //   STAFF_ASSIGNABLE に入れて、自動監視の人ごとの表示でONにする。
   claudechat: { exec: false, staff: false },
+  hachimitsu: { exec: false, staff: false },
   threads:    { exec: false, staff: false },
   // ★📸インスタ（2026-11-08 まるちゃん決定）＝お店のインスタを本物そっくりに見せる。既定は開発者だけ（共通ルール16）。
   insta:      { exec: false, staff: false },
@@ -1080,7 +1083,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1901,6 +1904,9 @@ var TILE_DEFS_ = [
   // ★Claudeに聞く（2026-10-27）＝打った文を会話のClaudeへ届け、返事を出す（op=claude_chat・共通\ズコからClaude.py）。
   { id: 'claudechat', cls: 'claudechat', view: 'claudechat',
     icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' },
+  // ★🍯ハチミツちゃん（2026-11-11 まるちゃん決定）＝トマトさんの相談と画像作り（op=hachimitsu）。既定は開発者だけ（共通ルール16）。
+  { id: 'hachimitsu', cls: 'hachimitsu', view: 'hachimitsu',
+    icon: '<span class="ticon">🍯</span>', label: 'ハチミツ\nちゃん' },
   // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
   //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
   { id: 'threads', cls: 'threads', view: 'threads',
@@ -1948,7 +1954,7 @@ var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', facebook: 'kaihatsu', uriagebook: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', hachimitsu: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', facebook: 'kaihatsu', uriagebook: 'kaihatsu'
   // ★2026-11-06 まるちゃん「前日お知らせの右に見てくれた？」＝お知らせ見てくれた？(mita)はスタッフ画面（ここに書かない）
   // ★2026-11-06 まるちゃん「開発中の機能に戻す」＝Threads投稿は開発版では開発中の機能に置く（TOMATO・オリーブ・みかんのスマホには人ごとの表示で出る）。
   // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
@@ -12435,6 +12441,190 @@ function renderClaudeChatPage_(base, staff, dev) {
     '<script>(' + claudeChatScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
 
+// ========== 🍯ハチミツちゃん（2026-11-11 まるちゃん決定） ==========
+// トマトさん（社長）の相談と画像作りの相手。打った文と写真を op=hachimitsu で受付係へ送り、返事と絵をこの画面に出す。
+//  本体＝AI自動プログラム\ハチミツちゃん\programs\honey.py。AIはパソコンの物に一切触れない作り（道具も外部連携も0個）。
+//  会話の控えは受付係から受け取る（本人確認を通った人にだけ返す）。絵は置き場の名前を受け取ってから読みに行く。
+var HONEYCSS_ =
+  '.hnimg{display:block;width:100%;max-width:420px;border-radius:12px;margin-top:8px;background:#e2e8f0;min-height:120px;}' +
+  '.hnqimg{display:block;width:120px;border-radius:10px;margin-top:6px;background:#e2e8f0;min-height:60px;}' +
+  '.hnsave{display:inline-block;margin-top:6px;font-size:14px;font-weight:800;color:#0e7490;}' +
+  '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
+  '.hnbar button{flex:1;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.hnthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}' +
+  '.hnthumbs:empty{display:none;}' +
+  '.hnth{position:relative;}' +
+  '.hnth img{display:block;width:76px;height:76px;object-fit:cover;border-radius:10px;}' +
+  '.hnth button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:14px;line-height:24px;padding:0;cursor:pointer;}';
+
+function honeyScript_(C) {
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
+  var picks = [], sending = false, cache = {};
+  function idn() { return { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' }; }
+  function jsonp(p, cb) {
+    var n = '__honey' + Date.now() + Math.floor(Math.random() * 1000);
+    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+    var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
+    s.onerror = function () { cb({ ok: false, error: '通信に失敗しました。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
+  }
+  function devKey(cb) {
+    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    var dv = '', dk = '';
+    try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
+    if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(dk)).then(function (b) {
+      var h = Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      cb({ zdv: dv, zdh: h });
+    }, function () { cb({}); });
+  }
+  function ask(fields, busy, done) {
+    devKey(function (ex) { for (var k in ex) fields[k] = ex[k]; ask0(fields, busy, done); });
+  }
+  function ask0(fields, busy, done) {
+    if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
+    var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
+    var me = idn();
+    var poll = function (id) {
+      var n = 0, max = 480;    // 絵は数分かかる＝約12分まで待つ
+      var tick = function () {
+        n++; if (n > max) { end('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
+        jsonp({ action: 'status', key: C.key, id: id }, function (x) {
+          if (!x || !x.ok) { setTimeout(tick, 2000); return; }
+          if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1500); return; }
+          if (x.status !== 'done') { end(x.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
+          var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
+          if (d && d.__bigres) {
+            jsonp({ action: 'data', key: C.key, name: d.__bigres }, function (y) {
+              var v = null; try { v = JSON.parse(y && y.result); } catch (e) {}
+              if (!v) { end('答えを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
+              end(null, v);
+            });
+            return;
+          }
+          end(null, d || {});
+        });
+      };
+      setTimeout(tick, 1200);
+    };
+    var send = function (ft) {
+      jsonp({ action: 'submit', key: C.key, op: 'hachimitsu', who: me.who, role: me.role, device: me.device, fields: ft },
+        function (r) {
+          if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
+          poll(r.id);
+        });
+    };
+    if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
+    BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'hachimitsu', op: 'hachimitsu',
+                  who: me.who, role: me.role, device: me.device, fields: fields },
+      send, function () { end('写真を送信できませんでした。枚数を減らして、もう一度試してもらえると嬉しいです🙇'); });
+  }
+  function fillImg(el) {
+    var n = el.getAttribute('data-n'); if (!n) return;
+    var put = function (src) {
+      el.src = src;
+      var a = el.nextSibling;
+      if (a && a.className === 'hnsave') { a.href = src; a.style.display = 'inline-block'; }
+    };
+    if (cache[n]) { put(cache[n]); return; }
+    jsonp({ action: 'data', key: C.key, name: n }, function (r) {
+      if (r && r.b64) { cache[n] = 'data:' + (r.mime || 'image/jpeg') + ';base64,' + r.b64; put(cache[n]); }
+    });
+  }
+  function imgs(list, cls, save) {
+    var h = '';
+    (list || []).forEach(function (x) {
+      h += '<img class="' + cls + '" data-n="' + esc(x.n) + '" alt="">';
+      if (save) h += '<a class="hnsave" style="display:none" download="hachimitsu.jpg">画像を保存</a>';
+    });
+    return h;
+  }
+  function draw(items) {
+    items = items || [];
+    if (!items.length) { $('hnLog').innerHTML = '<div class="ccnone">相談したいことや、作りたい画像を下に入力してください😊</div>'; return; }
+    var out = '';
+    items.forEach(function (x) {
+      if (x.q || (x.qimg && x.qimg.length)) out += '<div class="ccq">' + esc(x.q || '') + imgs(x.qimg, 'hnqimg', false) + '</div>';
+      out += '<div class="cca">' + esc(x.a || '') + imgs(x.img, 'hnimg', true) + '<div class="cct">' + esc(x.at || '') + '</div></div>';
+    });
+    $('hnLog').innerHTML = out;
+    Array.prototype.forEach.call($('hnLog').querySelectorAll('img[data-n]'), fillImg);
+  }
+  function drawPicks() {
+    $('hnThumbs').innerHTML = picks.map(function (p, i) {
+      return '<div class="hnth"><img src="data:image/jpeg;base64,' + p.b64 + '" alt=""><button type="button" data-i="' + i + '">×</button></div>';
+    }).join('');
+  }
+  function addFile(f) {
+    if (!/^image\//.test(f.type) || picks.length >= 4) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var mx = 1600, w = im.width, h = im.height;
+        if (w > mx || h > mx) { if (w >= h) { h = Math.round(h * mx / w); w = mx; } else { w = Math.round(w * mx / h); h = mx; } }
+        var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(im, 0, 0, w, h);
+        picks.push({ b64: cv.toDataURL('image/jpeg', 0.88).split(',')[1], mime: 'image/jpeg' });
+        drawPicks();
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(f);
+  }
+  $('hnPick').addEventListener('click', function () { $('hnFile').click(); });
+  $('hnFile').addEventListener('change', function () {
+    Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = '';
+  });
+  $('hnThumbs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    picks.splice(Number(b.getAttribute('data-i')), 1); drawPicks();
+  });
+  $('hnNew').addEventListener('click', function () {
+    popup('これまでの会話を削除しますか？😊', { icon: '', cancel: true, onYes: function () {
+      ask({ act: 'clear' }, '少し待っててくださいね🥺', function (err, d) { if (err) { popup(err); return; } draw(d.items); });
+    } });
+  });
+  $('hnSend').addEventListener('click', function () {
+    if (sending) return;
+    var t = $('hnText').value.replace(/^\s+|\s+$/g, '');
+    if (!t && !picks.length) { popup('聞きたいことを入力してください😊'); return; }
+    if (t.length > 2000) { popup('長すぎます。2000文字までにしてください😊'); return; }
+    sending = true; $('hnSend').disabled = true;
+    ask({ act: 'send', text: t, images: picks }, 'ハチミツちゃんが作業中です🍯', function (err, d) {
+      sending = false; $('hnSend').disabled = false;
+      if (err) { popup(err); return; }
+      $('hnText').value = ''; picks = []; drawPicks(); draw(d.items);
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  });
+  ask({ act: 'history' }, '', function (err, d) {
+    if (err) { $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
+    draw(d.items); window.scrollTo(0, document.body.scrollHeight);
+  });
+}
+
+function renderHoneyPage_(base, staff, dev) {
+  var C = {
+    exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
+    key: 'kx7Q2p9mVt4Zr8'
+  };
+  return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + HONEYCSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="cc">' +
+      '<div class="hhead"><span class="bmark">🍯</span><span class="bname">ハチミツちゃん</span></div>' +
+      '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
+      '<div class="hnthumbs" id="hnThumbs"></div>' +
+      '<div class="hnbar"><button type="button" id="hnPick">📷 写真を選択</button><button type="button" id="hnNew">新しい話を始める</button></div>' +
+      '<input type="file" id="hnFile" accept="image/*" multiple style="display:none">' +
+      '<textarea class="ccin" id="hnText" placeholder="相談や、作りたい画像を入力してください😊"></textarea>' +
+      '<button type="button" class="exgo" id="hnSend">送信</button>' +
+    '</div></div>' +
+    '<script>(' + honeyScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
+
 // ========== 販売管理（2026-10-17 まるちゃん依頼） ==========
 // ホームの「販売管理」→【台湾販売入力】【日本販売入力】【販売管理表】。
 //  日本：日付 →【新規お客様】氏・名を入れる／【🔁お客様】苗字の最初のひらがな→前に買った方から選ぶ
@@ -21950,6 +22140,7 @@ var HOMECSS_ =
 '  .tile.igdm::before { background:#c13584; }' +
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.claudechat::before { background:#d97757; }' +
+'  .tile.hachimitsu::before { background:#eab308; }' +
 '  .tile.threads::before { background:#9ca3af; }  /* ★2026-11-11 まるちゃん「スレッズコだけ左の線がない」＝黒は暗いボタンに溶けて見えないので灰色に */' +
 '  .tile.insta::before { background:#d62976; }' +
 '  .tile.facebook::before { background:#0866ff; }' +

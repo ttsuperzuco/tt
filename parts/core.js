@@ -108,6 +108,8 @@ function doGet(e) {
   } else if (view === 'claudechat') {
     title = 'Claudeに聞く';                            
     html = renderClaudeChatPage_(base, staff, dev);
+  } else if (view === 'hachimitsu') {
+    html = renderHoneyPage_(base, staff, dev);
   } else if (view === 'shophist') {
     title = 'T＆Tショップ履歴';                        
     html = renderShopHistPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
@@ -816,13 +818,14 @@ var DEFAULT_TILE_SETTINGS_ = {
   uriagebook: { exec: false, staff: false },
   hanbai:     { exec: true, staff: true },
   claudechat: { exec: false, staff: false },
+  hachimitsu: { exec: false, staff: false },
   threads:    { exec: false, staff: false },
   insta:      { exec: false, staff: false },
   facebook:   { exec: false, staff: false },
   mita:       { exec: true, staff: true },
   shomeisho:  { exec: true, staff: true }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1367,6 +1370,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🛒</span>', label: 'No31\n販売管理' },
   { id: 'claudechat', cls: 'claudechat', view: 'claudechat',
     icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' },
+  { id: 'hachimitsu', cls: 'hachimitsu', view: 'hachimitsu',
+    icon: '<span class="ticon">🍯</span>', label: 'ハチミツ\nちゃん' },
   { id: 'threads', cls: 'threads', view: 'threads',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-192.png"></span>', label: 'スレッズコ' },   
   { id: 'insta', cls: 'insta', view: 'insta',
@@ -1384,7 +1389,7 @@ var TILE_GROUP_ = {
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', facebook: 'kaihatsu', uriagebook: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', hachimitsu: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', facebook: 'kaihatsu', uriagebook: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
@@ -2551,6 +2556,9 @@ try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined'
 
 
 
+
+
+
 function renderPcStatus_(base, staff, dev) {
   try {
     return renderPcStatusPage_(
@@ -3004,6 +3012,7 @@ var HOMECSS_ =
 '  .tile.igdm::before { background:#c13584; }' +
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.claudechat::before { background:#d97757; }' +
+'  .tile.hachimitsu::before { background:#eab308; }' +
 '  .tile.threads::before { background:#9ca3af; }  /* ★2026-11-11 まるちゃん「スレッズコだけ左の線がない」＝黒は暗いボタンに溶けて見えないので灰色に */' +
 '  .tile.insta::before { background:#d62976; }' +
 '  .tile.facebook::before { background:#0866ff; }' +
