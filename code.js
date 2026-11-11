@@ -12665,7 +12665,7 @@ function honeyScript_(C) {
   //   「⏹ 止める」を押すまで（または送信するまで）、終わるたびに自動で聞き取りを始め直す。
   //   1回ずつ区切って始め直す形にした（ずっと聞き続ける設定は、Androidで同じ言葉が2回入ることがあるため）。
   var wantMic = false;
-  function micOff() { wantMic = false; rec = null; $('hnMic').classList.remove('on'); $('hnMic').textContent = '🎤 音声入力'; }
+  function micOff() { wantMic = false; rec = null; $('hnMic').classList.remove('on'); $('hnMic').textContent = '🎤 音声入力'; $('hnText').value = $('hnText').value.replace(/[、，]$/, ''); }
   function micStop() { wantMic = false; try { if (rec) rec.stop(); } catch (e) {} if (!rec) micOff(); }
   function micStart() {
     var base = $('hnText').value, said = '';
