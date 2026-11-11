@@ -12450,6 +12450,8 @@ var HONEYCSS_ =
   '.hnqimg{display:block;width:120px;border-radius:10px;margin-top:6px;background:#e2e8f0;min-height:60px;}' +
   '.hnsave{display:inline-block;margin-top:6px;font-size:14px;font-weight:800;color:#0e7490;}' +
   '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
+  '.hnbar button.on{background:#dc2626;color:#fff;}' +
+  '.hnbar button.lang{flex:0 0 auto;min-width:76px;}' +
   '.hnbar button{flex:1;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.hnthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}' +
   '.hnthumbs:empty{display:none;}' +
@@ -12522,11 +12524,11 @@ function honeyScript_(C) {
       send, function () { end('写真を送信できませんでした。枚数を減らして、もう一度試してもらえると嬉しいです🙇'); });
   }
   // ★2026-11-11 まるちゃん「スマホに残す形にすれば？」＝一度見た絵はこのスマホの中（IndexedDB）に残し、次からはそこから出す
-  //   （通信しない）。残すのは新しい80枚まで（古い物から消す＝スマホが重くならない）。
+  //   （通信しない）。残すのは新しい30枚まで（古い物から消す＝スマホが重くならない・約20MB）。
   //   置き場の入れ物は上書きされるので、名前と版の印（v）の組で覚える＝別の絵と取り違えない。
   //   読むのは新しい絵から1枚ずつ順番（いっぺんに全部読まない）。
   //   ★見えている所だけ読む形（IntersectionObserver）は、ズコの拡大表示と合わずに読み込みが始まらなかった（2026-11-11 実際に試して）＝使わない。
-  var DBN = 'zk_honey', ST = 'img', KEEP = 80, dbp = null;
+  var DBN = 'zk_honey', ST = 'img', KEEP = 30, dbp = null;      // ★2026-11-11 まるちゃん「上限30枚でいいよ」
   function db() {
     if (dbp) return dbp;
     dbp = new Promise(function (ok) {
@@ -12645,6 +12647,41 @@ function honeyScript_(C) {
     };
     fr.readAsDataURL(f);
   }
+  // ── 音声入力（2026-11-11 まるちゃん「入力欄には音声入力つけて」）──
+  //   スマホのブラウザの音声認識を使う（声はスマホとブラウザの会社の仕組みで文字になる・ズコのサーバーには送らない）。
+  //   言葉は「日本語／中文」のボタンで切り替え（このスマホに覚える）。使えないスマホでは、キーボードのマイクを案内する。
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;
+  var lang = '';
+  try { lang = localStorage.getItem('zk_honey_lang') || ''; } catch (e) {}
+  if (!lang) lang = /^zh/i.test(navigator.language || '') ? 'zh-TW' : 'ja-JP';
+  function drawLang() { $('hnLang').textContent = lang === 'zh-TW' ? '中文' : '日本語'; }
+  drawLang();
+  $('hnLang').addEventListener('click', function () {
+    lang = lang === 'zh-TW' ? 'ja-JP' : 'zh-TW';
+    try { localStorage.setItem('zk_honey_lang', lang); } catch (e) {}
+    drawLang();
+  });
+  function micOff() { rec = null; $('hnMic').classList.remove('on'); $('hnMic').textContent = '🎤 音声入力'; }
+  $('hnMic').addEventListener('click', function () {
+    if (!SR) { popup('このスマホでは音声入力のボタンを使えません。キーボードのマイクのボタンをお使いください🙇'); return; }
+    if (rec) { try { rec.stop(); } catch (e) {} return; }
+    var base = $('hnText').value;
+    try {
+      rec = new SR();
+      rec.lang = lang; rec.interimResults = true; rec.continuous = false;
+      rec.onresult = function (e) {
+        var t = '';
+        for (var i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+        $('hnText').value = base + t;
+      };
+      rec.onerror = function (e) {
+        if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) popup('マイクの使用が許可されていません。スマホの設定でマイクを許可してください🙇');
+      };
+      rec.onend = micOff;
+      rec.start();
+      $('hnMic').classList.add('on'); $('hnMic').textContent = '⏹ 止める';
+    } catch (e) { micOff(); popup('音声入力を開始できませんでした。キーボードのマイクのボタンをお使いください🙇'); }
+  });
   $('hnPick').addEventListener('click', function () { $('hnFile').click(); });
   $('hnFile').addEventListener('change', function () {
     Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = '';
@@ -12689,6 +12726,7 @@ function renderHoneyPage_(base, staff, dev) {
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
       '<div class="hnthumbs" id="hnThumbs"></div>' +
       '<div class="hnbar"><button type="button" id="hnPick">📷 写真を選択</button><button type="button" id="hnNew">新しい話を始める</button></div>' +
+      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" class="lang" id="hnLang">日本語</button></div>' +
       '<input type="file" id="hnFile" accept="image/*" multiple style="display:none">' +
       '<textarea class="ccin" id="hnText" placeholder="相談や、作りたい画像を入力してください😊"></textarea>' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
