@@ -1915,7 +1915,7 @@ var TILE_DEFS_ = [
   // ★📘Facebook（2026-11-10 まるちゃん決定「全部推奨で」）＝お店のFacebookページ3つを本物そっくりに見せる（第1段階＝読むだけ）。
   //   中身は受付係（op=facebook → Facebook投稿\programsb_zuko.py）がメタ公式の窓口で読む。既定は開発者だけ（共通ルール16）。
   { id: 'facebook', cls: 'facebook', view: 'facebook',
-    icon: '<span class="ticon">📘</span>', label: 'フェイズコブック' },   // ★2026-11-11 まるちゃん「フェイズコブック」
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-192.png"></span>', label: 'フェイズコブック' },   // ★2026-11-11 まるちゃん「A-1これさいよう」＝青い地の f を金魚がくぐる絵（パソコン版も同じ）   // ★2026-11-11 まるちゃん「フェイズコブック」
   // ★お知らせ見てくれた？（2026-11-06）＝前日お知らせへの反応（返事・確認リンクを押した）を今日・明日・過去の履歴で見る。
   //   分け方はサーバーが oshirase_mita.json に入れる（前日お知らせ確認リンクの お知らせ見てくれた.py）。
   { id: 'mita', cls: 'mita', view: 'mita',
