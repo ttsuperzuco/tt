@@ -1372,7 +1372,7 @@ var TILE_DEFS_ = [
   { id: 'insta', cls: 'insta', view: 'insta',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>', label: 'インズコグラム' },   
   { id: 'facebook', cls: 'facebook', view: 'facebook',
-    icon: '<span class="ticon">📘</span>', label: 'フェイズコブック' },   
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-192.png"></span>', label: 'フェイズコブック' },   
   { id: 'mita', cls: 'mita', view: 'mita',
     icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
