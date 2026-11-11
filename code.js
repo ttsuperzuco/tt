@@ -13905,6 +13905,16 @@ var THREADSCSS_ =
   '.thsheet .tlta::placeholder{color:#777;}' +
   '.thsheet .tfmt{display:flex;justify-content:center;gap:32px;padding:16px 0 20px;}' +
   '.thsheet .tfmt button{background:none;border:0;color:#f3f5f7;font-size:15px;font-weight:700;padding:0;cursor:pointer;min-width:20px;}' +
+  // ★2026-11-12 GIF（GIPHYで探して付ける）
+  '.thsheet #thGifBox .tmi img{width:auto;max-width:100%;max-height:300px;object-fit:contain;}' +
+  '.thsheet .tgs{padding:4px 24px 12px;}' +
+  '.thsheet .tgs input{display:block;width:100%;box-sizing:border-box;height:40px;background:#0a0a0a;border:1px solid rgba(243,245,247,.15);border-radius:16px;padding:0 16px;color:#f3f5f7;font:inherit;outline:none;}' +
+  '.thsheet .tgs input::placeholder{color:#777;}' +
+  '.thsheet .tgg{padding:0 24px;height:60vh;overflow-y:auto;}' +
+  '.thsheet .tgc{columns:2;column-gap:4px;}' +
+  '.thsheet .tgg img{display:block;width:100%;height:auto;margin:0 0 4px;border-radius:4px;cursor:pointer;background:#262626;break-inside:avoid;}' +
+  '.thsheet .tgl{color:#777;text-align:center;padding:48px 0;}' +
+  '.thsheet .tgp{text-align:center;color:#777;font-size:12px;padding:10px 0 16px;}' +
   '.thcomp .task{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;}' +
   '.thcomp .taskb{background:#181818;color:#f3f5f7;border:1px solid rgba(243,245,247,.15);border-radius:16px;width:280px;max-width:100%;text-align:center;overflow:hidden;font-family:system-ui,-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;font-size:15px;}' +
   '.thcomp .taskb b{display:block;padding:24px 20px 0;font-size:16px;font-weight:700;}' +
@@ -14001,6 +14011,7 @@ function renderThreadsPage_(base, staff, dev) {
                 '<input class="ttopic" id="thTopicText" maxlength="50" placeholder="コミュニティまたはトピック"><span class="tpg" style="display:none"></span></div>' +
               '<textarea class="tta" id="thText" rows="1" placeholder="最近どう？"></textarea>' +
               '<div class="tmed" id="thThumbs"></div>' +
+              '<div class="tmed" id="thGifBox" style="display:none"></div>' +
               '<div class="tpoll" id="thPoll" style="display:none">' +
                 '<input id="thP1" maxlength="25" placeholder="はい">' +
                 '<input id="thP2" maxlength="25" placeholder="いいえ">' +
@@ -14041,6 +14052,13 @@ function renderThreadsPage_(base, staff, dev) {
         '<div class="tfmt"><button type="button" data-off="文字の飾り">B</button><button type="button" data-off="文字の飾り"><i>I</i></button>' +
           '<button type="button" data-off="文字の飾り"><u>U</u></button><button type="button" data-off="文字の飾り"><s>S</s></button>' +
           '<button type="button" data-off="文字の飾り">' + thIco_('hl', 18) + '</button></div>' +
+      '</div>' +
+      // GIF（★2026-11-12 GIPHYで探して1つ選ぶ。探すのはスマホから直接GIPHYへ＝速い）
+      '<div id="thGifView" style="display:none">' +
+        '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thGifCancel">キャンセル</button></div><b>GIF</b><div class="tshr"></div></div>' +
+        '<div class="tgs"><input id="thGifQ" type="search" placeholder="GIPHYを検索" autocomplete="off"></div>' +
+        '<div class="tgg" id="thGifGrid"></div>' +
+        '<div class="tgp">Powered by GIPHY</div>' +
       '</div>' +
     '</div>' +
     // 書きかけでキャンセルした時（本物と同じ「下書きに保存しますか？」）
@@ -14153,14 +14171,15 @@ function threadsScript_(C) {
   //   ・下書きは公式の仕組みに無いので、この端末に覚えておく（アカウントごと）。
   var IC = function (k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" width="' + (sz || 20) + '" height="' + (sz || 20) + '" aria-hidden="true">' + ((C.ico && C.ico[k]) || '') + '</svg>'; };
   var OFFMSG = 'は、Threadsの公式の仕組みでは使えません。Threadsのアプリから行ってください🙇';
-  var CHMSG = '続きの投稿には文だけ付けられます。写真・アンケート・添付テキストは最初の投稿に付けてください😊';
+  var CHMSG = '続きの投稿には文だけ付けられます。写真・GIF・アンケート・添付テキストは最初の投稿に付けてください😊';
   var LONG = '', APPR = false, SPOIL = false, OPEN_DRAFT = 0;
+  var GIF = null;   // ★2026-11-12 選んだGIF {id, src（一覧の小さい絵）, big（小窓に出す絵）, w, h}
   function each(sel, root, fn) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
   function vals(ids) { return ids.map(function (i) { return $(i).value.trim(); }); }
   function chainBoxes() { return Array.prototype.slice.call(document.querySelectorAll('#thChain textarea')); }
   function blocks() { return [$('thText')].concat(chainBoxes()); }
   function autoH(t) { t.style.height = '21px'; t.style.height = t.scrollHeight + 'px'; }
-  function showView(v) { ['thWrite', 'thDrafts', 'thLongView'].forEach(function (i) { $(i).style.display = i === v ? '' : 'none'; }); closeMenus(); }
+  function showView(v) { ['thWrite', 'thDrafts', 'thLongView', 'thGifView'].forEach(function (i) { $(i).style.display = i === v ? '' : 'none'; }); closeMenus(); }
   function closeMenus() {
     $('thMoreMenu').style.display = 'none'; $('thOpt').style.display = 'none';
     each('#thThumbs .tmenu', null, function (m) { m.parentNode.removeChild(m); });
@@ -14183,22 +14202,22 @@ function threadsScript_(C) {
   function drawIcons() {
     var h, pollOn = $('thPoll').style.display !== 'none';
     if (MEDIA.length) h = mediaBtn('追加') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + icOff('loc', '位置情報', 18) + icOff('music', '音楽', 18);
-    else if (pollOn || LONG) h = icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + icOff('loc', '位置情報', 18);
-    else h = mediaBtn('') + icOff('gif', 'GIF') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + icBtn('poll', 'poll', 'アンケートを追加') +
+    else if (pollOn || LONG || GIF) h = icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + icOff('loc', '位置情報', 18);
+    else h = mediaBtn('') + (gifKey() ? icBtn('gif', 'gif', 'GIFを追加') : icOff('gif', 'GIF')) + icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + icBtn('poll', 'poll', 'アンケートを追加') +
       icOff('quote', '引用投稿') + icBtn('long', 'text', 'テキストを添付') + icOff('loc', '位置情報', 18) + icOff('music', '音楽', 18);
     var em = $('thEmos'), tm = $('thBlk0').querySelector('.tmain');
     $('thIcons').innerHTML = h;
     if (em.parentNode === tm) tm.insertBefore(em, $('thIcons'));
   }
   function chainIcons() {
-    return chOff('media') + icOff('gif', 'GIF') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + chOff('poll') +
+    return chOff('media') + chOff('gif') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + chOff('poll') +
       icOff('quote', '引用投稿') + chOff('text') + icOff('loc', '位置情報', 18) + icOff('music', '音楽', 18);
   }
 
   // ── 残りの文字数・投稿ボタン・スレッドに追加・「1/2」の印 ──
   function canPost() {
     var bs = blocks();
-    if (!$('thText').value.trim() && !MEDIA.length) return false;
+    if (!$('thText').value.trim() && !MEDIA.length && !GIF) return false;
     for (var i = 0; i < bs.length; i++) {
       if (tlen(bs[i].value) > MAXT) return false;
       if (i > 0 && !bs[i].value.trim()) return false;
@@ -14213,7 +14232,7 @@ function threadsScript_(C) {
     c.className = 'tcnt' + (rest < 0 ? ' neg' : '');
     $('thGo').disabled = !canPost();
     var last = bs[bs.length - 1];
-    var filled = !!last.value.trim() || (bs.length === 1 && MEDIA.length > 0);
+    var filled = !!last.value.trim() || (bs.length === 1 && (MEDIA.length > 0 || !!GIF));
     $('thAddChain').classList.toggle('on', filled && tlen(last.value) <= MAXT && bs.length - 1 < MAXCHAIN);
     var n = bs.length, p0 = $('thBlk0').querySelector('.tpg');
     p0.style.display = n > 1 ? '' : 'none'; p0.textContent = '1/' + n;
@@ -14311,6 +14330,58 @@ function threadsScript_(C) {
     openLong();
   });
 
+  // ── GIF（★2026-11-12 まるちゃん「2」＝GIFを使えるようにする） ──
+  //   ・Threadsの公式の仕組みはGIPHYのGIFを付けられる（文だけの投稿だけ・文なしでもよい・写真・アンケート・長い文とは一緒にできない）。
+  //   ・探すのはこのスマホから直接GIPHYへ（受付係を通すと1回5〜9秒かかるため）。鍵は open の答え（DATA.giphy）で、投稿できる人にだけ届く。
+  //   ・鍵がまだ無い時は、今までどおり押すと案内だけ出す。
+  var GSEQ = 0, GTIMER = null;
+  function gifKey() { return (DATA && DATA.giphy) || ''; }
+  function drawGif() {
+    var box = $('thGifBox');
+    if (!GIF) { box.style.display = 'none'; box.innerHTML = ''; }
+    else {
+      box.style.display = '';
+      box.innerHTML = '<div class="tmi"><img src="' + esc(GIF.big || GIF.src) + '" alt="GIF"><button type="button" class="rm" data-act="rmgif" title="削除">' + IC('x', 14) + '</button></div>';
+    }
+    drawIcons(); drawCnt();
+  }
+  function gifLoad(q) {
+    var k = gifKey(), seq = ++GSEQ, grid = $('thGifGrid');
+    if (!k) { grid.innerHTML = '<div class="tgl">GIFを読み込めませんでした。もう一度試してもらえると嬉しいです🙇</div>'; return; }
+    grid.innerHTML = '<div class="tgl">読み込み中です…</div>';
+    var u = 'https://api.giphy.com/v1/gifs/' + (q ? 'search' : 'trending') + '?api_key=' + encodeURIComponent(k) +
+            '&limit=40&rating=pg-13' + (q ? '&lang=ja&q=' + encodeURIComponent(q) : '');
+    fetch(u).then(function (r) { return r.json(); }).then(function (j) {
+      if (seq !== GSEQ) return;
+      var a = (j && j.data) || [];
+      if (!a.length) { grid.innerHTML = '<div class="tgl">' + (q ? '見つかりませんでした。別の言葉で検索してください😊' : 'GIFを読み込めませんでした。もう一度試してもらえると嬉しいです🙇') + '</div>'; return; }
+      grid.scrollTop = 0;
+      grid.innerHTML = '<div class="tgc">' + a.map(function (g) {
+        var im = g.images || {}, s = im.fixed_width || {}, b = im.downsized || im.fixed_width || {};
+        var w = Number(s.width) || 200, h = Number(s.height) || 150;
+        return '<img data-gid="' + esc(g.id) + '" data-big="' + esc(b.url || s.url || '') + '" src="' + esc(s.webp || s.url || '') +
+          '" width="' + w + '" height="' + h + '" loading="lazy" alt="' + esc(g.title || 'GIF') + '">';
+      }).join('') + '</div>';
+    }).catch(function () {
+      if (seq !== GSEQ) return;
+      grid.innerHTML = '<div class="tgl">GIFを読み込めませんでした。もう一度試してもらえると嬉しいです🙇</div>';
+    });
+  }
+  function openGif() {
+    $('thGifQ').value = ''; showView('thGifView'); gifLoad('');
+  }
+  $('thGifCancel').addEventListener('click', function () { GSEQ++; showView('thWrite'); });
+  $('thGifQ').addEventListener('input', function () {
+    var q = this.value.trim();
+    clearTimeout(GTIMER); GTIMER = setTimeout(function () { gifLoad(q); }, 400);
+  });
+  $('thGifGrid').addEventListener('click', function (e) {
+    var im = e.target.closest('img[data-gid]'); if (!im) return;
+    GIF = { id: im.getAttribute('data-gid'), src: im.getAttribute('src'), big: im.getAttribute('data-big'),
+            w: Number(im.getAttribute('width')) || 0, h: Number(im.getAttribute('height')) || 0 };
+    GSEQ++; showView('thWrite'); drawGif();
+  });
+
   // ── スレッドに追加（続きの投稿・5つまで。本物と同じく1つの投稿と同じ形で下に並ぶ） ──
   function addChain(text) {
     if (chainBoxes().length >= MAXCHAIN) { warn('続けて投稿できるのは' + MAXCHAIN + 'つまでです。'); return; }
@@ -14355,6 +14426,10 @@ function threadsScript_(C) {
         $('thPoll').style.display = ''; pollAdd(); drawIcons(); try { $('thP1').focus(); } catch (x) {}
       } else if (act === 'long') {
         openLong();
+      } else if (act === 'gif') {
+        openGif();
+      } else if (act === 'rmgif') {
+        GIF = null; drawGif();
       } else if (act === 'rmm') {
         MEDIA.splice(Number(a.getAttribute('data-i')), 1); drawThumbs();
       } else if (act === 'mmo') {
@@ -14396,7 +14471,7 @@ function threadsScript_(C) {
   function snapshot(withMedia) {
     return { at: Date.now(), text: $('thText').value, topic: $('thTopicText').value, chain: chainBoxes().map(function (t) { return t.value; }),
              poll: $('thPoll').style.display !== 'none' ? vals(['thP1', 'thP2', 'thP3', 'thP4']) : null,
-             long: LONG, rc: RC, appr: APPR, spoil: SPOIL, media: withMedia ? MEDIA : [] };
+             long: LONG, rc: RC, appr: APPR, spoil: SPOIL, media: withMedia ? MEDIA : [], gif: GIF };
   }
   function dropDraft(at) { if (!at) return; draftsSet(draftsGet().filter(function (d) { return d.at !== at; })); }
   function saveDraft() {
@@ -14413,7 +14488,8 @@ function threadsScript_(C) {
     (d.chain || []).forEach(function (c) { addChain(c); });
     if (d.poll) { $('thPoll').style.display = ''; ['thP1', 'thP2', 'thP3', 'thP4'].forEach(function (i, k) { $(i).value = d.poll[k] || ''; }); pollAdd(); }
     LONG = d.long || ''; RC = d.rc || 'everyone'; APPR = !!d.appr; MEDIA = d.media || []; SPOIL = !!d.spoil; OPEN_DRAFT = d.at || 0;
-    drawLong(); drawThumbs(); each('#thCompose .tta', null, autoH); drawCnt();
+    GIF = d.gif || null;
+    drawLong(); drawThumbs(); drawGif(); each('#thCompose .tta', null, autoH); drawCnt();
   }
   function drawDrafts() {
     var a = draftsGet();
@@ -14422,7 +14498,7 @@ function threadsScript_(C) {
       return;
     }
     $('thDraftList').innerHTML = a.map(function (d, i) {
-      var t = d.text || (d.chain || [])[0] || (d.long ? d.long : '') || ((d.media && d.media.length) ? '写真・動画' : '');
+      var t = d.text || (d.chain || [])[0] || (d.long ? d.long : '') || ((d.media && d.media.length) ? '写真・動画' : '') || (d.gif ? 'GIF' : '');
       var dt = new Date(d.at);
       return '<div class="tdr" data-di="' + i + '"><img class="tav thAvI" referrerpolicy="no-referrer"><div class="w"><b class="thUN"></b>' +
         '<div class="t">' + esc(t) + '</div><div class="d">' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日 ' + ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2) + '</div></div>' +
@@ -14448,8 +14524,8 @@ function threadsScript_(C) {
   // ── 投稿 ──
   function reset() {
     ['thText', 'thLongText', 'thTopicText', 'thP1', 'thP2', 'thP3', 'thP4'].forEach(function (i) { $(i).value = ''; });
-    MEDIA = []; LONG = ''; SPOIL = false; APPR = false; RC = 'everyone'; OPEN_DRAFT = 0;
-    $('thChain').innerHTML = ''; $('thPoll').style.display = 'none'; pollAdd();
+    MEDIA = []; LONG = ''; SPOIL = false; APPR = false; RC = 'everyone'; OPEN_DRAFT = 0; GIF = null;
+    $('thChain').innerHTML = ''; $('thPoll').style.display = 'none'; pollAdd(); drawGif();
     var em = $('thEmos'); em.style.display = 'none'; $('thBlk0').querySelector('.tmain').insertBefore(em, $('thIcons'));
     showView('thWrite'); autoH($('thText')); drawOpt();
     drawLong(); drawThumbs();
@@ -14463,8 +14539,9 @@ function threadsScript_(C) {
     var topic = $('thTopicText').value.trim().replace(/^#/, '');
     var chain = chainBoxes().map(function (t) { return t.value.trim(); }).filter(function (x) { return x; });
     if (!CUR) { warn('投稿するアカウントを選択してください😊'); return; }
-    if (!text && !MEDIA.length) { warn('文か写真・動画を入力してください😊'); return; }
+    if (!text && !MEDIA.length && !GIF) { warn('文か写真・動画を入力してください😊'); return; }
     if (tlen(text) > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
+    if (GIF && (MEDIA.length || usePoll || longt)) { warn('GIFは、写真・動画・アンケート・長い文と一緒には投稿できません。'); return; }
     if (usePoll) {
       if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には投稿できません。'); return; }
       if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入力してください😊'); return; }
@@ -14481,6 +14558,7 @@ function threadsScript_(C) {
               topic: topic, long: longt, chain: chain, reply_control: RC,
               approvals: APPR, spoiler: SPOIL };
     if (usePoll) f.poll = { a: pv[0], b: pv[1], c: pv[2], d: pv[3] };
+    if (GIF) f.gif = { id: GIF.id };
     var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
     szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？😊', { icon: '', cancel: true, onYes: function () {
       ask(f, MEDIA.some(function (o) { return o.video; }) ? 'Threadsに投稿中です（動画は数分かかります）' : 'Threadsに投稿中です', function (err, d) {
@@ -14499,7 +14577,7 @@ function threadsScript_(C) {
 
   // ── 小窓を開く・閉じる ──
   function hasDraft() {
-    return !!($('thText').value.trim() || MEDIA.length || chainBoxes().some(function (t) { return t.value.trim(); }) || LONG ||
+    return !!($('thText').value.trim() || MEDIA.length || GIF || chainBoxes().some(function (t) { return t.value.trim(); }) || LONG ||
               $('thTopicText').value.trim() || ($('thPoll').style.display !== 'none' && vals(['thP1', 'thP2', 'thP3', 'thP4']).some(function (x) { return x; })));
   }
   function openCompose() {
