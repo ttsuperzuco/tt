@@ -12654,34 +12654,53 @@ function honeyScript_(C) {
   var lang = '';
   try { lang = localStorage.getItem('zk_honey_lang') || ''; } catch (e) {}
   if (!lang) lang = /^zh/i.test(navigator.language || '') ? 'zh-TW' : 'ja-JP';
-  function drawLang() { $('hnLang').textContent = lang === 'zh-TW' ? '中文' : '日本語'; }
+  function drawLang() { $('hnLang').textContent = '話す言葉：' + (lang === 'zh-TW' ? '中文' : '日本語'); }
   drawLang();
   $('hnLang').addEventListener('click', function () {
     lang = lang === 'zh-TW' ? 'ja-JP' : 'zh-TW';
     try { localStorage.setItem('zk_honey_lang', lang); } catch (e) {}
     drawLang();
   });
-  function micOff() { rec = null; $('hnMic').classList.remove('on'); $('hnMic').textContent = '🎤 音声入力'; }
+  // ★2026-11-11 まるちゃん「音声入力する切れちゃう」＝少し黙るとスマホが聞き取りを終えてしまう。
+  //   「⏹ 止める」を押すまで（または送信するまで）、終わるたびに自動で聞き取りを始め直す。
+  //   1回ずつ区切って始め直す形にした（ずっと聞き続ける設定は、Androidで同じ言葉が2回入ることがあるため）。
+  var wantMic = false;
+  function micOff() { wantMic = false; rec = null; $('hnMic').classList.remove('on'); $('hnMic').textContent = '🎤 音声入力'; }
+  function micStop() { wantMic = false; try { if (rec) rec.stop(); } catch (e) {} if (!rec) micOff(); }
+  function micStart() {
+    var base = $('hnText').value, said = '';
+    rec = new SR();
+    rec.lang = lang; rec.interimResults = true; rec.continuous = false;
+    rec.onresult = function (e) {
+      var t = '';
+      for (var i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+      said = t;
+      $('hnText').value = base + t;
+    };
+    rec.onerror = function (e) {
+      if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) {
+        wantMic = false;
+        popup('マイクの使用が許可されていません。スマホの設定でマイクを許可してください🙇');
+      }
+    };
+    rec.onend = function () {
+      rec = null;
+      if (!wantMic) { micOff(); return; }
+      if (said && !/[\s、。,.!?！？]$/.test(said)) $('hnText').value += (lang === 'zh-TW' ? '，' : '、');
+      setTimeout(function () { if (!wantMic) { micOff(); return; } try { micStart(); } catch (er) { micOff(); } }, 250);
+    };
+    rec.start();
+  }
   $('hnMic').addEventListener('click', function () {
     if (!SR) { popup('このスマホでは音声入力のボタンを使えません。キーボードのマイクのボタンをお使いください🙇'); return; }
-    if (rec) { try { rec.stop(); } catch (e) {} return; }
-    var base = $('hnText').value;
+    if (wantMic) { micStop(); return; }
     try {
-      rec = new SR();
-      rec.lang = lang; rec.interimResults = true; rec.continuous = false;
-      rec.onresult = function (e) {
-        var t = '';
-        for (var i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
-        $('hnText').value = base + t;
-      };
-      rec.onerror = function (e) {
-        if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) popup('マイクの使用が許可されていません。スマホの設定でマイクを許可してください🙇');
-      };
-      rec.onend = micOff;
-      rec.start();
+      wantMic = true;
+      micStart();
       $('hnMic').classList.add('on'); $('hnMic').textContent = '⏹ 止める';
     } catch (e) { micOff(); popup('音声入力を開始できませんでした。キーボードのマイクのボタンをお使いください🙇'); }
   });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && wantMic) micStop(); });
   $('hnPick').addEventListener('click', function () { $('hnFile').click(); });
   $('hnFile').addEventListener('change', function () {
     Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = '';
@@ -12700,6 +12719,7 @@ function honeyScript_(C) {
     var t = $('hnText').value.replace(/^\s+|\s+$/g, '');
     if (!t && !picks.length) { popup('聞きたいことを入力してください😊'); return; }
     if (t.length > 2000) { popup('長すぎます。2000文字までにしてください😊'); return; }
+    if (wantMic) micStop();
     sending = true; $('hnSend').disabled = true;
     ask({ act: 'send', text: t, images: picks }, 'ハチミツちゃんが作業中です🍯', function (err, d) {
       sending = false; $('hnSend').disabled = false;
@@ -12726,7 +12746,7 @@ function renderHoneyPage_(base, staff, dev) {
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
       '<div class="hnthumbs" id="hnThumbs"></div>' +
       '<div class="hnbar"><button type="button" id="hnPick">📷 写真を選択</button><button type="button" id="hnNew">新しい話を始める</button></div>' +
-      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" class="lang" id="hnLang">日本語</button></div>' +
+      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnLang">話す言葉：日本語</button></div>' +
       '<input type="file" id="hnFile" accept="image/*" multiple style="display:none">' +
       '<textarea class="ccin" id="hnText" placeholder="相談や、作りたい画像を入力してください😊"></textarea>' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
