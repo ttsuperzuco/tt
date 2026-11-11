@@ -12521,22 +12521,78 @@ function honeyScript_(C) {
                   who: me.who, role: me.role, device: me.device, fields: fields },
       send, function () { end('写真を送信できませんでした。枚数を減らして、もう一度試してもらえると嬉しいです🙇'); });
   }
+  // ★2026-11-11 まるちゃん「スマホに残す形にすれば？」＝一度見た絵はこのスマホの中（IndexedDB）に残し、次からはそこから出す
+  //   （通信しない）。残すのは新しい80枚まで（古い物から消す＝スマホが重くならない）。
+  //   置き場の入れ物は上書きされるので、名前と版の印（v）の組で覚える＝別の絵と取り違えない。
+  //   さらに、画面に見えそうな絵だけを読む（下にスクロールした時に続きを読む）。
+  var DBN = 'zk_honey', ST = 'img', KEEP = 80, dbp = null;
+  function db() {
+    if (dbp) return dbp;
+    dbp = new Promise(function (ok) {
+      try {
+        var rq = indexedDB.open(DBN, 1);
+        rq.onupgradeneeded = function () { rq.result.createObjectStore(ST); };
+        rq.onsuccess = function () { ok(rq.result); };
+        rq.onerror = function () { ok(null); };
+      } catch (e) { ok(null); }
+    });
+    return dbp;
+  }
+  function idbGet(k, cb) {
+    db().then(function (d) {
+      if (!d) { cb(null); return; }
+      try {
+        var r = d.transaction(ST).objectStore(ST).get(k);
+        r.onsuccess = function () { cb(r.result && r.result.src || null); };
+        r.onerror = function () { cb(null); };
+      } catch (e) { cb(null); }
+    });
+  }
+  function idbPut(k, src) {
+    db().then(function (d) {
+      if (!d) return;
+      try {
+        var os = d.transaction(ST, 'readwrite').objectStore(ST), all = [];
+        os.put({ src: src, t: Date.now() }, k);
+        var c = os.openCursor();
+        c.onsuccess = function () {
+          var cur = c.result;
+          if (cur) { all.push([cur.key, (cur.value && cur.value.t) || 0]); cur.continue(); return; }
+          if (all.length <= KEEP) return;
+          all.sort(function (a, b) { return a[1] - b[1]; });
+          for (var i = 0; i < all.length - KEEP; i++) os.delete(all[i][0]);
+        };
+      } catch (e) {}
+    });
+  }
   function fillImg(el) {
-    var n = el.getAttribute('data-n'); if (!n) return;
+    var n = el.getAttribute('data-n'); if (!n || el.getAttribute('data-done')) return;
+    el.setAttribute('data-done', '1');
+    var v = el.getAttribute('data-v') || '', k = n + '|' + v;
     var put = function (src) {
       el.src = src;
       var a = el.nextSibling;
       if (a && a.className === 'hnsave') { a.href = src; a.download = 'hachimitsu.' + (/^data:image\/png/.test(src) ? 'png' : 'jpg'); a.style.display = 'inline-block'; }
     };
-    if (cache[n]) { put(cache[n]); return; }
-    jsonp({ action: 'data', key: C.key, name: n }, function (r) {
-      if (r && r.b64) { cache[n] = 'data:' + (r.mime || 'image/jpeg') + ';base64,' + r.b64; put(cache[n]); }
+    if (cache[k]) { put(cache[k]); return; }
+    idbGet(k, function (src) {
+      if (src) { cache[k] = src; put(src); return; }
+      jsonp({ action: 'data', key: C.key, name: n }, function (r) {
+        if (!(r && r.b64)) { el.removeAttribute('data-done'); return; }
+        var s2 = 'data:' + (r.mime || 'image/jpeg') + ';base64,' + r.b64;
+        cache[k] = s2; put(s2);
+        if (!v || r.v === v) idbPut(k, s2);    // 版の印が合う時だけ残す（入れ物が上書きされた後の別の絵を残さない）
+      });
     });
   }
+  var seen = (typeof IntersectionObserver === 'function') ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) { seen.unobserve(e.target); fillImg(e.target); } });
+  }, { rootMargin: '800px 0px' }) : null;
   function imgs(list, cls, save) {
     var h = '';
     (list || []).forEach(function (x) {
-      h += '<img class="' + cls + '" data-n="' + esc(x.n) + '" alt="">';
+      var ar = (x.w && x.h) ? ' style="aspect-ratio:' + Number(x.w) + '/' + Number(x.h) + '"' : '';
+      h += '<img class="' + cls + '" data-n="' + esc(x.n) + '" data-v="' + esc(x.v || '') + '"' + ar + ' alt="">';
       if (save) h += '<a class="hnsave" style="display:none" download="hachimitsu.jpg">画像を保存</a>';
     });
     return h;
@@ -12550,7 +12606,9 @@ function honeyScript_(C) {
       out += '<div class="cca">' + esc(x.a || '') + imgs(x.img, 'hnimg', true) + '<div class="cct">' + esc(x.at || '') + '</div></div>';
     });
     $('hnLog').innerHTML = out;
-    Array.prototype.forEach.call($('hnLog').querySelectorAll('img[data-n]'), fillImg);
+    Array.prototype.forEach.call($('hnLog').querySelectorAll('img[data-n]'), function (el) {
+      if (seen) seen.observe(el); else fillImg(el);
+    });
   }
   function drawPicks() {
     $('hnThumbs').innerHTML = picks.map(function (p, i) {
