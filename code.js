@@ -186,7 +186,7 @@ function doGet(e) {
     title = 'お知らせ見てくれた？';                       // ★静的アプリが oshirase_mita.json を取って描く
     html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
   } else if (view === 'facebook') {
-    title = 'Facebook';                                       // ★お店のFacebookページを本物そっくりに見せる（純JS・中身は受付係 op=facebook）
+    title = 'フェイズコブック';                                       // ★お店のFacebookページを本物そっくりに見せる（純JS・中身は受付係 op=facebook）
     html = renderFacebookPage_(base, staff, dev);
   } else if (view === 'insta') {
     title = 'インズコグラム';                                 // ★お店のインスタを本物そっくりに見せる（純JS・中身は受付係 op=insta）★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
@@ -1915,7 +1915,7 @@ var TILE_DEFS_ = [
   // ★📘Facebook（2026-11-10 まるちゃん決定「全部推奨で」）＝お店のFacebookページ3つを本物そっくりに見せる（第1段階＝読むだけ）。
   //   中身は受付係（op=facebook → Facebook投稿\programsb_zuko.py）がメタ公式の窓口で読む。既定は開発者だけ（共通ルール16）。
   { id: 'facebook', cls: 'facebook', view: 'facebook',
-    icon: '<span class="ticon">📘</span>', label: 'Facebook' },
+    icon: '<span class="ticon">📘</span>', label: 'フェイズコブック' },   // ★2026-11-11 まるちゃん「フェイズコブック」
   // ★お知らせ見てくれた？（2026-11-06）＝前日お知らせへの反応（返事・確認リンクを押した）を今日・明日・過去の履歴で見る。
   //   分け方はサーバーが oshirase_mita.json に入れる（前日お知らせ確認リンクの お知らせ見てくれた.py）。
   { id: 'mita', cls: 'mita', view: 'mita',
@@ -14978,7 +14978,7 @@ var FBCSS_ =
   '.fbsr .pill{flex:1;background:#f0f2f5;border-radius:20px;padding:0 14px;}.fbsr input{width:100%;border:0;background:none;outline:0;font:inherit;font-size:16px;padding:9px 0;}';
 
 function renderFacebookPage_(base, staff, dev) {
-  var head = '<div class="hhead"><span class="bmark">📘</span><span class="bname">Facebook</span></div>';
+  var head = '<div class="hhead"><span class="bmark">📘</span><span class="bname">フェイズコブック</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8'
@@ -15983,7 +15983,7 @@ function fbScript_(C) {
             return '<td><input type="checkbox" data-pa="' + a + '" data-pf="' + fn[0] + '"' + ((row[a] || []).indexOf(fn[0]) >= 0 ? ' checked' : '') + '></td>';
           }).join('') + '</tr>';
         }).join('') + '</table>' +
-        '<div class="fbnote">開発（まるちゃん）と社長の端末は、いつも全部使えます。スタッフは、ここで印を付けた所だけ使えます（ズコの📘 Facebookのボタンを見せるかは、人ごとの表示の設定です）。' +
+        '<div class="fbnote">開発（まるちゃん）と社長の端末は、いつも全部使えます。スタッフは、ここで印を付けた所だけ使えます（ズコの📘 フェイズコブックのボタンを見せるかは、人ごとの表示の設定です）。' +
         (T.at ? '<br>最後に保存：' + new Date(T.at * 1000).toLocaleString('ja-JP') + (T.by ? '（' + esc(T.by) + '）' : '') : '') + '</div>' +
         '<button type="button" class="fbgo" data-save="1">保存する</button></div></div>';
     };
