@@ -12531,7 +12531,7 @@ function honeyScript_(C) {
     if (dbp) return dbp;
     dbp = new Promise(function (ok) {
       try {
-        var rq = indexedDB.open(DBN, 1);
+        var rq = indexedDB.open(DBN);      // 版を指定しない（一度作り直して版が上がっていても開ける）
         rq.onupgradeneeded = function () { rq.result.createObjectStore(ST); };
         rq.onsuccess = function () {
           var d = rq.result;
