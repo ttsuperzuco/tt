@@ -80,7 +80,7 @@ function honeyScript_(C) {
     var put = function (src) {
       el.src = src;
       var a = el.nextSibling;
-      if (a && a.className === 'hnsave') { a.href = src; a.style.display = 'inline-block'; }
+      if (a && a.className === 'hnsave') { a.href = src; a.download = 'hachimitsu.' + (/^data:image\/png/.test(src) ? 'png' : 'jpg'); a.style.display = 'inline-block'; }
     };
     if (cache[n]) { put(cache[n]); return; }
     jsonp({ action: 'data', key: C.key, name: n }, function (r) {
