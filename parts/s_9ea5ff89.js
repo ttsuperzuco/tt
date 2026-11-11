@@ -8,7 +8,7 @@ function renderExistingPage_(base, staff, dev, mode) {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
   var KEY = 'kx7Q2p9mVt4Zr8';
   var DURS2 = [15, 20, 30, 40, 45, 50, 60, 70, 80, 90, 120, 150];
-  var STAFF2 = [['2', '🍊 みかん', '#e08a1e'], ['3', '🫒 オリーブ', '#4b8b3b'], ['1', '🍅 トマト', '#d1443c']];
+  var STAFF2 = [['2', '🍊 みかん', '#e08a1e'], ['3', '🫒 オリーブ', '#4b8b3b'], ['1', '🍅 トマト', '#d1443c'], ['4', '🥭 マンゴー', '#c9a227']];
   var ROOMS2 = [['FREEDOM', 'FREEDOM', '#2ecc87'], ['HAPPY', 'HAPPY', '#e73b3b'], ['LUCKY', 'LUCKY', '#fdc02d'], ['STAR/福/🇫🇷', 'STAR/福', '#b38bdc']];
   function exp_(grp, val, label, color, plain) {
     return '<button type="button" class="exp' + (plain ? ' plain' : '') + '" data-eg="' + grp + '" data-ev="' + esc_(val) + '"' + (color ? ' style="background:' + color + '"' : '') + '>' + label + '</button>';
