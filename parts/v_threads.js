@@ -278,7 +278,7 @@ var THICO_ = {
   hl: '<path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h7M14.5 4.5l5 5-8 8H6.5v-5z"/>'
 };
 function thIco_(k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" width="' + (sz || 20) + '" height="' + (sz || 20) + '" aria-hidden="true">' + THICO_[k] + '</svg>'; }
-var THREADS_TEASER_WHO_ = ['mikan', 'olive'];
+var THREADS_TEASER_WHO_ = [];
 function threadsTeaser_(staff, dev) {
   try {
     if (typeof window === 'undefined') return false;
