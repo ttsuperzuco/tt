@@ -12759,7 +12759,7 @@ function renderHoneyPage_(base, staff, dev) {
       '<div class="hnbar"><button type="button" id="hnPick">📷 写真を選択</button><button type="button" id="hnNew">新しい話を始める</button></div>' +
       '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnLang">話す言葉：日本語</button></div>' +
       '<input type="file" id="hnFile" accept="image/*" multiple style="display:none">' +
-      '<textarea class="ccin" id="hnText" placeholder="相談や、作りたい画像を入力してください😊"></textarea>' +
+      '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea>' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
     '</div></div>' +
     '<script>(' + honeyScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
