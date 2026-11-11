@@ -27,15 +27,23 @@ var ALL_ROOM_LABELS = { 1: 'FREEDOM', 2: 'COSMOS', 6: 'HAPPY', 9: 'LUCKY', 10: '
 //   パインに専用部屋は無く必ず施術室を借りるが、その“借りた部屋”は本物の部屋カレンダーに別枠で
 //   記入される（例：ラッキーに「エクステ使用中」）＝そちらが部屋を占有する。タイトルの「◯◯使います」はメモ。
 var DESIGN_MAYU_CAL = '1070077942';
+// ★数秘セッションの予定表＋題名に「使用」＋2026-11-10より後＝コスモス（2026-11-11 まるちゃん決定）。config.py と対。
+var NUMEROLOGY_CAL = '75708617';
+var NUMEROLOGY_FROM = '2026-11-10';
+var NUMEROLOGY_ROOM_LABEL = 2;
 var ROOM_NAME_TO_LABEL = {  // 現在 roomLabelOf では未使用（将来の照合用に残す）。config.py と対。
   'フリーダム': 1, 'コスモス': 2, 'ハッピー': 6, 'ラッキー': 9, 'スター': 10,
   'FREEDOM': 1, 'COSMOS': 2, 'HAPPY': 6, 'LUCKY': 9, 'STAR': 10
 };
 // 予定の“実際の部屋ラベル”（部屋でなければ null）。config.room_label_of の写し。
-function roomLabelOf(calendarId, labelId, title, roomLabels) {
+function roomLabelOf(calendarId, labelId, title, roomLabels, dateIso) {
   var labels = roomLabels || ROOM_LABELS;
   if (String(calendarId) === DESIGN_MAYU_CAL) {
     return null;   // パイン用カレンダーの予約は部屋を取らない（別枠の本物の部屋記入が部屋を担う）。
+  }
+  if (String(calendarId) === NUMEROLOGY_CAL && dateIso && String(dateIso) >= NUMEROLOGY_FROM &&
+      String(title || '').indexOf('使用') >= 0 && (NUMEROLOGY_ROOM_LABEL in labels)) {
+    return NUMEROLOGY_ROOM_LABEL;
   }
   return (labelId in labels) ? labelId : null;
 }
@@ -187,7 +195,7 @@ function detect(events, withNail, dateFrom) {
   for (var i = 0; i < events.length; i++) {
     var r = events[i];
     if (dateFrom && (r.date || '') < dateFrom) continue;
-    var eff = roomLabelOf(r.calendar_id, r.label_id, r.title || '', rooms);
+    var eff = roomLabelOf(r.calendar_id, r.label_id, r.title || '', rooms, r.date);
     if (eff === null) continue;
     // ★予約(預約)に加え「使用」で部屋を押さえた予定も部屋の占有として扱う（2026-08-11・detect_core.py と対）。
     //   パイン🍍のデザイン眉/まつエクやパリジェンヌは借りた部屋の本物カレンダーに「デザ眉使用中」
@@ -306,7 +314,7 @@ function detect(events, withNail, dateFrom) {
 function detectStaff(events, dateFrom) {
   function roomOf(r) {
     // ★“実際の部屋”＝デザイン眉はタイトルの部屋名／専用スペースは空（部屋なし）。
-    var eff = roomLabelOf(r.calendar_id, r.label_id, r.title || '', ALL_ROOM_LABELS);
+    var eff = roomLabelOf(r.calendar_id, r.label_id, r.title || '', ALL_ROOM_LABELS, r.date);
     var n = (eff != null) ? ALL_ROOM_LABELS[eff] : null;
     return (n != null) ? n : '';
   }
@@ -325,7 +333,7 @@ function detectStaff(events, dateFrom) {
     //   ★逆に「タイトルのどこかに🥝があれば外す」にしてはいけない：うちのお客様の予約にも
     //   🥝が混じる書き方が221件あり、本物の被りを隠してしまう（実データで確認済み）。
     //   ※detect_core.py の detect_staff と同じ位置・同じ判定にすること（parityで担保）。
-    var effRoom_ = roomLabelOf(r.calendar_id, r.label_id, r.title || '', ALL_ROOM_LABELS);
+    var effRoom_ = roomLabelOf(r.calendar_id, r.label_id, r.title || '', ALL_ROOM_LABELS, r.date);
     if (effRoom_ != null && (effRoom_ in NAIL_LABEL)) continue;
     var s = staffOf(r.title || '');
     if (!s || s === IGNORE_STAFF) continue;
