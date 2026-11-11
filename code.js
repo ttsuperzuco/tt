@@ -12614,8 +12614,16 @@ function honeyScript_(C) {
     });
     return h;
   }
+  // ★2026-11-11 まるちゃん「スマホに文字データを保存してるはずなのに、読み取るのが長い」＝会話の文字は開くたびにサーバーへ取りに行っていた（約18秒）。
+  //   会話の文字もこのスマホに残し、開いた瞬間に出す。サーバーの最新は裏で確かめ、違っていた時だけ描き直す。
+  //   残すのは会話の控えと同じ最大50通（数十KB）。
+  var HK = 'zk_honey_hist', lastJson = '';
+  function histGet() { try { return JSON.parse(localStorage.getItem(HK) || 'null'); } catch (e) { return null; } }
+  function histPut(items) { try { localStorage.setItem(HK, JSON.stringify(items || [])); } catch (e) {} }
   function draw(items) {
     items = items || [];
+    lastJson = JSON.stringify(items);
+    histPut(items);
     if (!items.length) { $('hnLog').innerHTML = '<div class="ccnone">相談したいことや、作りたい画像を下に入力してください😊</div>'; return; }
     var out = '';
     items.forEach(function (x) {
@@ -12728,8 +12736,11 @@ function honeyScript_(C) {
       window.scrollTo(0, document.body.scrollHeight);
     });
   });
+  var cached = histGet();
+  if (cached) { draw(cached); window.scrollTo(0, document.body.scrollHeight); }
   ask({ act: 'history' }, '', function (err, d) {
-    if (err) { $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
+    if (err) { if (!cached) $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
+    if (JSON.stringify(d.items || []) === lastJson) return;      // スマホに残していた物と同じ＝描き直さない
     draw(d.items); window.scrollTo(0, document.body.scrollHeight);
   });
 }

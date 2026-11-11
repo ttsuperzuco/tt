@@ -162,8 +162,13 @@ function honeyScript_(C) {
     });
     return h;
   }
+  var HK = 'zk_honey_hist', lastJson = '';
+  function histGet() { try { return JSON.parse(localStorage.getItem(HK) || 'null'); } catch (e) { return null; } }
+  function histPut(items) { try { localStorage.setItem(HK, JSON.stringify(items || [])); } catch (e) {} }
   function draw(items) {
     items = items || [];
+    lastJson = JSON.stringify(items);
+    histPut(items);
     if (!items.length) { $('hnLog').innerHTML = '<div class="ccnone">相談したいことや、作りたい画像を下に入力してください😊</div>'; return; }
     var out = '';
     items.forEach(function (x) {
@@ -270,8 +275,11 @@ function honeyScript_(C) {
       window.scrollTo(0, document.body.scrollHeight);
     });
   });
+  var cached = histGet();
+  if (cached) { draw(cached); window.scrollTo(0, document.body.scrollHeight); }
   ask({ act: 'history' }, '', function (err, d) {
-    if (err) { $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
+    if (err) { if (!cached) $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
+    if (JSON.stringify(d.items || []) === lastJson) return;      
     draw(d.items); window.scrollTo(0, document.body.scrollHeight);
   });
 }
