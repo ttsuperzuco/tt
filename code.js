@@ -21949,7 +21949,7 @@ var HOMECSS_ =
 '  .tile.igdm::before { background:#c13584; }' +
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.claudechat::before { background:#d97757; }' +
-'  .tile.threads::before { background:#101010; }' +
+'  .tile.threads::before { background:#9ca3af; }  /* ★2026-11-11 まるちゃん「スレッズコだけ左の線がない」＝黒は暗いボタンに溶けて見えないので灰色に */' +
 '  .tile.insta::before { background:#d62976; }' +
 '  .tile.facebook::before { background:#0866ff; }' +
 '  .tile.mita::before { background:#0f766e; }' +
