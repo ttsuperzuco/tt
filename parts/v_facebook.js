@@ -244,7 +244,7 @@ var FBCSS_ =
   '.fbsr > button{width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;color:#080809;}' +
   '.fbsr .pill{flex:1;background:#f0f2f5;border-radius:20px;padding:0 14px;}.fbsr input{width:100%;border:0;background:none;outline:0;font:inherit;font-size:16px;padding:9px 0;}';
 function renderFacebookPage_(base, staff, dev) {
-  var head = '<div class="hhead"><span class="bmark">📘</span><span class="bname">Facebook</span></div>';
+  var head = '<div class="hhead"><span class="bmark">📘</span><span class="bname">フェイズコブック</span></div>';
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8'
@@ -1215,7 +1215,7 @@ function fbScript_(C) {
             return '<td><input type="checkbox" data-pa="' + a + '" data-pf="' + fn[0] + '"' + ((row[a] || []).indexOf(fn[0]) >= 0 ? ' checked' : '') + '></td>';
           }).join('') + '</tr>';
         }).join('') + '</table>' +
-        '<div class="fbnote">開発（まるちゃん）と社長の端末は、いつも全部使えます。スタッフは、ここで印を付けた所だけ使えます（ズコの📘 Facebookのボタンを見せるかは、人ごとの表示の設定です）。' +
+        '<div class="fbnote">開発（まるちゃん）と社長の端末は、いつも全部使えます。スタッフは、ここで印を付けた所だけ使えます（ズコの📘 フェイズコブックのボタンを見せるかは、人ごとの表示の設定です）。' +
         (T.at ? '<br>最後に保存：' + new Date(T.at * 1000).toLocaleString('ja-JP') + (T.by ? '（' + esc(T.by) + '）' : '') : '') + '</div>' +
         '<button type="button" class="fbgo" data-save="1">保存する</button></div></div>';
     };
