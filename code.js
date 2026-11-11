@@ -13614,7 +13614,8 @@ function thIco_(k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" wi
 //   大きめに出す。本体は見せない」＝公開前の予告。下の名前の人には、題名と予告の字だけを出す（中身は読みに行かない）。
 //   ★公開する時（11/11のリーダーズ会議）＝THREADS_TEASER_WHO_ を空にする。それだけで、いつものスレッズコが出る。
 //   ★開発の住所に &teaser=1 を付けると、まるちゃんが予告の画面を見られる（確認用）。
-var THREADS_TEASER_WHO_ = ['mikan', 'olive'];
+//   ★2026-11-11 まるちゃん「オリーブ、みかんに本番のスレッズコの本体だして」＝並びを空にして公開した。
+var THREADS_TEASER_WHO_ = [];
 function threadsTeaser_(staff, dev) {
   try {
     if (typeof window === 'undefined') return false;
