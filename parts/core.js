@@ -820,7 +820,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   insta:      { exec: false, staff: false },
   facebook:   { exec: false, staff: false },
   mita:       { exec: true, staff: true },
-  shomeisho:  { exec: false, staff: false }
+  shomeisho:  { exec: true, staff: true }
 };
 var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'claudechat', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho'];
 function getTileSettings_() {
@@ -841,7 +841,7 @@ function defaultPerms_(people) {
   var list = people || PEOPLE_;
   var perms = {};
   for (var i = 0; i < list.length; i++) {
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, sgline: true, procstock: false, hanbai: true, mita: true };   
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, sgline: true, procstock: false, hanbai: true, mita: true, shomeisho: true };   
   }
   return perms;
 }
@@ -1383,7 +1383,6 @@ var TILE_GROUP_ = {
   instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
-  shomeisho: 'tomato',   
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', facebook: 'kaihatsu', uriagebook: 'kaihatsu'
 };

@@ -1071,8 +1071,8 @@ var DEFAULT_TILE_SETTINGS_ = {
   //   既定は開発者だけ（共通ルール16）。tile_settings.py の STAFF_ASSIGNABLE に入れてある＝確かめたら人ごとの表示でスタッフにONにする。
   // ★2026-11-06 まるちゃん「①だす」＝全スタッフにON（人ごとの表示で入切できる）。
   mita:       { exec: true, staff: true },
-  // ★購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ」）。既定は開発者だけ（共通ルール16）＝人ごとの表示でトマトだけON。
-  shomeisho:  { exec: false, staff: false }
+  // ★購入証明書作成（2026-11-11 まるちゃん「全スタッフにだして」）＝全スタッフにON（人ごとの表示で入切できる）。
+  shomeisho:  { exec: true, staff: true }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1117,7 +1117,7 @@ function defaultPerms_(people) {
     // ★sejutsugo(施術後の予約)＝2026-09-12 まるちゃん指示で「まるちゃんのスマホ(無印の住所)にも出す」。
     //   作りかけなのでスタッフには出さない＝kanbu(無印)だけON（新規ボタンは開発者だけ、の決まりの範囲内）。
     // ★★2026-09-17 まるちゃん決定「施術後の予約ボタンをスタッフにもだす」＝全員ON（tile_settings.py と一致）。
-    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, sgline: true, procstock: false, hanbai: true, mita: true };   // ★mita＝2026-11-06 まるちゃん「①だす」全員ON
+    perms[list[i]] = { conflict: true, lt: false, uriage: false, unanswered: false, akijikan: false, links: true, ttapp: true, rireki: false, kanshi: false, zenjitsu: true, yoyaku: true, sejutsugo: true, sgline: true, procstock: false, hanbai: true, mita: true, shomeisho: true };   // ★mita＝2026-11-06 まるちゃん「①だす」／★shomeisho＝2026-11-11 まるちゃん「全スタッフにだして」全員ON
   }
   return perms;
 }
@@ -1920,7 +1920,7 @@ var TILE_DEFS_ = [
   //   分け方はサーバーが oshirase_mita.json に入れる（前日お知らせ確認リンクの お知らせ見てくれた.py）。
   { id: 'mita', cls: 'mita', view: 'mita',
     icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
-  // ★購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」）＝TOMATO画面。テストのお客様トモトラス様だけ。
+  // ★購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」→2026-11-11「全スタッフにだして」＝スタッフ画面）。テストのお客様トモトラス様だけ。
   //   画面と紙はパソコン版と同じ1本を係から受け取って出す（受付係 op=shomeisho → まとめ購入証明書\programs\zuko_shomeisho.py）。
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
     icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' }
@@ -1942,7 +1942,7 @@ var TILE_GROUP_ = {
   procell: 'keiei', shophist: 'keiei',
   // ★2026-10-26 まるちゃん決定：幹部(🍅トマト)にだけ出すボタンはスタッフ画面の下の「TOMATO画面」（PC版 super_pc.py と同じ）。
   uriage: 'tomato',
-  shomeisho: 'tomato',   // ★2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」（PC版 super_pc.py と同じ）
+  // ★2026-11-11 まるちゃん「購入証明書ボタンを全スタッフにだして」＝shomeisho はスタッフ画面へ（ここに書かない・PC版 super_pc.py と同じ）。
   // ★2026-10-21 まるちゃん決定：「実務者用」を「スタッフ画面」に改名し、中身をみかんさんの画面と同じにした。
   //   みかんさんに出ないボタンは、開発中なら開発者用・それ以外は管理者用へ（PC版 super_pc.py の GROUP_OF と同じ）。
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
