@@ -80,7 +80,7 @@ function honeyScript_(C) {
     if (dbp) return dbp;
     dbp = new Promise(function (ok) {
       try {
-        var rq = indexedDB.open(DBN, 1);
+        var rq = indexedDB.open(DBN);      
         rq.onupgradeneeded = function () { rq.result.createObjectStore(ST); };
         rq.onsuccess = function () {
           var d = rq.result;
