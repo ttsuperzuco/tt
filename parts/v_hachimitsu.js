@@ -1,0 +1,179 @@
+// ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
+// この画面だけで使う部品：hachimitsu
+var HONEYCSS_ =
+  '.hnimg{display:block;width:100%;max-width:420px;border-radius:12px;margin-top:8px;background:#e2e8f0;min-height:120px;}' +
+  '.hnqimg{display:block;width:120px;border-radius:10px;margin-top:6px;background:#e2e8f0;min-height:60px;}' +
+  '.hnsave{display:inline-block;margin-top:6px;font-size:14px;font-weight:800;color:#0e7490;}' +
+  '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
+  '.hnbar button{flex:1;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.hnthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}' +
+  '.hnthumbs:empty{display:none;}' +
+  '.hnth{position:relative;}' +
+  '.hnth img{display:block;width:76px;height:76px;object-fit:cover;border-radius:10px;}' +
+  '.hnth button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:14px;line-height:24px;padding:0;cursor:pointer;}';
+function honeyScript_(C) {
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
+  var picks = [], sending = false, cache = {};
+  function idn() { return { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' }; }
+  function jsonp(p, cb) {
+    var n = '__honey' + Date.now() + Math.floor(Math.random() * 1000);
+    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+    var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
+    s.onerror = function () { cb({ ok: false, error: '通信に失敗しました。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
+  }
+  function devKey(cb) {
+    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    var dv = '', dk = '';
+    try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
+    if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(dk)).then(function (b) {
+      var h = Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      cb({ zdv: dv, zdh: h });
+    }, function () { cb({}); });
+  }
+  function ask(fields, busy, done) {
+    devKey(function (ex) { for (var k in ex) fields[k] = ex[k]; ask0(fields, busy, done); });
+  }
+  function ask0(fields, busy, done) {
+    if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
+    var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
+    var me = idn();
+    var poll = function (id) {
+      var n = 0, max = 480;    
+      var tick = function () {
+        n++; if (n > max) { end('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
+        jsonp({ action: 'status', key: C.key, id: id }, function (x) {
+          if (!x || !x.ok) { setTimeout(tick, 2000); return; }
+          if (x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1500); return; }
+          if (x.status !== 'done') { end(x.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
+          var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
+          if (d && d.__bigres) {
+            jsonp({ action: 'data', key: C.key, name: d.__bigres }, function (y) {
+              var v = null; try { v = JSON.parse(y && y.result); } catch (e) {}
+              if (!v) { end('答えを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
+              end(null, v);
+            });
+            return;
+          }
+          end(null, d || {});
+        });
+      };
+      setTimeout(tick, 1200);
+    };
+    var send = function (ft) {
+      jsonp({ action: 'submit', key: C.key, op: 'hachimitsu', who: me.who, role: me.role, device: me.device, fields: ft },
+        function (r) {
+          if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
+          poll(r.id);
+        });
+    };
+    if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
+    BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'hachimitsu', op: 'hachimitsu',
+                  who: me.who, role: me.role, device: me.device, fields: fields },
+      send, function () { end('写真を送信できませんでした。枚数を減らして、もう一度試してもらえると嬉しいです🙇'); });
+  }
+  function fillImg(el) {
+    var n = el.getAttribute('data-n'); if (!n) return;
+    var put = function (src) {
+      el.src = src;
+      var a = el.nextSibling;
+      if (a && a.className === 'hnsave') { a.href = src; a.style.display = 'inline-block'; }
+    };
+    if (cache[n]) { put(cache[n]); return; }
+    jsonp({ action: 'data', key: C.key, name: n }, function (r) {
+      if (r && r.b64) { cache[n] = 'data:' + (r.mime || 'image/jpeg') + ';base64,' + r.b64; put(cache[n]); }
+    });
+  }
+  function imgs(list, cls, save) {
+    var h = '';
+    (list || []).forEach(function (x) {
+      h += '<img class="' + cls + '" data-n="' + esc(x.n) + '" alt="">';
+      if (save) h += '<a class="hnsave" style="display:none" download="hachimitsu.jpg">画像を保存</a>';
+    });
+    return h;
+  }
+  function draw(items) {
+    items = items || [];
+    if (!items.length) { $('hnLog').innerHTML = '<div class="ccnone">相談したいことや、作りたい画像を下に入力してください😊</div>'; return; }
+    var out = '';
+    items.forEach(function (x) {
+      if (x.q || (x.qimg && x.qimg.length)) out += '<div class="ccq">' + esc(x.q || '') + imgs(x.qimg, 'hnqimg', false) + '</div>';
+      out += '<div class="cca">' + esc(x.a || '') + imgs(x.img, 'hnimg', true) + '<div class="cct">' + esc(x.at || '') + '</div></div>';
+    });
+    $('hnLog').innerHTML = out;
+    Array.prototype.forEach.call($('hnLog').querySelectorAll('img[data-n]'), fillImg);
+  }
+  function drawPicks() {
+    $('hnThumbs').innerHTML = picks.map(function (p, i) {
+      return '<div class="hnth"><img src="data:image/jpeg;base64,' + p.b64 + '" alt=""><button type="button" data-i="' + i + '">×</button></div>';
+    }).join('');
+  }
+  function addFile(f) {
+    if (!/^image\//.test(f.type) || picks.length >= 4) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var mx = 1600, w = im.width, h = im.height;
+        if (w > mx || h > mx) { if (w >= h) { h = Math.round(h * mx / w); w = mx; } else { w = Math.round(w * mx / h); h = mx; } }
+        var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        cv.getContext('2d').drawImage(im, 0, 0, w, h);
+        picks.push({ b64: cv.toDataURL('image/jpeg', 0.88).split(',')[1], mime: 'image/jpeg' });
+        drawPicks();
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(f);
+  }
+  $('hnPick').addEventListener('click', function () { $('hnFile').click(); });
+  $('hnFile').addEventListener('change', function () {
+    Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = '';
+  });
+  $('hnThumbs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    picks.splice(Number(b.getAttribute('data-i')), 1); drawPicks();
+  });
+  $('hnNew').addEventListener('click', function () {
+    popup('これまでの会話を削除しますか？😊', { icon: '', cancel: true, onYes: function () {
+      ask({ act: 'clear' }, '少し待っててくださいね🥺', function (err, d) { if (err) { popup(err); return; } draw(d.items); });
+    } });
+  });
+  $('hnSend').addEventListener('click', function () {
+    if (sending) return;
+    var t = $('hnText').value.replace(/^\s+|\s+$/g, '');
+    if (!t && !picks.length) { popup('聞きたいことを入力してください😊'); return; }
+    if (t.length > 2000) { popup('長すぎます。2000文字までにしてください😊'); return; }
+    sending = true; $('hnSend').disabled = true;
+    ask({ act: 'send', text: t, images: picks }, 'ハチミツちゃんが作業中です🍯', function (err, d) {
+      sending = false; $('hnSend').disabled = false;
+      if (err) { popup(err); return; }
+      $('hnText').value = ''; picks = []; drawPicks(); draw(d.items);
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  });
+  ask({ act: 'history' }, '', function (err, d) {
+    if (err) { $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
+    draw(d.items); window.scrollTo(0, document.body.scrollHeight);
+  });
+}
+function renderHoneyPage_(base, staff, dev) {
+  var C = {
+    exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
+    key: 'kx7Q2p9mVt4Zr8'
+  };
+  return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + HONEYCSS_ + '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="cc">' +
+      '<div class="hhead"><span class="bmark">🍯</span><span class="bname">ハチミツちゃん</span></div>' +
+      '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
+      '<div class="hnthumbs" id="hnThumbs"></div>' +
+      '<div class="hnbar"><button type="button" id="hnPick">📷 写真を選択</button><button type="button" id="hnNew">新しい話を始める</button></div>' +
+      '<input type="file" id="hnFile" accept="image/*" multiple style="display:none">' +
+      '<textarea class="ccin" id="hnText" placeholder="相談や、作りたい画像を入力してください😊"></textarea>' +
+      '<button type="button" class="exgo" id="hnSend">送信</button>' +
+    '</div></div>' +
+    '<script>(' + honeyScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
