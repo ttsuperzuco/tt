@@ -12524,7 +12524,8 @@ function honeyScript_(C) {
   // ★2026-11-11 まるちゃん「スマホに残す形にすれば？」＝一度見た絵はこのスマホの中（IndexedDB）に残し、次からはそこから出す
   //   （通信しない）。残すのは新しい80枚まで（古い物から消す＝スマホが重くならない）。
   //   置き場の入れ物は上書きされるので、名前と版の印（v）の組で覚える＝別の絵と取り違えない。
-  //   さらに、画面に見えそうな絵だけを読む（下にスクロールした時に続きを読む）。
+  //   読むのは新しい絵から1枚ずつ順番（いっぺんに全部読まない）。
+  //   ★見えている所だけ読む形（IntersectionObserver）は、ズコの拡大表示と合わずに読み込みが始まらなかった（2026-11-11 実際に試して）＝使わない。
   var DBN = 'zk_honey', ST = 'img', KEEP = 80, dbp = null;
   function db() {
     if (dbp) return dbp;
@@ -12532,7 +12533,16 @@ function honeyScript_(C) {
       try {
         var rq = indexedDB.open(DBN, 1);
         rq.onupgradeneeded = function () { rq.result.createObjectStore(ST); };
-        rq.onsuccess = function () { ok(rq.result); };
+        rq.onsuccess = function () {
+          var d = rq.result;
+          if (d.objectStoreNames.contains(ST)) { ok(d); return; }
+          // 置き場が無い（壊れた）時は版を上げて作り直す
+          var v = d.version + 1; d.close();
+          var r2 = indexedDB.open(DBN, v);
+          r2.onupgradeneeded = function () { if (!r2.result.objectStoreNames.contains(ST)) r2.result.createObjectStore(ST); };
+          r2.onsuccess = function () { ok(r2.result); };
+          r2.onerror = function () { ok(null); };
+        };
         rq.onerror = function () { ok(null); };
       } catch (e) { ok(null); }
     });
@@ -12565,8 +12575,9 @@ function honeyScript_(C) {
       } catch (e) {}
     });
   }
-  function fillImg(el) {
-    var n = el.getAttribute('data-n'); if (!n || el.getAttribute('data-done')) return;
+  function fillImg(el, next) {
+    next = next || function () {};
+    var n = el.getAttribute('data-n'); if (!n || el.getAttribute('data-done')) { next(); return; }
     el.setAttribute('data-done', '1');
     var v = el.getAttribute('data-v') || '', k = n + '|' + v;
     var put = function (src) {
@@ -12574,20 +12585,24 @@ function honeyScript_(C) {
       var a = el.nextSibling;
       if (a && a.className === 'hnsave') { a.href = src; a.download = 'hachimitsu.' + (/^data:image\/png/.test(src) ? 'png' : 'jpg'); a.style.display = 'inline-block'; }
     };
-    if (cache[k]) { put(cache[k]); return; }
+    if (cache[k]) { put(cache[k]); next(); return; }
     idbGet(k, function (src) {
-      if (src) { cache[k] = src; put(src); return; }
+      if (src) { cache[k] = src; put(src); next(); return; }
       jsonp({ action: 'data', key: C.key, name: n }, function (r) {
-        if (!(r && r.b64)) { el.removeAttribute('data-done'); return; }
+        if (!(r && r.b64)) { el.removeAttribute('data-done'); next(); return; }
         var s2 = 'data:' + (r.mime || 'image/jpeg') + ';base64,' + r.b64;
         cache[k] = s2; put(s2);
         if (!v || r.v === v) idbPut(k, s2);    // 版の印が合う時だけ残す（入れ物が上書きされた後の別の絵を残さない）
+        next();
       });
     });
   }
-  var seen = (typeof IntersectionObserver === 'function') ? new IntersectionObserver(function (es) {
-    es.forEach(function (e) { if (e.isIntersecting) { seen.unobserve(e.target); fillImg(e.target); } });
-  }, { rootMargin: '800px 0px' }) : null;
+  var drawNo = 0;
+  function fillAll() {
+    var my = ++drawNo;      // 描き直したら前の順番待ちはやめる
+    var list = Array.prototype.slice.call($('hnLog').querySelectorAll('img[data-n]')).reverse();
+    (function step(i) { if (my !== drawNo || i >= list.length) return; fillImg(list[i], function () { step(i + 1); }); })(0);
+  }
   function imgs(list, cls, save) {
     var h = '';
     (list || []).forEach(function (x) {
@@ -12606,9 +12621,7 @@ function honeyScript_(C) {
       out += '<div class="cca">' + esc(x.a || '') + imgs(x.img, 'hnimg', true) + '<div class="cct">' + esc(x.at || '') + '</div></div>';
     });
     $('hnLog').innerHTML = out;
-    Array.prototype.forEach.call($('hnLog').querySelectorAll('img[data-n]'), function (el) {
-      if (seen) seen.observe(el); else fillImg(el);
-    });
+    fillAll();
   }
   function drawPicks() {
     $('hnThumbs').innerHTML = picks.map(function (p, i) {
