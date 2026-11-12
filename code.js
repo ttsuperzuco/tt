@@ -14326,7 +14326,9 @@ function threadsScript_(C) {
   function drawIcons(blk) {
     blk = blk || B0;
     var S = st(blk), first = blk === B0, h;
-    var loc = first ? icBtn('loc', 'loc', '位置情報', 18) : '';
+    // ★2026-11-12 位置情報は、メタの審査を通るまで本物の場所を検索できない（どの言葉でも「Menlo Park」などアメリカの見本の場所だけが返る）
+    //   ＝間違った場所を付けないよう、ボタンを出さない。審査が通ったら下の false を外す（受付・画面の部品は残してある）。
+    var loc = (false && first) ? icBtn('loc', 'loc', '位置情報', 18) : '';
     var qt = S.quote ? '' : icBtn('quote', 'quote', '引用投稿');
     if (S.media.length) h = mediaBtn('追加') + icBtn('emo', 'emoji', '絵文字を追加') + qt + loc;
     else if (S.poll || S.long || S.gif) h = icBtn('emo', 'emoji', '絵文字を追加') + qt + loc;

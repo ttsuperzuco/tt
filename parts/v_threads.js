@@ -582,7 +582,7 @@ function threadsScript_(C) {
   function drawIcons(blk) {
     blk = blk || B0;
     var S = st(blk), first = blk === B0, h;
-    var loc = first ? icBtn('loc', 'loc', '位置情報', 18) : '';
+    var loc = (false && first) ? icBtn('loc', 'loc', '位置情報', 18) : '';
     var qt = S.quote ? '' : icBtn('quote', 'quote', '引用投稿');
     if (S.media.length) h = mediaBtn('追加') + icBtn('emo', 'emoji', '絵文字を追加') + qt + loc;
     else if (S.poll || S.long || S.gif) h = icBtn('emo', 'emoji', '絵文字を追加') + qt + loc;
