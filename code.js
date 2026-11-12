@@ -12452,6 +12452,10 @@ var HONEYCSS_ =
   '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
   '.hnbar button.on{background:#dc2626;color:#fff;}' +
   // ★2026-11-12 まるちゃん「戻るのすぐ右にハチミツちゃん（少し小さめの文字）、その右に会話を初期化ボタン。そこのトップはスクロールしていても常に表示」
+  // ★2026-11-12 まるちゃん「送信の下の余白はほんの少しでいい」
+  '.home.hnhome{padding-bottom:10px;}' +
+  '.hnhome .cc{padding-bottom:0;}' +
+  '.hnhome #hnSend{margin-bottom:0;}' +
   '.hntop{position:sticky;top:0;z-index:30;background:#2C7A99;display:flex;align-items:center;gap:6px;margin:-34px -18px 10px;padding:10px 12px 8px;}' +
   '.hntop .ubar{margin:0;flex:0 0 auto;}' +
   '.hntop .uhome{padding:8px 11px;font-size:.95rem;}' +
@@ -12602,7 +12606,7 @@ function honeyScript_(C) {
     var put = function (src) {
       el.src = src;
       var a = el.nextSibling;
-      if (a && a.className === 'hnsave') { a.href = src; a.download = 'hachimitsu.' + (/^data:image\/png/.test(src) ? 'png' : 'jpg'); a.style.display = 'inline-block'; }
+      if (a && a.className === 'hnsave') { a.href = src; a.download = 'hachimitsu.' + (/^data:image\/png/.test(src) ? 'png' : 'jpg'); a.style.visibility = 'visible'; }
     };
     if (cache[k]) { put(cache[k]); next(); return; }
     idbGet(k, function (src) {
@@ -12627,7 +12631,7 @@ function honeyScript_(C) {
     (list || []).forEach(function (x) {
       var ar = (x.w && x.h) ? ' style="aspect-ratio:' + Number(x.w) + '/' + Number(x.h) + '"' : '';
       h += '<img class="' + cls + '" data-n="' + esc(x.n) + '" data-v="' + esc(x.v || '') + '"' + ar + ' alt="">';
-      if (save) h += '<a class="hnsave" style="display:none" download="hachimitsu.jpg">画像を保存</a>';
+      if (save) h += '<a class="hnsave" style="visibility:hidden" download="hachimitsu.jpg">画像を保存</a>';
     });
     return h;
   }
@@ -12759,15 +12763,29 @@ function honeyScript_(C) {
       sending = false; $('hnSend').disabled = false;
       if (err) { popup(err); return; }
       $('hnText').value = ''; picks = []; drawPicks(); draw(d.items);
-      window.scrollTo(0, document.body.scrollHeight);
+      stickBottom();
     });
   });
+  // ★2026-11-12 まるちゃん「開いた時に、最新の会話とBOXや送信ボタンが見えたい状態だろ」
+  //   ＝前は会話を出した瞬間に一番下へ動かすだけで、そのあと絵が読み込まれて高さが伸び、途中の位置で止まっていた。
+  //   自分で画面を触る（なぞる・ホイール）までは、高さが変わるたびに一番下へ合わせ直す。
+  var stick = true;
+  function toBottom() { window.scrollTo(0, document.documentElement.scrollHeight); }
+  function stickBottom() { stick = true; toBottom(); }
+  ['touchstart', 'wheel', 'mousedown'].forEach(function (ev) {
+    window.addEventListener(ev, function (e) {
+      if (e.target && e.target.closest && e.target.closest('#hnSend, #hnText, .hnbar, .hntabs, .hnbox')) return;
+      stick = false;
+    }, { passive: true });
+  });
+  if (window.ResizeObserver) new ResizeObserver(function () { if (stick) toBottom(); }).observe(document.body);
+  $('hnLog').addEventListener('load', function () { if (stick) toBottom(); }, true);
   var cached = histGet();
-  if (cached) { draw(cached); window.scrollTo(0, document.body.scrollHeight); }
+  if (cached) { draw(cached); stickBottom(); }
   ask({ act: 'history' }, '', function (err, d) {
     if (err) { if (!cached) $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
     if (JSON.stringify(d.items || []) === lastJson) return;      // スマホに残していた物と同じ＝描き直さない
-    draw(d.items); window.scrollTo(0, document.body.scrollHeight);
+    draw(d.items); stickBottom();
   });
 }
 
@@ -12777,7 +12795,7 @@ function renderHoneyPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + HONEYCSS_ + '</style>' +
-    '<div class="home">' +
+    '<div class="home hnhome">' +
     '<div class="hntop">' + backBar_(base, staff, dev) +
       '<span class="hnttl">🍯 ハチミツちゃん</span>' +
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
