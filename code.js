@@ -12451,7 +12451,12 @@ var HONEYCSS_ =
   '.hnsave{display:inline-block;margin-top:6px;font-size:14px;font-weight:800;color:#0e7490;}' +
   '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
   '.hnbar button.on{background:#dc2626;color:#fff;}' +
-  '.hnbar button.lang{flex:0 0 auto;min-width:76px;}' +
+  '.hntabs{display:flex;margin:0 0 10px;border-radius:12px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.hntabs[hidden]{display:none;}' +
+  '.hnbar button.open{background:#0e7490;color:#fff;}' +
+  '.hntabs button{flex:1;background:#e2e8f0;color:#0f172a;border:0;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;}' +
+  '.hntabs button.on{background:#fff;color:#0e7490;}' +
+  '.hntabs button+button{border-left:1px solid #cbd5e1;}' +
   '.hnbar button{flex:1;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.hnthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}' +
   '.hnthumbs:empty{display:none;}' +
@@ -12657,18 +12662,10 @@ function honeyScript_(C) {
   }
   // ── 音声入力（2026-11-11 まるちゃん「入力欄には音声入力つけて」）──
   //   スマホのブラウザの音声認識を使う（声はスマホとブラウザの会社の仕組みで文字になる・ズコのサーバーには送らない）。
-  //   言葉は「日本語／中文」のボタンで切り替え（このスマホに覚える）。使えないスマホでは、キーボードのマイクを案内する。
+  //   使えないスマホでは、キーボードのマイクを案内する。
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;
-  var lang = '';
-  try { lang = localStorage.getItem('zk_honey_lang') || ''; } catch (e) {}
-  if (!lang) lang = /^zh/i.test(navigator.language || '') ? 'zh-TW' : 'ja-JP';
-  function drawLang() { $('hnLang').textContent = '話す言葉：' + (lang === 'zh-TW' ? '中文' : '日本語'); }
-  drawLang();
-  $('hnLang').addEventListener('click', function () {
-    lang = lang === 'zh-TW' ? 'ja-JP' : 'zh-TW';
-    try { localStorage.setItem('zk_honey_lang', lang); } catch (e) {}
-    drawLang();
-  });
+  // ★2026-11-12 まるちゃん「話す言葉は自動で日本語（ボタンは表示しない）」＝聞き取りはいつも日本語。
+  var lang = 'ja-JP';
   // ★2026-11-11 まるちゃん「音声入力する切れちゃう」＝少し黙るとスマホが聞き取りを終えてしまう。
   //   「⏹ 止める」を押すまで（または送信するまで）、終わるたびに自動で聞き取りを始め直す。
   //   1回ずつ区切って始め直す形にした（ずっと聞き続ける設定は、Androidで同じ言葉が2回入ることがあるため）。
@@ -12709,18 +12706,28 @@ function honeyScript_(C) {
     } catch (e) { micOff(); popup('音声入力を開始できませんでした。キーボードのマイクのボタンをお使いください🙇'); }
   });
   document.addEventListener('visibilitychange', function () { if (document.hidden && wantMic) micStop(); });
-  $('hnPick').addEventListener('click', function () { $('hnFile').click(); });
-  $('hnFile').addEventListener('change', function () {
-    Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = '';
+  // ★2026-11-12 まるちゃん「画像選択は スマホ内タブ・カメラタブの2つ。スマホ内は、スマホ内の画像を自動で表示」
+  //   「🖼 画像選択」を押すと2つのタブが出て、すぐにスマホの写真の一覧が開く（スマホ内）。
+  //   「📷 カメラ」を押すとカメラが開く。もう一度「🖼 画像選択」を押すとタブを閉じる。
+  //   ★ズコの画面の中に写真の一覧を並べることはできない（ブラウザがスマホの写真を勝手に読ませない）＝スマホの写真の一覧を開く形。
+  function tabOn(which) {
+    $('hnTabLib').classList.toggle('on', which === 'lib');
+    $('hnTabCam').classList.toggle('on', which === 'cam');
+  }
+  $('hnPick').addEventListener('click', function () {
+    var tabs = $('hnTabs');
+    if (!tabs.hidden) { tabs.hidden = true; $('hnPick').classList.remove('open'); return; }
+    tabs.hidden = false; $('hnPick').classList.add('open');
+    tabOn('lib'); $('hnFile').click();
   });
+  $('hnTabLib').addEventListener('click', function () { tabOn('lib'); $('hnFile').click(); });
+  $('hnTabCam').addEventListener('click', function () { tabOn('cam'); $('hnCam').click(); });
+  function takeFiles() { Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = ''; }
+  $('hnFile').addEventListener('change', takeFiles);
+  $('hnCam').addEventListener('change', takeFiles);
   $('hnThumbs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     picks.splice(Number(b.getAttribute('data-i')), 1); drawPicks();
-  });
-  $('hnNew').addEventListener('click', function () {
-    popup('これまでの会話を削除しますか？😊', { icon: '', cancel: true, onYes: function () {
-      ask({ act: 'clear' }, '少し待っててくださいね🥺', function (err, d) { if (err) { popup(err); return; } draw(d.items); });
-    } });
   });
   $('hnSend').addEventListener('click', function () {
     if (sending) return;
@@ -12755,11 +12762,12 @@ function renderHoneyPage_(base, staff, dev) {
     '<div class="cc">' +
       '<div class="hhead"><span class="bmark">🍯</span><span class="bname">ハチミツちゃん</span></div>' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
-      '<div class="hnthumbs" id="hnThumbs"></div>' +
-      '<div class="hnbar"><button type="button" id="hnPick">📷 写真を選択</button><button type="button" id="hnNew">新しい話を始める</button></div>' +
-      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnLang">話す言葉：日本語</button></div>' +
-      '<input type="file" id="hnFile" accept="image/*" multiple style="display:none">' +
       '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea>' +
+      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼 画像選択</button></div>' +
+      '<div class="hntabs" id="hnTabs" hidden><button type="button" id="hnTabLib">🖼 スマホ内</button><button type="button" id="hnTabCam">📷 カメラ</button></div>' +
+      '<div class="hnthumbs" id="hnThumbs"></div>' +
+      '<input type="file" id="hnFile" accept="image/*" multiple style="display:none">' +
+      '<input type="file" id="hnCam" accept="image/*" capture="environment" style="display:none">' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
     '</div></div>' +
     '<script>(' + honeyScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
