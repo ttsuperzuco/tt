@@ -16,6 +16,9 @@ var HONEYCSS_ =
   '.hnico{width:1.6em;height:1.6em;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;}' +
   '.hnreset{flex:0 0 auto;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:999px;padding:8px 10px;font:inherit;font-size:.85rem;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
   '.hnreset:active{transform:translateY(1px);}' +
+  '.hnsw{flex:0 0 auto;display:flex;background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:2px;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
+  '.hnsw button{border:0;background:transparent;color:#475569;border-radius:999px;padding:6px 8px;font:inherit;font-size:.78rem;font-weight:800;white-space:nowrap;cursor:pointer;}' +
+  '.hnsw button.on{background:#2C7A99;color:#fff;}' +
   '.hnbar #hnMic,.hnbar #hnPick{padding:20px 6px;font-size:17px;}' +
   '.hnbar button{flex:1;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.hnbox{background:#fff;border-radius:14px;margin:4px 0 10px;box-shadow:0 4px 14px rgba(0,0,0,.15);overflow:hidden;}' +
@@ -31,6 +34,11 @@ function honeyScript_(C) {
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var picks = [], sending = false, cache = {};
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  var full = lsGet('zk_honey_full') === '1', where = lsGet('zk_honey_where') === 'pc' ? 'pc' : 'server';
+  if (!full) where = 'server';
+  function opName() { return (full && where === 'pc') ? 'hachimitsu_pc' : 'hachimitsu'; }
   function idn() { return { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' }; }
   function jsonp(p, cb) {
     var n = '__honey' + Date.now() + Math.floor(Math.random() * 1000);
@@ -57,7 +65,7 @@ function honeyScript_(C) {
     var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     var me = idn();
     var poll = function (id) {
-      var n = 0, max = 480;    
+      var n = 0, max = full ? 1700 : 480;    
       var tick = function () {
         n++; if (n > max) { end('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
         jsonp({ action: 'status', key: C.key, id: id }, function (x) {
@@ -79,14 +87,14 @@ function honeyScript_(C) {
       setTimeout(tick, 1200);
     };
     var send = function (ft) {
-      jsonp({ action: 'submit', key: C.key, op: 'hachimitsu', who: me.who, role: me.role, device: me.device, fields: ft },
+      jsonp({ action: 'submit', key: C.key, op: opName(), who: me.who, role: me.role, device: me.device, fields: ft },
         function (r) {
           if (!r || !r.ok || !r.id) { end((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
           poll(r.id);
         });
     };
     if (typeof BIG === 'undefined') { send(JSON.stringify(fields)); return; }
-    BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'hachimitsu', op: 'hachimitsu',
+    BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'hachimitsu', op: opName(),
                   who: me.who, role: me.role, device: me.device, fields: fields },
       send, function () { end('写真を送信できませんでした。枚数を減らして、もう一度試してもらえると嬉しいです🙇'); });
   }
@@ -175,9 +183,10 @@ function honeyScript_(C) {
     });
     return h;
   }
-  var HK = 'zk_honey_hist', lastJson = '';
-  function histGet() { try { return JSON.parse(localStorage.getItem(HK) || 'null'); } catch (e) { return null; } }
-  function histPut(items) { try { localStorage.setItem(HK, JSON.stringify(items || [])); } catch (e) {} }
+  var lastJson = '';
+  function HK() { return 'zk_honey_hist' + (where === 'pc' ? '_pc' : ''); }      
+  function histGet() { try { return JSON.parse(localStorage.getItem(HK()) || 'null'); } catch (e) { return null; } }
+  function histPut(items) { try { localStorage.setItem(HK(), JSON.stringify(items || [])); } catch (e) {} }
   function draw(items) {
     items = items || [];
     lastJson = JSON.stringify(items);
@@ -270,10 +279,49 @@ function honeyScript_(C) {
     var b = e.target.closest('button'); if (!b) return;
     picks.splice(Number(b.getAttribute('data-i')), 1); drawPicks();
   });
+  var PC_OFF = '自宅PCが動いていません。自宅PCの電源を確認するか、スイッチをサーバーに切り替えてください🙇';
+  function go(fields, busy, done) {
+    if (opName() !== 'hachimitsu_pc') { ask(fields, busy, done); return; }
+    jsonp({ action: 'data', key: C.key, name: 'honey_pc_alive.json' }, function (y) {
+      var v = null;
+      try { v = (y && typeof y.result === 'string') ? JSON.parse(y.result) : (y && y.at ? y : (y && y.result)); } catch (e) {}
+      var age = (v && v.at) ? Date.now() / 1000 - Number(v.at) : 1e9;
+      if (!(age < 150)) { done(PC_OFF); return; }
+      ask(fields, busy, done);
+    });
+  }
+  function drawSw() {
+    $('hnSw').style.display = full ? '' : 'none';
+    Array.prototype.forEach.call($('hnSw').querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-w') === where); });
+  }
+  function setFull(d) {
+    if (!d || typeof d.full === 'undefined') return;
+    full = !!d.full; lsSet('zk_honey_full', full ? '1' : '0');
+    if (!full && where === 'pc') { where = 'server'; lsSet('zk_honey_where', 'server'); }
+    drawSw();
+  }
+  function loadHist(busy) {
+    var my = where;
+    go({ act: 'history' }, busy, function (err, d) {
+      if (my !== where) return;      
+      if (err) { if (busy) popup(err); else if (!histGet()) $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
+      setFull(d);
+      if (JSON.stringify(d.items || []) === lastJson) return;      
+      draw(d.items); stickBottom();
+    });
+  }
+  $('hnSw').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || sending) return;
+    var w = b.getAttribute('data-w'); if (w === where) return;
+    where = w; lsSet('zk_honey_where', w); drawSw();
+    var c = histGet(); lastJson = ''; draw(c || []); stickBottom();
+    loadHist('少し待っててくださいね🥺');
+  });
+  drawSw();
   $('hnReset').addEventListener('click', function () {
     if (sending) return;
     popup('これまでの会話を削除して、最初から話しますか？😊', { icon: '', cancel: true, onYes: function () {
-      ask({ act: 'clear' }, '少し待っててくださいね🥺', function (err, d) { if (err) { popup(err); return; } draw(d.items); });
+      go({ act: 'clear' }, '少し待っててくださいね🥺', function (err, d) { if (err) { popup(err); return; } setFull(d); draw(d.items); });
     } });
   });
   $('hnSend').addEventListener('click', function () {
@@ -283,9 +331,10 @@ function honeyScript_(C) {
     if (t.length > 2000) { popup('長すぎます。2000文字までにしてください😊'); return; }
     if (wantMic) micStop();
     sending = true; $('hnSend').disabled = true;
-    ask({ act: 'send', text: t, images: picks }, 'ハチミツちゃんが作業中です🍯', function (err, d) {
+    go({ act: 'send', text: t, images: picks }, 'ハチミツちゃんが作業中です🍯', function (err, d) {
       sending = false; $('hnSend').disabled = false;
       if (err) { popup(err); return; }
+      setFull(d);
       $('hnText').value = ''; picks = []; drawPicks(); draw(d.items);
       stickBottom();
     });
@@ -312,11 +361,7 @@ function honeyScript_(C) {
   $('hnLog').addEventListener('load', function () { if (stick) toBottom(); }, true);
   var cached = histGet();
   if (cached) { draw(cached); stickBottom(); }
-  ask({ act: 'history' }, '', function (err, d) {
-    if (err) { if (!cached) $('hnLog').innerHTML = '<div class="ccnone">' + esc(err) + '</div>'; return; }
-    if (JSON.stringify(d.items || []) === lastJson) return;      
-    draw(d.items); stickBottom();
-  });
+  loadHist('');
 }
 function renderHoneyPage_(base, staff, dev) {
   var C = {
@@ -327,6 +372,7 @@ function renderHoneyPage_(base, staff, dev) {
     '<div class="home hnhome">' +
     '<div class="hntop">' + backBar_(base, staff, dev) +
       '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png?v=2">ハチミツちゃん</span>' +
+      '<div class="hnsw" id="hnSw" style="display:none"><button type="button" data-w="server">サーバー</button><button type="button" data-w="pc">自宅PC</button></div>' +
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
