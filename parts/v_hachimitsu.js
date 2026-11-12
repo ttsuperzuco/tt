@@ -315,7 +315,7 @@ function renderHoneyPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + HONEYCSS_ + '</style>' +
     '<div class="home hnhome">' +
     '<div class="hntop">' + backBar_(base, staff, dev) +
-      '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png">ハチミツちゃん</span>' +
+      '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png?v=2">ハチミツちゃん</span>' +
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +

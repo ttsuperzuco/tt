@@ -1906,8 +1906,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' },
   // ★🍯ハチミツちゃん（2026-11-11 まるちゃん決定）＝トマトさんの相談と画像作り（op=hachimitsu）。既定は開発者だけ（共通ルール16）。
   { id: 'hachimitsu', cls: 'hachimitsu', view: 'hachimitsu',
-    // ★2026-11-12 まるちゃん選択＝はちみつのスプーンを持ったタニシのハチミツちゃん（icons/hachimitsu-192.png・パソコン版も同じ）。
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-192.png"></span>', label: 'ハチミツ\nちゃん' },
+    // ★2026-11-12 まるちゃん選択＝黄色と黒のしまの角のあるタニシ（ぷっくり立体・icons/hachimitsu-192.png・パソコン版も同じ）。絵を替えたら ?v= の数字を上げる（スマホが前の絵を覚えているため）。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-192.png?v=2"></span>', label: 'ハチミツ\nちゃん' },
   // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
   //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
   { id: 'threads', cls: 'threads', view: 'threads',
@@ -12794,7 +12794,7 @@ function renderHoneyPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + HONEYCSS_ + '</style>' +
     '<div class="home hnhome">' +
     '<div class="hntop">' + backBar_(base, staff, dev) +
-      '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png">ハチミツちゃん</span>' +
+      '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png?v=2">ハチミツちゃん</span>' +
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
