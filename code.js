@@ -12462,14 +12462,8 @@ var HONEYCSS_ =
   '.hnttl{flex:1 1 auto;min-width:0;font-size:1rem;font-weight:900;color:#fb8c44;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
   '.hnreset{flex:0 0 auto;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:999px;padding:8px 10px;font:inherit;font-size:.85rem;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
   '.hnreset:active{transform:translateY(1px);}' +
-  '.hntabs{display:flex;margin:0 0 10px;border-radius:12px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
-  '.hntabs[hidden]{display:none;}' +
-  '.hnbar button.open{background:#0e7490;color:#fff;}' +
   // ★2026-11-12 まるちゃん「音声入力を縦に少し長く押しやすく」＝この列のボタンを縦に高くする
   '.hnbar #hnMic,.hnbar #hnPick{padding:20px 6px;font-size:17px;}' +
-  '.hntabs button{flex:1;background:#e2e8f0;color:#0f172a;border:0;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;}' +
-  '.hntabs button.on{background:#fff;color:#0e7490;}' +
-  '.hntabs button+button{border-left:1px solid #cbd5e1;}' +
   '.hnbar button{flex:1;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   // ★2026-11-12 まるちゃん「画像選択したら、ふつうBOXに添付された見た目になるだろ。Claudeだってそうだろ」
   //   ＝入力欄の白い枠の中に、選んだ写真を文字の上に並べる（枠ごと1つの入力欄に見せる）。
@@ -12725,26 +12719,11 @@ function honeyScript_(C) {
     } catch (e) { micOff(); popup('音声入力を開始できませんでした。キーボードのマイクのボタンをお使いください🙇'); }
   });
   document.addEventListener('visibilitychange', function () { if (document.hidden && wantMic) micStop(); });
-  // ★2026-11-12 まるちゃん「画像選択は スマホ内タブ・カメラタブの2つ。スマホ内は、スマホ内の画像を自動で表示」
-  //   「🖼 画像選択」を押すと「スマホ内／カメラ」の2つが出て、選んだ方が開く。もう一度「🖼 画像選択」を押すと閉じる。
-  //   ★2026-11-12 まるちゃん「画像選択していきなりポップアップで出るのを、スマホ内・カメラの選択にしたい。今のは変」
-  //     ＝前は画像選択を押した瞬間にスマホの写真の一覧も開いていた。今は2つを出すだけで、何も開かない。
-  //   ★ズコの画面の中に写真の一覧を並べることはできない（ブラウザがスマホの写真を勝手に読ませない）＝スマホの写真の一覧を開く形。
-  function tabOn(which) {
-    $('hnTabLib').classList.toggle('on', which === 'lib');
-    $('hnTabCam').classList.toggle('on', which === 'cam');
-  }
-  $('hnPick').addEventListener('click', function () {
-    var tabs = $('hnTabs');
-    if (!tabs.hidden) { tabs.hidden = true; $('hnPick').classList.remove('open'); return; }
-    tabs.hidden = false; $('hnPick').classList.add('open');
-    tabOn('');
-  });
-  $('hnTabLib').addEventListener('click', function () { tabOn('lib'); $('hnFile').click(); });
-  $('hnTabCam').addEventListener('click', function () { tabOn('cam'); $('hnCam').click(); });
-  function takeFiles() { Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = ''; }
-  $('hnFile').addEventListener('change', takeFiles);
-  $('hnCam').addEventListener('change', takeFiles);
+  // ★2026-11-12 まるちゃん「スマホ内を押すと、カメラとファイルの選択画面が出る。なら画像選択でそれをいきなり出せば、ボタンはいらないよね」
+  //   ＝「🖼 画像選択」を押すと、すぐスマホの「カメラ／ファイル」の選択画面が出る（スマホ内・カメラの2つのボタンはやめた）。
+  //   ★ズコの画面の中に写真の一覧を並べることはできない（ブラウザがスマホの写真を勝手に読ませない）＝スマホの選択画面を開く形。
+  $('hnPick').addEventListener('click', function () { $('hnFile').click(); });
+  $('hnFile').addEventListener('change', function () { Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = ''; });
   $('hnThumbs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     picks.splice(Number(b.getAttribute('data-i')), 1); drawPicks();
@@ -12790,7 +12769,7 @@ function honeyScript_(C) {
   }
   ['touchstart', 'wheel', 'mousedown', 'keydown'].forEach(function (ev) {      // 人が触った＝もう合わせない（入力欄とボタンは別）
     window.addEventListener(ev, function (e) {
-      if (e.target && e.target.closest && e.target.closest('.hnbox, .hnbar, .hntabs, #hnSend, .hntop')) return;
+      if (e.target && e.target.closest && e.target.closest('.hnbox, .hnbar, #hnSend, .hntop')) return;
       stick = false;
     }, { passive: true });
   });
@@ -12820,12 +12799,10 @@ function renderHoneyPage_(base, staff, dev) {
       '<div class="hnbox"><div class="hnthumbs" id="hnThumbs"></div>' +
       '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea></div>' +
       '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼 画像選択</button></div>' +
-      '<div class="hntabs" id="hnTabs" hidden><button type="button" id="hnTabLib">🖼 スマホ内</button><button type="button" id="hnTabCam">📷 カメラ</button></div>' +
       // ★2026-11-12 まるちゃん「スマホ内を押すと、スマホの中から選べるようにして。一瞬その画面が出たけど、すぐに写真・コレクションの画面に行っちゃう」
       //   ＝画像だけを頼むと、Android（14以降）はスマホのファイルの画面を一瞬出してから、自分の写真選びの画面へ切り替える。
       //   PDFも混ぜて頼むと切り替わらず、スマホのファイルの画面（最近・画像・ダウンロード・フォルダ）から選べる。画像以外を選んだら知らせる。
       '<input type="file" id="hnFile" accept="image/*,application/pdf" multiple style="display:none">' +
-      '<input type="file" id="hnCam" accept="image/*" capture="environment" style="display:none">' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
     '</div></div>' +
     '<script>(' + honeyScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
