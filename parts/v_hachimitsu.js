@@ -294,6 +294,7 @@ function honeyScript_(C) {
   function drawSw() {
     $('hnSw').style.display = full ? '' : 'none';
     document.querySelector('.hntop').classList.toggle('sw', full);
+    $('hnText').placeholder = (full ? 'りゅうさん' : 'なすさん') + 'をお助けしたいですの！相談事をここに入力してね😊';
     Array.prototype.forEach.call($('hnSw').querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-w') === where); });
   }
   function setFull(d) {
