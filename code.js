@@ -14122,7 +14122,9 @@ function renderThreadsPage_(base, staff, dev) {
             '<button type="button" data-v="mentioned_only">あなたがメンションした人のプロフィール<span class="r"></span></button>' +
           '</div></div>' +
           '<div class="s"><button type="button" id="thApprove">返信を確認して承認<span class="sw"><i></i></span></button></div>' +
-          '<div class="s"><div class="h">オーディエンス</div><button type="button" id="thShareBtn">他のシェア先...<span class="r"></span></button>' +
+          // ★2026-11-12 インスタのストーリーズへの同時シェアは、Threadsは「出せた（SUCCESS）」と答えるのに、インスタに出てこない（本番で2回確かめた）
+          //   ＝押しても何も起きないので、この欄ごと出さない（display:none を外せば戻る。受付・画面の部品は残してある）。
+          '<div class="s" style="display:none"><div class="h">オーディエンス</div><button type="button" id="thShareBtn">他のシェア先...<span class="r"></span></button>' +
             '<div id="thShareRow" style="display:none"><button type="button" id="thIgs">Instagramのストーリーズ<span class="sw"><i></i></span></button></div></div>' +
         '</div>' +
       '</div>' +

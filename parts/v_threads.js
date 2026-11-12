@@ -404,7 +404,7 @@ function renderThreadsPage_(base, staff, dev) {
             '<button type="button" data-v="mentioned_only">あなたがメンションした人のプロフィール<span class="r"></span></button>' +
           '</div></div>' +
           '<div class="s"><button type="button" id="thApprove">返信を確認して承認<span class="sw"><i></i></span></button></div>' +
-          '<div class="s"><div class="h">オーディエンス</div><button type="button" id="thShareBtn">他のシェア先...<span class="r"></span></button>' +
+          '<div class="s" style="display:none"><div class="h">オーディエンス</div><button type="button" id="thShareBtn">他のシェア先...<span class="r"></span></button>' +
             '<div id="thShareRow" style="display:none"><button type="button" id="thIgs">Instagramのストーリーズ<span class="sw"><i></i></span></button></div></div>' +
         '</div>' +
       '</div>' +
