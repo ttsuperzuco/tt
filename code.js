@@ -2627,7 +2627,7 @@ function renderLtPage_(d, base, staff, dev) {
   // ★2026-11-12 まるちゃん「記入漏れのみぎすみに最新に更新ボタンを付けて。全部読み込みに行って最新にする。
   //   グーグルマップの口コミも」＝右上のボタン。押すと予約台帳と🔁・LINEの予約の点検・口コミの読み取りを
   //   その場で全部回す（受付係 op=lt_refresh）。進み具合は d.refresh（パソコンが書く）で出す。開発者だけ（ルール16）。
-  var rbtn = dev ? ltRefreshBtn_(d.refresh) : '';
+  var rbtn = ltRefreshBtn_(d.refresh);   // ★2026-11-12 まるちゃん「スタッフにも出す」＝全員に出す
   return '' +
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +

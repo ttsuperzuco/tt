@@ -182,7 +182,7 @@ function renderLtPage_(d, base, staff, dev) {
       }).join('\n')
     : '<tr><td colspan="3">なし</td></tr>';
 
-  var rbtn = dev ? ltRefreshBtn_(d.refresh) : '';
+  var rbtn = ltRefreshBtn_(d.refresh);   
   return '' +
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +
