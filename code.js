@@ -12500,6 +12500,7 @@ var HONEYCSS_ =
   '.hnsw{flex:0 0 auto;display:flex;background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:2px;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
   '.hnsw button{border:0;background:transparent;color:#475569;border-radius:999px;padding:6px 8px;font:inherit;font-size:.78rem;font-weight:800;white-space:nowrap;cursor:pointer;}' +
   '.hnsw button.on{background:#2C7A99;color:#fff;}' +
+  '.hntop.sw .hntxt{display:none;}' +      // スイッチを出す時は名前を隠してアイコンだけ（横411・文字1.3倍でも1列に入れる）
   // ★2026-11-12 まるちゃん「音声入力を縦に少し長く押しやすく」＝この列のボタンを縦に高くする
   '.hnbar #hnMic,.hnbar #hnPick{padding:20px 6px;font-size:17px;}' +
   '.hnbar button{flex:1;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
@@ -12803,6 +12804,7 @@ function honeyScript_(C) {
   }
   function drawSw() {
     $('hnSw').style.display = full ? '' : 'none';
+    document.querySelector('.hntop').classList.toggle('sw', full);
     Array.prototype.forEach.call($('hnSw').querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-w') === where); });
   }
   function setFull(d) {
@@ -12890,7 +12892,7 @@ function renderHoneyPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + HONEYCSS_ + '</style>' +
     '<div class="home hnhome">' +
     '<div class="hntop">' + backBar_(base, staff, dev) +
-      '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png?v=2">ハチミツちゃん</span>' +
+      '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png?v=2"><span class="hntxt">ハチミツちゃん</span></span>' +
       '<div class="hnsw" id="hnSw" style="display:none"><button type="button" data-w="server">サーバー</button><button type="button" data-w="pc">自宅PC</button></div>' +
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
