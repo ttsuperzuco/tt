@@ -1,5 +1,5 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
-// この画面だけで使う部品：bcast、claudechat、facebook、hachimitsu、hanbai、igdm、insta、kanshi、threads、timedsend、timetree、yoyaku_new、yoyaku_sejutsugo
+// この画面だけで使う部品：bcast、facebook、hachimitsu、hanbai、igdm、insta、kanshi、threads、timedsend、timetree、yoyaku_new、yoyaku_sejutsugo
 function szOvShow_(html, bg) {
   var ov = document.getElementById('szBusyOv');
   if (!ov) { ov = document.createElement('div'); ov.id = 'szBusyOv'; document.body.appendChild(ov); }
