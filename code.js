@@ -12768,17 +12768,25 @@ function honeyScript_(C) {
   });
   // ★2026-11-12 まるちゃん「開いた時に、最新の会話とBOXや送信ボタンが見えたい状態だろ」
   //   ＝前は会話を出した瞬間に一番下へ動かすだけで、そのあと絵が読み込まれて高さが伸び、途中の位置で止まっていた。
-  //   自分で画面を触る（なぞる・ホイール）までは、高さが変わるたびに一番下へ合わせ直す。
-  var stick = true;
-  function toBottom() { window.scrollTo(0, document.documentElement.scrollHeight); }
-  function stickBottom() { stick = true; toBottom(); }
-  ['touchstart', 'wheel', 'mousedown'].forEach(function (ev) {
-    window.addEventListener(ev, function (e) {
-      if (e.target && e.target.closest && e.target.closest('#hnSend, #hnText, .hnbar, .hntabs, .hnbox')) return;
-      stick = false;
-    }, { passive: true });
-  });
-  if (window.ResizeObserver) new ResizeObserver(function () { if (stick) toBottom(); }).observe(document.body);
+  //   自分で上へ動かすまでは、絵が出るたび・少し時間がたつたびに一番下へ合わせ直す。
+  //   ★ブラウザが前の位置に戻す働き（読み直した時）も止める（これで途中の位置に戻されていた）。
+  try { history.scrollRestoration = 'manual'; } catch (e) {}
+  var stick = true, autoY = -1, tries = [];
+  function toBottom() {
+    var de = document.documentElement;
+    window.scrollTo(0, de.scrollHeight);
+    autoY = window.scrollY || de.scrollTop || 0;
+  }
+  function stickBottom() {
+    stick = true; toBottom();
+    tries.forEach(clearTimeout);
+    tries = [150, 500, 1200, 2500, 4500, 8000].map(function (ms) { return setTimeout(function () { if (stick) toBottom(); }, ms); });
+  }
+  window.addEventListener('scroll', function () {
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    if (autoY >= 0 && y < autoY - 40) stick = false;      // 自分で上へ動かした＝もう合わせない
+  }, { passive: true });
+  if (window.ResizeObserver) new ResizeObserver(function () { if (stick) toBottom(); }).observe($('hnLog'));
   $('hnLog').addEventListener('load', function () { if (stick) toBottom(); }, true);
   var cached = histGet();
   if (cached) { draw(cached); stickBottom(); }
