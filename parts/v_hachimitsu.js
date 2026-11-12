@@ -182,7 +182,7 @@ function honeyScript_(C) {
     items = items || [];
     lastJson = JSON.stringify(items);
     histPut(items);
-    if (!items.length) { $('hnLog').innerHTML = '<div class="ccnone">相談したいことや、作りたい画像を下に入力してください😊</div>'; return; }
+    if (!items.length) { $('hnLog').innerHTML = ''; return; }     
     var out = '';
     items.forEach(function (x) {
       if (x.q || (x.qimg && x.qimg.length)) out += '<div class="ccq">' + esc(x.q || '') + imgs(x.qimg, 'hnqimg', false) + '</div>';
