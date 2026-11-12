@@ -509,17 +509,17 @@ function threadsScript_(C) {
   }
   function drawIcons() {
     var h, pollOn = $('thPoll').style.display !== 'none';
-    if (MEDIA.length) h = mediaBtn('追加') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + icOff('loc', '位置情報', 18) + icOff('music', '音楽', 18);
-    else if (pollOn || LONG || GIF) h = icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + icOff('loc', '位置情報', 18);
-    else h = mediaBtn('') + (gifKey() ? icBtn('gif', 'gif', 'GIFを追加') : '') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + icBtn('poll', 'poll', 'アンケートを追加') +
-      icOff('quote', '引用投稿') + icBtn('long', 'text', 'テキストを添付') + icOff('loc', '位置情報', 18) + icOff('music', '音楽', 18);
+    if (MEDIA.length) h = mediaBtn('追加') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('loc', '位置情報', 18);
+    else if (pollOn || LONG || GIF) h = icBtn('emo', 'emoji', '絵文字を追加') + icOff('loc', '位置情報', 18);
+    else h = mediaBtn('') + (gifKey() ? icBtn('gif', 'gif', 'GIFを追加') : '') + icBtn('emo', 'emoji', '絵文字を追加') + icBtn('poll', 'poll', 'アンケートを追加') +
+      icOff('quote', '引用投稿') + icBtn('long', 'text', 'テキストを添付') + icOff('loc', '位置情報', 18);
     var em = $('thEmos'), tm = $('thBlk0').querySelector('.tmain');
     $('thIcons').innerHTML = h;
     if (em.parentNode === tm) tm.insertBefore(em, $('thIcons'));
   }
   function chainIcons() {
-    return chOff('media') + (gifKey() ? chOff('gif') : '') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('sticker', 'スタンプ') + chOff('poll') +
-      icOff('quote', '引用投稿') + chOff('text') + icOff('loc', '位置情報', 18) + icOff('music', '音楽', 18);
+    return chOff('media') + (gifKey() ? chOff('gif') : '') + icBtn('emo', 'emoji', '絵文字を追加') + chOff('poll') +
+      icOff('quote', '引用投稿') + chOff('text') + icOff('loc', '位置情報', 18);
   }
 
   function canPost() {
