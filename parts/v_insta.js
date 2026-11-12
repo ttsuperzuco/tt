@@ -687,7 +687,7 @@ function instaScript_(C) {
       ((ISADMIN || mine) ? '<button type="button" data-del="1" style="display:block;margin:14px auto 0;color:#A32D2D;font-weight:700">' + (apvTag(it) === '新規' ? '削除' : 'この変更を取り消す') + '</button>' : '') +
       '</div></div>';
     document.body.appendChild(e);
-    var after = function () { e.remove(); APVL[CUR] = null; apvLoad(CUR); loadWeb(CUR, true); };
+    var after = function () { e.remove(); apvLoad(CUR); loadWeb(CUR, true); };      
     e.addEventListener('click', function (ev) {
       var t = ev.target;
       if (t.closest('[data-cx]')) { e.remove(); return; }
@@ -712,7 +712,7 @@ function instaScript_(C) {
       if (t.closest('[data-del]')) {
         var isNew2 = apvTag(it) === '新規';
         szPopup_(isNew2 ? 'この下書きを削除しますか？😊（本番には出ません）' : 'この変更を取り消しますか？😊（本番には出ません）', { cancel: true, onYes: function () {
-          busyAsk({ kind: 'apv_del', aid: id }, false, isNew2 ? '削除しています' : '取り消しています', '', function (err) { if (err) { warn(err); return; } after(); if (isNew2) doneBox('削除が完了しました'); });
+          busyAsk({ kind: 'apv_del', aid: id }, false, isNew2 ? '削除しています' : '取り消しています', '', function (err) { if (err) { warn(err); return; } APVL[CUR] = (APVL[CUR] || []).filter(function (x) { return x.id !== id; }); apvBar(); drawApp(); after(); if (isNew2) doneBox('削除が完了しました'); });
         } });
       }
     });
@@ -2479,7 +2479,7 @@ function instaScript_(C) {
           szPopup_('この下書きを削除しますか？😊（本番には出ません）', { cancel: true, onYes: function () {
             busyAsk({ kind: 'apv_del', aid: aid }, false, '削除しています', '', function (err) {
               if (err) { warn(err); return; }
-              closePost(); APVL[CUR] = null; apvLoad(CUR); doneBox('削除が完了しました');
+              closePost(); APVL[CUR] = (APVL[CUR] || []).filter(function (x) { return x.id !== aid; }); apvBar(); drawApp(); apvLoad(CUR); doneBox('削除が完了しました');
             });
           } });
         } },
