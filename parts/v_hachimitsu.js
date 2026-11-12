@@ -6,6 +6,12 @@ var HONEYCSS_ =
   '.hnsave{display:inline-block;margin-top:6px;font-size:14px;font-weight:800;color:#0e7490;}' +
   '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
   '.hnbar button.on{background:#dc2626;color:#fff;}' +
+  '.hntop{position:sticky;top:0;z-index:30;background:#2C7A99;display:flex;align-items:center;gap:8px;margin:-34px -18px 10px;padding:12px 18px 10px;}' +
+  '.hntop .ubar{margin:0;flex:0 0 auto;}' +
+  '.hntop .uhome{padding:9px 14px;}' +
+  '.hnttl{flex:1 1 auto;min-width:0;font-size:1.15rem;font-weight:900;color:#fb8c44;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+  '.hnreset{flex:0 0 auto;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:999px;padding:9px 12px;font:inherit;font-size:.9rem;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
+  '.hnreset:active{transform:translateY(1px);}' +
   '.hntabs{display:flex;margin:0 0 10px;border-radius:12px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.hntabs[hidden]{display:none;}' +
   '.hnbar button.open{background:#0e7490;color:#fff;}' +
@@ -263,6 +269,12 @@ function honeyScript_(C) {
     var b = e.target.closest('button'); if (!b) return;
     picks.splice(Number(b.getAttribute('data-i')), 1); drawPicks();
   });
+  $('hnReset').addEventListener('click', function () {
+    if (sending) return;
+    popup('これまでの会話を削除して、最初から話しますか？😊', { icon: '', cancel: true, onYes: function () {
+      ask({ act: 'clear' }, '少し待っててくださいね🥺', function (err, d) { if (err) { popup(err); return; } draw(d.items); });
+    } });
+  });
   $('hnSend').addEventListener('click', function () {
     if (sending) return;
     var t = $('hnText').value.replace(/^\s+|\s+$/g, '');
@@ -291,9 +303,11 @@ function renderHoneyPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + HONEYCSS_ + '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="home">' +
+    '<div class="hntop">' + backBar_(base, staff, dev) +
+      '<span class="hnttl">🍯 ハチミツちゃん</span>' +
+      '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
-      '<div class="hhead"><span class="bmark">🍯</span><span class="bname">ハチミツちゃん</span></div>' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
       '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea>' +
       '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼 画像選択</button></div>' +
