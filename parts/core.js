@@ -1764,6 +1764,7 @@ function ltDismLabel_(r) {
   return '対応不要';
 }
 
+
 function comma_(n) { return String(n == null ? '' : n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
 function renderUriage_(base, staff, dev) {
   try {
