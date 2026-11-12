@@ -12465,7 +12465,12 @@ var HONEYCSS_ =
   '.hntabs button.on{background:#fff;color:#0e7490;}' +
   '.hntabs button+button{border-left:1px solid #cbd5e1;}' +
   '.hnbar button{flex:1;background:#fff;color:#0f172a;border:0;border-radius:12px;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
-  '.hnthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;}' +
+  // ★2026-11-12 まるちゃん「画像選択したら、ふつうBOXに添付された見た目になるだろ。Claudeだってそうだろ」
+  //   ＝入力欄の白い枠の中に、選んだ写真を文字の上に並べる（枠ごと1つの入力欄に見せる）。
+  '.hnbox{background:#fff;border-radius:14px;margin:4px 0 10px;box-shadow:0 4px 14px rgba(0,0,0,.15);overflow:hidden;}' +
+  '.hnbox .ccin{margin:0;box-shadow:none;border-radius:0;background:transparent;}' +
+  '.hnbox .hnthumbs{padding:14px 14px 0;margin:0;}' +
+  '.hnthumbs{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 8px;}' +
   '.hnthumbs:empty{display:none;}' +
   '.hnth{position:relative;}' +
   '.hnth img{display:block;width:76px;height:76px;object-fit:cover;border-radius:10px;}' +
@@ -12778,10 +12783,10 @@ function renderHoneyPage_(base, staff, dev) {
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
-      '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea>' +
+      '<div class="hnbox"><div class="hnthumbs" id="hnThumbs"></div>' +
+      '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea></div>' +
       '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼 画像選択</button></div>' +
       '<div class="hntabs" id="hnTabs" hidden><button type="button" id="hnTabLib">🖼 スマホ内</button><button type="button" id="hnTabCam">📷 カメラ</button></div>' +
-      '<div class="hnthumbs" id="hnThumbs"></div>' +
       '<input type="file" id="hnFile" accept="image/*" multiple style="display:none">' +
       '<input type="file" id="hnCam" accept="image/*" capture="environment" style="display:none">' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
