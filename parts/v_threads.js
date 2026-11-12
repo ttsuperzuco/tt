@@ -246,7 +246,32 @@ var THREADSCSS_ =
   '.thsheet .tlta::placeholder{color:#777;}' +
   '.thsheet .tfmt{display:flex;justify-content:center;gap:32px;padding:16px 0 20px;}' +
   '.thsheet .tfmt button{background:none;border:0;color:#f3f5f7;font-size:15px;font-weight:700;padding:0;cursor:pointer;min-width:20px;}' +
-  '.thsheet #thGifBox .tmi img{width:auto;max-width:100%;max-height:300px;object-fit:contain;}' +
+  '.thsheet .tfmt button.on{color:#0a0a0a;background:#f3f5f7;border-radius:6px;}' +
+  '.thsheet div.tlta{white-space:pre-wrap;word-break:break-word;overflow-y:auto;max-height:65vh;}' +
+  '.thsheet div.tlta:empty:before{content:attr(data-ph);color:#777;}' +
+  '.thsheet .talta{min-height:30vh;}' +
+  '.thsheet .talti img,.thsheet .talti video{display:block;max-width:calc(100% - 48px);max-height:36vh;margin:16px auto 0;border-radius:8px;}' +
+  '.thsheet .tmi .talt{position:absolute;bottom:12px;right:10px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;font-weight:700;padding:1px 5px;border-radius:4px;}' +
+  '.thsheet .tqc{position:relative;margin-top:8px;border:1px solid rgba(243,245,247,.15);border-radius:12px;padding:10px 36px 10px 12px;}' +
+  '.thsheet .tqc .h b{font-weight:600;font-size:14px;}' +
+  '.thsheet .tqc .t{color:#ccc;font-size:14px;white-space:pre-wrap;max-height:63px;overflow:hidden;margin-top:2px;}' +
+  '.thsheet .tqc img{display:block;max-height:80px;border-radius:6px;margin-top:6px;}' +
+  '.thsheet .tqc .rm{position:absolute;top:10px;right:10px;background:none;border:0;color:#777;padding:0;cursor:pointer;display:inline-flex;}' +
+  '.thsheet .tqth{flex:none;width:48px;height:48px;object-fit:cover;border-radius:6px;}' +
+  '.thsheet .tlocc{display:inline-flex;align-items:center;gap:6px;margin-top:8px;color:#999;font-size:13px;}' +
+  '.thsheet .tlocc button{background:none;border:0;color:#777;padding:0;cursor:pointer;display:inline-flex;}' +
+  '.thsheet .tschl{display:flex;align-items:center;gap:6px;padding:8px 24px 0;color:#999;font-size:13px;}' +
+  '.thsheet .tschl button{background:none;border:0;color:#777;padding:0;cursor:pointer;display:inline-flex;}' +
+  '.thsheet .tdtabs{display:flex;border-bottom:1px solid #333638;}' +
+  '.thsheet .tdtabs button{flex:1;background:none;border:0;border-bottom:1px solid transparent;color:#777;font:inherit;font-weight:600;padding:12px 0;cursor:pointer;margin-bottom:-1px;}' +
+  '.thsheet .tdtabs button.on{color:#f3f5f7;border-bottom-color:#f3f5f7;}' +
+  '.thsheet #thLocList .tdr svg{flex:none;color:#999;margin-top:2px;}' +
+  '.thsheet .tsch{padding:24px;}' +
+  '.thsheet .tsch label{display:block;color:#999;font-size:13px;margin-bottom:16px;}' +
+  '.thsheet .tsch input{display:block;width:100%;box-sizing:border-box;height:46px;margin-top:6px;background:transparent;border:1px solid rgba(243,245,247,.15);border-radius:12px;padding:0 14px;color:#f3f5f7;font:inherit;font-size:16px;color-scheme:dark;}' +
+  '.thsheet .tsch p{color:#999;font-size:13px;margin:4px 0 20px;}' +
+  '.thsheet #thSchedClear{background:none;border:0;color:#ff6b6b;font:inherit;font-weight:600;padding:0;cursor:pointer;}' +
+  '.thsheet .tgifb .tmi img{width:auto;max-width:100%;max-height:300px;object-fit:contain;}' +
   '.thsheet .tgs{padding:4px 24px 12px;}' +
   '.thsheet .tgs input{display:block;width:100%;box-sizing:border-box;height:40px;background:#0a0a0a;border:1px solid rgba(243,245,247,.15);border-radius:16px;padding:0 16px;color:#f3f5f7;font:inherit;outline:none;}' +
   '.thsheet .tgs input::placeholder{color:#777;}' +
@@ -327,7 +352,7 @@ function renderThreadsPage_(base, staff, dev) {
           '<div class="tshr"><button type="button" class="tib" id="thDraftBtn" title="下書き">' + thIco_('draft', 24) + '</button>' +
           '<button type="button" class="tib" id="thMoreBtn" title="もっと見る">' + thIco_('more', 24) + '</button></div></div>' +
         '<div class="tmenu" id="thMoreMenu" style="display:none"><div class="s">' +
-          '<button type="button" data-off="日時の指定">日時を指定...<span class="r">' + thIco_('clock', 20) + '</span></button></div></div>' +
+          '<button type="button" id="thSchedMenu">日時を指定...<span class="r">' + thIco_('clock', 20) + '</span></button></div></div>' +
         '<div class="tsb">' +
           '<div class="tblk" id="thBlk0">' +
             '<div class="tleft"><img class="tav thAvI" referrerpolicy="no-referrer"><div class="tline"></div></div>' +
@@ -335,22 +360,25 @@ function renderThreadsPage_(base, staff, dev) {
               '<div class="tun"><b class="thUN"></b><span class="tchev">' + thIco_('chev', 12) + '</span>' +
                 '<input class="ttopic" id="thTopicText" maxlength="50" placeholder="コミュニティまたはトピック"><span class="tpg" style="display:none"></span></div>' +
               '<textarea class="tta" id="thText" rows="1" placeholder="最近どう？"></textarea>' +
+              '<div class="tqc" style="display:none"></div>' +
               '<div class="tmed" id="thThumbs"></div>' +
-              '<div class="tmed" id="thGifBox" style="display:none"></div>' +
+              '<div class="tmed tgifb" id="thGifBox" style="display:none"></div>' +
               '<div class="tpoll" id="thPoll" style="display:none">' +
-                '<input id="thP1" maxlength="25" placeholder="はい">' +
-                '<input id="thP2" maxlength="25" placeholder="いいえ">' +
-                '<input id="thP3" maxlength="25" class="add" placeholder="別の選択肢を追加">' +
-                '<input id="thP4" maxlength="25" class="add" placeholder="別の選択肢を追加" style="display:none">' +
-                '<div class="tpf"><span>24時間後に終了します</span><button type="button" id="thPollDel">アンケートを削除</button></div>' +
+                '<input class="tp1" id="thP1" maxlength="25" placeholder="はい">' +
+                '<input class="tp2" id="thP2" maxlength="25" placeholder="いいえ">' +
+                '<input class="tp3 add" id="thP3" maxlength="25" placeholder="別の選択肢を追加">' +
+                '<input class="tp4 add" id="thP4" maxlength="25" placeholder="別の選択肢を追加" style="display:none">' +
+                '<div class="tpf"><span>24時間後に終了します</span><button type="button" data-act="pollDel">アンケートを削除</button></div>' +
               '</div>' +
-              '<div class="tlongc" id="thLongCard" style="display:none"><span id="thLongPrev"></span><button type="button" class="rm" id="thLongDel" title="削除">' + thIco_('x', 16) + '</button></div>' +
+              '<div class="tlongc" id="thLongCard" style="display:none"><span class="lp"></span><button type="button" class="rm" data-act="longDel" title="削除">' + thIco_('x', 16) + '</button></div>' +
+              '<div class="tlocc" id="thLocChip" style="display:none"></div>' +
               '<div class="themos" id="thEmos" style="display:none"></div>' +
               '<div class="ticons" id="thIcons"></div>' +
             '</div></div>' +
           '<div id="thChain"></div>' +
           '<div class="tadd" id="thAddChain"><div class="tleft"><img class="tav sm thAvI" referrerpolicy="no-referrer"></div><span>スレッドに追加</span></div>' +
         '</div>' +
+        '<div class="tschl" id="thSchedLine" style="display:none"></div>' +
         '<div class="tsf"><button type="button" id="thOptBtn">' + thIco_('opt', 20) + '<span>投稿オプション</span></button>' +
           '<div class="tsfr"><span class="tcnt" id="thCnt"></span><button type="button" id="thGo" disabled>投稿</button></div></div>' +
         '<div class="tmenu" id="thOpt" style="display:none">' +
@@ -361,26 +389,49 @@ function renderThreadsPage_(base, staff, dev) {
             '<button type="button" data-v="mentioned_only">あなたがメンションした人のプロフィール<span class="r"></span></button>' +
           '</div></div>' +
           '<div class="s"><button type="button" id="thApprove">返信を確認して承認<span class="sw"><i></i></span></button></div>' +
-          '<div class="s"><div class="h">オーディエンス</div><button type="button" data-off="他のシェア先">他のシェア先...<span class="r">オフ ' + thIco_('right', 14) + '</span></button></div>' +
+          '<div class="s"><div class="h">オーディエンス</div><button type="button" id="thShareBtn">他のシェア先...<span class="r"></span></button>' +
+            '<div id="thShareRow" style="display:none"><button type="button" id="thIgs">Instagramのストーリーズ<span class="sw"><i></i></span></button></div></div>' +
         '</div>' +
       '</div>' +
       '<div id="thDrafts" style="display:none">' +
         '<div class="tsh"><div class="tl"><button type="button" class="tib" id="thDraftBack" title="戻る">' + thIco_('back', 24) + '</button></div><b>下書き</b><div class="tshr"></div></div>' +
+        '<div class="tdtabs" id="thDraftTabs"><button type="button" data-dt="dr" class="on">下書き</button><button type="button" data-dt="sc">予約済み</button></div>' +
         '<div id="thDraftList"></div>' +
       '</div>' +
       '<div id="thLongView" style="display:none">' +
         '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thLongCancel">キャンセル</button></div><b>添付テキスト</b>' +
           '<div class="tshr"><button type="button" class="tdone" id="thLongDone">完了</button></div></div>' +
-        '<textarea class="tlta" id="thLongText" maxlength="10000" placeholder="さらに書く..."></textarea>' +
-        '<div class="tfmt"><button type="button" data-off="文字の飾り">B</button><button type="button" data-off="文字の飾り"><i>I</i></button>' +
-          '<button type="button" data-off="文字の飾り"><u>U</u></button><button type="button" data-off="文字の飾り"><s>S</s></button>' +
-          '<button type="button" data-off="文字の飾り">' + thIco_('hl', 18) + '</button></div>' +
+        '<div class="tlta" id="thLongEd" contenteditable="true" data-ph="さらに書く..."></div>' +
+        '<div class="tfmt" id="thFmt"><button type="button" data-fmt="bold" title="太字">B</button><button type="button" data-fmt="italic" title="斜体"><i>I</i></button>' +
+          '<button type="button" data-fmt="underline" title="下線"><u>U</u></button><button type="button" data-fmt="strikethrough" title="取り消し線"><s>S</s></button>' +
+          '<button type="button" data-fmt="highlight" title="蛍光ペン">' + thIco_('hl', 18) + '</button></div>' +
       '</div>' +
       '<div id="thGifView" style="display:none">' +
         '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thGifCancel">キャンセル</button></div><b>GIF</b><div class="tshr"></div></div>' +
         '<div class="tgs"><input id="thGifQ" type="search" placeholder="GIPHYを検索" autocomplete="off"></div>' +
         '<div class="tgg" id="thGifGrid"></div>' +
         '<div class="tgp">Powered by GIPHY</div>' +
+      '</div>' +
+      '<div id="thAltView" style="display:none">' +
+        '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thAltCancel">キャンセル</button></div><b>代替テキスト</b>' +
+          '<div class="tshr"><button type="button" class="tdone ok" id="thAltDone">完了</button></div></div>' +
+        '<div class="talti" id="thAltImg"></div>' +
+        '<textarea class="tlta talta" id="thAltText" maxlength="1000" placeholder="代替テキストを入力..."></textarea>' +
+      '</div>' +
+      '<div id="thQuoteView" style="display:none">' +
+        '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thQuoteCancel">キャンセル</button></div><b>引用する投稿</b><div class="tshr"></div></div>' +
+        '<div id="thQuoteList"></div>' +
+      '</div>' +
+      '<div id="thLocView" style="display:none">' +
+        '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thLocCancel">キャンセル</button></div><b>位置情報</b><div class="tshr"></div></div>' +
+        '<div class="tgs"><input id="thLocQ" type="search" placeholder="場所を検索" autocomplete="off"></div>' +
+        '<div id="thLocList"></div>' +
+      '</div>' +
+      '<div id="thSchedView" style="display:none">' +
+        '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thSchedCancel">キャンセル</button></div><b>日時を指定</b>' +
+          '<div class="tshr"><button type="button" class="tdone ok" id="thSchedDone">完了</button></div></div>' +
+        '<div class="tsch"><label>日付<input type="date" id="thSchedDate"></label><label>時刻<input type="time" id="thSchedTime"></label>' +
+          '<p>指定した日時に、自動で投稿されます。</p><button type="button" id="thSchedClear">日時の指定を解除</button></div>' +
       '</div>' +
     '</div>' +
     '<div class="task" id="thAsk" style="display:none"><div class="taskb"><b>下書きに保存しますか？</b><p>後で編集・投稿できるように下書きに保存します。</p>' +
@@ -1184,7 +1235,7 @@ function threadsScript_(C) {
           szOvHide_(); if (!wasSched) loadAll();
           var msg = [];
           if (d && d.chain_fail) msg.push('最初の投稿はできましたが、' + d.chain_fail);
-          if (d && d.ig_story && d.ig_story !== 'SUCCESS') msg.push('インスタのストーリーズには出せませんでした。Threadsには投稿できています。');
+          if (d && d.ig_story && d.ig_story !== 'SUCCESS') msg.push('インスタのストーリーズには投稿できませんでした。Threadsには投稿できています。');
           if (msg.length) warn(msg.join('\n'));
         });
       });
@@ -1308,6 +1359,7 @@ function threadsScript_(C) {
         '<button type="button" class="dots" data-menu="' + esc(p.id) + '">⋯</button></div>' +
         '<div class="pmenu" id="pm_' + esc(p.id) + '" style="display:none">' +
           (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') +
+          (!ro && TAB !== 'rp' && p.type !== 'REPOST_FACADE' ? '<button type="button" data-fquote="' + esc(p.id) + '">引用する</button>' : '') +
           (canDel ? '<button type="button" class="del" data-fdel="' + esc(p.id) + '">削除</button>' : '') + '</div>' +
         (p.text ? '<div class="tx">' + linkify(p.text) + '</div>' : (p.type === 'REPOST_FACADE' ? '<div class="tx" style="color:#888">🔁 再投稿（内容はThreadsの画面から読み込んでいます…）</div>' : '')) + md + card +
         (cnt4 ? '<div class="st"><span>♡ ' + nz(cnt4[0]) + '</span><span>💬 ' + nz(cnt4[1]) + '</span><span>🔁 ' + nz(cnt4[2]) + '</span><span>➤ ' + nz(cnt4[3]) + '</span></div>' : '') +
@@ -1418,6 +1470,11 @@ function threadsScript_(C) {
     }
     if (curRo()) return;   
     if (g('data-rp')) { openReply(g('data-rp')); return; }
+    if (g('data-fquote')) {
+      var qp = ((FEED && FEED.posts) || []).filter(function (x) { return x.id === g('data-fquote'); })[0]; if (!qp) return;
+      var pm = t.closest('.pmenu'); if (pm) pm.style.display = 'none';
+      openCompose(); setQuote(B0, qp); return;
+    }
     if (g('data-fdel')) {
       var dmid = g('data-fdel');
       szPopup_('この投稿をThreadsから削除しますか？😊\n（元に戻せません）', { cancel: true, onYes: function () {
