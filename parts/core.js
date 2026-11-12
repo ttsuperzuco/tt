@@ -1371,7 +1371,7 @@ var TILE_DEFS_ = [
   { id: 'claudechat', cls: 'claudechat', view: 'claudechat',
     icon: '<span class="ticon">💬</span>', label: 'Claudeに\n聞く' },
   { id: 'hachimitsu', cls: 'hachimitsu', view: 'hachimitsu',
-    icon: '<span class="ticon">🍯</span>', label: 'ハチミツ\nちゃん' },
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-192.png"></span>', label: 'ハチミツ\nちゃん' },
   { id: 'threads', cls: 'threads', view: 'threads',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-192.png"></span>', label: 'スレッズコ' },   
   { id: 'insta', cls: 'insta', view: 'insta',

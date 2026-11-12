@@ -13,6 +13,7 @@ var HONEYCSS_ =
   '.hntop .ubar{margin:0;flex:0 0 auto;}' +
   '.hntop .uhome{padding:8px 11px;font-size:.95rem;}' +
   '.hnttl{flex:1 1 auto;min-width:0;font-size:1rem;font-weight:900;color:#fb8c44;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+  '.hnico{width:1.6em;height:1.6em;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;}' +
   '.hnreset{flex:0 0 auto;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:999px;padding:8px 10px;font:inherit;font-size:.85rem;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
   '.hnreset:active{transform:translateY(1px);}' +
   '.hnbar #hnMic,.hnbar #hnPick{padding:20px 6px;font-size:17px;}' +
@@ -314,7 +315,7 @@ function renderHoneyPage_(base, staff, dev) {
   return '<style>' + HOMECSS_ + EXPADCSS_ + CLAUDECHATCSS_ + HONEYCSS_ + '</style>' +
     '<div class="home hnhome">' +
     '<div class="hntop">' + backBar_(base, staff, dev) +
-      '<span class="hnttl">🍯 ハチミツちゃん</span>' +
+      '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png">ハチミツちゃん</span>' +
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
