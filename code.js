@@ -17750,19 +17750,19 @@ function instaScript_(C) {
       if (t.closest('[data-cx]')) { e.remove(); return; }
       if (t.closest('[data-ok]')) {
         szPopup_('この変更を承認して、本番に出しますか？😊', { cancel: true, onYes: function () {
-          busyAsk({ kind: 'apv_ok', id: id }, false, '承認して本番に出しています', '1〜2分かかります', function (err) { if (err) { warn(err); return; } after(); doneBox('承認して本番に出しました'); });
+          busyAsk({ kind: 'apv_ok', aid: id }, false, '承認して本番に出しています', '1〜2分かかります', function (err) { if (err) { warn(err); return; } after(); doneBox('承認して本番に出しました'); });
         } });
         return;
       }
       if (t.closest('[data-ng]')) {
         var r = window.prompt('差し戻す理由を入力してください😊（スタッフの画面に出ます）', '');
         if (r === null) return;
-        busyAsk({ kind: 'apv_ng', id: id, reason: r }, false, '差し戻しています', '', function (err) { if (err) { warn(err); return; } after(); });
+        busyAsk({ kind: 'apv_ng', aid: id, reason: r }, false, '差し戻しています', '', function (err) { if (err) { warn(err); return; } after(); });
         return;
       }
       if (t.closest('[data-del]')) {
         szPopup_('この変更を取り消しますか？😊（本番には出ません）', { cancel: true, onYes: function () {
-          busyAsk({ kind: 'apv_del', id: id }, false, '取り消しています', '', function (err) { if (err) { warn(err); return; } after(); });
+          busyAsk({ kind: 'apv_del', aid: id }, false, '取り消しています', '', function (err) { if (err) { warn(err); return; } after(); });
         } });
       }
     });
