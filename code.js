@@ -12768,8 +12768,10 @@ function honeyScript_(C) {
   });
   // ★2026-11-12 まるちゃん「開いた時に、最新の会話とBOXや送信ボタンが見えたい状態だろ」
   //   ＝前は会話を出した瞬間に一番下へ動かすだけで、そのあと絵が読み込まれて高さが伸び、途中の位置で止まっていた。
-  //   自分で上へ動かすまでは、絵が出るたび・少し時間がたつたびに一番下へ合わせ直す。
+  //   自分で画面を触る（なぞる・ホイール・クリック・キー）までは、絵が出るたび・少し時間がたつたびに一番下へ合わせ直す。
   //   ★ブラウザが前の位置に戻す働き（読み直した時）も止める（これで途中の位置に戻されていた）。
+  //   ★★「上へ動いた」だけで止めてはいけない：ズコ本体は画面を出した直後に一番上へ戻す（index.html の mount）。
+  //     これを人が動かしたと取り違えて止まり、本物のスマホで一番下が出なかった（2026-11-12 まるちゃん「下が表示されてない」）。
   try { history.scrollRestoration = 'manual'; } catch (e) {}
   var stick = true, autoY = -1, tries = [];
   function toBottom() {
@@ -12782,11 +12784,7 @@ function honeyScript_(C) {
     tries.forEach(clearTimeout);
     tries = [150, 500, 1200, 2500, 4500, 8000].map(function (ms) { return setTimeout(function () { if (stick) toBottom(); }, ms); });
   }
-  window.addEventListener('scroll', function () {
-    var y = window.scrollY || document.documentElement.scrollTop || 0;
-    if (autoY >= 0 && y < autoY - 40) stick = false;      // 自分で上へ動かした＝もう合わせない
-  }, { passive: true });
-  ['touchstart', 'wheel'].forEach(function (ev) {      // 会話の所を触った・ホイールを回した＝もう合わせない（入力欄とボタンは別）
+  ['touchstart', 'wheel', 'mousedown', 'keydown'].forEach(function (ev) {      // 人が触った＝もう合わせない（入力欄とボタンは別）
     window.addEventListener(ev, function (e) {
       if (e.target && e.target.closest && e.target.closest('.hnbox, .hnbar, .hntabs, #hnSend, .hntop')) return;
       stick = false;
@@ -14231,18 +14229,14 @@ function threadsScript_(C) {
   //   ・下書きは公式の仕組みに無いので、この端末に覚えておく（アカウントごと）。
   var IC = function (k, sz) { return '<svg viewBox="0 0 24 24" fill="currentColor" width="' + (sz || 20) + '" height="' + (sz || 20) + '" aria-hidden="true">' + ((C.ico && C.ico[k]) || '') + '</svg>'; };
   var OFFMSG = 'は、Threadsの公式の仕組みでは使えません。Threadsのアプリから行ってください🙇';
-  var CHMSG = '続きの投稿には文だけ付けられます。写真・GIF・アンケート・添付テキストは最初の投稿に付けてください😊';
-  var LONG = '', APPR = false, SPOIL = false, OPEN_DRAFT = 0;
-  var GIF = null;   // ★2026-11-12 選んだGIF {id, src（一覧の小さい絵）, big（小窓に出す絵）, w, h}
+  var APPR = false, OPEN_DRAFT = 0;
   function each(sel, root, fn) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
   function vals(ids) { return ids.map(function (i) { return $(i).value.trim(); }); }
-  function chainBoxes() { return Array.prototype.slice.call(document.querySelectorAll('#thChain textarea')); }
-  function blocks() { return [$('thText')].concat(chainBoxes()); }
   function autoH(t) { t.style.height = '21px'; t.style.height = t.scrollHeight + 'px'; }
-  function showView(v) { ['thWrite', 'thDrafts', 'thLongView', 'thGifView'].forEach(function (i) { $(i).style.display = i === v ? '' : 'none'; }); closeMenus(); }
+  function showView(v) { ['thWrite', 'thDrafts', 'thLongView', 'thGifView', 'thAltView', 'thQuoteView', 'thLocView', 'thSchedView'].forEach(function (i) { $(i).style.display = i === v ? '' : 'none'; }); closeMenus(); }
   function closeMenus() {
     $('thMoreMenu').style.display = 'none'; $('thOpt').style.display = 'none';
-    each('#thThumbs .tmenu', null, function (m) { m.parentNode.removeChild(m); });
+    each('#thCompose .tmi .tmenu', null, function (m) { m.parentNode.removeChild(m); });
   }
   function fillWho(root) {
     var pf = (FEED && FEED.profile) || {}, a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
@@ -14251,52 +14245,60 @@ function threadsScript_(C) {
     each('.thAvI', root, function (im) { if (pf.pic) im.src = pf.pic; else im.removeAttribute('src'); });
   }
 
-  // ── 道具の並び（本物と同じ：写真を付けると「追加」・アンケート中は絵文字・スタンプ・位置情報だけ） ──
+  // ── 投稿の欄（★2026-11-12 まるちゃん「全部作って」で作り直した）──
+  //   1つ目の投稿も続きの投稿も、同じ部品（.tblk）で、写真・動画・アンケート・添付テキスト（文字の飾りつき）・引用を持てる。
+  //   中身は欄ごとに el.S に持つ（1つ目＝thBlk0）。位置情報・予約・インスタのストーリーズへの同時シェアは投稿全体で1つ。
+  var B0 = $('thBlk0');
+  var LOC = null, SCHED = 0, IGS = false;   // 位置情報 {id,name}／予約の日時（ミリ秒）／インスタのストーリーズにも出す
+  var EDIT = null;                          // 別の画面で編集中の欄 {blk, i}
+  function st(blk) { if (!blk.S) blk.S = { media: [], long: null, gif: null, spoil: false, quote: null, poll: false }; return blk.S; }
+  function q1(blk, sel) { return blk.querySelector(sel); }
+  function allBlks() { return [B0].concat(Array.prototype.slice.call(document.querySelectorAll('#thChain .tblk'))); }
+  function blkOf(el) { return el && el.closest ? el.closest('.tblk') : null; }
+
+  // ── 道具の並び（本物と同じ：写真を付けると「追加」・アンケート中は絵文字・位置情報だけ） ──
   function icBtn(act, k, title, sz) { return '<button type="button" class="tic" data-act="' + act + '" title="' + title + '">' + IC(k, sz) + '</button>'; }
-  function icOff(k, name, sz) { return '<button type="button" class="tic" data-off="' + name + '" title="' + name + '">' + IC(k, sz) + '</button>'; }
-  function chOff(k, sz) { return '<button type="button" class="tic" data-msg="' + CHMSG + '">' + IC(k, sz) + '</button>'; }
   function mediaBtn(label) {
     return '<label class="tic" title="メディアを添付">' + IC('media') + (label ? '<span>' + label + '</span>' : '') +
       '<input type="file" class="thFile" accept="image/*,video/mp4,video/quicktime" multiple></label>';
   }
-  function drawIcons() {
-    var h, pollOn = $('thPoll').style.display !== 'none';
-    if (MEDIA.length) h = mediaBtn('追加') + icBtn('emo', 'emoji', '絵文字を追加') + icOff('loc', '位置情報', 18);
-    else if (pollOn || LONG || GIF) h = icBtn('emo', 'emoji', '絵文字を追加') + icOff('loc', '位置情報', 18);
+  function drawIcons(blk) {
+    blk = blk || B0;
+    var S = st(blk), first = blk === B0, h;
+    var loc = first ? icBtn('loc', 'loc', '位置情報', 18) : '';
+    var qt = S.quote ? '' : icBtn('quote', 'quote', '引用投稿');
+    if (S.media.length) h = mediaBtn('追加') + icBtn('emo', 'emoji', '絵文字を追加') + qt + loc;
+    else if (S.poll || S.long || S.gif) h = icBtn('emo', 'emoji', '絵文字を追加') + qt + loc;
     else h = mediaBtn('') + (gifKey() ? icBtn('gif', 'gif', 'GIFを追加') : '') + icBtn('emo', 'emoji', '絵文字を追加') + icBtn('poll', 'poll', 'アンケートを追加') +
-      icOff('quote', '引用投稿') + icBtn('long', 'text', 'テキストを添付') + icOff('loc', '位置情報', 18);
-    var em = $('thEmos'), tm = $('thBlk0').querySelector('.tmain');
-    $('thIcons').innerHTML = h;
-    if (em.parentNode === tm) tm.insertBefore(em, $('thIcons'));
-  }
-  function chainIcons() {
-    return chOff('media') + (gifKey() ? chOff('gif') : '') + icBtn('emo', 'emoji', '絵文字を追加') + chOff('poll') +
-      icOff('quote', '引用投稿') + chOff('text') + icOff('loc', '位置情報', 18);
+      qt + icBtn('long', 'text', 'テキストを添付') + loc;
+    var ic = q1(blk, '.ticons'), em = $('thEmos'), tm = q1(blk, '.tmain');
+    ic.innerHTML = h;
+    if (em.parentNode === tm) tm.insertBefore(em, ic);
   }
 
   // ── 残りの文字数・投稿ボタン・スレッドに追加・「1/2」の印 ──
+  function blkEmpty(blk) { var S = st(blk); return !q1(blk, '.tta').value.trim() && !S.media.length && !S.gif; }
   function canPost() {
-    var bs = blocks();
-    if (!$('thText').value.trim() && !MEDIA.length && !GIF) return false;
+    var bs = allBlks();
+    if (blkEmpty(B0)) return false;
     for (var i = 0; i < bs.length; i++) {
-      if (tlen(bs[i].value) > MAXT) return false;
-      if (i > 0 && !bs[i].value.trim()) return false;
+      if (tlen(q1(bs[i], '.tta').value) > MAXT) return false;
+      if (i > 0 && blkEmpty(bs[i])) return false;
     }
     return true;
   }
   function drawCnt() {
-    var bs = blocks(), rest = MAXT;
-    bs.forEach(function (t) { rest = Math.min(rest, MAXT - tlen(t.value)); });
+    var bs = allBlks(), rest = MAXT;
+    bs.forEach(function (b) { rest = Math.min(rest, MAXT - tlen(q1(b, '.tta').value)); });
     var c = $('thCnt');
     c.textContent = rest <= 50 ? String(rest) : '';
     c.className = 'tcnt' + (rest < 0 ? ' neg' : '');
     $('thGo').disabled = !canPost();
+    $('thGo').textContent = SCHED ? '予約' : '投稿';
     var last = bs[bs.length - 1];
-    var filled = !!last.value.trim() || (bs.length === 1 && (MEDIA.length > 0 || !!GIF));
-    $('thAddChain').classList.toggle('on', filled && tlen(last.value) <= MAXT && bs.length - 1 < MAXCHAIN);
-    var n = bs.length, p0 = $('thBlk0').querySelector('.tpg');
-    p0.style.display = n > 1 ? '' : 'none'; p0.textContent = '1/' + n;
-    each('#thChain .tpg', null, function (p, i) { p.textContent = (i + 2) + '/' + n; });
+    $('thAddChain').classList.toggle('on', !blkEmpty(last) && tlen(q1(last, '.tta').value) <= MAXT && bs.length - 1 < MAXCHAIN);
+    var n = bs.length;
+    bs.forEach(function (b, i) { var p = q1(b, '.tpg'); p.style.display = n > 1 ? '' : 'none'; p.textContent = (i + 1) + '/' + n; });
   }
 
   // ── 絵文字（押すと、最後に触った欄の今の位置に入る） ──
@@ -14314,32 +14316,39 @@ function threadsScript_(C) {
     t.dispatchEvent(new Event('input', { bubbles: true }));
   });
 
-  // ── 写真・動画（写真は時間指定LINE送信と同じ縮め方・動画はそのまま） ──
-  function totalMB() { return MEDIA.reduce(function (s, o) { return s + o.b64.length * 3 / 4; }, 0) / 1048576; }
-  function drawThumbs() {
-    if (!MEDIA.length) SPOIL = false;
-    var box = $('thThumbs');
-    box.className = 'tmed' + (MEDIA.length > 1 ? ' many' : '') + (SPOIL ? ' sp' : '');
-    box.innerHTML = MEDIA.map(function (o, i) {
+  // ── 写真・動画（写真は時間指定LINE送信と同じ縮め方・動画はそのまま）。代替テキストは写真ごと（alt）。 ──
+  function totalMB() {
+    var s = 0; allBlks().forEach(function (b) { st(b).media.forEach(function (o) { s += o.b64.length * 3 / 4; }); });
+    return s / 1048576;
+  }
+  function drawThumbs(blk) {
+    blk = blk || B0;
+    var S = st(blk);
+    if (!S.media.length) S.spoil = false;
+    var box = q1(blk, '.tmed');
+    box.className = 'tmed' + (S.media.length > 1 ? ' many' : '') + (S.spoil ? ' sp' : '');
+    box.innerHTML = S.media.map(function (o, i) {
       var face = o.video ? '<video class="v" src="data:' + (o.type || 'video/mp4') + ';base64,' + o.b64 + '" muted playsinline preload="metadata"></video>'
                          : '<img src="data:image/jpeg;base64,' + o.b64 + '">';
       return '<div class="tmi">' + face + '<button type="button" class="rm" data-act="rmm" data-i="' + i + '" title="削除">' + IC('x', 14) + '</button>' +
+        (o.alt ? '<span class="talt">ALT</span>' : '') +
         '<button type="button" class="mo" data-act="mmo" data-i="' + i + '" title="添付ファイルに対するアクション">···</button></div>';
     }).join('');
-    drawIcons(); drawCnt();
+    drawIcons(blk); drawCnt();
   }
   function addFiles(inp) {
+    var blk = blkOf(inp) || B0, S = st(blk);
     var files = Array.prototype.slice.call(inp.files || []);
     inp.value = '';
     files.forEach(function (f) {
-      if (MEDIA.length >= MAXI) { warn('写真・動画は合わせて' + MAXI + '個までです。'); return; }
+      if (S.media.length >= MAXI) { warn('写真・動画は合わせて' + MAXI + '個までです。'); return; }
       if (/^video\//.test(f.type)) {
         if (f.size > VIDEO_MB * 1048576) { warn('動画は1つ' + VIDEO_MB + 'MBまでです。短い動画にしてください🙇'); return; }
         var vr = new FileReader();
         vr.onload = function () {
           var b64 = String(vr.result).split(',')[1] || '';
           if (totalMB() + b64.length * 3 / 4 / 1048576 > TOTAL_MB) { warn('写真・動画は合わせて' + TOTAL_MB + 'MBまでです。'); return; }
-          MEDIA.push({ b64: b64, video: true, type: f.type }); drawThumbs();
+          S.media.push({ b64: b64, video: true, type: f.type }); drawThumbs(blk);
         };
         vr.readAsDataURL(f);
         return;
@@ -14353,9 +14362,9 @@ function threadsScript_(C) {
           if (w > mx || h > mx) { if (w >= h) { h = Math.round(h * mx / w); w = mx; } else { w = Math.round(w * mx / h); h = mx; } }
           var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
           cv.getContext('2d').drawImage(im, 0, 0, w, h);
-          if (MEDIA.length >= MAXI) return;
-          MEDIA.push({ b64: cv.toDataURL('image/jpeg', 0.82).split(',')[1] });
-          drawThumbs();
+          if (S.media.length >= MAXI) return;
+          S.media.push({ b64: cv.toDataURL('image/jpeg', 0.82).split(',')[1] });
+          drawThumbs(blk);
         };
         im.src = fr.result;
       };
@@ -14363,47 +14372,167 @@ function threadsScript_(C) {
     });
   }
 
+  // ── 代替テキスト（★2026-11-12：写真・動画に「何が写っているか」の説明を付ける。公式の仕組みの alt_text） ──
+  function openAlt(blk, i) {
+    var o = st(blk).media[i]; if (!o) return;
+    EDIT = { blk: blk, i: i };
+    $('thAltImg').innerHTML = o.video ? '<video src="data:' + (o.type || 'video/mp4') + ';base64,' + o.b64 + '" muted playsinline></video>' : '<img src="data:image/jpeg;base64,' + o.b64 + '">';
+    $('thAltText').value = o.alt || '';
+    showView('thAltView');
+    setTimeout(function () { try { $('thAltText').focus(); } catch (e) {} }, 50);
+  }
+  $('thAltCancel').addEventListener('click', function () { EDIT = null; showView('thWrite'); });
+  $('thAltDone').addEventListener('click', function () {
+    if (!EDIT) { showView('thWrite'); return; }
+    var o = st(EDIT.blk).media[EDIT.i];
+    if (o) o.alt = $('thAltText').value.trim().slice(0, 1000);
+    var b = EDIT.blk; EDIT = null; showView('thWrite'); drawThumbs(b);
+  });
+
   // ── アンケート（本物と同じ：はい／いいえ／別の選択肢を追加・24時間後に終了） ──
-  function pollAdd() {
-    var p3 = $('thP3'), p4 = $('thP4');
+  function pollIns(blk) { return ['.tp1', '.tp2', '.tp3', '.tp4'].map(function (c) { return q1(blk, c); }); }
+  function pollAdd(blk) {
+    var p = pollIns(blk), p3 = p[2], p4 = p[3];
     p3.classList.toggle('add', !p3.value); p4.classList.toggle('add', !p4.value);
     if (p3.value) p4.style.display = ''; else if (!p4.value) p4.style.display = 'none';
   }
-  $('thPollDel').addEventListener('click', function () {
-    ['thP1', 'thP2', 'thP3', 'thP4'].forEach(function (i) { $(i).value = ''; });
-    $('thPoll').style.display = 'none'; pollAdd(); drawIcons();
-  });
+  function setPoll(blk, on, vals_) {
+    var S = st(blk), p = pollIns(blk);
+    S.poll = !!on;
+    p.forEach(function (x, k) { x.value = on && vals_ ? (vals_[k] || '') : (on ? x.value : ''); });
+    q1(blk, '.tpoll').style.display = on ? '' : 'none';
+    pollAdd(blk); drawIcons(blk);
+  }
+  function pollVals(blk) { return pollIns(blk).map(function (x) { return x.value.trim(); }); }
 
-  // ── 添付テキスト（📄＝長い文・10000文字まで） ──
-  function drawLong() { $('thLongCard').style.display = LONG ? '' : 'none'; $('thLongPrev').textContent = LONG; drawIcons(); drawCnt(); }
-  function drawLongDone() { $('thLongDone').classList.toggle('ok', !!$('thLongText').value.trim()); }
-  function openLong() { $('thLongText').value = LONG; drawLongDone(); showView('thLongView'); setTimeout(function () { try { $('thLongText').focus(); } catch (e) {} }, 50); }
-  $('thLongText').addEventListener('input', drawLongDone);
-  $('thLongCancel').addEventListener('click', function () { showView('thWrite'); });
-  $('thLongDone').addEventListener('click', function () {
-    var v = $('thLongText').value.trim(); if (!v) return;
-    if (tlen(v) > MAXLONG) { warn('長い文は' + MAXLONG + '文字までです。'); return; }
-    LONG = v; drawLong(); showView('thWrite');
+  // ── 添付テキスト（📄＝長い文・10000文字まで）＋文字の飾り（★2026-11-12：太字・斜体・下線・取り消し線・蛍光ペン） ──
+  //   飾りは公式の仕組みの text_with_styling_info で付く（2026-11-12 下書きで確かめた）。画面は「飾りごとの区切り」(runs)を送る。
+  var FMT = { bold: 'bold', italic: 'italic', underline: 'underline', strikethrough: 'strikeThrough' };
+  var HL = 'rgb(122, 98, 0)';
+  function longPlain(L) { return !L ? '' : (typeof L === 'string' ? L : (L.runs || []).map(function (r) { return r[0]; }).join('')); }
+  function runsHtml(L) {
+    if (!L) return '';
+    var runs = typeof L === 'string' ? [[L, []]] : (L.runs || []);
+    return runs.map(function (r) {
+      var h = esc(r[0]).replace(/\n/g, '<br>'), s = r[1] || [];
+      if (s.indexOf('bold') >= 0) h = '<b>' + h + '</b>';
+      if (s.indexOf('italic') >= 0) h = '<i>' + h + '</i>';
+      if (s.indexOf('underline') >= 0) h = '<u>' + h + '</u>';
+      if (s.indexOf('strikethrough') >= 0) h = '<s>' + h + '</s>';
+      if (s.indexOf('highlight') >= 0) h = '<span style="background-color:' + HL + '">' + h + '</span>';
+      return h;
+    }).join('');
+  }
+  // 編集した中身を「飾りごとの区切り」に直す（スマホの入力は <b>・<i>・<u>・<strike>・色つきの <span>・<div> 改行などで入るので、見た目＝計算した書式で判断する）
+  function edRuns(root) {
+    var runs = [], first = true;
+    function push(t, s) {
+      if (!t) return;
+      var k = s.join(','), last = runs[runs.length - 1];
+      if (last && last[1].join(',') === k) last[0] += t; else runs.push([t, s.slice()]);
+    }
+    function stylesOf(el) {
+      var s = [], cs = window.getComputedStyle(el);
+      if (Number(cs.fontWeight) >= 600 || cs.fontWeight === 'bold') s.push('bold');
+      if (cs.fontStyle === 'italic') s.push('italic');
+      var deco = '', p = el;
+      while (p && p !== root) { var c2 = window.getComputedStyle(p); deco += ' ' + (c2.textDecorationLine || c2.textDecoration || ''); p = p.parentElement; }
+      if (/underline/.test(deco)) s.push('underline');
+      if (/line-through/.test(deco)) s.push('strikethrough');
+      var hl = false; p = el;
+      while (p && p !== root) { var bg = window.getComputedStyle(p).backgroundColor; if (bg && bg !== 'transparent' && !/rgba\(0, 0, 0, 0\)/.test(bg)) { hl = true; break; } p = p.parentElement; }
+      if (hl) s.push('highlight');
+      return s;
+    }
+    function walk(n) {
+      if (n.nodeType === 3) { push(n.nodeValue.replace(/ /g, ' '), stylesOf(n.parentElement)); first = false; return; }
+      if (n.nodeType !== 1) return;
+      if (n.tagName === 'BR') { push('\n', []); first = false; return; }
+      var block = /^(DIV|P|LI)$/.test(n.tagName);
+      if (block && !first) {
+        var last = runs[runs.length - 1];
+        if (!(last && /\n$/.test(last[0]))) push('\n', []);
+      }
+      for (var c = n.firstChild; c; c = c.nextSibling) walk(c);
+    }
+    for (var c = root.firstChild; c; c = c.nextSibling) walk(c);
+    // 最後の余分な改行は外す
+    while (runs.length && /^\n+$/.test(runs[runs.length - 1][0])) runs.pop();
+    if (runs.length) runs[runs.length - 1][0] = runs[runs.length - 1][0].replace(/\n+$/, '');
+    return runs.filter(function (r) { return r[0]; });
+  }
+  function drawLong(blk) {
+    blk = blk || B0;
+    var L = st(blk).long, c = q1(blk, '.tlongc');
+    c.style.display = L ? '' : 'none';
+    q1(c, '.lp').innerHTML = runsHtml(L);
+    drawIcons(blk); drawCnt();
+  }
+  function drawLongDone() { $('thLongDone').classList.toggle('ok', !!$('thLongEd').textContent.trim()); }
+  function fmtState() {
+    each('#thFmt button', null, function (b) {
+      var k = b.getAttribute('data-fmt'), on = false;
+      try {
+        if (k === 'highlight') {
+          var s = window.getSelection(), n = s && s.anchorNode;
+          var el = n && (n.nodeType === 1 ? n : n.parentElement);
+          while (el && el !== $('thLongEd')) { var bg = window.getComputedStyle(el).backgroundColor; if (bg && bg !== 'transparent' && !/rgba\(0, 0, 0, 0\)/.test(bg)) { on = true; break; } el = el.parentElement; }
+        } else on = document.queryCommandState(FMT[k]);
+      } catch (e) {}
+      b.classList.toggle('on', on);
+    });
+  }
+  function openLong(blk) {
+    EDIT = { blk: blk || B0 };
+    $('thLongEd').innerHTML = runsHtml(st(EDIT.blk).long);
+    drawLongDone(); showView('thLongView'); fmtState();
+    setTimeout(function () { try { $('thLongEd').focus(); } catch (e) {} }, 50);
+  }
+  $('thLongEd').addEventListener('input', function () { drawLongDone(); fmtState(); });
+  $('thLongEd').addEventListener('keyup', fmtState);
+  $('thLongEd').addEventListener('mouseup', fmtState);
+  document.addEventListener('selectionchange', function () { if ($('thLongView').style.display !== 'none') fmtState(); });
+  // ★飾りのボタンを押しても入力欄から外れない（選んだ文字が消えない）ように、押した瞬間の動きを止める
+  $('thFmt').addEventListener('mousedown', function (e) { if (e.target.closest('button')) e.preventDefault(); });
+  $('thFmt').addEventListener('touchstart', function (e) { if (e.target.closest('button')) e.preventDefault(); }, { passive: false });
+  $('thFmt').addEventListener('touchend', function (e) { var b = e.target.closest('button'); if (b) { e.preventDefault(); b.click(); } });
+  $('thFmt').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var k = b.getAttribute('data-fmt');
+    try {
+      document.execCommand('styleWithCSS', false, k === 'highlight');
+      if (k === 'highlight') document.execCommand('hiliteColor', false, b.classList.contains('on') ? 'transparent' : HL);
+      else document.execCommand(FMT[k], false, null);
+      document.execCommand('styleWithCSS', false, false);
+    } catch (x) {}
+    fmtState(); drawLongDone();
   });
-  $('thLongCard').addEventListener('click', function (e) {
-    if (e.target.closest('#thLongDel')) { LONG = ''; drawLong(); return; }
-    openLong();
+  $('thLongCancel').addEventListener('click', function () { EDIT = null; showView('thWrite'); });
+  $('thLongDone').addEventListener('click', function () {
+    var runs = edRuns($('thLongEd'));
+    var plain = runs.map(function (r) { return r[0]; }).join('');
+    if (!plain.trim()) return;
+    if (tlen(plain) > MAXLONG) { warn('長い文は' + MAXLONG + '文字までです。'); return; }
+    var blk = (EDIT && EDIT.blk) || B0; EDIT = null;
+    st(blk).long = runs.some(function (r) { return r[1].length; }) ? { runs: runs } : plain;
+    drawLong(blk); showView('thWrite');
   });
 
   // ── GIF（★2026-11-12 まるちゃん「2」＝GIFを使えるようにする） ──
   //   ・Threadsの公式の仕組みはGIPHYのGIFを付けられる（文だけの投稿だけ・文なしでもよい・写真・アンケート・長い文とは一緒にできない）。
   //   ・探すのはこのスマホから直接GIPHYへ（受付係を通すと1回5〜9秒かかるため）。鍵は open の答え（DATA.giphy）で、投稿できる人にだけ届く。
-  //   ・鍵がまだ無い時は、今までどおり押すと案内だけ出す。
+  //   ・鍵が無い間はボタンを出さない（2026-11-12 まるちゃん「GIFボタンを非表示」）。
   var GSEQ = 0, GTIMER = null;
   function gifKey() { return (DATA && DATA.giphy) || ''; }
-  function drawGif() {
-    var box = $('thGifBox');
-    if (!GIF) { box.style.display = 'none'; box.innerHTML = ''; }
+  function drawGif(blk) {
+    blk = blk || B0;
+    var G = st(blk).gif, box = q1(blk, '.tgifb');
+    if (!G) { box.style.display = 'none'; box.innerHTML = ''; }
     else {
       box.style.display = '';
-      box.innerHTML = '<div class="tmi"><img src="' + esc(GIF.big || GIF.src) + '" alt="GIF"><button type="button" class="rm" data-act="rmgif" title="削除">' + IC('x', 14) + '</button></div>';
+      box.innerHTML = '<div class="tmi"><img src="' + esc(G.big || G.src) + '" alt="GIF"><button type="button" class="rm" data-act="rmgif" title="削除">' + IC('x', 14) + '</button></div>';
     }
-    drawIcons(); drawCnt();
+    drawIcons(blk); drawCnt();
   }
   function gifLoad(q) {
     var k = gifKey(), seq = ++GSEQ, grid = $('thGifGrid');
@@ -14427,86 +14556,225 @@ function threadsScript_(C) {
       grid.innerHTML = '<div class="tgl">GIFを読み込めませんでした。もう一度試してもらえると嬉しいです🙇</div>';
     });
   }
-  function openGif() {
-    $('thGifQ').value = ''; showView('thGifView'); gifLoad('');
-  }
-  $('thGifCancel').addEventListener('click', function () { GSEQ++; showView('thWrite'); });
+  function openGif(blk) { EDIT = { blk: blk || B0 }; $('thGifQ').value = ''; showView('thGifView'); gifLoad(''); }
+  $('thGifCancel').addEventListener('click', function () { GSEQ++; EDIT = null; showView('thWrite'); });
   $('thGifQ').addEventListener('input', function () {
     var q = this.value.trim();
     clearTimeout(GTIMER); GTIMER = setTimeout(function () { gifLoad(q); }, 400);
   });
   $('thGifGrid').addEventListener('click', function (e) {
     var im = e.target.closest('img[data-gid]'); if (!im) return;
-    GIF = { id: im.getAttribute('data-gid'), src: im.getAttribute('src'), big: im.getAttribute('data-big'),
-            w: Number(im.getAttribute('width')) || 0, h: Number(im.getAttribute('height')) || 0 };
-    GSEQ++; showView('thWrite'); drawGif();
+    var blk = (EDIT && EDIT.blk) || B0; EDIT = null;
+    st(blk).gif = { id: im.getAttribute('data-gid'), src: im.getAttribute('src'), big: im.getAttribute('data-big'),
+                    w: Number(im.getAttribute('width')) || 0, h: Number(im.getAttribute('height')) || 0 };
+    GSEQ++; showView('thWrite'); drawGif(blk);
   });
 
-  // ── スレッドに追加（続きの投稿・5つまで。本物と同じく1つの投稿と同じ形で下に並ぶ） ──
-  function addChain(text) {
-    if (chainBoxes().length >= MAXCHAIN) { warn('続けて投稿できるのは' + MAXCHAIN + 'つまでです。'); return; }
-    var d = document.createElement('div');
-    d.className = 'tblk';
-    d.innerHTML = '<div class="tleft"><img class="tav thAvI" referrerpolicy="no-referrer"><div class="tline"></div></div><div class="tmain">' +
-      '<div class="tun"><b class="thUN"></b><span class="tpg"></span><button type="button" class="tx" data-act="rmchain" title="削除">' + IC('x', 16) + '</button></div>' +
-      '<textarea class="tta" rows="1" placeholder="もっと書く"></textarea>' +
-      '<div class="ticons">' + chainIcons() + '</div></div>';
-    $('thChain').appendChild(d); fillWho(d);
-    var ta = d.querySelector('textarea');
-    if (text) { ta.value = text; autoH(ta); } else ta.focus();
+  // ── 引用投稿（★2026-11-12：お店の投稿を引用する。公式の仕組みの quote_post_id）──
+  //   ほかの人の投稿を住所から引用することは、公式の仕組みでは番号が分からずできない（2026-11-12 確かめた）＝お店の投稿から選ぶ。
+  function drawQuote(blk) {
+    blk = blk || B0;
+    var Q = st(blk).quote, c = q1(blk, '.tqc'), pf = (FEED && FEED.profile) || {};
+    if (!Q) { c.style.display = 'none'; c.innerHTML = ''; }
+    else {
+      c.style.display = '';
+      c.innerHTML = '<div class="h"><b>' + esc(Q.user || pf.username || '') + '</b></div>' + (Q.text ? '<div class="t">' + esc(Q.text) + '</div>' : '') +
+        (Q.th ? '<img src="' + esc(Q.th) + '" referrerpolicy="no-referrer">' : '') +
+        '<button type="button" class="rm" data-act="rmquote" title="削除">' + IC('x', 16) + '</button>';
+    }
+    drawIcons(blk); drawCnt();
+  }
+  function openQuote(blk) {
+    EDIT = { blk: blk || B0 };
+    var ps = ((FEED && FEED.posts) || []).filter(function (p) { return p.type !== 'REPOST_FACADE' && p.id; });
+    $('thQuoteList').innerHTML = ps.length ? ps.map(function (p, i) {
+      var m = (p.media || [])[0];
+      return '<div class="tdr" data-qi="' + i + '"><div class="w"><div class="t">' + esc(p.text || (m ? '写真・動画' : '')) + '</div>' +
+        '<div class="d">' + esc(ago(p.at)) + '</div></div>' + (m ? '<img class="tqth" src="' + esc(m.th || m.u) + '" referrerpolicy="no-referrer">' : '') + '</div>';
+    }).join('') : '<div class="tempty"><b>引用できる投稿がまだありません</b><div>お店の投稿を読み込んでから、もう一度試してもらえると嬉しいです🙇</div></div>';
+    $('thQuoteList').__ps = ps;
+    showView('thQuoteView');
+  }
+  function setQuote(blk, p) {
+    var m = (p.media || [])[0];
+    st(blk).quote = { id: p.id, text: String(p.text || '').slice(0, 200), th: m ? (m.th || (m.t === 'IMAGE' ? m.u : '')) : '', user: p.user || '' };
+    drawQuote(blk);
+  }
+  $('thQuoteCancel').addEventListener('click', function () { EDIT = null; showView('thWrite'); });
+  $('thQuoteList').addEventListener('click', function (e) {
+    var r = e.target.closest('[data-qi]'); if (!r) return;
+    var p = ($('thQuoteList').__ps || [])[Number(r.getAttribute('data-qi'))]; if (!p) return;
+    var blk = (EDIT && EDIT.blk) || B0; EDIT = null;
+    showView('thWrite'); setQuote(blk, p);
+  });
+
+  // ── 位置情報（★2026-11-12：公式の仕組みの location_search → location_id。投稿全体で1つ） ──
+  var LSEQ = 0, LTIMER = null;
+  function drawLoc() {
+    var c = $('thLocChip');
+    c.style.display = LOC ? '' : 'none';
+    c.innerHTML = LOC ? IC('loc', 14) + '<span>' + esc(LOC.name) + '</span><button type="button" data-act="rmloc" title="削除">' + IC('x', 14) + '</button>' : '';
+  }
+  function locLoad(qv) {
+    var seq = ++LSEQ, box = $('thLocList');
+    if (!qv) { box.innerHTML = '<div class="tgl">場所の名前を入力してください😊</div>'; return; }
+    box.innerHTML = '<div class="tgl">検索しています。少し待っててくださいね🥺</div>';
+    ask({ kind: 'loc_search', acct: CUR, q: qv }, '', function (err, d) {
+      if (seq !== LSEQ) return;
+      if (err) { box.innerHTML = '<div class="tgl">' + esc(err) + '</div>'; return; }
+      var a = (d && d.places) || [];
+      $('thLocList').__a = a;
+      box.innerHTML = a.length ? a.map(function (p, i) {
+        return '<div class="tdr" data-li="' + i + '">' + IC('loc', 20) + '<div class="w"><div class="t">' + esc(p.name) + '</div>' + (p.sub ? '<div class="d">' + esc(p.sub) + '</div>' : '') + '</div></div>';
+      }).join('') : '<div class="tgl">見つかりませんでした。別の言葉で検索してください😊</div>';
+    });
+  }
+  function openLoc() { $('thLocQ').value = ''; $('thLocList').innerHTML = '<div class="tgl">場所の名前を入力してください😊</div>'; showView('thLocView'); setTimeout(function () { try { $('thLocQ').focus(); } catch (e) {} }, 50); }
+  $('thLocCancel').addEventListener('click', function () { LSEQ++; showView('thWrite'); });
+  $('thLocQ').addEventListener('input', function () { var v = this.value.trim(); clearTimeout(LTIMER); LTIMER = setTimeout(function () { locLoad(v); }, 700); });
+  $('thLocList').addEventListener('click', function (e) {
+    var r = e.target.closest('[data-li]'); if (!r) return;
+    var p = ($('thLocList').__a || [])[Number(r.getAttribute('data-li'))]; if (!p) return;
+    LOC = { id: p.id, name: p.name }; LSEQ++; showView('thWrite'); drawLoc(); drawCnt();
+  });
+
+  // ── 予約投稿（★2026-11-12 まるちゃん「④それで実現」＝サーバーが中身を預かり、その時刻に投稿する） ──
+  function fmtWhen(ms) {
+    var d = new Date(ms), w = '日月火水木金土'.charAt(d.getDay());
+    return (d.getMonth() + 1) + '月' + d.getDate() + '日(' + w + ') ' + d.getHours() + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+  function drawSched() {
+    $('thSchedLine').style.display = SCHED ? '' : 'none';
+    $('thSchedLine').innerHTML = SCHED ? IC('clock', 16) + '<span>' + esc(fmtWhen(SCHED)) + 'に投稿されます</span><button type="button" data-act="rmsched" title="予約を解除">' + IC('x', 14) + '</button>' : '';
+    $('thSchedMenu').querySelector('.r').innerHTML = (SCHED ? esc(fmtWhen(SCHED)) + ' ' : '') + IC('clock', 20);
     drawCnt();
   }
+  function openSched() {
+    var d = new Date(SCHED || (Date.now() + 3600000));
+    if (!SCHED) { d.setMinutes(0, 0, 0); }
+    var p2 = function (n) { return ('0' + n).slice(-2); };
+    $('thSchedDate').value = d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+    $('thSchedTime').value = p2(d.getHours()) + ':' + p2(d.getMinutes());
+    $('thSchedClear').style.display = SCHED ? '' : 'none';
+    showView('thSchedView');
+  }
+  $('thSchedCancel').addEventListener('click', function () { showView('thWrite'); });
+  $('thSchedClear').addEventListener('click', function () { SCHED = 0; showView('thWrite'); drawSched(); });
+  $('thSchedDone').addEventListener('click', function () {
+    var dv = $('thSchedDate').value, tv = $('thSchedTime').value;
+    if (!dv || !tv) { warn('日付と時刻を選択してください😊'); return; }
+    var a = dv.split('-'), b = tv.split(':');
+    var ms = new Date(Number(a[0]), Number(a[1]) - 1, Number(a[2]), Number(b[0]), Number(b[1]), 0, 0).getTime();
+    if (!(ms > Date.now() + 120000)) { warn('予約は、今から2分より後の日時を選択してください😊'); return; }
+    if (ms > Date.now() + 75 * 86400000) { warn('予約できるのは75日先までです。'); return; }
+    SCHED = ms; showView('thWrite'); drawSched();
+  });
+
+  // ── スレッドに追加（続きの投稿・5つまで。1つ目と同じ部品＝写真・アンケート・添付テキスト・引用も付けられる） ──
+  var PARTS = '<div class="tqc" style="display:none"></div><div class="tmed"></div><div class="tmed tgifb" style="display:none"></div>' +
+    '<div class="tpoll" style="display:none"><input class="tp1" maxlength="25" placeholder="はい"><input class="tp2" maxlength="25" placeholder="いいえ">' +
+    '<input class="tp3 add" maxlength="25" placeholder="別の選択肢を追加"><input class="tp4 add" maxlength="25" placeholder="別の選択肢を追加" style="display:none">' +
+    '<div class="tpf"><span>24時間後に終了します</span><button type="button" data-act="pollDel">アンケートを削除</button></div></div>' +
+    '<div class="tlongc" style="display:none"><span class="lp"></span><button type="button" class="rm" data-act="longDel" title="削除">' + IC('x', 16) + '</button></div>';
+  function addChain(d) {
+    if (allBlks().length - 1 >= MAXCHAIN) { warn('続けて投稿できるのは' + MAXCHAIN + 'つまでです。'); return null; }
+    d = (typeof d === 'string') ? { text: d } : (d || {});
+    var el = document.createElement('div');
+    el.className = 'tblk';
+    el.innerHTML = '<div class="tleft"><img class="tav thAvI" referrerpolicy="no-referrer"><div class="tline"></div></div><div class="tmain">' +
+      '<div class="tun"><b class="thUN"></b><span class="tpg"></span><button type="button" class="tx" data-act="rmchain" title="削除">' + IC('x', 16) + '</button></div>' +
+      '<textarea class="tta" rows="1" placeholder="もっと書く"></textarea>' + PARTS +
+      '<div class="ticons"></div></div>';
+    $('thChain').appendChild(el); fillWho(el);
+    loadBlk(el, d);
+    var ta = q1(el, '.tta');
+    if (!d.text) ta.focus();
+    return el;
+  }
   $('thAddChain').addEventListener('click', function () { if (this.classList.contains('on')) addChain(''); });
+  // 1つの欄に中身を入れる（下書きを開く時・続きを足す時）
+  function loadBlk(blk, d) {
+    var S = st(blk);
+    S.media = d.media || []; S.long = d.long || null; S.gif = d.gif || null; S.spoil = !!d.spoil; S.quote = d.quote || null;
+    var ta = q1(blk, '.tta'); ta.value = d.text || ''; autoH(ta);
+    setPoll(blk, !!d.poll, d.poll || null);
+    drawThumbs(blk); drawLong(blk); drawGif(blk); drawQuote(blk);
+  }
+  function blkData(blk, withMedia) {
+    var S = st(blk);
+    return { text: q1(blk, '.tta').value, media: withMedia ? S.media : [], long: S.long, gif: S.gif, spoil: S.spoil, quote: S.quote,
+             poll: S.poll ? pollVals(blk) : null };
+  }
 
   // ── 右上の「⋯」と、左下の「投稿オプション」（本物と同じメニュー） ──
   function drawOpt() {
     each('button', $('thRc'), function (b) { b.querySelector('.r').innerHTML = b.getAttribute('data-v') === RC ? IC('check', 20) : ''; });
     $('thApprove').querySelector('.sw').classList.toggle('on', APPR);
+    $('thIgs').querySelector('.sw').classList.toggle('on', IGS);
+    $('thShareBtn').querySelector('.r').innerHTML = (IGS ? 'オン ' : 'オフ ') + IC('right', 14);
   }
   $('thMoreBtn').addEventListener('click', function () { var m = $('thMoreMenu'), op = m.style.display === 'none'; closeMenus(); m.style.display = op ? '' : 'none'; });
-  $('thOptBtn').addEventListener('click', function () { var m = $('thOpt'), op = m.style.display === 'none'; closeMenus(); m.style.display = op ? '' : 'none'; drawOpt(); });
+  $('thOptBtn').addEventListener('click', function () { var m = $('thOpt'), op = m.style.display === 'none'; closeMenus(); m.style.display = op ? '' : 'none'; $('thShareRow').style.display = 'none'; drawOpt(); });
   $('thRc').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; RC = b.getAttribute('data-v'); drawOpt(); });
   $('thApprove').addEventListener('click', function () { APPR = !APPR; drawOpt(); });
+  $('thShareBtn').addEventListener('click', function () { var r = $('thShareRow'); r.style.display = r.style.display === 'none' ? '' : 'none'; });
+  $('thIgs').addEventListener('click', function () { IGS = !IGS; drawOpt(); });
+  $('thSchedMenu').addEventListener('click', function () { closeMenus(); openSched(); });
 
   // ── 小窓の中の押す・入力をまとめて受ける ──
   $('thCompose').addEventListener('click', function (e) {
     var t = e.target;
     var off = t.closest('[data-off]');
     if (off) { closeMenus(); warn(off.getAttribute('data-off') + OFFMSG); return; }
-    var mg = t.closest('[data-msg]');
-    if (mg) { warn(mg.getAttribute('data-msg')); return; }
     var a = t.closest('[data-act]');
     if (a) {
-      var act = a.getAttribute('data-act');
+      var act = a.getAttribute('data-act'), blk = blkOf(a) || B0, S = st(blk);
       if (act === 'emo') {
         var tm = a.closest('.tmain'), em = $('thEmos'), same = em.parentNode === tm && em.style.display !== 'none';
-        tm.insertBefore(em, tm.querySelector('.ticons')); em.style.display = same ? 'none' : '';
-        LAST = tm.querySelector('.tta');
+        tm.insertBefore(em, q1(tm, '.ticons')); em.style.display = same ? 'none' : '';
+        LAST = q1(tm, '.tta');
       } else if (act === 'poll') {
-        $('thPoll').style.display = ''; pollAdd(); drawIcons(); try { $('thP1').focus(); } catch (x) {}
+        setPoll(blk, true); try { q1(blk, '.tp1').focus(); } catch (x) {}
+      } else if (act === 'pollDel') {
+        setPoll(blk, false);
       } else if (act === 'long') {
-        openLong();
+        openLong(blk);
+      } else if (act === 'longDel') {
+        S.long = null; drawLong(blk);
       } else if (act === 'gif') {
-        openGif();
+        openGif(blk);
       } else if (act === 'rmgif') {
-        GIF = null; drawGif();
+        S.gif = null; drawGif(blk);
+      } else if (act === 'quote') {
+        openQuote(blk);
+      } else if (act === 'rmquote') {
+        S.quote = null; drawQuote(blk);
+      } else if (act === 'loc') {
+        openLoc();
+      } else if (act === 'rmloc') {
+        LOC = null; drawLoc(); drawCnt();
+      } else if (act === 'rmsched') {
+        SCHED = 0; drawSched();
       } else if (act === 'rmm') {
-        MEDIA.splice(Number(a.getAttribute('data-i')), 1); drawThumbs();
+        S.media.splice(Number(a.getAttribute('data-i')), 1); drawThumbs(blk);
       } else if (act === 'mmo') {
         var had = a.parentNode.querySelector('.tmenu'); closeMenus();
         if (!had) {
+          var i = Number(a.getAttribute('data-i')), o = S.media[i] || {};
           var m = document.createElement('div'); m.className = 'tmenu';
-          m.innerHTML = '<div class="s"><button type="button" data-act="spoil">「ネタバレあり」' + (SPOIL ? 'を解除' : 'にする') + '<span class="r">' + IC('eyeoff') + '</span></button>' +
+          m.innerHTML = '<div class="s"><button type="button" data-act="spoil">「ネタバレあり」' + (S.spoil ? 'を解除' : 'にする') + '<span class="r">' + IC('eyeoff') + '</span></button>' +
             '<button type="button" data-off="タグ付け">タグ付けする<span class="r">' + IC('person') + '</span></button>' +
-            '<button type="button" data-off="代替テキスト">代替テキストを追加<span class="r">' + IC('alt') + '</span></button></div>';
+            '<button type="button" data-act="alt" data-i="' + i + '">代替テキストを' + (o.alt ? '編集' : '追加') + '<span class="r">' + IC('alt') + '</span></button></div>';
           a.parentNode.appendChild(m);
         }
+      } else if (act === 'alt') {
+        closeMenus(); openAlt(blk, Number(a.getAttribute('data-i')));
       } else if (act === 'spoil') {
-        SPOIL = !SPOIL; closeMenus(); drawThumbs();
+        S.spoil = !S.spoil; closeMenus(); drawThumbs(blk);
       } else if (act === 'rmchain') {
-        var bk = a.closest('.tblk'), e2 = $('thEmos');
-        if (bk.contains(e2)) { e2.style.display = 'none'; $('thBlk0').querySelector('.tmain').insertBefore(e2, $('thIcons')); }   // 絵文字の箱ごと消さない
-        bk.parentNode.removeChild(bk);
+        var e2 = $('thEmos');
+        if (blk.contains(e2)) { e2.style.display = 'none'; q1(B0, '.tmain').insertBefore(e2, $('thIcons')); }   // 絵文字の箱ごと消さない
+        blk.parentNode.removeChild(blk);
         drawCnt();
       }
       return;
@@ -14516,7 +14784,7 @@ function threadsScript_(C) {
   $('thCompose').addEventListener('input', function (e) {
     var t = e.target;
     if (t.classList.contains('tta')) { autoH(t); drawCnt(); }
-    if (t.id === 'thP3' || t.id === 'thP4') pollAdd();
+    if (t.classList.contains('tp3') || t.classList.contains('tp4')) pollAdd(blkOf(t));
   });
   $('thCompose').addEventListener('change', function (e) { if (e.target.classList && e.target.classList.contains('thFile')) addFiles(e.target); });
   $('thCompose').addEventListener('focusin', function (e) {
@@ -14524,14 +14792,13 @@ function threadsScript_(C) {
     if (t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && t.type !== 'file')) LAST = t;
   });
 
-  // ── 下書き（本物と同じ：右上の絵で一覧・書きかけでキャンセルすると「下書きに保存しますか？」） ──
+  // ── 下書き（本物と同じ：右上の絵で一覧・書きかけでキャンセルすると「下書きに保存しますか？」）＋予約済み（★2026-11-12） ──
   function dkey() { return 'th_drafts_v1_' + CUR; }
   function draftsGet() { try { return JSON.parse(localStorage.getItem(dkey()) || '[]') || []; } catch (e) { return []; } }
   function draftsSet(a) { try { localStorage.setItem(dkey(), JSON.stringify(a)); return true; } catch (e) { return false; } }
   function snapshot(withMedia) {
-    return { at: Date.now(), text: $('thText').value, topic: $('thTopicText').value, chain: chainBoxes().map(function (t) { return t.value; }),
-             poll: $('thPoll').style.display !== 'none' ? vals(['thP1', 'thP2', 'thP3', 'thP4']) : null,
-             long: LONG, rc: RC, appr: APPR, spoil: SPOIL, media: withMedia ? MEDIA : [], gif: GIF };
+    return { v: 2, at: Date.now(), topic: $('thTopicText').value, blocks: allBlks().map(function (b) { return blkData(b, withMedia); }),
+             rc: RC, appr: APPR, loc: LOC, sched: SCHED, igs: IGS };
   }
   function dropDraft(at) { if (!at) return; draftsSet(draftsGet().filter(function (d) { return d.at !== at; })); }
   function saveDraft() {
@@ -14542,23 +14809,34 @@ function threadsScript_(C) {
     if (draftsSet(a)) { warn('写真・動画は大きいため下書きに保存できませんでした。文だけ保存しました。'); return true; }
     warn('下書きを保存できませんでした。'); return false;
   }
+  function draftBlocks(d) {
+    if (d.blocks) return d.blocks;
+    // 2026-11-12より前の下書き（1つ目だけが写真などを持つ形）
+    return [{ text: d.text || '', media: d.media || [], long: d.long || null, gif: d.gif || null, spoil: !!d.spoil, quote: null, poll: d.poll || null }]
+      .concat((d.chain || []).map(function (c) { return { text: c }; }));
+  }
   function loadDraft(d) {
     reset();
-    $('thText').value = d.text || ''; $('thTopicText').value = d.topic || '';
-    (d.chain || []).forEach(function (c) { addChain(c); });
-    if (d.poll) { $('thPoll').style.display = ''; ['thP1', 'thP2', 'thP3', 'thP4'].forEach(function (i, k) { $(i).value = d.poll[k] || ''; }); pollAdd(); }
-    LONG = d.long || ''; RC = d.rc || 'everyone'; APPR = !!d.appr; MEDIA = d.media || []; SPOIL = !!d.spoil; OPEN_DRAFT = d.at || 0;
-    GIF = d.gif || null;
-    drawLong(); drawThumbs(); drawGif(); each('#thCompose .tta', null, autoH); drawCnt();
+    $('thTopicText').value = d.topic || '';
+    var bs = draftBlocks(d);
+    loadBlk(B0, bs[0] || {});
+    bs.slice(1).forEach(function (b) { addChain(b); });
+    RC = d.rc || 'everyone'; APPR = !!d.appr; LOC = d.loc || null; IGS = !!d.igs; OPEN_DRAFT = d.at || 0;
+    SCHED = (d.sched && d.sched > Date.now() + 120000) ? d.sched : 0;
+    drawLoc(); drawSched(); drawOpt(); each('#thCompose .tta', null, autoH); drawCnt();
   }
+  var DTAB = 'dr';
   function drawDrafts() {
+    each('#thDraftTabs [data-dt]', null, function (b) { b.classList.toggle('on', b.getAttribute('data-dt') === DTAB); });
+    if (DTAB === 'sc') { drawSchedList(); return; }
     var a = draftsGet();
     if (!a.length) {
       $('thDraftList').innerHTML = '<div class="tempty">' + IC('draft', 88) + '<b>下書きはまだありません</b><div>下書きはここに表示されます。</div></div>';
       return;
     }
     $('thDraftList').innerHTML = a.map(function (d, i) {
-      var t = d.text || (d.chain || [])[0] || (d.long ? d.long : '') || ((d.media && d.media.length) ? '写真・動画' : '') || (d.gif ? 'GIF' : '');
+      var b0 = draftBlocks(d)[0] || {}, b1 = draftBlocks(d)[1] || {};
+      var t = b0.text || b1.text || longPlain(b0.long) || ((b0.media && b0.media.length) ? '写真・動画' : '') || (b0.gif ? 'GIF' : '');
       var dt = new Date(d.at);
       return '<div class="tdr" data-di="' + i + '"><img class="tav thAvI" referrerpolicy="no-referrer"><div class="w"><b class="thUN"></b>' +
         '<div class="t">' + esc(t) + '</div><div class="d">' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日 ' + ('0' + dt.getHours()).slice(-2) + ':' + ('0' + dt.getMinutes()).slice(-2) + '</div></div>' +
@@ -14566,9 +14844,47 @@ function threadsScript_(C) {
     }).join('');
     fillWho($('thDraftList'));
   }
-  $('thDraftBtn').addEventListener('click', function () { drawDrafts(); showView('thDrafts'); });
+  var SCL = null;
+  function drawSchedList() {
+    var box = $('thDraftList');
+    if (!SCL) { box.innerHTML = '<div class="tgl">読み込み中です…</div>'; return; }
+    if (!SCL.length) { box.innerHTML = '<div class="tempty">' + IC('clock', 88) + '<b>予約済みのスレッドはありません</b><div>予約したスレッドはここに表示されます。</div></div>'; return; }
+    box.innerHTML = SCL.map(function (d, i) {
+      var t = d.text || (d.n ? '写真・動画' : (d.long ? '添付テキスト' : ''));
+      return '<div class="tdr"><img class="tav thAvI" referrerpolicy="no-referrer"><div class="w"><b class="thUN"></b>' +
+        '<div class="t">' + esc(t) + '</div><div class="d">' + IC('clock', 12) + ' ' + esc(fmtWhen(Number(d.at) * 1000)) + 'に投稿' +
+        (d.n ? '・写真・動画' + d.n + '個' : '') + (d.chain ? '・続き' + d.chain + 'つ' : '') + (d.who ? '・' + esc(d.who) : '') + '</div></div>' +
+        (curRo() ? '' : '<button type="button" class="rm" data-srm="' + i + '" title="予約を取り消す">' + IC('x', 16) + '</button>') + '</div>';
+    }).join('');
+    fillWho(box);
+  }
+  function loadSchedList() {
+    SCL = null; drawSchedList();
+    ask({ kind: 'sched_list', acct: CUR }, '', function (err, d) {
+      if (err) { $('thDraftList').innerHTML = '<div class="tgl">' + esc(err) + '</div>'; return; }
+      SCL = (d && d.items) || [];
+      if (DTAB === 'sc') drawSchedList();
+    });
+  }
+  $('thDraftTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-dt]'); if (!b) return;
+    DTAB = b.getAttribute('data-dt'); drawDrafts();
+    if (DTAB === 'sc') loadSchedList();
+  });
+  $('thDraftBtn').addEventListener('click', function () { DTAB = 'dr'; drawDrafts(); showView('thDrafts'); });
   $('thDraftBack').addEventListener('click', function () { showView('thWrite'); });
   $('thDraftList').addEventListener('click', function (e) {
+    var sr = e.target.closest('[data-srm]');
+    if (sr) {
+      var it = (SCL || [])[Number(sr.getAttribute('data-srm'))]; if (!it) return;
+      szPopup_('この予約を取り消しますか？😊', { cancel: true, onYes: function () {
+        ask({ kind: 'sched_del', acct: CUR, sid: it.id }, '予約を取り消しています', function (err) {
+          if (err) { warn(err); return; }
+          loadSchedList();
+        });
+      } });
+      return;
+    }
     var rm = e.target.closest('[data-drm]');
     if (rm) {
       var at = (draftsGet()[Number(rm.getAttribute('data-drm'))] || {}).at;
@@ -14583,53 +14899,73 @@ function threadsScript_(C) {
 
   // ── 投稿 ──
   function reset() {
-    ['thText', 'thLongText', 'thTopicText', 'thP1', 'thP2', 'thP3', 'thP4'].forEach(function (i) { $(i).value = ''; });
-    MEDIA = []; LONG = ''; SPOIL = false; APPR = false; RC = 'everyone'; OPEN_DRAFT = 0; GIF = null;
-    $('thChain').innerHTML = ''; $('thPoll').style.display = 'none'; pollAdd(); drawGif();
-    var em = $('thEmos'); em.style.display = 'none'; $('thBlk0').querySelector('.tmain').insertBefore(em, $('thIcons'));
-    showView('thWrite'); autoH($('thText')); drawOpt();
-    drawLong(); drawThumbs();
+    ['thText', 'thTopicText'].forEach(function (i) { $(i).value = ''; });
+    $('thChain').innerHTML = '';
+    B0.S = null; loadBlk(B0, {});
+    RC = 'everyone'; APPR = false; OPEN_DRAFT = 0; LOC = null; SCHED = 0; IGS = false; EDIT = null;
+    var em = $('thEmos'); em.style.display = 'none'; q1(B0, '.tmain').insertBefore(em, $('thIcons'));
+    showView('thWrite'); autoH($('thText')); drawOpt(); drawLoc(); drawSched();
+  }
+  // 1つの欄を送る形にする（確かめも同じ所で）。→ 送る形 か エラーの文
+  function blkSend(blk, i) {
+    var S = st(blk), text = q1(blk, '.tta').value.trim(), where = i ? (i + 1) + 'つ目の投稿：' : '';
+    var pv = pollVals(blk), longt = longPlain(S.long);
+    if (!text && !S.media.length && !S.gif) return where + '文か写真・動画を入力してください😊';
+    if (tlen(text) > MAXT) return where + '文は' + MAXT + '文字までです。';
+    if (S.gif && (S.media.length || S.poll || longt)) return where + 'GIFは、写真・動画・アンケート・長い文と一緒には投稿できません。';
+    if (S.poll) {
+      if (S.media.length || longt) return where + '投票は、写真・動画・長い文と一緒には投稿できません。';
+      if (!pv[0] || !pv[1]) return where + '投票の選択肢は1つ目と2つ目を入力してください😊';
+      if (!text) return where + '投票には質問の文を入力してください😊';
+    }
+    if (longt) {
+      if (S.media.length) return where + '長い文は、写真・動画と一緒には投稿できません。';
+      if (tlen(longt) > MAXLONG) return where + '長い文は' + MAXLONG + '文字までです。';
+      if (!text) return where + '長い文には、最初に表示される文も入力してください😊';
+    }
+    var o = { text: text, media: S.media.map(function (m) { return m.alt ? { b64: m.b64, alt: m.alt } : { b64: m.b64 }; }),
+              long: S.long || '', spoiler: S.spoil };
+    if (S.poll) o.poll = { a: pv[0], b: pv[1], c: pv[2], d: pv[3] };
+    if (S.gif) o.gif = { id: S.gif.id };
+    if (S.quote) o.quote = { id: S.quote.id };
+    return o;
   }
   $('thGo').addEventListener('click', function () {
     if (this.disabled || curRo()) return;
-    var text = $('thText').value.trim();
-    var pv = vals(['thP1', 'thP2', 'thP3', 'thP4']);
-    var usePoll = $('thPoll').style.display !== 'none';
-    var longt = LONG;
-    var topic = $('thTopicText').value.trim().replace(/^#/, '');
-    var chain = chainBoxes().map(function (t) { return t.value.trim(); }).filter(function (x) { return x; });
     if (!CUR) { warn('投稿するアカウントを選択してください😊'); return; }
-    if (!text && !MEDIA.length && !GIF) { warn('文か写真・動画を入力してください😊'); return; }
-    if (tlen(text) > MAXT) { warn('文は' + MAXT + '文字までです。'); return; }
-    if (GIF && (MEDIA.length || usePoll || longt)) { warn('GIFは、写真・動画・アンケート・長い文と一緒には投稿できません。'); return; }
-    if (usePoll) {
-      if (MEDIA.length || longt) { warn('投票は、写真・動画・長い文と一緒には投稿できません。'); return; }
-      if (!pv[0] || !pv[1]) { warn('投票の選択肢は1つ目と2つ目を入力してください😊'); return; }
-      if (!text) { warn('投票には質問の文を入力してください😊'); return; }
-    }
-    if (longt) {
-      if (MEDIA.length) { warn('長い文は、写真・動画と一緒には投稿できません。'); return; }
-      if (tlen(longt) > MAXLONG) { warn('長い文は' + MAXLONG + '文字までです。'); return; }
-      if (!text) { warn('長い文には、最初に表示される文も入力してください😊'); return; }
-    }
+    var topic = $('thTopicText').value.trim().replace(/^#/, '');
     if (topic && (tlen(topic) > 50 || /[.&]/.test(topic))) { warn('トピックは50文字まで・「.」と「&」は使えません。'); return; }
-    if (chain.some(function (c) { return tlen(c) > MAXT; })) { warn('続きの文も1つ' + MAXT + '文字までです。'); return; }
-    var f = { kind: 'post', acct: CUR, text: text, media: MEDIA.map(function (o) { return { b64: o.b64 }; }),
-              topic: topic, long: longt, chain: chain, reply_control: RC,
-              approvals: APPR, spoiler: SPOIL };
-    if (usePoll) f.poll = { a: pv[0], b: pv[1], c: pv[2], d: pv[3] };
-    if (GIF) f.gif = { id: GIF.id };
-    var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
-    szPopup_((a ? a.label : '') + 'のThreadsに投稿しますか？😊', { icon: '', cancel: true, onYes: function () {
-      ask(f, MEDIA.some(function (o) { return o.video; }) ? 'Threadsに投稿中です（動画は数分かかります）' : 'Threadsに投稿中です', function (err, d) {
+    var bs = allBlks(), parts = [];
+    for (var i = 0; i < bs.length; i++) {
+      if (i > 0 && blkEmpty(bs[i])) continue;
+      var o = blkSend(bs[i], i);
+      if (typeof o === 'string') { warn(o); return; }
+      parts.push(o);
+    }
+    if (SCHED && SCHED < Date.now() + 120000) { warn('予約の日時が近すぎます。日時を選択し直してください😊'); return; }
+    var f = parts[0];
+    f.kind = SCHED ? 'sched_add' : 'post'; f.acct = CUR; f.topic = topic; f.reply_control = RC; f.approvals = APPR;
+    f.chain = parts.slice(1);
+    if (LOC) f.location = { id: LOC.id };
+    if (IGS) f.ig_story = true;
+    if (SCHED) f.at = Math.floor(SCHED / 1000);
+    var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0], lb = a ? a.label : '';
+    var hasVideo = allBlks().some(function (b) { return st(b).media.some(function (m) { return m.video; }); });
+    var q = SCHED ? lb + 'のThreadsに、' + fmtWhen(SCHED) + 'に投稿する予約をしますか？😊' : lb + 'のThreadsに投稿しますか？😊';
+    szPopup_(q, { icon: '', cancel: true, onYes: function () {
+      ask(f, SCHED ? '予約しています' : (hasVideo ? 'Threadsに投稿中です（動画は数分かかります）' : 'Threadsに投稿中です'), function (err, d) {
         if (err) { warn(err); return; }
+        var wasSched = !!SCHED;
         dropDraft(OPEN_DRAFT);
         reset(); closeCompose();
-        szOvShow_(szDoneHtml_('投稿が完了しました'), '#16a34a');
+        szOvShow_(szDoneHtml_(wasSched ? '予約が完了しました' : '投稿が完了しました'), '#16a34a');
         var db = document.getElementById('szDoneBack');
         if (db) db.addEventListener('click', function () {
-          szOvHide_(); loadAll();
-          if (d && d.chain_fail) warn('最初の投稿はできましたが、' + d.chain_fail);
+          szOvHide_(); if (!wasSched) loadAll();
+          var msg = [];
+          if (d && d.chain_fail) msg.push('最初の投稿はできましたが、' + d.chain_fail);
+          if (d && d.ig_story && d.ig_story !== 'SUCCESS') msg.push('インスタのストーリーズには出せませんでした。Threadsには投稿できています。');
+          if (msg.length) warn(msg.join('\n'));
         });
       });
     } });
@@ -14637,13 +14973,13 @@ function threadsScript_(C) {
 
   // ── 小窓を開く・閉じる ──
   function hasDraft() {
-    return !!($('thText').value.trim() || MEDIA.length || GIF || chainBoxes().some(function (t) { return t.value.trim(); }) || LONG ||
-              $('thTopicText').value.trim() || ($('thPoll').style.display !== 'none' && vals(['thP1', 'thP2', 'thP3', 'thP4']).some(function (x) { return x; })));
+    return allBlks().some(function (b) { var S = st(b); return !blkEmpty(b) || S.long || S.quote || (S.poll && pollVals(b).some(function (x) { return x; })); }) ||
+      !!$('thTopicText').value.trim() || !!LOC || !!SCHED;
   }
   function openCompose() {
     fillWho($('thCompose'));
     showView('thWrite'); $('thCompose').style.display = ''; document.body.style.overflow = 'hidden';
-    drawIcons(); drawCnt(); autoH($('thText'));
+    drawIcons(B0); drawCnt(); autoH($('thText'));
     setTimeout(function () { try { $('thText').focus(); } catch (e) {} }, 50);
   }
   function closeCompose() { $('thAsk').style.display = 'none'; $('thCompose').style.display = 'none'; document.body.style.overflow = ''; }

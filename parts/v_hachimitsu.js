@@ -307,11 +307,7 @@ function honeyScript_(C) {
     tries.forEach(clearTimeout);
     tries = [150, 500, 1200, 2500, 4500, 8000].map(function (ms) { return setTimeout(function () { if (stick) toBottom(); }, ms); });
   }
-  window.addEventListener('scroll', function () {
-    var y = window.scrollY || document.documentElement.scrollTop || 0;
-    if (autoY >= 0 && y < autoY - 40) stick = false;      
-  }, { passive: true });
-  ['touchstart', 'wheel'].forEach(function (ev) {      
+  ['touchstart', 'wheel', 'mousedown', 'keydown'].forEach(function (ev) {      
     window.addEventListener(ev, function (e) {
       if (e.target && e.target.closest && e.target.closest('.hnbox, .hnbar, .hntabs, #hnSend, .hntop')) return;
       stick = false;
