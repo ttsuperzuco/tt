@@ -216,41 +216,52 @@ function honeyScript_(C) {
   }
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;
   var lang = 'ja-JP';
-  var wantMic = false;
+  var IOS = /iPhone|iPad|iPod/.test(navigator.userAgent || '') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var wantMic = false, micAt = 0, gotText = false;
+  function kbHint() { popup('このiPhoneでは音声入力のボタンが止まってしまいました。入力欄を押して、キーボードの🎤（マイク）のボタンで話してください😊'); }
   function micOff() { wantMic = false; rec = null; $('hnMic').classList.remove('on'); $('hnMic').textContent = '🎤 音声入力'; $('hnText').value = $('hnText').value.replace(/[、，]$/, ''); }
   function micStop() { wantMic = false; try { if (rec) rec.stop(); } catch (e) {} if (!rec) micOff(); }
   function micStart() {
     var base = $('hnText').value, said = '';
     rec = new SR();
-    rec.lang = lang; rec.interimResults = true; rec.continuous = false;
+    rec.lang = lang; rec.interimResults = true; rec.continuous = IOS;
+    micAt = Date.now(); gotText = false;
     rec.onresult = function (e) {
       var t = '';
       for (var i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
       said = t;
+      if (t) gotText = true;
       $('hnText').value = base + t;
     };
     rec.onerror = function (e) {
       if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) {
         wantMic = false;
-        popup('マイクの使用が許可されていません。スマホの設定でマイクを許可してください🙇');
+        if (IOS) kbHint();
+        else popup('マイクの使用が許可されていません。スマホの設定でマイクを許可してください🙇');
       }
     };
     rec.onend = function () {
       rec = null;
       if (!wantMic) { micOff(); return; }
+      if (IOS) {      
+        var quick = !gotText && Date.now() - micAt < 4000;
+        micOff();
+        if (quick) kbHint();
+        return;
+      }
       if (said && !/[\s、。,.!?！？]$/.test(said)) $('hnText').value += (lang === 'zh-TW' ? '，' : '、');
       setTimeout(function () { if (!wantMic) { micOff(); return; } try { micStart(); } catch (er) { micOff(); } }, 250);
     };
     rec.start();
   }
   $('hnMic').addEventListener('click', function () {
-    if (!SR) { popup('このスマホでは音声入力のボタンを使えません。キーボードのマイクのボタンをお使いください🙇'); return; }
+    if (!SR) { popup('このスマホでは音声入力のボタンを使えません。入力欄を押して、キーボードの🎤（マイク）のボタンで話してください😊'); return; }
     if (wantMic) { micStop(); return; }
     try {
       wantMic = true;
       micStart();
       $('hnMic').classList.add('on'); $('hnMic').textContent = '⏹ 止める';
-    } catch (e) { micOff(); popup('音声入力を開始できませんでした。キーボードのマイクのボタンをお使いください🙇'); }
+    } catch (e) { micOff(); popup('音声入力を開始できませんでした。入力欄を押して、キーボードの🎤（マイク）のボタンで話してください😊'); }
   });
   document.addEventListener('visibilitychange', function () { if (document.hidden && wantMic) micStop(); });
   $('hnPick').addEventListener('click', function () { $('hnFile').click(); });
