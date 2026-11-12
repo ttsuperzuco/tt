@@ -1949,13 +1949,16 @@ var TILE_GROUP_ = {
   procell: 'keiei', shophist: 'keiei',
   // ★2026-10-26 まるちゃん決定：幹部(🍅トマト)にだけ出すボタンはスタッフ画面の下の「TOMATO画面」（PC版 super_pc.py と同じ）。
   uriage: 'tomato',
+  // ★2026-11-12 まるちゃん「この中でスタッフに公開したのは、スタッフの中にいれて」＝人ごとの表示で誰かに出しているボタンを開発中の機能から出した（PC版 super_pc.py と同じ）。
+  //   スレッズコ・TT売上帳簿・インズコグラム＝スタッフ画面（ここに書かない）。ハチミツちゃん＝トマトだけに出している＝TOMATO画面。フェイズコブックは開発中の機能のまま。
+  hachimitsu: 'tomato',
   // ★2026-11-11 まるちゃん「購入証明書ボタンを全スタッフにだして」＝shomeisho はスタッフ画面へ（ここに書かない・PC版 super_pc.py と同じ）。
   // ★2026-10-21 まるちゃん決定：「実務者用」を「スタッフ画面」に改名し、中身をみかんさんの画面と同じにした。
   //   みかんさんに出ないボタンは、開発中なら開発者用・それ以外は管理者用へ（PC版 super_pc.py の GROUP_OF と同じ）。
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', hachimitsu: 'kaihatsu', threads: 'kaihatsu', insta: 'kaihatsu', facebook: 'kaihatsu', uriagebook: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', facebook: 'kaihatsu'
   // ★2026-11-06 まるちゃん「前日お知らせの右に見てくれた？」＝お知らせ見てくれた？(mita)はスタッフ画面（ここに書かない）
   // ★2026-11-06 まるちゃん「開発中の機能に戻す」＝Threads投稿は開発版では開発中の機能に置く（TOMATO・オリーブ・みかんのスマホには人ごとの表示で出る）。
   // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
