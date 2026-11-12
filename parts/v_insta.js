@@ -66,7 +66,10 @@ var INSTACSS_ =
   '.iggrid button{position:relative;}' +
   '.igapvbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0;background:#FAEEDA;color:#633806;border-radius:10px;padding:8px 12px;font-size:13px;}' +
   '.igapvbar button{background:none;border:0;color:#633806;text-decoration:underline;font:inherit;font-weight:700;cursor:pointer;}' +
-  '#igDraftBtn.on{background:#EF9F27 !important;color:#412402 !important;}' +
+  '.igmode{display:inline-flex;background:#fff;border-radius:999px;padding:2px;gap:2px;}' +
+  '.igstat .igmode button{background:transparent;color:#64748b;padding:4px 12px;}' +
+  '.igstat .igmode button[data-mode="d"].on{background:#EF9F27;color:#412402;}' +
+  '.igstat .igmode button[data-mode="p"].on{background:#A32D2D;color:#fff;}' +
   '.iggrid button{position:relative;aspect-ratio:3/4;overflow:hidden;background:#efefef;display:block;}' +
   '.iggrid img{width:100%;height:100%;object-fit:cover;display:block;}' +
   '.iggrid .k{position:absolute;top:8px;right:8px;color:#fff;filter:drop-shadow(0 0 2px rgba(0,0,0,.45));}' +
@@ -322,7 +325,7 @@ function renderInstaPage_(base, staff, dev) {
       '<div class="hbhint" id="igLoad">読み込み中です…</div>' +
       '<div id="igMain" style="display:none">' +
         '<div class="igacct" id="igAcct"></div>' +
-        '<div class="igstat"><span id="igWhen"></span><span style="display:flex;gap:6px"><button type="button" id="igDraftBtn">下書き</button><button type="button" id="igReload">⟳ 最新にする</button></span></div>' +
+        '<div class="igstat"><span id="igWhen"></span><span style="display:flex;gap:6px"><span class="igmode" id="igMode"><button type="button" data-mode="d" class="on">下書き</button><button type="button" data-mode="p">本番</button></span><button type="button" id="igReload">⟳ 最新にする</button></span></div>' +
         '<div id="igApvBar" class="igapvbar" style="display:none"></div>' +
         '<div class="igapp" id="igApp"></div>' +
       '</div>' +
@@ -584,14 +587,15 @@ function instaScript_(C) {
                              'phone_unarchive', 'phone_pin', 'phone_unpin'] };
   var APV_DEL = ['delete', 'hl_delete', 'story_delete', 'cdel', 'sched_del', 'phone_archive'];
   var APV_NEW = ['post', 'comment', 'reply', 'dm_send', 'dm_image', 'phone_story', 'phone_reel', 'sched_add', 'phone_banner'];
-  var DRAFT = false, APVL = {};
+  var DRAFT = true, APVL = {};
   var APV_MSG = '承認待ちにしました😊\n社長・開発が承認すると本番に出ます。\n上の「下書き」で、出た時の見た目を確認できます。';
+  var APV_MSG_ADMIN = '下書きに保存しました。\n本番に出す時は、札を押して「承認」を押してください😊\nすぐ本番に出したい時は、上の「本番」に切り替えてから操作してください😊';
   function apvWrap(fields, op, done) {
     op = op || 'insta';
-    if (ISADMIN || !fields || !APV_W[op] || APV_W[op].indexOf(String(fields.kind || '')) < 0) return null;
-    var f = { kind: 'apv_add', op: op, f: fields, acct: fields.acct };
+    if ((ISADMIN && !DRAFT) || !fields || !APV_W[op] || APV_W[op].indexOf(String(fields.kind || '')) < 0) return null;
+    var f = { kind: 'apv_add', op: op, f: fields, acct: fields.acct }, adm = ISADMIN;
     return { f: f, done: function (err, d) {
-      if (!err && d && d.pending) { APVL[fields.acct] = null; if (DRAFT) apvLoad(fields.acct); done(APV_MSG); return; }
+      if (!err && d && d.pending) { APVL[fields.acct] = null; if (DRAFT) apvLoad(fields.acct); done(adm ? APV_MSG_ADMIN : APV_MSG); return; }
       done(err, d);
     } };
   }
@@ -733,8 +737,12 @@ function instaScript_(C) {
       var r = ev.target.closest('[data-li]'); if (r) openApvCard(r.getAttribute('data-li'));
     });
   }
-  $('igDraftBtn').addEventListener('click', function () {
-    DRAFT = !DRAFT; this.classList.toggle('on', DRAFT);
+  $('igMode').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-mode]'); if (!b) return;
+    var d = b.getAttribute('data-mode') === 'd';
+    if (d === DRAFT) return;
+    DRAFT = d;
+    [].forEach.call(this.querySelectorAll('[data-mode]'), function (x) { x.classList.toggle('on', (x.getAttribute('data-mode') === 'd') === DRAFT); });
     apvBar(); drawApp();
     if (DRAFT) apvLoad(CUR);
   });
