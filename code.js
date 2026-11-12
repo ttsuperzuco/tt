@@ -14062,7 +14062,6 @@ function renderThreadsPage_(base, staff, dev) {
           '<div class="tshr"><button type="button" class="tib" id="thDraftBtn" title="下書き">' + thIco_('draft', 24) + '</button>' +
           '<button type="button" class="tib" id="thMoreBtn" title="もっと見る">' + thIco_('more', 24) + '</button></div></div>' +
         '<div class="tmenu" id="thMoreMenu" style="display:none"><div class="s">' +
-          '<button type="button" data-off="AIラベル">AIラベルを追加</button></div><div class="s">' +
           '<button type="button" data-off="日時の指定">日時を指定...<span class="r">' + thIco_('clock', 20) + '</span></button></div></div>' +
         '<div class="tsb">' +
           '<div class="tblk" id="thBlk0">' +
