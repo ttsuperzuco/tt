@@ -17085,6 +17085,12 @@ var INSTACSS_ =
   '.igtabs button{height:46px;display:flex;align-items:center;justify-content:center;color:#737373;border-bottom:1px solid transparent;}' +
   '.igtabs button.on{color:#000;border-bottom:1px solid #000;}' +
   '.iggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}' +
+  // ★2026-11-12 承認制の札＝小さく重ねるだけ（並びも大きさも本番と同じまま）
+  '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
+  '.iggrid button{position:relative;}' +
+  '.igapvbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0;background:#FAEEDA;color:#633806;border-radius:10px;padding:8px 12px;font-size:13px;}' +
+  '.igapvbar button{background:none;border:0;color:#633806;text-decoration:underline;font:inherit;font-weight:700;cursor:pointer;}' +
+  '#igDraftBtn.on{background:#EF9F27 !important;color:#412402 !important;}' +
   '.iggrid button{position:relative;aspect-ratio:3/4;overflow:hidden;background:#efefef;display:block;}' +
   '.iggrid img{width:100%;height:100%;object-fit:cover;display:block;}' +
   '.iggrid .k{position:absolute;top:8px;right:8px;color:#fff;filter:drop-shadow(0 0 2px rgba(0,0,0,.45));}' +
@@ -17352,7 +17358,8 @@ function renderInstaPage_(base, staff, dev) {
       '<div class="hbhint" id="igLoad">読み込み中です…</div>' +
       '<div id="igMain" style="display:none">' +
         '<div class="igacct" id="igAcct"></div>' +
-        '<div class="igstat"><span id="igWhen"></span><button type="button" id="igReload">⟳ 最新にする</button></div>' +
+        '<div class="igstat"><span id="igWhen"></span><span style="display:flex;gap:6px"><button type="button" id="igDraftBtn">下書き</button><button type="button" id="igReload">⟳ 最新にする</button></span></div>' +
+        '<div id="igApvBar" class="igapvbar" style="display:none"></div>' +
         '<div class="igapp" id="igApp"></div>' +
       '</div>' +
     '</div></div>' +
@@ -17442,6 +17449,7 @@ function instaScript_(C) {
     }, function () { cb({}); });
   }
   function ask(fields, done, op) {
+    var w = apvWrap(fields, op, done); if (w) { fields = w.f; op = 'insta'; done = w.done; }
     devKey(function (ex) {
       for (var k in ex) fields[k] = ex[k];
       jsonp({ action: 'submit', key: C.key, op: op || 'insta', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) },
@@ -17509,9 +17517,9 @@ function instaScript_(C) {
     // 2026-11-09 目の印＋回数＝リールは再生回数、それ以外は閲覧数（vw＝メタ公式のviews・サーバーの insta_views.py が足す）
     var pv = (p.plays != null && p.plays !== '') ? p.plays : p.vw;
     var v = (pv != null && pv !== '') ? '<span class="v">' + IC.eye + num(pv) + '</span>' : '';
-    return '<button type="button" data-post="' + esc(p.code) + '">' +
+    return '<button type="button" ' + (p._apv ? 'data-apv="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
       (p.th ? '<img src="' + esc(p.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
-      (k ? '<span class="k">' + k + '</span>' : '') + v + '</button>';
+      (k ? '<span class="k">' + k + '</span>' : '') + v + (p._mark ? '<span class="igapv">' + p._mark + '</span>' : '') + '</button>';
   }
   function drawGrid(v) {
     var list = [], mode = TAB;
@@ -17543,6 +17551,8 @@ function instaScript_(C) {
   function drawApp() {
     var v = DATA && DATA.views && DATA.views[CUR];
     drawWhen();
+    if (DRAFT) apvBar();
+    if (DRAFT && v && v.prof) v = apvView(v);
     if (!v || !v.prof) { $('igApp').innerHTML = '<div class="igempty">' + (BUSY[CUR] ? 'インスタから読み込み中です…（30秒ほどかかります）' : '読み込み中です…') + '</div>'; return; }
     var p = v.prof, links = p.links || [];
     var h = '';
@@ -17591,6 +17601,7 @@ function instaScript_(C) {
     h += navHtml('prof');
     $('igApp').innerHTML = h;
     bioFit($('igApp'));
+    if (DRAFT && v._apvM) apvMarks($('igApp'), v._apvM);
     if (can('insights')) {
       var dn = CUR;
       readAsk({ kind: 'more_dash', acct: dn, days: 30 }, function (err, d) {
@@ -17619,6 +17630,169 @@ function instaScript_(C) {
     if (t.closest && (t.closest('[data-soon]') || t.closest('[data-post]'))) { warn(SOON); return; }
   });
   $('igReload').addEventListener('click', function () { loadWeb(CUR, true); });
+
+  // ── 承認制（2026-11-12 まるちゃん決定）──
+  //   社長・開発以外の書き込みは、送る直前に「承認待ち」（受付係の apv_add）へ回す。本番にはまだ出ない。
+  //   「下書き」を入れると、承認待ちを重ねた完成形を本番と同じ見た目で出し、変えた所に小さな札（新規・修正）だけ付ける。
+  //   札を押すと前・後・直した人・時刻。社長・開発には承認／差し戻し。削除した物は画面から消し、上の帯の「一覧」に出す。
+  var APV_W = { insta: ['post', 'comment', 'reply', 'chide', 'cdel', 'conoff', 'likes', 'edit', 'delete', 'prof_save', 'links_save', 'hl_save', 'hl_delete',
+                        'biz_save', 'story_delete', 'dm_send', 'dm_image', 'more_like', 'more_save', 'more_clike'],
+                instaphone: ['phone_banner', 'phone_story', 'phone_reel', 'phone_clike', 'sched_add', 'sched_del', 'phone_cf_set', 'phone_archive',
+                             'phone_unarchive', 'phone_pin', 'phone_unpin'] };
+  var APV_DEL = ['delete', 'hl_delete', 'story_delete', 'cdel', 'sched_del', 'phone_archive'];
+  var APV_NEW = ['post', 'comment', 'reply', 'dm_send', 'dm_image', 'phone_story', 'phone_reel', 'sched_add', 'phone_banner'];
+  var DRAFT = false, APVL = {};
+  var APV_MSG = '承認待ちにしました😊\n社長・開発が承認すると本番に出ます。\n上の「下書き」で、出た時の見た目を確認できます。';
+  function apvWrap(fields, op, done) {
+    op = op || 'insta';
+    if (ISADMIN || !fields || !APV_W[op] || APV_W[op].indexOf(String(fields.kind || '')) < 0) return null;
+    var f = { kind: 'apv_add', op: op, f: fields, acct: fields.acct };
+    return { f: f, done: function (err, d) {
+      if (!err && d && d.pending) { APVL[fields.acct] = null; if (DRAFT) apvLoad(fields.acct); done(APV_MSG); return; }
+      done(err, d);
+    } };
+  }
+  function apvAll() { return (APVL[CUR] || []).filter(function (it) { return it.status === 'wait'; }); }
+  function apvFind(fn) { return apvAll().filter(fn).slice(-1)[0] || null; }
+  function apvTag(it) { return APV_DEL.indexOf(it.kind) >= 0 ? '削除' : (APV_NEW.indexOf(it.kind) >= 0 || (it.kind === 'hl_save' && !(it.light || {}).hid) ? '新規' : '修正'); }
+  function apvLoad(acct) {
+    acct = acct || CUR;
+    ask({ kind: 'apv_list', acct: acct }, function (err, d) {
+      if (err) { warn(err); return; }
+      APVL[acct] = (d && d.items) || [];
+      if (acct === CUR) { apvBar(); if (DRAFT) drawApp(); }
+    });
+  }
+  function apvBar() {
+    var b = $('igApvBar'); if (!b) return;
+    if (!DRAFT) { b.style.display = 'none'; return; }
+    if (APVL[CUR] === undefined) { APVL[CUR] = null; apvLoad(CUR); }
+    var all = APVL[CUR] || [], w = apvAll().length, ng = all.filter(function (it) { return it.status === 'rejected'; }).length;
+    b.style.display = '';
+    b.innerHTML = '<span>' + (APVL[CUR] ? '下書き・変更' + w + '件' + (ng ? '（差し戻し' + ng + '件）' : '') : '下書きを読み込んでいます…') + '</span><button type="button" id="igApvList">一覧</button>';
+  }
+  // 承認待ちを重ねた完成形（本番の中身は書き換えない＝写しを作る）
+  function apvView(v0) {
+    var v = {}; for (var k in v0) v[k] = v0[k];
+    var p = {}; for (var k2 in (v0.prof || {})) p[k2] = v0.prof[k2];
+    v.prof = p; v.posts = (v0.posts || []).slice(); v.hl = (v0.hl || []).slice();
+    var M = { list: {} };
+    apvAll().forEach(function (it) {
+      var L = it.light || {}, t = apvTag(it);
+      if (it.kind === 'prof_save') {
+        if (L.name != null) { p.name = L.name; M.name = it.id; }
+        if (L.bio != null) { p.bio = L.bio; M.bio = it.id; }
+        if ((L.thumbs || []).length) { p.pic = L.thumbs[0]; M.pic = it.id; }
+      } else if (it.kind === 'links_save') { p.links = L.links || []; M.links = it.id; }
+      else if (it.kind === 'biz_save') { M.addr = it.id; var ad = [L.zip, L.city, L.street].filter(Boolean).join(' '); if (ad) p.addr = ad; }
+      else if (it.kind === 'hl_save') {
+        var ix = -1; v.hl.forEach(function (h, i) { if (hlId(h) === String(L.hid || '')) ix = i; });
+        var cv = (L.thumbs || [])[0] || '';
+        if (ix >= 0) { var h2 = {}; for (var k3 in v.hl[ix]) h2[k3] = v.hl[ix][k3]; if (L.title != null) h2.t = L.title; if (cv) h2.cv = cv; h2._mark = t; h2._apv = it.id; v.hl[ix] = h2; }
+        else v.hl.unshift({ t: L.title || '', cv: cv, _mark: t, _apv: it.id });
+      } else if (it.kind === 'hl_delete') v.hl = v.hl.filter(function (h) { return hlId(h) !== String(L.hid || ''); });
+      else if (it.kind === 'post' && L.type !== 'story') v.posts.unshift({ code: 'apv_' + it.id, th: (L.thumbs || [])[0] || '', k: (L.type === 'reel' ? 'reel' : ((L.n_media || 0) > 1 ? 'car' : '')), _mark: t, _apv: it.id });
+      else if (it.kind === 'phone_reel') v.posts.unshift({ code: 'apv_' + it.id, th: (L.thumbs || [])[0] || '', k: 'reel', _mark: t, _apv: it.id });
+      else if (it.kind === 'delete' || it.kind === 'phone_archive') v.posts = v.posts.filter(function (x) { return x.code !== L.code; });
+      else if (it.kind === 'edit' || it.kind === 'phone_pin' || it.kind === 'phone_unpin' || it.kind === 'likes' || it.kind === 'conoff') {
+        v.posts = v.posts.map(function (x) { if (x.code !== L.code) return x; var y = {}; for (var k4 in x) y[k4] = x[k4]; y._mark = t; y._apv = it.id; if (it.kind === 'phone_pin') y.pin = true; if (it.kind === 'phone_unpin') y.pin = false; return y; });
+      }
+    });
+    v._apvM = M;
+    return v;
+  }
+  function apvBadge(el, id, t) {
+    if (!el || !id) return;
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    el.insertAdjacentHTML('beforeend', '<span class="igapv" data-apv="' + esc(id) + '">' + (t || '修正') + '</span>');
+  }
+  function apvMarks(root, M) {
+    apvBadge(root.querySelector('.igav'), M.pic); apvBadge(root.querySelector('.nmw'), M.name); apvBadge(root.querySelector('.igbio'), M.bio);
+    apvBadge(root.querySelector('.iglink'), M.links); apvBadge(root.querySelector('.igaddr'), M.addr);
+    var hb = root.querySelectorAll('.ighl [data-hl]'), hls = (apvView(DATA.views[CUR]).hl || []);
+    for (var i = 0; i < hb.length; i++) { var h = hls[Number(hb[i].getAttribute('data-hl'))]; if (h && h._apv) { hb[i].setAttribute('data-apv', h._apv); apvBadge(hb[i], h._apv, h._mark); } }
+  }
+  function apvWho(it) { return (typeof PERM_PEOPLE !== 'undefined' && PERM_PEOPLE[it.who]) || (it.who || '社長・開発'); }
+  function apvWhen(t) { return t ? ago(new Date(t * 1000).toISOString()) : ''; }
+  function apvBefore(it) {
+    var L = it.light || {}, p = prof(), g = L.code ? gridPost(L.code) : null;
+    if (it.kind === 'prof_save') return [L.name != null ? '名前：' + (p.name || '') : '', L.bio != null ? '自己紹介：' + (p.bio || '') : ''].filter(Boolean).join('\n');
+    if (it.kind === 'edit') return (g && g.cap) || '';
+    if (it.kind === 'links_save') return (p.links || []).map(function (x) { return (x.t ? x.t + ' ' : '') + x.u; }).join('\n');
+    return '';
+  }
+  function apvAfter(it) {
+    var L = it.light || {};
+    if (it.kind === 'prof_save') return [L.name != null ? '名前：' + L.name : '', L.bio != null ? '自己紹介：' + L.bio : ''].filter(Boolean).join('\n');
+    if (it.kind === 'links_save') return (L.links || []).map(function (x) { return (x.t ? x.t + ' ' : '') + x.u; }).join('\n');
+    return String(L.caption || L.text || L.msg || L.title || L.cap || '');
+  }
+  function openApvCard(id) {
+    var it = (APVL[CUR] || []).filter(function (x) { return x.id === id; })[0]; if (!it) { warn('この変更は見つかりません（もう承認されたか、取り消されています）'); return; }
+    var L = it.light || {}, bef = apvBefore(it), aft = apvAfter(it), mine = it.who === (window.__SZ_WHO_ || '');
+    var e = document.createElement('div'); e.className = 'igp igsr'; e.style.zIndex = 8700;
+    var pre = function (t) { return '<div style="white-space:pre-wrap;word-break:break-word;background:#fafafa;border-radius:8px;padding:8px 10px;margin:4px 0 10px">' + esc(t) + '</div>'; };
+    e.innerHTML = '<div class="w"><div class="igph"><button type="button" data-cx="1">' + IC.back + '</button><b>' + esc(it.name) + '</b><span></span></div><div style="padding:12px 16px">' +
+      '<div><span class="igapv" style="position:static">' + apvTag(it) + '</span>　' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + '</div>' +
+      (it.status === 'rejected' ? '<div style="margin-top:10px;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</div>' : '') +
+      (bef ? '<div style="margin-top:12px;color:#737373;font-size:12px">前</div>' + pre(bef) : '') +
+      (aft ? '<div style="margin-top:' + (bef ? 0 : 12) + 'px;color:#737373;font-size:12px">' + (bef ? '後' : '内容') + '</div>' + pre(aft) : '') +
+      ((L.thumbs || []).length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">' + L.thumbs.map(function (s2) { return '<img src="' + s2 + '" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:6px">'; }).join('') + '</div>' : '') +
+      (L.n_media && !(L.thumbs || []).length ? '<div style="color:#737373;margin-bottom:10px">写真・動画 ' + L.n_media + '件</div>' : '') +
+      (ISADMIN && it.status === 'wait' ? '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-ok="1" style="flex:1;background:#0095f6;color:#fff;border-radius:8px;padding:10px">承認する</button>' +
+        '<button type="button" data-ng="1" style="flex:1;background:#efefef;border-radius:8px;padding:10px">差し戻す</button></div>' : '') +
+      ((ISADMIN || mine) ? '<button type="button" data-del="1" style="display:block;margin:14px auto 0;color:#A32D2D;font-weight:700">この変更を取り消す</button>' : '') +
+      '</div></div>';
+    document.body.appendChild(e);
+    var after = function () { e.remove(); APVL[CUR] = null; apvLoad(CUR); loadWeb(CUR, true); };
+    e.addEventListener('click', function (ev) {
+      var t = ev.target;
+      if (t.closest('[data-cx]')) { e.remove(); return; }
+      if (t.closest('[data-ok]')) {
+        szPopup_('この変更を承認して、本番に出しますか？😊', { cancel: true, onYes: function () {
+          busyAsk({ kind: 'apv_ok', id: id }, false, '承認して本番に出しています', '1〜2分かかります', function (err) { if (err) { warn(err); return; } after(); doneBox('承認して本番に出しました'); });
+        } });
+        return;
+      }
+      if (t.closest('[data-ng]')) {
+        var r = window.prompt('差し戻す理由を入力してください😊（スタッフの画面に出ます）', '');
+        if (r === null) return;
+        busyAsk({ kind: 'apv_ng', id: id, reason: r }, false, '差し戻しています', '', function (err) { if (err) { warn(err); return; } after(); });
+        return;
+      }
+      if (t.closest('[data-del]')) {
+        szPopup_('この変更を取り消しますか？😊（本番には出ません）', { cancel: true, onYes: function () {
+          busyAsk({ kind: 'apv_del', id: id }, false, '取り消しています', '', function (err) { if (err) { warn(err); return; } after(); });
+        } });
+      }
+    });
+  }
+  function openApvList() {
+    var L = (APVL[CUR] || []).filter(function (it) { return it.status === 'wait' || it.status === 'rejected'; });
+    var e = document.createElement('div'); e.className = 'igp igsr'; e.style.zIndex = 8650;
+    e.innerHTML = '<div class="w"><div class="igph"><button type="button" data-lx="1">' + IC.back + '</button><b>変更の一覧</b><span></span></div>' +
+      (L.length ? L.map(function (it) {
+        return '<button type="button" data-li="' + esc(it.id) + '" style="display:flex;gap:10px;align-items:center;width:100%;padding:12px 16px;border-bottom:1px solid #efefef;text-align:left">' +
+          '<span class="igapv" style="position:static">' + apvTag(it) + '</span><span style="flex:1;min-width:0"><b>' + esc(it.name) + '</b>' +
+          '<small style="display:block;color:#737373;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + (apvAfter(it) ? '・' + esc(apvAfter(it).replace(/\n/g, ' ')) : '') + '</small>' +
+          (it.status === 'rejected' ? '<small style="display:block;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</small>' : '') + '</span></button>';
+      }).join('') : '<div class="igempty"><b>承認待ちはありません</b></div>') + '</div>';
+    document.body.appendChild(e);
+    e.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-lx]')) { e.remove(); return; }
+      var r = ev.target.closest('[data-li]'); if (r) openApvCard(r.getAttribute('data-li'));
+    });
+  }
+  $('igDraftBtn').addEventListener('click', function () {
+    DRAFT = !DRAFT; this.classList.toggle('on', DRAFT);
+    apvBar(); drawApp();
+    if (DRAFT) apvLoad(CUR);
+  });
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('[data-apv]');
+    if (a && DRAFT) { e.stopPropagation(); e.preventDefault(); openApvCard(a.getAttribute('data-apv')); return; }
+    if (e.target && e.target.id === 'igApvList') openApvList();
+  }, true);
   // ★2026-11-10 まるちゃん「本物と画面が違う」＝本物は下のメニューが、ホーム・リール・メッセージ・検索・プロフィールの
   //   どれを開いていても一番下に残り、今いる画面のボタンだけ横長の薄い灰色で囲まれる。前はホーム・メッセージ・検索を開くと
   //   上に「‹」の付いた別の画面がかぶさり、下のメニューが消えていた。＝その3つの画面にも同じメニューを出し、押したら切り替える。
@@ -17655,7 +17829,7 @@ function instaScript_(C) {
   //   上げたあと「いいねの数を非表示（選んだ時）」「AIラベルが付いていないか」を受付係が専用ブラウザで行う（決まり 4-0／4-0b）。
   // ★2026-11-09 権限の表（受付係が開く時に返す {アカウント: [機能]}）。画面は入口で止めるだけ＝本当の守りは受付係。
   // ★2026-11-09 まるちゃん決定の6つ＝view（お客様が見る画面）／post（投稿・ストーリーズ）／highlight／profile／reply（お客様に返事）／insights（分析）
-  var PERM = {}, ISDEV = false, NOPERM = 'この操作の権限がありません。りゅうさんに連絡してください🙇';
+  var PERM = {}, ISDEV = false, ISADMIN = true, NOPERM = 'この操作の権限がありません。りゅうさんに連絡してください🙇';
   function can(f) { var p = PERM && PERM[CUR]; return !p || p.indexOf(f) >= 0; }
   var CK = 'feed', CMEDIA = [], CHIDE = null, CLOC = null, CMUS = null, CSTK = [], CPEN = [], CEFF = '', MAXI = 10, VIDEO_MB = 18, TOTAL_MB = 18, MAXCAP = 2200;
   function openCreate() {
@@ -18412,6 +18586,7 @@ function instaScript_(C) {
   }
   // 写真・動画つきの依頼は大きいので、共通の BIG で別に預ける（Threads投稿と同じ）。動画は準備に数分かかる＝約10分まで待つ。
   function askBig(fields, done, op) {
+    var w = apvWrap(fields, op, done); if (w) { fields = w.f; op = 'insta'; done = w.done; }
     op = op || 'insta';
     devKey(function (ex) {
       for (var k in ex) fields[k] = ex[k];
@@ -18495,7 +18670,9 @@ function instaScript_(C) {
       '<span style="display:flex">' + IC.rep + '</span><button type="button" data-go="postshare">' + IC.send + '</button><span class="sp"></span>' +
       '<button type="button" data-go="psave">' + (POST.saved ? S(BM, 26).replace('fill="none"', 'fill="currentColor"') : S(BM, 26)) + '</button></div>';
     h += '<div class="igpl">' + (POST.likes_hidden ? '「いいね！」数は非表示です' : 'いいね！' + num(POST.likes || 0) + '件') + '</div>';
-    if (POST.caption) h += '<div class="igpcap"><b>' + esc(p.user || '') + '</b> ' + esc(POST.caption) + '</div>';
+    var capA = DRAFT ? apvFind(function (it) { return it.kind === 'edit' && (it.light || {}).code === POST.code; }) : null;
+    var capT = capA ? String((capA.light || {}).caption || '') : POST.caption;
+    if (capT) h += '<div class="igpcap" style="position:relative"><b>' + esc(p.user || '') + '</b> ' + esc(capT) + (capA ? '<span class="igapv" data-apv="' + esc(capA.id) + '">修正</span>' : '') + '</div>';
     h += '<div class="igpd">' + esc(ago(POST.at)) + (POST.comments_on ? '' : '　・　コメントはオフです') + '</div>';
     h += '<div class="igpcs">' + (POST.comments && POST.comments.length ? POST.comments.map(function (c) {
       return cmt(c, false) + (c.replies || []).map(function (r) { return cmt(r, true, c); }).join('');
@@ -18591,6 +18768,9 @@ function instaScript_(C) {
         if (!m.t && !m.img) body += esc(m.note || '');
         if (m.link) body += (body ? '\n' : '') + '<a href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link) + '</a>';
         h += '<div class="m' + (m.mine ? ' me' : '') + '"><div class="b' + (!m.t && !m.img && m.note ? ' n' : '') + '">' + body + '</div></div>';
+      });
+      if (DRAFT) apvAll().filter(function (it) { return it.kind === 'dm_send' && (it.light || {}).cid === DMT.id; }).forEach(function (it) {
+        h += '<div class="m me"><div class="b" style="position:relative">' + esc((it.light || {}).text || '') + '<span class="igapv" data-apv="' + esc(it.id) + '">新規</span></div></div>';
       });
       if (!(DMT.msgs || []).length) h += '<div class="igempty">メッセージはありません。</div>';
     }
@@ -19891,7 +20071,7 @@ function instaScript_(C) {
     DATA = d; DATA.views = DATA.views || {};
     if (keep) for (var k in keep) { if (!DATA.views[k] || (keep[k].read_at || 0) > (DATA.views[k].read_at || 0)) DATA.views[k] = keep[k]; }
     ACCTS = (d && d.accounts) || [];
-    if (d && d.perm) { PERM = d.perm; ISDEV = !!d.dev; }
+    if (d && d.perm) { PERM = d.perm; ISDEV = !!d.dev; ISADMIN = d.admin === undefined ? true : !!d.admin; }
     if (!ACCTS.length) {
       if (fresh) { $('igMain').style.display = 'none'; $('igLoad').style.display = ''; $('igLoad').textContent = 'この端末から表示できるアカウントがありません。'; }
       return;
