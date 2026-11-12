@@ -12643,7 +12643,7 @@ function honeyScript_(C) {
     items = items || [];
     lastJson = JSON.stringify(items);
     histPut(items);
-    if (!items.length) { $('hnLog').innerHTML = '<div class="ccnone">相談したいことや、作りたい画像を下に入力してください😊</div>'; return; }
+    if (!items.length) { $('hnLog').innerHTML = ''; return; }     // ★2026-11-12 まるちゃん「これいらない」＝会話が無い時の案内は出さない
     var out = '';
     items.forEach(function (x) {
       if (x.q || (x.qimg && x.qimg.length)) out += '<div class="ccq">' + esc(x.q || '') + imgs(x.qimg, 'hnqimg', false) + '</div>';
