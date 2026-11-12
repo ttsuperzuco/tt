@@ -12786,6 +12786,12 @@ function honeyScript_(C) {
     var y = window.scrollY || document.documentElement.scrollTop || 0;
     if (autoY >= 0 && y < autoY - 40) stick = false;      // 自分で上へ動かした＝もう合わせない
   }, { passive: true });
+  ['touchstart', 'wheel'].forEach(function (ev) {      // 会話の所を触った・ホイールを回した＝もう合わせない（入力欄とボタンは別）
+    window.addEventListener(ev, function (e) {
+      if (e.target && e.target.closest && e.target.closest('.hnbox, .hnbar, .hntabs, #hnSend, .hntop')) return;
+      stick = false;
+    }, { passive: true });
+  });
   if (window.ResizeObserver) new ResizeObserver(function () { if (stick) toBottom(); }).observe($('hnLog'));
   $('hnLog').addEventListener('load', function () { if (stick) toBottom(); }, true);
   var cached = histGet();
