@@ -469,9 +469,10 @@ function instaScript_(C) {
     } else if (p.pin) k = IC.pin;
     var pv = (p.plays != null && p.plays !== '') ? p.plays : p.vw;
     var v = (pv != null && pv !== '') ? '<span class="v">' + IC.eye + num(pv) + '</span>' : '';
-    return '<button type="button" ' + (p._apv ? 'data-apv="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
+    var isNew = p._apv && String(p.code || '').indexOf('apv_') === 0;
+    return '<button type="button" ' + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
       (p.th ? '<img src="' + esc(p.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
-      (k ? '<span class="k">' + k + '</span>' : '') + v + (p._mark ? '<span class="igapv">' + p._mark + '</span>' : '') + '</button>';
+      (k ? '<span class="k">' + k + '</span>' : '') + v + (p._mark ? '<span class="igapv"' + (p._apv ? ' data-apv="' + esc(p._apv) + '"' : '') + '>' + p._mark + '</span>' : '') + '</button>';
   }
   function drawGrid(v) {
     var list = [], mode = TAB;
@@ -568,6 +569,8 @@ function instaScript_(C) {
     var go = t.closest && t.closest('[data-go]'); if (go) { goTo(go.getAttribute('data-go')); return; }
     var hb = t.closest && t.closest('[data-hl]');
     if (hb) { var vv = DATA && DATA.views && DATA.views[CUR]; var hx = vv && (vv.hl || [])[Number(hb.getAttribute('data-hl'))]; if (hx) openHlView(hx); return; }
+    var apo = t.closest && t.closest('[data-apvpost]');
+    if (apo) { openApvPost(apo.getAttribute('data-apvpost')); return; }
     var po = t.closest && t.closest('[data-post]');
     if (po && TAB === 'tagged') { openTagged(po.getAttribute('data-post')); return; }
     if (po && TAB !== 'tagged') { openPost(po.getAttribute('data-post'), (po.querySelector('img') || {}).src || ''); return; }
@@ -680,7 +683,8 @@ function instaScript_(C) {
       (L.n_media && !(L.thumbs || []).length ? '<div style="color:#737373;margin-bottom:10px">写真・動画 ' + L.n_media + '件</div>' : '') +
       (ISADMIN && it.status === 'wait' ? '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-ok="1" style="flex:1;background:#0095f6;color:#fff;border-radius:8px;padding:10px">承認する</button>' +
         '<button type="button" data-ng="1" style="flex:1;background:#efefef;border-radius:8px;padding:10px">差し戻す</button></div>' : '') +
-      ((ISADMIN || mine) ? '<button type="button" data-del="1" style="display:block;margin:14px auto 0;color:#A32D2D;font-weight:700">この変更を取り消す</button>' : '') +
+      ((ISADMIN || mine) && it.status === 'wait' && it.kind === 'hl_save' ? '<button type="button" data-hlt="1" style="display:block;width:100%;margin-top:10px;background:#efefef;border-radius:8px;padding:10px">ハイライトの名前を修正</button>' : '') +
+      ((ISADMIN || mine) ? '<button type="button" data-del="1" style="display:block;margin:14px auto 0;color:#A32D2D;font-weight:700">' + (apvTag(it) === '新規' ? '削除' : 'この変更を取り消す') + '</button>' : '') +
       '</div></div>';
     document.body.appendChild(e);
     var after = function () { e.remove(); APVL[CUR] = null; apvLoad(CUR); loadWeb(CUR, true); };
@@ -699,9 +703,16 @@ function instaScript_(C) {
         busyAsk({ kind: 'apv_ng', aid: id, reason: r }, false, '差し戻しています', '', function (err) { if (err) { warn(err); return; } after(); });
         return;
       }
+      if (t.closest('[data-hlt]')) {
+        var nt = window.prompt('ハイライトの名前を入力してください😊', String(L.title || ''));
+        if (nt === null) return;
+        busyAsk({ kind: 'apv_upd', aid: id, patch: { title: nt } }, false, '下書きを修正しています', '', function (err) { if (err) { warn(err); return; } after(); doneBox('下書きの修正が完了しました'); });
+        return;
+      }
       if (t.closest('[data-del]')) {
-        szPopup_('この変更を取り消しますか？😊（本番には出ません）', { cancel: true, onYes: function () {
-          busyAsk({ kind: 'apv_del', aid: id }, false, '取り消しています', '', function (err) { if (err) { warn(err); return; } after(); });
+        var isNew2 = apvTag(it) === '新規';
+        szPopup_(isNew2 ? 'この下書きを削除しますか？😊（本番には出ません）' : 'この変更を取り消しますか？😊（本番には出ません）', { cancel: true, onYes: function () {
+          busyAsk({ kind: 'apv_del', aid: id }, false, isNew2 ? '削除しています' : '取り消しています', '', function (err) { if (err) { warn(err); return; } after(); if (isNew2) doneBox('削除が完了しました'); });
         } });
       }
     });
@@ -1555,6 +1566,17 @@ function instaScript_(C) {
       POST = d; drawPost();
     });
   }
+  function openApvPost(id) {
+    var it = apvAll().filter(function (x) { return x.id === id; })[0];
+    if (!it) { warn('この下書きは見つかりません（もう承認されたか、削除されています）'); return; }
+    var L = it.light || {};
+    closePost(); REPLY = null;
+    POST = { code: 'apv_' + id, _apv: id, caption: String(L.caption || ''), likes: 0, likes_hidden: !!L.hide_likes,
+             at: new Date((it.at || 0) * 1000).toISOString(), comments: [], comments_on: false,
+             items: (L.thumbs || []).map(function (s2) { return { type: 'IMAGE', url: s2 }; }), _n: L.n_media || 0, _video: !!L.video };
+    var el = document.createElement('div'); el.className = 'igp'; el.id = 'igPost'; document.body.appendChild(el); el.addEventListener('click', postClick);
+    drawPost();
+  }
   function closePost() { var el = document.getElementById('igPost'); if (el) el.remove(); var i = document.getElementById('igPin'); if (i) i.remove(); POST = null; }
   function drawPost() {
     var el = document.getElementById('igPost'); if (!el || !POST) return;
@@ -1566,11 +1588,12 @@ function instaScript_(C) {
       h += '<div class="igpm">' + (POST.thumb ? '<img src="' + esc(POST.thumb) + '" referrerpolicy="no-referrer" alt="">' : '') + '</div><div class="igempty">読み込み中です…</div></div>';
       el.innerHTML = h; return;
     }
+    if (POST._apv && !(POST.items || []).length) h += '<div class="igpm"><div class="igempty" style="background:#efefef;aspect-ratio:4/5;display:flex;align-items:center;justify-content:center">' + (POST._video ? '動画' : '写真・動画') + (POST._n ? ' ' + POST._n + '件' : '') + '</div></div>';
     h += '<div class="igpm">' + (POST.items || []).map(function (it) {
       return it.type === 'VIDEO' ? '<video src="' + esc(it.url) + '" poster="' + esc(it.th) + '" controls playsinline></video>'
         : '<img src="' + esc(it.url) + '" referrerpolicy="no-referrer" alt="">';
     }).join('') + '</div>';
-    h += '<div class="igpins"><button type="button" data-pins="1">' + IC.eye + (POST.views != null ? ' ' + num(POST.views) + '・' : ' ') + 'インサイトを表示</button></div>';
+    if (!POST._apv) h += '<div class="igpins"><button type="button" data-pins="1">' + IC.eye + (POST.views != null ? ' ' + num(POST.views) + '・' : ' ') + 'インサイトを表示</button></div>';
     var HEART = '<path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0112 7a4.4 4.4 0 018 2.9c0 5.9-8 10.6-8 10.6z"/>', BM = '<path d="M19 21l-7-5-7 5V4a1 1 0 011-1h12a1 1 0 011 1z"/>';
     h += '<div class="igpa"><button type="button" data-go="plike">' + (POST.liked ? S(HEART, 26).replace('fill="none"', 'fill="#ff3040"').replace('stroke="currentColor"', 'stroke="#ff3040"') : S(HEART, 26)) + '</button>' +
       '<button type="button" data-pcom="1">' + S('<path d="M20.7 12a8.7 8.7 0 01-12.6 7.8L3.5 21l1.3-4.4A8.7 8.7 0 1120.7 12z"/>', 26) + '</button>' +
@@ -1579,8 +1602,9 @@ function instaScript_(C) {
     h += '<div class="igpl">' + (POST.likes_hidden ? '「いいね！」数は非表示です' : 'いいね！' + num(POST.likes || 0) + '件') + '</div>';
     var capA = DRAFT ? apvFind(function (it) { return it.kind === 'edit' && (it.light || {}).code === POST.code; }) : null;
     var capT = capA ? String((capA.light || {}).caption || '') : POST.caption;
-    if (capT) h += '<div class="igpcap" style="position:relative"><b>' + esc(p.user || '') + '</b> ' + esc(capT) + (capA ? '<span class="igapv" data-apv="' + esc(capA.id) + '">修正</span>' : '') + '</div>';
-    h += '<div class="igpd">' + esc(ago(POST.at)) + (POST.comments_on ? '' : '　・　コメントはオフです') + '</div>';
+    if (POST._apv) capA = { id: POST._apv };
+    if (capT || POST._apv) h += '<div class="igpcap" style="position:relative"><b>' + esc(p.user || '') + '</b> ' + esc(capT || '') + (capA ? '<span class="igapv" data-apv="' + esc(capA.id) + '">' + (POST._apv ? '新規' : '修正') + '</span>' : '') + '</div>';
+    h += '<div class="igpd">' + esc(ago(POST.at)) + (POST.comments_on || POST._apv ? '' : '　・　コメントはオフです') + '</div>';
     h += '<div class="igpcs">' + (POST.comments && POST.comments.length ? POST.comments.map(function (c) {
       return cmt(c, false) + (c.replies || []).map(function (r) { return cmt(r, true, c); }).join('');
     }).join('') : '<div class="igpd">まだコメントはありません。</div>') + '</div></div>';
@@ -2446,6 +2470,23 @@ function instaScript_(C) {
   function postClick(e) {
     var t = e.target, cl = function (q) { return t.closest && t.closest(q); };
     if (cl('[data-pback]')) { closePost(); return; }
+    if (POST && POST._apv) {
+      if (!cl('[data-pmenu]')) return;
+      var aid = POST._apv, it0 = apvAll().filter(function (x) { return x.id === aid; })[0] || {};
+      if (!(ISADMIN || it0.who === (window.__SZ_WHO_ || ''))) { warn('この下書きを編集できるのは、作った本人と社長・開発です😊'); return; }
+      sheet([
+        { t: '削除', red: true, go: function () {
+          szPopup_('この下書きを削除しますか？😊（本番には出ません）', { cancel: true, onYes: function () {
+            busyAsk({ kind: 'apv_del', aid: aid }, false, '削除しています', '', function (err) {
+              if (err) { warn(err); return; }
+              closePost(); APVL[CUR] = null; apvLoad(CUR); doneBox('削除が完了しました');
+            });
+          } });
+        } },
+        { t: '編集', go: openEdit }
+      ]);
+      return;
+    }
     if (cl('[data-pins]') && POST && !POST.loading) { openIns(POST.code); return; }
     if (cl('[data-go="plike"]') && POST && !POST.loading) { togglePost('like'); return; }
     if (cl('[data-go="psave"]') && POST && !POST.loading) { togglePost('save'); return; }
@@ -2549,6 +2590,16 @@ function instaScript_(C) {
       if (ev.target.id !== 'igeGo') return;
       var v = tx.value.trim();
       if (v.length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです（絵文字は2文字に数えます）😊'); return; }
+      if (POST._apv) {
+        var aid2 = POST._apv;
+        busyAsk({ kind: 'apv_upd', aid: aid2, patch: { caption: v } }, false, '下書きを修正しています', '', function (err) {
+          if (err) { warn(err); return; }
+          e.remove(); POST.caption = v;
+          (APVL[CUR] || []).forEach(function (x) { if (x.id === aid2) x.light = Object.assign({}, x.light || {}, { caption: v }); });
+          drawPost(); doneBox('下書きの修正が完了しました');
+        });
+        return;
+      }
       simple({ kind: 'edit', acct: CUR, code: POST.code, caption: v }, 'キャプションを修正しています', function (err, d) {
         if (err) { warn(err); return; }
         e.remove(); POST.caption = d.caption; drawPost();
