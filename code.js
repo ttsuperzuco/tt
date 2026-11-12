@@ -17735,16 +17735,60 @@ function instaScript_(C) {
     if (it.kind === 'links_save') return (L.links || []).map(function (x) { return (x.t ? x.t + ' ' : '') + x.u; }).join('\n');
     return String(L.caption || L.text || L.msg || L.title || L.cap || '');
   }
+  // ★2026-11-12 まるちゃん「修正って書いてあるけど、どこが修正されてるのかわかんない」＝前と後の違いだけを色で見せる（赤＝削除・緑＝追加）。
+  //   前と後の全文は、その下の「前と後の全文を見る」で開く。
+  function apvDiff(a, b) {
+    a = String(a || ''); b = String(b || '');
+    var p = 0; while (p < a.length && p < b.length && a[p] === b[p]) p++;
+    var q = 0; while (q < a.length - p && q < b.length - p && a[a.length - 1 - q] === b[b.length - 1 - q]) q++;
+    var A = a.slice(p, a.length - q), B = b.slice(p, b.length - q), mid = [];
+    if (A.length && B.length && A.length * B.length <= 4000000) {
+      var n = A.length, m = B.length, w = m + 1, T = new Uint16Array((n + 1) * w), i, j;
+      for (i = n - 1; i >= 0; i--) for (j = m - 1; j >= 0; j--) T[i * w + j] = A[i] === B[j] ? T[(i + 1) * w + j + 1] + 1 : Math.max(T[(i + 1) * w + j], T[i * w + j + 1]);
+      i = 0; j = 0;
+      var push = function (t, c) { var l = mid[mid.length - 1]; if (l && l[0] === t) l[1] += c; else mid.push([t, c]); };
+      while (i < n && j < m) {
+        if (A[i] === B[j]) { push('=', A[i]); i++; j++; }
+        else if (T[(i + 1) * w + j] >= T[i * w + j + 1]) { push('-', A[i]); i++; }
+        else { push('+', B[j]); j++; }
+      }
+      if (i < n) push('-', A.slice(i)); if (j < m) push('+', B.slice(j));
+    } else {
+      if (A) mid.push(['-', A]); if (B) mid.push(['+', B]);
+    }
+    return [['=', a.slice(0, p)]].concat(mid, [['=', a.slice(a.length - q)]]).filter(function (x) { return x[1]; });
+  }
+  function apvDiffHtml(a, b) {
+    var ops = apvDiff(a, b), C = 25;
+    if (!ops.some(function (x) { return x[0] !== '='; })) return '<div style="color:#737373;margin:4px 0 10px">前と後で文の違いはありません。</div>';
+    var h = ops.map(function (x, k) {
+      if (x[0] === '-') return '<del style="background:#fde2e2;color:#A32D2D">' + esc(x[1]) + '</del>';
+      if (x[0] === '+') return '<ins style="background:#d9f2dc;color:#1e6b2d;text-decoration:none;font-weight:700">' + esc(x[1]) + '</ins>';
+      var t = x[1], first = k === 0, last = k === ops.length - 1;
+      if (first) return t.length > C ? '…' + esc(t.slice(-C)) : esc(t);
+      if (last) return t.length > C ? esc(t.slice(0, C)) + '…' : esc(t);
+      return t.length > C * 2 + 10 ? esc(t.slice(0, C)) + '<div style="color:#b0b0b0;margin:6px 0">…（変更なし）…</div>' + esc(t.slice(-C)) : esc(t);
+    }).join('');
+    return '<div style="white-space:pre-wrap;word-break:break-word;background:#fafafa;border-radius:8px;padding:8px 10px;margin:4px 0 10px;line-height:1.7">' + h + '</div>';
+  }
+  var APV_FULLCAP = {};      // 投稿の説明文の全文（並びの説明文は80文字までしか持っていないため、投稿を開く時と同じ読み方で取る）
   function openApvCard(id) {
     var it = (APVL[CUR] || []).filter(function (x) { return x.id === id; })[0]; if (!it) { warn('この変更は見つかりません（もう承認されたか、取り消されています）'); return; }
     var L = it.light || {}, bef = apvBefore(it), aft = apvAfter(it), mine = it.who === (window.__SZ_WHO_ || '');
+    var needFull = it.kind === 'edit' && L.code && APV_FULLCAP[L.code] === undefined;
+    if (it.kind === 'edit' && L.code && APV_FULLCAP[L.code] !== undefined) bef = APV_FULLCAP[L.code];
     var e = document.createElement('div'); e.className = 'igp igsr'; e.style.zIndex = 8700;
     var pre = function (t) { return '<div style="white-space:pre-wrap;word-break:break-word;background:#fafafa;border-radius:8px;padding:8px 10px;margin:4px 0 10px">' + esc(t) + '</div>'; };
     e.innerHTML = '<div class="w"><div class="igph"><button type="button" data-cx="1">' + IC.back + '</button><b>' + esc(it.name) + '</b><span></span></div><div style="padding:12px 16px">' +
       '<div><span class="igapv" style="position:static">' + apvTag(it) + '</span>　' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + '</div>' +
       (it.status === 'rejected' ? '<div style="margin-top:10px;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</div>' : '') +
-      (bef ? '<div style="margin-top:12px;color:#737373;font-size:12px">前</div>' + pre(bef) : '') +
-      (aft ? '<div style="margin-top:' + (bef ? 0 : 12) + 'px;color:#737373;font-size:12px">' + (bef ? '後' : '内容') + '</div>' + pre(aft) : '') +
+      (bef && aft ? '<div style="margin-top:12px;color:#737373;font-size:12px">変更した所（<span style="color:#A32D2D">赤＝削除</span>・<span style="color:#1e6b2d">緑＝追加</span>）</div>' +
+        '<div data-apvdiff="1">' + (needFull ? '<div style="color:#737373;margin:4px 0 10px">本番の説明文を読み込んでいます…</div>' : apvDiffHtml(bef, aft)) + '</div>' +
+        '<details style="margin:0 0 10px"><summary style="color:#737373;font-size:12px;cursor:pointer">前と後の全文を見る</summary>' +
+        '<div style="margin-top:8px;color:#737373;font-size:12px">前</div><div data-apvbef="1">' + pre(bef) + '</div>' +
+        '<div style="color:#737373;font-size:12px">後</div>' + pre(aft) + '</details>' :
+        (bef ? '<div style="margin-top:12px;color:#737373;font-size:12px">前</div>' + pre(bef) : '') +
+        (aft ? '<div style="margin-top:12px;color:#737373;font-size:12px">内容</div>' + pre(aft) : '')) +
       ((L.thumbs || []).length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">' + L.thumbs.map(function (s2) { return '<img src="' + s2 + '" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:6px">'; }).join('') + '</div>' : '') +
       (L.n_media && !(L.thumbs || []).length ? '<div style="color:#737373;margin-bottom:10px">写真・動画 ' + L.n_media + '件</div>' : '') +
       (ISADMIN && it.status === 'wait' ? '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-ok="1" style="flex:1;background:#0095f6;color:#fff;border-radius:8px;padding:10px">承認する</button>' +
@@ -17753,7 +17797,16 @@ function instaScript_(C) {
       ((ISADMIN || mine) ? '<button type="button" data-del="1" style="display:block;margin:14px auto 0;color:#A32D2D;font-weight:700">' + (apvTag(it) === '新規' ? '削除' : 'この変更を取り消す') + '</button>' : '') +
       '</div></div>';
     document.body.appendChild(e);
-    var after = function () { e.remove(); apvLoad(CUR); loadWeb(CUR, true); };      // 一覧は読み直しの答えで入れ替える（null にすると読み直しの間、下書きが全部消えて見えた）
+    if (needFull && bef && aft) {
+      readAsk({ kind: 'detail', acct: CUR, code: L.code }, function (err, d) {
+        var box = e.querySelector('[data-apvdiff]'); if (!box) return;
+        if (err || !d) { box.innerHTML = '<div style="color:#A32D2D;margin:4px 0 10px">本番の説明文を読み込めませんでした。下の全文で確認してください😊</div>'; return; }
+        APV_FULLCAP[L.code] = String(d.caption || '');
+        box.innerHTML = apvDiffHtml(APV_FULLCAP[L.code], aft);
+        var bb = e.querySelector('[data-apvbef]'); if (bb) bb.innerHTML = pre(APV_FULLCAP[L.code]);
+      });
+    }
+    var after = function () { e.remove(); APV_FULLCAP = {}; apvLoad(CUR); loadWeb(CUR, true); };      // 一覧は読み直しの答えで入れ替える（null にすると読み直しの間、下書きが全部消えて見えた）
     e.addEventListener('click', function (ev) {
       var t = ev.target;
       if (t.closest('[data-cx]')) { e.remove(); return; }
