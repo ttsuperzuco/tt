@@ -1390,7 +1390,8 @@ var TILE_GROUP_ = {
   uriage: 'tomato',
   hachimitsu: 'tomato',
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', facebook: 'kaihatsu'
+  formconv: 'kaihatsu', honyaku: 'kaihatsu', claudechat: 'kaihatsu', facebook: 'kaihatsu',
+  uriagebook: 'kaihatsu'
 };
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
