@@ -125,6 +125,22 @@ function ltKaeshiSection_(k, base, staff, dev) {
          '<h1>⚠️ 🔁記入漏れ（おまとめ最終回） <span class="lcnt">' + list.length + '件</span></h1>' +
          '<div class="lcards">' + cardsHtml + '</div>';
 }
+function ltRefreshBtn_(r) {
+  var pend = (typeof window !== 'undefined') && window.__ltRefRid &&
+             (!r || r.rid !== window.__ltRefRid) && (Date.now() - (window.__ltRefAt || 0) < 180000);
+  var busy = (r && r.running) || pend;
+  var note = '';
+  if (busy) {
+    note = '数分かかります。少し待っててくださいね🥺';
+  } else if (r && r.finished_at && r.rid && (typeof window !== 'undefined') && r.rid === window.__ltRefRid) {
+    note = r.ok === false
+      ? '一部を更新できませんでした。もう一度試してもらえると嬉しいです🙇'
+      : '更新しました ' + String(r.finished_at).replace(/^\d{4}-(\d{2})-(\d{2}) (\d{2}:\d{2}).*$/, '$1/$2 $3');
+  }
+  return '<button type="button" class="lrefbtn"' + (busy ? ' disabled' : '') +
+         ' onclick="if(window.ltRefresh)window.ltRefresh()">' + (busy ? '⏳ 更新中…' : '🔄 最新に更新') + '</button>' +
+         (note ? '<span class="lrefnote">' + esc_(note) + '</span>' : '');
+}
 function renderLtPage_(d, base, staff, dev) {
   var c = d.counts || {};
   var action = d.action || [];
@@ -166,12 +182,15 @@ function renderLtPage_(d, base, staff, dev) {
       }).join('\n')
     : '<tr><td colspan="3">なし</td></tr>';
 
+  var rbtn = dev ? ltRefreshBtn_(d.refresh) : '';
   return '' +
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +
   '<div class="lbar">' +
     '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
-    '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>' +
+    (rbtn
+      ? '<div class="lbarr">' + rbtn + '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span></div>'
+      : '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>') +
   '</div>' +
   cards +
 '</div>' + LTFIT_SCRIPT_;
@@ -187,6 +206,11 @@ var LTCSS_ =
 '  .lhome{ flex:0 0 auto; color:#0f172a; text-decoration:none; font-weight:700; font-size:14px;' +
 '    background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:9px 14px; }' +
 '  .lgen{ color:rgba(255,255,255,.85); font-size:12px; }' +
+'  .lbarr{ display:flex; flex-direction:column; align-items:flex-end; gap:3px; text-align:right; }' +
+'  .lrefbtn{ color:#0f172a; background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:9px 14px;' +
+'    font-weight:800; font-size:14px; cursor:pointer; font-family:inherit; }' +
+'  .lrefbtn:disabled{ background:#e2e8f0; color:#475569; cursor:default; }' +
+'  .lrefnote{ color:#fff; font-size:12px; font-weight:700; }' +
 '  h1{ color:#fff; font-size:1.7rem; font-weight:900; margin:6px 0 14px; }' +
 '  .lcnt{ color:#ff8fb3; font-size:1.4em; font-weight:900; }' +
 '  #lq{ width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px;' +
