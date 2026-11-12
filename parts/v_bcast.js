@@ -114,6 +114,8 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bctaglist button{border:1px solid #26324A;background:#131C2E;color:#E8EEF7;' +
     'border-radius:999px;padding:9px 13px;font-size:14px;font-weight:800;cursor:pointer;}' +
     '.bctaglist button.on{background:#16A34A;color:#fff;border-color:#16A34A;}' +
+    '.bctaglist.bcx button.on{background:#DC2626;border-color:#DC2626;}' +
+    '.bcwho .bcxw{color:#FCA5A5;font-weight:800;}' +
     '.bcmv{border:1px solid #26324A;background:#131C2E;color:#E8EEF7;border-radius:9px;' +
     'padding:6px 9px;font-size:13px;font-weight:800;flex:0 0 auto;cursor:pointer;}' +
     '.bcdel{border:1px solid #7f1d1d;background:#2a1214;color:#fca5a5;border-radius:9px;' +
@@ -222,8 +224,14 @@ function renderBroadcastPage_(base, staff, dev) {
   'var EDI=-1;' +
   'var LTAB="wait",LPOSTS=null,LBATCH=0;' +
   'var MBACK=0;' +
-  'var TAGS=[],TAGLIST=[],TAGBUSY=false,ADDAT=-1,TAGSNAP=[];' +
+  'var TAGS=[],TAGLIST=[],TAGBUSY=false,ADDAT=-1,TAGSNAP=[],XTAGS=[],XTAGSNAP=[];' +
   'function defTags(t){return String((t&&t.who)||"").split("　（外す")[0].split("＋").filter(function(x){return x;});}' +
+  'function defX(t){var s=String((t&&t.who)||""),k=s.indexOf("（外す：");if(k<0)return [];' +
+  'return s.slice(k+4).replace(/）\\s*$/,"").split("＋").filter(function(x){return x;});}' +
+  'function xOf(i){return Array.isArray(XTAGS[i])?XTAGS[i]:defX(TPL[i]);}' +
+  'function sendX(i){return Array.isArray(XTAGS[i])?XTAGS[i]:((TAGS[i]&&TAGS[i].length)?defX(TPL[i]):[]);}' +
+  'function whoTxt(i,t){var a=(TAGS[i]&&TAGS[i].length)?TAGS[i]:defTags(t),x=xOf(i);' +
+  'return "タグ："+esc(a.join("＋"))+(x.length?(\'　<span class="bcxw">除く：\'+esc(x.join("＋"))+"</span>"):"");}' +
   'function sameSet(a,b){a=(a||[]).slice().sort();b=(b||[]).slice().sort();return a.join("|")===b.join("|");}' +
   'var MOVED=false;' +
   'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
@@ -263,7 +271,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
   'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,zbodies:MZBODYS,' +
-  'ja:MJA,zh:MZH,tags:TAGS,mback:MBACK,' +
+  'ja:MJA,zh:MZH,tags:TAGS,xtags:XTAGS,mback:MBACK,' +
   'midx:MIDX,mstep:MSTEP,m6from:M6FROM,names:TPL.map(function(t){return t.name;}),' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   'var OLDNAMES=["新規 日本男性","新規 日本女性","既存 日本男性","既存 日本女性","新規 台湾男性","新規 台湾女性","既存 台湾男性","既存 台湾女性"];' +
@@ -292,6 +300,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var oldTags=(s.tags&&s.tags.length)?s.tags:null,oldStep=s.step;' +
   'for(var i=0;i<TPL.length;i++){var si=savedIdx(s,i);var ps=(si>=0&&((s.data[si]||{}).parts))||[];' +
   'if(oldTags){TAGS[i]=(si>=0&&oldTags[si])||[];}' +
+  'if(s.xtags&&s.xtags.length){XTAGS[i]=(si>=0&&Array.isArray(s.xtags[si]))?s.xtags[si]:null;}' +
   'if(typeof oldStep==="number"&&si>=0&&si===oldStep)s.__step=i;' +
   'DATA[i].parts=ps.slice(0,MAXP).map(function(p){' +
   'if(p.kind==="image"&&p.b64&&!p.thumb)p.thumb="data:image/jpeg;base64,"+p.b64;return p;});}' +
@@ -871,8 +880,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '(mode?"":\'<div class="bcsubnote">※画像や文章を追加できます</div>\')+' +
   '\'<div class="bccard"><div class="bcnamerow"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
   '(mode==="tag"?"":\'<button type="button" class="bcmv" id="bctag">タグを変更</button>\')+\'</div>\'+' +
-  '\'<div class="bcwho">\'+esc((TAGS[step]&&TAGS[step].length)?' +
-  '("タグ："+TAGS[step].join("＋")):("タグ："+t.who))+\'</div><div class="bchr"></div>\';' +
+  '\'<div class="bcwho">\'+whoTxt(step,t)+\'</div><div class="bchr"></div>\';' +
   'if(n&&n<MAXP&&!mode)h+=\'<div class="bcaddslot"><span class="bcpno">1つ目の前に追加</span>\'+' +
   '\'<button type="button" data-addimg="0">🖼 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="0">✍ 文章を追加</button></div>\';' +
@@ -910,7 +918,12 @@ function renderBroadcastPage_(base, staff, dev) {
   'else if(!TAGLIST.length){h+=\'<div class="bcouttx">タグの一覧を読み込めませんでした。</div>\';}' +
   'else{h+=\'<div class="bctaglist">\'+TAGLIST.map(function(x){' +
   'return \'<button type="button" data-tag="\'+esc(x)+\'" class="\'+' +
-  '((cur.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';}' +
+  '((cur.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';' +
+  'var curx=xOf(step);' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">送らないタグ（このタグが付いている人には送りません。いくつでも選べます）</div>\'+' +
+  '\'<div class="bctaglist bcx">\'+TAGLIST.map(function(x){' +
+  'return \'<button type="button" data-xtag="\'+esc(x)+\'" class="\'+' +
+  '((curx.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';}' +
   'h+=\'</div>\';' +
   'h+=\'<button type="button" class="bcgo" id="bctagok">このタグで送る</button>\'+' +
   '\'<button type="button" class="bcghost" id="bctagdef">最初のタグに戻す（\'+esc(t.who)+\'）</button>\'+' +
@@ -978,7 +991,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '[].slice.call(box.querySelectorAll("[data-addtx]")).forEach(function(b){b.onclick=function(){' +
   'ADDAT=+b.getAttribute("data-addtx");EDI=-1;mode="txt";status("");draw();};});' +
   'if(e=document.getElementById("bctx"))e.onclick=function(){ADDAT=-1;EDI=-1;mode="txt";draw();};' +
-  'if(e=document.getElementById("bctag"))e.onclick=function(){mode="tag";TAGSNAP=(TAGS[step]||[]).slice();status("");' +
+  'if(e=document.getElementById("bctag"))e.onclick=function(){mode="tag";TAGSNAP=(TAGS[step]||[]).slice();XTAGSNAP=Array.isArray(XTAGS[step])?XTAGS[step].slice():null;status("");' +
   'if(!TAGLIST.length&&!TAGBUSY){TAGBUSY=true;draw();' +
   'ask("bc_tags",{},function(r){TAGBUSY=false;' +
   'TAGLIST=((r&&r.tags)||[]);if(!TAGLIST.length&&r&&r.note)status(r.note,true);draw();},' +
@@ -986,13 +999,22 @@ function renderBroadcastPage_(base, staff, dev) {
   'draw();};' +
   '[].slice.call(box.querySelectorAll("[data-tag]")).forEach(function(b){b.onclick=function(){' +
   'var x=b.getAttribute("data-tag"),a=((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).slice(),k=a.indexOf(x);' +
-  'if(k>=0)a.splice(k,1);else a.push(x);TAGS[step]=a;saveNow();draw();};});' +
+  'if(k>=0)a.splice(k,1);else{a.push(x);' +
+  'var xa=xOf(step).slice(),xk=xa.indexOf(x);if(xk>=0){xa.splice(xk,1);XTAGS[step]=xa;}}' +
+  'TAGS[step]=a;saveNow();draw();};});' +
+  '[].slice.call(box.querySelectorAll("[data-xtag]")).forEach(function(b){b.onclick=function(){' +
+  'var x=b.getAttribute("data-xtag"),a=xOf(step).slice(),k=a.indexOf(x);' +
+  'if(k>=0)a.splice(k,1);else{a.push(x);' +
+  'var ia=((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).slice(),ik=ia.indexOf(x);' +
+  'if(ik>=0){ia.splice(ik,1);TAGS[step]=ia;}}' +
+  'XTAGS[step]=a;saveNow();draw();};});' +
   'if(e=document.getElementById("bctagok"))e.onclick=function(){' +
-  'if(!(TAGS[step]||[]).length){status("タグを1つ以上選択してください😊",true);return;}' +
+  'if(!((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).length){status("タグを1つ以上選択してください😊",true);return;}' +
   'if(sameSet(TAGS[step],defTags(TPL[step])))TAGS[step]=[];' +
+  'if(sameSet(xOf(step),defX(TPL[step])))XTAGS[step]=null;' +
   'mode="";saveNow();status("タグを確定しました。");draw();};' +
-  'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];saveNow();status("");draw();};' +
-  'if(e=document.getElementById("bctagcancel"))e.onclick=function(){TAGS[step]=(TAGSNAP||[]).slice();mode="";saveNow();status("");draw();};' +
+  'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];XTAGS[step]=null;saveNow();status("");draw();};' +
+  'if(e=document.getElementById("bctagcancel"))e.onclick=function(){TAGS[step]=(TAGSNAP||[]).slice();XTAGS[step]=XTAGSNAP?XTAGSNAP.slice():null;mode="";saveNow();status("");draw();};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){EDI=-1;mode="";draw();};' +
   'if(e=document.getElementById("bcnext"))e.onclick=function(){' +
   'step=nextLive(step);mode="";status("");draw();};' +
@@ -1024,7 +1046,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'var h=\'<div class="bccard"><div class="bcname">最終確認</div><div class="bchr"></div>\';' +
   'TPL.forEach(function(x,i){var n=filled(i);if(!n)return;m++;' +
   'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="on">\'+esc(bcSumOf(i))+\'</span>\'+' +
-  '\'<button type="button" class="bcmv bcseeall" data-seeall="\'+i+\'">内容を確認</button></div>\';});' +
+  '\'<button type="button" class="bcmv bcseeall" data-seeall="\'+i+\'">内容を確認</button></div>\'+' +
+  '\'<div class="bcwho" style="margin:0 0 8px">\'+whoTxt(i,x)+\'</div>\';});' +
   'h+=\'</div>\';' +
   'if(!m)h+=\'<div class="bcstatus on">内容を入力した対象がありません。\'+' +
   '\'左上の「← 戻る」から入力してください😊</div>\';' +
@@ -1052,7 +1075,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var d0=now?"":(dateEl?dateEl.value:""),t0=now?"":(timeEl?timeEl.value:"");' +
   'var items=[],n=0;' +
   'TPL.forEach(function(t,i){var ps=DATA[i].parts;if(!ps.length)return;n++;' +
-  'items.push({name:t.name,tags:(TAGS[i]||[]),' +
+  'items.push({name:t.name,tags:(TAGS[i]||[]),exclude_tags:sendX(i),' +
   'parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
   'if(!n){status("文章か画像を入力した対象が1つもありません。",true);return;}' +
   'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいでしょうか？😊")' +
@@ -1207,6 +1230,11 @@ function bcCampCode_() {
   var CTPLBUSY = false, CWAITLAST = false;
 
   function campName(gi) { return CGROUPS[gi][0]; }
+  function campGi(name) { for (var q = 0; q < CGROUPS.length; q++) if (campName(q) === name) return q; return -1; }
+  var CTAGMODE = false, CTAGSNAP = null;
+  function campTpl(gi) { for (var ti = 0; ti < CTPL.length; ti++) if (CTPL[ti].name === campName(gi)) return CTPL[ti]; return null; }
+  function campInc(gi) { var c = campCell(gi); return (c.tags && c.tags.length) ? c.tags : defTags(campTpl(gi)); }
+  function campExc(gi) { var c = campCell(gi); return Array.isArray(c.xtags) ? c.xtags : defX(campTpl(gi)); }
   function campDefImgs(gi) { return CLINKS ? campImages(CGROUPS[gi][2], CGROUPS[gi][1]).slice(0, MAXP - 1) : []; }
   function campCell(gi) {
     var k = campName(gi);
@@ -1286,7 +1314,7 @@ function bcCampCode_() {
   }
   function campUnswap() {
     if (!CORIG) return;
-    TPL = CORIG.tpl; DATA = CORIG.data; CAT = CORIG.cat; TAGS = CORIG.tags; CORIG = null;
+    TPL = CORIG.tpl; DATA = CORIG.data; CAT = CORIG.cat; TAGS = CORIG.tags; XTAGS = CORIG.xtags || []; CORIG = null;
   }
   function campLeave() { campUnswap(); CMODE = false; }
 
@@ -1351,6 +1379,58 @@ function bcCampCode_() {
     };
   }
 
+  function drawCampTag(h, c, tp, inc, exc) {
+    function list(cls, attr, cur) {
+      return '<div class="bctaglist' + cls + '">' + TAGLIST.map(function (x) {
+        return '<button type="button" ' + attr + '="' + esc(x) + '" class="' + (cur.indexOf(x) >= 0 ? 'on' : '') + '">' + esc(x) + '</button>';
+      }).join('') + '</div>';
+    }
+    h += '<div class="bcleft">送るタグを選択（いくつでも選べます。もう一度押すと外れます）</div>';
+    if (TAGBUSY) h += '<div class="bcouttx">タグの一覧を読んでいます…</div>';
+    else if (!TAGLIST.length) h += '<div class="bcouttx">タグの一覧を読み込めませんでした。</div>';
+    else {
+      h += list('', 'data-ctag', inc) + '<div class="bchr"></div>' +
+        '<div class="bcleft">送らないタグ（このタグが付いている人には送りません。いくつでも選べます）</div>' +
+        list(' bcx', 'data-cxtag', exc);
+    }
+    h += '</div>' +
+      '<button type="button" class="bcgo" id="bcctagok">このタグで送る</button>' +
+      '<button type="button" class="bcghost" id="bcctagdef">最初のタグに戻す（' + esc(tp.who) + '）</button>' +
+      '<button type="button" class="bcghost" id="bcctagcancel">タグを変更せずに戻る</button>';
+    box.innerHTML = h;
+    function del(a, x) { var k = a.indexOf(x); if (k >= 0) a.splice(k, 1); return a; }
+    [].slice.call(box.querySelectorAll('[data-ctag]')).forEach(function (b) {
+      b.onclick = function () {
+        var x = b.getAttribute('data-ctag'), a = campInc(CGI).slice();
+        if (a.indexOf(x) >= 0) del(a, x);
+        else { a.push(x); if (campExc(CGI).indexOf(x) >= 0) c.xtags = del(campExc(CGI).slice(), x); }   
+        c.tags = a; saveNow(); draw();
+      };
+    });
+    [].slice.call(box.querySelectorAll('[data-cxtag]')).forEach(function (b) {
+      b.onclick = function () {
+        var x = b.getAttribute('data-cxtag'), a = campExc(CGI).slice();
+        if (a.indexOf(x) >= 0) del(a, x);
+        else { a.push(x); if (campInc(CGI).indexOf(x) >= 0) c.tags = del(campInc(CGI).slice(), x); }
+        c.xtags = a; saveNow(); draw();
+      };
+    });
+    var ok = document.getElementById('bcctagok');
+    if (ok) ok.onclick = function () {
+      if (!campInc(CGI).length) { status('タグを1つ以上選択してください😊', true); return; }
+      if (sameSet(c.tags || [], defTags(tp))) c.tags = [];
+      if (sameSet(campExc(CGI), defX(tp))) c.xtags = null;
+      CTAGMODE = false; saveNow(); status('タグを確定しました。'); draw();
+    };
+    var df = document.getElementById('bcctagdef');
+    if (df) df.onclick = function () { c.tags = []; c.xtags = null; saveNow(); status(''); draw(); };
+    var cc = document.getElementById('bcctagcancel');
+    if (cc) cc.onclick = function () {
+      if (CTAGSNAP) { c.tags = CTAGSNAP.tags; c.xtags = CTAGSNAP.xtags; }
+      CTAGMODE = false; saveNow(); status(''); draw();
+    };
+  }
+
   function drawCampEdit() {
     var g = CGROUPS[CGI], c = campCell(CGI), imgs = campImages(g[2], g[1]);
     var tp = null;
@@ -1358,9 +1438,13 @@ function bcCampCode_() {
     var last = (CGI === CGROUPS.length - 1), n = c.parts.length;
     var h = '<div class="bcstop"><span class="bcsttl">' + esc(CKIND) + '</span>' +
       '<span class="bcsno">' + (CGI + 1) + ' / ' + CGROUPS.length + '</span></div>';
-    h += '<div class="bccard"><div class="bcname">' + esc(g[0]) + '</div>' +
-      '<div class="bcwho">送り先：' + esc(tp ? tp.who : ('未来店 ' + g[0] + '＋' + g[0] + ' 来店済')) + '（同じ内容を送ります）</div>' +
+    var inc = campInc(CGI), exc = campExc(CGI);
+    h += '<div class="bccard"><div class="bcnamerow"><div class="bcname">' + esc(g[0]) + '</div>' +
+      ((CTAGMODE || !tp) ? '' : '<button type="button" class="bcmv" id="bcctag">タグを変更</button>') + '</div>' +
+      '<div class="bcwho">送り先：' + esc(tp ? inc.join('＋') : ('未来店 ' + g[0] + '＋' + g[0] + ' 来店済')) +
+      (exc.length ? '　<span class="bcxw">除く：' + esc(exc.join('＋')) + '</span>' : '') + '（同じ内容を送ります）</div>' +
       '<div class="bchr"></div>';
+    if (CTAGMODE && tp) { drawCampTag(h, c, tp, inc, exc); return; }
     h += '<div class="bcleft">上から順に送ります（' + MAXP + 'つまで）</div>';
     c.parts.forEach(function (x, i) {
       var kind = x.k === 'img' ? '画像' : (x.k === 'txt' ? '文章' : '画像か文章を選ぶ');
@@ -1441,6 +1525,21 @@ function bcCampCode_() {
     });
     var ad = document.getElementById('bccadd');
     if (ad) ad.onclick = function () { if (c.parts.length >= MAXP) return; c.parts.push({ k: 'new' }); changed(); };
+    var ct = document.getElementById('bcctag');
+    if (ct) ct.onclick = function () {
+      CTAGMODE = true; status('');
+      CTAGSNAP = { tags: (c.tags || []).slice(), xtags: Array.isArray(c.xtags) ? c.xtags.slice() : null };
+      if (!TAGLIST.length && !TAGBUSY) {
+        TAGBUSY = true; draw();
+        ask('bc_tags', {}, function (r) {
+          TAGBUSY = false; TAGLIST = ((r && r.tags) || []);
+          if (!TAGLIST.length && r && r.note) status(r.note, true);
+          draw();
+        }, function (m) { TAGBUSY = false; status(m, true); draw(); });
+        return;
+      }
+      draw();
+    };
     document.getElementById('bccnext').onclick = function () {
       for (var i = 0; i < c.parts.length; i++) {
         if (c.parts[i].k === 'txt' && trimLen(c.parts[i].text) > MAXT) {
@@ -1456,8 +1555,10 @@ function bcCampCode_() {
   function campToLast() {
     if (!campAny()) { status('文章を入力したタブがありません。', true); return; }
     if (!CTPL.length) { CWAITLAST = true; status('送り先の決まりを読み込んでいます。終わったら自動で最終確認に進みます…'); campLoadTpl(); return; }
-    if (!CORIG) CORIG = { tpl: TPL, data: DATA, cat: CAT, tags: TAGS };
-    TPL = CTPL; CAT = CAMPCAT; TAGS = [];
+    if (!CORIG) CORIG = { tpl: TPL, data: DATA, cat: CAT, tags: TAGS, xtags: XTAGS };
+    TPL = CTPL; CAT = CAMPCAT;
+    TAGS = CTPL.map(function (t) { var gi = campGi(t.name); return gi < 0 ? [] : ((campCell(gi).tags || []).slice()); });
+    XTAGS = CTPL.map(function (t) { var gi = campGi(t.name), c = gi < 0 ? null : campCell(gi); return (c && Array.isArray(c.xtags)) ? c.xtags.slice() : null; });
     DATA = CTPL.map(function (t) {
       var gi = -1;
       for (var q = 0; q < CGROUPS.length; q++) if (campName(q) === t.name) gi = q;
@@ -1507,6 +1608,11 @@ function bcCampCode_() {
   }
   function campBack() {
     if (page === 'c') { campLeave(); page = 'k'; return true; }
+    if (page === 'ce' && CTAGMODE) {                     
+      var cc = campCell(CGI);
+      if (CTAGSNAP) { cc.tags = CTAGSNAP.tags; cc.xtags = CTAGSNAP.xtags; }
+      CTAGMODE = false; return true;
+    }
     if (page === 'ce') { if (CGI > 0) { CGI--; CTAB = 0; } else { page = 'c'; } return true; }
     if (LMODE === 'at') { LMODE = ''; return true; }
     campUnswap(); page = 'ce'; CGI = CGROUPS.length - 1; step = 0; return true;
