@@ -12465,6 +12465,8 @@ var HONEYCSS_ =
   '.hntabs{display:flex;margin:0 0 10px;border-radius:12px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.hntabs[hidden]{display:none;}' +
   '.hnbar button.open{background:#0e7490;color:#fff;}' +
+  // ★2026-11-12 まるちゃん「音声入力を縦に少し長く押しやすく」＝この列のボタンを縦に高くする
+  '.hnbar #hnMic,.hnbar #hnPick{padding:20px 6px;font-size:17px;}' +
   '.hntabs button{flex:1;background:#e2e8f0;color:#0f172a;border:0;padding:12px 6px;font:inherit;font-size:16px;font-weight:800;cursor:pointer;}' +
   '.hntabs button.on{background:#fff;color:#0e7490;}' +
   '.hntabs button+button{border-left:1px solid #cbd5e1;}' +
@@ -12723,8 +12725,9 @@ function honeyScript_(C) {
   });
   document.addEventListener('visibilitychange', function () { if (document.hidden && wantMic) micStop(); });
   // ★2026-11-12 まるちゃん「画像選択は スマホ内タブ・カメラタブの2つ。スマホ内は、スマホ内の画像を自動で表示」
-  //   「🖼 画像選択」を押すと2つのタブが出て、すぐにスマホの写真の一覧が開く（スマホ内）。
-  //   「📷 カメラ」を押すとカメラが開く。もう一度「🖼 画像選択」を押すとタブを閉じる。
+  //   「🖼 画像選択」を押すと「スマホ内／カメラ」の2つが出て、選んだ方が開く。もう一度「🖼 画像選択」を押すと閉じる。
+  //   ★2026-11-12 まるちゃん「画像選択していきなりポップアップで出るのを、スマホ内・カメラの選択にしたい。今のは変」
+  //     ＝前は画像選択を押した瞬間にスマホの写真の一覧も開いていた。今は2つを出すだけで、何も開かない。
   //   ★ズコの画面の中に写真の一覧を並べることはできない（ブラウザがスマホの写真を勝手に読ませない）＝スマホの写真の一覧を開く形。
   function tabOn(which) {
     $('hnTabLib').classList.toggle('on', which === 'lib');
@@ -12734,7 +12737,7 @@ function honeyScript_(C) {
     var tabs = $('hnTabs');
     if (!tabs.hidden) { tabs.hidden = true; $('hnPick').classList.remove('open'); return; }
     tabs.hidden = false; $('hnPick').classList.add('open');
-    tabOn('lib'); $('hnFile').click();
+    tabOn('');
   });
   $('hnTabLib').addEventListener('click', function () { tabOn('lib'); $('hnFile').click(); });
   $('hnTabCam').addEventListener('click', function () { tabOn('cam'); $('hnCam').click(); });
