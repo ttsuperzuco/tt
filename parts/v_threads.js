@@ -271,6 +271,21 @@ var THREADSCSS_ =
   '.thsheet .tsch input{display:block;width:100%;box-sizing:border-box;height:46px;margin-top:6px;background:transparent;border:1px solid rgba(243,245,247,.15);border-radius:12px;padding:0 14px;color:#f3f5f7;font:inherit;font-size:16px;color-scheme:dark;}' +
   '.thsheet .tsch p{color:#999;font-size:13px;margin:4px 0 20px;}' +
   '.thsheet #thSchedClear{background:none;border:0;color:#ff6b6b;font:inherit;font-weight:600;padding:0;cursor:pointer;}' +
+  '.thsheet .tpf1{padding:14px 24px;border-bottom:1px solid #333638;}' +
+  '.thsheet .tpf1 .h{font-weight:600;font-size:15px;margin-bottom:6px;}' +
+  '.thsheet .tpf1 .v{color:#ccc;}' +
+  '.thsheet .tpf1 .n{color:#777;font-size:12px;margin-top:6px;}' +
+  '.thsheet .tpf1 textarea{display:block;width:100%;box-sizing:border-box;min-height:110px;background:transparent;border:1px solid rgba(243,245,247,.15);border-radius:12px;color:#f3f5f7;font:inherit;padding:10px 12px;resize:vertical;outline:none;}' +
+  '.thsheet .tplk{display:flex;gap:6px;align-items:center;margin-bottom:8px;}' +
+  '.thsheet .tplk input{flex:1;min-width:0;height:40px;background:transparent;border:1px solid rgba(243,245,247,.15);border-radius:10px;color:#f3f5f7;font:inherit;font-size:14px;padding:0 10px;outline:none;}' +
+  '.thsheet .tplk input.t{flex:0 0 34%;}' +
+  '.thsheet .tplk .rm{background:none;border:0;color:#777;padding:0;cursor:pointer;display:inline-flex;}' +
+  '.thsheet .tpadd{background:none;border:0;color:#5ea4ff;font:inherit;font-weight:600;padding:4px 0;cursor:pointer;}' +
+  '.thsheet .tpf1.sw{display:flex;align-items:center;justify-content:space-between;}' +
+  '.thsheet .tpf1 .psw{flex:none;position:relative;width:40px;height:24px;border-radius:16px;background:#323539;border:0;padding:0;cursor:pointer;}' +
+  '.thsheet .tpf1 .psw i{position:absolute;top:1px;left:1px;width:22px;height:22px;border-radius:14px;background:#0a0a0a;border:1px solid rgba(243,245,247,.15);box-sizing:border-box;transition:left .15s;}' +
+  '.thsheet .tpf1 .psw.on{background:#f3f5f7;}' +
+  '.thsheet .tpf1 .psw.on i{left:17px;}' +
   '.thsheet .tgifb .tmi img{width:auto;max-width:100%;max-height:300px;object-fit:contain;}' +
   '.thsheet .tgs{padding:4px 24px 12px;}' +
   '.thsheet .tgs input{display:block;width:100%;box-sizing:border-box;height:40px;background:#0a0a0a;border:1px solid rgba(243,245,247,.15);border-radius:16px;padding:0 16px;color:#f3f5f7;font:inherit;outline:none;}' +
@@ -427,6 +442,11 @@ function renderThreadsPage_(base, staff, dev) {
         '<div class="tgs"><input id="thLocQ" type="search" placeholder="場所を検索" autocomplete="off"></div>' +
         '<div id="thLocList"></div>' +
       '</div>' +
+      '<div id="thProfView" style="display:none">' +
+        '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thProfCancel">キャンセル</button></div><b>プロフィールを編集</b>' +
+          '<div class="tshr"><button type="button" class="tdone ok" id="thProfDone">完了</button></div></div>' +
+        '<div id="thProfBody"></div>' +
+      '</div>' +
       '<div id="thSchedView" style="display:none">' +
         '<div class="tsh"><div class="tl"><button type="button" class="tcx" id="thSchedCancel">キャンセル</button></div><b>日時を指定</b>' +
           '<div class="tshr"><button type="button" class="tdone ok" id="thSchedDone">完了</button></div></div>' +
@@ -534,7 +554,7 @@ function threadsScript_(C) {
   function each(sel, root, fn) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
   function vals(ids) { return ids.map(function (i) { return $(i).value.trim(); }); }
   function autoH(t) { t.style.height = '21px'; t.style.height = t.scrollHeight + 'px'; }
-  function showView(v) { ['thWrite', 'thDrafts', 'thLongView', 'thGifView', 'thAltView', 'thQuoteView', 'thLocView', 'thSchedView'].forEach(function (i) { $(i).style.display = i === v ? '' : 'none'; }); closeMenus(); }
+  function showView(v) { ['thWrite', 'thDrafts', 'thLongView', 'thGifView', 'thAltView', 'thQuoteView', 'thLocView', 'thSchedView', 'thProfView'].forEach(function (i) { $(i).style.display = i === v ? '' : 'none'; }); closeMenus(); }
   function closeMenus() {
     $('thMoreMenu').style.display = 'none'; $('thOpt').style.display = 'none';
     each('#thCompose .tmi .tmenu', null, function (m) { m.parentNode.removeChild(m); });
@@ -949,6 +969,75 @@ function threadsScript_(C) {
     SCHED = ms; showView('thWrite'); drawSched();
   });
 
+  var PROF = null, PSEQ = 0;
+  function profLinkRow(L) {
+    return '<div class="tplk"><input class="u" inputmode="url" autocapitalize="off" placeholder="URL" value="' + esc(L.url || '') + '">' +
+      '<input class="t" maxlength="30" placeholder="タイトル(任意)" value="' + esc(L.title || '') + '">' +
+      '<button type="button" class="rm" data-plrm="1" title="リンクを削除">' + IC('x', 16) + '</button></div>';
+  }
+  function profAddVis() { $('thProfAdd').style.display = $('thProfLinks').querySelectorAll('.tplk').length >= 5 ? 'none' : ''; }
+  function drawProf() {
+    var b = $('thProfBody');
+    if (!PROF) { b.innerHTML = '<div class="tgl">読み込み中です。少し待っててくださいね🥺</div>'; return; }
+    b.innerHTML = '<div class="tpf1"><div class="h">名前</div><div class="v">' + esc(PROF.name || '') + '</div></div>' +
+      '<div class="tpf1"><div class="h">ユーザーネーム</div><div class="v">' + esc(PROF.username || '') + '</div>' +
+        '<div class="n">名前・ユーザーネーム・写真はインスタと同じです。Threadsからは変更できません。</div></div>' +
+      '<div class="tpf1"><div class="h">自己紹介</div><textarea id="thProfBio" maxlength="150" placeholder="自己紹介を入力…">' + esc(PROF.bio || '') + '</textarea></div>' +
+      '<div class="tpf1"><div class="h">リンク</div><div id="thProfLinks">' + (PROF.links || []).map(profLinkRow).join('') + '</div>' +
+        '<button type="button" class="tpadd" id="thProfAdd">リンクを追加</button></div>' +
+      '<div class="tpf1 sw"><span>Instagramバッジを表示</span><button type="button" class="psw' + (PROF.badge ? ' on' : '') + '" data-psw="badge"><i></i></button></div>' +
+      '<div class="tpf1 sw"><span>最近の閲覧数を表示</span><button type="button" class="psw' + (PROF.views ? ' on' : '') + '" data-psw="views"><i></i></button></div>';
+    profAddVis();
+  }
+  function openProf() {
+    if (curRo()) return;
+    PROF = null; var seq = ++PSEQ, acct = CUR;
+    fillWho($('thCompose'));
+    $('thCompose').style.display = ''; document.body.style.overflow = 'hidden';
+    showView('thProfView'); drawProf();
+    ask({ kind: 'profile_get', acct: acct }, '', function (err, d) {
+      if (seq !== PSEQ) return;
+      if (err) { warn(err); closeCompose(); showView('thWrite'); return; }
+      PROF = (d && d.profile) || {}; drawProf();
+    });
+  }
+  function profVals() {
+    var links = Array.prototype.map.call($('thProfLinks').querySelectorAll('.tplk'), function (r) {
+      return { url: r.querySelector('.u').value.trim(), title: r.querySelector('.t').value.trim() };
+    }).filter(function (x) { return x.url; });
+    return { bio: $('thProfBio').value.replace(/\s+$/, ''), links: links,
+             badge: !!$('thProfBody').querySelector('[data-psw="badge"].on'), views: !!$('thProfBody').querySelector('[data-psw="views"].on') };
+  }
+  $('thProfBody').addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.closest('#thProfAdd')) { $('thProfLinks').insertAdjacentHTML('beforeend', profLinkRow({})); profAddVis(); var u = $('thProfLinks').querySelectorAll('.tplk .u'); try { u[u.length - 1].focus(); } catch (x) {} return; }
+    var rm = t.closest('[data-plrm]'); if (rm) { rm.closest('.tplk').remove(); profAddVis(); return; }
+    var sw = t.closest('[data-psw]'); if (sw) sw.classList.toggle('on');
+  });
+  $('thProfCancel').addEventListener('click', function () { PSEQ++; closeCompose(); showView('thWrite'); });
+  $('thProfDone').addEventListener('click', function () {
+    if (!PROF) return;
+    var v = profVals();
+    if (tlen(v.bio) > 150) { warn('自己紹介は150文字までです。'); return; }
+    if (v.links.length > 5) { warn('リンクは5つまでです。'); return; }
+    var bad = v.links.filter(function (x) { return !/^(https?:\/\/)?[^\s\/]+\.[^\s]+$/.test(x.url); })[0];
+    if (bad) { warn('リンクのURLの形が正しくありません。\n' + bad.url); return; }
+    var same = v.bio === String(PROF.bio || '') && v.badge === !!PROF.badge && v.views === !!PROF.views &&
+      JSON.stringify(v.links) === JSON.stringify((PROF.links || []).map(function (x) { return { url: x.url, title: x.title || '' }; }));
+    if (same) { closeCompose(); showView('thWrite'); return; }
+    var a = ACCTS.filter(function (x) { return x.acct === CUR; })[0];
+    szPopup_((a ? a.label : '') + 'のThreadsのプロフィールを変更しますか？😊', { icon: '', cancel: true, onYes: function () {
+      var f = { kind: 'profile_set', acct: CUR, bio: v.bio, links: v.links, badge: v.badge, views: v.views };
+      ask(f, 'プロフィールを変更しています。少し待っててくださいね🥺', function (err) {
+        if (err) { warn(err); return; }
+        closeCompose(); showView('thWrite');
+        szOvShow_(szDoneHtml_('プロフィールの変更が完了しました'), '#16a34a');
+        var db = document.getElementById('szDoneBack');
+        if (db) db.addEventListener('click', function () { szOvHide_(); loadAll(); });
+      });
+    } });
+  });
+
   var PARTS = '<div class="tqc" style="display:none"></div><div class="tmed"></div><div class="tmed tgifb" style="display:none"></div>' +
     '<div class="tpoll" style="display:none"><input class="tp1" maxlength="25" placeholder="はい"><input class="tp2" maxlength="25" placeholder="いいえ">' +
     '<input class="tp3 add" maxlength="25" placeholder="別の選択肢を追加"><input class="tp4 add" maxlength="25" placeholder="別の選択肢を追加" style="display:none">' +
@@ -1286,7 +1375,7 @@ function threadsScript_(C) {
         '<span>フォロワー' + esc((wb && wb.fcount) || pf.followers) + '人</span></div>' +
         '<a class="ig" href="https://www.instagram.com/' + esc(pf.username || '') + '/" target="_blank" rel="noopener" title="Instagram">◎</a></div>';
     }
-    h += '<div class="pbtns"><button type="button" class="off" data-off="プロフィールの編集は、公式の仕組みでは変更できません。Threadsのアプリから行ってください🙇">プロフィールを編集</button>' +
+    h += '<div class="pbtns">' + (ro ? '<button type="button" class="off" data-off="このアカウントは閲覧のみです😊">プロフィールを編集</button>' : '<button type="button" data-prof="1">プロフィールを編集</button>') +
       '<button type="button" id="thInsOpen">インサイトを見る</button></div>';
     var TABS = [['th', 'スレッド'], ['rp', '返信'], ['md', 'メディア'], ['rs', '再投稿']];
     h += '<div class="tabs">' + TABS.map(function (t) { return '<div data-tab="' + t[0] + '"' + (t[0] === TAB ? ' class="on"' : '') + '>' + t[1] + '</div>'; }).join('') + '</div>';
@@ -1470,6 +1559,7 @@ function threadsScript_(C) {
     }
     if (curRo()) return;   
     if (g('data-rp')) { openReply(g('data-rp')); return; }
+    if (g('data-prof')) { openProf(); return; }
     if (g('data-fquote')) {
       var qp = ((FEED && FEED.posts) || []).filter(function (x) { return x.id === g('data-fquote'); })[0]; if (!qp) return;
       var pm = t.closest('.pmenu'); if (pm) pm.style.display = 'none';
