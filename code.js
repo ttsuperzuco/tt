@@ -5157,6 +5157,9 @@ function renderBroadcastPage_(base, staff, dev) {
     '.bctaglist button{border:1px solid #26324A;background:#131C2E;color:#E8EEF7;' +
     'border-radius:999px;padding:9px 13px;font-size:14px;font-weight:800;cursor:pointer;}' +
     '.bctaglist button.on{background:#16A34A;color:#fff;border-color:#16A34A;}' +
+    // ★送らないタグ（2026-11-12 まるちゃん「VIOをやったことがある人とない人で分けたい」）＝選んだ物は赤
+    '.bctaglist.bcx button.on{background:#DC2626;border-color:#DC2626;}' +
+    '.bcwho .bcxw{color:#FCA5A5;font-weight:800;}' +
     // ★並べ替え・直しの小さなボタン（まるちゃん指示 2026-09-09）
     '.bcmv{border:1px solid #26324A;background:#131C2E;color:#E8EEF7;border-radius:9px;' +
     'padding:6px 9px;font-size:13px;font-weight:800;flex:0 0 auto;cursor:pointer;}' +
@@ -5286,8 +5289,18 @@ function renderBroadcastPage_(base, staff, dev) {
   //   「← 戻る」でここへ戻す（まるちゃん指摘 2026-09-09）
   'var MBACK=0;' +
   // ★対象ごとに選び直した送り先（空＝もとの決まりのまま）と、選べる送り先の一覧
-  'var TAGS=[],TAGLIST=[],TAGBUSY=false,ADDAT=-1,TAGSNAP=[];' +
+  'var TAGS=[],TAGLIST=[],TAGBUSY=false,ADDAT=-1,TAGSNAP=[],XTAGS=[],XTAGSNAP=[];' +
   'function defTags(t){return String((t&&t.who)||"").split("　（外す")[0].split("＋").filter(function(x){return x;});}' +
+  // ★送らないタグ（2026-11-12 まるちゃん「VIOをやったことがある人とない人で分けたい」）。
+  //   最初の決まりの外すタグ（who の「（外す：◯◯）」）を読む。XTAGS が空＝最初の決まりのまま。
+  'function defX(t){var s=String((t&&t.who)||""),k=s.indexOf("（外す：");if(k<0)return [];' +
+  'return s.slice(k+4).replace(/）\\s*$/,"").split("＋").filter(function(x){return x;});}' +
+  // XTAGS[i] が並び（空でも）＝選び直した／null か無し＝最初の決まりのまま
+  'function xOf(i){return Array.isArray(XTAGS[i])?XTAGS[i]:defX(TPL[i]);}' +
+  // 送る時の「除く」＝選び直していればそれ。送るタグだけ選び直した時も、最初の決まりの外すタグは残す。
+  'function sendX(i){return Array.isArray(XTAGS[i])?XTAGS[i]:((TAGS[i]&&TAGS[i].length)?defX(TPL[i]):[]);}' +
+  'function whoTxt(i,t){var a=(TAGS[i]&&TAGS[i].length)?TAGS[i]:defTags(t),x=xOf(i);' +
+  'return "タグ："+esc(a.join("＋"))+(x.length?(\'　<span class="bcxw">除く：\'+esc(x.join("＋"))+"</span>"):"");}' +
   'function sameSet(a,b){a=(a||[]).slice().sort();b=(b||[]).slice().sort();return a.join("|")===b.join("|");}' +
   // ★まるちゃんが入口から先へ進んだか（進んだあとに、遅れて届いた返事で画面を戻さない）
   'var MOVED=false;' +
@@ -5339,7 +5352,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '.map(function(p){return p.kind==="text"?{kind:"text",text:p.text,g:p.g}:{kind:"image",src:p.src,b64:p.b64};});}' +
   'function packNow(withPhoto){return {t:Date.now(),step:step,text:WTEXT,body:MBODY,' +
   'per:SPER,waku:SRES,sidx:SIDX,page:page,bodies:MBODYS,zbodies:MZBODYS,' +
-  'ja:MJA,zh:MZH,tags:TAGS,mback:MBACK,' +
+  'ja:MJA,zh:MZH,tags:TAGS,xtags:XTAGS,mback:MBACK,' +
   'midx:MIDX,mstep:MSTEP,m6from:M6FROM,names:TPL.map(function(t){return t.name;}),' +
   'data:DATA.map(function(x){return {parts:partsFor(x,withPhoto)};})};}' +
   // ★2026-10-01：対象の並びを変えた（男性の新規日本→新規台湾→既存日本→既存台湾→女性も同じ）。
@@ -5378,6 +5391,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var oldTags=(s.tags&&s.tags.length)?s.tags:null,oldStep=s.step;' +
   'for(var i=0;i<TPL.length;i++){var si=savedIdx(s,i);var ps=(si>=0&&((s.data[si]||{}).parts))||[];' +
   'if(oldTags){TAGS[i]=(si>=0&&oldTags[si])||[];}' +
+  'if(s.xtags&&s.xtags.length){XTAGS[i]=(si>=0&&Array.isArray(s.xtags[si]))?s.xtags[si]:null;}' +
   'if(typeof oldStep==="number"&&si>=0&&si===oldStep)s.__step=i;' +
   'DATA[i].parts=ps.slice(0,MAXP).map(function(p){' +
   'if(p.kind==="image"&&p.b64&&!p.thumb)p.thumb="data:image/jpeg;base64,"+p.b64;return p;});}' +
@@ -6091,8 +6105,7 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★送り先を選び直せる（まるちゃん指示 2026-09-09）。選んでいなければ元の決まりのまま。
   '\'<div class="bccard"><div class="bcnamerow"><div class="bcname">\'+esc(t.name)+\'</div>\'+' +
   '(mode==="tag"?"":\'<button type="button" class="bcmv" id="bctag">タグを変更</button>\')+\'</div>\'+' +
-  '\'<div class="bcwho">\'+esc((TAGS[step]&&TAGS[step].length)?' +
-  '("タグ："+TAGS[step].join("＋")):("タグ："+t.who))+\'</div><div class="bchr"></div>\';' +
+  '\'<div class="bcwho">\'+whoTxt(step,t)+\'</div><div class="bchr"></div>\';' +
   // ★並べ替えと、文の直し（まるちゃん指示 2026-09-09）
   'if(n&&n<MAXP&&!mode)h+=\'<div class="bcaddslot"><span class="bcpno">1つ目の前に追加</span>\'+' +
   '\'<button type="button" data-addimg="0">🖼 画像を追加</button>\'+' +
@@ -6139,7 +6152,13 @@ function renderBroadcastPage_(base, staff, dev) {
   'else if(!TAGLIST.length){h+=\'<div class="bcouttx">タグの一覧を読み込めませんでした。</div>\';}' +
   'else{h+=\'<div class="bctaglist">\'+TAGLIST.map(function(x){' +
   'return \'<button type="button" data-tag="\'+esc(x)+\'" class="\'+' +
-  '((cur.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';}' +
+  '((cur.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';' +
+  // ★送らないタグ（2026-11-12）＝ここで選んだタグが付いている人には、上で選んだタグがあっても送らない
+  'var curx=xOf(step);' +
+  'h+=\'<div class="bchr"></div><div class="bcleft">送らないタグ（このタグが付いている人には送りません。いくつでも選べます）</div>\'+' +
+  '\'<div class="bctaglist bcx">\'+TAGLIST.map(function(x){' +
+  'return \'<button type="button" data-xtag="\'+esc(x)+\'" class="\'+' +
+  '((curx.indexOf(x)>=0)?"on":"")+\'">\'+esc(x)+\'</button>\';}).join("")+\'</div>\';}' +
   'h+=\'</div>\';' +
   'h+=\'<button type="button" class="bcgo" id="bctagok">このタグで送る</button>\'+' +
   '\'<button type="button" class="bcghost" id="bctagdef">最初のタグに戻す（\'+esc(t.who)+\'）</button>\'+' +
@@ -6214,7 +6233,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'ADDAT=+b.getAttribute("data-addtx");EDI=-1;mode="txt";status("");draw();};});' +
   'if(e=document.getElementById("bctx"))e.onclick=function(){ADDAT=-1;EDI=-1;mode="txt";draw();};' +
   // ★送り先を選び直す（一覧は初めて開いた時に1回だけ事務所パソコンから取る）
-  'if(e=document.getElementById("bctag"))e.onclick=function(){mode="tag";TAGSNAP=(TAGS[step]||[]).slice();status("");' +
+  'if(e=document.getElementById("bctag"))e.onclick=function(){mode="tag";TAGSNAP=(TAGS[step]||[]).slice();XTAGSNAP=Array.isArray(XTAGS[step])?XTAGS[step].slice():null;status("");' +
   'if(!TAGLIST.length&&!TAGBUSY){TAGBUSY=true;draw();' +
   'ask("bc_tags",{},function(r){TAGBUSY=false;' +
   'TAGLIST=((r&&r.tags)||[]);if(!TAGLIST.length&&r&&r.note)status(r.note,true);draw();},' +
@@ -6222,14 +6241,25 @@ function renderBroadcastPage_(base, staff, dev) {
   'draw();};' +
   '[].slice.call(box.querySelectorAll("[data-tag]")).forEach(function(b){b.onclick=function(){' +
   'var x=b.getAttribute("data-tag"),a=((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).slice(),k=a.indexOf(x);' +
-  'if(k>=0)a.splice(k,1);else a.push(x);TAGS[step]=a;saveNow();draw();};});' +
+  'if(k>=0)a.splice(k,1);else{a.push(x);' +
+  // 送るタグに選んだ物は、送らないタグから外す（両方に入らないように）
+  'var xa=xOf(step).slice(),xk=xa.indexOf(x);if(xk>=0){xa.splice(xk,1);XTAGS[step]=xa;}}' +
+  'TAGS[step]=a;saveNow();draw();};});' +
+  // ★送らないタグ（2026-11-12）。送るタグに入っていたら、そちらから外す。
+  '[].slice.call(box.querySelectorAll("[data-xtag]")).forEach(function(b){b.onclick=function(){' +
+  'var x=b.getAttribute("data-xtag"),a=xOf(step).slice(),k=a.indexOf(x);' +
+  'if(k>=0)a.splice(k,1);else{a.push(x);' +
+  'var ia=((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).slice(),ik=ia.indexOf(x);' +
+  'if(ik>=0){ia.splice(ik,1);TAGS[step]=ia;}}' +
+  'XTAGS[step]=a;saveNow();draw();};});' +
   'if(e=document.getElementById("bctagok"))e.onclick=function(){' +
-  'if(!(TAGS[step]||[]).length){status("タグを1つ以上選択してください😊",true);return;}' +
+  'if(!((TAGS[step]&&TAGS[step].length)?TAGS[step]:defTags(TPL[step])).length){status("タグを1つ以上選択してください😊",true);return;}' +
   // 最初の決まりと同じなら「選び直していない」に戻す（決まりの外すタグもそのまま効く）
   'if(sameSet(TAGS[step],defTags(TPL[step])))TAGS[step]=[];' +
+  'if(sameSet(xOf(step),defX(TPL[step])))XTAGS[step]=null;' +
   'mode="";saveNow();status("タグを確定しました。");draw();};' +
-  'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];saveNow();status("");draw();};' +
-  'if(e=document.getElementById("bctagcancel"))e.onclick=function(){TAGS[step]=(TAGSNAP||[]).slice();mode="";saveNow();status("");draw();};' +
+  'if(e=document.getElementById("bctagdef"))e.onclick=function(){TAGS[step]=[];XTAGS[step]=null;saveNow();status("");draw();};' +
+  'if(e=document.getElementById("bctagcancel"))e.onclick=function(){TAGS[step]=(TAGSNAP||[]).slice();XTAGS[step]=XTAGSNAP?XTAGSNAP.slice():null;mode="";saveNow();status("");draw();};' +
   'if(e=document.getElementById("bccancel"))e.onclick=function(){EDI=-1;mode="";draw();};' +
   'if(e=document.getElementById("bcnext"))e.onclick=function(){' +
   'step=nextLive(step);mode="";status("");draw();};' +
@@ -6267,7 +6297,9 @@ function renderBroadcastPage_(base, staff, dev) {
   // ★「1つ入り」では分からない（まるちゃん 2026-09-17）＝「画像1枚、文章1つ」と書き、右に「内容を確認」
   'TPL.forEach(function(x,i){var n=filled(i);if(!n)return;m++;' +
   'h+=\'<div class="bcsum"><b>\'+esc(x.name)+\'</b><span class="on">\'+esc(bcSumOf(i))+\'</span>\'+' +
-  '\'<button type="button" class="bcmv bcseeall" data-seeall="\'+i+\'">内容を確認</button></div>\';});' +
+  '\'<button type="button" class="bcmv bcseeall" data-seeall="\'+i+\'">内容を確認</button></div>\'+' +
+  // ★送るタグと送らないタグを、予約の直前にもう一度見せる（2026-11-12）
+  '\'<div class="bcwho" style="margin:0 0 8px">\'+whoTxt(i,x)+\'</div>\';});' +
   'h+=\'</div>\';' +
   'if(!m)h+=\'<div class="bcstatus on">内容を入力した対象がありません。\'+' +
   '\'左上の「← 戻る」から入力してください😊</div>\';' +
@@ -6298,7 +6330,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var d0=now?"":(dateEl?dateEl.value:""),t0=now?"":(timeEl?timeEl.value:"");' +
   'var items=[],n=0;' +
   'TPL.forEach(function(t,i){var ps=DATA[i].parts;if(!ps.length)return;n++;' +
-  'items.push({name:t.name,tags:(TAGS[i]||[]),' +
+  'items.push({name:t.name,tags:(TAGS[i]||[]),exclude_tags:sendX(i),' +
   'parts:ps.map(function(p){return p.kind==="text"?{kind:"text",text:p.text}:{kind:"image",src:p.src,b64:p.b64};})});});' +
   'if(!n){status("文章か画像を入力した対象が1つもありません。",true);return;}' +
   'szPopup_(now?("いますぐ "+n+"通りの配信を送ります。よろしいでしょうか？😊")' +
@@ -24341,6 +24373,14 @@ function bcCampCode_() {
   //   1種類の1通を「未来店」「来店済」の2つのタグの両方へ送る（送り先は事務所パソコンの型が持つ）。
   //   ※同じ日に一度「未来店／来店済を別々のタブ」と読み違えて作った（まるちゃんの「二つのタブ」は「二つのタグ」だった）。
   function campName(gi) { return CGROUPS[gi][0]; }
+  function campGi(name) { for (var q = 0; q < CGROUPS.length; q++) if (campName(q) === name) return q; return -1; }
+  // ★送るタグ・送らないタグ（2026-11-12 まるちゃん「VIOをやったことがある人とない人で分けたい」「ズコにも選ぶ欄が必要」）。
+  //   その画面の中身に tags（送るタグ・空＝最初の決まり）と xtags（送らないタグ・null＝最初の決まり）で持つ。
+  //   最初の決まり＝送り先の型（事務所パソコンの「キャンペーン・商品の紹介」）。
+  var CTAGMODE = false, CTAGSNAP = null;
+  function campTpl(gi) { for (var ti = 0; ti < CTPL.length; ti++) if (CTPL[ti].name === campName(gi)) return CTPL[ti]; return null; }
+  function campInc(gi) { var c = campCell(gi); return (c.tags && c.tags.length) ? c.tags : defTags(campTpl(gi)); }
+  function campExc(gi) { var c = campCell(gi); return Array.isArray(c.xtags) ? c.xtags : defX(campTpl(gi)); }
   // ★中身の持ち方（2026-09-17 まるちゃん「3つ入れられるんだから、上下に入れ替え・文章も足せる・欄を1つ追加するボタン」）
   //   タブ1つ＝欄の並び parts（上から送る順・最大3つ）。欄は {k:'img',url} ／ {k:'txt',text} ／ {k:'new'}（まだ画像か文章か決めていない）。
   //   ★最初（まだ欄を触っていない＝set が無い）は「1つ目 画像（各種LINKのその案内の、言語・男女が合う画像を選んだ状態）→ 2つ目 文章」。
@@ -24432,7 +24472,7 @@ function bcCampCode_() {
   // 最終確認のために入れ替えた送り先・中身を、予約可能枠案内の物へ戻す
   function campUnswap() {
     if (!CORIG) return;
-    TPL = CORIG.tpl; DATA = CORIG.data; CAT = CORIG.cat; TAGS = CORIG.tags; CORIG = null;
+    TPL = CORIG.tpl; DATA = CORIG.data; CAT = CORIG.cat; TAGS = CORIG.tags; XTAGS = CORIG.xtags || []; CORIG = null;
   }
   function campLeave() { campUnswap(); CMODE = false; }
 
@@ -24500,6 +24540,60 @@ function bcCampCode_() {
     };
   }
 
+  // ── ②' 送るタグ・送らないタグを選ぶ（2026-11-12）。見た目と動きは予約可能枠案内の「タグを変更」と同じ ──
+  function drawCampTag(h, c, tp, inc, exc) {
+    function list(cls, attr, cur) {
+      return '<div class="bctaglist' + cls + '">' + TAGLIST.map(function (x) {
+        return '<button type="button" ' + attr + '="' + esc(x) + '" class="' + (cur.indexOf(x) >= 0 ? 'on' : '') + '">' + esc(x) + '</button>';
+      }).join('') + '</div>';
+    }
+    h += '<div class="bcleft">送るタグを選択（いくつでも選べます。もう一度押すと外れます）</div>';
+    if (TAGBUSY) h += '<div class="bcouttx">タグの一覧を読んでいます…</div>';
+    else if (!TAGLIST.length) h += '<div class="bcouttx">タグの一覧を読み込めませんでした。</div>';
+    else {
+      h += list('', 'data-ctag', inc) + '<div class="bchr"></div>' +
+        '<div class="bcleft">送らないタグ（このタグが付いている人には送りません。いくつでも選べます）</div>' +
+        list(' bcx', 'data-cxtag', exc);
+    }
+    h += '</div>' +
+      '<button type="button" class="bcgo" id="bcctagok">このタグで送る</button>' +
+      '<button type="button" class="bcghost" id="bcctagdef">最初のタグに戻す（' + esc(tp.who) + '）</button>' +
+      '<button type="button" class="bcghost" id="bcctagcancel">タグを変更せずに戻る</button>';
+    box.innerHTML = h;
+    function del(a, x) { var k = a.indexOf(x); if (k >= 0) a.splice(k, 1); return a; }
+    [].slice.call(box.querySelectorAll('[data-ctag]')).forEach(function (b) {
+      b.onclick = function () {
+        var x = b.getAttribute('data-ctag'), a = campInc(CGI).slice();
+        if (a.indexOf(x) >= 0) del(a, x);
+        else { a.push(x); if (campExc(CGI).indexOf(x) >= 0) c.xtags = del(campExc(CGI).slice(), x); }   // 両方に入らないように
+        c.tags = a; saveNow(); draw();
+      };
+    });
+    [].slice.call(box.querySelectorAll('[data-cxtag]')).forEach(function (b) {
+      b.onclick = function () {
+        var x = b.getAttribute('data-cxtag'), a = campExc(CGI).slice();
+        if (a.indexOf(x) >= 0) del(a, x);
+        else { a.push(x); if (campInc(CGI).indexOf(x) >= 0) c.tags = del(campInc(CGI).slice(), x); }
+        c.xtags = a; saveNow(); draw();
+      };
+    });
+    var ok = document.getElementById('bcctagok');
+    if (ok) ok.onclick = function () {
+      if (!campInc(CGI).length) { status('タグを1つ以上選択してください😊', true); return; }
+      // 最初の決まりと同じなら「選び直していない」に戻す
+      if (sameSet(c.tags || [], defTags(tp))) c.tags = [];
+      if (sameSet(campExc(CGI), defX(tp))) c.xtags = null;
+      CTAGMODE = false; saveNow(); status('タグを確定しました。'); draw();
+    };
+    var df = document.getElementById('bcctagdef');
+    if (df) df.onclick = function () { c.tags = []; c.xtags = null; saveNow(); status(''); draw(); };
+    var cc = document.getElementById('bcctagcancel');
+    if (cc) cc.onclick = function () {
+      if (CTAGSNAP) { c.tags = CTAGSNAP.tags; c.xtags = CTAGSNAP.xtags; }
+      CTAGMODE = false; saveNow(); status(''); draw();
+    };
+  }
+
   // ── ②中身を入れる（日本男性／日本女性／台湾男性／台湾女性 × 未来店・来店済のタブ）──
   function drawCampEdit() {
     var g = CGROUPS[CGI], c = campCell(CGI), imgs = campImages(g[2], g[1]);
@@ -24508,9 +24602,13 @@ function bcCampCode_() {
     var last = (CGI === CGROUPS.length - 1), n = c.parts.length;
     var h = '<div class="bcstop"><span class="bcsttl">' + esc(CKIND) + '</span>' +
       '<span class="bcsno">' + (CGI + 1) + ' / ' + CGROUPS.length + '</span></div>';
-    h += '<div class="bccard"><div class="bcname">' + esc(g[0]) + '</div>' +
-      '<div class="bcwho">送り先：' + esc(tp ? tp.who : ('未来店 ' + g[0] + '＋' + g[0] + ' 来店済')) + '（同じ内容を送ります）</div>' +
+    var inc = campInc(CGI), exc = campExc(CGI);
+    h += '<div class="bccard"><div class="bcnamerow"><div class="bcname">' + esc(g[0]) + '</div>' +
+      ((CTAGMODE || !tp) ? '' : '<button type="button" class="bcmv" id="bcctag">タグを変更</button>') + '</div>' +
+      '<div class="bcwho">送り先：' + esc(tp ? inc.join('＋') : ('未来店 ' + g[0] + '＋' + g[0] + ' 来店済')) +
+      (exc.length ? '　<span class="bcxw">除く：' + esc(exc.join('＋')) + '</span>' : '') + '（同じ内容を送ります）</div>' +
       '<div class="bchr"></div>';
+    if (CTAGMODE && tp) { drawCampTag(h, c, tp, inc, exc); return; }
     h += '<div class="bcleft">上から順に送ります（' + MAXP + 'つまで）</div>';
     c.parts.forEach(function (x, i) {
       var kind = x.k === 'img' ? '画像' : (x.k === 'txt' ? '文章' : '画像か文章を選ぶ');
@@ -24593,6 +24691,22 @@ function bcCampCode_() {
     });
     var ad = document.getElementById('bccadd');
     if (ad) ad.onclick = function () { if (c.parts.length >= MAXP) return; c.parts.push({ k: 'new' }); changed(); };
+    // ★タグを変更（2026-11-12）＝タグの一覧は初めて開いた時に1回だけ取る（予約可能枠案内と同じ一覧）
+    var ct = document.getElementById('bcctag');
+    if (ct) ct.onclick = function () {
+      CTAGMODE = true; status('');
+      CTAGSNAP = { tags: (c.tags || []).slice(), xtags: Array.isArray(c.xtags) ? c.xtags.slice() : null };
+      if (!TAGLIST.length && !TAGBUSY) {
+        TAGBUSY = true; draw();
+        ask('bc_tags', {}, function (r) {
+          TAGBUSY = false; TAGLIST = ((r && r.tags) || []);
+          if (!TAGLIST.length && r && r.note) status(r.note, true);
+          draw();
+        }, function (m) { TAGBUSY = false; status(m, true); draw(); });
+        return;
+      }
+      draw();
+    };
     document.getElementById('bccnext').onclick = function () {
       for (var i = 0; i < c.parts.length; i++) {
         if (c.parts[i].k === 'txt' && trimLen(c.parts[i].text) > MAXT) {
@@ -24609,8 +24723,11 @@ function bcCampCode_() {
   function campToLast() {
     if (!campAny()) { status('文章を入力したタブがありません。', true); return; }
     if (!CTPL.length) { CWAITLAST = true; status('送り先の決まりを読み込んでいます。終わったら自動で最終確認に進みます…'); campLoadTpl(); return; }
-    if (!CORIG) CORIG = { tpl: TPL, data: DATA, cat: CAT, tags: TAGS };
-    TPL = CTPL; CAT = CAMPCAT; TAGS = [];
+    if (!CORIG) CORIG = { tpl: TPL, data: DATA, cat: CAT, tags: TAGS, xtags: XTAGS };
+    TPL = CTPL; CAT = CAMPCAT;
+    // ★送るタグ・送らないタグ（2026-11-12）＝各画面の「タグを変更」で選んだ物。選んでいなければ最初の決まりのまま。
+    TAGS = CTPL.map(function (t) { var gi = campGi(t.name); return gi < 0 ? [] : ((campCell(gi).tags || []).slice()); });
+    XTAGS = CTPL.map(function (t) { var gi = campGi(t.name), c = gi < 0 ? null : campCell(gi); return (c && Array.isArray(c.xtags)) ? c.xtags.slice() : null; });
     DATA = CTPL.map(function (t) {
       var gi = -1;
       for (var q = 0; q < CGROUPS.length; q++) if (campName(q) === t.name) gi = q;
@@ -24666,6 +24783,11 @@ function bcCampCode_() {
   // 画面の上の「← 戻る」＝1つ前へ。戻せる所が無ければ false。
   function campBack() {
     if (page === 'c') { campLeave(); page = 'k'; return true; }
+    if (page === 'ce' && CTAGMODE) {                     // タグを選んでいる途中＝変更せずに中身の画面へ戻る
+      var cc = campCell(CGI);
+      if (CTAGSNAP) { cc.tags = CTAGSNAP.tags; cc.xtags = CTAGSNAP.xtags; }
+      CTAGMODE = false; return true;
+    }
     if (page === 'ce') { if (CGI > 0) { CGI--; CTAB = 0; } else { page = 'c'; } return true; }
     if (LMODE === 'at') { LMODE = ''; return true; }
     campUnswap(); page = 'ce'; CGI = CGROUPS.length - 1; step = 0; return true;
