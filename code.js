@@ -1823,7 +1823,10 @@ var TILE_DEFS_ = [
   //   ズコの中の画面(view=ttapp＝renderTeikeiPage_)で同じ定型文を出す。idは今までどおり（人ごとの表示・並び順をそのまま使う）。
   //   元のグーグル側のアプリ（https://x.gd/eaxgF）は消していない＝直接開けば今までどおり使える。
   { id: 'ttapp', cls: 'ttapp', view: 'ttapp',
-    icon: '<span class="ticon">🗓️</span>', label: '元祖TT\nアプリ' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝赤いのれんに白い大きな「元祖」の絵（GPTで作成）。
+    //   パソコン版の同じ絵＝PC版スーパーズコ\icons\ttapp-zuko-96.png。
+    icon: '<span class="ticon">🗓️</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/ttapp-192.png"></span>', label: '元祖TT\nアプリ' },
   // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
   { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
     icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' },
