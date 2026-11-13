@@ -595,7 +595,10 @@ function instaScript_(C) {
     if ((ISADMIN && !DRAFT) || !fields || !APV_W[op] || APV_W[op].indexOf(String(fields.kind || '')) < 0) return null;
     var f = { kind: 'apv_add', op: op, f: fields, acct: fields.acct }, adm = ISADMIN;
     return { f: f, done: function (err, d) {
-      if (!err && d && d.pending) { APVL[fields.acct] = null; if (DRAFT) apvLoad(fields.acct); done(adm ? APV_MSG_ADMIN : APV_MSG); return; }
+      if (!err && d && d.pending) {
+        [].forEach.call(document.querySelectorAll('.igc, .igpe'), function (x) { x.remove(); });
+        APVL[fields.acct] = null; if (DRAFT) apvLoad(fields.acct); done(adm ? APV_MSG_ADMIN : APV_MSG); return;
+      }
       done(err, d);
     } };
   }

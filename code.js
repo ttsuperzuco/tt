@@ -17688,7 +17688,12 @@ function instaScript_(C) {
     if ((ISADMIN && !DRAFT) || !fields || !APV_W[op] || APV_W[op].indexOf(String(fields.kind || '')) < 0) return null;
     var f = { kind: 'apv_add', op: op, f: fields, acct: fields.acct }, adm = ISADMIN;
     return { f: f, done: function (err, d) {
-      if (!err && d && d.pending) { APVL[fields.acct] = null; if (DRAFT) apvLoad(fields.acct); done(adm ? APV_MSG_ADMIN : APV_MSG); return; }
+      if (!err && d && d.pending) {
+        // ★2026-11-13 下書きに保存できたら、本番に出した時と同じく入力の画面（編集・作成・プロフィール等）を閉じる。
+        //   前は「下書きに保存しました」を出すだけで入力の画面が裏に残り、続けて操作すると古い画面の続きになっていた。
+        [].forEach.call(document.querySelectorAll('.igc, .igpe'), function (x) { x.remove(); });
+        APVL[fields.acct] = null; if (DRAFT) apvLoad(fields.acct); done(adm ? APV_MSG_ADMIN : APV_MSG); return;
+      }
       done(err, d);
     } };
   }
