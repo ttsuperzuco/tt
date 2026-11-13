@@ -1941,7 +1941,9 @@ var TILE_DEFS_ = [
   // ★T＆Tショップ履歴＝ネットショップ（T＆T SIGNATURE）に、どなたが・何回・何を見て・注文したか（2026-09-19）。
   //   事務所PCがまとめた shop_history.json を読んで出すだけ（まとめは 商品ページ（T＆Tショップ）の ショップ履歴.py）。
   { id: 'shophist', cls: 'shophist', view: 'shophist',
-    icon: '<span class="ticon">🛍️</span>', label: 'T＆Tショップ\n履歴' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ）＝No.31の瓶がのぞくショッピングバッグ（GPTで作成）・黒い地＋細い白枠。パソコン版＝icons\shophist-kuro-96.png。
+    icon: '<span class="ticon">🛍️</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shophist-kuro-192.png"></span>', label: 'T＆Tショップ\n履歴' },
   // ★プロセル在庫＝品物を1つずつ数字ボタンで入れて、最後に一覧で確かめて登録（2026-10-02・実務者用）。
   //   登録は事務所PCの記録に残すだけ（受付係 op=procell_stock_save）。
   { id: 'procstock', cls: 'procstock', view: 'procstock',
