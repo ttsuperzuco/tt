@@ -122,9 +122,6 @@ function doGet(e) {
   } else if (view === 'koukoku') {
     title = '広告費管理';                                
     html = renderKoukoku_(base, staff, dev);
-  } else if (view === 'honyaku') {
-    title = '翻訳 日→台湾中国語';                        
-    html = renderHonyakuPage_(base, staff, dev);
   } else if (view === 'timedsend') {
     title = '時間指定LINE送信';                          
     html = renderTimedSendPage_(base, staff, dev);
@@ -1357,8 +1354,6 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/koukoku-kuro-192.png"></span>', label: '広告費\n管理' },
   { id: 'instadm', cls: 'instadm', view: 'instadm',
     icon: '<span class="ticon">📩</span>', label: 'IGの\nDM' },
-  { id: 'honyaku', cls: 'honyaku', view: 'honyaku',
-    icon: '<span class="ticon">🀄</span>', label: '翻訳\n日→台湾中国語' },
   { id: 'bcast', cls: 'bcast', view: 'bcast',
     icon: '<span class="ticon">📣</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/bcast-kuro-192.png?v=2"></span>', label: 'LINE\n一斉配信' },
@@ -1421,7 +1416,7 @@ var TILE_GROUP_ = {
   uriage: 'tomato',
   hachimitsu: 'tomato',
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', honyaku: 'kaihatsu', facebook: 'kaihatsu',
+  formconv: 'kaihatsu', facebook: 'kaihatsu',
   uriagebook: 'kaihatsu',
   foldertest: 'kaihatsu',   
 };
@@ -2269,7 +2264,6 @@ function renderKoukoku_(base, staff, dev) {
     return renderKoukokuPage_({ ads: [] }, base, staff, dev);
   }
 }
-
 
 
 
