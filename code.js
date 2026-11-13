@@ -2011,8 +2011,10 @@ var TILE_DEFS_ = [
 //   開発者だけのまま＝部屋(管理/実務/開発)と「誰に見せるか」は別の話（人ごとの表示で決まる）。
 var TILE_GROUP_ = {
   // ★2026-10-25 まるちゃん決定：管理者用を「りゅう（経営管理ツール）」(keiei) と「りゅう（便利ツール）」(kanri) に分けた（PC版と同じ）。
-  kanshi: 'kanri', mushitori: 'kanri', cost: 'keiei', koukoku: 'keiei', imglink: 'kanri',
-  claudetools: 'kanri', pcstatus: 'kanri',
+  // ★2026-11-13 まるちゃん「りゅうのかんりつーるにいれちゃって。このフォルダからになるからさくじょ」「フォルダ名は りゅうツール に変更」
+  //   ＝便利ツール(kanri)の部屋をやめ、中身を経営管理ツール(keiei)へ入れて、部屋の名前を「りゅうツール」にした（PC版と同じ）。
+  kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
+  claudetools: 'keiei', pcstatus: 'keiei',
   procell: 'keiei', shophist: 'keiei',
   // ★2026-10-26 まるちゃん決定：幹部(🍅トマト)にだけ出すボタンはスタッフ画面の下の「TOMATO画面」（PC版 super_pc.py と同じ）。
   uriage: 'tomato',
@@ -2037,8 +2039,7 @@ var TILE_GROUP_ = {
 // ★2026-10-25 まるちゃん「スタッフ画面を一番上にしたい」＝スタッフ画面を先頭へ（PC版 super_pc.py の ROLES と同じ順）。
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
-  { id: 'keiei', icon: '📊', title: 'りゅう（経営管理ツール）' },
-  { id: 'kanri', icon: '🛠️', title: 'りゅう（便利ツール）' },
+  { id: 'keiei', icon: '📊', title: 'りゅうツール' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
@@ -23687,7 +23688,7 @@ var KANSHISCRIPT_ =
 '  }' +
 '  var groups={keiei:[],kanri:[],jitsumu:[],kaihatsu:[],tomato:[]};' +
 '  for(var k=0;k<order.length;k++){ var g=tileGrp_(order[k]); (groups[g]||groups.jitsumu).push(order[k]); }' +
-'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_.slice(0,1).concat([{id:"tomato",icon:"🍅",title:"TOMATO画面"}],ROLE_DEFS_.slice(1)):[{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"keiei",icon:"📊",title:"りゅう（経営管理ツール）"},{id:"kanri",icon:"🛠️",title:"りゅう（便利ツール）"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
+'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_.slice(0,1).concat([{id:"tomato",icon:"🍅",title:"TOMATO画面"}],ROLE_DEFS_.slice(1)):[{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"keiei",icon:"📊",title:"りゅうツール"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
 '  var out="";' +
 '  for(var r=0;r<roles.length;r++){ var R=roles[r], ids=groups[R.id]||[]; if(!ids.length) continue;' +
 '    out+="<div class=\\"kroom\\">"+R.icon+" "+R.title+"</div>"+ids.map(rowH_).join(""); }' +
