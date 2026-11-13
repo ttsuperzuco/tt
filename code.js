@@ -21901,89 +21901,118 @@ var LKIMGCSS_ =
  *   画面は描くだけ（renderTimeTreePage_）＋動き（ttviewStart_）。index.html の showTimeTree が両方を呼ぶ。
  */
 function renderTimeTreePage_(base, staff, dev) {
+  /* ★2026-11-13 まるちゃん「本物のスマホのタイムツリーと同じ見た目にしたい」
+     ＝白い画面・月のカレンダーは日付の中に予定の帯（終日＝塗り／時間あり＝薄い色）・今日は黒い丸、
+       日の予定は「時刻・色の細い線・題名・作った人」の並び、中身は本物の予定の詳細画面の形。
+     見本＝TimeTree公式ヘルプの画面写真（予定の詳細・日の予定・2026年のカレンダー）。
+     上の「← 戻る」はズコの決まりなので残す。部屋の色はタイムツリーの本物の色（データの col）をそのまま使う。 */
   var css =
-    '.tv{max-width:560px;width:100%;margin:0 auto;padding:0 6px 60px;text-align:left;box-sizing:border-box;}' +
-    '.tvbar{position:sticky;top:0;z-index:5;background:#2C7A99;padding:8px 0 8px;}' +
-    '.tvback{border:0;cursor:pointer;font:inherit;}' +
-    '.tvnav{display:flex;align-items:center;gap:8px;margin:4px 2px 10px;}' +
-    '.tvnav .tvt{flex:1;min-width:0;text-align:center;color:#fff;font-weight:900;font-size:24px;line-height:1.25;}' +
-    '.tvarw{flex:none;width:52px;height:46px;border:0;border-radius:14px;background:#fff;color:#0f172a;' +
-      'font-size:20px;font-weight:900;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
-    '.tvarw:disabled{opacity:.35;}' +
-    '.tvseg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 2px 12px;}' +
-    '.tvsegb{border:0;border-radius:12px;padding:10px 4px;font-size:16px;font-weight:900;cursor:pointer;' +
-      'background:rgba(255,255,255,.18);color:#fff;}' +
-    '.tvsegb.sel{background:#fff;color:#0f172a;}' +
-    '.tvgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}' +
-    '.tvwd{text-align:center;font-size:13px;color:#eaf6fb;font-weight:800;}' +
-    '.tvwd.sat{color:#bfe3ff;}.tvwd.sun{color:#ffc9c9;}' +
-    '.tvday{min-height:74px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;' +
-      'background:#fff;color:#0f172a;border:0;border-radius:11px;cursor:pointer;box-sizing:border-box;' +
-      'box-shadow:0 2px 6px rgba(0,0,0,.12);font:inherit;}' +
-    '.tvday .dn{font-size:18px;font-weight:900;line-height:1;}' +
-    '.tvday.sat .dn{color:#1d6fb8;}.tvday.sun .dn{color:#c0392b;}' +
-    '.tvday.today{background:#fb8c44;box-shadow:0 0 0 3px #fff,0 4px 12px rgba(0,0,0,.25);}' +
-    '.tvday.today .dn,.tvday.today .cnt{color:#fff;}' +
-    '.tvday.today .tvdots i{box-shadow:0 0 0 1.5px #fff;}' +
-    '.tvday.blank{visibility:hidden;box-shadow:none;}' +
-    '.tvday .cnt{font-size:12px;font-weight:800;color:#475569;line-height:1;}' +
-    '.tvdots{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:100%;}' +
-    '.tvdots i{display:block;width:7px;height:7px;border-radius:50%;}' +
-    '.tvstatus{color:#fff;font-weight:800;font-size:17px;margin:12px 4px;line-height:1.6;}' +
-    '.tvsec{color:#eaf6fb;font-weight:800;font-size:14px;margin:12px 4px 6px;}' +
-    '.tvlist{display:flex;flex-direction:column;gap:8px;}' +
-    '.tvrow{display:flex;align-items:stretch;gap:10px;width:100%;box-sizing:border-box;text-align:left;' +
-      'background:#fff;color:#0f172a;border:0;border-radius:14px;padding:10px 12px 10px 0;cursor:pointer;' +
-      'box-shadow:0 3px 10px rgba(0,0,0,.12);font:inherit;overflow:hidden;}' +
-    '.tvrow .bar{flex:none;width:7px;border-radius:0 6px 6px 0;}' +
-    '.tvrow .tm{flex:none;width:58px;font-weight:900;font-size:16px;line-height:1.3;}' +
-    '.tvrow .tm small{display:block;color:#64748b;font-weight:800;font-size:13px;}' +
-    '.tvrow .bd{flex:1;min-width:0;}' +
-    '.tvrow .ti{font-weight:900;font-size:18px;line-height:1.35;word-break:break-all;}' +
-    '.tvrow .sub{color:#64748b;font-weight:700;font-size:13px;margin-top:2px;}' +
-    '.tvad{display:block;width:100%;box-sizing:border-box;text-align:left;border:0;border-radius:10px;' +
-      'padding:9px 12px;color:#fff;font:inherit;font-weight:900;font-size:16px;cursor:pointer;' +
-      'text-shadow:0 1px 2px rgba(0,0,0,.35);box-shadow:0 2px 6px rgba(0,0,0,.12);word-break:break-all;}' +
-    '.tvcard{background:#fff;color:#0f172a;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.14);' +
-      'margin:0 2px 12px;position:relative;overflow:hidden;}' +
-    '.tvcard .bar{position:absolute;left:0;top:0;bottom:0;width:8px;}' +
-    '.tvdt{font-weight:900;font-size:23px;line-height:1.35;word-break:break-all;margin:0 0 10px 4px;}' +
-    '.tvline{display:flex;gap:10px;align-items:flex-start;margin:8px 0 0 4px;font-size:16px;line-height:1.5;}' +
-    '.tvline .k{flex:none;width:22px;text-align:center;}' +
-    '.tvline .v{flex:1;min-width:0;font-weight:700;word-break:break-all;}' +
-    '.tvchip{display:inline-block;color:#fff;border-radius:9px;padding:1px 10px;font-weight:900;font-size:14px;' +
-      'margin-left:6px;text-shadow:0 1px 2px rgba(0,0,0,.3);vertical-align:1px;}' +
-    '.tvmemo{white-space:pre-wrap;word-break:break-all;font-size:16px;line-height:1.75;margin:0;font:inherit;}' +
-    '.tvmeta{color:#64748b;font-size:13px;font-weight:700;line-height:1.7;margin:0 6px 14px;color:#eaf6fb;}' +
-    '.tvpick{background:transparent;border:0;cursor:pointer;font-family:inherit;padding:6px 0;}' +
-    '.tvtoday{display:block;margin:-4px auto 10px;border:0;border-radius:999px;background:#fb8c44;color:#fff;' +
-      'font:inherit;font-weight:900;font-size:15px;padding:7px 18px;cursor:pointer;}' +
-    '.tvpmask{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.55);display:flex;align-items:center;' +
+    'html,body{background:#fff !important;}' +
+    '.home.tvhome{max-width:560px;padding:0 0 60px;min-height:100vh;background:#fff;}' +
+    '.tv{width:100%;margin:0 auto;text-align:left;box-sizing:border-box;color:#333;background:#fff;' +
+      'font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Segoe UI",system-ui,sans-serif;}' +
+    '.tv button{font-family:inherit;}' +
+    '.tvbar{position:sticky;top:0;z-index:5;background:#fff;padding:10px 12px 4px;}' +
+    '.tvbar .ubar{margin:0;}' +
+    '.tvback{border:1px solid #e2e8f0;cursor:pointer;font:inherit;}' +
+    '.tvstatus{color:#666;font-weight:700;font-size:15px;margin:24px 16px;line-height:1.6;}' +
+    /* ── 月のカレンダー ── */
+    '.tvmh{display:flex;align-items:center;gap:8px;padding:6px 12px 8px;}' +
+    '.tvym{border:0;background:none;font-size:21px;font-weight:800;color:#222;cursor:pointer;padding:4px 2px;' +
+      'display:flex;align-items:center;gap:5px;}' +
+    '.tvym i{font-style:normal;font-size:11px;color:#9a9a9a;}' +
+    '.tvsp{flex:1;}' +
+    '.tvic{flex:none;border:0;background:#f2f2f2;color:#555;width:34px;height:34px;border-radius:50%;' +
+      'font-size:20px;font-weight:700;cursor:pointer;line-height:34px;padding:0;text-align:center;}' +
+    '.tvic:disabled{opacity:.3;cursor:default;}' +
+    '.tvtd{flex:none;border:1px solid #ddd;background:#fff;color:#333;border-radius:999px;font-size:13px;' +
+      'font-weight:700;padding:6px 12px;cursor:pointer;}' +
+    '.tvchips{display:flex;gap:8px;padding:0 12px 10px;overflow-x:auto;}' +
+    '.tvchip{flex:none;display:flex;align-items:center;gap:7px;border:1px solid #e3e3e3;background:#fff;color:#333;' +
+      'border-radius:10px;padding:4px 11px 4px 4px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}' +
+    '.tvchip .ck{width:24px;height:24px;border-radius:7px;background:#e9e9e9;color:#fff;display:flex;' +
+      'align-items:center;justify-content:center;font-size:14px;font-weight:900;}' +
+    '.tvchip.sel{border-color:#cfeee0;}' +
+    '.tvchip.sel .ck{background:#2bad6f;}' +
+    '.tvwk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid #eee;}' +
+    '.tvwk div{text-align:center;font-size:11px;color:#999;padding:2px 0 5px;}' +
+    '.tvwk .sat{color:#3d8ae0;}.tvwk .sun{color:#e85a5a;}' +
+    '.tvweek{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid #eee;}' +
+    '.tvc{display:flex;flex-direction:column;align-items:stretch;gap:2px;min-width:0;min-height:108px;' +
+      'padding:4px 1px 5px;background:#fff;border:0;cursor:pointer;text-align:center;color:#333;}' +
+    '.tvc.sel{background:#f2f2f2;}' +
+    '.tvc .dn{align-self:center;width:22px;height:22px;line-height:22px;border-radius:50%;font-size:12px;' +
+      'font-weight:600;color:#333;margin-bottom:1px;}' +
+    '.tvc.sat .dn{color:#3d8ae0;}.tvc.sun .dn{color:#e85a5a;}' +
+    '.tvc.out .dn{color:#c9c9c9;}' +
+    '.tvc.today .dn{background:#222;color:#fff;font-weight:800;}' +
+    '.tvb{display:block;font-size:10px;font-weight:700;line-height:15px;height:15px;border-radius:3px;padding:0 2px;' +
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}' +
+    '.tvb.fill{color:#fff;}' +
+    '.tvmore{font-size:10px;color:#999;font-weight:700;line-height:13px;}' +
+    /* ── その日の予定 ── */
+    '.tvdh{display:flex;align-items:center;gap:8px;padding:8px 16px 6px;}' +
+    '.tvdh .dt{flex:1;min-width:0;font-size:18px;font-weight:800;color:#222;}' +
+    '.tvdchips{padding:2px 16px 6px;}' +
+    '.tvlist{padding:2px 0 20px;}' +
+    '.tvrow{display:flex;align-items:center;gap:10px;width:100%;min-height:50px;box-sizing:border-box;text-align:left;' +
+      'background:#fff;border:0;padding:5px 16px;cursor:pointer;color:#333;}' +
+    '.tvrow:active{background:#f5f5f5;}' +
+    '.tvrow .tm{flex:none;width:42px;text-align:right;font-size:11px;font-weight:600;color:#9a9a9a;line-height:1.4;}' +
+    '.tvrow .tm b{display:block;color:#555;font-weight:700;}' +
+    '.tvrow .ln{flex:none;width:3px;align-self:stretch;border-radius:2px;min-height:34px;}' +
+    '.tvrow .ti{flex:1;min-width:0;font-size:15px;font-weight:700;line-height:1.4;color:#222;word-break:break-all;}' +
+    '.tvrow .av{flex:none;width:30px;height:30px;border-radius:50%;background:#f1f1f1;display:flex;align-items:center;' +
+      'justify-content:center;font-size:15px;font-weight:800;color:#777;}' +
+    /* ── 予定の中身 ── */
+    '.tvdtop{padding:8px 20px 4px;text-align:center;font-size:17px;font-weight:800;line-height:1.45;word-break:break-all;}' +
+    '.tvwhen{display:flex;align-items:center;gap:6px;padding:14px 20px 16px;border-bottom:1px solid #eee;}' +
+    '.tvwhen .w{flex:1;min-width:0;}' +
+    '.tvwhen .w small{display:block;font-size:12px;font-weight:800;color:#333;}' +
+    '.tvwhen .w b{display:block;font-size:27px;font-weight:800;color:#222;line-height:1.25;}' +
+    '.tvwhen .w.r small{font-weight:600;color:#555;}.tvwhen .w.r b{font-weight:500;color:#444;}' +
+    '.tvwhen .arw{flex:none;width:26px;text-align:center;font-size:26px;font-weight:400;}' +
+    '.tvmemo{white-space:pre-wrap;word-break:break-all;font-size:15px;line-height:1.75;margin:0;padding:16px 20px;' +
+      'color:#333;font-family:inherit;border-bottom:1px solid #eee;}' +
+    '.tvnomemo{color:#aaa;font-size:14px;padding:16px 20px;border-bottom:1px solid #eee;}' +
+    '.tvinfo{padding:4px 0;border-bottom:1px solid #eee;}' +
+    '.tvi{display:flex;align-items:center;gap:14px;padding:10px 20px;font-size:14px;color:#333;line-height:1.5;}' +
+    '.tvi .k{flex:none;width:20px;height:20px;color:#999;display:flex;align-items:center;justify-content:center;}' +
+    '.tvi .k svg{width:20px;height:20px;display:block;}' +
+    '.tvi .v{flex:1;min-width:0;word-break:break-all;}' +
+    '.tvi .v a{color:#2b7de9;}' +
+    '.tvdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;}' +
+    '.tvlog{padding:14px 20px 6px;text-align:center;}' +
+    '.tvlog div{font-size:12px;color:#999;margin:3px 0;line-height:1.6;}' +
+    '.tvacts{padding:14px 16px 0;}' +
+    '.tvedit,.tvopen{display:block;width:100%;box-sizing:border-box;text-align:center;text-decoration:none;border-radius:12px;' +
+      'font-size:16px;font-weight:800;padding:14px;margin:0 0 10px;cursor:pointer;}' +
+    '.tvedit{background:#fff;color:#222;border:1px solid #ddd;}' +
+    '.tvopen{background:#2bad6f;color:#fff;border:0;}' +
+    /* ── 予約メモの修正 ── */
+    '.tvsec{color:#888;font-weight:800;font-size:13px;margin:14px 20px 6px;}' +
+    '.tvmemotx{display:block;width:calc(100% - 32px);margin:0 16px 12px;box-sizing:border-box;font:inherit;font-size:16px;' +
+      'line-height:1.75;color:#222;background:#fff;border:1px solid #ddd;border-radius:12px;padding:12px;overflow:hidden;' +
+      'resize:none;min-height:200px;}' +
+    '.tvsave{display:block;width:calc(100% - 32px);margin:0 16px 12px;border:0;border-radius:12px;background:#2bad6f;color:#fff;' +
+      'font-size:18px;font-weight:800;padding:16px;cursor:pointer;}' +
+    /* ── 年と月を選ぶ小窓 ── */
+    '.tvpmask{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.45);display:flex;align-items:center;' +
       'justify-content:center;padding:20px;}' +
-    '.tvpbox{background:#2C7A99;border-radius:18px;padding:16px;width:100%;max-width:420px;box-shadow:0 14px 44px rgba(0,0,0,.45);}' +
-    '.tvpgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 14px;}' +
-    '.tvpm{border:0;border-radius:12px;background:#fff;color:#0f172a;font:inherit;font-weight:900;font-size:18px;' +
-      'padding:14px 0;cursor:pointer;}' +
-    '.tvpm.now{box-shadow:inset 0 0 0 3px #fb8c44;}' +
-    '.tvpm.sel{background:#fb8c44;color:#fff;}' +
-    '.tvpm:disabled{opacity:.3;}' +
-    '.tvpclose{display:block;width:100%;border:0;border-radius:12px;background:rgba(255,255,255,.2);color:#fff;' +
-      'font:inherit;font-weight:900;font-size:17px;padding:12px;cursor:pointer;}' +
-    '.tvnomemo{color:#64748b;font-weight:700;margin-left:4px;}' +
-    '.tvedit{display:block;width:calc(100% - 4px);margin:0 2px 12px;border:0;border-radius:16px;background:#fff;' +
-      'color:#0f172a;font:inherit;font-size:19px;font-weight:900;padding:15px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.14);}' +
-    '.tvmemotx{display:block;width:calc(100% - 4px);margin:0 2px 12px;box-sizing:border-box;font:inherit;font-size:17px;' +
-      'line-height:1.75;color:#0f172a;background:#fff;border:0;border-radius:14px;padding:14px;overflow:hidden;resize:none;min-height:200px;}' +
-    '.tvsave{display:block;width:calc(100% - 4px);margin:0 2px 12px;border:0;border-radius:16px;background:#16a34a;color:#fff;' +
-      'font:inherit;font-size:21px;font-weight:900;padding:18px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.18);}' +
-    '.tvopen{display:block;text-align:center;text-decoration:none;background:#2bad6f;color:#fff;border-radius:16px;' +
-      'padding:16px;font-size:19px;font-weight:900;margin:0 2px 12px;box-shadow:0 4px 10px rgba(0,0,0,.18);}';
-  var head = '<div class="hhead"><span class="bmark">' + TT_LOGO_ + '</span><span class="bname">TimeTree</span></div>';
+    '.tvpbox{background:#fff;color:#222;border-radius:16px;padding:16px;width:100%;max-width:400px;box-shadow:0 14px 44px rgba(0,0,0,.3);}' +
+    '.tvpnav{display:flex;align-items:center;gap:8px;margin:0 0 12px;}' +
+    '.tvpnav .t{flex:1;text-align:center;font-size:19px;font-weight:800;}' +
+    '.tvpgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 14px;}' +
+    '.tvpm{border:0;border-radius:10px;background:#f2f2f2;color:#222;font-size:16px;font-weight:700;padding:13px 0;cursor:pointer;}' +
+    '.tvpm.now{box-shadow:inset 0 0 0 2px #222;}' +
+    '.tvpm.sel{background:#222;color:#fff;}' +
+    '.tvpm:disabled{opacity:.3;cursor:default;}' +
+    '.tvpclose{display:block;width:100%;border:1px solid #ddd;border-radius:10px;background:#fff;color:#333;' +
+      'font-size:16px;font-weight:700;padding:11px;cursor:pointer;}';
   return '<style>' + HOMECSS_ + css + '</style>' +
-    '<div class="home">' +
+    '<div class="home tvhome">' +
       '<div class="tv">' +
         '<div class="tvbar" id="tvbar">' + backBar_(base, staff, dev) + '</div>' +
-        '<div id="tvhead">' + head + '</div>' +
         '<div id="tvbody"><div class="tvstatus">予定を読んでいます...</div></div>' +
       '</div>' +
     '</div>';
@@ -21994,10 +22023,12 @@ function renderTimeTreePage_(base, staff, dev) {
  *    見られる端（最初と最後の月）は今月のファイルに入っている first／last で決める。
  *  ★予約メモを直す：今の「予約変更」と同じ書き込みの道（op=change_reservation の note）を使う。
  *    開いた時のメモ（expect_note）も一緒に送り、事務所パソコンが本物を読み直して、
- *    その間に誰かが直していたら上書きせずに止める（スタッフの書き込みを消さない）。 */
+ *    その間に誰かが直していたら上書きせずに止める（スタッフの書き込みを消さない）。
+ *  ★2026-11-13 見た目を本物のタイムツリーに合わせた（月・日は左右に指でなでても切り替わる）。
+ *    「全部／予約一覧のみ」の切り替えは、本物のカレンダーの切り替えと同じ形にして、月のカレンダーにも効かせる。 */
 function ttviewStart_(exec, base, staff, dev) {
   var KEY = 'kx7Q2p9mVt4Zr8';
-  var WD = ['月', '火', '水', '木', '金', '土', '日'];     // ズコの他の暦と同じく月曜はじまり
+  var WD = ['月', '火', '水', '木', '金', '土', '日'];     // ズコの他の暦と同じく月曜はじまり（本物も月曜はじまりにできる）
   var JWD = ['日', '月', '火', '水', '木', '金', '土'];
   var cache = {};          // 年月 → 受け取った中身
   var waiting = {};
@@ -22008,7 +22039,6 @@ function ttviewStart_(exec, base, staff, dev) {
   try { roomOnly = localStorage.getItem('sz_tv_roomonly') === '1'; } catch (e) {}
   var body = document.getElementById('tvbody');
   var bar = document.getElementById('tvbar');
-  var head = document.getElementById('tvhead');
   var homeBar = bar.innerHTML;
   var idn = (window.__SZ_WHO_ !== undefined) ? { who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '', device: window.__SZ_DEVICE_ || '' } : { who: '', role: '', device: '' };
 
@@ -22026,6 +22056,17 @@ function ttviewStart_(exec, base, staff, dev) {
     if (!ms) return '';
     var d = new Date(+ms);
     return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  /* 本物と同じ「薄い色の帯」＝部屋の色を薄くした地（#rrggbb の後ろに透け具合を足す） */
+  function tint(col) { return /^#[0-9a-fA-F]{6}$/.test(col || '') ? col + '26' : 'rgba(0,0,0,.06)'; }
+  /* 日の予定で「終日」の側に置く物＝終日の予定と、前の日から続いている予定（元の並びと同じ） */
+  function isAllDay(e, ds) { return e.a === 1 || e.a === '1' || e.a === true || e.d < ds; }
+  /* 月のカレンダーで塗りの帯にする物＝本物と同じく、終日の予定と何日にもまたがる予定 */
+  function isFill(e) { return e.a === 1 || e.a === '1' || e.a === true || e.d !== e.e; }
+  function avOf(au) {
+    var s = String(au || '').trim();
+    if (!s) return '';
+    try { return Array.from(s)[0]; } catch (x) { return s.charAt(0); }
   }
   function inRange(k) { return range ? (k >= range.lo && k <= range.hi) : (k >= -1 && k <= 5); }
   function jsonp(params, onR) {
@@ -22065,10 +22106,14 @@ function ttviewStart_(exec, base, staff, dev) {
   }
   function visible(evs) {
     if (!roomOnly) return evs;
-    return evs.filter(function (e) { return e.rm === 1; });
+    return evs.filter(function (e) { return e.rm === 1 || e.rm === '1'; });
   }
+  /* その日の予定（本物と同じ並び＝終日が上・あとは始まる時刻の順） */
   function onDay(evs, ds) {
-    return visible(evs).filter(function (e) { return e.d <= ds && e.e >= ds; });
+    var list = visible(evs).filter(function (e) { return e.d <= ds && e.e >= ds; });
+    var ad = [], tm = [];
+    for (var i = 0; i < list.length; i++) (isAllDay(list[i], ds) ? ad : tm).push(list[i]);
+    return { ad: ad, tm: tm };
   }
 
   /* 画面の上：戻るの形（月＝ホームへ／それ以外＝ひとつ前へ） */
@@ -22077,19 +22122,33 @@ function ttviewStart_(exec, base, staff, dev) {
     bar.innerHTML = '<div class="ubar"><button class="uhome tvback" id="tvbackbtn">← 戻る</button></div>';
     document.getElementById('tvbackbtn').onclick = fn;
   }
-  function segHtml() {
-    return '<div class="tvseg">' +
-      '<button class="tvsegb' + (roomOnly ? '' : ' sel') + '" data-r="0">全部</button>' +
-      '<button class="tvsegb' + (roomOnly ? ' sel' : '') + '" data-r="1">予約一覧のみ</button></div>';
+  /* 本物のカレンダーの切り替えと同じ形（左に緑のチェック） */
+  function chipsHtml() {
+    return '<div class="tvchips">' +
+      '<button class="tvchip' + (roomOnly ? '' : ' sel') + '" data-r="0"><span class="ck">' + (roomOnly ? '' : '✓') + '</span>全部</button>' +
+      '<button class="tvchip' + (roomOnly ? ' sel' : '') + '" data-r="1"><span class="ck">' + (roomOnly ? '✓' : '') + '</span>予約一覧のみ</button></div>';
   }
-  function bindSeg() {
-    var bs = body.querySelectorAll('.tvsegb');
+  function bindChips() {
+    var bs = body.querySelectorAll('.tvchip');
     for (var i = 0; i < bs.length; i++) bs[i].onclick = function () {
       roomOnly = this.getAttribute('data-r') === '1';
       try { localStorage.setItem('sz_tv_roomonly', roomOnly ? '1' : '0'); } catch (e) {}
       redraw();
     };
   }
+  /* 指で左右になでた時（本物と同じく、月・日を切り替える） */
+  var swipe = null, sx = 0, sy = 0;
+  body.addEventListener('touchstart', function (ev) {
+    if (!ev.touches || ev.touches.length !== 1) { sx = null; return; }
+    sx = ev.touches[0].clientX; sy = ev.touches[0].clientY;
+  }, { passive: true });
+  body.addEventListener('touchend', function (ev) {
+    if (sx == null || !swipe || !ev.changedTouches || !ev.changedTouches.length) return;
+    var dx = ev.changedTouches[0].clientX - sx, dy = ev.changedTouches[0].clientY - sy;
+    sx = null;
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 50) swipe(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
   function go(next, push) {
     st = next;
     try { if (push !== false) history.pushState({ tv: next }, ''); else history.replaceState({ tv: next }, ''); } catch (e) {}
@@ -22097,6 +22156,7 @@ function ttviewStart_(exec, base, staff, dev) {
     window.scrollTo(0, 0);
   }
   function redraw() {
+    swipe = null;
     if (st.step === 'month') drawMonth();
     else if (st.step === 'day') drawDay();
     else if (st.step === 'memo') drawMemo();
@@ -22109,15 +22169,15 @@ function ttviewStart_(exec, base, staff, dev) {
     }, 600);
   }
 
-  /* ── 年月をえらぶ小窓（見出しの「2026年9月」を押すと出る） ── */
+  /* ── 年月をえらぶ小窓（見出しの「2026年11月 ▾」を押すと出る） ── */
   function openPicker() {
     var cur = monthOf(st.k), year = cur.getFullYear();
     var lo = range ? monthOf(range.lo) : monthOf(-1), hi = range ? monthOf(range.hi) : monthOf(5);
     var mask = document.createElement('div');
     mask.className = 'tvpmask';
     function draw() {
-      var h = '<div class="tvpbox"><div class="tvnav"><button class="tvarw" data-y="-1"' + (year <= lo.getFullYear() ? ' disabled' : '') + '>◀</button>' +
-        '<div class="tvt">' + year + '年</div><button class="tvarw" data-y="1"' + (year >= hi.getFullYear() ? ' disabled' : '') + '>▶</button></div><div class="tvpgrid">';
+      var h = '<div class="tvpbox"><div class="tvpnav"><button class="tvic" data-y="-1"' + (year <= lo.getFullYear() ? ' disabled' : '') + '>‹</button>' +
+        '<div class="t">' + year + '年</div><button class="tvic" data-y="1"' + (year >= hi.getFullYear() ? ' disabled' : '') + '>›</button></div><div class="tvpgrid">';
       for (var m = 0; m < 12; m++) {
         var k = (year - today.getFullYear()) * 12 + m - today.getMonth();
         var sel = (k === st.k), now = (k === 0);
@@ -22137,100 +22197,108 @@ function ttviewStart_(exec, base, staff, dev) {
     document.body.appendChild(mask);
   }
 
-  /* ── 月のカレンダー ── */
+  /* ── 月のカレンダー（本物と同じく、日付の中に予定の帯を並べる） ── */
+  function barHtml(e, ds) {
+    var t = esc(e.t || '(タイトルなし)');
+    if (isFill(e)) return '<span class="tvb fill" style="background:' + esc(e.col) + '">' + t + '</span>';
+    return '<span class="tvb" style="background:' + tint(e.col) + ';color:' + esc(e.col) + '">' + t + '</span>';
+  }
   function drawMonth() {
     setBack();
-    head.style.display = '';
     var k = st.k, m = monthOf(k);
-    var nav = '<div class="tvnav"><button class="tvarw" id="tvprev"' + (inRange(k - 1) ? '' : ' disabled') + '>◀</button>' +
-      '<button class="tvt tvpick" id="tvpick">' + m.getFullYear() + '年' + (m.getMonth() + 1) + '月 ▾</button>' +
-      '<button class="tvarw" id="tvnext"' + (inRange(k + 1) ? '' : ' disabled') + '>▶</button></div>';
-    body.innerHTML = nav + (k !== 0 ? '<button class="tvtoday" id="tvtoday">今月にもどる</button>' : '') +
-      '<div id="tvcal"><div class="tvstatus">予定を読んでいます...</div></div>';
-    document.getElementById('tvprev').onclick = function () { if (inRange(st.k - 1)) go({ step: 'month', k: st.k - 1 }, false); };
-    document.getElementById('tvnext').onclick = function () { if (inRange(st.k + 1)) go({ step: 'month', k: st.k + 1 }, false); };
+    body.innerHTML = '<div class="tvmh">' +
+        '<button class="tvym" id="tvpick">' + m.getFullYear() + '年' + (m.getMonth() + 1) + '月<i>▼</i></button>' +
+        '<span class="tvsp"></span>' +
+        (k !== 0 ? '<button class="tvtd" id="tvtoday">今日</button>' : '') +
+        '<button class="tvic" id="tvprev"' + (inRange(k - 1) ? '' : ' disabled') + '>‹</button>' +
+        '<button class="tvic" id="tvnext"' + (inRange(k + 1) ? '' : ' disabled') + '>›</button></div>' +
+      chipsHtml() + '<div id="tvcal"><div class="tvstatus">予定を読んでいます...</div></div>';
+    function prev() { if (inRange(st.k - 1)) go({ step: 'month', k: st.k - 1 }, false); }
+    function next() { if (inRange(st.k + 1)) go({ step: 'month', k: st.k + 1 }, false); }
+    document.getElementById('tvprev').onclick = prev;
+    document.getElementById('tvnext').onclick = next;
     document.getElementById('tvpick').onclick = openPicker;
     var tb = document.getElementById('tvtoday'); if (tb) tb.onclick = function () { go({ step: 'month', k: 0 }, false); };
+    bindChips();
+    swipe = function (d) { if (d > 0) next(); else prev(); };
     load(k, function (p) {
       if (st.step !== 'month' || st.k !== k) return;
-      // 今月のファイルで見られる端が分かったら、◀▶の押せる／押せないを付け直す
+      // 今月のファイルで見られる端が分かったら、‹ › の押せる／押せないを付け直す
       var pv = document.getElementById('tvprev'), nx = document.getElementById('tvnext');
       if (pv) pv.disabled = !inRange(k - 1);
       if (nx) nx.disabled = !inRange(k + 1);
       var box = document.getElementById('tvcal');
       if (!p || p.error) { box.innerHTML = '<div class="tvstatus">' + esc(failText(p)) + '</div>'; return; }
-      var evs = p.events;       /* 月のカレンダーは切り替えなしで全部を数える */
-      var h = '<div class="tvgrid">';
-      for (var i = 0; i < 7; i++) h += '<div class="tvwd' + (i === 5 ? ' sat' : i === 6 ? ' sun' : '') + '">' + WD[i] + '</div>';
+      var evs = p.events;
+      var h = '<div class="tvwk">';
+      for (var i = 0; i < 7; i++) h += '<div class="' + (i === 5 ? 'sat' : i === 6 ? 'sun' : '') + '">' + WD[i] + '</div>';
+      h += '</div>';
       var first = new Date(m.getFullYear(), m.getMonth(), 1);
       var lead = (first.getDay() + 6) % 7;
-      for (i = 0; i < lead; i++) h += '<div class="tvday blank"></div>';
       var last = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
-      var tiso = iso(today);
-      for (var dnum = 1; dnum <= last; dnum++) {
-        var d = new Date(m.getFullYear(), m.getMonth(), dnum), ds = iso(d), wd = (d.getDay() + 6) % 7;
-        var list = evs.filter(function (e) { return e.d <= ds && e.e >= ds; });
-        var cols = [], dots = '';
-        for (var j = 0; j < list.length && cols.length < 6; j++) if (cols.indexOf(list[j].col) < 0) cols.push(list[j].col);
-        for (j = 0; j < cols.length; j++) dots += '<i style="background:' + esc(cols[j]) + '"></i>';
-        h += '<button class="tvday' + (wd === 5 ? ' sat' : wd === 6 ? ' sun' : '') + (ds === tiso ? ' today' : '') + '" data-d="' + ds + '">' +
-          '<span class="dn">' + dnum + '</span>' +
-          '<span class="cnt">' + (list.length ? list.length + '件' : '&nbsp;') + '</span>' +
-          '<span class="tvdots">' + dots + '</span></button>';
+      var cells = Math.ceil((lead + last) / 7) * 7;
+      var tiso = iso(today), MAXB = 4;
+      for (var c = 0; c < cells; c++) {
+        if (c % 7 === 0) h += '<div class="tvweek">';
+        var d = new Date(m.getFullYear(), m.getMonth(), 1 - lead + c), ds = iso(d), wd = c % 7;
+        var out = d.getMonth() !== m.getMonth();
+        var bars = '';
+        if (!out) {
+          var od = onDay(evs, ds), list = od.ad.concat(od.tm);
+          for (var j = 0; j < list.length && j < MAXB; j++) bars += barHtml(list[j], ds);
+          if (list.length > MAXB) bars += '<span class="tvmore">+' + (list.length - MAXB) + '</span>';
+        }
+        h += '<button class="tvc' + (wd === 5 ? ' sat' : wd === 6 ? ' sun' : '') + (out ? ' out' : '') +
+          (ds === tiso ? ' today sel' : '') + '" data-d="' + ds + '"><span class="dn">' + d.getDate() + '</span>' + bars + '</button>';
+        if (c % 7 === 6) h += '</div>';
       }
-      h += '</div>';
       box.innerHTML = h;
-      var ds2 = box.querySelectorAll('.tvday[data-d]');
-      for (i = 0; i < ds2.length; i++) ds2[i].onclick = function () { go({ step: 'day', k: st.k, date: this.getAttribute('data-d') }); };
+      var ds2 = box.querySelectorAll('.tvc[data-d]');
+      for (i = 0; i < ds2.length; i++) ds2[i].onclick = function () {
+        var dd = this.getAttribute('data-d'), kk = kOfDate(dd);
+        if (!inRange(kk)) return;
+        go({ step: 'day', k: kk, date: dd });
+      };
       preload(k);
     });
   }
 
-  /* ── その日の予定 ── */
+  /* ── その日の予定（本物と同じ：左に時刻、色の細い線、題名、右に作った人） ── */
   function rowHtml(e, idx, ds) {
-    if (e.a) {
-      return '<button class="tvad" style="background:' + esc(e.col) + '" data-i="' + idx + '">' + esc(e.t || '(タイトルなし)') + '</button>';
-    }
-    var s = e.d === ds ? e.s : '';        // 何日にもまたがる予定は、始まる日だけ時刻を出す
-    var f = e.e === ds ? e.f : '';
-    return '<button class="tvrow" data-i="' + idx + '"><span class="bar" style="background:' + esc(e.col) + '"></span>' +
-      '<span class="tm">' + esc(s || '〜') + '<small>' + esc(f ? '〜' + f : '') + '</small></span>' +
-      '<span class="bd"><span class="ti">' + esc(e.t || '(タイトルなし)') + '</span>' +
-      '<div class="sub">' + esc(e.cn) + (e.rn && e.rn.toUpperCase() !== String(e.cn).toUpperCase() ? '・' + esc(e.rn) : '') + '</div></span></button>';
+    var tm;
+    if (isAllDay(e, ds)) tm = '終日';
+    else tm = '<b>' + esc(e.s || '') + '</b>' + esc(e.e === ds ? (e.f || '') : '');   // 次の日まで続く予定は終わりの時刻を出さない（元と同じ）
+    return '<button class="tvrow" data-i="' + idx + '"><span class="tm">' + tm + '</span>' +
+      '<span class="ln" style="background:' + esc(e.col) + '"></span>' +
+      '<span class="ti">' + esc(e.t || '(タイトルなし)') + '</span>' +
+      (e.au ? '<span class="av" title="' + esc(e.au) + '">' + esc(avOf(e.au)) + '</span>' : '') + '</button>';
   }
   function drawDay() {
     var ds = st.date;
     setBack(function () { history.back(); });
-    head.style.display = 'none';
     var d = parseIso(ds);
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
     var pk = kOfDate(iso(prev)), nk = kOfDate(iso(next));
-    body.innerHTML = '<div class="tvnav"><button class="tvarw" id="tvprev"' + (inRange(pk) ? '' : ' disabled') + '>◀</button>' +
-      '<div class="tvt">' + esc(jpDay(ds)) + '</div>' +
-      '<button class="tvarw" id="tvnext"' + (inRange(nk) ? '' : ' disabled') + '>▶</button></div>' +
-      segHtml() + '<div id="tvdaybox"><div class="tvstatus">予定を読んでいます...</div></div>';
-    document.getElementById('tvprev').onclick = function () { if (inRange(pk)) go({ step: 'day', k: pk, date: iso(prev) }, false); };
-    document.getElementById('tvnext').onclick = function () { if (inRange(nk)) go({ step: 'day', k: nk, date: iso(next) }, false); };
-    bindSeg();
+    body.innerHTML = '<div class="tvdh"><div class="dt">' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + JWD[d.getDay()] + '曜日</div>' +
+      '<button class="tvic" id="tvprev"' + (inRange(pk) ? '' : ' disabled') + '>‹</button>' +
+      '<button class="tvic" id="tvnext"' + (inRange(nk) ? '' : ' disabled') + '>›</button></div>' +
+      '<div class="tvdchips">' + chipsHtml() + '</div><div id="tvdaybox"><div class="tvstatus">予定を読んでいます...</div></div>';
+    function goPrev() { if (inRange(pk)) go({ step: 'day', k: pk, date: iso(prev) }, false); }
+    function goNext() { if (inRange(nk)) go({ step: 'day', k: nk, date: iso(next) }, false); }
+    document.getElementById('tvprev').onclick = goPrev;
+    document.getElementById('tvnext').onclick = goNext;
+    bindChips();
+    swipe = function (dd) { if (dd > 0) goNext(); else goPrev(); };
     load(st.k, function (p) {
       if (st.step !== 'day' || st.date !== ds) return;
       var box = document.getElementById('tvdaybox');
       if (!p || p.error) { box.innerHTML = '<div class="tvstatus">' + esc(failText(p)) + '</div>'; return; }
-      var list = onDay(p.events, ds);
-      if (!list.length) { box.innerHTML = '<div class="tvstatus">この日の予定はありません。</div>'; return; }
-      var ad = [], tm = [];
-      for (var i = 0; i < list.length; i++) (list[i].a || list[i].d < ds ? ad : tm).push(list[i]);
-      var h = '';
-      if (ad.length) {
-        h += '<div class="tvsec">終日</div><div class="tvlist">';
-        for (i = 0; i < ad.length; i++) h += rowHtml(ad[i], 'a' + i, ds);
-        h += '</div>';
-      }
-      if (tm.length) {
-        h += '<div class="tvsec">' + list.length + '件</div><div class="tvlist">';
-        for (i = 0; i < tm.length; i++) h += rowHtml(tm[i], 't' + i, ds);
-        h += '</div>';
-      }
+      var od = onDay(p.events, ds), ad = od.ad, tm = od.tm;
+      if (!ad.length && !tm.length) { box.innerHTML = '<div class="tvstatus">この日の予定はありません。</div>'; return; }
+      var h = '<div class="tvlist">', i;
+      for (i = 0; i < ad.length; i++) h += rowHtml(ad[i], 'a' + i, ds);
+      for (i = 0; i < tm.length; i++) h += rowHtml(tm[i], 't' + i, ds);
+      h += '</div>';
       box.innerHTML = h;
       var bs = box.querySelectorAll('[data-i]');
       for (i = 0; i < bs.length; i++) bs[i].onclick = function () {
@@ -22241,7 +22309,15 @@ function ttviewStart_(exec, base, staff, dev) {
     });
   }
 
-  /* ── 予定の中身 ── */
+  /* ── 予定の中身（本物の予定の詳細画面の形） ── */
+  var ICO = {
+    cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+    tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.4 1.4 0 0 1 0 2l-6.2 6.2a1.4 1.4 0 0 1-2 0z"/><circle cx="8" cy="8" r="1.4"/></svg>',
+    pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+    rep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11V9a3 3 0 0 1 3-3h12l-3-3M20 13v2a3 3 0 0 1-3 3H5l3 3"/></svg>'
+  };
+  function infoRow(icon, v) { return '<div class="tvi"><span class="k">' + icon + '</span><span class="v">' + v + '</span></div>'; }
   function openHref(e) {
     if (!e.tt) return '';
     if (/Android/i.test(navigator.userAgent)) {
@@ -22254,41 +22330,41 @@ function ttviewStart_(exec, base, staff, dev) {
     var e = st.ev;
     if (!e) { st = { step: 'month', k: 0 }; redraw(); return; }
     setBack(function () { history.back(); });
-    head.style.display = 'none';
-    var when;
-    if (e.a) when = (e.d === e.e ? jpFull(e.d) : jpFull(e.d) + ' 〜 ' + jpDay(e.e)) + ' 終日';
-    else if (e.d === e.e) when = jpFull(e.d) + ' ' + e.s + '〜' + e.f;
-    else when = jpFull(e.d) + ' ' + e.s + ' 〜 ' + jpDay(e.e) + ' ' + e.f;
-    var h = '<div class="tvcard"><span class="bar" style="background:' + esc(e.col) + '"></span>' +
-      '<div class="tvdt">' + esc(e.t || '(タイトルなし)') + '</div>' +
-      '<div class="tvline"><span class="k">🕒</span><span class="v">' + esc(when) + (e.r ? '<span class="tvchip" style="background:#64748b">くり返し</span>' : '') + '</span></div>' +
-      '<div class="tvline"><span class="k">📅</span><span class="v">' + esc(e.cn) +
-        /* カレンダー名と部屋名が同じ（HAPPY と HAPPY 等）なら部屋名は重ねて出さず、色だけ見せる */
-        '<span class="tvchip" style="background:' + esc(e.col) + '">' +
-          (e.rn && e.rn.toUpperCase() !== String(e.cn).toUpperCase() ? esc(e.rn) : '&nbsp;') + '</span></span></div>' +
-      (e.loc ? '<div class="tvline"><span class="k">📍</span><span class="v">' + esc(e.loc) + '</span></div>' : '') +
-      (e.url ? '<div class="tvline"><span class="k">🔗</span><span class="v"><a href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.url) + '</a></span></div>' : '') +
+    var allDay = (e.a === 1 || e.a === '1' || e.a === true);
+    var when = '<div class="tvwhen"><div class="w"><small>' + esc(jpFull(e.d)) + '</small><b>' + esc(allDay ? '終日' : e.s) + '</b></div>' +
+      '<span class="arw" style="color:' + esc(e.col) + '">›</span>' +
+      '<div class="w r"><small>' + esc(jpFull(e.e)) + '</small><b>' + esc(allDay ? '終日' : e.f) + '</b></div></div>';
+    var h = '<div class="tvdtop" style="color:' + esc(e.col) + '">' + esc(e.t || '(タイトルなし)') + '</div>' + when;
+    h += e.n ? '<pre class="tvmemo">' + esc(e.n) + '</pre>' : '<div class="tvnomemo">予約メモはありません</div>';
+    /* ラベル＝本物と同じく、色の丸とラベルの名前（部屋の名前）を出す */
+    var room = e.rn ? esc(e.rn) : '';
+    h += '<div class="tvinfo">' +
+      infoRow(ICO.cal, esc(e.cn)) +
+      infoRow(ICO.tag, '<span class="tvdot" style="background:' + esc(e.col) + '"></span>' + room) +
+      (e.r ? infoRow(ICO.rep, 'くり返し') : '') +
+      (e.loc ? infoRow(ICO.pin, esc(e.loc)) : '') +
+      (e.url ? infoRow(ICO.link, '<a href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.url) + '</a>') : '') +
       '</div>';
-    h += '<div class="tvcard"><span class="bar" style="background:' + esc(e.col) + '"></span>' +
-      (e.n ? '<pre class="tvmemo">' + esc(e.n) + '</pre>' : '<div class="tvnomemo">予約メモはありません</div>') + '</div>';
-    /* くり返しの予定は、メモを直すと全部の回が変わるので、ここからは直させない */
-    if (!e.r) h += '<button class="tvedit" id="tvedit">✏️ 予約メモを修正</button>';
     /* ★作った・直した人の履歴（2026-09-15 まるちゃん「直した人を並べる」）。
        タイムツリーの予約ごとの履歴を事務所パソコンが貯めた物（h＝[[1作った/2直した, 名前, 時刻], ...]）。
-       ズコで直した回は押した人の名前、自動の仕組みで直した回は Ryu。履歴がまだ無い予約は今までどおり。 */
+       ズコで直した回は押した人の名前、自動の仕組みで直した回は Ryu。履歴がまだ無い予約は今までどおり。
+       ★2026-11-13 本物の予定の画面の「◯◯が予定を作成しました」と同じ、真ん中の小さな灰色の行で出す。 */
+    h += '<div class="tvlog">';
     if (e.h && e.h.length) {
-      h += '<div class="tvmeta">';
       for (var hi = 0; hi < e.h.length; hi++) {
         var a = e.h[hi];
-        h += (a[0] === 1 ? '作った日：' : '修正日：') + esc(msText(a[2])) + (a[1] ? '　' + esc(a[1]) : '') + '<br>';
+        h += '<div>' + esc(msText(a[2])) + '　' + (a[1] ? esc(a[1]) + 'が' : '') + (a[0] === 1 ? '予定を作成しました' : '予定を修正しました') + '</div>';
       }
-      h += '</div>';
     } else {
-      h += '<div class="tvmeta">' +
-        (e.cr ? '作った日：' + esc(msText(e.cr)) + (e.au ? '　' + esc(e.au) : '') + '<br>' : (e.au ? '作った人：' + esc(e.au) + '<br>' : '')) +
-        (e.up ? '修正日：' + esc(msText(e.up)) : '') + '</div>';
+      if (e.cr) h += '<div>' + esc(msText(e.cr)) + '　' + (e.au ? esc(e.au) + 'が' : '') + '予定を作成しました</div>';
+      else if (e.au) h += '<div>作った人：' + esc(e.au) + '</div>';
+      if (e.up) h += '<div>' + esc(msText(e.up)) + '　予定を修正しました</div>';
     }
+    h += '</div><div class="tvacts">';
+    /* くり返しの予定は、メモを直すと全部の回が変わるので、ここからは直させない */
+    if (!e.r) h += '<button class="tvedit" id="tvedit">✏️ 予約メモを修正</button>';
     if (e.tt) h += '<a class="tvopen" href="' + esc(openHref(e)) + '" target="_blank" rel="noopener">実際のタイムツリーでこの予約メモを開く</a>';
+    h += '</div>';
     body.innerHTML = h;
     var eb = document.getElementById('tvedit');
     if (eb) eb.onclick = function () { go({ step: 'memo', k: st.k, date: st.date, ev: e, base: e.n || '' }); };
@@ -22305,12 +22381,12 @@ function ttviewStart_(exec, base, staff, dev) {
     var e = st.ev;
     if (!e) { st = { step: 'month', k: 0 }; redraw(); return; }
     setBack(function () { history.back(); });
-    head.style.display = 'none';
     var cur = (st.draft != null) ? st.draft : (st.base || '');
+    var allDay = (e.a === 1 || e.a === '1' || e.a === true);
     body.innerHTML =
-      '<div class="tvcard"><span class="bar" style="background:' + esc(e.col) + '"></span>' +
-        '<div class="tvdt" style="font-size:19px;margin-bottom:4px">' + esc(e.t || '(タイトルなし)') + '</div>' +
-        '<div class="tvline" style="margin-top:0"><span class="k">🕒</span><span class="v">' + esc(e.a ? jpFull(e.d) + ' 終日' : jpFull(e.d) + ' ' + e.s + '〜' + e.f) + '</span></div></div>' +
+      '<div class="tvdtop" style="color:' + esc(e.col) + '">' + esc(e.t || '(タイトルなし)') + '</div>' +
+      '<div class="tvi" style="justify-content:center;padding-top:0"><span class="v" style="flex:none">' +
+        esc(allDay ? jpFull(e.d) + ' 終日' : jpFull(e.d) + ' ' + e.s + '〜' + e.f) + '</span></div>' +
       '<div class="tvsec">予約メモ</div>' +
       '<textarea class="tvmemotx" id="tvmemotx" spellcheck="false"></textarea>' +
       '<button class="tvsave" id="tvsave">この内容で保存する</button>';
