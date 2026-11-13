@@ -1873,7 +1873,9 @@ var TILE_DEFS_ = [
   { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
     icon: '<span class="ticon">🖥️</span>', label: '自宅\nPC' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
-    icon: '<span class="ticon">📝</span>', label: '予約\n入力' },
+    // ★2026-11-13 まるちゃん選択＝開いたピンクの予約帳に大きな黄色い鉛筆で書き込む絵（子ども向けアニメ風・GPTで作成）。
+    //   パソコン版の同じ絵＝PC版スーパーズコ\icons\yoyaku-zuko-96.png。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/yoyaku-192.png"></span>', label: '予約\n入力' },
   // ★施術後の予約＝施術者が施術のあと、その場でそのお客様の次回の予約を入れる入口（作りかけ）。
   //   まるちゃん依頼 2026-09-11「開発中の機能は、ここにもいれて。すぐに呼び出せるように」。
   //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発URL(?dev=1)専用

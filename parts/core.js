@@ -1357,7 +1357,7 @@ var TILE_DEFS_ = [
   { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
     icon: '<span class="ticon">🖥️</span>', label: '自宅\nPC' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
-    icon: '<span class="ticon">📝</span>', label: '予約\n入力' },
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/yoyaku-192.png"></span>', label: '予約\n入力' },
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
