@@ -1360,7 +1360,7 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🀄</span>', label: '翻訳\n日→台湾中国語' },
   { id: 'bcast', cls: 'bcast', view: 'bcast',
     icon: '<span class="ticon">📣</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/bcast-kuro-192.png"></span>', label: 'LINE\n一斉配信' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/bcast-kuro-192.png?v=2"></span>', label: 'LINE\n一斉配信' },
   { id: 'procell', cls: 'procell', view: 'procell',
     icon: '<span class="ticon">🧴</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procell-192.png?v=2"></span>', label: 'プロセル\n残り本数' },
