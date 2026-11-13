@@ -1881,7 +1881,10 @@ var TILE_DEFS_ = [
   // ★プロセル残り本数＝美容液を何本注文するかの数（頭皮用・顔MD用・顔Pro用）。開発URL(?dev=1)専用。
   //   事務所PCが毎晩そろえた procell.json を読んで出すだけ（計算はPC側・2026-08-20）。
   { id: 'procell', cls: 'procell', view: 'procell',
-    icon: '<span class="ticon">🧴</span>', label: 'プロセル\n残り本数' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝白い地にプロセルの丸いマーク＋右下に赤い丸の「残」。
+    //   パソコン版の同じ絵＝PC版スーパーズコ\icons\procell-zuko-96.png。
+    icon: '<span class="ticon">🧴</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procell-192.png"></span>', label: 'プロセル\n残り本数' },
   // ★自宅PC＝事務所PCが今動いているか／止まっているなら何が起きたか（2026-08-24 まるちゃん決定）。
   //   開発URL(?dev=1)専用。事務所PCが1分ごとに送る pc_status.json を読むだけ。
   { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
