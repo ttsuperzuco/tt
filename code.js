@@ -2382,6 +2382,7 @@ var FOLDERTESTCSS_ =
   '  .ftmini.ft6 { width:86px; grid-template-columns:1fr 1fr 1fr; gap:2px; }' +
   '  .ftmini.ft6 .ticon, .ftmini.ft6 .ticon img { width:25px; height:25px; font-size:20px; border-radius:6px; }' +
   '  .ftmini.ft6 .ftmore { font-size:13px; }' +
+  '  .ftmini.ft6 .lt2 svg { width:12px; height:12px; }' +   // 記入漏れの絵（LINEとTimeTreeの2つ重ね）を25pxの枠に収める
   '  .ftlab { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; }' +
   '  .ftlab .tname { flex:none; word-break:auto-phrase; }' +   // 2行になる時は言葉の切れ目で折る（「在庫売上管／理」にしない）
   '  .ftcount { display:block; font-size:.78rem; font-weight:800; opacity:.75; margin-top:2px; }' +
