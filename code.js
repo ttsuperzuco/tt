@@ -1817,7 +1817,7 @@ function devHeadMarkHtml_(view) {   // その画面の新しい絵（無けれ�
 //   ＝見た目の決まり（::before）で題名の頭に絵を出す（描き直しても消えない）。購入証明書は中の画面（iframe）に入れる。
 var DEV_TITLE_SEL_ = { lt: '.lwrap > h1:first-of-type', bcast: '#bctitle', timetree: '#tvpick', shomeisho: '#ttl' };
 function devTitleCss_(sel, src) {
-  return sel + '::before{content:"";display:inline-block;width:1.15em;height:1.15em;margin-right:.3em;' +
+  return sel + '::before{content:"";display:inline-block;flex:none;width:1.15em;height:1.15em;margin-right:.3em;' +
     'vertical-align:-.2em;border-radius:.2em;background:url("' + src + '") center/contain no-repeat;}';
 }
 function devHeadMark_(root, view, dev) {
