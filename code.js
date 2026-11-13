@@ -15300,7 +15300,7 @@ function threadsScript_(C) {
           var ids = {};
           nf.posts.forEach(function (p) { ids[p.id] = 1; });
           nf.posts = nf.posts.concat(of.posts.filter(function (p) { return !ids[p.id]; }));
-          nf.after = of.after || '';
+          nf.after = of.after || ''; if (of._moreAt) nf._moreAt = of._moreAt;
         }
       }
       PF.done = {};
@@ -15330,13 +15330,25 @@ function threadsScript_(C) {
     });
     return L;
   }
-  function pfAge(it) {   // 最後に読んだ時刻（0＝まだ読んでいない）。続きの投稿は「この回に読んだか」だけを見る
+  // ★2026-11-13 まるちゃん「3も残せよ。じゃないと意味ないじゃん。あとそれぞれスタッフがどこまでダウンロードしたか記録とれよ」
+  //   ＝続きの投稿も「読み終わった時刻」を覚えて残す（前はこの回に読んだかだけ＝開くたびに最大300件を読み直していた）。
+  //   読み終わってから1日は読み直さない（古い投稿は変わらない。いいね等の数は1日に1回そろえる）。
+  var MORE_FRESH = 24 * 3600000;
+  function pfAge(it) {   // 最後に読んだ時刻（0＝まだ読んでいない）
     if (it.t === 'more') {
       var fd = DATA && DATA.feeds && DATA.feeds[it.a];
-      return (PF.done['more_' + it.a] || !fd || !fd.ok || !fd.after0) ? Date.now() : 0;
+      if (PF.done['more_' + it.a] || !fd || !fd.ok || !fd.after0) return Date.now();
+      return (fd._moreAt && Date.now() - fd._moreAt < MORE_FRESH) ? fd._moreAt : 0;
     }
     var o = (it.t === 'ins' ? INS : WEB)[it.a + '_' + it.d];
     return (o && o._t) || 0;
+  }
+  function thProg() {   // どこまで読み終わったか（読んだことがある物の数／全部の数）を端末に覚える
+    try {
+      var L = pfList(), have = L.filter(function (it) { return pfAge(it) > 0; }).length, posts = {};
+      for (var a in ((DATA && DATA.feeds) || {})) posts[a] = ((DATA.feeds[a] || {}).posts || []).length;
+      localStorage.setItem('th_pf_prog', JSON.stringify({ h: have, t: L.length, p: posts, at: Date.now() }));
+    } catch (e) {}
   }
   function pfNext() {
     var now = Date.now(), L = pfList(), miss = null, old = null;
@@ -15355,7 +15367,7 @@ function threadsScript_(C) {
     if (!it) return;
     PF.on = true;
     var fin = function (ok, err) {
-      PF.on = false;
+      PF.on = false; thProg();
       if (!ok && err) PF.bad[it.t + '_' + it.a] = 1;
       setTimeout(pfRun, it.t === 'web' ? 20000 : 300);
     };
@@ -15377,17 +15389,26 @@ function threadsScript_(C) {
         if (cur && n < 20) { setTimeout(step, 300); return; }
         var f2 = DATA && DATA.feeds && DATA.feeds[a];
         if (f2 && f2.after0 === fd.after0) {   // 途中で新しい中身に入れ替わっていたら捨てる（次の回に読み直す）
-          f2.posts = f2.posts.slice(0, f2.n0).concat(got); f2.after = cur;
+          f2.posts = f2.posts.slice(0, f2.n0).concat(got); f2.after = cur; f2._moreAt = Date.now();
           cacheSet(DATA);
           if (CUR === a && VIEW === 'feed' && !(FEED && FEED.more)) showFeedFromData();
         }
-        PF.done['more_' + a] = 1; fin(true);
+        PF.done['more_' + a] = 1; thProg(); fin(true);
       });
     };
     step();
   }
 
   var _c = cacheGet();
+  // ★2026-11-13 まるちゃん「3も残せよ。じゃないと意味ないじゃん。あとそれぞれスタッフがどこまでダウンロードしたか記録とれよ」
+  //   ＝開いた時に「前回までにどこまで読み終わっていたか」を開くまでの秒数の記録（superzuko_boot_timing の raw の th）に足す。
+  try {
+    if (window.__BT && !window.__BT.done) {
+      var _pg = JSON.parse(localStorage.getItem('th_pf_prog') || 'null') || {};
+      window.__BT.th = { c: _c ? JSON.stringify(_c).length : 0, h: _pg.h == null ? -1 : _pg.h, t: _pg.t == null ? -1 : _pg.t, p: _pg.p || {},
+        m: _pg.at ? Math.round((Date.now() - _pg.at) / 60000) : -1 };
+    }
+  } catch (e) {}
   if (_c) apply(_c, false);
   loadAll();
 }
@@ -20079,9 +20100,17 @@ function instaScript_(C) {
           pfPut(it.key, d);
           if (it.t === 'dm_list') { try { localStorage.setItem('ig_dm_v1_' + it.a, JSON.stringify(d)); } catch (e) {} }   // メッセージの画面が先に出す控え
         }
+        igProg(T);
         setTimeout(pfRun, it.heavy ? 20000 : 300);
       });
     });
+  }
+  function igProg(T) {   // ★2026-11-13 まるちゃん「3も残せよ。じゃないと意味ないじゃん。あとそれぞれスタッフがどこまでダウンロードしたか記録とれよ」
+    //   ＝どこまで読み終わったか（読んだことがある物の数／全部の数）を端末に覚え、次に開いた時の記録に入れる。
+    try {
+      var L = pfList(), have = L.filter(function (it) { return T[it.key]; }).length;
+      localStorage.setItem('ig_pf_prog', JSON.stringify({ h: have, t: L.length, at: Date.now() }));
+    } catch (e) {}
   }
 
   var _c = cacheGet();
@@ -20096,6 +20125,7 @@ function instaScript_(C) {
       m: _c && _c._saved ? Math.round((Date.now() - _c._saved) / 60000) : -1,
       dm: localStorage.getItem('ig_dm_v1_' + ((_c && _c.cur) || 'jp')) ? 1 : 0, ls: _ls, n: localStorage.length,
       e: localStorage.getItem('ig_cache_err') || '' };
+    try { var _pg = JSON.parse(localStorage.getItem('ig_pf_prog') || 'null'); if (_pg && window.__BT.ig) { window.__BT.ig.h = _pg.h; window.__BT.ig.t = _pg.t; window.__BT.ig.pm = Math.round((Date.now() - _pg.at) / 60000); } } catch (e) {}
   } catch (e) {}
   if (_c) apply(_c, false);
   loadAll();
