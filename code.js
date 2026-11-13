@@ -1838,7 +1838,9 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/ttapp-192.png?v=2"></span>', label: '元祖TT\nアプリ' },
   // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
   { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
-    icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ）＝緑の心電図の波が映った画面（GPTで作成）・黒い地＋細い白枠。パソコン版＝icons\kanshi-kuro-96.png。
+    icon: '<span class="ticon">📟</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/kanshi-kuro-192.png"></span>', label: '自動監視\n（開発用）' },
   // ★前日お知らせ＝2026-08-24 まるちゃん決定でスタッフにも見せる（それまでは開発URL専用）。
   //   実際の作成は事務所PCが行い、この画面は日付を選んで頼むだけ（renderZenjitsuPage_）。
   //   ★2026-08-25 まるちゃん決定：「未送信の分だけ作成」も**誰が開いても出す**
