@@ -1,11 +1,11 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
 // この画面だけで使う部品：foldertest
 var FOLDERTEST_START_ = [
-  { f: 'お知らせ・配信', items: ['zenjitsu', 'mita', 'bcast'] },
   { f: '施術直後', items: ['sejutsugo', 'sgline', 'shomeisho'] },
   { f: 'SNS', items: ['insta', 'threads', 'hachimitsu'] },
+  { f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'links', 'lt', 'conflict'] },
   { f: '在庫売上管理', items: ['procstock', 'hanbai', 'uriage'] },
-  { f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'links', 'lt', 'conflict'] }];
+  { f: 'お知らせ・配信', items: ['zenjitsu', 'mita', 'bcast'] }];
 function renderFolderTestPage_(base, staff, dev) {
   var tiles = {};
   var want = [];
@@ -40,7 +40,7 @@ var FOLDERTESTCSS_ =
   '  .ftzone { flex:1 1 40%; box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
   '  .ftzone.hinto { outline:3px solid #fbbf24; outline-offset:-3px; background:#fef3c7; transform:scale(1.04); transition:transform .12s ease; }';
 function folderTestBoot_(D) {
-  var T = D.tiles, KEY = 'sz_foldertest2';   
+  var T = D.tiles, KEY = 'sz_foldertest3';   
   var home = document.getElementById('ftHome');
   if (!home) return;
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
