@@ -2496,8 +2496,9 @@ var FOLDERTEST_START_ = [
   { f: '施術直後', items: ['sejutsugo', 'sgline', 'shomeisho'] },
   { f: 'SNS', items: ['insta', 'threads', 'hachimitsu'] },
   { f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'links', 'lt', 'conflict'] },
-  { f: '在庫売上管理', items: ['procstock', 'hanbai', 'uriage'] },
-  { f: 'お知らせ・配信', items: ['zenjitsu', 'mita', 'bcast'] }];
+  // ★2026-11-14 まるちゃん「在庫売上 管理 で改行 お知らせ ＆配信 で改行」＝名前の中の改行の印で2行にする（下の load で、覚えている名前も直す）
+  { f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage'] },
+  { f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] }];
 function renderFolderTestPage_(base, staff, dev) {
   var tiles = {};
   var want = [];
@@ -2562,7 +2563,10 @@ function folderTestBoot_(D) {
     for (var id in T) if (!seen[id]) out.push(id);
     return out;
   }
-  function load() { try { var s = localStorage.getItem(KEY); if (s) return clean(JSON.parse(s)); } catch (e) {} return clean(D.start); }
+  // ★2026-11-14 前の名前のまま覚えているスマホ・パソコンも、新しい名前（改行入り）に直して出す
+  var RENAME = { '在庫売上管理': '在庫売上\n管理', 'お知らせ・配信': 'お知らせ\n＆配信' };
+  function renamed(L) { L.forEach(function (x) { if (typeof x !== 'string' && RENAME[x.f]) x.f = RENAME[x.f]; }); return L; }
+  function load() { try { var s = localStorage.getItem(KEY); if (s) return clean(renamed(JSON.parse(s))); } catch (e) {} return clean(D.start); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {} }
   var items = load(), openF = null;
   home.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
