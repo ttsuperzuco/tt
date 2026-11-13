@@ -1692,11 +1692,36 @@ function renderHome_(base, staff, dev, who) {
   return renderHomePage_({ perms: _permsFromCfg_(d), labels: _labelsFromCfg_(d), order: _orderFromCfg_(d) },
                           base, staff, dev, who);
 }
+var HOME_AS_PEOPLE_ = [
+  { id: '', mark: '🐉', title: 'りゅう（開発版）' },
+  { id: 'kanbu', mark: '🍅', title: 'トマト' },
+  { id: 'mikan', mark: '🍊', title: 'みかん' },
+  { id: 'olive', mark: '🫒', title: 'オリーブ' },
+  { id: 'pine', mark: '🍍', title: 'パイン' },
+  { id: 'reception', text: '受付PC' },
+  { id: 'reception_sp', text: '受付スマホ' }
+];
+function homeAsWho_(dev) {
+  if (!dev || typeof location === 'undefined') return '';
+  var m = /[?&]as=([a-z_]+)/.exec(location.search || '');
+  if (!m) return '';
+  for (var i = 0; i < HOME_AS_PEOPLE_.length; i++) { if (HOME_AS_PEOPLE_[i].id && HOME_AS_PEOPLE_[i].id === m[1]) return m[1]; }
+  return '';
+}
+function homeAsRow_(base, cur) {
+  return '<div class="hasrow">' + HOME_AS_PEOPLE_.map(function (p) {
+    var href = base + '?view=home&dev=1' + (p.id ? '&as=' + p.id : '');
+    return '<a class="hasbtn' + (p.text ? ' hastx' : '') + (p.id === cur ? ' on' : '') + '" href="' + href +
+      '" target="_top" title="' + esc_(p.title || p.text) + 'の画面">' + esc_(p.mark || p.text) + '</a>';
+  }).join('') + '</div>';
+}
 function renderHomePage_(cfg, base, staff, dev, who) {
   var perms = (cfg && cfg.perms) || defaultPerms_();
   var labels = (cfg && cfg.labels) || PERSON_LABEL_;
-  var allow = personPerms_(perms, staff, dev, who);   
+  var asWho = homeAsWho_(dev);
   var sfx = roleSfx_(staff, dev);
+  if (asWho) { staff = asWho !== 'kanbu'; who = staff ? asWho : ''; dev = false; }
+  var allow = personPerms_(perms, staff, dev, who);   
   var subtitle = dev ? '開発版（全ボタン表示）'
     : (staff ? (labels[who] || 'スタッフ') : 'TOMATOさん版');
   var order = (cfg && cfg.order) || DEFAULT_TILE_ORDER_;
@@ -1710,7 +1735,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   for (var ok = 0; ok < TILE_DEFS_.length; ok++) {   
     if (!placed[TILE_DEFS_[ok].id]) orderedDefs.push(TILE_DEFS_[ok]);
   }
-  var canSort = true;
+  var canSort = !asWho;   
   var defIdx = {};   
   for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
   var mine = canSort ? homeMyOrder_() : null;
@@ -1763,6 +1788,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' + resetHtml + '</div>' +
+        (R.id === 'jitsumu' ? homeAsRow_(base, '') : '') +   
         (R.id === 'jitsumu'
           ? '<div class="grouptitle gtk"><span>' + R.icon + ' ' + R.title + '</span>' +
               '<span class="halerts">' + alertsHtml + '</span></div>'
@@ -1781,6 +1807,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
+    (asWho ? homeAsRow_(base, asWho) : '') +   
     (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
     (shown.length ? '<div class="halerts hrow">' + alertsHtml + '</div>' : '') +
     (staff && !shown.length
@@ -2604,6 +2631,12 @@ var HOMECSS_ =
 '  .hkaburi:active { transform:translateY(1px); }' +
 '  .hkaburi.hkinyu { background:#6366f1; }' +
 '  .hkaburi.hsgline { background:#06a34a; }' +
+'  .hasrow { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }' +
+'  .hasbtn { min-width:44px; height:44px; padding:0 8px; box-sizing:border-box; border-radius:12px; background:#111827;' +
+'    border:2px solid rgba(255,255,255,.55); color:#fff; font-size:24px; font-weight:900; text-decoration:none;' +
+'    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }' +
+'  .hasbtn.hastx { font-size:.95rem; padding:0 12px; }' +
+'  .hasbtn.on { background:#fff; color:#12303c; border-color:#fff; }' +
 '  .halerts.hrow { margin:0; }' +
 '  .halerts.hrow .hkaburi { margin-bottom:12px; }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
