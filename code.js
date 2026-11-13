@@ -2529,11 +2529,11 @@ function renderFolderTestPage_(base, staff, dev) {
 }
 var FOLDERTESTCSS_ =
   '  .tile.foldertest::before { background:#94a3b8; }' +
-  '  .tile.ftfolder::before { background:#94a3b8; }' +
+  '  .tile.ftfolder::before { background:var(--ftc, #94a3b8); }' +
   // ★2026-11-14 まるちゃん「トップにある時は（ボタンの）左の棒線の色はつけない。フォルダとボタンの差をつけるため。
   //   フォルダに入ってる時は全部そのフォルダの左の色に合わせて、みんな左の棒を入れる」
   '  #ftHome .fttop a.tile:not(.ftfolder)::before { display:none; }' +
-  '  #ftHome .ftin a.tile::before { background:#94a3b8 !important; }' +
+  '  #ftHome .ftin a.tile::before { background:var(--ftc, #94a3b8) !important; }' +
   '  #ftHome .tiles { grid-auto-rows:1fr; }' +
   // ★同日まるちゃん「数は表示しなくていい。フォルダの中の1個のアイコンをもっと大きく。目に見えない」＝中の絵を20px→32pxに。
   '  .ftmini { flex:none; width:74px; height:74px; border-radius:14px; background:rgba(148,163,184,.22); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:3px; padding:3px; box-sizing:border-box; margin-right:6px; }' +
@@ -2573,6 +2573,15 @@ function folderTestBoot_(D) {
   function newKey() { seq++; return 'f' + Date.now().toString(36) + seq; }
   // 保存した並びを読み直す時、知らないボタンは捨て、どこにも無いボタンはトップの後ろに足す（ボタンが消えない）。
   //   フォルダには見分けの印(k)を付ける（並べ替えのあとも、どのフォルダか分かるように）。
+  // ★2026-11-14 まるちゃん「フォルダごとに色分けしたい。新規フォルダは自動で新しい色がつく」＝
+  //   フォルダの左の線・中のボタンの左の線・小さな絵の箱の地をその色に。新しいフォルダには、まだ使っていない色を順に配る。
+  var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
+  function nextColor(list) {
+    var used = {};
+    (list || []).forEach(function (x) { if (typeof x !== 'string' && x.c) used[x.c.toLowerCase()] = 1; });
+    for (var i = 0; i < PALETTE.length; i++) if (!used[PALETTE[i]]) return PALETTE[i];
+    return PALETTE[(list || []).length % PALETTE.length];   // 全部使っていたら順に使い回す
+  }
   function clean(list) {
     var out = [], seen = {}, keys = {};
     (list || []).forEach(function (x) {
@@ -2580,10 +2589,12 @@ function folderTestBoot_(D) {
       else if (x && x.items) {
         var it = x.items.filter(function (y) { if (!T[y] || seen[y]) return false; seen[y] = 1; return true; });
         var k = (x.k && !keys[x.k]) ? String(x.k) : newKey(); keys[k] = 1;
-        if (it.length) out.push({ k: k, f: String(x.f || 'フォルダ'), items: it });
+        var c = (typeof x.c === 'string' && /^#[0-9a-fA-F]{6}$/.test(x.c)) ? x.c : '';
+        if (it.length) out.push({ k: k, f: String(x.f || 'フォルダ'), items: it, c: c });
       }
     });
     for (var id in T) if (!seen[id]) out.push(id);
+    out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = nextColor(out); });
     return out;
   }
   // ★2026-11-14 前の名前のまま覚えているスマホ・パソコンも、新しい名前（改行入り）に直して出す
@@ -2603,7 +2614,7 @@ function folderTestBoot_(D) {
     var n = F.items.length, cells = '', six = n > 4, show = n > 6 ? 5 : n;
     for (var k = 0; k < show; k++) cells += T[F.items[k]].icon;
     if (n > 6) cells += '<span class="ftmore">+' + (n - 5) + '</span>';
-    return '<a class="tile ftfolder" href="#" data-tid="@' + F.k + '" draggable="false"><span class="ftmini' + (six ? ' ft6' : '') + '">' + cells + '</span>' +
+    return '<a class="tile ftfolder" href="#" data-tid="@' + F.k + '" draggable="false" style="--ftc:' + F.c + '"><span class="ftmini' + (six ? ' ft6' : '') + '" style="background:' + F.c + '33">' + cells + '</span>' +
       '<span class="ftlab"><span class="tname">' + esc(F.f) + '</span></span></a>';   // 名前は2行まで（個数は出さない＝同日まるちゃん）
   }
   function render() {
@@ -2618,7 +2629,7 @@ function folderTestBoot_(D) {
     } else {
       h += '<div class="backbar"><button type="button" class="backbtn" id="ftBack">← 戻る</button></div>' +
         '<div class="grouptitle">📂 ' + esc(openF.f) + '</div>' +
-        '<div class="tiles ftin" id="ftBox">' + openF.items.map(tileHtml).join('') + '</div>';
+        '<div class="tiles ftin" id="ftBox" style="--ftc:' + openF.c + '">' + openF.items.map(tileHtml).join('') + '</div>';
     }
     home.innerHTML = h;
     bind();
@@ -2669,7 +2680,7 @@ function folderTestBoot_(D) {
     askName('新しいフォルダの名前を入力してください😊', '新しいフォルダ', function (nm) {
       var from = where(id), pos = takeOut(id);
       if (pos < 0) pos = from ? items.indexOf(from) + 1 : items.length;
-      items.splice(pos, 0, { k: newKey(), f: nm, items: [id] }); dropEmpty();
+      items.splice(pos, 0, { k: newKey(), f: nm, items: [id], c: nextColor(items) }); dropEmpty();
       done('新しいフォルダ「' + nm + '」を作成しました');
     });
   }
@@ -2683,7 +2694,7 @@ function folderTestBoot_(D) {
     var z = [];
     if (openF) {
       z.push('<div class="ftzone ftfull" data-z="top">⬆️ トップ画面に移動</div>');
-      items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '">📂 ' + esc(String(x.f).replace(/\n/g, '')) + '</div>'); });
+      items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '" style="box-shadow:inset 7px 0 0 ' + x.c + '">📂 ' + esc(String(x.f).replace(/\n/g, '')) + '</div>'); });
     }
     z.push('<div class="ftzone ftfull" data-z="new">＋ 新しいフォルダへ移動</div>');
     var bar = document.getElementById('ftBar');
