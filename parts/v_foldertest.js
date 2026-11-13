@@ -25,6 +25,9 @@ var FOLDERTESTCSS_ =
   '  .ftmini .ticon { width:32px; height:32px; font-size:26px; border-radius:7px; background:transparent!important; margin:auto; }' +
   '  .ftmini .ticon img { width:32px; height:32px; }' +
   '  .ftmini .ftmore { font-size:16px; font-weight:900; color:#475569; display:grid; place-items:center; }' +
+  '  .ftmini.ft6 { width:86px; grid-template-columns:1fr 1fr 1fr; gap:2px; }' +
+  '  .ftmini.ft6 .ticon, .ftmini.ft6 .ticon img { width:25px; height:25px; font-size:20px; border-radius:6px; }' +
+  '  .ftmini.ft6 .ftmore { font-size:13px; }' +
   '  .ftlab { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; }' +
   '  .ftlab .tname { flex:none; word-break:auto-phrase; }' +   
   '  .ftcount { display:block; font-size:.78rem; font-weight:800; opacity:.75; margin-top:2px; }' +
@@ -70,10 +73,10 @@ function folderTestBoot_(D) {
     return '<a class="tile ' + T[id].cls + '" href="#" data-tid="' + id + '" draggable="false">' + T[id].icon + '<span class="tname">' + esc(T[id].label) + '</span></a>';
   }
   function folderHtml(F) {
-    var n = F.items.length, cells = '', show = n > 4 ? 3 : n;
+    var n = F.items.length, cells = '', six = n > 4, show = n > 6 ? 5 : n;
     for (var k = 0; k < show; k++) cells += T[F.items[k]].icon;
-    if (n > 4) cells += '<span class="ftmore">+' + (n - 3) + '</span>';
-    return '<a class="tile ftfolder" href="#" data-tid="@' + F.k + '" draggable="false"><span class="ftmini">' + cells + '</span>' +
+    if (n > 6) cells += '<span class="ftmore">+' + (n - 5) + '</span>';
+    return '<a class="tile ftfolder" href="#" data-tid="@' + F.k + '" draggable="false"><span class="ftmini' + (six ? ' ft6' : '') + '">' + cells + '</span>' +
       '<span class="ftlab"><span class="tname">' + esc(F.f) + '</span></span></a>';   
   }
   function render() {
