@@ -48,8 +48,8 @@ function roomLabelOf(calendarId, labelId, title, roomLabels, dateIso) {
   return (labelId in labels) ? labelId : null;
 }
 
-var CODE_RE = /([MFDNP])\s?0?(\d{1,4})/;
-var CODE_RE_G = /([MFDNP])\s?0?(\d{1,4})/g;
+// ★2026-11-13 先頭の0を落とさない（reservation_text.CODE_RE と同じ＝F01はF01のまま・2026-08-27まるちゃん決定）。
+var CODE_RE_G = /([MFDNP])\s?(\d{1,4})/g;
 var PHONE_RE = /\d[\d\-\s]{7,13}\d/;
 // Python STAFF_HEAD_RE と同じ：先頭の絵文字は1つだけ担当スタッフとして拾う（VS16(FE0F)は同じ絵文字の一部として許容）。
 // ★以前は+(1つ以上)で欲張りに複数の絵文字をまとめて拾っており、誤入力等でタイトル先頭に絵文字が
@@ -82,19 +82,58 @@ function roomHoldStaff(title) {
   return '';
 }
 
+// ★2026-11-13 まるちゃん「直して」：予約の題名から通し番号を読む。共通\customer_code.extract の写し
+//   （パソコン側の reservation_text.code_of は 2026-08-18 からこれを使う）。前はスマホ側だけ古い読み方のままで、
+//   先頭の0を落とし（M06→M6・F01→F1）、号機の印（8️⃣9️⃣）を番号の一部と読み（M90＋8️⃣→M908）、
+//   預約の直後が昔のメニュー番号（D/N/P）でもそれを番号にしていた。片方を直したら両方直す（run_parity で照合）。
+var CC_REFERRER_MARKS_ = ['紹介', '経由', '※', '御紹介', 'ご紹介'];
+var CC_KEYCAP_RE_ = /[0-9０-９]️?⃣/g;
+var CC_PAREN_RE_ = /[（(][^）)]*[）)]/g;
+var CC_YOYAKU_RE_ = /預約[:：]?\s*/;
+var CC_ANY_CODE_RE_ = /^([A-Z])\s?(\d{1,4})/;
+function ccHankaku_(s) {
+  return String(s || '').replace(/[Ａ-Ｚａ-ｚ０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+}
+// (?<![A-Z])([MF])\s?(\d{1,4}) と同じ（古いiPhoneは後ろ読みの書き方を読めないので、手で前の文字を見る）。
+function ccStrictAll_(t) {
+  var re = /([MF])\s?(\d{1,4})/g, out = [], m;
+  while ((m = re.exec(t)) !== null) {
+    if (m.index > 0 && /[A-Z]/.test(t.charAt(m.index - 1))) { re.lastIndex = m.index + 1; continue; }
+    out.push(m);
+  }
+  return out;
+}
 function codeOf(title) {
-  var m = norm(title).match(CODE_RE);
-  return m ? (m[1] + String(parseInt(m[2], 10))) : '';
+  var t = ccHankaku_(String(title || '').replace(CC_KEYCAP_RE_, '')).replace(CC_PAREN_RE_, '');
+  var cut = t.length;
+  for (var i = 0; i < CC_REFERRER_MARKS_.length; i++) {
+    var k = t.indexOf(CC_REFERRER_MARKS_[i]);
+    if (k >= 0 && k < cut) cut = k;
+  }
+  var tt = t.slice(0, cut).toUpperCase();
+  var y = CC_YOYAKU_RE_.exec(tt);
+  if (y) {
+    var ato = tt.slice(y.index + y[0].length);
+    var ck = CC_ANY_CODE_RE_.exec(ato);
+    if (ck) {
+      if (ck[1] === 'M' || ck[1] === 'F') return ck[1] + ck[2];   // 直後がF/M＝今のお客様番号
+      var all = ccStrictAll_(ato);                                 // 直後が昔のメニュー番号＝うしろの2桁以上だけ
+      for (var j = 0; j < all.length; j++) if (all[j][2].length >= 2) return all[j][1] + all[j][2];
+      return '';
+    }
+  }
+  var s1 = ccStrictAll_(tt);
+  return s1.length ? (s1[0][1] + s1[0][2]) : '';
 }
 
 function codesIn(text) {
-  // テキスト中の通し番号を全部（M0402→M402 に正規化）。Set 相当。
+  // テキスト中の通し番号を全部（書いてある通りに読む＝F01はF01のまま・reservation_text.codes_in と同じ）。Set 相当。
   var out = {};
   var s = norm(text);
   var m;
   CODE_RE_G.lastIndex = 0;
   while ((m = CODE_RE_G.exec(s)) !== null) {
-    out[m[1] + String(parseInt(m[2], 10))] = true;
+    out[m[1] + m[2]] = true;
   }
   return out;
 }
