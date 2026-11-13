@@ -1359,7 +1359,7 @@ var TILE_DEFS_ = [
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
     icon: '<span class="ticon">📝</span>', label: '予約\n入力' },
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
-    icon: '<span class="ticon">💆</span>', label: '施術後の\n予約' },
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
     icon: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
   { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
