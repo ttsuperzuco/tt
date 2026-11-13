@@ -1,10 +1,11 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
 // この画面だけで使う部品：foldertest
-var FOLDERTEST_START_ = ['sejutsugo', 'yoyaku', 'akijikan', 'links', 'ttapp',
-  { f: 'LINE送信', items: ['zenjitsu', 'mita', 'bcast', 'sgline'] },
-  { f: 'チェック', items: ['conflict', 'lt'] },
-  { f: 'SNS', items: ['threads', 'insta'] },
-  { f: '販売・在庫', items: ['procstock', 'hanbai', 'shomeisho'] }];
+var FOLDERTEST_START_ = [
+  { f: 'お知らせ・配信', items: ['zenjitsu', 'mita', 'bcast'] },
+  { f: '施術直後', items: ['sejutsugo', 'sgline', 'shomeisho'] },
+  { f: 'SNS', items: ['insta', 'threads', 'hachimitsu'] },
+  { f: '在庫売上管理', items: ['procstock', 'hanbai', 'uriage'] },
+  { f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'links', 'lt', 'conflict'] }];
 function renderFolderTestPage_(base, staff, dev) {
   var tiles = {};
   var want = [];
@@ -24,6 +25,8 @@ var FOLDERTESTCSS_ =
   '  .ftmini .ticon { width:20px; height:20px; font-size:16px; border-radius:5px; background:transparent!important; margin:auto; }' +
   '  .ftmini .ticon img { width:20px; height:20px; }' +
   '  .ftmini .ftmore { font-size:12px; font-weight:900; color:#475569; display:grid; place-items:center; }' +
+  '  .ftlab { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; }' +
+  '  .ftlab .tname { flex:none; word-break:auto-phrase; }' +   
   '  .ftcount { display:block; font-size:.78rem; font-weight:800; opacity:.75; margin-top:2px; }' +
   '  .tile.hinto { outline:3px solid #fbbf24; outline-offset:-3px; transform:scale(1.06); transition:transform .12s ease; }' +
   '  .fttoast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#fff; color:#12303c; font-weight:800; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(0,0,0,.25); display:none; z-index:10002; font-size:.95rem; max-width:90vw; text-align:center; }' +
@@ -37,7 +40,7 @@ var FOLDERTESTCSS_ =
   '  .ftzone { flex:1 1 40%; box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
   '  .ftzone.hinto { outline:3px solid #fbbf24; outline-offset:-3px; background:#fef3c7; transform:scale(1.04); transition:transform .12s ease; }';
 function folderTestBoot_(D) {
-  var T = D.tiles, KEY = 'sz_foldertest';
+  var T = D.tiles, KEY = 'sz_foldertest2';   
   var home = document.getElementById('ftHome');
   if (!home) return;
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -71,7 +74,7 @@ function folderTestBoot_(D) {
     for (var k = 0; k < show; k++) cells += T[F.items[k]].icon;
     if (n > 4) cells += '<span class="ftmore">+' + (n - 3) + '</span>';
     return '<a class="tile ftfolder" href="#" data-tid="@' + F.k + '" draggable="false"><span class="ftmini">' + cells + '</span>' +
-      '<span class="tname">' + esc(F.f) + '<span class="ftcount">' + n + '個</span></span></a>';
+      '<span class="ftlab"><span class="tname">' + esc(F.f) + '</span><span class="ftcount">' + n + '個</span></span></a>';   
   }
   function render() {
     if (openF && items.indexOf(openF) < 0) openF = null;
