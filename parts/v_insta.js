@@ -3035,7 +3035,10 @@ function instaScript_(C) {
 
   var CKEY = 'ig_cache_v1_' + (window.__SZ_ROLE_ || '') + '_' + (window.__SZ_WHO_ || '');
   function cacheGet() { try { return JSON.parse(localStorage.getItem(CKEY) || 'null'); } catch (e) { return null; } }
-  function cacheSet(d) { try { localStorage.setItem(CKEY, JSON.stringify(d)); } catch (e) {} }
+  function cacheSet(d) {
+    try { if (d) d._saved = Date.now(); localStorage.setItem(CKEY, JSON.stringify(d)); }
+    catch (e) { try { localStorage.setItem('ig_cache_err', ((e && e.name) || 'err') + '@' + new Date().toISOString().slice(0, 16)); } catch (e2) {} }   
+  }
   function apply(d, fresh) {
     var keep = DATA && DATA.views;
     DATA = d; DATA.views = DATA.views || {};
@@ -3180,6 +3183,15 @@ function instaScript_(C) {
   }
 
   var _c = cacheGet();
+  try {
+    var _ls = 0;
+    for (var _i = 0; _i < localStorage.length; _i++) { var _k = localStorage.key(_i); _ls += _k.length + (localStorage.getItem(_k) || '').length; }
+    if (window.__BT && !window.__BT.done) window.__BT.ig = {
+      c: _c ? JSON.stringify(_c).length : 0, a: ((_c && _c.accounts) || []).length,
+      m: _c && _c._saved ? Math.round((Date.now() - _c._saved) / 60000) : -1,
+      dm: localStorage.getItem('ig_dm_v1_' + ((_c && _c.cur) || 'jp')) ? 1 : 0, ls: _ls, n: localStorage.length,
+      e: localStorage.getItem('ig_cache_err') || '' };
+  } catch (e) {}
   if (_c) apply(_c, false);
   loadAll();
 }
