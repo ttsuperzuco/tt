@@ -11,12 +11,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
   var css = sgCss_();
   var body =
     '<div class="sg" id="sgPick">' +
+      (LN ? '<button type="button" class="sgyb" id="sgyb" style="display:none"><span class="sgybi">⚠️</span>' +
+        '<span class="sgybt">昨日のお客様で、施術後のLINEをまだ送っていない方がいます（このボタンを押してください😊）</span></button>' : '') +
       '<div class="sgstep" id="sgpickhead" style="display:none">施術者を選択してください😊</div>' +
       '<div class="sgstaff" id="sgstaff"></div>' +
       '<div class="sgstatus" id="sgstatus">今日の予約を読んでいます...</div>' +
     '</div>' +
     '<div class="sg" id="sgList" style="display:none">' +
       '<div class="sgwho" id="sglisthead"></div>' +
+      '<div class="sgmnote sgydnote" id="sgydnote" style="display:none"></div>' +
       '<div class="sglist" id="sglist"></div>' +
       '<div class="sgstatus" id="sgstatus2"></div>' +
     '</div>' +
@@ -36,6 +39,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="exgo" id="sgrgo">🔁 リピート入力へ →</button>' +
     '</div>' : '') +
     sgStepsHtml_() +
+    (LN ? '<div class="sg" id="sgNext" style="display:none">' +
+      '<div class="sgwho">次回のご予約のLINEも送りますか？😊</div>' +
+      '<div class="sgmnote" id="sgnxinfo"></div>' +
+      '<button type="button" class="sgrbig sgnx" data-k="yes"><span class="sgrbi">📅</span>YES（☆次回のご予約を送る）</button>' +
+      '<button type="button" class="sgrbig sgnx" data-k="no"><span class="sgrbi">🙅</span>NO（送らない）</button>' +
+    '</div>' : '') +
     '<div class="sg" id="sgElight" style="display:none">' +
       '<div class="sgwho">本日イーライトをやりましたか？</div>' +
       '<div class="sgmnote" id="sgelparts"></div>' +
@@ -137,6 +146,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={};' +
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null;' +
     'var ELANS=null;' +
+    'var YD=null,YDL=false,YDM=false,YNX=null,NXANS=null;' +
     'var PAID=null;' +
     'var AHEAD={},PAIDAUTO="",PAYREMOVED=[];' +
     'var SWAP=0;' +
@@ -208,12 +218,17 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgPF").style.display=step===13?"":"none";' +
       '$("sgPH").style.display=step===14?"":"none";' +
       '$("sgCheck").style.display=step===15?"":"none";' +
+      'if($("sgNext"))$("sgNext").style.display=step===16?"":"none";' +
+      'var wq=["sgElight","sgFirst","sgLash","sgPF","sgPH"];for(var wi=0;wi<wq.length;wi++){var we=$(wq[wi]);if(!we)continue;' +
+        'var wh=we.getElementsByClassName("sgwho");for(var wj=0;wj<wh.length;wj++){' +
+          'wh[wj].innerHTML=YDM?wh[wj].innerHTML.replace(/^本日/,"昨日"):wh[wj].innerHTML.replace(/^昨日/,"本日");}' +
+        'var wp=$("sgelparts");if(wp)wp.textContent=YDM?wp.textContent.replace(/^本日/,"昨日"):wp.textContent.replace(/^昨日/,"本日");}' +
       'if(REP){$("sgRChoose").style.display=step===21?"":"none";$("sgRNum").style.display=step===22?"":"none";}' +
       '$("sgbackbar").style.display=step===1?"none":"";' +
       'var tb=$("sgtopbar");if(tb)tb.style.display=step===1?"":"none";' +
       'var hd=$("sghead");if(hd)hd.style.display=step===1?"":"none";}' +
-    'function goPick(){step=1;show();drawPick();window.scrollTo(0,0);}' +
-    'function goList(){step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
+    'function goPick(){step=1;YDM=false;show();drawPick();ydShow();window.scrollTo(0,0);}' +
+    'function goList(){if(YDM){goYList();return;}var yn=$("sgydnote");if(yn)yn.style.display="none";step=2;show();window.scrollTo(0,0);drawList();scrollToNow();}' +
     'function back(){if(REP&&repBack())return;' +
       'if(rcp()&&step===8){var sv8=seqv();if(sv8.length){goStep(sv8[sv8.length-1]);}else{goCheck();}return;}' +
       'if(rcp()&&step===15){if(RB2){RB2=null;goPick();return;}step=7;show();growMemo();window.scrollTo(0,0);return;}' +
@@ -225,7 +240,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'else if(step===4){goMonth();}else if(step===3&&!REP&&!LN&&seqv().length){goStep(seqv()[seqv().length-1]);}' +
       'else if(step===3&&!REP&&!LN){goList();}' +
       'else if(SEQ.indexOf(step)>0&&prevOf(step)){}' +
-      'else if(step===3||(step>=9&&step<=14)){goList();}else{goPick();}}' +
+      'else if(step===3||(step>=9&&step<=14)||step===16){goList();}else{goPick();}}' +
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,NOW());' +
       'if(pick===null)pick=r.selected;' +
@@ -377,7 +392,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'w.textContent="次回用の下書きを作成できませんでした。回数とお支払いは手動で修正してください🙇";' +
         '$("sgmgo").disabled=false;}},25000);}' +
     'function goElight(){step=9;show();' +
-      '$("sgelparts").textContent="本日の部位："+((ELJ&&ELJ.parts)||[]).join("・");' +
+      '$("sgelparts").textContent=(YDM?"昨日":"本日")+"の部位："+((ELJ&&ELJ.parts)||[]).join("・");' +
       'var top=SG.elightTop((ELJ&&ELJ.parts)||[]),ord=["vio","both","other","no"],box=$("sgElight");' +
       'if(top)ord=[top].concat(ord.filter(function(k){return k!==top;}));' +
       'for(var j=0;j<ord.length;j++){var b=box.querySelector(".sgel[data-k=\\""+ord[j]+"\\"]");if(b)box.appendChild(b);}' +
@@ -385,7 +400,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===(ELANS||top));' +
       'window.scrollTo(0,0);}' +
     'function goToday(){step=10;show();taDraw();window.scrollTo(0,0);}' +
-    'function goStep(n){if(n===9)goElight();else if(n===11)goFirst();else if(n===12)goLash();' +
+    'function goStep(n){if(n===16){goNext();return;}if(n===9)goElight();else if(n===11)goFirst();else if(n===12)goLash();' +
       'else if(n===13)goYN(13,"sgPF","sgpf",PFANS||"yes");else if(n===14)goYN(14,"sgPH","sgph",PHANS||"yes");else goToday();}' +
     'function goYN(n,id,cls,ans){step=n;show();var bs=$(id).getElementsByClassName(cls);' +
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ans);window.scrollTo(0,0);}' +
@@ -402,7 +417,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(PFANS==="yes")adds.push("顔プロセル");if(PHANS==="yes")adds.push("頭皮プロセル");' +
       'o.push("→ 送る文："+(FDANS==="yes"?"脱毛の長いお礼文（次回の日時入り）":"☆次回の短い文")+(adds.length?"＋"+adds.join("・")+"の注意事項":""));' +
       'return o.join("<br>");}' +
-    'function noCheck(what,go){szPopup_("予約メモには、"+what+"を施術する、と記入されています。今日本当に、"+what+"はやりませんでしたか？",' +
+    'function noCheck(what,go){szPopup_("予約メモには、"+what+"を施術する、と記入されています。"+(YDM?"昨日":"今日")+"本当に、"+what+"はやりませんでしたか？",' +
       '{cancel:true,noLabel:"選び直す",yesLabel:"はい、やりませんでした",onYes:go});}' +
     'function sgAns(){var el=(ELANS==="vio"||ELANS==="both"||ELANS==="other")?ELANS:"";' +
       'return {el:el,el_parts:el==="vio"?"VIO":(el==="both"?"VIO,その他":(el==="other"?"その他":"")),' +
@@ -549,18 +564,75 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function goRNum(){step=22;show();rUpd();window.scrollTo(0,0);}' +
     'var RLOADED=false;' +
     'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",elight_vio:"イーライト（VIOのみ）",elight_both:"イーライト（VIO＋髭等）",elight_other:"イーライト（髭等）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮"},lsending=false;' +
+    'var YDN={next:"☆次回のご予約",first:"はじめての方へのお礼の文",elight:"イーライトの注意事項",lash:"パリジェンヌの注意事項",' +
+      'procell_face:"顔プロセルの注意事項",procell_scalp:"頭皮プロセルの注意事項"},YDW="日月火水木金土";' +
+    'function ydYesterday(){if(!TODAY)return "";var d=new Date(TODAY+"T12:00:00");d.setDate(d.getDate()-1);' +
+      'var p2=function(n){return (n<10?"0":"")+n;};return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());}' +
+    'function ydMD(s){var d=new Date(String(s||"")+"T12:00:00");return isNaN(d)?"":(d.getMonth()+1)+"/"+d.getDate()+"（"+YDW.charAt(d.getDay())+"）";}' +
+    'function ydLoad(){if(!LN||!DEVMODE||YDL)return;YDL=true;' +
+      'var nm="__sgYd_"+Date.now();window[nm]=function(p){' +
+        'YD=(p&&p.items&&p.items.length&&p.date===ydYesterday())?p:null;ydShow();};' +
+      'var s=document.createElement("script");' +
+      's.src=EXEC+"?action=data&name=aftercare_yesterday.json&callback="+nm+"&cb="+Date.now();' +
+      's.onerror=function(){};document.body.appendChild(s);}' +
+    'function ydShow(){var b=$("sgyb");if(!b)return;b.style.display=(step===1&&YD&&YD.items&&YD.items.length)?"":"none";}' +
+    'function goYList(){YDM=true;step=2;show();window.scrollTo(0,0);' +
+      'var it=(YD&&YD.items)||[];LIST=[];' +
+      '$("sglisthead").textContent="まだ送っていないお客様";' +
+      'var yn=$("sgydnote");yn.innerHTML="昨日（"+esc(ydMD(YD&&YD.date).replace(/（.*$/,""))+"）のお客様です。<br>文は「本日は」ではなく「昨日は」で送ります。";yn.style.display="";' +
+      'if(!it.length){$("sglist").innerHTML="";$("sgstatus2").textContent="まだ送っていないお客様はいません。";return;}' +
+      '$("sgstatus2").textContent="";var h="";' +
+      'for(var i=0;i<it.length;i++){var x=it[i],e=x.event||{};' +
+        'var mk=x.mark||((typeof staffOf==="function")?staffOf(e.title||""):"");' +
+        'var ws=(x.kinds||[]).slice().sort(function(a,b){return (a==="next"?0:1)-(b==="next"?0:1);}).map(function(k){return YDN[k]||k;}).join("・");' +
+        'h+="<button type=\\"button\\" class=\\"sgrow\\" data-id=\\""+i+"\\">"+' +
+          '"<span class=\\"sgyd\\">昨日 "+esc(ydMD(e.date||YD.date))+"</span>"+' +
+          '"<span class=\\"sgl1\\"><span class=\\"sgtm\\">"+esc(e.start_time||"")+"〜"+esc(e.end_time||"")+"</span></span>"+' +
+          '"<span class=\\"sgl2\\"><span class=\\"sgmk2\\">"+esc(mk)+"</span>"+' +
+            '"<span class=\\"sgnm2\\">"+esc(x.name||"お名前なし")+"</span>"+' +
+            '"<span class=\\"sgcd2\\">"+esc(x.code||"")+"</span></span>"+' +
+          '"<span class=\\"sgywhat\\">まだ送っていない物："+esc(ws)+"</span>"+' +
+          '"</button>";}' +
+      '$("sglist").innerHTML=h;fitNames();' +
+      'var rs=$("sglist").getElementsByClassName("sgrow");' +
+      'for(var k=0;k<rs.length;k++){rs[k].onclick=function(){if(!tapOK())return;ydPick(it[parseInt(this.getAttribute("data-id"),10)]);};}}' +
+    'function ydPick(x){var e=x.event||{},ks=x.kinds||[];' +
+      'var mk=x.mark||((typeof staffOf==="function")?staffOf(e.title||""):"");' +
+      'var rm=(typeof roomLabelOf==="function")?roomLabelOf(e.calendar_id,e.label_id,e.title||"",ALL_ROOM_LABELS):null;' +
+      'var rn=(rm!=null&&typeof ALL_ROOM_LABELS!=="undefined")?ALL_ROOM_LABELS[rm]:(e.calendar_name||"");' +
+      'CUST={mark:mk,start:e.start_at_ms,end:e.end_at_ms,title:e.title||"",note:e.note||"",room:rn,' +
+        'st:e.start_time||"",et:e.end_time||"",id:e.event_id||"",dname:x.name||""};' +
+      'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];TA={};' +
+      'FIRSTDAT=null;FDANS=null;FDASK=null;ELANS=null;LASHANS=null;PFANS=null;PHANS=null;NXANS=null;' +
+      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}' +
+      'ACQ=["lash","procell_face","procell_scalp"].filter(function(k){return ks.indexOf(k)>=0;});' +
+      'ELJ=(SG.elightAsk)?SG.elightAsk(CUST.title,CUST.note):{ask:false,parts:[]};' +
+      'YNX=(ks.indexOf("next")>=0&&x.next)?x.next:null;' +
+      'SEQ=[];if(YNX)SEQ.push(16);if(ks.indexOf("elight")>=0)SEQ.push(9);if(ks.indexOf("first")>=0)SEQ.push(11);' +
+      'if(ks.indexOf("lash")>=0)SEQ.push(12);if(ks.indexOf("procell_face")>=0)SEQ.push(13);if(ks.indexOf("procell_scalp")>=0)SEQ.push(14);' +
+      'if(seqv().length){goStep(seqv()[0]);}else{lnFinish();}}' +
+    'function goNext(){step=16;show();' +
+      'var cd=(typeof codeOf==="function")?(codeOf(CUST.title||"")||""):"",nd=String((YNX&&YNX.date)||""),m=nd.match(/^\\d{4}-(\\d+)-(\\d+)$/);' +
+      '$("sgnxinfo").innerHTML="次回のご予約：<b>"+esc((m?parseInt(m[1],10)+"月"+parseInt(m[2],10)+"日":nd)+' +
+        '"（"+YDW.charAt(new Date(nd+"T12:00:00").getDay())+"）"+((YNX&&YNX.start)||"")+"～")+"</b><br>"+esc((CUST.dname||"")+" "+cd);' +
+      'var bs=$("sgNext").getElementsByClassName("sgnx");' +
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===(NXANS||"yes"));window.scrollTo(0,0);}' +
     'function lnHasNext(){var c=(typeof codeOf==="function")?(codeOf((CUST&&CUST.title)||"")||""):"";return !!(c&&NXC[c]);}' +
-    'function lnKinds(){var a=sgAns(),o=[];if(a.first)o.push("new_nobook");if(a.el)o.push("elight_"+a.el);return o.concat(a.after);}' +
-    'function lnFinish(){var ks=lnKinds();' +
+    'function lnKinds(){var a=sgAns(),o=[];if(a.first&&!(YDM&&YNX&&NXANS==="yes"))o.push("new_nobook");if(a.el)o.push("elight_"+a.el);return o.concat(a.after);}' +
+    'function lnFinish(){var ks=lnKinds(),nx=(YDM&&YNX&&NXANS==="yes")?YNX:null;' +
       'var nm=CUST.dname||((typeof customerLine==="function")?(customerLine(CUST.note).name||""):"");' +
-      'if(!ks.length){szPopup_((nm||"このお客様")+"に送る施術後のLINEはありません。",{icon:"",onYes:function(){goList();}});return;}' +
-      'var names=ks.map(function(k){return "「"+LNNAME[k]+"」";}).join("");' +
-      'szPopup_((nm||"このお客様")+"へ"+names+"の施術後フォローLINE文を送りますか？😊",{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(ks);}});}' +
+      'if(!ks.length&&!nx){szPopup_((nm||"このお客様")+"に送る施術後のLINEはありません。",{icon:"",onYes:function(){goList();}});return;}' +
+      'var names=(nx?"「☆次回のご予約」":"")+ks.map(function(k){return "「"+LNNAME[k]+"」";}).join("");' +
+      'szPopup_((nm||"このお客様")+"へ"+names+"の施術後フォローLINE文を送りますか？😊"+' +
+        '(YDM?"\\n\\n昨日（"+ydMD(YD&&YD.date).replace(/（.*$/,"")+"）のご来店として、「昨日は」の文で送ります。":""),' +
+        '{cancel:true,icon:"",yesLabel:"送る",onYes:function(){lnSend(ks,nx);}});}' +
     'function lnFail(m){lsending=false;szOvHide_();szPopup_(m||"エラーが発生しました。りゅうさんに連絡しました。");}' +
-    'function lnSend(k){if(lsending)return;lsending=true;' +
+    'function lnSend(k,nx){if(lsending)return;lsending=true;' +
       'szOvShow_(szBusyHtml_("LINEを送る準備をしています","準備が終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");var n=0;' +
       'jsonp({action:"submit",key:KEY,op:"sgline_send",who:idn.who,role:idn.role,device:idn.device,' +
-        'fields:JSON.stringify({event:CUST.id||"",title:CUST.title||"",kinds:k.join(","),who:idn.who||WHO||""})},' +
+        'fields:JSON.stringify({event:CUST.id||"",title:CUST.title||"",kinds:k.join(","),who:idn.who||WHO||"",' +
+          'next:nx?{event_id:nx.event_id||"",title:nx.title||"",date:nx.date||"",start:nx.start||"",memo:nx.memo||"",' +
+            'first_dat:(seqv().indexOf(11)>=0&&FDANS)?(FDANS==="yes"?1:0):""}:""})},' +
       'function(r){if(!r||!r.ok||!r.id){lnFail();return;}' +
         'var poll=function(){n++;if(n>LIMITS.tries("sgline_send",600)){lnFail("時間切れです。もう一度試してもらえると嬉しいです🙇");return;}' +
           'jsonp({action:"status",key:KEY,id:r.id},function(x){' +
@@ -570,6 +642,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
             'var d=null;try{d=JSON.parse(x.result||"{}");}catch(e){}' +
             'if(!d||!d.ok){lnFail((d&&d.reason)||"送れませんでした。");return;}' +
             'lsending=false;' +
+            'if(YDM&&YD&&YD.items){YD.items=YD.items.filter(function(x){return (x.event||{}).event_id!==CUST.id;});}' +
             'var at=String(d.send_at||"").slice(11,16);' +
             'szOvShow_(szDoneHtml_("自動送信をセットしました。"+(d.practice?"（練習）":"")+"<br>"+(at?at+"に送信されます。":"15分後に送信されます。"),"TOP画面に戻る"),"#16a34a");' +
             'var bb=document.getElementById("szDoneBack");' +
@@ -742,10 +815,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'var k=this.getAttribute("data-k");' +
           'if(k==="no"){noCheck("イーライト",function(){ELANS="no";afterElight();});return;}' +
           'var top=SG.elightTop((ELJ&&ELJ.parts)||[]),EN={vio:"VIOのみ",both:"VIO＋髭等【VIO以外の部位】",other:"髭等【VIO以外の部位】"};' +
-          'if(top&&k!==top){szPopup_("予約メモには、"+EN[top]+"のイーライトを施術する、と記入されています。今日本当に、"+EN[k]+"のイーライトをやりましたか？",' +
+          'if(top&&k!==top){szPopup_("予約メモには、"+EN[top]+"のイーライトを施術する、と記入されています。"+(YDM?"昨日":"今日")+"本当に、"+EN[k]+"のイーライトをやりましたか？",' +
             '{cancel:true,noLabel:"選び直す",yesLabel:"はい、やりました",onYes:function(){ELANS=k;afterElight();}});return;}' +
           'if(/イーライト/.test((CUST&&CUST.title)||"")){ELANS=k;afterElight();return;}' +
-          '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、本日、本当にイーライトをやりましたか？",' +
+          '(window.szPopup_||szPopup_)("タイムツリーの予約タイトルには、イーライトの言葉が入っていませんが、"+(YDM?"昨日":"本日")+"、本当にイーライトをやりましたか？",' +
             '{cancel:true,noLabel:"NO<br><span style=white-space:nowrap;font-size:.8em>（やってない）</span>",' +
             'yesLabel:"YES<br><span style=white-space:nowrap;font-size:.8em>（やりました）</span>",' +
             'onNo:function(){ELANS="no";afterElight();},onYes:function(){ELANS=k;afterElight();}});};}' +
@@ -767,6 +840,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var hb=$("sgPH").getElementsByClassName("sgph");' +
         'for(var hi=0;hi<hb.length;hi++){hb[hi].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){PHANS=k;nextOf(14);};' +
           'if(k==="no"){noCheck("頭皮のプロセル",go);return;}go();};}}' +
+      'var yb=$("sgyb");if(yb)yb.onclick=function(){if(!tapOK())return;goYList();};' +
+      'if($("sgNext")){var nxb=$("sgNext").getElementsByClassName("sgnx");' +
+        'for(var nxi=0;nxi<nxb.length;nxi++){nxb[nxi].onclick=function(){if(!tapOK())return;NXANS=this.getAttribute("data-k");nextOf(16);};}}' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgckgo").onclick=function(){if(!tapOK())return;var sv=seqv();if(sv.length){goStep(sv[0]);}else{rcpFinish();}};' +
       '$("sgkgo").onclick=function(){if(!tapOK())return;' +
@@ -776,11 +852,16 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'window.addEventListener("resize",function(){if(step===2){fitNames();gapAfterNow();}' +
       'if(step===6)fitLine($("sgtwho"),26,13);if(step===7)growMemo();});' +
     'showTestNote();' +
-    'if(REP){repStart();}else{need(build);}' +
+    'if(REP){repStart();}else{need(function(p){build(p);ydLoad();});}' +
     '})();<' + '/script>';
   return '<style>' + HOMECSS_ + css + AKFCSS_ + KAESHICSS_ + (REP ? EXPADCSS_ : '') + (true ?
     '.sgrbig{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;margin:12px 0;padding:22px 18px;border:0;border-radius:18px;background:#fff;color:#0f172a;font:inherit;font-size:24px;font-weight:900;text-align:left;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.15);}' +
     '.sgrbig .sgrbi{font-size:30px;}' +
+    '.sgyb{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;text-align:left;font:inherit;cursor:pointer;background:#fff7ed;color:#9a3412;border:3px solid #f97316;border-radius:18px;padding:16px;margin:0 0 18px;box-shadow:0 6px 18px rgba(0,0,0,.12);}' +
+    '.sgyb .sgybi{font-size:30px;flex:none;}.sgyb .sgybt{flex:1;min-width:0;font-size:19px;font-weight:900;line-height:1.4;}' +
+    '.sgydnote{background:#fff7ed;color:#9a3412;border-radius:12px;padding:10px 12px;font-weight:800;margin:0 0 12px;}' +
+    '.sgrow .sgyd{display:block;font-size:17px;font-weight:900;color:#c2410c;margin-bottom:2px;}' +
+    '.sgrow .sgywhat{display:block;margin-top:8px;font-size:15px;font-weight:800;color:#c2410c;}' +
     '.sgrbig.sel{outline:4px solid #fb8c44;outline-offset:-4px;}' +
     '.sgrbig.sel::after{content:"✔";margin-left:auto;color:#fb8c44;font-size:28px;}' +
     '#sglgo:disabled{opacity:.45;}' +
