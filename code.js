@@ -2560,7 +2560,8 @@ var FOLDERTESTCSS_ =
   '  .ftbar { position:fixed; left:0; right:0; top:0; z-index:50; display:none; background:rgba(18,48,60,.97); padding:calc(14px + env(safe-area-inset-top)) 12px 14px; border-radius:0 0 18px 18px; box-shadow:0 8px 24px rgba(0,0,0,.3); }' +
   '  .ftbhint { color:#fff; font-weight:800; font-size:.95rem; text-align:center; margin-bottom:10px; }' +
   '  .ftzones { display:flex; flex-wrap:wrap; gap:10px; max-width:640px; margin:0 auto; }' +
-  '  .ftzone { flex:1 1 40%; box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
+  '  .ftzone { flex:0 0 calc(50% - 5px); box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
+  '  .ftzone.ftfull { flex-basis:100%; }' +   // 「トップ画面に移動」「新しいフォルダへ移動」は1行いっぱい・フォルダは半分
   '  .ftzone.hinto { outline:3px solid #fbbf24; outline-offset:-3px; background:#fef3c7; transform:scale(1.04); transition:transform .12s ease; }';
 function folderTestBoot_(D) {
   var T = D.tiles, KEY = 'sz_foldertest3';   // ★同日：最初のフォルダ・並びを変えたので名前を変えた（前の試しの並びは使わない）
@@ -2678,12 +2679,13 @@ function folderTestBoot_(D) {
   function showBar(el) {
     var tid = el.getAttribute('data-tid') || '';
     if (!T[tid]) return;
+    // ★2026-11-14 まるちゃん「トップ画面に移動にして、で一行のボタン、あとは半分ボタン、で一番下に新しいフォルダへ移動」
     var z = [];
-    if (!openF) z.push('<div class="ftzone" data-z="new">＋ 新しいフォルダ</div>');
-    else {
-      z.push('<div class="ftzone" data-z="top">⬆️ トップに出す</div>');
-      items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '">📂 ' + esc(x.f) + '</div>'); });
+    if (openF) {
+      z.push('<div class="ftzone ftfull" data-z="top">⬆️ トップ画面に移動</div>');
+      items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '">📂 ' + esc(String(x.f).replace(/\n/g, '')) + '</div>'); });
     }
+    z.push('<div class="ftzone ftfull" data-z="new">＋ 新しいフォルダへ移動</div>');
     var bar = document.getElementById('ftBar');
     if (!bar) { bar = document.createElement('div'); bar.id = 'ftBar'; bar.className = 'ftbar'; document.body.appendChild(bar); }
     bar.innerHTML = '<div class="ftbhint">行き先の上で離してください😊</div><div class="ftzones">' + z.join('') + '</div>';
