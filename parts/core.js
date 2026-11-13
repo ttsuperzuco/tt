@@ -1327,7 +1327,7 @@ var TILE_DEFS_ = [
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
     icon: '<span class="ticon">' + LINE_UNANS_LOGO_ + '</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
-    icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' },
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png"></span>', label: '空き時間\n検索' },
   { id: 'links', cls: 'links', view: 'links',
     icon: '<span class="ticon">🔗</span>', label: '各種\nLINK' },
   { id: 'ttapp', cls: 'ttapp', view: 'ttapp',
