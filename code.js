@@ -2715,7 +2715,9 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var canSort = !asWho;   // ★その人の画面の見本では並べ替えない（自分の並びを変えないため・並びは全員共通の物）
   var defIdx = {};   // 全員共通の並びでの順番（「初期の並びに戻す」で使う）
   for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
-  var mine = canSort ? homeMyOrder_() : null;
+  // ★2026-11-13 まるちゃん「スタッフのスマホのならびにしてよ」＝その人の画面の見本では、その人のスマホが
+  //   知らせてきた並び（index.html が home_orders.json から cfg.asOrder に入れる）を使う。無い人は全員共通の並び。
+  var mine = canSort ? homeMyOrder_() : ((asWho && cfg && cfg.asOrder && cfg.asOrder.length) ? cfg.asOrder : null);
   if (mine) {   // 自分の並びに有る物を先に、無い物（あとから増えたボタン等）は共通の並びのまま後ろへ
     var mineDefs = [], minePlaced = {};
     for (var mi = 0; mi < mine.length; mi++) {
