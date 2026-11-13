@@ -1307,6 +1307,7 @@ var LINE_BIG_BUBBLE_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hid
   '<rect width="24" height="24" rx="7" fill="#06C755"/><g transform="matrix(1.35 0 0 1.35 -4.2 -3.92)">' +
   '<path d="M12 6.2c-3.3 0-6 2.1-6 4.7 0 2.3 2 4.2 4.8 4.6.5.1.4.35.3.85l-.08.5c-.05.3.2.42.48.3 1.9-.8 4-2.55 5.3-4.05.68-.8 1.2-1.6 1.2-2.7 0-2.6-2.7-4.7-6-4.7z" fill="#fff"/>';
 var LINE_UNANS_LOGO_ = LINE_BIG_BUBBLE_ + '</g>' +
+  '<rect x="1.18" y="1.18" width="21.64" height="21.64" rx="4.7" fill="none" stroke="#fff" stroke-width=".67"/>' +
   '<circle cx="19.4" cy="4.8" r="3.8" fill="#E24B4A" stroke="#fff" stroke-width=".9"/></svg>';
 var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
   '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g>' +
@@ -1399,7 +1400,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-kuro-192.png?v=2"></span>', label: 'インズコグラム' },   
   { id: 'facebook', cls: 'facebook', view: 'facebook',
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-192.png"></span>', label: 'フェイズコブック' },   
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-192.png"></span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-kuro-192.png"></span>', label: 'フェイズコブック' },   
   { id: 'mita', cls: 'mita', view: 'mita',
     icon: '<span class="ticon">👀</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/mita-kuro-192.png"></span>', label: 'お知らせ\n見てくれた？' },
