@@ -1776,8 +1776,10 @@ var LINE_BIG_BUBBLE_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hid
   '<path d="M12 6.2c-3.3 0-6 2.1-6 4.7 0 2.3 2 4.2 4.8 4.6.5.1.4.35.3.85l-.08.5c-.05.3.2.42.48.3 1.9-.8 4-2.55 5.3-4.05.68-.8 1.2-1.6 1.2-2.7 0-2.6-2.7-4.7-6-4.7z" fill="#fff"/>';
 var LINE_UNANS_LOGO_ = LINE_BIG_BUBBLE_ + '</g>' +
   '<circle cx="19.4" cy="4.8" r="3.8" fill="#E24B4A" stroke="#fff" stroke-width=".9"/></svg>';
+// ★同日まるちゃん「これもしろわくつける」＝施術後のLINE送信（開発版だけの絵）にほかの新しい絵と同じ細い白枠。
 var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
-  '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g></svg>';
+  '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g>' +
+  '<rect x="1.18" y="1.18" width="21.64" height="21.64" rx="4.7" fill="none" stroke="#fff" stroke-width=".67"/></svg>';
 // ★2026-11-13 まるちゃん「アイコンをいったん全部もどす。あたらしいあいこんは開発者だけにだす。ぜんぶかんせいしてからみせる」
 //   ＝ボタンに iconDev（新しい絵）があれば、開発版（dev）の画面だけそれを出す。スタッフ版・TOMATOさん版は今までの icon のまま。
 //   全部そろって公開する時は、各ボタンの iconDev を icon に移して iconDev を消す。
@@ -1886,7 +1888,7 @@ var TILE_DEFS_ = [
     // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝白い地にプロセルの丸いマーク＋右下に赤い丸の「残」。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\procell-zuko-96.png。
     icon: '<span class="ticon">🧴</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procell-192.png"></span>', label: 'プロセル\n残り本数' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procell-192.png?v=2"></span>', label: 'プロセル\n残り本数' },
   // ★自宅PC＝事務所PCが今動いているか／止まっているなら何が起きたか（2026-08-24 まるちゃん決定）。
   //   開発URL(?dev=1)専用。事務所PCが1分ごとに送る pc_status.json を読むだけ。
   { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
@@ -1930,7 +1932,7 @@ var TILE_DEFS_ = [
     // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝白い地にプロセルの丸いマーク（本物のロゴから切り出し）＋右下に段ボール箱。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\procstock-zuko-96.png。
     icon: '<span class="ticon">📦</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procstock-192.png"></span>', label: 'プロセル\n在庫' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procstock-192.png?v=2"></span>', label: 'プロセル\n在庫' },
   // ★TT売上帳簿（2026-11-07）＝今日の売上表を触る（受付係 op=uriagebook → 発票から売上表\programs\売上帳簿の係.py）。
   { id: 'uriagebook', cls: 'uriagebook', view: 'uriagebook',
     icon: '<span class="ticon">📒</span>', label: 'TT売上\n帳簿' },
@@ -1961,7 +1963,7 @@ var TILE_DEFS_ = [
     // ★2026-11-10 まるちゃん「A-2採用・ボタンの右もそれにできる？」＝ボタンの絵も金魚がレンズをくぐる絵（icons/insta-192.png・パソコン版も同じ）
     // ★2026-11-13 まるちゃん「これらもおなじ」＝開発版だけ、同じ絵の地を黒にして細い白枠（insta-kuro-192.png・GPTで地だけ描き直し）。insta-192.png はホーム画面のアイコンにも使うので触らない。
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-kuro-192.png"></span>', label: 'インズコグラム' },   // ★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-kuro-192.png?v=2"></span>', label: 'インズコグラム' },   // ★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
   // ★📘Facebook（2026-11-10 まるちゃん決定「全部推奨で」）＝お店のFacebookページ3つを本物そっくりに見せる（第1段階＝読むだけ）。
   //   中身は受付係（op=facebook → Facebook投稿\programsb_zuko.py）がメタ公式の窓口で読む。既定は開発者だけ（共通ルール16）。
   { id: 'facebook', cls: 'facebook', view: 'facebook',
