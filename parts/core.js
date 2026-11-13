@@ -1310,7 +1310,7 @@ var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
   '<rect x="1.18" y="1.18" width="21.64" height="21.64" rx="4.7" fill="none" stroke="#fff" stroke-width=".67"/></svg>';
 function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
 var HEAD_MARK_EXTRA_ = {
-  yoyaku_new: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png">', yoyaku_kizon: '📅',
+  yoyaku_new: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png">', yoyaku_kizon: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/kizon-pink-128.png">',
   yoyaku_henkou: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png">'
 };
 function devHeadMarkHtml_(view) {   
@@ -1464,7 +1464,7 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
   { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
     icon: '<span class="ticon">📖</span>',
-    iconDev: '<span class="ticon">📅</span>', label: '既存の\n予約' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/kizon-pink-128.png"></span>', label: '既存の\n予約' },
   { id: 'timetree', cls: 'timetree', view: 'timetree',
     icon: '<span class="ticon">' + TT_LOGO_ + '</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/timetree-real-192.png"></span>', label: 'Time\nTree' },
