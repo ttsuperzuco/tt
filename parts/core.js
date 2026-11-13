@@ -1367,7 +1367,7 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/yoyaku-192.png?v=2"></span>', label: '予約\n入力' },
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
     icon: '<span class="ticon">💆</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png?v=2"></span>', label: '施術後の\n予約' },
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
     icon: '<span class="ticon">💌</span>',
     iconDev: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
@@ -1388,7 +1388,8 @@ var TILE_DEFS_ = [
   { id: 'hachimitsu', cls: 'hachimitsu', view: 'hachimitsu',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-192.png?v=2"></span>', label: 'ハチミツ\nちゃん' },
   { id: 'threads', cls: 'threads', view: 'threads',
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-192.png"></span>', label: 'スレッズコ' },   
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-192.png"></span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-kuro-192.png"></span>', label: 'スレッズコ' },   
   { id: 'insta', cls: 'insta', view: 'insta',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>', label: 'インズコグラム' },   
   { id: 'facebook', cls: 'facebook', view: 'facebook',
@@ -1397,7 +1398,7 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
     icon: '<span class="ticon">🧾</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png"></span>', label: '購入証明書\n作成' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
   { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
     icon: '<span class="ticon">📂</span>', label: 'フォルダの\n試し' }
 ];

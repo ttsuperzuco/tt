@@ -1903,7 +1903,7 @@ var TILE_DEFS_ = [
     // ★2026-11-13 まるちゃん選択＝目を閉じてにっこり笑う女の子の顔（子ども向けアニメ風・GPTで作成）＋右下に黄色い「次」。
     //   前の 💆 は小さいと「万歳している人」に見えたため。パソコン版の同じ絵＝PC版スーパーズコ\icons\sejutsugo-zuko-96.png。
     icon: '<span class="ticon">💆</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png?v=2"></span>', label: '施術後の\n予約' },
   // ★施術後のLINE送信（2026-10-31）＝施術後の予約と同じ画面（施術者→今日のお客様）を mode=line で開き、
   //   4つの送る物から選んで送る。開発中の機能の部屋だけ（開発者だけ）。
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
@@ -1948,7 +1948,9 @@ var TILE_DEFS_ = [
   { id: 'threads', cls: 'threads', view: 'threads',
     // ★2026-11-10 まるちゃん「スレッズコのボタンのアイコンを、スマホのアイコンに入れ替えて」＝金魚がThreadsのマークをくぐる絵（icons/threads-192.png・パソコン版も同じ）。
     //   画面の見出し・独立した窓のアイコンは本物のThreadsのマークのまま。
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-192.png"></span>', label: 'スレッズコ' },   // ★2026-11-10 まるちゃん「なまえを スレッズコ にする」
+    // ★2026-11-13 まるちゃん「これらもおなじ」＝開発版だけ、黒い地＋細い白枠の絵（threads-kuro-192.png）。threads-192.png はホーム画面のアイコンにも使うので触らない。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-192.png"></span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-kuro-192.png"></span>', label: 'スレッズコ' },   // ★2026-11-10 まるちゃん「なまえを スレッズコ にする」
   // ★📸インスタ（2026-11-08 まるちゃん決定「ぜんぶすいしょう」）＝お店のインスタ3つのプロフィールを本物そっくりに見せる。
   //   中身は受付係（op=insta → Instagram投稿\programs\insta_zuko.py）が専用ブラウザで読む。既定は開発者だけ（共通ルール16）。
   { id: 'insta', cls: 'insta', view: 'insta',
@@ -1968,7 +1970,7 @@ var TILE_DEFS_ = [
     // ★2026-11-13 まるちゃん選択＝ピンクのプリンターから赤いハンコ付きの証明書が出てくる絵（子ども向けアニメ風・GPTで作成）。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\shomeisho-zuko-96.png。
     icon: '<span class="ticon">🧾</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png"></span>', label: '購入証明書\n作成' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
