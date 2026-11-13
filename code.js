@@ -1865,7 +1865,9 @@ var TILE_DEFS_ = [
   // ★広告費管理＝オーナー(開発者)専用の内部ツール。開発URL(?dev=1)専用（cost/kanshiと同じ＝
   //   tile_settings.py に入れないので開発者だけに出る）。国籍×性別で広告費を見る＋広告ごとの明細。
   { id: 'koukoku', cls: 'koukoku', view: 'koukoku',
-    icon: '<span class="ticon">📣</span>', label: '広告費\n管理' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ）＝的のまん中に矢＋手前に金貨（GPTで作成）・黒い地＋細い白枠。パソコン版＝icons\koukoku-kuro-96.png。
+    icon: '<span class="ticon">📣</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/koukoku-kuro-192.png"></span>', label: '広告費\n管理' },
   // ★DM再現＝インスタのDM画面をそっくり再現（左に一覧・右にやり取り全文）。開発URL(?dev=1)専用。2026-08-02。
   { id: 'igdm', cls: 'igdm', view: 'igdm',
     icon: '<span class="ticon">📱</span>', label: 'DM\n再現' },
