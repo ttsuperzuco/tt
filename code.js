@@ -23064,11 +23064,11 @@ var HOMECSS_ =
 '  .hkaburi.hkinyu { background:#6366f1; }' +
 '  .hkaburi.hsgline { background:#06a34a; }' +
 /* ★2026-11-13 人のボタン（その人の画面を出す・開発版だけ・PC版 super_pc.py の .hasbtn と同じ） */
-'  .hasrow { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }' +
-'  .hasbtn { min-width:44px; height:44px; padding:0 8px; box-sizing:border-box; border-radius:12px; background:#111827;' +
+'  .hasrow { display:flex; flex-wrap:nowrap; gap:6px; margin:0 0 14px; }' +   /* ★同日まるちゃん「受付スマホまで一行にして」 */
+'  .hasbtn { flex:1 1 0; min-width:34px; height:44px; padding:0 4px; box-sizing:border-box; border-radius:12px; background:#111827;' +
 '    border:2px solid rgba(255,255,255,.55); color:#fff; font-size:24px; font-weight:900; text-decoration:none;' +
 '    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }' +
-'  .hasbtn.hastx { font-size:.95rem; padding:0 12px; }' +
+'  .hasbtn.hastx { flex:0 0 auto; font-size:.8rem; padding:0 7px; white-space:nowrap; }' +
 '  .hasbtn.on { background:#fff; color:#12303c; border-color:#fff; }' +
 '  .halerts.hrow { margin:0; }' +
 '  .halerts.hrow .hkaburi { margin-bottom:12px; }' +
