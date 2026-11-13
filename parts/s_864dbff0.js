@@ -1,5 +1,5 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
-// この画面だけで使う部品：facebook、igdm、insta、kanshi、threads、timedsend、timetree、yoyaku_henkou、yoyaku_kizon、yoyaku_new、yoyaku_sejutsugo
+// この画面だけで使う部品：facebook、insta、kanshi、threads、timedsend、timetree、yoyaku_henkou、yoyaku_kizon、yoyaku_new、yoyaku_sejutsugo
 function szDoneHtml_(title, backLabel, openUrl) {
   var extra = openUrl
     ? "<a id='szDoneOpen' href='" + openUrl + "' target='_blank' rel='noopener' " +
