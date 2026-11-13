@@ -581,6 +581,7 @@
   //   送れたら送った分だけ消す。送れなければ次に開いた時にまた送る。
   window.__btSend = function () {
     var LS_Q = 'sz_bt_q', LS_SENT = 'sz_bt_sent';
+    if (window.__SZ_AS_) return;   // ★見本（&as=）の秒数はその人の記録にしない（ズコの速さの見張りが数えるため）
     try {
       var last = parseInt(lsGet(LS_SENT) || '0', 10) || 0;
       if (Date.now() - last < 3 * 60 * 1000) return;
@@ -625,6 +626,11 @@
     if (!ok) return;
     window.__SZ_AS_ = a0;
     staff = a0 !== 'kanbu'; dev = false; who = staff ? a0 : '';
+    // ★同日「まったくおなじにしてよ スタッフの画面と」＝画面の中の出し分け（役割・名前で決めている所）も、
+    //   受付係が返す中身も、その人と同じにする。役割・名前をその人の物で名乗り、端末はまるちゃんの物のまま送る。
+    //   受付係（共通\zuko_who）は「開発の端末がその人を名乗った」時だけ、その人と同じ範囲を返す。
+    role = staff ? 'スタッフ' : '社長(幹部)';
+    window.__SZ_WHO_ = who; window.__SZ_ROLE_ = role;
   })();
 
   // ★2026-11-13 まるちゃん「スタッフのスマホのならびにしてよ」：このスマホで並べ替えたホームの並びを、
@@ -656,6 +662,7 @@
   // ===== アクセスログ（画面表示ごとにGASへ。GASが一旦貯め、事務所PCがDBへ回収）=====
   var hitDone_ = false;
   function logHit(v){
+    if (window.__SZ_AS_) return;   // ★見本（&as=）はその人が開いた記録にしない
     if (hitDone_) return;   // ★覚えている設定で先に描く→新しい設定で描き直す時に二重に記録しない
     hitDone_ = true;
     try {
