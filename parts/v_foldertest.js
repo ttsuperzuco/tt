@@ -33,6 +33,7 @@ var FOLDERTESTCSS_ =
   '  .ftlab .tname { flex:none; word-break:auto-phrase; }' +   
   '  .ftcount { display:block; font-size:.78rem; font-weight:800; opacity:.75; margin-top:2px; }' +
   '  .tile.hinto { outline:3px solid #fbbf24; outline-offset:-3px; transform:scale(1.06); transition:transform .12s ease; }' +
+  '  .tile.hside { box-shadow:-7px 0 0 0 #fbbf24; }' +   
   '  .fttoast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#fff; color:#12303c; font-weight:800; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(0,0,0,.25); display:none; z-index:10002; font-size:.95rem; max-width:90vw; text-align:center; }' +
   '  .ftmbtn { display:block; width:100%; font:inherit; font-size:1.2rem; font-weight:800; padding:14px; margin:0 0 10px; border-radius:12px; border:0; background:#fff; color:#12303c; cursor:pointer; }' +
   '  .ftmtitle { font-size:1.3rem; font-weight:900; margin-bottom:14px; }' +
@@ -217,8 +218,9 @@ function folderTestBoot_(D) {
       save: sortSaved,
       clear: function () {},
       confirm: function (msg) { szPopup_(msg, { cancel: true, icon: '', onYes: resetAll }); },
-      into: function (dragEl, t) {
-        return !openF && (dragEl.getAttribute('data-tid') || '').charAt(0) !== '@' && (t.getAttribute('data-tid') || '').charAt(0) === '@';
+      into: function (dragEl, t, px) {
+        if (openF || (dragEl.getAttribute('data-tid') || '').charAt(0) === '@' || (t.getAttribute('data-tid') || '').charAt(0) !== '@') return false;
+        return px < 0.25 ? 300 : true;
       },
       dropInto: function (dragEl, t) {
         var id = dragEl.getAttribute('data-tid'); if (!T[id]) return;
