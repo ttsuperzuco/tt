@@ -318,7 +318,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   'var el=document.getElementById("zjbig");if(el)el.textContent="⛔ "+e;});}' +
   'function zjPersonImg(eid,info){' +
   'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk3\\">← 戻る</button>"' +
-  '+"<h2>🖼 "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
+  '+"<h2>🖼️ "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
   '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してください😊</div>"' +
   '+"<div id=\\"zjpick\\" class=\\"zjpick\\">読み込んでいます…</div>"' +
   '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjpicksave\\">この画像で決定</button></div>");' +

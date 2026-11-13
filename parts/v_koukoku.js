@@ -392,7 +392,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
       } else {
         groups = stopAds.map(function (a) { return perfTotalCard(a, true); }).join('');
       }
-      stopBody = '<div class="kkacc" style="border-left-color:#94a3b8;">⏸ 今は止めている広告' +
+      stopBody = '<div class="kkacc" style="border-left-color:#94a3b8;">⏸️ 今は止めている広告' +
         '<small>' + stopAds.length + '件</small></div>' + groups;
     }
 

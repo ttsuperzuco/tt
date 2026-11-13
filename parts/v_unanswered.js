@@ -24,7 +24,7 @@ function unaWhen_(s) {
   return (+m[2]) + '月' + (+m[3]) + '日 ' + m[4] + ':' + m[5];
 }
 function unaCard_(r, kind, dev) {
-  var name = r.nm || '🆕 新規（番号未設定）';
+  var name = r.nm || '🆕️ 新規（番号未設定）';
   var tag = [r.nat, r.sex].filter(Boolean).join('・');
   var search = esc_(((name) + ' ' + (r.q || '')).toLowerCase());
   var sub = [tag, (r.read && r.read !== '—') ? r.read : '', '待ち' + (r.d || 0) + '日']
@@ -469,7 +469,7 @@ var UNASCRIPT_ =
 '  var w=b.closest(".unareply"); if(w) unaStickerPanel_(w);' +
 '});' +
 'var EMOJI_LIST_=["😊","😀","😄","😁","😆","🙂","😉","😍","🥰","🤣","😂","😢","😭","🙏","👍",' +
-'"👌","💪","🎉","❤","💦","😅","🤔","😴","🙇","✨","🌸","☀","🌧","😱","😳"];' +
+'"👌","💪","🎉","❤️","💦","😅","🤔","😴","🙇","✨","🌸","☀️","🌧️","😱","😳"];' +
 'function unaEmojiPanel_(wrap){' +
 '  var mask=document.createElement("div"); mask.className="unaask";' +
 '  var box=document.createElement("div"); box.className="unaaskbox unastkbox";' +
