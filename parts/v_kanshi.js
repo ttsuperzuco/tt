@@ -381,7 +381,7 @@ var KANSHISCRIPT_ =
 '  }' +
 '  var groups={keiei:[],kanri:[],jitsumu:[],kaihatsu:[],tomato:[]};' +
 '  for(var k=0;k<order.length;k++){ var g=tileGrp_(order[k]); (groups[g]||groups.jitsumu).push(order[k]); }' +
-'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_.slice(0,1).concat([{id:"tomato",icon:"🍅",title:"TOMATO画面"}],ROLE_DEFS_.slice(1)):[{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"keiei",icon:"📊",title:"りゅう（経営管理ツール）"},{id:"kanri",icon:"🛠️",title:"りゅう（便利ツール）"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
+'  var roles=(typeof ROLE_DEFS_!=="undefined")?ROLE_DEFS_.slice(0,1).concat([{id:"tomato",icon:"🍅",title:"TOMATO画面"}],ROLE_DEFS_.slice(1)):[{id:"jitsumu",icon:"💼",title:"スタッフ画面"},{id:"keiei",icon:"📊",title:"りゅうツール"},{id:"kaihatsu",icon:"🧑‍💻",title:"開発中の機能"}];' +
 '  var out="";' +
 '  for(var r=0;r<roles.length;r++){ var R=roles[r], ids=groups[R.id]||[]; if(!ids.length) continue;' +
 '    out+="<div class=\\"kroom\\">"+R.icon+" "+R.title+"</div>"+ids.map(rowH_).join(""); }' +

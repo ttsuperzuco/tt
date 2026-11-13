@@ -1408,8 +1408,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">📂</span>', label: 'フォルダの\n試し' }
 ];
 var TILE_GROUP_ = {
-  kanshi: 'kanri', mushitori: 'kanri', cost: 'keiei', koukoku: 'keiei', imglink: 'kanri',
-  claudetools: 'kanri', pcstatus: 'kanri',
+  kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
+  claudetools: 'keiei', pcstatus: 'keiei',
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
   hachimitsu: 'tomato',
@@ -1420,8 +1420,7 @@ var TILE_GROUP_ = {
 };
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
-  { id: 'keiei', icon: '📊', title: 'りゅう（経営管理ツール）' },
-  { id: 'kanri', icon: '🛠️', title: 'りゅう（便利ツール）' },
+  { id: 'keiei', icon: '📊', title: 'りゅうツール' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
