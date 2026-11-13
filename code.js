@@ -1814,7 +1814,10 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🕑</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png"></span>', label: '空き時間\n検索' },
   { id: 'links', cls: 'links', view: 'links',
-    icon: '<span class="ticon">🔗</span>', label: '各種\nLINK' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝オレンジの地にピンクと白の鎖の輪（GPTで作成・地の緑はLINEに見えるのでオレンジに塗り替え）。
+    //   まるちゃん「すたっふのいろはかえないで」＝ボタンの左はしの線の色（.tile.links）はそのまま。パソコン版の同じ絵＝PC版スーパーズコ\icons\links-zuko-96.png。
+    icon: '<span class="ticon">🔗</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/links-192.png"></span>', label: '各種\nLINK' },
   // ★元祖TTアプリ＝外部サイトへのリンクだけのボタン（GAS内のviewではない）。
   //   2026-07-16：他のボタンと同じく人ごとのON/OFF対象に変更（以前はalways:trueで常時表示
   //   固定だったが、ユーザー要望で「人ごとに見せる/見せない」を選べるようにした。初期値は
