@@ -1526,8 +1526,9 @@ function homeSortBoot_(KEY, OPT) {
   }
   function tick() {
     if (!st || !st.drag) return;
+    var top = OPT.topGap ? (OPT.topGap() || 0) : 0;
     var h = window.innerHeight - (OPT.bottomGap ? (OPT.bottomGap() || 0) : 0), v = 0, EDGE = 84;
-    if (st.y < EDGE) v = -Math.ceil((EDGE - st.y) / 6);
+    if (st.y < top + EDGE && st.y >= top) v = -Math.ceil((top + EDGE - st.y) / 6);
     else if (st.y > h - EDGE && st.y <= h) v = Math.ceil((st.y - (h - EDGE)) / 6);
     if (v) {
       var y0 = window.pageYOffset;

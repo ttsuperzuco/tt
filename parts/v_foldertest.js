@@ -30,7 +30,8 @@ var FOLDERTESTCSS_ =
   '  .ftmbtn { display:block; width:100%; font:inherit; font-size:1.2rem; font-weight:800; padding:14px; margin:0 0 10px; border-radius:12px; border:0; background:#fff; color:#12303c; cursor:pointer; }' +
   '  .ftmtitle { font-size:1.3rem; font-weight:900; margin-bottom:14px; }' +
   '  .ftname { width:100%; box-sizing:border-box; font:inherit; font-size:1.3rem; font-weight:800; padding:12px 14px; border-radius:12px; border:0; color:#12303c; }' +
-  '  .ftbar { position:fixed; left:0; right:0; bottom:0; z-index:50; display:none; background:rgba(18,48,60,.97); padding:12px 12px calc(16px + env(safe-area-inset-bottom)); border-radius:18px 18px 0 0; box-shadow:0 -8px 24px rgba(0,0,0,.3); }' +
+  '  #ftHome, .ftbar, .fttoast { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }' +
+  '  .ftbar { position:fixed; left:0; right:0; top:0; z-index:50; display:none; background:rgba(18,48,60,.97); padding:calc(14px + env(safe-area-inset-top)) 12px 14px; border-radius:0 0 18px 18px; box-shadow:0 8px 24px rgba(0,0,0,.3); }' +
   '  .ftbhint { color:#fff; font-weight:800; font-size:.95rem; text-align:center; margin-bottom:10px; }' +
   '  .ftzones { display:flex; flex-wrap:wrap; gap:10px; max-width:640px; margin:0 auto; }' +
   '  .ftzone { flex:1 1 40%; box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
@@ -59,6 +60,7 @@ function folderTestBoot_(D) {
   function load() { try { var s = localStorage.getItem(KEY); if (s) return clean(JSON.parse(s)); } catch (e) {} return clean(D.start); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {} }
   var items = load(), openF = null;
+  home.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
   function folderByKey(k) { for (var i = 0; i < items.length; i++) if (typeof items[i] !== 'string' && items[i].k === k) return items[i]; return null; }
 
   function tileHtml(id) {
@@ -150,12 +152,8 @@ function folderTestBoot_(D) {
     if (!bar) { bar = document.createElement('div'); bar.id = 'ftBar'; bar.className = 'ftbar'; document.body.appendChild(bar); }
     bar.innerHTML = '<div class="ftbhint">行き先の上で離してください😊</div><div class="ftzones">' + z.join('') + '</div>';
     bar.style.display = 'block';
-    home.style.paddingBottom = (bar.offsetHeight + 16) + 'px';   
   }
-  function hideBar() {
-    var bar = document.getElementById('ftBar'); if (bar) bar.style.display = 'none';
-    home.style.paddingBottom = '';
-  }
+  function hideBar() { var bar = document.getElementById('ftBar'); if (bar) bar.style.display = 'none'; }
   function barHeight() { var bar = document.getElementById('ftBar'); return (bar && bar.style.display !== 'none') ? bar.offsetHeight : 0; }
   function zoneAt(x, y) {
     if (!barHeight()) return null;
@@ -189,7 +187,7 @@ function folderTestBoot_(D) {
       ]);
       return;
     }
-    toast('動かして、下の行き先かフォルダの上で離してください😊');
+    toast('動かして、上の行き先かフォルダの上で離してください😊');
   }
 
   function sortSaved(ids) {
@@ -226,7 +224,7 @@ function folderTestBoot_(D) {
       lift: showBar,
       end: hideBar,
       zoneAt: zoneAt,
-      bottomGap: barHeight
+      topGap: barHeight
     });
     box.addEventListener('click', function (ev) {
       var a = (ev.target && ev.target.closest) ? ev.target.closest('a.tile') : null;
