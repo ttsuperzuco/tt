@@ -22011,19 +22011,22 @@ function renderTimeTreePage_(base, staff, dev) {
     '.tvb.fill{color:#fff;}' +
     '.tvmore{font-size:10px;color:#999;font-weight:700;line-height:13px;}' +
     /* ── その日の予定 ── */
-    '.tvdh{display:flex;align-items:center;gap:8px;padding:8px 16px 6px;}' +
+    '.tvdh{display:flex;align-items:center;gap:8px;padding:6px 14px 4px;}' +
     '.tvdh .dt{flex:1;min-width:0;font-size:18px;font-weight:800;color:#222;}' +
-    '.tvdchips{padding:2px 16px 6px;}' +
-    '.tvlist{padding:2px 0 20px;}' +
-    '.tvrow{display:flex;align-items:center;gap:10px;width:100%;min-height:50px;box-sizing:border-box;text-align:left;' +
-      'background:#fff;border:0;padding:5px 16px;cursor:pointer;color:#333;}' +
+    '.tvdchips{padding:0 2px 2px;}' +
+    /* ★2026-11-13 まるちゃん「本物はもっと縦の空白が少なく詰まっている。各行にメモの1行目が見えている」 */
+    '.tvlist{padding:0 0 20px;}' +
+    '.tvrow{display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;text-align:left;' +
+      'background:#fff;border:0;padding:4px 14px;cursor:pointer;color:#333;}' +
     '.tvrow:active{background:#f5f5f5;}' +
-    '.tvrow .tm{flex:none;width:42px;text-align:right;font-size:11px;font-weight:600;color:#9a9a9a;line-height:1.4;}' +
+    '.tvrow .tm{flex:none;width:36px;text-align:right;font-size:11px;font-weight:600;color:#9a9a9a;line-height:1.3;}' +
     '.tvrow .tm b{display:block;color:#555;font-weight:700;}' +
-    '.tvrow .ln{flex:none;width:3px;align-self:stretch;border-radius:2px;min-height:34px;}' +
-    '.tvrow .ti{flex:1;min-width:0;font-size:15px;font-weight:700;line-height:1.4;color:#222;word-break:break-all;}' +
-    '.tvrow .av{flex:none;width:30px;height:30px;border-radius:50%;background:#f1f1f1;display:flex;align-items:center;' +
-      'justify-content:center;font-size:15px;font-weight:800;color:#777;}' +
+    '.tvrow .ln{flex:none;width:3px;align-self:stretch;border-radius:2px;min-height:30px;}' +
+    '.tvrow .bd{flex:1;min-width:0;}' +
+    '.tvrow .ti{display:block;font-size:14px;font-weight:700;line-height:1.35;color:#222;word-break:break-all;}' +
+    '.tvrow .mm{display:block;font-size:12px;font-weight:500;line-height:1.35;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+    '.tvrow .av{flex:none;width:26px;height:26px;border-radius:50%;background:#f1f1f1;display:flex;align-items:center;' +
+      'justify-content:center;font-size:13px;font-weight:800;color:#777;}' +
     /* ── 予定の中身 ── */
     '.tvdtop{padding:8px 20px 4px;text-align:center;font-size:17px;font-weight:800;line-height:1.45;word-break:break-all;}' +
     '.tvwhen{display:flex;align-items:center;gap:6px;padding:14px 20px 16px;border-bottom:1px solid #eee;}' +
@@ -22324,13 +22327,20 @@ function ttviewStart_(exec, base, staff, dev) {
   }
 
   /* ── その日の予定（本物と同じ：左に時刻、色の細い線、題名、右に作った人） ── */
+  /* 予約メモの1行目（本物の日の予定と同じく、題名の下に灰色で1行だけ出す） */
+  function memo1(n) {
+    var ls = String(n || '').split(String.fromCharCode(10));   // 改行で分ける（行末の見えない文字は下で取る）
+    for (var i = 0; i < ls.length; i++) { var t = ls[i].replace(/^\s+|\s+$/g, ''); if (t) return t; }
+    return '';
+  }
   function rowHtml(e, idx, ds) {
     var tm;
     if (isAllDay(e, ds)) tm = '終日';
     else tm = '<b>' + esc(e.s || '') + '</b>' + esc(e.e === ds ? (e.f || '') : '');   // 次の日まで続く予定は終わりの時刻を出さない（元と同じ）
     return '<button class="tvrow" data-i="' + idx + '"><span class="tm">' + tm + '</span>' +
       '<span class="ln" style="background:' + esc(e.col) + '"></span>' +
-      '<span class="ti">' + esc(e.t || '(タイトルなし)') + '</span>' +
+      '<span class="bd"><span class="ti">' + esc(e.t || '(タイトルなし)') + '</span>' +
+      (memo1(e.n) ? '<span class="mm">' + esc(memo1(e.n)) + '</span>' : '') + '</span>' +
       (e.au ? '<span class="av" title="' + esc(e.au) + '">' + esc(avOf(e.au)) + '</span>' : '') + '</button>';
   }
   function drawDay() {
