@@ -311,6 +311,57 @@ function detect(events, withNail, dateFrom) {
  * （NAIL＝うちのサービスでない／🥝＝自店外／分施＝意図的同時／同伴家族。
  *   同一客二重は dup_suspect の印だけ付けて出す）。
  */
+// ★2026-11-13 まるちゃん決定「（担当の交代の書き方を機械が読めるように）直して」。
+//   途中で担当が交代する予約は、タイトルに「2人目の印＋時刻」で書いてある：
+//     ①印→時刻「🫒14時開始🍊14:30〜」 ②時刻→印「12:30~🍅」「14:30〜15:00🍅と交代」 ③時刻に交代「🍊🍅預約…19:50に交代」
+//   読み取れた時だけ担当を時間で分ける。読めない書き方・2つ以上・時刻が予約の時間の外なら今までどおり。
+//   ★detect_core.py の staff_handoff と同じ内容にすること（run_parity で照合）。
+var HO_MARK_ = '(' + Object.keys(STAFF_NAMES).join('|') + ')\uFE0F?';
+var HO_TIME_ = '([0-9]{1,2})(?:[:：]([0-9]{2})|時(半|[0-9]{1,2}分)?)';
+var HO_TILDE_ = '\s*(?:[〜~～]|から)\s*';
+var HO_P1_ = HO_MARK_ + '\s*' + HO_TIME_ + HO_TILDE_ + '(?:' + HO_TIME_ + ')?';
+var HO_P2_ = HO_TIME_ + HO_TILDE_ + '(?:' + HO_TIME_ + ')?\s*' + HO_MARK_;
+var HO_P3_ = HO_TIME_ + '\s*に?交代';
+var STAFF_MARK_RE_ = Object.keys(STAFF_NAMES).join('|');
+function hoMin_(h, mm, ji) {
+  if (h == null) return null;
+  var m = mm ? parseInt(mm, 10) : (ji === '半' ? 30 : (ji ? parseInt(ji.slice(0, -1), 10) : 0));
+  var hh = parseInt(h, 10);
+  if (hh > 23 || m > 59) return null;
+  return hh * 60 + m;
+}
+function hhmmMin_(s) {
+  var p = String(s == null ? '' : s).split(':');
+  if (p.length !== 2 || !/^[0-9]+$/.test(p[0]) || !/^[0-9]+$/.test(p[1])) return null;
+  return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+}
+function fmtMin_(n) {
+  var h = Math.floor(n / 60), m = n % 60;
+  return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+}
+function staffHandoff(title, startTime, endTime) {
+  var t = title || '', head = staffOf(t);
+  var S = hhmmMin_(startTime), E = hhmmMin_(endTime);
+  if (!(head in STAFF_NAMES) || S == null || E == null || E <= S) return null;
+  var found = [], m, re;
+  re = new RegExp(HO_P1_, 'gu');
+  while ((m = re.exec(t))) found.push([m[1], hoMin_(m[2], m[3], m[4]), hoMin_(m[5], m[6], m[7])]);
+  re = new RegExp(HO_P2_, 'gu');
+  while ((m = re.exec(t))) found.push([m[7], hoMin_(m[1], m[2], m[3]), hoMin_(m[4], m[5], m[6])]);
+  re = new RegExp(HO_P3_, 'gu');
+  while ((m = re.exec(t))) {
+    var all = t.match(new RegExp(STAFF_MARK_RE_, 'gu')) || [], others = all.filter(function (c) { return c !== head; });
+    found.push([others.length ? others[0] : '', hoMin_(m[1], m[2], m[3]), null]);
+  }
+  found = found.filter(function (f) { return f[0] !== head; });   // 先頭の担当の始まりの書き直しは交代ではない
+  if (found.length !== 1) return null;
+  var mark = found[0][0], t1 = found[0][1], t2 = found[0][2];
+  if (!mark || mark === head || t1 == null || !(S < t1 && t1 < E)) return null;
+  if (t2 != null && (t2 <= t1 || t2 >= E)) t2 = null;
+  if (t2 == null) return [[head, S, t1], [mark, t1, E]];
+  return [[head, S, t1], [mark, t1, t2], [head, t2, E]];
+}
+
 function detectStaff(events, dateFrom) {
   function roomOf(r) {
     // ★“実際の部屋”＝デザイン眉はタイトルの部屋名／専用スペースは空（部屋なし）。
@@ -321,6 +372,7 @@ function detectStaff(events, dateFrom) {
 
   // --- 対象の絞り込み（預約・ネイル以外・担当マークあり・🥝でない・dateFrom以降）---
   var target = [];
+  var checked = 0;   // 調べた予約の数（交代で分けた分は数えない）
   for (var i = 0; i < events.length; i++) {
     var r = events[i];
     if (dateFrom && (r.date || '') < dateFrom) continue;
@@ -337,8 +389,20 @@ function detectStaff(events, dateFrom) {
     if (effRoom_ != null && (effRoom_ in NAIL_LABEL)) continue;
     var s = staffOf(r.title || '');
     if (!s || s === IGNORE_STAFF) continue;
-    r._staff = s;
-    target.push(r);
+    checked++;
+    // ★2026-11-13 途中で担当が交代する予約は、担当ごと・時間ごとに分けて数える（staffHandoff）。
+    var segs = staffHandoff(r.title, r.start_time, r.end_time);
+    if (!segs) {
+      target.push(Object.assign({}, r, { _staff: s, _s: r.start_at_ms, _e: r.end_at_ms, _st: r.start_time, _et: r.end_time }));
+      continue;
+    }
+    var base = hhmmMin_(r.start_time);
+    for (var sg = 0; sg < segs.length; sg++) {
+      target.push(Object.assign({}, r, {
+        _staff: segs[sg][0], _s: r.start_at_ms + (segs[sg][1] - base) * 60000,
+        _e: r.start_at_ms + (segs[sg][2] - base) * 60000,
+        _st: fmtMin_(segs[sg][1]), _et: fmtMin_(segs[sg][2]) }));
+    }
   }
 
   // (担当マーク, 日付) ごと。Map で挿入順を Python の defaultdict と一致させる。
@@ -355,12 +419,12 @@ function detectStaff(events, dateFrom) {
   var familyExcluded = 0;
   var roomHold = 0;
   groups.forEach(function (g) {
-    var evs = g.evs.slice().sort(function (x, y) { return x.start_at_ms - y.start_at_ms; });
+    var evs = g.evs.slice().sort(function (x, y) { return x._s - y._s; });
     for (var i2 = 0; i2 < evs.length; i2++) {
       for (var j = i2 + 1; j < evs.length; j++) {
         var a = evs[i2], b = evs[j];
-        if (b.start_at_ms >= a.end_at_ms) break;
-        if (overlaps(a.start_at_ms, a.end_at_ms, b.start_at_ms, b.end_at_ms)) {
+        if (b._s >= a._e) break;
+        if (overlaps(a._s, a._e, b._s, b._e)) {
           if ((a.title || '').indexOf(SPLIT_MARK) !== -1 || (b.title || '').indexOf(SPLIT_MARK) !== -1) {
             splitExcluded++; continue;
           }
@@ -375,27 +439,27 @@ function detectStaff(events, dateFrom) {
           }
           // 施術者被りはグループ化の時点で必ず「同じ担当」＝家族連れ(relatedParty)でも1人で同時に2件は
           // 物理的に不可なので除外せず出す（detect_core.py の detect_staff と同じ。連麗惠様親子対策・2026-07-25）。
-          var ovMin = Math.floor((Math.min(a.end_at_ms, b.end_at_ms)
-                                  - Math.max(a.start_at_ms, b.start_at_ms)) / 60000);
-          var ovStart = ((a.start_time || '') > (b.start_time || '')) ? a.start_time : b.start_time;
-          var ovEnd = ((a.end_time || '') < (b.end_time || '')) ? a.end_time : b.end_time;
+          // ★時間は担当ごとに分けた時間（交代の無い予約は予約の時間そのまま＝今までと同じ）。
+          var ovMin = Math.floor((Math.min(a._e, b._e) - Math.max(a._s, b._s)) / 60000);
+          var ovStart = ((a._st || '') > (b._st || '')) ? a._st : b._st;
+          var ovEnd = ((a._et || '') < (b._et || '')) ? a._et : b._et;
           conflicts.push({
             kind: '施術者被り',
             dup_suspect: dupSuspect,
             staff: g.staff,
             staff_name: (STAFF_NAMES[g.staff] || ''),
             date: g.date,
-            a_time: a.start_time + '-' + a.end_time, a_cal: a.calendar_name,
+            a_time: a._st + '-' + a._et, a_cal: a.calendar_name,
             a_cal_id: (a.calendar_id != null ? a.calendar_id : null),
             a_event_id: (a.event_id != null ? a.event_id : null),
             a_room: roomOf(a),
-            a_staff: staffOf(a.title), a_code: ca, a_name: na.name,
+            a_staff: a._staff, a_code: ca, a_name: na.name,
             a_phone: na.phone, a_menu: (a.treatment_db || treatmentOf(a.note)), a_title: (a.title || '').trim(),
-            b_time: b.start_time + '-' + b.end_time, b_cal: b.calendar_name,
+            b_time: b._st + '-' + b._et, b_cal: b.calendar_name,
             b_cal_id: (b.calendar_id != null ? b.calendar_id : null),
             b_event_id: (b.event_id != null ? b.event_id : null),
             b_room: roomOf(b),
-            b_staff: staffOf(b.title), b_code: cb, b_name: nb.name,
+            b_staff: b._staff, b_code: cb, b_name: nb.name,
             b_phone: nb.phone, b_menu: (b.treatment_db || treatmentOf(b.note)), b_title: (b.title || '').trim(),
             overlap_min: ovMin, overlap_time: ovStart + '-' + ovEnd
           });
@@ -416,7 +480,7 @@ function detectStaff(events, dateFrom) {
 
   var meta = {
     staff_list: staffList,
-    checked: target.length,
+    checked: checked,
     split: splitExcluded,
     family: familyExcluded,
     room_hold: roomHold
@@ -426,5 +490,5 @@ function detectStaff(events, dateFrom) {
 
 // Node（照合テスト）用エクスポート。GASでは module 未定義なので無視される。
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { detect: detect, detectStaff: detectStaff, staffOf: staffOf, codeOf: codeOf, customerLine: customerLine, ROOM_LABELS: ROOM_LABELS };
+  module.exports = { detect: detect, detectStaff: detectStaff, staffHandoff: staffHandoff, staffOf: staffOf, codeOf: codeOf, customerLine: customerLine, ROOM_LABELS: ROOM_LABELS };
 }
