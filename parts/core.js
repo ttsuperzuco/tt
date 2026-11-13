@@ -1511,6 +1511,8 @@ function homeSortBoot_(KEY, OPT) {
       if (a !== st.el && fx >= a.offsetLeft && fx <= a.offsetLeft + a.offsetWidth &&
           fy >= a.offsetTop && fy <= a.offsetTop + a.offsetHeight) { t = a; break; }
     }
+    if (st.into && st.into !== t) { st.into.classList.remove('hinto'); st.into = null; }
+    if (t && OPT.into && OPT.into(st.el, t)) { st.into = t; t.classList.add('hinto'); return; }
     if (!t) return;
     var before = rectsOf(st.box, st.el);
     if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
@@ -1570,6 +1572,7 @@ function homeSortBoot_(KEY, OPT) {
       return;
     }
     if (ev && ev.cancelable) ev.preventDefault();   
+    if (Math.abs(x - st.x0) > SLOP || Math.abs(y - st.y0) > SLOP) st.moved = true;
     place(); over();
   }
   function up(ev) {
@@ -1587,6 +1590,8 @@ function homeSortBoot_(KEY, OPT) {
     el.style.transform = '';
     el.classList.remove('tdrag'); home.classList.remove('hsorting');
     setTimeout(function () { el.style.transition = ''; el.style.zIndex = ''; }, 240);
+    if (s.into) { s.into.classList.remove('hinto'); if (OPT.dropInto) OPT.dropInto(el, s.into); return; }
+    if (!s.moved && OPT.still) { OPT.still(el); return; }
     if (idsOf(s.box).join(',') !== s.start) save();
   }
   function tileAt(box, target) {
