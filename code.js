@@ -1843,7 +1843,9 @@ var TILE_DEFS_ = [
   //     （スタッフのスマホにも🍅トマトのスマホにも出す＝事務所パソコンの画面と同じ2つ）。
   //     どのボタンを出すかの判断は共通の1本＝zj_rules.js の ZJ.optionsShown が持つ。
   { id: 'zenjitsu', cls: 'zenjitsu', view: 'zenjitsu',
-    icon: '<span class="ticon">🔔</span>', label: '前日\nお知らせ' },
+    // ★2026-11-13 まるちゃん「黒背景に白枠すればOK　画像生成AIはつかわずに」＝開発版だけ、今の絵を黒い地に置いて細い白枠。
+    icon: '<span class="ticon">🔔</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/zenjitsu-kuro-192.png"></span>', label: '前日\nお知らせ' },
   // ★顧客履歴検索＝番号/氏名で客を探し、今回の予約と過去予約(メモ込み)を見る。事務所PCが検索
   //   （op=cust_search）＝日中(事務所PC稼働中)に使える。PC版スーパーズコと並びをそろえる(2026-07-19)。
   { id: 'rireki', cls: 'rireki', view: 'rireki',
@@ -1879,7 +1881,9 @@ var TILE_DEFS_ = [
   //   公式LINEの一斉配信として置く。送るのはLINEのサーバー＝パソコンが止まっていても届く。
   //   見せる人は自動監視の人ごとの表示で決める（2026-10-06〜 トマト・みかん・オリーブ・お店スマホ・お店受付PC）。
   { id: 'bcast', cls: 'bcast', view: 'bcast',
-    icon: '<span class="ticon">📣</span>', label: 'LINE\n一斉配信' },
+    // ★2026-11-13 まるちゃん「黒背景に白枠すればOK　画像生成AIはつかわずに」＝開発版だけ、今の絵を黒い地に置いて細い白枠。
+    icon: '<span class="ticon">📣</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/bcast-kuro-192.png"></span>', label: 'LINE\n一斉配信' },
   // ★予約入力＝貼って選ぶだけで新規予約を1件作る。開発URL(?dev=1)専用（kanshi/zenjitsu/costと同じ＝
   //   tile_settings.py に入れないので開発者だけに出る）。登録は事務所PC(edit_worker op=new_reservation)が実行。
   // ★プロセル残り本数＝美容液を何本注文するかの数（頭皮用・顔MD用・顔Pro用）。開発URL(?dev=1)専用。
@@ -1971,7 +1975,9 @@ var TILE_DEFS_ = [
   // ★お知らせ見てくれた？（2026-11-06）＝前日お知らせへの反応（返事・確認リンクを押した）を今日・明日・過去の履歴で見る。
   //   分け方はサーバーが oshirase_mita.json に入れる（前日お知らせ確認リンクの お知らせ見てくれた.py）。
   { id: 'mita', cls: 'mita', view: 'mita',
-    icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
+    // ★2026-11-13 まるちゃん「黒背景に白枠すればOK　画像生成AIはつかわずに」＝開発版だけ、今の絵を黒い地に置いて細い白枠。
+    icon: '<span class="ticon">👀</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/mita-kuro-192.png"></span>', label: 'お知らせ\n見てくれた？' },
   // ★購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」→2026-11-11「全スタッフにだして」＝スタッフ画面）。テストのお客様トモトラス様だけ。
   //   画面と紙はパソコン版と同じ1本を係から受け取って出す（受付係 op=shomeisho → まとめ購入証明書\programs\zuko_shomeisho.py）。
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
