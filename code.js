@@ -1784,6 +1784,39 @@ var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
 //   ＝ボタンに iconDev（新しい絵）があれば、開発版（dev）の画面だけそれを出す。スタッフ版・TOMATOさん版は今までの icon のまま。
 //   全部そろって公開する時は、各ボタンの iconDev を icon に移して iconDev を消す。
 function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
+// ★2026-11-13 まるちゃん「ズコ内のアイコンがほとんどかわってない。ちゃんと最新のに全部かえて」
+//   ＝各画面の一番上の見出しの絵（🧴 プロセル 残り本数 など）も、開発版ではそのボタンの新しい絵にする。
+//   画面ごとに書き換えると漏れるので、画面を出す共通の所（index.html の mount）から1か所で差し替える。
+//   スタッフ版は今までの絵のまま（ボタンと同じく「公開して」まで変えない）。
+//   ボタンの無い画面（予約入力の中の新規・既存・変更）は、予約入力のトップで選んだ絵にそろえる。
+var HEAD_MARK_EXTRA_ = {
+  yoyaku_new: '🆕️', yoyaku_kizon: '📅',
+  yoyaku_henkou: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png">'
+};
+function devHeadMark_(root, view, dev) {
+  if (!dev || !root || !root.querySelector) return;
+  var bm = root.querySelector('.hhead span.bmark');
+  if (!bm) return;
+  var html = HEAD_MARK_EXTRA_[view] || '';
+  if (!html) {
+    var q = (typeof location !== 'undefined') ? location.search : '';
+    var tid = '';   // 施術後の予約の画面は、施術後のLINE送信（mode=line）とリピート入力（mode=repeat）にも使う
+    if (view === 'yoyaku_sejutsugo') {
+      if (/[?&]mode=repeat(&|$)/.test(q)) return;   // リピート入力は🔁のまま
+      tid = /[?&]mode=line(&|$)/.test(q) ? 'sgline' : 'sejutsugo';
+    }
+    for (var i = 0; i < TILE_DEFS_.length && !html; i++) {
+      var t = TILE_DEFS_[i];
+      if (!t.iconDev || (tid ? t.id !== tid : t.view !== view)) continue;
+      var tmp = document.createElement('div'); tmp.innerHTML = t.iconDev;
+      var el = tmp.querySelector('img,svg');
+      html = el ? el.outerHTML : '';
+    }
+  }
+  if (!html) return;
+  bm.innerHTML = html;
+  bm.classList.add('bmarkimg');
+}
 // ★2026-11-10 まるちゃん「これのマークいれて」＝スレッズコのボタン・画面のタイトルに、本物のThreadsのマーク（黒地に白）。
 //   パソコン版の同じ絵＝PC版スーパーズコ\icons	hreads_logo.svg（ボタンとタスクバーのアイコンの元）。形を直す時は両方。
 var THREADS_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
@@ -1924,7 +1957,9 @@ var TILE_DEFS_ = [
   //   まるちゃん依頼 2026-09-25「一番トップの画面に出して。開発中だからしょっちゅう押す」。
   //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発の住所(?dev=1)だけ。
   { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
-    icon: '<span class="ticon">📖</span>', label: '既存の\n予約' },
+    icon: '<span class="ticon">📖</span>',
+    // ★2026-11-13 予約入力のトップで選んだ📅にそろえた（開発版だけ）
+    iconDev: '<span class="ticon">📅</span>', label: '既存の\n予約' },
   // ★TimeTree＝タイムツリーを開かずに、月のカレンダー→日付→その日の予定→中身を見る（2026-09-15）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'timetree', cls: 'timetree', view: 'timetree',
@@ -23005,6 +23040,9 @@ var HOMECSS_ =
 '  .home { max-width:560px; margin:0 auto; min-height:100vh; padding:34px 18px 48px;' +
 '    display:flex; flex-direction:column; }' +
 '  .hhead { display:flex; align-items:center; justify-content:center; gap:9px; margin:18px 0 4px; }' +
+/* ★2026-11-13 開発版で見出しの絵をボタンの新しい絵に差し替えた時の大きさ（devHeadMark_） */
+'  .bmark.bmarkimg { display:inline-flex; }' +
+'  .bmark.bmarkimg img, .bmark.bmarkimg svg { width:34px; height:34px; display:block; border-radius:8px; }' +
 '  .bmark { font-size:22px; line-height:1; }' +
 '  img.bmark { width:66px; height:66px; border-radius:50%; object-fit:cover; }' +
 '  .bname { font-size:2.05rem; font-weight:900; letter-spacing:.01em; color:#fb8c44; }' +
