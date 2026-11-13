@@ -2530,6 +2530,10 @@ function renderFolderTestPage_(base, staff, dev) {
 var FOLDERTESTCSS_ =
   '  .tile.foldertest::before { background:#94a3b8; }' +
   '  .tile.ftfolder::before { background:#94a3b8; }' +
+  // ★2026-11-14 まるちゃん「トップにある時は（ボタンの）左の棒線の色はつけない。フォルダとボタンの差をつけるため。
+  //   フォルダに入ってる時は全部そのフォルダの左の色に合わせて、みんな左の棒を入れる」
+  '  #ftHome .fttop a.tile:not(.ftfolder)::before { display:none; }' +
+  '  #ftHome .ftin a.tile::before { background:#94a3b8 !important; }' +
   '  #ftHome .tiles { grid-auto-rows:1fr; }' +
   // ★同日まるちゃん「数は表示しなくていい。フォルダの中の1個のアイコンをもっと大きく。目に見えない」＝中の絵を20px→32pxに。
   '  .ftmini { flex:none; width:74px; height:74px; border-radius:14px; background:rgba(148,163,184,.22); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:3px; padding:3px; box-sizing:border-box; margin-right:6px; }' +
@@ -2609,11 +2613,11 @@ function folderTestBoot_(D) {
       h += '<div class="backbar"><button type="button" class="backbtn" id="ftBack">← 戻る</button>' +
         '<span class="hreset"><button type="button" class="hresetbtn">↺ 初期の並びに戻す</button></span></div>' +
         '<div class="grouptitle">💼 スタッフ画面（' + items.length + '個）</div>' +
-        '<div class="tiles" id="ftBox">' + items.map(function (x) { return typeof x === 'string' ? tileHtml(x) : folderHtml(x); }).join('') + '</div>';
+        '<div class="tiles fttop" id="ftBox">' + items.map(function (x) { return typeof x === 'string' ? tileHtml(x) : folderHtml(x); }).join('') + '</div>';
     } else {
       h += '<div class="backbar"><button type="button" class="backbtn" id="ftBack">← 戻る</button></div>' +
         '<div class="grouptitle">📂 ' + esc(openF.f) + '</div>' +
-        '<div class="tiles" id="ftBox">' + openF.items.map(tileHtml).join('') + '</div>';
+        '<div class="tiles ftin" id="ftBox">' + openF.items.map(tileHtml).join('') + '</div>';
     }
     home.innerHTML = h;
     bind();
@@ -2694,8 +2698,8 @@ function folderTestBoot_(D) {
   }
   function toTop(id) {
     var F = where(id); if (!F) return;
-    var pos = items.indexOf(F) + 1;
-    takeOut(id); items.splice(pos, 0, id); dropEmpty();
+    // ★2026-11-14 まるちゃん「トップに移動させるのは一番使いたいから＝トップ画面の一番左上に置く」
+    takeOut(id); items.splice(0, 0, id); dropEmpty();
     done('「' + lbl(id) + '」をトップに移動しました');
   }
   function ungroup(F) {
