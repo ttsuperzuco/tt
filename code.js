@@ -1790,7 +1790,7 @@ function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
 //   スタッフ版は今までの絵のまま（ボタンと同じく「公開して」まで変えない）。
 //   ボタンの無い画面（予約入力の中の新規・既存・変更）は、予約入力のトップで選んだ絵にそろえる。
 var HEAD_MARK_EXTRA_ = {
-  yoyaku_new: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png">', yoyaku_kizon: '📅',
+  yoyaku_new: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png">', yoyaku_kizon: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/kizon-pink-128.png">',
   yoyaku_henkou: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png">'
 };
 function devHeadMarkHtml_(view) {   // その画面の新しい絵（無ければ空）
@@ -2028,7 +2028,7 @@ var TILE_DEFS_ = [
   { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
     icon: '<span class="ticon">📖</span>',
     // ★2026-11-13 予約入力のトップで選んだ📅にそろえた（開発版だけ）
-    iconDev: '<span class="ticon">📅</span>', label: '既存の\n予約' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/kizon-pink-128.png"></span>', label: '既存の\n予約' },
   // ★TimeTree＝タイムツリーを開かずに、月のカレンダー→日付→その日の予定→中身を見る（2026-09-15）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'timetree', cls: 'timetree', view: 'timetree',
@@ -6266,10 +6266,10 @@ function renderReservationHomePage_(base, staff, dev) {
   //   （2026-08-11 まるちゃん決定。2026-09-11 に予約入力そのものを全スタッフへ開放したが、中は新規だけのまま）。
   var ex = dev ?
       ('<a class="rolebtn kaihatsu" href="' + base + '?view=yoyaku_kizon' + sfx + '" target="_top">' +
-        // ★2026-11-13 まるちゃん「🔁くらいシンプルに」で選択＝既存の予約は📅、既存の変更は🔀。
+        // ★2026-11-13 まるちゃん「🔁くらいシンプルに」で選択＝既存の予約は📅、既存の変更は🔀。11-14「既存の予約は色をかえたい」→ピンクの📅の絵（kizon-pink-128.png）。
         //   🔀は「色がリピートと同じでまぎらわしい」＝青をオレンジに塗り替えた絵（icons/henkou-orange-128.png）。
         //   この2つは開発者だけのボタンなので直接入れた。
-        '<span class="ricon">📅</span><span class="rname">既存の予約</span></a>' +
+        '<span class="ricon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/kizon-pink-128.png" style="width:34px;height:34px;display:block"></span><span class="rname">既存の予約</span></a>' +
       '<a class="rolebtn kanri" href="' + base + '?view=yoyaku_henkou' + sfx + '" target="_top">' +
         '<span class="ricon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png" style="width:34px;height:34px;display:block"></span><span class="rname">既存の変更</span></a>') : '';
   // ★2026-10-07 まるちゃん決定：「施術後の予約」はホームに大きいボタンがあるので、ここには出さない（二重になるため）。
