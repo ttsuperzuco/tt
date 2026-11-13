@@ -2648,6 +2648,7 @@ function instaScript_(C) {
       if (ev.target.id === 'igeX') { e.remove(); return; }
       if (ev.target.id !== 'igeGo') return;
       var v = tx.value.trim();
+      if (v === String(POST.caption || '').trim()) { e.remove(); return; }
       if (v.length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです（絵文字は2文字に数えます）😊'); return; }
       if (POST._apv) {
         var aid2 = POST._apv;
