@@ -12,7 +12,7 @@ function renderFolderTestPage_(base, staff, dev) {
   FOLDERTEST_START_.forEach(function (x) { if (typeof x === 'string') want.push(x); else want = want.concat(x.items); });
   var byId = {};
   for (var i = 0; i < TILE_DEFS_.length; i++) byId[TILE_DEFS_[i].id] = TILE_DEFS_[i];
-  want.forEach(function (id) { var t = byId[id]; if (t) tiles[id] = { icon: t.icon, label: t.label, cls: t.cls }; });
+  want.forEach(function (id) { var t = byId[id]; if (t) tiles[id] = { icon: tileIcon_(t, dev), label: t.label, cls: t.cls }; });
   var D = { tiles: tiles, start: FOLDERTEST_START_, home: (base || '') + '?view=home' + roleSfx_(staff, dev) };
   return '<style>' + HOMECSS_ + FOLDERTESTCSS_ + '</style><div class="home hsort" id="ftHome"></div>' +
     '<script>(' + folderTestBoot_.toString() + ')(' + JSON.stringify(D).replace(/</g, '\\u003c') + ');</' + 'script>';

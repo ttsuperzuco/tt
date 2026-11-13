@@ -1778,6 +1778,10 @@ var LINE_UNANS_LOGO_ = LINE_BIG_BUBBLE_ + '</g>' +
   '<circle cx="19.4" cy="4.8" r="3.8" fill="#E24B4A" stroke="#fff" stroke-width=".9"/></svg>';
 var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
   '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g></svg>';
+// ★2026-11-13 まるちゃん「アイコンをいったん全部もどす。あたらしいあいこんは開発者だけにだす。ぜんぶかんせいしてからみせる」
+//   ＝ボタンに iconDev（新しい絵）があれば、開発版（dev）の画面だけそれを出す。スタッフ版・TOMATOさん版は今までの icon のまま。
+//   全部そろって公開する時は、各ボタンの iconDev を icon に移して iconDev を消す。
+function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
 // ★2026-11-10 まるちゃん「これのマークいれて」＝スレッズコのボタン・画面のタイトルに、本物のThreadsのマーク（黒地に白）。
 //   パソコン版の同じ絵＝PC版スーパーズコ\icons	hreads_logo.svg（ボタンとタスクバーのアイコンの元）。形を直す時は両方。
 var THREADS_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
@@ -1802,11 +1806,13 @@ var TILE_DEFS_ = [
   { id: 'uriage', cls: 'uriage', view: 'uriage',
     icon: '<span class="ticon">💰</span>', label: '売上転記\nTimeTree' },
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
-    icon: '<span class="ticon">' + LINE_UNANS_LOGO_ + '</span>', label: 'LINE未回答\n＆返信待ち' },
+    icon: '<span class="ticon">💬</span>',
+    iconDev: '<span class="ticon">' + LINE_UNANS_LOGO_ + '</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
     // ★2026-11-13 まるちゃん選択＝オレンジの目覚まし時計にピンクの虫めがねを重ねた絵（子ども向けアニメ風・GPTで作成）。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\akijikan-zuko-96.png。
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png"></span>', label: '空き時間\n検索' },
+    icon: '<span class="ticon">🕑</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png"></span>', label: '空き時間\n検索' },
   { id: 'links', cls: 'links', view: 'links',
     icon: '<span class="ticon">🔗</span>', label: '各種\nLINK' },
   // ★元祖TTアプリ＝外部サイトへのリンクだけのボタン（GAS内のviewではない）。
@@ -1877,7 +1883,8 @@ var TILE_DEFS_ = [
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
     // ★2026-11-13 まるちゃん選択＝開いたピンクの予約帳に大きな黄色い鉛筆で書き込む絵（子ども向けアニメ風・GPTで作成）。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\yoyaku-zuko-96.png。
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/yoyaku-192.png"></span>', label: '予約\n入力' },
+    icon: '<span class="ticon">📝</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/yoyaku-192.png"></span>', label: '予約\n入力' },
   // ★施術後の予約＝施術者が施術のあと、その場でそのお客様の次回の予約を入れる入口（作りかけ）。
   //   まるちゃん依頼 2026-09-11「開発中の機能は、ここにもいれて。すぐに呼び出せるように」。
   //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発URL(?dev=1)専用
@@ -1885,11 +1892,13 @@ var TILE_DEFS_ = [
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
     // ★2026-11-13 まるちゃん選択＝目を閉じてにっこり笑う女の子の顔（子ども向けアニメ風・GPTで作成）＋右下に黄色い「次」。
     //   前の 💆 は小さいと「万歳している人」に見えたため。パソコン版の同じ絵＝PC版スーパーズコ\icons\sejutsugo-zuko-96.png。
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
+    icon: '<span class="ticon">💆</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
   // ★施術後のLINE送信（2026-10-31）＝施術後の予約と同じ画面（施術者→今日のお客様）を mode=line で開き、
   //   4つの送る物から選んで送る。開発中の機能の部屋だけ（開発者だけ）。
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
-    icon: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
+    icon: '<span class="ticon">💌</span>',
+    iconDev: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
   // ★既存の予約＝LINEで予約を受けた時に使う入口（いま作り替え中）。
   //   まるちゃん依頼 2026-09-25「一番トップの画面に出して。開発中だからしょっちゅう押す」。
   //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発の住所(?dev=1)だけ。
@@ -1942,7 +1951,8 @@ var TILE_DEFS_ = [
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
     // ★2026-11-13 まるちゃん選択＝ピンクのプリンターから赤いハンコ付きの証明書が出てくる絵（子ども向けアニメ風・GPTで作成）。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\shomeisho-zuko-96.png。
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png"></span>', label: '購入証明書\n作成' },
+    icon: '<span class="ticon">🧾</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png"></span>', label: '購入証明書\n作成' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
@@ -2339,7 +2349,7 @@ function renderFolderTestPage_(base, staff, dev) {
   FOLDERTEST_START_.forEach(function (x) { if (typeof x === 'string') want.push(x); else want = want.concat(x.items); });
   var byId = {};
   for (var i = 0; i < TILE_DEFS_.length; i++) byId[TILE_DEFS_[i].id] = TILE_DEFS_[i];
-  want.forEach(function (id) { var t = byId[id]; if (t) tiles[id] = { icon: t.icon, label: t.label, cls: t.cls }; });
+  want.forEach(function (id) { var t = byId[id]; if (t) tiles[id] = { icon: tileIcon_(t, dev), label: t.label, cls: t.cls }; });
   var D = { tiles: tiles, start: FOLDERTEST_START_, home: (base || '') + '?view=home' + roleSfx_(staff, dev) };
   return '<style>' + HOMECSS_ + FOLDERTESTCSS_ + '</style><div class="home hsort" id="ftHome"></div>' +
     '<script>(' + folderTestBoot_.toString() + ')(' + JSON.stringify(D).replace(/</g, '\\u003c') + ');</' + 'script>';
@@ -2642,7 +2652,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     var rel = t.url ? ' rel="noopener"' : '';
     var sortAttr = canSort ? (' data-tid="' + esc_(t.id) + '" data-def="' + defIdx[t.id] + '" draggable="false"') : '';
     return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + sortAttr + '>' +
-      t.icon + '<span class="tname">' + esc_(t.label) + '</span></a>';
+      tileIcon_(t, dev) + '<span class="tname">' + esc_(t.label) + '</span></a>';
   }
   // ボタンの並ぶ箱。入れ替えのあとも「右を空けるボタン」の決まりを同じに保つため、箱に名前を持たせる。
   function tilesBox_(list, gaps) {
