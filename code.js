@@ -1804,7 +1804,9 @@ var TILE_DEFS_ = [
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
     icon: '<span class="ticon">' + LINE_UNANS_LOGO_ + '</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
-    icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' },
+    // ★2026-11-13 まるちゃん選択＝オレンジの目覚まし時計にピンクの虫めがねを重ねた絵（子ども向けアニメ風・GPTで作成）。
+    //   パソコン版の同じ絵＝PC版スーパーズコ\icons\akijikan-zuko-96.png。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png"></span>', label: '空き時間\n検索' },
   { id: 'links', cls: 'links', view: 'links',
     icon: '<span class="ticon">🔗</span>', label: '各種\nLINK' },
   // ★元祖TTアプリ＝外部サイトへのリンクだけのボタン（GAS内のviewではない）。
