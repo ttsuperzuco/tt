@@ -19828,6 +19828,9 @@ function instaScript_(C) {
       if (ev.target.id === 'igeX') { e.remove(); return; }
       if (ev.target.id !== 'igeGo') return;
       var v = tx.value.trim();
+      // ★2026-11-13 まるちゃん「なんで修正がないのにこれ出てるの？」＝文を変えずに「完了」を押すと、中身の同じ「修正」の下書きができていた。
+      //   本物のインスタと同じく、何も変えていなければ閉じるだけ（下書きも本番の書き込みも作らない）。
+      if (v === String(POST.caption || '').trim()) { e.remove(); return; }
       if (v.length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです（絵文字は2文字に数えます）😊'); return; }
       if (POST._apv) {
         var aid2 = POST._apv;
