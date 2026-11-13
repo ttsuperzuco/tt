@@ -1953,7 +1953,9 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procstock-192.png?v=2"></span>', label: 'プロセル\n在庫' },
   // ★TT売上帳簿（2026-11-07）＝今日の売上表を触る（受付係 op=uriagebook → 発票から売上表\programs\売上帳簿の係.py）。
   { id: 'uriagebook', cls: 'uriagebook', view: 'uriagebook',
-    icon: '<span class="ticon">📒</span>', label: 'TT売上\n帳簿' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ）＝帳簿の表紙に白く大きな「売」（GPTで作成）・表紙は台湾トマトの色（ズコの地の #2C7A99）・黒い地＋細い白枠。パソコン版＝icons\uriagebook-kuro-96.png。
+    icon: '<span class="ticon">📒</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/uriagebook-kuro-192.png"></span>', label: 'TT売上\n帳簿' },
   // ★販売管理＝台湾販売入力／日本販売入力／販売管理表（2026-10-17・実務者用）。
   //   登録・候補・一覧は事務所PCの記録（受付係 op=hanbai → 販売管理\programs\hanbai.py）。
   { id: 'hanbai', cls: 'hanbai', view: 'hanbai',
