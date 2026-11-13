@@ -2349,7 +2349,12 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' + resetHtml + '</div>' +
-        '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>' +
+        // ★2026-11-13 まるちゃん「かぶりが出てる時には、スタッフ画面の右側に 被り検出あり っていう注意ボタンを出して。
+        //   押すと、被りボタンに直接飛べるように」＝見出しの右。出すかどうかは index.html の裏取りが数えて決める（PC版と同じ）。
+        (R.id === 'jitsumu'
+          ? '<div class="grouptitle gtk"><span>' + R.icon + ' ' + R.title + '</span>' +
+              '<a class="hkaburi" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a></div>'
+          : '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>') +
         tilesBox_(list, BLANK_AFTER_[R.id]) + subs.map(function (S) {
           var sl = byG[S.id] || [];
           return sl.length ? ('<div class="grouptitle" style="margin-top:22px">' + S.icon + ' ' + S.title + '</div>' +
@@ -23313,6 +23318,11 @@ var HOMECSS_ =
 '    font-size:1rem; font-weight:800; box-shadow:0 4px 12px rgba(0,0,0,.08); }' +
 '  .backbtn:active { transform:translateY(1px); }' +
 '  .grouptitle { font-size:1.15rem; font-weight:900; color:#fff; margin:2px 0 14px; letter-spacing:.02em; }' +
+/* ★2026-11-13 被りがある時だけ、スタッフ画面の見出しの右に出す注意ボタン（PC版 super_pc.py の .hkaburi と同じ） */
+'  .grouptitle.gtk { display:flex; align-items:center; gap:10px; }' +
+'  .hkaburi { margin-left:auto; font-size:1rem; font-weight:900; color:#fff; background:#e11d48; text-decoration:none;' +
+'    border:2px solid #fff; border-radius:999px; padding:8px 16px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.22); }' +
+'  .hkaburi:active { transform:translateY(1px); }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
 '  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
 '    gap:2px; text-align:left; text-decoration:none; color:var(--ink);' +
