@@ -1420,7 +1420,7 @@ var TILE_GROUP_ = {
 };
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
-  { id: 'keiei', icon: '📊', title: 'りゅうツール' },
+  { id: 'keiei', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/ryutool-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'りゅうツール' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
@@ -2583,6 +2583,7 @@ var HOMECSS_ =
 '  @media (hover:hover){ .rolebtn:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.14); } }' +
 '  .ricon { flex:none; width:52px; height:52px; border-radius:13px; font-size:30px; display:grid; place-items:center; }' +
 '  .rolebtn.keiei .ricon { background:rgba(220,38,38,.14); }' +
+'  .ricon img.rimg { height:46px !important; width:46px !important; vertical-align:0 !important; display:block; object-fit:contain; }' +
 '  .rolebtn.kanri .ricon { background:rgba(245,158,11,.16); }' +
 '  .rolebtn.jitsumu .ricon { background:rgba(22,163,74,.15); }' +
 '  .rolebtn.kaihatsu .ricon { background:rgba(99,102,241,.15); }' +
