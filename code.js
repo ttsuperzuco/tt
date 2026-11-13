@@ -2656,11 +2656,41 @@ function renderHome_(base, staff, dev, who) {
 /** ホーム画面の描画（純JS・GAS API不使用）。②静的アプリは JSONP で tile_settings を取得し、
  *  これを直接呼ぶ（renderPage_/renderLtPage_/renderUriagePage_ と同じ「取得と描画を分離」の作法）。
  *  dev=true（開発用URL）は tile_settings.json の設定を無視して全ボタンを表示する。 */
+// ★2026-11-13 まるちゃん「スタッフ画面の文字の上に りゅう 🍅 🍊 オリーブ パイン 受付PC 受付スマホ のボタンを出して。
+//   その人の画面をだす。受付以外は全部文字じゃなくマーク」＝開発版（?dev=1）だけの見本の仕組み。
+//   住所に &as=<人> を付けると、その人のホーム（見えるボタン・並び・ボタンの絵がその人と同じ）を出す。
+//   押した先の画面は開発版のまま開く（ボタンの行き先は開発版の住所）。PC版 super_pc.py の HOME_AS_PEOPLE と同じ並び。
+var HOME_AS_PEOPLE_ = [
+  { id: '', mark: '🐉', title: 'りゅう（開発版）' },
+  { id: 'kanbu', mark: '🍅', title: 'トマト' },
+  { id: 'mikan', mark: '🍊', title: 'みかん' },
+  { id: 'olive', mark: '🫒', title: 'オリーブ' },
+  { id: 'pine', mark: '🍍', title: 'パイン' },
+  { id: 'reception', text: '受付PC' },
+  { id: 'reception_sp', text: '受付スマホ' }
+];
+function homeAsWho_(dev) {
+  if (!dev || typeof location === 'undefined') return '';
+  var m = /[?&]as=([a-z_]+)/.exec(location.search || '');
+  if (!m) return '';
+  for (var i = 0; i < HOME_AS_PEOPLE_.length; i++) { if (HOME_AS_PEOPLE_[i].id && HOME_AS_PEOPLE_[i].id === m[1]) return m[1]; }
+  return '';
+}
+function homeAsRow_(base, cur) {
+  return '<div class="hasrow">' + HOME_AS_PEOPLE_.map(function (p) {
+    var href = base + '?view=home&dev=1' + (p.id ? '&as=' + p.id : '');
+    return '<a class="hasbtn' + (p.text ? ' hastx' : '') + (p.id === cur ? ' on' : '') + '" href="' + href +
+      '" target="_top" title="' + esc_(p.title || p.text) + 'の画面">' + esc_(p.mark || p.text) + '</a>';
+  }).join('') + '</div>';
+}
 function renderHomePage_(cfg, base, staff, dev, who) {
   var perms = (cfg && cfg.perms) || defaultPerms_();
   var labels = (cfg && cfg.labels) || PERSON_LABEL_;
-  var allow = personPerms_(perms, staff, dev, who);   // null=dev(全許可)
+  // ★2026-11-13 その人の画面の見本（上の HOME_AS_PEOPLE_）。ボタンの行き先は開発版のまま（sfx は先に作る）。
+  var asWho = homeAsWho_(dev);
   var sfx = roleSfx_(staff, dev);
+  if (asWho) { staff = asWho !== 'kanbu'; who = staff ? asWho : ''; dev = false; }
+  var allow = personPerms_(perms, staff, dev, who);   // null=dev(全許可)
   var subtitle = dev ? '開発版（全ボタン表示）'
     : (staff ? (labels[who] || 'スタッフ') : 'TOMATOさん版');
   // 並び順：自動監視メニュー4「ボタンの並びをかえれる」設定（tile_settings.py）で変更可能。
@@ -2679,7 +2709,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   // ★2026-11-10 まるちゃん「ボタンを長押しして場所を入れ替えたい」＝そのスマホだけの並び（全員共通の並びは変えない）。
   //   最初は開発版だけだった。★2026-11-10 まるちゃん「トマトさんやら、みかんさんやら、オリーブさんやら、
   //   他の全スタッフにも反映して」＝全員のホーム（スタッフ版・TOMATOさん版・開発版）で使える。
-  var canSort = true;
+  var canSort = !asWho;   // ★その人の画面の見本では並べ替えない（自分の並びを変えないため・並びは全員共通の物）
   var defIdx = {};   // 全員共通の並びでの順番（「初期の並びに戻す」で使う）
   for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
   var mine = canSort ? homeMyOrder_() : null;
@@ -2740,6 +2770,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' + resetHtml + '</div>' +
+        (R.id === 'jitsumu' ? homeAsRow_(base, '') : '') +   // ★2026-11-13 人のボタン（スタッフ画面の見出しの上）
         // ★2026-11-13 まるちゃん「かぶりが出てる時には、スタッフ画面の右側に 被り検出あり っていう注意ボタンを出して。
         //   押すと、被りボタンに直接飛べるように」＝見出しの右。出すかどうかは index.html の裏取りが数えて決める（PC版と同じ）。
         (R.id === 'jitsumu'
@@ -2761,6 +2792,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
+    (asWho ? homeAsRow_(base, asWho) : '') +   // ★2026-11-13 その人の画面の見本＝上に人のボタン（押した人が白く光る）
     // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
     // 戻るボタンの無いホーム（開発版以外）では、ボタンの並びの上の右端に置く。
     (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
@@ -22963,6 +22995,13 @@ var HOMECSS_ =
 '  .hkaburi:active { transform:translateY(1px); }' +
 '  .hkaburi.hkinyu { background:#6366f1; }' +
 '  .hkaburi.hsgline { background:#06a34a; }' +
+/* ★2026-11-13 人のボタン（その人の画面を出す・開発版だけ・PC版 super_pc.py の .hasbtn と同じ） */
+'  .hasrow { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }' +
+'  .hasbtn { min-width:44px; height:44px; padding:0 8px; box-sizing:border-box; border-radius:12px; background:#111827;' +
+'    border:2px solid rgba(255,255,255,.55); color:#fff; font-size:24px; font-weight:900; text-decoration:none;' +
+'    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }' +
+'  .hasbtn.hastx { font-size:.95rem; padding:0 12px; }' +
+'  .hasbtn.on { background:#fff; color:#12303c; border-color:#fff; }' +
 '  .halerts.hrow { margin:0; }' +
 '  .halerts.hrow .hkaburi { margin-bottom:12px; }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
