@@ -279,7 +279,7 @@ function honeyScript_(C) {
     try {
       wantMic = true;
       micStart();
-      $('hnMic').classList.add('on'); $('hnMic').textContent = '⏹ 止める';
+      $('hnMic').classList.add('on'); $('hnMic').textContent = '⏹️ 止める';
     } catch (e) { micOff(); popup('音声入力を開始できませんでした。入力欄を押して、キーボードの🎤（マイク）のボタンで話してください😊'); }
   });
   document.addEventListener('visibilitychange', function () { if (document.hidden && wantMic) micStop(); });
@@ -390,7 +390,7 @@ function renderHoneyPage_(base, staff, dev) {
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
       '<div class="hnbox"><div class="hnthumbs" id="hnThumbs"></div>' +
       '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea></div>' +
-      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼 画像選択</button></div>' +
+      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼️ 画像選択</button></div>' +
       '<input type="file" id="hnFile" accept="image/*,application/pdf" multiple style="display:none">' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
     '</div></div>' +

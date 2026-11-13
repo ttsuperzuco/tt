@@ -46,7 +46,7 @@ function renderKanshiPage_(d, base, staff, dev) {
     '<h1>📟 自動監視</h1>' +
     '<div class="kfresh" id="kFresh"></div>' +
     '<div id="kList"></div>' +
-    '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
+    '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪️＝OFF（止めてある）。' +
       'カードの「⚙ 設定」で内容の一覧へ、さらに各行の「詳細」でその項目の画面へ進みます' +
       '（上の「← 戻る」で戻れます）。入切や実行はいちばん奥の画面にあります（自宅PCの自動監視と同じ場所）。' +
       'この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
@@ -175,7 +175,7 @@ var KANSHISCRIPT_ =
 '  document.body.appendChild(t);' +
 '  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3200);' +
 '}' +
-'function mark_(st){ return st==="ok"?"🟢":(st==="off"?"⚪":(st==="unknown"?"🟡":"🔴")); }' +
+'function mark_(st){ return st==="ok"?"🟢":(st==="off"?"⚪️":(st==="unknown"?"🟡":"🔴")); }' +
 'function agoSec_(s){' +
 '  if(!s) return null;' +
 '  var t=Date.parse(String(s).replace(" ","T"));' +
@@ -187,7 +187,7 @@ var KANSHISCRIPT_ =
 '  var sec=agoSec_(data_.generated_at);' +
 '  if(sec===null||sec>STALE_SEC_){' +
 '    el.className="kfresh old";' +
-'    el.textContent="⚠ 自宅PCから状態が届いていません（最後に届いたのは "+(data_.generated_at||"不明")+"）。下の表示は古い可能性があります。";' +
+'    el.textContent="⚠️ 自宅PCから状態が届いていません（最後に届いたのは "+(data_.generated_at||"不明")+"）。下の表示は古い可能性があります。";' +
 '  } else {' +
 '    el.className="kfresh"; el.textContent="最終更新 "+(data_.generated_at||"");' +
 '  }' +
@@ -233,7 +233,7 @@ var KANSHISCRIPT_ =
 '  h+="<span class=\\"klabel\\">"+esc(m.label)+' +
 '    "<div class=\\"kslabel k_"+esc(m.status||"")+"\\">"+esc(m.slabel||"")+"</div>"+' +
 '    "<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div>"+' +
-'    (m.where_note?"<div class=\\"kdetail\\" style=\\"color:#f87171\\">⚠ "+esc(m.where_note)+"</div>":"")+"</span></div>";' +
+'    (m.where_note?"<div class=\\"kdetail\\" style=\\"color:#f87171\\">⚠️ "+esc(m.where_note)+"</div>":"")+"</span></div>";' +
 '  h+=ctlBtns_(m);' +
 '  h+="</div>";' +
 '  if(m.members&&m.members.length){' +
@@ -313,7 +313,7 @@ var KANSHISCRIPT_ =
 '          var _b=document.getElementById("szDoneBack");' +
 '          if(_b) _b.addEventListener("click", function(){ szOvHide_(); });' +
 '        } else { szOvHide_(); szPopup_("エラーが発生しました。"+(r.result||"")); }' +
-'      } else { toast_((r.status==="done"?"✅ ":"⚠ ")+(r.result||"")); }' +
+'      } else { toast_((r.status==="done"?"✅ ":"⚠️ ")+(r.result||"")); }' +
 '      reload_();' +
 '      return;' +
 '    }' +
@@ -336,7 +336,7 @@ var KANSHISCRIPT_ =
 'function openTiles_(){' +
 '  toast_("設定を読み込んでいます…");' +
 '  jsonp_({action:"data", name:"tile_settings.json"}, function(r){' +
-'    if(!r||r.error){ toast_("⚠ 設定を読み込めませんでした"); return; }' +
+'    if(!r||r.error){ toast_("⚠️ 設定を読み込めませんでした"); return; }' +
 '    EPEOPLE_=(typeof _peopleFromCfg_==="function")?_peopleFromCfg_(r):(r.people||[]);' +
 '    ELAB_=(typeof _labelsFromCfg_==="function")?_labelsFromCfg_(r):(r.labels||{});' +
 '    ECLAIM_=r.claimed||{};' +
@@ -400,7 +400,7 @@ var KANSHISCRIPT_ =
 '  var mask=document.createElement("div"); mask.className="kmask"; mask.id="kTiles";' +
 '  var resets=EPEOPLE_.filter(function(p){ return p!=="kanbu"; }).map(function(pid){' +
 '    return "<button type=\\"button\\" class=\\"kchip\\" data-reset=\\""+esc(pid)+"\\">"+esc(ELAB_[pid]||pid)+"</button>";' +
-'  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠ 全員</button>";' +
+'  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠️ 全員</button>";' +
 '  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
 '    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください😊 （反映まで最大1分）。</div>"+' +
 '    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
@@ -493,7 +493,7 @@ var KANSHISCRIPT_ =
 '    function(r){' +
 '      if(!r||!r.ok){' +
 '        if(busy){ szOvHide_(); szPopup_("エラーが発生しました。"+((r&&r.error)||"依頼できませんでした")); }' +
-'        else { toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); }' +
+'        else { toast_("⚠️ "+((r&&r.error)||"依頼できませんでした")); }' +
 '        return;' +
 '      }' +
 '      poll_(r.id, 16, busy);' +

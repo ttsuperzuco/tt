@@ -71,7 +71,7 @@ function renderTimedSendPage_(base, staff, dev) {
   '+"<div style=\\"font-weight:800\\">"+esc(r.st)+"　"+esc(r.at)+"</div>"' +
   '+"<div style=\\"font-size:14px;margin-top:2px\\">"+esc(r.who)+"　"+esc(r.head)+(r.imgs?("　画像"+r.imgs+"枚"):"")+"</div>"' +
   '+(r.note?("<div style=\\"font-size:13px;color:#7f1d1d;margin-top:2px\\">"+esc(r.note)+"</div>"):"")' +
-  '+(r.trouble?("<div style=\\"font-size:13px;color:#b45309;margin-top:2px\\">⚠ "+esc(r.trouble)+"</div>"):"")' +
+  '+(r.trouble?("<div style=\\"font-size:13px;color:#b45309;margin-top:2px\\">⚠️ "+esc(r.trouble)+"</div>"):"")' +
   '+(r.cancelable?("<button type=\\"button\\" class=\\"tscancel\\" data-id=\\""+esc(r.id)+"\\" style=\\"margin-top:8px;font:inherit;font-weight:800;color:#fff;background:#b91c1c;border:0;border-radius:10px;padding:8px 14px;\\">取り消し</button>"):"")' +
   '+"</div>";}' +
   'listEl.innerHTML=h;' +

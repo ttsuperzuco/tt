@@ -3512,7 +3512,7 @@ function renderZenjitsuPage_(base, staff, dev) {
   /* ── その方に付く画像を修正する ─────────────────────── */
   'function zjPersonImg(eid,info){' +
   'zjBox("<div class=\\"zjbox-in\\"><button type=\\"button\\" class=\\"zjback\\" id=\\"zjbk3\\">← 戻る</button>"' +
-  '+"<h2>🖼 "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
+  '+"<h2>🖼️ "+esc((info&&info.name)||"")+" のお知らせに添付する画像</h2>"' +
   '+"<div class=\\"zjnote\\">押して入切します。決めたら『この画像で決定』を押してください😊</div>"' +
   '+"<div id=\\"zjpick\\" class=\\"zjpick\\">読み込んでいます…</div>"' +
   '+"<button type=\\"button\\" class=\\"zjgo\\" id=\\"zjpicksave\\">この画像で決定</button></div>");' +
@@ -4178,7 +4178,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
       } else {
         groups = stopAds.map(function (a) { return perfTotalCard(a, true); }).join('');
       }
-      stopBody = '<div class="kkacc" style="border-left-color:#94a3b8;">⏸ 今は止めている広告' +
+      stopBody = '<div class="kkacc" style="border-left-color:#94a3b8;">⏸️ 今は止めている広告' +
         '<small>' + stopAds.length + '件</small></div>' + groups;
     }
 
@@ -4558,7 +4558,7 @@ function renderTimedSendPage_(base, staff, dev) {
   '+"<div style=\\"font-size:14px;margin-top:2px\\">"+esc(r.who)+"　"+esc(r.head)+(r.imgs?("　画像"+r.imgs+"枚"):"")+"</div>"' +
   '+(r.note?("<div style=\\"font-size:13px;color:#7f1d1d;margin-top:2px\\">"+esc(r.note)+"</div>"):"")' +
   /* ★2026-09-08：途中でつまずいた話は、やり直して成功していても出す（後から原因を追えるように） */
-  '+(r.trouble?("<div style=\\"font-size:13px;color:#b45309;margin-top:2px\\">⚠ "+esc(r.trouble)+"</div>"):"")' +
+  '+(r.trouble?("<div style=\\"font-size:13px;color:#b45309;margin-top:2px\\">⚠️ "+esc(r.trouble)+"</div>"):"")' +
   '+(r.cancelable?("<button type=\\"button\\" class=\\"tscancel\\" data-id=\\""+esc(r.id)+"\\" style=\\"margin-top:8px;font:inherit;font-weight:800;color:#fff;background:#b91c1c;border:0;border-radius:10px;padding:8px 14px;\\">取り消し</button>"):"")' +
   '+"</div>";}' +
   'listEl.innerHTML=h;' +
@@ -5706,7 +5706,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '\'<div class="bcwho">\'+whoTxt(step,t)+\'</div><div class="bchr"></div>\';' +
   // ★並べ替えと、文の直し（まるちゃん指示 2026-09-09）
   'if(n&&n<MAXP&&!mode)h+=\'<div class="bcaddslot"><span class="bcpno">1つ目の前に追加</span>\'+' +
-  '\'<button type="button" data-addimg="0">🖼 画像を追加</button>\'+' +
+  '\'<button type="button" data-addimg="0">🖼️ 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="0">✍ 文章を追加</button></div>\';' +
   'if(n&&!mode){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
@@ -5728,7 +5728,7 @@ function renderBroadcastPage_(base, staff, dev) {
   //   ＝空いている枠（◯つ目）を並べ、その枠で「画像を追加／文章を追加」。押した枠の位置に入る。
   'if(!mode){for(var sk=n;sk<MAXP;sk++){' +
   'h+=\'<div class="bcaddslot"><span class="bcpno">\'+(sk+1)+\'つ目</span>\'+' +
-  '\'<button type="button" data-addimg="\'+sk+\'">🖼 画像を追加</button>\'+' +
+  '\'<button type="button" data-addimg="\'+sk+\'">🖼️ 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="\'+sk+\'">✍ 文章を追加</button></div>\';}' +
   'if(n>=MAXP)h+=\'<div class="bcwho">\'+MAXP+\'つまで送れます（いっぱいです）。\'+' +
   '\'入れ替える時は「消去」してから追加してください😊</div>\';}' +
@@ -6138,7 +6138,7 @@ function renderReservationHomePage_(base, staff, dev) {
     '<div class="rolemenu">' +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
         // ★2026-11-13 まるちゃん選択＝🆕（開発版だけ・スタッフは📝のまま＝「公開して」まで変えない）
-        '<span class="ricon">' + (dev ? '🆕' : '📝') + '</span><span class="rname">新規の予約</span></a>' +
+        '<span class="ricon">' + (dev ? '🆕️' : '📝') + '</span><span class="rname">新規の予約</span></a>' +
       ex + rp +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
@@ -9826,7 +9826,7 @@ function uriageBody_(d, dev) {
   '<button type="button" id="uallbtn" class="ubtn uall">帳簿売上をTimeTreeに記録</button>' +
   // ★開発者の画面(dev)にだけ、このボタンが実際に何をするかを①②③で全部出す（2026-07-19ユーザー要望）。
   //   スタッフ用の画面には出さない（ボタン内の「含：…」の一行も廃止）。
-  (dev ? '<div class="udev"><div class="udevt">🛠 このボタンを押すと実行する内容（開発者向け）</div>' +
+  (dev ? '<div class="udev"><div class="udevt">🛠️ このボタンを押すと実行する内容（開発者向け）</div>' +
     '<ol class="udevl">' +
       '<li>帳簿の「まだTimeTreeに書いていない売上」を、TimeTreeに新しく記入する（すでに入っている値は触らない）。</li>' +
       '<li>TimeTreeにすでに入っている売上に記入ミスがあれば、帳簿の正しい金額に上書きして修正する。</li>' +
@@ -10018,7 +10018,7 @@ function unaWhen_(s) {
 // 詳細でいつでも中身を見られるので、カード上部の要約は短く（.unaq は2行でクランプ・
 // 直近のやりとり.unath は詳細と重複するので省略）＝PC版の行と同じ見せ方に揃える。
 function unaCard_(r, kind, dev) {
-  var name = r.nm || '🆕 新規（番号未設定）';
+  var name = r.nm || '🆕️ 新規（番号未設定）';
   var tag = [r.nat, r.sex].filter(Boolean).join('・');
   var search = esc_(((name) + ' ' + (r.q || '')).toLowerCase());
   var sub = [tag, (r.read && r.read !== '—') ? r.read : '', '待ち' + (r.d || 0) + '日']
@@ -10509,7 +10509,7 @@ var UNASCRIPT_ =
 '});' +
 // ―― 文章に絵文字を差し込む（送信はしない・打つだけ。2026-07-18追加）――
 'var EMOJI_LIST_=["😊","😀","😄","😁","😆","🙂","😉","😍","🥰","🤣","😂","😢","😭","🙏","👍",' +
-'"👌","💪","🎉","❤","💦","😅","🤔","😴","🙇","✨","🌸","☀","🌧","😱","😳"];' +
+'"👌","💪","🎉","❤️","💦","😅","🤔","😴","🙇","✨","🌸","☀️","🌧️","😱","😳"];' +
 'function unaEmojiPanel_(wrap){' +
 '  var mask=document.createElement("div"); mask.className="unaask";' +
 '  var box=document.createElement("div"); box.className="unaaskbox unastkbox";' +
@@ -12077,7 +12077,7 @@ function renderShomeishoPage_(base, staff, dev) {
       '<iframe id="smFrame" title="購入証明書作成" style="display:none"></iframe>' +
       '<div id="smCertBox"><div class="smbar"><div class="ubar"><a class="uhome" id="smCertBack" href="javascript:void(0)">← 戻る</a></div>' +
           '<button type="button" class="smzoom" id="smZoom">拡大して表示</button>' +
-          '<button type="button" class="smprint" id="smPrint">🖨 印刷する</button></div>' +
+          '<button type="button" class="smprint" id="smPrint">🖨️ 印刷する</button></div>' +
         '<div id="smCertPane"><div id="smCertSizer"><iframe id="smCert" title="購入証明書"></iframe></div></div></div>' +
     '</div>' +
     '<script>(' + shomeishoScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
@@ -12399,7 +12399,7 @@ function honeyScript_(C) {
     try {
       wantMic = true;
       micStart();
-      $('hnMic').classList.add('on'); $('hnMic').textContent = '⏹ 止める';
+      $('hnMic').classList.add('on'); $('hnMic').textContent = '⏹️ 止める';
     } catch (e) { micOff(); popup('音声入力を開始できませんでした。入力欄を押して、キーボードの🎤（マイク）のボタンで話してください😊'); }
   });
   document.addEventListener('visibilitychange', function () { if (document.hidden && wantMic) micStop(); });
@@ -12524,7 +12524,7 @@ function renderHoneyPage_(base, staff, dev) {
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
       '<div class="hnbox"><div class="hnthumbs" id="hnThumbs"></div>' +
       '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea></div>' +
-      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼 画像選択</button></div>' +
+      '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼️ 画像選択</button></div>' +
       // ★2026-11-12 まるちゃん「スマホ内を押すと、スマホの中から選べるようにして。一瞬その画面が出たけど、すぐに写真・コレクションの画面に行っちゃう」
       //   ＝画像だけを頼むと、Android（14以降）はスマホのファイルの画面を一瞬出してから、自分の写真選びの画面へ切り替える。
       //   PDFも混ぜて頼むと切り替わらず、スマホのファイルの画面（最近・画像・ダウンロード・フォルダ）から選べる。画像以外を選んだら知らせる。
@@ -13338,10 +13338,10 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbDateGo">この日で次へ</button>' +
       '</div>' +
       '<div id="hbJKind" style="display:none">' + inBack + head('🇯🇵', '日本販売入力') + sum +
-        '<button type="button" class="hbbig" id="hbJNewBtn"><span class="i">🆕</span>新規お客様</button>' +
+        '<button type="button" class="hbbig" id="hbJNewBtn"><span class="i">🆕️</span>新規お客様</button>' +
         '<button type="button" class="hbbig" id="hbJRepBtn"><span class="i">🔁</span>お客様</button>' +
       '</div>' +
-      '<div id="hbJNew" style="display:none">' + inBack + head('🆕', 'お客様氏名入力') + sum +
+      '<div id="hbJNew" style="display:none">' + inBack + head('🆕️', 'お客様氏名入力') + sum +
         '<div class="hblb">氏</div><input class="hbin" id="hbSei" autocomplete="off" placeholder="例：山田">' +
         '<div class="hblb">名</div><input class="hbin" id="hbMei" autocomplete="off" placeholder="例：花子">' +
         '<button type="button" class="exgo" id="hbJNewGo">次へ</button>' +
@@ -13354,7 +13354,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="hbhint">お客様を選択してください😊</div>' +
         '<div class="hbrows hbcards" id="hbCandRows"></div>' +
         '<div class="hbempty" id="hbCandNone">前に買ったお客様が見つかりません</div>' +
-        '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕</span>新規お客様として入力</button>' +
+        '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕️</span>新規お客様として入力</button>' +
       '</div>' +
       '<div id="hbTKind" style="display:none">' + inBack + head('🇹🇼', '台湾販売入力') + sum +
         '<button type="button" class="hbbig" id="hbTodayBtn"><span class="i">📅</span><span id="hbTodayBtnTx">本日予約のお客様</span></button>' +
@@ -13411,7 +13411,7 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       '<div id="hbList" style="display:none">' + inBack + head('📋', '販売管理表') +
         '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="TW">🇹🇼 台湾（元）</button><button type="button" data-v="JP">🇯🇵 日本（円）</button></div>' +
-        '<div class="hbseg sm" id="hbSpanSeg"><button type="button" class="on" data-v="M">📅 月ごと</button><button type="button" data-v="ALL">🗂 全期間</button></div>' +
+        '<div class="hbseg sm" id="hbSpanSeg"><button type="button" class="on" data-v="M">📅 月ごと</button><button type="button" data-v="ALL">🗂️ 全期間</button></div>' +
         '<div class="hbseg sm" id="hbSrcSeg"><button type="button" class="on" data-v="shop">🏪 お店購入</button><button type="button" class="on" data-v="shopee">🛍️ 蝦皮購入</button></div>' +
         '<div class="hbmon" id="hbMonRow"><button type="button" id="hbMonPrev">◀</button><div id="hbMonTxt"></div><button type="button" id="hbMonNext">▶</button></div>' +
         '<div id="hbListBody"></div>' +
@@ -14094,7 +14094,7 @@ function threadsScript_(C) {
 
   // ── 絵文字（押すと、最後に触った欄の今の位置に入る） ──
   var EMOS = ['😊','😍','🥰','😆','🤗','🥹','😂','🙏','✨','💖','💕','❤️','🩷','🌸','🌷','💐',
-              '🌿','🍀','🍅','🎉','🎁','🎀','🔥','👍','💯','✅','🆕','⚠️','📅','⏰','📍','📞',
+              '🌿','🍀','🍅','🎉','🎁','🎀','🔥','👍','💯','✅','🆕️','⚠️','📅','⏰','📍','📞',
               '💬','👉','➡️','⭐','☀️','🌙','🌈','💆‍♀️','💅','🧖‍♀️','💄','👀','😳','🤩','😎','🫶'];
   $('thEmos').innerHTML = EMOS.map(function (e) { return '<button type="button" data-e="' + e + '">' + e + '</button>'; }).join('');
   $('thEmos').addEventListener('click', function (e) {
@@ -16663,7 +16663,7 @@ function fbScript_(C) {
 
   // ── 権限の表（開発だけ・インスタと同じ形）──
   var PERM_PEOPLE = { kanbu: '🍅 トマト', ringo: '🍎 りんご', mikan: '🍊 みかん', olive: '🫒 オリーブ', mango: '🥭 マンゴー',
-                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥 お店受付PC', reception_sp: '📱 お店スマホ' };
+                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥️ お店受付PC', reception_sp: '📱 お店スマホ' };
   function openPerm() {
     var e = document.createElement('div'); e.className = 'fbov'; var T = null, who = '';
     var draw = function () {
@@ -17854,7 +17854,7 @@ function instaScript_(C) {
   //   本物のアプリと同じく、縦長（1080×1920）の画面に写真を置き、文字とスタンプを指で動かして置く。シェアの時に写真へ焼き付ける。
   //   ★リンク・音楽・メンションのような「押せるスタンプ」はアプリにしか無い（疑似スマホで行う＝次の段階）。
   var ST_COLORS = ['#ffffff', '#000000', '#ff3040', '#ffd400', '#ff8ac8', '#2c7a99', '#3ec46d'];
-  var ST_EMOJI = ['😊', '✨', '💖', '❤️', '🎉', '🔥', '👍', '🙏', '🌸', '⭐', '📍', '📅', '💰', '🆕', '‼️', '💆‍♀️', '💅', '🇯🇵', '🇹🇼', '🍅'];
+  var ST_EMOJI = ['😊', '✨', '💖', '❤️', '🎉', '🔥', '👍', '🙏', '🌸', '⭐', '📍', '📅', '💰', '🆕️', '‼️', '💆‍♀️', '💅', '🇯🇵', '🇹🇼', '🍅'];
   var ST_LABELS = ['予約受付中', '本日空きあり', 'キャンペーン中', 'NEW', '残りわずか', 'LINEで予約', '日本人スタッフ', '本日OPEN'];
   function openStoryEditor(m) {
     if (!m) return;
@@ -17875,7 +17875,7 @@ function instaScript_(C) {
       '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:4px 12px">' +
       '<button type="button" data-st="text" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">Aa 文字</button>' +
       '<button type="button" data-st="emoji" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">😊 スタンプ</button>' +
-      '<button type="button" data-st="label" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">🏷 文字の札</button>' +
+      '<button type="button" data-st="label" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">🏷️ 文字の札</button>' +
       '<button type="button" data-st="bg" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">🎨 背景の色</button></div>' +
       '<div id="igseSel" style="display:none;gap:8px;justify-content:center;padding:6px 12px">' +
       '<button type="button" data-ss="up" style="border:0;background:#efefef;border-radius:18px;padding:7px 14px;font:inherit;cursor:pointer">大きく</button>' +
@@ -17997,10 +17997,10 @@ function instaScript_(C) {
   }
   // ★2026-11-09 まるちゃん「いちからよん」①：質問・アンケート・カウントダウン（インスタのアプリで付ける＝疑似スマホ）
   // ★2026-11-09 まるちゃん「いちからよん」①＋「まずこれらやって」：ストーリーズのスタンプ（インスタのアプリで付ける＝疑似スマホ）
-  var STK_NAME = { question: '❓ 質問', poll: '📊 アンケート', countdown: '⏰ カウントダウン', slider: '🎚 スライダー',
+  var STK_NAME = { question: '❓ 質問', poll: '📊 アンケート', countdown: '⏰ カウントダウン', slider: '🎚️ スライダー',
                    mention: '＠ メンション', location: '📍 場所', hashtag: '＃ ハッシュタグ', addyours: '🔁 Add Yours',
-                   igtext: 'Aa インスタの文字', gif: '🎞 GIF', reaction: '😍 リアクション', notify: '🔔 お知らせ', highlight: '⭐ ハイライト',
-                   photo: '🖼 写真', frame: '🖼 フレーム', captions: '💬 字幕（動画の声を文字に）' };
+                   igtext: 'Aa インスタの文字', gif: '🎞️ GIF', reaction: '😍 リアクション', notify: '🔔 お知らせ', highlight: '⭐ ハイライト',
+                   photo: '🖼️ 写真', frame: '🖼️ フレーム', captions: '💬 字幕（動画の声を文字に）' };
   // 2026-11-10 インスタの文字の書体と色（インスタのアプリと同じ並び）・ペン
   var IG_FONTS = ['Modern', 'Classic', 'Signature', 'Editor', 'Poster', 'Bubble', 'Deco', 'SQUEEZE', 'Typewriter', 'Strong',
                   'Meme', 'Elegant', 'DIRECTIONAL', 'Literature', 'Arcade', 'Gothic', 'Headline'];
@@ -18738,7 +18738,7 @@ function instaScript_(C) {
   }
   // ── 権限の表（2026-11-09 まるちゃん「まずこれらやって」）＝人ごと・アカウントごと・機能ごと。開発だけが変更できる ──
   var PERM_PEOPLE = { kanbu: '🍅 トマト', ringo: '🍎 りんご', mikan: '🍊 みかん', olive: '🫒 オリーブ', mango: '🥭 マンゴー',
-                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥 お店受付PC', reception_sp: '📱 お店スマホ' };
+                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥️ お店受付PC', reception_sp: '📱 お店スマホ' };
   function openPerm() {
     var e = document.createElement('div'); e.className = 'igc'; e.id = 'igPerm'; e.style.zIndex = 8500;
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igPmX">← 戻る</button><b>権限（スタッフごと）</b><button type="button" class="go" id="igPmGo">保存</button></div><div id="igPmB" style="padding:12px">読み込んでいます…</div></div>';
@@ -18862,7 +18862,7 @@ function instaScript_(C) {
             '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '')) +
           '<span class="lt" data-sprev="1"></span><span class="rt" data-snext="1"></span>') + '</div>' +
         (its.length && !st.nov ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
-          '👁 見た人 ' + num(n || 0) + '人</button>' : '');
+          '👁️ 見た人 ' + num(n || 0) + '人</button>' : '');
     };
     var viewers = function (it) {
       var lst = it.viewers || [], n = it.count == null ? lst.length : it.count;
@@ -23418,7 +23418,7 @@ function renderKanshiPage_(d, base, staff, dev) {
     '<h1>📟 自動監視</h1>' +
     '<div class="kfresh" id="kFresh"></div>' +
     '<div id="kList"></div>' +
-    '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪＝OFF（止めてある）。' +
+    '<div class="kfoot">🟢＝動いている ／ 🔴＝止まっている疑い ／ ⚪️＝OFF（止めてある）。' +
       'カードの「⚙ 設定」で内容の一覧へ、さらに各行の「詳細」でその項目の画面へ進みます' +
       '（上の「← 戻る」で戻れます）。入切や実行はいちばん奥の画面にあります（自宅PCの自動監視と同じ場所）。' +
       'この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
@@ -23564,7 +23564,7 @@ var KANSHISCRIPT_ =
 '  document.body.appendChild(t);' +
 '  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 3200);' +
 '}' +
-'function mark_(st){ return st==="ok"?"🟢":(st==="off"?"⚪":(st==="unknown"?"🟡":"🔴")); }' +
+'function mark_(st){ return st==="ok"?"🟢":(st==="off"?"⚪️":(st==="unknown"?"🟡":"🔴")); }' +
 'function agoSec_(s){' +
 '  if(!s) return null;' +
 '  var t=Date.parse(String(s).replace(" ","T"));' +
@@ -23576,7 +23576,7 @@ var KANSHISCRIPT_ =
 '  var sec=agoSec_(data_.generated_at);' +
 '  if(sec===null||sec>STALE_SEC_){' +
 '    el.className="kfresh old";' +
-'    el.textContent="⚠ 自宅PCから状態が届いていません（最後に届いたのは "+(data_.generated_at||"不明")+"）。下の表示は古い可能性があります。";' +
+'    el.textContent="⚠️ 自宅PCから状態が届いていません（最後に届いたのは "+(data_.generated_at||"不明")+"）。下の表示は古い可能性があります。";' +
 '  } else {' +
 '    el.className="kfresh"; el.textContent="最終更新 "+(data_.generated_at||"");' +
 '  }' +
@@ -23632,7 +23632,7 @@ var KANSHISCRIPT_ =
 '  h+="<span class=\\"klabel\\">"+esc(m.label)+' +
 '    "<div class=\\"kslabel k_"+esc(m.status||"")+"\\">"+esc(m.slabel||"")+"</div>"+' +
 '    "<div class=\\"kdetail\\">"+esc(m.detail||"")+"</div>"+' +
-'    (m.where_note?"<div class=\\"kdetail\\" style=\\"color:#f87171\\">⚠ "+esc(m.where_note)+"</div>":"")+"</span></div>";' +
+'    (m.where_note?"<div class=\\"kdetail\\" style=\\"color:#f87171\\">⚠️ "+esc(m.where_note)+"</div>":"")+"</span></div>";' +
 '  h+=ctlBtns_(m);' +
 '  h+="</div>";' +
 '  if(m.members&&m.members.length){' +
@@ -23722,7 +23722,7 @@ var KANSHISCRIPT_ =
 '          var _b=document.getElementById("szDoneBack");' +
 '          if(_b) _b.addEventListener("click", function(){ szOvHide_(); });' +
 '        } else { szOvHide_(); szPopup_("エラーが発生しました。"+(r.result||"")); }' +
-'      } else { toast_((r.status==="done"?"✅ ":"⚠ ")+(r.result||"")); }' +
+'      } else { toast_((r.status==="done"?"✅ ":"⚠️ ")+(r.result||"")); }' +
 '      reload_();' +
 '      return;' +
 '    }' +
@@ -23754,7 +23754,7 @@ var KANSHISCRIPT_ =
 //   今は設定ファイルを直接読み、人・名前・権限・並び順は code.js の共通関数
 //   （_peopleFromCfg_ 等＝ホーム起動と同じ導出）でこの場で組み立てる。
 '  jsonp_({action:"data", name:"tile_settings.json"}, function(r){' +
-'    if(!r||r.error){ toast_("⚠ 設定を読み込めませんでした"); return; }' +
+'    if(!r||r.error){ toast_("⚠️ 設定を読み込めませんでした"); return; }' +
 '    EPEOPLE_=(typeof _peopleFromCfg_==="function")?_peopleFromCfg_(r):(r.people||[]);' +
 '    ELAB_=(typeof _labelsFromCfg_==="function")?_labelsFromCfg_(r):(r.labels||{});' +
 '    ECLAIM_=r.claimed||{};' +
@@ -23819,7 +23819,7 @@ var KANSHISCRIPT_ =
 '  var mask=document.createElement("div"); mask.className="kmask"; mask.id="kTiles";' +
 '  var resets=EPEOPLE_.filter(function(p){ return p!=="kanbu"; }).map(function(pid){' +
 '    return "<button type=\\"button\\" class=\\"kchip\\" data-reset=\\""+esc(pid)+"\\">"+esc(ELAB_[pid]||pid)+"</button>";' +
-'  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠ 全員</button>";' +
+'  }).join("")+"<button type=\\"button\\" class=\\"kchip\\" data-reset=\\"all\\">⚠️ 全員</button>";' +
 '  mask.innerHTML="<div class=\\"kbox kwide\\"><h3>スーパーズコApp ボタン表示設定</h3>"+' +
 '    "<div class=\\"knote\\">それぞれのボタンを、誰に見せるかを選びます。名前を押すとON（緑）／OFF（灰色）が切り替わります。▲▼はホーム画面の並び順です。最後に「保存する」を押してください😊 （反映まで最大1分）。</div>"+' +
 '    "<div id=\\"kTileRows\\">"+tileRowsHtml_()+"</div>"+' +
@@ -23913,7 +23913,7 @@ var KANSHISCRIPT_ =
 '    function(r){' +
 '      if(!r||!r.ok){' +
 '        if(busy){ szOvHide_(); szPopup_("エラーが発生しました。"+((r&&r.error)||"依頼できませんでした")); }' +
-'        else { toast_("⚠ "+((r&&r.error)||"依頼できませんでした")); }' +
+'        else { toast_("⚠️ "+((r&&r.error)||"依頼できませんでした")); }' +
 '        return;' +
 '      }' +
 '      poll_(r.id, 16, busy);' +
@@ -24493,7 +24493,7 @@ function bcCampCode_() {
         h += '<textarea data-st="' + i + '" placeholder="' + esc(g[0]) + 'のお客様へ送る文章">' + esc(x.text || '') + '</textarea>' +
           '<div class="bccount" data-sc="' + i + '"></div>';
       } else {
-        h += '<div class="bcadd"><button type="button" data-sk="' + i + ':img">🖼 画像にする</button>' +
+        h += '<div class="bcadd"><button type="button" data-sk="' + i + ':img">🖼️ 画像にする</button>' +
           '<button type="button" data-sk="' + i + ':txt">✍ 文章にする</button></div>';
       }
       h += '</div>';

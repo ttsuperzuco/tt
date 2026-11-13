@@ -882,7 +882,7 @@ function renderBroadcastPage_(base, staff, dev) {
   '(mode==="tag"?"":\'<button type="button" class="bcmv" id="bctag">タグを変更</button>\')+\'</div>\'+' +
   '\'<div class="bcwho">\'+whoTxt(step,t)+\'</div><div class="bchr"></div>\';' +
   'if(n&&n<MAXP&&!mode)h+=\'<div class="bcaddslot"><span class="bcpno">1つ目の前に追加</span>\'+' +
-  '\'<button type="button" data-addimg="0">🖼 画像を追加</button>\'+' +
+  '\'<button type="button" data-addimg="0">🖼️ 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="0">✍ 文章を追加</button></div>\';' +
   'if(n&&!mode){h+=d.parts.map(function(p,i){var th=partThumb(p);' +
   'return \'<div class="bcpart"><span class="bcpno">\'+(i+1)+\'つ目</span>\'+' +
@@ -898,7 +898,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'h+=\'<input type="file" accept="image/*" id="bcrepfile" style="display:none">\';}' +
   'if(!mode){for(var sk=n;sk<MAXP;sk++){' +
   'h+=\'<div class="bcaddslot"><span class="bcpno">\'+(sk+1)+\'つ目</span>\'+' +
-  '\'<button type="button" data-addimg="\'+sk+\'">🖼 画像を追加</button>\'+' +
+  '\'<button type="button" data-addimg="\'+sk+\'">🖼️ 画像を追加</button>\'+' +
   '\'<button type="button" data-addtx="\'+sk+\'">✍ 文章を追加</button></div>\';}' +
   'if(n>=MAXP)h+=\'<div class="bcwho">\'+MAXP+\'つまで送れます（いっぱいです）。\'+' +
   '\'入れ替える時は「消去」してから追加してください😊</div>\';}' +
@@ -1469,7 +1469,7 @@ function bcCampCode_() {
         h += '<textarea data-st="' + i + '" placeholder="' + esc(g[0]) + 'のお客様へ送る文章">' + esc(x.text || '') + '</textarea>' +
           '<div class="bccount" data-sc="' + i + '"></div>';
       } else {
-        h += '<div class="bcadd"><button type="button" data-sk="' + i + ':img">🖼 画像にする</button>' +
+        h += '<div class="bcadd"><button type="button" data-sk="' + i + ':img">🖼️ 画像にする</button>' +
           '<button type="button" data-sk="' + i + ':txt">✍ 文章にする</button></div>';
       }
       h += '</div>';

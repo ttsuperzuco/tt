@@ -1959,7 +1959,7 @@ function uriageBody_(d, dev) {
     '<tbody>' + perRows + '</tbody></table>' +
   '</div>' +
   '<button type="button" id="uallbtn" class="ubtn uall">帳簿売上をTimeTreeに記録</button>' +
-  (dev ? '<div class="udev"><div class="udevt">🛠 このボタンを押すと実行する内容（開発者向け）</div>' +
+  (dev ? '<div class="udev"><div class="udevt">🛠️ このボタンを押すと実行する内容（開発者向け）</div>' +
     '<ol class="udevl">' +
       '<li>帳簿の「まだTimeTreeに書いていない売上」を、TimeTreeに新しく記入する（すでに入っている値は触らない）。</li>' +
       '<li>TimeTreeにすでに入っている売上に記入ミスがあれば、帳簿の正しい金額に上書きして修正する。</li>' +

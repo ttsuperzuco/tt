@@ -636,10 +636,10 @@ function renderHanbaiPage_(base, staff, dev) {
         '<button type="button" class="exgo" id="hbDateGo">この日で次へ</button>' +
       '</div>' +
       '<div id="hbJKind" style="display:none">' + inBack + head('🇯🇵', '日本販売入力') + sum +
-        '<button type="button" class="hbbig" id="hbJNewBtn"><span class="i">🆕</span>新規お客様</button>' +
+        '<button type="button" class="hbbig" id="hbJNewBtn"><span class="i">🆕️</span>新規お客様</button>' +
         '<button type="button" class="hbbig" id="hbJRepBtn"><span class="i">🔁</span>お客様</button>' +
       '</div>' +
-      '<div id="hbJNew" style="display:none">' + inBack + head('🆕', 'お客様氏名入力') + sum +
+      '<div id="hbJNew" style="display:none">' + inBack + head('🆕️', 'お客様氏名入力') + sum +
         '<div class="hblb">氏</div><input class="hbin" id="hbSei" autocomplete="off" placeholder="例：山田">' +
         '<div class="hblb">名</div><input class="hbin" id="hbMei" autocomplete="off" placeholder="例：花子">' +
         '<button type="button" class="exgo" id="hbJNewGo">次へ</button>' +
@@ -652,7 +652,7 @@ function renderHanbaiPage_(base, staff, dev) {
         '<div class="hbhint">お客様を選択してください😊</div>' +
         '<div class="hbrows hbcards" id="hbCandRows"></div>' +
         '<div class="hbempty" id="hbCandNone">前に買ったお客様が見つかりません</div>' +
-        '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕</span>新規お客様として入力</button>' +
+        '<button type="button" class="hbbig" id="hbCandNew"><span class="i">🆕️</span>新規お客様として入力</button>' +
       '</div>' +
       '<div id="hbTKind" style="display:none">' + inBack + head('🇹🇼', '台湾販売入力') + sum +
         '<button type="button" class="hbbig" id="hbTodayBtn"><span class="i">📅</span><span id="hbTodayBtnTx">本日予約のお客様</span></button>' +
@@ -708,7 +708,7 @@ function renderHanbaiPage_(base, staff, dev) {
       '</div>' +
       '<div id="hbList" style="display:none">' + inBack + head('📋', '販売管理表') +
         '<div class="hbseg" id="hbListSeg"><button type="button" class="on" data-v="TW">🇹🇼 台湾（元）</button><button type="button" data-v="JP">🇯🇵 日本（円）</button></div>' +
-        '<div class="hbseg sm" id="hbSpanSeg"><button type="button" class="on" data-v="M">📅 月ごと</button><button type="button" data-v="ALL">🗂 全期間</button></div>' +
+        '<div class="hbseg sm" id="hbSpanSeg"><button type="button" class="on" data-v="M">📅 月ごと</button><button type="button" data-v="ALL">🗂️ 全期間</button></div>' +
         '<div class="hbseg sm" id="hbSrcSeg"><button type="button" class="on" data-v="shop">🏪 お店購入</button><button type="button" class="on" data-v="shopee">🛍️ 蝦皮購入</button></div>' +
         '<div class="hbmon" id="hbMonRow"><button type="button" id="hbMonPrev">◀</button><div id="hbMonTxt"></div><button type="button" id="hbMonNext">▶</button></div>' +
         '<div id="hbListBody"></div>' +

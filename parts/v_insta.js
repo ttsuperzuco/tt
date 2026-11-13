@@ -1039,7 +1039,7 @@ function instaScript_(C) {
     });
   }
   var ST_COLORS = ['#ffffff', '#000000', '#ff3040', '#ffd400', '#ff8ac8', '#2c7a99', '#3ec46d'];
-  var ST_EMOJI = ['😊', '✨', '💖', '❤️', '🎉', '🔥', '👍', '🙏', '🌸', '⭐', '📍', '📅', '💰', '🆕', '‼️', '💆‍♀️', '💅', '🇯🇵', '🇹🇼', '🍅'];
+  var ST_EMOJI = ['😊', '✨', '💖', '❤️', '🎉', '🔥', '👍', '🙏', '🌸', '⭐', '📍', '📅', '💰', '🆕️', '‼️', '💆‍♀️', '💅', '🇯🇵', '🇹🇼', '🍅'];
   var ST_LABELS = ['予約受付中', '本日空きあり', 'キャンペーン中', 'NEW', '残りわずか', 'LINEで予約', '日本人スタッフ', '本日OPEN'];
   function openStoryEditor(m) {
     if (!m) return;
@@ -1059,7 +1059,7 @@ function instaScript_(C) {
       '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:4px 12px">' +
       '<button type="button" data-st="text" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">Aa 文字</button>' +
       '<button type="button" data-st="emoji" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">😊 スタンプ</button>' +
-      '<button type="button" data-st="label" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">🏷 文字の札</button>' +
+      '<button type="button" data-st="label" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">🏷️ 文字の札</button>' +
       '<button type="button" data-st="bg" style="border:0;background:#efefef;border-radius:18px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer">🎨 背景の色</button></div>' +
       '<div id="igseSel" style="display:none;gap:8px;justify-content:center;padding:6px 12px">' +
       '<button type="button" data-ss="up" style="border:0;background:#efefef;border-radius:18px;padding:7px 14px;font:inherit;cursor:pointer">大きく</button>' +
@@ -1179,10 +1179,10 @@ function instaScript_(C) {
     img.onload = function () { draw(); };
     if (!m.video) img.src = m.orig || m.url; else draw();
   }
-  var STK_NAME = { question: '❓ 質問', poll: '📊 アンケート', countdown: '⏰ カウントダウン', slider: '🎚 スライダー',
+  var STK_NAME = { question: '❓ 質問', poll: '📊 アンケート', countdown: '⏰ カウントダウン', slider: '🎚️ スライダー',
                    mention: '＠ メンション', location: '📍 場所', hashtag: '＃ ハッシュタグ', addyours: '🔁 Add Yours',
-                   igtext: 'Aa インスタの文字', gif: '🎞 GIF', reaction: '😍 リアクション', notify: '🔔 お知らせ', highlight: '⭐ ハイライト',
-                   photo: '🖼 写真', frame: '🖼 フレーム', captions: '💬 字幕（動画の声を文字に）' };
+                   igtext: 'Aa インスタの文字', gif: '🎞️ GIF', reaction: '😍 リアクション', notify: '🔔 お知らせ', highlight: '⭐ ハイライト',
+                   photo: '🖼️ 写真', frame: '🖼️ フレーム', captions: '💬 字幕（動画の声を文字に）' };
   var IG_FONTS = ['Modern', 'Classic', 'Signature', 'Editor', 'Poster', 'Bubble', 'Deco', 'SQUEEZE', 'Typewriter', 'Strong',
                   'Meme', 'Elegant', 'DIRECTIONAL', 'Literature', 'Arcade', 'Gothic', 'Headline'];
   var IG_COLORS = [['white', '#ffffff'], ['black', '#000000'], ['blue', '#3897f0'], ['green', '#70c050'], ['yellow', '#fdcb5c'],
@@ -1889,7 +1889,7 @@ function instaScript_(C) {
     warn(SOON);
   }
   var PERM_PEOPLE = { kanbu: '🍅 トマト', ringo: '🍎 りんご', mikan: '🍊 みかん', olive: '🫒 オリーブ', mango: '🥭 マンゴー',
-                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥 お店受付PC', reception_sp: '📱 お店スマホ' };
+                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥️ お店受付PC', reception_sp: '📱 お店スマホ' };
   function openPerm() {
     var e = document.createElement('div'); e.className = 'igc'; e.id = 'igPerm'; e.style.zIndex = 8500;
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igPmX">← 戻る</button><b>権限（スタッフごと）</b><button type="button" class="go" id="igPmGo">保存</button></div><div id="igPmB" style="padding:12px">読み込んでいます…</div></div>';
@@ -2008,7 +2008,7 @@ function instaScript_(C) {
             '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '')) +
           '<span class="lt" data-sprev="1"></span><span class="rt" data-snext="1"></span>') + '</div>' +
         (its.length && !st.nov ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
-          '👁 見た人 ' + num(n || 0) + '人</button>' : '');
+          '👁️ 見た人 ' + num(n || 0) + '人</button>' : '');
     };
     var viewers = function (it) {
       var lst = it.viewers || [], n = it.count == null ? lst.length : it.count;

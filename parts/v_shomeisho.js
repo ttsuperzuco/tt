@@ -154,7 +154,7 @@ function renderShomeishoPage_(base, staff, dev) {
       '<iframe id="smFrame" title="購入証明書作成" style="display:none"></iframe>' +
       '<div id="smCertBox"><div class="smbar"><div class="ubar"><a class="uhome" id="smCertBack" href="javascript:void(0)">← 戻る</a></div>' +
           '<button type="button" class="smzoom" id="smZoom">拡大して表示</button>' +
-          '<button type="button" class="smprint" id="smPrint">🖨 印刷する</button></div>' +
+          '<button type="button" class="smprint" id="smPrint">🖨️ 印刷する</button></div>' +
         '<div id="smCertPane"><div id="smCertSizer"><iframe id="smCert" title="購入証明書"></iframe></div></div></div>' +
     '</div>' +
     '<script>(' + shomeishoScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';

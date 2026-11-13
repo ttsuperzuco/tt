@@ -1198,7 +1198,7 @@ function fbScript_(C) {
   }
 
   var PERM_PEOPLE = { kanbu: '🍅 トマト', ringo: '🍎 りんご', mikan: '🍊 みかん', olive: '🫒 オリーブ', mango: '🥭 マンゴー',
-                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥 お店受付PC', reception_sp: '📱 お店スマホ' };
+                      coconut: '🥥 ココナッツ', pine: '🍍 パイン', reception: '🖥️ お店受付PC', reception_sp: '📱 お店スマホ' };
   function openPerm() {
     var e = document.createElement('div'); e.className = 'fbov'; var T = null, who = '';
     var draw = function () {
