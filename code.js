@@ -1855,7 +1855,9 @@ var TILE_DEFS_ = [
   // ★顧客履歴検索＝番号/氏名で客を探し、今回の予約と過去予約(メモ込み)を見る。事務所PCが検索
   //   （op=cust_search）＝日中(事務所PC稼働中)に使える。PC版スーパーズコと並びをそろえる(2026-07-19)。
   { id: 'rireki', cls: 'rireki', view: 'rireki',
-    icon: '<span class="ticon">🔎</span>', label: '顧客履歴\n検索' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ）＝回転式のカードファイル（GPTで作成）・黒い地＋細い白枠。パソコン版＝icons\rireki-kuro-96.png。
+    icon: '<span class="ticon">🔎</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/rireki-kuro-192.png"></span>', label: '顧客履歴\n検索' },
   // ★台湾トマト 売上・コスト＝オーナー(開発者)専用の内部ツール。開発URL(?dev=1)専用
   //   （kanshi/zenjitsuと同じ。tile_settings.py にも入れない）。押すと「月間コスト計算」ボタン→コスト表。
   { id: 'cost', cls: 'cost', view: 'cost',
