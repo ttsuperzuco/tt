@@ -1385,7 +1385,7 @@ var TILE_DEFS_ = [
   { id: 'mita', cls: 'mita', view: 'mita',
     icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
-    icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' },
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png"></span>', label: '購入証明書\n作成' },
   { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
     icon: '<span class="ticon">📂</span>', label: 'フォルダの\n試し' }
 ];
