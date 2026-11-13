@@ -6120,9 +6120,12 @@ function renderReservationHomePage_(base, staff, dev) {
   //   （2026-08-11 まるちゃん決定。2026-09-11 に予約入力そのものを全スタッフへ開放したが、中は新規だけのまま）。
   var ex = dev ?
       ('<a class="rolebtn kaihatsu" href="' + base + '?view=yoyaku_kizon' + sfx + '" target="_top">' +
-        '<span class="ricon">📖</span><span class="rname">既存の予約</span></a>' +
+        // ★2026-11-13 まるちゃん「🔁くらいシンプルに」で選択＝既存の予約は📅、既存の変更は🔀。
+        //   🔀は「色がリピートと同じでまぎらわしい」＝青をオレンジに塗り替えた絵（icons/henkou-orange-128.png）。
+        //   この2つは開発者だけのボタンなので直接入れた。
+        '<span class="ricon">📅</span><span class="rname">既存の予約</span></a>' +
       '<a class="rolebtn kanri" href="' + base + '?view=yoyaku_henkou' + sfx + '" target="_top">' +
-        '<span class="ricon">✏️</span><span class="rname">既存の変更</span></a>') : '';
+        '<span class="ricon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png" style="width:34px;height:34px;display:block"></span><span class="rname">既存の変更</span></a>') : '';
   // ★2026-10-07 まるちゃん決定：「施術後の予約」はホームに大きいボタンがあるので、ここには出さない（二重になるため）。
   // ★2026-10-07 まるちゃん決定：一番下に「🔁 リピート入力」（最終回の1つ前の担当が🔁を入れる入口）。
   //   新しいボタンなので既定は開発者(?dev=1)だけ（共通ルール16）。試して良ければスタッフにも出す。
@@ -6134,7 +6137,8 @@ function renderReservationHomePage_(base, staff, dev) {
   var menu =
     '<div class="rolemenu">' +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
-        '<span class="ricon">📝</span><span class="rname">新規の予約</span></a>' +
+        // ★2026-11-13 まるちゃん選択＝🆕（開発版だけ・スタッフは📝のまま＝「公開して」まで変えない）
+        '<span class="ricon">' + (dev ? '🆕' : '📝') + '</span><span class="rname">新規の予約</span></a>' +
       ex + rp +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
