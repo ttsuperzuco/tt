@@ -1936,7 +1936,9 @@ var TILE_DEFS_ = [
   // ★購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」→2026-11-11「全スタッフにだして」＝スタッフ画面）。テストのお客様トモトラス様だけ。
   //   画面と紙はパソコン版と同じ1本を係から受け取って出す（受付係 op=shomeisho → まとめ購入証明書\programs\zuko_shomeisho.py）。
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
-    icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' },
+    // ★2026-11-13 まるちゃん選択＝ピンクのプリンターから赤いハンコ付きの証明書が出てくる絵（子ども向けアニメ風・GPTで作成）。
+    //   パソコン版の同じ絵＝PC版スーパーズコ\icons\shomeisho-zuko-96.png。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png"></span>', label: '購入証明書\n作成' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
