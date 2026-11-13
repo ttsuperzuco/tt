@@ -1309,6 +1309,34 @@ var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
   '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g>' +
   '<rect x="1.18" y="1.18" width="21.64" height="21.64" rx="4.7" fill="none" stroke="#fff" stroke-width=".67"/></svg>';
 function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
+var HEAD_MARK_EXTRA_ = {
+  yoyaku_new: '🆕️', yoyaku_kizon: '📅',
+  yoyaku_henkou: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png">'
+};
+function devHeadMark_(root, view, dev) {
+  if (!dev || !root || !root.querySelector) return;
+  var bm = root.querySelector('.hhead span.bmark');
+  if (!bm) return;
+  var html = HEAD_MARK_EXTRA_[view] || '';
+  if (!html) {
+    var q = (typeof location !== 'undefined') ? location.search : '';
+    var tid = '';   
+    if (view === 'yoyaku_sejutsugo') {
+      if (/[?&]mode=repeat(&|$)/.test(q)) return;   
+      tid = /[?&]mode=line(&|$)/.test(q) ? 'sgline' : 'sejutsugo';
+    }
+    for (var i = 0; i < TILE_DEFS_.length && !html; i++) {
+      var t = TILE_DEFS_[i];
+      if (!t.iconDev || (tid ? t.id !== tid : t.view !== view)) continue;
+      var tmp = document.createElement('div'); tmp.innerHTML = t.iconDev;
+      var el = tmp.querySelector('img,svg');
+      html = el ? el.outerHTML : '';
+    }
+  }
+  if (!html) return;
+  bm.innerHTML = html;
+  bm.classList.add('bmarkimg');
+}
 
 var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
   '<rect width="24" height="24" rx="7" fill="#2bad6f"/>' +
@@ -1371,7 +1399,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">💌</span>',
     iconDev: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
   { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
-    icon: '<span class="ticon">📖</span>', label: '既存の\n予約' },
+    icon: '<span class="ticon">📖</span>',
+    iconDev: '<span class="ticon">📅</span>', label: '既存の\n予約' },
   { id: 'timetree', cls: 'timetree', view: 'timetree',
     icon: '<span class="ticon">' + TT_LOGO_ + '</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/timetree-real-192.png"></span>', label: 'Time\nTree' },
@@ -2587,6 +2616,8 @@ var HOMECSS_ =
 '  .home { max-width:560px; margin:0 auto; min-height:100vh; padding:34px 18px 48px;' +
 '    display:flex; flex-direction:column; }' +
 '  .hhead { display:flex; align-items:center; justify-content:center; gap:9px; margin:18px 0 4px; }' +
+'  .bmark.bmarkimg { display:inline-flex; }' +
+'  .bmark.bmarkimg img, .bmark.bmarkimg svg { width:34px; height:34px; display:block; border-radius:8px; }' +
 '  .bmark { font-size:22px; line-height:1; }' +
 '  img.bmark { width:66px; height:66px; border-radius:50%; object-fit:cover; }' +
 '  .bname { font-size:2.05rem; font-weight:900; letter-spacing:.01em; color:#fb8c44; }' +
