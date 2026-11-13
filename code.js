@@ -2589,7 +2589,10 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   //   見られない画面のボタンは出ない。開発版はスタッフ画面の見出しの右、ほかのホームは並びの上の右端（まるちゃん「staffにも出して」）。
   var alertsHtml =
     '<a class="hkaburi" data-go="conflict" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a>' +
-    '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>';
+    '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>' +
+    // ★同日 まるちゃん「施術後LINE未送信あり」＝送り忘れの知らせと同じ判断（施術が終わって2時間たっても送っていない方・今日と昨日）。
+    //   押すと施術後のLINE送信の画面。送ったら次の見回り（5分ごと）で消える。
+    '<a class="hkaburi hsgline" data-go="sgline" href="' + base + '?view=yoyaku_sejutsugo&mode=line' + sfx + '" target="_top" style="display:none">⚠️ 施術後LINE未送信あり</a>';
   var homeCls = canSort ? 'home hsort' : 'home';
   var sortScript = canSort ? HOMESORT_SCRIPT_ : '';
   var head =
@@ -23587,6 +23590,7 @@ var HOMECSS_ =
 '    border:2px solid #fff; border-radius:999px; padding:8px 16px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.22); }' +
 '  .hkaburi:active { transform:translateY(1px); }' +
 '  .hkaburi.hkinyu { background:#6366f1; }' +
+'  .hkaburi.hsgline { background:#06a34a; }' +
 '  .halerts.hrow { margin:0; }' +
 '  .halerts.hrow .hkaburi { margin-bottom:12px; }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +

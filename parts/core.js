@@ -1715,7 +1715,8 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     : '';   
   var alertsHtml =
     '<a class="hkaburi" data-go="conflict" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a>' +
-    '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>';
+    '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>' +
+    '<a class="hkaburi hsgline" data-go="sgline" href="' + base + '?view=yoyaku_sejutsugo&mode=line' + sfx + '" target="_top" style="display:none">⚠️ 施術後LINE未送信あり</a>';
   var homeCls = canSort ? 'home hsort' : 'home';
   var sortScript = canSort ? HOMESORT_SCRIPT_ : '';
   var head =
@@ -3003,6 +3004,7 @@ var HOMECSS_ =
 '    border:2px solid #fff; border-radius:999px; padding:8px 16px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.22); }' +
 '  .hkaburi:active { transform:translateY(1px); }' +
 '  .hkaburi.hkinyu { background:#6366f1; }' +
+'  .hkaburi.hsgline { background:#06a34a; }' +
 '  .halerts.hrow { margin:0; }' +
 '  .halerts.hrow .hkaburi { margin-bottom:12px; }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
