@@ -1948,7 +1948,7 @@ var TILE_DEFS_ = [
     // ★2026-11-12 まるちゃん選択＝黄色と黒のしまの角のあるタニシ（ぷっくり立体・icons/hachimitsu-192.png・パソコン版も同じ）。絵を替えたら ?v= の数字を上げる（スマホが前の絵を覚えているため）。
     // ★2026-11-13 まるちゃん「これらもおなじ」＝開発版だけ、同じ絵の地を黒にして細い白枠（hachimitsu-kuro-192.png・GPTで地だけ描き直し）。hachimitsu-192.png は触らない。
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-192.png?v=2"></span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-kuro-192.png"></span>', label: 'ハチミツ\nちゃん' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-kuro-192.png?v=2"></span>', label: 'ハチミツ\nちゃん' },
   // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
   //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
   { id: 'threads', cls: 'threads', view: 'threads',

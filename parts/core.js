@@ -1389,7 +1389,7 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hanbai-192.png"></span>', label: 'No31\n販売管理' },
   { id: 'hachimitsu', cls: 'hachimitsu', view: 'hachimitsu',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-192.png?v=2"></span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-kuro-192.png"></span>', label: 'ハチミツ\nちゃん' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-kuro-192.png?v=2"></span>', label: 'ハチミツ\nちゃん' },
   { id: 'threads', cls: 'threads', view: 'threads',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-192.png"></span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-kuro-192.png"></span>', label: 'スレッズコ' },   
