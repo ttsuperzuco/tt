@@ -563,21 +563,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function ydYesterday(){if(!TODAY)return "";var d=new Date(TODAY+"T12:00:00");d.setDate(d.getDate()-1);' +
       'var p2=function(n){return (n<10?"0":"")+n;};return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());}' +
     'function ydMD(s){var d=new Date(String(s||"")+"T12:00:00");return isNaN(d)?"":(d.getMonth()+1)+"/"+d.getDate()+"（"+YDW.charAt(d.getDay())+"）";}' +
-    'function ydLoad(){if(!LN||!DEVMODE||YDL)return;YDL=true;' +
+    'function ydLoad(){if(!LN||YDL)return;YDL=true;' +
       'var nm="__sgYd_"+Date.now();window[nm]=function(p){' +
         'YD=(p&&p.items&&p.date===ydYesterday())?p:null;TNX=(p&&p.today===TODAY&&p.today_next)?p.today_next:{};ydShow();};' +
       'var s=document.createElement("script");' +
       's.src=EXEC+"?action=data&name=aftercare_yesterday.json&callback="+nm+"&cb="+Date.now();' +
       's.onerror=function(){};document.body.appendChild(s);}' +
-    'function ydDummies(){if(!DEVMODE)return [];var d=new Date(TODAY+"T12:00:00");d.setDate(d.getDate()+14);' +
-      'var p2=function(n){return (n<10?"0":"")+n;},nd=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()),y=ydYesterday();' +
-      'var nx={event_id:"DUMMY-NEXT",title:"RYU",date:nd,start:"14:00",memo:""};' +
-      'var mk=function(id,ti,nm,ks,fd,n){return {event:{event_id:id,title:ti,note:"RYU様",date:y,start_time:"ダミー",end_time:""},' +
-        'code:ti.replace(/^.*預約/,"").slice(0,4),name:nm,mark:"🍅",kinds:ks,first_dat:fd,next:n};};' +
-      'return [mk("DUMMY:ja:F:Y","🍅預約F999イーライト🇫🇷PF","RYU（ダミー・日本語）",["next","elight","lash","procell_face"],null,nx),' +
-        'mk("DUMMY:zh:M:Y","🍅預約M999新規イーライト","RYU（ダミー・中国語・はじめて）",["next","first","elight"],[true,true],nx),' +
-        'mk("DUMMY:en:F:Y","🍅預約F999イーライトPH","RYU（ダミー・英語）",["elight","procell_scalp"],null,null)];}' +
-    'function ydItems(){return ((YD&&YD.items)||[]).concat(ydDummies());}' +
+    'function ydItems(){return (YD&&YD.items)||[];}' +
     'function ydShow(){var b=$("sgyb");if(!b)return;b.style.display=(step===1&&TODAY&&ydItems().length)?"":"none";}' +
     'function goYList(){YDM=true;step=2;show();window.scrollTo(0,0);' +
       'var it=ydItems();LIST=[];' +

@@ -7054,7 +7054,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
   /* 4枚の画面。出すのは1枚だけ。 */
   var body =
     '<div class="sg" id="sgPick">' +
-      /* ★2026-11-13 まるちゃん決定（施術後のLINE送信だけ・今は開発版だけ）：昨日のお客様で、まだ送っていない物がある方がいる時だけ
+      /* ★2026-11-13 まるちゃん決定（施術後のLINE送信だけ・同日「外して公開」でスタッフにも出した）：昨日のお客様で、まだ送っていない物がある方がいる時だけ
          一番上に出す。人数は出さない・2行に分けない（まるちゃん「人数いらない」「二行にしないで」）。中身は事務所の見回りが5分ごとに作る。 */
       (LN ? '<button type="button" class="sgyb" id="sgyb" style="display:none"><span class="sgybi">⚠️</span>' +
         '<span class="sgybt">昨日のお客様で、施術後のLINEをまだ送っていない方がいます（このボタンを押してください😊）</span></button>' : '') +
@@ -7748,7 +7748,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ── 施術後のLINE送信（31枚目）：送る物を選ぶ→確かめる→事務所PCが文を作って「いま送る」で積む ── */
     'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",elight_vio:"イーライト（VIOのみ）",elight_both:"イーライト（VIO＋髭等）",elight_other:"イーライト（髭等）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮"},lsending=false;' +
     /* 今日より先に同じ番号の予約がある＝次回の予約がもう入っている（「はじめての脱毛」の質問を出さない＝予約なしの文は送らない）。 */
-    /* ── ★2026-11-13 まるちゃん決定：施術後のLINE送信の「昨日のお客様で、施術後のLINEをまだ送っていない方がいます」（今は開発版だけ）──
+    /* ── ★2026-11-13 まるちゃん決定：施術後のLINE送信の「昨日のお客様で、施術後のLINEをまだ送っていない方がいます」（同日スタッフにも公開）──
        一覧は事務所の見回りが5分ごとに作って置く（aftercare_yesterday.json）＝まだ送っていない物の判断は送り忘れの知らせと同じ1本。
        出すのは昨日の方だけ（まるちゃん「翌々日に当日の注意事項おくられてもこまる」）。送る文は「昨日は」になる（事務所で作る）。 */
     'var YDN={next:"☆次回のご予約",first:"はじめての方へのお礼の文",elight:"イーライトの注意事項",lash:"パリジェンヌの注意事項",' +
@@ -7756,23 +7756,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'function ydYesterday(){if(!TODAY)return "";var d=new Date(TODAY+"T12:00:00");d.setDate(d.getDate()-1);' +
       'var p2=function(n){return (n<10?"0":"")+n;};return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());}' +
     'function ydMD(s){var d=new Date(String(s||"")+"T12:00:00");return isNaN(d)?"":(d.getMonth()+1)+"/"+d.getDate()+"（"+YDW.charAt(d.getDay())+"）";}' +
-    'function ydLoad(){if(!LN||!DEVMODE||YDL)return;YDL=true;' +
+    'function ydLoad(){if(!LN||YDL)return;YDL=true;' +
       'var nm="__sgYd_"+Date.now();window[nm]=function(p){' +
         'YD=(p&&p.items&&p.date===ydYesterday())?p:null;TNX=(p&&p.today===TODAY&&p.today_next)?p.today_next:{};ydShow();};' +
       'var s=document.createElement("script");' +
       's.src=EXEC+"?action=data&name=aftercare_yesterday.json&callback="+nm+"&cb="+Date.now();' +
       's.onerror=function(){};document.body.appendChild(s);}' +
-    /* ★2026-11-13 まるちゃん「だしてあなたがぜんぶてすとして」：試し用のダミーのお客様（RYU）を開発版の一覧にだけ出す。
-       送るとまるちゃん本人のLINEにだけ届く（事務所が「DUMMY:」を見分ける）。試しが終わったら外す。 */
-    'function ydDummies(){if(!DEVMODE)return [];var d=new Date(TODAY+"T12:00:00");d.setDate(d.getDate()+14);' +
-      'var p2=function(n){return (n<10?"0":"")+n;},nd=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()),y=ydYesterday();' +
-      'var nx={event_id:"DUMMY-NEXT",title:"RYU",date:nd,start:"14:00",memo:""};' +
-      'var mk=function(id,ti,nm,ks,fd,n){return {event:{event_id:id,title:ti,note:"RYU様",date:y,start_time:"ダミー",end_time:""},' +
-        'code:ti.replace(/^.*預約/,"").slice(0,4),name:nm,mark:"🍅",kinds:ks,first_dat:fd,next:n};};' +
-      'return [mk("DUMMY:ja:F:Y","🍅預約F999イーライト🇫🇷PF","RYU（ダミー・日本語）",["next","elight","lash","procell_face"],null,nx),' +
-        'mk("DUMMY:zh:M:Y","🍅預約M999新規イーライト","RYU（ダミー・中国語・はじめて）",["next","first","elight"],[true,true],nx),' +
-        'mk("DUMMY:en:F:Y","🍅預約F999イーライトPH","RYU（ダミー・英語）",["elight","procell_scalp"],null,null)];}' +
-    'function ydItems(){return ((YD&&YD.items)||[]).concat(ydDummies());}' +
+    /* 試し用のダミー（RYU）は 2026-11-13 に試し終わって外した（まるちゃん「外して公開」）。また試す時は git の 6d97102 の版のダミーの部分を戻す。 */
+    'function ydItems(){return (YD&&YD.items)||[];}' +
     'function ydShow(){var b=$("sgyb");if(!b)return;b.style.display=(step===1&&TODAY&&ydItems().length)?"":"none";}' +
     'function goYList(){YDM=true;step=2;show();window.scrollTo(0,0);' +
       'var it=ydItems();LIST=[];' +
