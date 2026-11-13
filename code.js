@@ -1775,6 +1775,8 @@ var LINE_BIG_BUBBLE_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hid
   '<rect width="24" height="24" rx="7" fill="#06C755"/><g transform="matrix(1.35 0 0 1.35 -4.2 -3.92)">' +
   '<path d="M12 6.2c-3.3 0-6 2.1-6 4.7 0 2.3 2 4.2 4.8 4.6.5.1.4.35.3.85l-.08.5c-.05.3.2.42.48.3 1.9-.8 4-2.55 5.3-4.05.68-.8 1.2-1.6 1.2-2.7 0-2.6-2.7-4.7-6-4.7z" fill="#fff"/>';
 var LINE_UNANS_LOGO_ = LINE_BIG_BUBBLE_ + '</g>' +
+  // ★同日まるちゃん「LINEとフェイスブックは白枠つけて」＝細い白枠（赤い丸は枠の上に重ねる）。
+  '<rect x="1.18" y="1.18" width="21.64" height="21.64" rx="4.7" fill="none" stroke="#fff" stroke-width=".67"/>' +
   '<circle cx="19.4" cy="4.8" r="3.8" fill="#E24B4A" stroke="#fff" stroke-width=".9"/></svg>';
 // ★同日まるちゃん「これもしろわくつける」＝施術後のLINE送信（開発版だけの絵）にほかの新しい絵と同じ細い白枠。
 var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
@@ -1971,7 +1973,9 @@ var TILE_DEFS_ = [
   // ★📘Facebook（2026-11-10 まるちゃん決定「全部推奨で」）＝お店のFacebookページ3つを本物そっくりに見せる（第1段階＝読むだけ）。
   //   中身は受付係（op=facebook → Facebook投稿\programsb_zuko.py）がメタ公式の窓口で読む。既定は開発者だけ（共通ルール16）。
   { id: 'facebook', cls: 'facebook', view: 'facebook',
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-192.png"></span>', label: 'フェイズコブック' },   // ★2026-11-11 まるちゃん「A-1これさいよう」＝青い地の f を金魚がくぐる絵（パソコン版も同じ）   // ★2026-11-11 まるちゃん「フェイズコブック」
+    // ★2026-11-13 まるちゃん「フェイスブックは白枠つけて」＝開発版だけ、今の絵＋細い白枠（facebook-kuro-192.png）。facebook-192.png はホーム画面のアイコンにも使うので触らない。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-192.png"></span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-kuro-192.png"></span>', label: 'フェイズコブック' },   // ★2026-11-11 まるちゃん「A-1これさいよう」＝青い地の f を金魚がくぐる絵（パソコン版も同じ）   // ★2026-11-11 まるちゃん「フェイズコブック」
   // ★お知らせ見てくれた？（2026-11-06）＝前日お知らせへの反応（返事・確認リンクを押した）を今日・明日・過去の履歴で見る。
   //   分け方はサーバーが oshirase_mita.json に入れる（前日お知らせ確認リンクの お知らせ見てくれた.py）。
   { id: 'mita', cls: 'mita', view: 'mita',
