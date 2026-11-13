@@ -1309,7 +1309,8 @@ var LINE_BIG_BUBBLE_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hid
 var LINE_UNANS_LOGO_ = LINE_BIG_BUBBLE_ + '</g>' +
   '<circle cx="19.4" cy="4.8" r="3.8" fill="#E24B4A" stroke="#fff" stroke-width=".9"/></svg>';
 var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
-  '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g></svg>';
+  '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g>' +
+  '<rect x="1.18" y="1.18" width="21.64" height="21.64" rx="4.7" fill="none" stroke="#fff" stroke-width=".67"/></svg>';
 function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
 
 var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
@@ -1360,7 +1361,7 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">📣</span>', label: 'LINE\n一斉配信' },
   { id: 'procell', cls: 'procell', view: 'procell',
     icon: '<span class="ticon">🧴</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procell-192.png"></span>', label: 'プロセル\n残り本数' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procell-192.png?v=2"></span>', label: 'プロセル\n残り本数' },
   { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
     icon: '<span class="ticon">🖥️</span>', label: '自宅\nPC' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
@@ -1380,7 +1381,7 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🛍️</span>', label: 'T＆Tショップ\n履歴' },
   { id: 'procstock', cls: 'procstock', view: 'procstock',
     icon: '<span class="ticon">📦</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procstock-192.png"></span>', label: 'プロセル\n在庫' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procstock-192.png?v=2"></span>', label: 'プロセル\n在庫' },
   { id: 'uriagebook', cls: 'uriagebook', view: 'uriagebook',
     icon: '<span class="ticon">📒</span>', label: 'TT売上\n帳簿' },
   { id: 'hanbai', cls: 'hanbai', view: 'hanbai',
@@ -1394,7 +1395,7 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/threads-kuro-192.png"></span>', label: 'スレッズコ' },   
   { id: 'insta', cls: 'insta', view: 'insta',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-kuro-192.png"></span>', label: 'インズコグラム' },   
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-kuro-192.png?v=2"></span>', label: 'インズコグラム' },   
   { id: 'facebook', cls: 'facebook', view: 'facebook',
     icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/facebook-192.png"></span>', label: 'フェイズコブック' },   
   { id: 'mita', cls: 'mita', view: 'mita',
