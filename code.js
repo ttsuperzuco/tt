@@ -2039,7 +2039,10 @@ var TILE_GROUP_ = {
 // ★2026-10-25 まるちゃん「スタッフ画面を一番上にしたい」＝スタッフ画面を先頭へ（PC版 super_pc.py の ROLES と同じ順）。
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
-  { id: 'keiei', icon: '📊', title: 'りゅうツール' },
+  // ★2026-11-13 まるちゃん「龍のアイコンは、このりゅう」＝11/11にLINEグループのアイコンで使った黄色いりゅう
+  //   （元＝C:\Users\User\SNS運用グループのアイコン案\りゅう_参考.png を切り抜いた物）。見出しでも同じ絵を小さく出す。
+  //   この部屋は開発版（まるちゃん）にしか出ないので、iconDev にせず直接入れた。PC版 super_pc.py の ROLES と同じ。
+  { id: 'keiei', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/ryutool-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'りゅうツール' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
@@ -22934,6 +22937,7 @@ var HOMECSS_ =
 '  @media (hover:hover){ .rolebtn:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.14); } }' +
 '  .ricon { flex:none; width:52px; height:52px; border-radius:13px; font-size:30px; display:grid; place-items:center; }' +
 '  .rolebtn.keiei .ricon { background:rgba(220,38,38,.14); }' +
+'  .ricon img.rimg { height:46px !important; width:46px !important; vertical-align:0 !important; display:block; object-fit:contain; }' +
 '  .rolebtn.kanri .ricon { background:rgba(245,158,11,.16); }' +
 '  .rolebtn.jitsumu .ricon { background:rgba(22,163,74,.15); }' +
 '  .rolebtn.kaihatsu .ricon { background:rgba(99,102,241,.15); }' +
