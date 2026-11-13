@@ -1769,7 +1769,7 @@ function threadsScript_(C) {
           var ids = {};
           nf.posts.forEach(function (p) { ids[p.id] = 1; });
           nf.posts = nf.posts.concat(of.posts.filter(function (p) { return !ids[p.id]; }));
-          nf.after = of.after || '';
+          nf.after = of.after || ''; if (of._moreAt) nf._moreAt = of._moreAt;
         }
       }
       PF.done = {};
@@ -1790,13 +1790,22 @@ function threadsScript_(C) {
     });
     return L;
   }
+  var MORE_FRESH = 24 * 3600000;
   function pfAge(it) {   
     if (it.t === 'more') {
       var fd = DATA && DATA.feeds && DATA.feeds[it.a];
-      return (PF.done['more_' + it.a] || !fd || !fd.ok || !fd.after0) ? Date.now() : 0;
+      if (PF.done['more_' + it.a] || !fd || !fd.ok || !fd.after0) return Date.now();
+      return (fd._moreAt && Date.now() - fd._moreAt < MORE_FRESH) ? fd._moreAt : 0;
     }
     var o = (it.t === 'ins' ? INS : WEB)[it.a + '_' + it.d];
     return (o && o._t) || 0;
+  }
+  function thProg() {   
+    try {
+      var L = pfList(), have = L.filter(function (it) { return pfAge(it) > 0; }).length, posts = {};
+      for (var a in ((DATA && DATA.feeds) || {})) posts[a] = ((DATA.feeds[a] || {}).posts || []).length;
+      localStorage.setItem('th_pf_prog', JSON.stringify({ h: have, t: L.length, p: posts, at: Date.now() }));
+    } catch (e) {}
   }
   function pfNext() {
     var now = Date.now(), L = pfList(), miss = null, old = null;
@@ -1815,7 +1824,7 @@ function threadsScript_(C) {
     if (!it) return;
     PF.on = true;
     var fin = function (ok, err) {
-      PF.on = false;
+      PF.on = false; thProg();
       if (!ok && err) PF.bad[it.t + '_' + it.a] = 1;
       setTimeout(pfRun, it.t === 'web' ? 20000 : 300);
     };
@@ -1837,17 +1846,24 @@ function threadsScript_(C) {
         if (cur && n < 20) { setTimeout(step, 300); return; }
         var f2 = DATA && DATA.feeds && DATA.feeds[a];
         if (f2 && f2.after0 === fd.after0) {   
-          f2.posts = f2.posts.slice(0, f2.n0).concat(got); f2.after = cur;
+          f2.posts = f2.posts.slice(0, f2.n0).concat(got); f2.after = cur; f2._moreAt = Date.now();
           cacheSet(DATA);
           if (CUR === a && VIEW === 'feed' && !(FEED && FEED.more)) showFeedFromData();
         }
-        PF.done['more_' + a] = 1; fin(true);
+        PF.done['more_' + a] = 1; thProg(); fin(true);
       });
     };
     step();
   }
 
   var _c = cacheGet();
+  try {
+    if (window.__BT && !window.__BT.done) {
+      var _pg = JSON.parse(localStorage.getItem('th_pf_prog') || 'null') || {};
+      window.__BT.th = { c: _c ? JSON.stringify(_c).length : 0, h: _pg.h == null ? -1 : _pg.h, t: _pg.t == null ? -1 : _pg.t, p: _pg.p || {},
+        m: _pg.at ? Math.round((Date.now() - _pg.at) / 60000) : -1 };
+    }
+  } catch (e) {}
   if (_c) apply(_c, false);
   loadAll();
 }

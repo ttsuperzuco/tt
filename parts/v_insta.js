@@ -3177,9 +3177,16 @@ function instaScript_(C) {
           pfPut(it.key, d);
           if (it.t === 'dm_list') { try { localStorage.setItem('ig_dm_v1_' + it.a, JSON.stringify(d)); } catch (e) {} }   
         }
+        igProg(T);
         setTimeout(pfRun, it.heavy ? 20000 : 300);
       });
     });
+  }
+  function igProg(T) {   
+    try {
+      var L = pfList(), have = L.filter(function (it) { return T[it.key]; }).length;
+      localStorage.setItem('ig_pf_prog', JSON.stringify({ h: have, t: L.length, at: Date.now() }));
+    } catch (e) {}
   }
 
   var _c = cacheGet();
@@ -3191,6 +3198,7 @@ function instaScript_(C) {
       m: _c && _c._saved ? Math.round((Date.now() - _c._saved) / 60000) : -1,
       dm: localStorage.getItem('ig_dm_v1_' + ((_c && _c.cur) || 'jp')) ? 1 : 0, ls: _ls, n: localStorage.length,
       e: localStorage.getItem('ig_cache_err') || '' };
+    try { var _pg = JSON.parse(localStorage.getItem('ig_pf_prog') || 'null'); if (_pg && window.__BT.ig) { window.__BT.ig.h = _pg.h; window.__BT.ig.t = _pg.t; window.__BT.ig.pm = Math.round((Date.now() - _pg.at) / 60000); } } catch (e) {}
   } catch (e) {}
   if (_c) apply(_c, false);
   loadAll();
