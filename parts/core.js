@@ -1732,7 +1732,10 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' + resetHtml + '</div>' +
         (R.id === 'jitsumu'
           ? '<div class="grouptitle gtk"><span>' + R.icon + ' ' + R.title + '</span>' +
-              '<a class="hkaburi" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a></div>'
+              '<span class="halerts">' +
+              '<a class="hkaburi" data-go="conflict" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a>' +
+              '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>' +
+              '</span></div>'
           : '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>') +
         tilesBox_(list, BLANK_AFTER_[R.id]) + subs.map(function (S) {
           var sl = byG[S.id] || [];
@@ -2993,9 +2996,12 @@ var HOMECSS_ =
 '  .backbtn:active { transform:translateY(1px); }' +
 '  .grouptitle { font-size:1.15rem; font-weight:900; color:#fff; margin:2px 0 14px; letter-spacing:.02em; }' +
 '  .grouptitle.gtk { display:flex; align-items:center; gap:10px; }' +
-'  .hkaburi { margin-left:auto; font-size:1rem; font-weight:900; color:#fff; background:#e11d48; text-decoration:none;' +
+'  .grouptitle.gtk > span:first-child { white-space:nowrap; }' +
+'  .halerts { margin-left:auto; display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }' +
+'  .hkaburi { font-size:1rem; font-weight:900; color:#fff; background:#e11d48; text-decoration:none;' +
 '    border:2px solid #fff; border-radius:999px; padding:8px 16px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.22); }' +
 '  .hkaburi:active { transform:translateY(1px); }' +
+'  .hkaburi.hkinyu { background:#6366f1; }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
 '  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
 '    gap:2px; text-align:left; text-decoration:none; color:var(--ink);' +
