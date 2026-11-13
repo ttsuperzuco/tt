@@ -2038,7 +2038,10 @@ var TILE_GROUP_ = {
 };
 // ★2026-10-25 まるちゃん「スタッフ画面を一番上にしたい」＝スタッフ画面を先頭へ（PC版 super_pc.py の ROLES と同じ順）。
 var ROLE_DEFS_ = [
-  { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
+  // ★2026-11-13 まるちゃん「スタッフ画面のアイコンは、🍅、オリーブ、みかん、のみっつを使ったアイコン」
+  //   ＝スタッフの果物の並びの絵（PC版スーパーズコ\icons\スタッフ画面_アイコンの元絵_果物の並び.png）から3つを切り抜き、
+  //   後ろに左オリーブ・右みかん、前にトマト。部屋のボタンは開発版にしか出ないので直接入れた。PC版 super_pc.py の ROLES と同じ。
+  { id: 'jitsumu', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/staffroom-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'スタッフ画面' },
   // ★2026-11-13 まるちゃん「龍のアイコンは、このりゅう」＝11/11にLINEグループのアイコンで使った黄色いりゅう
   //   （元＝C:\Users\User\SNS運用グループのアイコン案\りゅう_参考.png を切り抜いた物）。見出しでも同じ絵を小さく出す。
   //   この部屋は開発版（まるちゃん）にしか出ないので、iconDev にせず直接入れた。PC版 super_pc.py の ROLES と同じ。

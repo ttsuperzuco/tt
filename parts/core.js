@@ -1419,7 +1419,7 @@ var TILE_GROUP_ = {
   foldertest: 'kaihatsu',   
 };
 var ROLE_DEFS_ = [
-  { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
+  { id: 'jitsumu', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/staffroom-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'スタッフ画面' },
   { id: 'keiei', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/ryutool-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'りゅうツール' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
