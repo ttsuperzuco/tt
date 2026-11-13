@@ -19,6 +19,9 @@ var EVENTS_FILENAME = 'events.json';
 // 引き継がせ、移動しても本人(＝権限・ログ)が保たれるようにする（GAS実行はリクエスト毎に独立のため）。
 var CUR_WHO_ = '';
 function roleSfx_(staff, dev) {
+  // ★2026-11-13 開発版の「その人の画面」の見本（&as=<人>・index.html が window.__SZ_AS_ に入れる）では、
+  //   押した先も見本のまま開く（開発版の住所＋&as=）。スタッフの住所（&staff=1）にすると、まるちゃんの端末で名前選びが出てしまう。
+  if (typeof window !== 'undefined' && window.__SZ_AS_) return '&dev=1&as=' + encodeURIComponent(window.__SZ_AS_);
   var s = staff ? '&staff=1' : (dev ? '&dev=1' : '');
   if (CUR_WHO_) s += '&who=' + encodeURIComponent(CUR_WHO_);
   return s;
@@ -2673,6 +2676,7 @@ var HOME_AS_PEOPLE_ = [
   { id: 'reception_sp', text: '受付スマホ' }
 ];
 function homeAsWho_(dev) {
+  if (typeof window !== 'undefined' && window.__SZ_AS_) return window.__SZ_AS_;   // ★index.html が見本の時に入れる（dev はもう false）
   if (!dev || typeof location === 'undefined') return '';
   var m = /[?&]as=([a-z_]+)/.exec(location.search || '');
   if (!m) return '';
