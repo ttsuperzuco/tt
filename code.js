@@ -184,6 +184,9 @@ function doGet(e) {
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       // ★静的アプリが oshirase_mita.json を取って描く
     html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
+  } else if (view === 'foldertest') {
+    title = 'フォルダの試し';                                   // ★2026-11-13 スタッフ画面のボタンをフォルダにまとめる案を試す（純JS・開発者だけ）
+    html = renderFolderTestPage_(base, staff, dev);
   } else if (view === 'facebook') {
     title = 'フェイズコブック';                                       // ★お店のFacebookページを本物そっくりに見せる（純JS・中身は受付係 op=facebook）
     html = renderFacebookPage_(base, staff, dev);
@@ -1076,7 +1079,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1920,7 +1923,11 @@ var TILE_DEFS_ = [
   // ★購入証明書作成（2026-11-09 まるちゃん「TOMATOにだけ購入証明書出す」→2026-11-11「全スタッフにだして」＝スタッフ画面）。テストのお客様トモトラス様だけ。
   //   画面と紙はパソコン版と同じ1本を係から受け取って出す（受付係 op=shomeisho → まとめ購入証明書\programs\zuko_shomeisho.py）。
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
-    icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' }
+    icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' },
+  // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
+  //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
+  { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
+    icon: '<span class="ticon">📂</span>', label: 'フォルダの\n試し' }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -1950,7 +1957,8 @@ var TILE_GROUP_ = {
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', facebook: 'kaihatsu',
   // ★2026-11-12 まるちゃん「TT売上帳簿はスタッフやトマトさんにはまだ未公開にして」＝人ごとの表示を全員オフにし、開発中の機能に戻した（PC版 super_pc.py と同じ）。
-  uriagebook: 'kaihatsu'
+  uriagebook: 'kaihatsu',
+  foldertest: 'kaihatsu',   // ★2026-11-13 フォルダの試し（開発中の機能・PC版 super_pc.py と同じ）
   // ★2026-11-06 まるちゃん「前日お知らせの右に見てくれた？」＝お知らせ見てくれた？(mita)はスタッフ画面（ここに書かない）
   // ★2026-11-06 まるちゃん「開発中の機能に戻す」＝Threads投稿は開発版では開発中の機能に置く（TOMATO・オリーブ・みかんのスマホには人ごとの表示で出る）。
   // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
@@ -2261,6 +2269,287 @@ function homeSortBoot_(KEY, OPT) {
 }
 // SZ-HOMESORT-END
 var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stringify(HOME_MY_ORDER_KEY_) + ');</' + 'script>';
+
+// ★フォルダの試し（2026-11-13 まるちゃん「①②③全部それで　開発トップにテストボタンをつくってそのなかに再現して」）。
+//   スタッフ画面のボタンを「フォルダ」にまとめる案を、本物のボタンの見た目で試す画面（開発者だけ＝共通ルール16）。
+//   ★本物のホームの並び・人ごとの表示には一切触らない。試しの並びはこのスマホだけに保存（localStorage sz_foldertest）。
+//   操作（まるちゃん決定＝全部長押しのメニューにまとめる・名前を押して変える作りは外す）：
+//     トップのボタンを長押し → 「フォルダに移動」→ フォルダを選ぶ／「＋ 新しいフォルダを作成」→ 名前を入力して保存
+//     フォルダの中のボタンを長押し → 「トップに移動」／「ほかのフォルダに移動」
+//     フォルダを長押し → 「名前を変更」／「フォルダを解除」（中のボタンはトップに戻る）
+//     長押ししたまま動かす → ボタンに重ねるとフォルダになる・フォルダに重ねると入る・フォルダの中から外へ出すとトップに戻る
+//   中が0個になったフォルダは自動で消す（1個のフォルダは残す＝メニューで1個から作れるため）。
+//   最初のフォルダの分け方は試しの仮（全員共通のフォルダはまるちゃんが決める）。本番に入れる時はホームの作りに組み込み直す。
+var FOLDERTEST_START_ = ['sejutsugo', 'yoyaku', 'akijikan', 'links', 'ttapp',
+  { f: 'LINE送信', items: ['zenjitsu', 'mita', 'bcast', 'sgline'] },
+  { f: 'チェック', items: ['conflict', 'lt'] },
+  { f: 'SNS', items: ['threads', 'insta'] },
+  { f: '販売・在庫', items: ['procstock', 'hanbai', 'shomeisho'] }];
+function renderFolderTestPage_(base, staff, dev) {
+  var tiles = {};
+  var want = [];
+  FOLDERTEST_START_.forEach(function (x) { if (typeof x === 'string') want.push(x); else want = want.concat(x.items); });
+  var byId = {};
+  for (var i = 0; i < TILE_DEFS_.length; i++) byId[TILE_DEFS_[i].id] = TILE_DEFS_[i];
+  want.forEach(function (id) { var t = byId[id]; if (t) tiles[id] = { icon: t.icon, label: t.label, cls: t.cls }; });
+  var D = { tiles: tiles, start: FOLDERTEST_START_, home: (base || '') + '?view=home' + roleSfx_(staff, dev) };
+  return '<style>' + HOMECSS_ + FOLDERTESTCSS_ + '</style><div class="home hsort" id="ftHome"></div>' +
+    '<script>(' + folderTestBoot_.toString() + ')(' + JSON.stringify(D).replace(/</g, '\\u003c') + ');</' + 'script>';
+}
+var FOLDERTESTCSS_ =
+  '  .tile.foldertest::before { background:#94a3b8; }' +
+  '  .tile.ftfolder::before { background:#94a3b8; }' +
+  '  #ftHome .tiles { grid-auto-rows:1fr; }' +
+  '  .ftmini { flex:none; width:48px; height:48px; border-radius:11px; background:rgba(148,163,184,.22); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:2px; padding:3px; box-sizing:border-box; margin-right:4px; }' +
+  '  .ftmini .ticon { width:20px; height:20px; font-size:16px; border-radius:5px; background:transparent!important; margin:auto; }' +
+  '  .ftmini .ticon img { width:20px; height:20px; }' +
+  '  .ftmini .ftmore { font-size:12px; font-weight:900; color:#475569; display:grid; place-items:center; }' +
+  '  .ftcount { display:block; font-size:.78rem; font-weight:800; opacity:.75; margin-top:2px; }' +
+  '  .tile.ftdropto { outline:3px solid #fbbf24; outline-offset:-3px; }' +
+  '  .fttoast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#fff; color:#12303c; font-weight:800; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(0,0,0,.25); display:none; z-index:10002; font-size:.95rem; max-width:90vw; text-align:center; }' +
+  '  .ftmbtn { display:block; width:100%; font:inherit; font-size:1.2rem; font-weight:800; padding:14px; margin:0 0 10px; border-radius:12px; border:0; background:#fff; color:#12303c; cursor:pointer; }' +
+  '  .ftmtitle { font-size:1.3rem; font-weight:900; margin-bottom:14px; }' +
+  '  .ftname { width:100%; box-sizing:border-box; font:inherit; font-size:1.3rem; font-weight:800; padding:12px 14px; border-radius:12px; border:0; color:#12303c; }';
+function folderTestBoot_(D) {
+  var T = D.tiles, KEY = 'sz_foldertest', HOLD = 450, SLOP = 10;
+  var home = document.getElementById('ftHome');
+  if (!home) return;
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function lbl(id) { return String(T[id].label).replace(/\n/g, ''); }
+  // 保存した並びを読み直す時、知らないボタンは捨て、どこにも無いボタンはトップの後ろに足す（ボタンが消えない）。
+  function clean(list) {
+    var out = [], seen = {};
+    (list || []).forEach(function (x) {
+      if (typeof x === 'string') { if (T[x] && !seen[x]) { out.push(x); seen[x] = 1; } }
+      else if (x && x.items) {
+        var it = x.items.filter(function (y) { if (!T[y] || seen[y]) return false; seen[y] = 1; return true; });
+        if (it.length) out.push({ f: String(x.f || 'フォルダ'), items: it });
+      }
+    });
+    for (var id in T) if (!seen[id]) out.push(id);
+    return out;
+  }
+  function load() { try { var s = localStorage.getItem(KEY); if (s) return clean(JSON.parse(s)); } catch (e) {} return clean(D.start); }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {} }
+  var items = load(), openF = null;
+
+  function tileHtml(id) {
+    return '<a class="tile ' + T[id].cls + '" href="#" data-id="' + id + '" draggable="false">' + T[id].icon + '<span class="tname">' + esc(T[id].label) + '</span></a>';
+  }
+  function folderHtml(F, i) {
+    var n = F.items.length, cells = '', show = n > 4 ? 3 : n;
+    for (var k = 0; k < show; k++) cells += T[F.items[k]].icon;
+    if (n > 4) cells += '<span class="ftmore">+' + (n - 3) + '</span>';
+    return '<a class="tile ftfolder" href="#" data-folder="' + i + '" draggable="false"><span class="ftmini">' + cells + '</span>' +
+      '<span class="tname">' + esc(F.f) + '<span class="ftcount">' + n + '個</span></span></a>';
+  }
+  function render() {
+    if (openF && items.indexOf(openF) < 0) openF = null;
+    var h = '<div class="hhead"><img class="bmark" src="https://ttsuperzuco.github.io/tt/icons/icon-180.png" alt=""><span class="bname">TTスーパーズコ</span></div>' +
+      '<div class="hsub">フォルダの試し（長押しでメニューが出ます😊）</div>';
+    if (!openF) {
+      h += '<div class="backbar"><button type="button" class="backbtn" id="ftBack">← 戻る</button>' +
+        '<span class="hreset"><button type="button" class="hresetbtn" id="ftReset">↺ 初期の並びに戻す</button></span></div>' +
+        '<div class="grouptitle">💼 スタッフ画面（' + items.length + '個）</div>' +
+        '<div class="tiles" id="ftBox">' + items.map(function (x, i) { return typeof x === 'string' ? tileHtml(x) : folderHtml(x, i); }).join('') + '</div>';
+    } else {
+      h += '<div class="backbar"><button type="button" class="backbtn" id="ftBack">← 戻る</button></div>' +
+        '<div class="grouptitle">📂 ' + esc(openF.f) + '</div>' +
+        '<div class="tiles" id="ftBox">' + openF.items.map(tileHtml).join('') + '</div>';
+    }
+    home.innerHTML = h;
+    bind();
+  }
+  var toastTm = null;
+  function toast(m) {
+    var t = document.getElementById('ftToast');
+    if (!t) { t = document.createElement('div'); t.id = 'ftToast'; t.className = 'fttoast'; document.body.appendChild(t); }
+    t.textContent = m; t.style.display = 'block';
+    clearTimeout(toastTm); toastTm = setTimeout(function () { t.style.display = 'none'; }, 2200);
+  }
+  function done(m) { save(); render(); toast(m); }
+
+  // ── 長押しのメニュー（ズコの共通の小窓 szPopup_ の中にボタンを並べる）──
+  function sheet(title, btns) {
+    var html = '<div class="ftmtitle">' + title + '</div>' + btns.map(function (b, i) {
+      return '<button type="button" class="ftmbtn" data-k="' + i + '">' + b.label + '</button>';
+    }).join('');
+    var m = szPopup_(html, { isHtml: true, icon: '', yesLabel: '閉じる' });
+    var bs = m.querySelectorAll('[data-k]');
+    for (var i = 0; i < bs.length; i++) (function (el) {
+      el.addEventListener('click', function () { if (m.parentNode) m.parentNode.removeChild(m); btns[+el.getAttribute('data-k')].fn(); });
+    })(bs[i]);
+  }
+  function askName(title, cur, cb) {
+    var inp = null;
+    var m = szPopup_('<div class="ftmtitle">' + title + '</div><input type="text" class="ftname" maxlength="10" value="' + esc(cur) + '">',
+      { isHtml: true, icon: '', cancel: true, yesLabel: '保存', onYes: function () { var v = String(inp.value || '').trim(); cb(v || cur || 'フォルダ'); } });
+    inp = m.querySelector('.ftname');
+    setTimeout(function () { try { inp.focus(); inp.select(); } catch (e) {} }, 60);
+  }
+  function where(id) {   // そのボタンが今どこにあるか（トップなら null・フォルダならそのフォルダ）
+    for (var i = 0; i < items.length; i++) if (typeof items[i] !== 'string' && items[i].items.indexOf(id) >= 0) return items[i];
+    return null;
+  }
+  function takeOut(id) {   // ボタンを今の場所から外す（トップならその位置を返す）
+    var i = items.indexOf(id);
+    if (i >= 0) { items.splice(i, 1); return i; }
+    var F = where(id); if (F) F.items.splice(F.items.indexOf(id), 1);
+    return -1;
+  }
+  function dropEmpty() { items = items.filter(function (x) { return typeof x === 'string' || x.items.length; }); }
+  function moveToFolder(id, F) {
+    takeOut(id); F.items.push(id); dropEmpty();
+    done('「' + lbl(id) + '」を「' + F.f + '」に移動しました');
+  }
+  function newFolder(id) {
+    askName('新しいフォルダの名前を入力してください😊', '新しいフォルダ', function (nm) {
+      var from = where(id), pos = takeOut(id);
+      if (pos < 0) pos = from ? items.indexOf(from) + 1 : items.length;
+      items.splice(pos, 0, { f: nm, items: [id] }); dropEmpty();
+      done('新しいフォルダ「' + nm + '」を作成しました');
+    });
+  }
+  function pickFolder(id) {
+    var cur = where(id), btns = [];
+    items.forEach(function (x) {
+      if (typeof x !== 'string' && x !== cur) btns.push({ label: '📂 ' + esc(x.f), fn: function () { moveToFolder(id, x); } });
+    });
+    btns.push({ label: '＋ 新しいフォルダを作成', fn: function () { newFolder(id); } });
+    sheet('「' + esc(lbl(id)) + '」を<br>どのフォルダに移動しますか？😊', btns);
+  }
+  function toTop(id) {
+    var F = where(id); if (!F) return;
+    var pos = items.indexOf(F) + 1;
+    takeOut(id); items.splice(pos, 0, id); dropEmpty();
+    done('「' + lbl(id) + '」をトップに移動しました');
+  }
+  function ungroup(F) {
+    var i = items.indexOf(F); if (i < 0) return;
+    items.splice.apply(items, [i, 1].concat(F.items));
+    if (openF === F) openF = null;
+    done('フォルダ「' + F.f + '」を解除しました');
+  }
+  function menuFor(el) {
+    var fi = el.getAttribute('data-folder');
+    if (fi != null) {
+      var F = items[+fi];
+      sheet('📂 ' + esc(F.f), [
+        { label: '✏️ 名前を変更', fn: function () {
+          askName('フォルダの名前を入力してください😊', F.f, function (nm) { F.f = nm; done('名前を「' + nm + '」に変更しました'); });
+        } },
+        { label: '🗂️ フォルダを解除', fn: function () {
+          szPopup_('中のボタンは、すべてトップに戻ります。\nフォルダ「' + F.f + '」を解除しますか？😊',
+            { icon: '', cancel: true, yesLabel: '解除する', onYes: function () { ungroup(F); } });
+        } }
+      ]);
+      return;
+    }
+    var id = el.getAttribute('data-id');
+    if (!openF) sheet('「' + esc(lbl(id)) + '」', [{ label: '📂 フォルダに移動', fn: function () { pickFolder(id); } }]);
+    else sheet('「' + esc(lbl(id)) + '」', [
+      { label: '⬆️ トップに移動', fn: function () { toTop(id); } },
+      { label: '📂 ほかのフォルダに移動', fn: function () { pickFolder(id); } }
+    ]);
+  }
+
+  // ── 長押し（本物の並べ替えと同じ作り＝指は touch、パソコンは mouse）──
+  var st = null, lastUp = 0, lastTouchAt = 0;
+  function down(el, x, y) { st = { el: el, x0: x, y0: y, drag: false, moved: false, target: null, outside: false }; st.timer = setTimeout(lift, HOLD); }
+  function lift() {
+    if (!st) return;
+    st.drag = true; st.el.classList.add('tdrag'); home.classList.add('hsorting');
+    try { if (navigator.vibrate) navigator.vibrate(25); } catch (e) {}
+  }
+  function move(x, y, ev) {
+    if (!st) return;
+    if (!st.drag) { if (Math.abs(x - st.x0) > SLOP || Math.abs(y - st.y0) > SLOP) { clearTimeout(st.timer); unbind(st); st = null; } return; }
+    if (ev && ev.cancelable) ev.preventDefault();   // 持ち上げている間は画面を送らない
+    if (Math.abs(x - st.x0) > SLOP || Math.abs(y - st.y0) > SLOP) st.moved = true;
+    st.el.style.transform = 'translate(' + (x - st.x0) + 'px,' + (y - st.y0) + 'px) scale(1.05)';
+    var u = document.elementFromPoint(x, y), t = (u && u.closest) ? u.closest('a.tile') : null;
+    if (st.target && st.target !== t) st.target.classList.remove('ftdropto');
+    st.target = (t && t !== st.el && st.el.hasAttribute('data-id')) ? t : null;
+    st.outside = !(u && u.closest && u.closest('#ftBox'));
+    if (st.target && !openF) st.target.classList.add('ftdropto');
+  }
+  function unbind(s) {
+    if (s.tm) { s.el.removeEventListener('touchmove', s.tm); s.el.removeEventListener('touchend', s.te); s.el.removeEventListener('touchcancel', s.te); }
+    if (s.mm) { document.removeEventListener('mousemove', s.mm); document.removeEventListener('mouseup', s.mu); }
+  }
+  function up(ev) {
+    if (!st) return;
+    clearTimeout(st.timer);
+    var s = st; st = null; unbind(s);
+    if (!s.drag) return;
+    if (ev && ev.cancelable) ev.preventDefault();
+    lastUp = Date.now();
+    s.el.classList.remove('tdrag'); home.classList.remove('hsorting'); s.el.style.transform = '';
+    if (s.target) s.target.classList.remove('ftdropto');
+    if (!s.moved) { menuFor(s.el); return; }   // 長押しして動かさずに離した＝メニュー
+    var did = s.el.getAttribute('data-id');
+    if (!did) { render(); return; }
+    if (openF) {   // フォルダの中から外へ出した＝トップへ
+      if (s.outside) toTop(did); else render();
+      return;
+    }
+    if (s.target) {
+      var tf = s.target.getAttribute('data-folder');
+      if (tf != null) { moveToFolder(did, items[+tf]); return; }
+      var tid = s.target.getAttribute('data-id'), ti = items.indexOf(tid);
+      takeOut(did); ti = items.indexOf(tid);
+      items[ti] = { f: '新しいフォルダ', items: [tid, did] };
+      done('新しいフォルダができました（名前は長押しで変更できます😊）');
+      return;
+    }
+    render();
+  }
+  function bind() {
+    var bk = document.getElementById('ftBack');
+    if (bk) bk.onclick = function () {
+      if (openF) { openF = null; render(); window.scrollTo(0, 0); return; }
+      try { window.top.location.href = D.home; } catch (e) { location.href = D.home; }
+    };
+    var rs = document.getElementById('ftReset');
+    if (rs) rs.onclick = function () { try { localStorage.removeItem(KEY); } catch (e) {} items = clean(D.start); openF = null; render(); toast('初期の並びに戻しました'); };
+    var box = document.getElementById('ftBox');
+    if (!box) return;
+    function tileOf(t) { var a = (t && t.closest) ? t.closest('a.tile') : null; return (a && a.parentNode === box) ? a : null; }
+    box.addEventListener('touchstart', function (ev) {
+      lastTouchAt = Date.now();
+      if (ev.touches.length !== 1 || st) return;
+      var a = tileOf(ev.target); if (!a) return;
+      var p = ev.touches[0];
+      down(a, p.clientX, p.clientY);
+      st.tm = function (e) { var q = e.touches[0]; if (q) move(q.clientX, q.clientY, e); };
+      st.te = function (e) { lastTouchAt = Date.now(); up(e); };
+      a.addEventListener('touchmove', st.tm, { passive: false });
+      a.addEventListener('touchend', st.te);
+      a.addEventListener('touchcancel', st.te);
+    }, { passive: true });
+    box.addEventListener('mousedown', function (ev) {
+      if (ev.button !== 0 || st || Date.now() - lastTouchAt < 1200) return;
+      var a = tileOf(ev.target); if (!a) return;
+      ev.preventDefault();
+      down(a, ev.clientX, ev.clientY);
+      st.mm = function (e) { move(e.clientX, e.clientY, e); };
+      st.mu = function (e) { up(e); };
+      document.addEventListener('mousemove', st.mm);
+      document.addEventListener('mouseup', st.mu);
+    });
+    box.addEventListener('click', function (ev) {
+      var a = tileOf(ev.target); if (!a) return;
+      ev.preventDefault();
+      if (Date.now() - lastUp < 700) return;   // 長押しのあとは押した事にしない
+      var fi = a.getAttribute('data-folder');
+      if (fi != null) { openF = items[+fi]; render(); window.scrollTo(0, 0); }
+      else toast('試しの画面なので、ボタンの先は開きません😊');
+    });
+    box.addEventListener('contextmenu', function (ev) { if (tileOf(ev.target)) ev.preventDefault(); });
+    box.addEventListener('dragstart', function (ev) { if (tileOf(ev.target)) ev.preventDefault(); });
+  }
+  render();
+}
 
 /** ①GAS直アクセス専用のホーム画面ラッパ。tile_settings.json(Drive)を1回だけ読んで
  *  perms/labels(追加スタッフ込み)を renderHomePage_ に渡す。 */
@@ -23366,6 +23655,7 @@ var HOMECSS_ =
 '  .tile.insta::before { background:#d62976; }' +
 '  .tile.facebook::before { background:#0866ff; }' +
 '  .tile.mita::before { background:#0f766e; }' +
+'  .tile.foldertest::before { background:#94a3b8; }' +   // ★2026-11-13 フォルダの試し（PC版 super_pc.py と同じ色）
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile.kizon::before { background:#7c3aed; }' +

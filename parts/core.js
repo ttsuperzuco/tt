@@ -146,6 +146,9 @@ function doGet(e) {
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       
     html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
+  } else if (view === 'foldertest') {
+    title = 'フォルダの試し';                                   
+    html = renderFolderTestPage_(base, staff, dev);
   } else if (view === 'facebook') {
     title = 'フェイズコブック';                                       
     html = renderFacebookPage_(base, staff, dev);
@@ -821,7 +824,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   mita:       { exec: true, staff: true },
   shomeisho:  { exec: true, staff: true }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1375,7 +1378,9 @@ var TILE_DEFS_ = [
   { id: 'mita', cls: 'mita', view: 'mita',
     icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
-    icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' }
+    icon: '<span class="ticon">🧾</span>', label: '購入証明書\n作成' },
+  { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
+    icon: '<span class="ticon">📂</span>', label: 'フォルダの\n試し' }
 ];
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'keiei', koukoku: 'keiei', imglink: 'kanri',
@@ -1385,7 +1390,8 @@ var TILE_GROUP_ = {
   hachimitsu: 'tomato',
   unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
   formconv: 'kaihatsu', honyaku: 'kaihatsu', facebook: 'kaihatsu',
-  uriagebook: 'kaihatsu'
+  uriagebook: 'kaihatsu',
+  foldertest: 'kaihatsu',   
 };
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '💼', title: 'スタッフ画面' },
@@ -1642,6 +1648,10 @@ function homeSortBoot_(KEY, OPT) {
   }
 }
 var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stringify(HOME_MY_ORDER_KEY_) + ');</' + 'script>';
+
+
+
+
 function renderHome_(base, staff, dev, who) {
   var d = {};
   try { d = JSON.parse(getTileSettingsFile_().getBlob().getDataAsString('UTF-8')) || {}; } catch (ignore) {}
@@ -3018,6 +3028,7 @@ var HOMECSS_ =
 '  .tile.insta::before { background:#d62976; }' +
 '  .tile.facebook::before { background:#0866ff; }' +
 '  .tile.mita::before { background:#0f766e; }' +
+'  .tile.foldertest::before { background:#94a3b8; }' +   
 '  .tile.yoyaku::before { background:#16a34a; }' +
 '  .tile.sejutsugo::before { background:#0ea5e9; }' +
 '  .tile.kizon::before { background:#7c3aed; }' +
