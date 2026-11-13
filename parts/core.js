@@ -1310,6 +1310,7 @@ var LINE_UNANS_LOGO_ = LINE_BIG_BUBBLE_ + '</g>' +
   '<circle cx="19.4" cy="4.8" r="3.8" fill="#E24B4A" stroke="#fff" stroke-width=".9"/></svg>';
 var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
   '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g></svg>';
+function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
 
 var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
   '<rect width="24" height="24" rx="7" fill="#2bad6f"/>' +
@@ -1325,9 +1326,11 @@ var TILE_DEFS_ = [
   { id: 'uriage', cls: 'uriage', view: 'uriage',
     icon: '<span class="ticon">💰</span>', label: '売上転記\nTimeTree' },
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
-    icon: '<span class="ticon">' + LINE_UNANS_LOGO_ + '</span>', label: 'LINE未回答\n＆返信待ち' },
+    icon: '<span class="ticon">💬</span>',
+    iconDev: '<span class="ticon">' + LINE_UNANS_LOGO_ + '</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png"></span>', label: '空き時間\n検索' },
+    icon: '<span class="ticon">🕑</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png"></span>', label: '空き時間\n検索' },
   { id: 'links', cls: 'links', view: 'links',
     icon: '<span class="ticon">🔗</span>', label: '各種\nLINK' },
   { id: 'ttapp', cls: 'ttapp', view: 'ttapp',
@@ -1357,11 +1360,14 @@ var TILE_DEFS_ = [
   { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
     icon: '<span class="ticon">🖥️</span>', label: '自宅\nPC' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/yoyaku-192.png"></span>', label: '予約\n入力' },
+    icon: '<span class="ticon">📝</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/yoyaku-192.png"></span>', label: '予約\n入力' },
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
+    icon: '<span class="ticon">💆</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
-    icon: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
+    icon: '<span class="ticon">💌</span>',
+    iconDev: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
   { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
     icon: '<span class="ticon">📖</span>', label: '既存の\n予約' },
   { id: 'timetree', cls: 'timetree', view: 'timetree',
@@ -1385,7 +1391,8 @@ var TILE_DEFS_ = [
   { id: 'mita', cls: 'mita', view: 'mita',
     icon: '<span class="ticon">👀</span>', label: 'お知らせ\n見てくれた？' },
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png"></span>', label: '購入証明書\n作成' },
+    icon: '<span class="ticon">🧾</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png"></span>', label: '購入証明書\n作成' },
   { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
     icon: '<span class="ticon">📂</span>', label: 'フォルダの\n試し' }
 ];
@@ -1716,7 +1723,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     var rel = t.url ? ' rel="noopener"' : '';
     var sortAttr = canSort ? (' data-tid="' + esc_(t.id) + '" data-def="' + defIdx[t.id] + '" draggable="false"') : '';
     return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + sortAttr + '>' +
-      t.icon + '<span class="tname">' + esc_(t.label) + '</span></a>';
+      tileIcon_(t, dev) + '<span class="tname">' + esc_(t.label) + '</span></a>';
   }
   function tilesBox_(list, gaps) {
     return '<div class="tiles"' + (canSort && gaps && gaps.length ? ' data-gaps="' + esc_(gaps.join(',')) + '"' : '') + '>' +
