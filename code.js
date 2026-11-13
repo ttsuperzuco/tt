@@ -2057,7 +2057,8 @@ function homeMyOrder_() {
 //   ★同日まるちゃん「それで大丈夫です。作って」（持ち上げた時だけ画面の下に行き先の帯を出す）用に、さらに3つ（書かなければ同じ）：
 //     lift(ボタン)＝持ち上げた時に呼ぶ（帯を出す）／end(ボタン)＝指を離した時に必ず呼ぶ（帯を消す）
 //     zoneAt(x, y, ボタン)＝指の下が行き先（箱の外の帯など）ならその要素を返す。光らせ、離すと dropInto に渡す
-//     bottomGap()＝画面の下に重なっている帯の高さ（帯のすぐ上で画面を下へ送る・帯の上では送らない）
+//     bottomGap()／topGap()＝画面の下／上に重なっている帯の高さ（帯のすぐ手前で画面を送る・帯の上では送らない）
+//     ★帯は画面の上に出す（下はAndroidの「かこって検索」＝ホームに戻る線の長押しと重なる・同日まるちゃんのスマホで検索が出た原因とみられる）
 function homeSortBoot_(KEY, OPT) {
   OPT = OPT || {};
   var SEL = OPT.tile || 'a.tile', IDATTR = OPT.idAttr || 'data-tid';
@@ -2151,8 +2152,10 @@ function homeSortBoot_(KEY, OPT) {
   function tick() {
     if (!st || !st.drag) return;
     // ★bottomGap()＝画面の下に重なっている帯の高さ（書かなければ0）。帯のすぐ上で下へ送り、帯の上では送らない。
+    //   topGap()＝画面の上に重なっている帯の高さ（同じ考え方。帯のすぐ下で上へ送る）。
+    var top = OPT.topGap ? (OPT.topGap() || 0) : 0;
     var h = window.innerHeight - (OPT.bottomGap ? (OPT.bottomGap() || 0) : 0), v = 0, EDGE = 84;
-    if (st.y < EDGE) v = -Math.ceil((EDGE - st.y) / 6);
+    if (st.y < top + EDGE && st.y >= top) v = -Math.ceil((top + EDGE - st.y) / 6);
     else if (st.y > h - EDGE && st.y <= h) v = Math.ceil((st.y - (h - EDGE)) / 6);
     if (v) {
       var y0 = window.pageYOffset;
@@ -2296,7 +2299,7 @@ var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stri
 //   操作：
 //     長押しして動かす＝本物のホームと同じ並べ替え（共通\画面\ホーム並べ替え.js をそのまま使う）。
 //       ボタンをフォルダの上まで動かすとフォルダが光り、そこで離すとそのフォルダに入る（同日まるちゃん「元に戻して…入るのもつけて」）。
-//     長押しして持ち上げた時だけ、画面の下に「行き先の帯」を出す（同日まるちゃん「それで大丈夫です。作って」）：
+//     長押しして持ち上げた時だけ、画面の上に「行き先の帯」を出す（同日まるちゃん「それで大丈夫です。作って」）：
 //       トップ＝「＋ 新しいフォルダ」（離すと名前を入力）／フォルダの中＝「⬆️ トップに出す」とほかのフォルダ。
 //     フォルダを長押しして動かさずに離す＝メニュー（名前を変更・フォルダを解除）。ボタンのメニューはやめた。
 //   中が0個になったフォルダは自動で消す（1個のフォルダは残す＝メニューで1個から作れるため）。
@@ -2331,7 +2334,10 @@ var FOLDERTESTCSS_ =
   '  .ftmbtn { display:block; width:100%; font:inherit; font-size:1.2rem; font-weight:800; padding:14px; margin:0 0 10px; border-radius:12px; border:0; background:#fff; color:#12303c; cursor:pointer; }' +
   '  .ftmtitle { font-size:1.3rem; font-weight:900; margin-bottom:14px; }' +
   '  .ftname { width:100%; box-sizing:border-box; font:inherit; font-size:1.3rem; font-weight:800; padding:12px 14px; border-radius:12px; border:0; color:#12303c; }' +
-  '  .ftbar { position:fixed; left:0; right:0; bottom:0; z-index:50; display:none; background:rgba(18,48,60,.97); padding:12px 12px calc(16px + env(safe-area-inset-bottom)); border-radius:18px 18px 0 0; box-shadow:0 -8px 24px rgba(0,0,0,.3); }' +
+  // ★帯は画面の上（同日まるちゃん「スマホで長押しするとGoogleのタップして検索が出て全然できない」＝下の帯はAndroidの
+  //   「かこって検索」（ホームに戻る線の長押し）と重なるとみて上へ移した）。試しの画面ではどこを長押ししても文字を選ばない。
+  '  #ftHome, .ftbar, .fttoast { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }' +
+  '  .ftbar { position:fixed; left:0; right:0; top:0; z-index:50; display:none; background:rgba(18,48,60,.97); padding:calc(14px + env(safe-area-inset-top)) 12px 14px; border-radius:0 0 18px 18px; box-shadow:0 8px 24px rgba(0,0,0,.3); }' +
   '  .ftbhint { color:#fff; font-weight:800; font-size:.95rem; text-align:center; margin-bottom:10px; }' +
   '  .ftzones { display:flex; flex-wrap:wrap; gap:10px; max-width:640px; margin:0 auto; }' +
   '  .ftzone { flex:1 1 40%; box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
@@ -2362,6 +2368,7 @@ function folderTestBoot_(D) {
   function load() { try { var s = localStorage.getItem(KEY); if (s) return clean(JSON.parse(s)); } catch (e) {} return clean(D.start); }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {} }
   var items = load(), openF = null;
+  home.addEventListener('contextmenu', function (ev) { ev.preventDefault(); });
   function folderByKey(k) { for (var i = 0; i < items.length; i++) if (typeof items[i] !== 'string' && items[i].k === k) return items[i]; return null; }
 
   function tileHtml(id) {
@@ -2442,7 +2449,7 @@ function folderTestBoot_(D) {
     });
   }
   // ── 行き先の帯（★2026-11-13 まるちゃん「それで大丈夫です。作って」）──
-  //   ボタンを長押しして持ち上げた時だけ、画面の下に出す。行き先の上で離すとそこへ移る。指を離すと消える。
+  //   ボタンを長押しして持ち上げた時だけ、画面の上に出す（下はAndroidの「かこって検索」と重なるため）。行き先の上で離すとそこへ移る。指を離すと消える。
   //   トップ＝「＋ 新しいフォルダ」／フォルダの中＝「⬆️ トップに出す」とほかのフォルダ。フォルダそのものを持ち上げた時は出さない。
   function showBar(el) {
     var tid = el.getAttribute('data-tid') || '';
@@ -2457,12 +2464,8 @@ function folderTestBoot_(D) {
     if (!bar) { bar = document.createElement('div'); bar.id = 'ftBar'; bar.className = 'ftbar'; document.body.appendChild(bar); }
     bar.innerHTML = '<div class="ftbhint">行き先の上で離してください😊</div><div class="ftzones">' + z.join('') + '</div>';
     bar.style.display = 'block';
-    home.style.paddingBottom = (bar.offsetHeight + 16) + 'px';   // 一番下の段も帯の上まで送れるように
   }
-  function hideBar() {
-    var bar = document.getElementById('ftBar'); if (bar) bar.style.display = 'none';
-    home.style.paddingBottom = '';
-  }
+  function hideBar() { var bar = document.getElementById('ftBar'); if (bar) bar.style.display = 'none'; }
   function barHeight() { var bar = document.getElementById('ftBar'); return (bar && bar.style.display !== 'none') ? bar.offsetHeight : 0; }
   function zoneAt(x, y) {
     if (!barHeight()) return null;
@@ -2497,7 +2500,7 @@ function folderTestBoot_(D) {
       return;
     }
     // ★同日まるちゃん「それで」＝ボタンのメニューはやめた（移動は行き先の帯で行う）。
-    toast('動かして、下の行き先かフォルダの上で離してください😊');
+    toast('動かして、上の行き先かフォルダの上で離してください😊');
   }
 
   // ── 長押しして動かす＝本物のホームと同じ並べ替え（共通\画面\ホーム並べ替え.js をそのまま使う）──
@@ -2539,7 +2542,7 @@ function folderTestBoot_(D) {
       lift: showBar,
       end: hideBar,
       zoneAt: zoneAt,
-      bottomGap: barHeight
+      topGap: barHeight
     });
     box.addEventListener('click', function (ev) {
       var a = (ev.target && ev.target.closest) ? ev.target.closest('a.tile') : null;
