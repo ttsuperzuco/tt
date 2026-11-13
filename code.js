@@ -1934,7 +1934,10 @@ var TILE_DEFS_ = [
   // ★販売管理＝台湾販売入力／日本販売入力／販売管理表（2026-10-17・実務者用）。
   //   登録・候補・一覧は事務所PCの記録（受付係 op=hanbai → 販売管理\programs\hanbai.py）。
   { id: 'hanbai', cls: 'hanbai', view: 'hanbai',
-    icon: '<span class="ticon">🛒</span>', label: 'No31\n販売管理' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝本物のNo.31（青い瓶）の写真をこげ茶の地に置き、細い白枠を付けた絵。
+    //   瓶の元写真＝共通\output\imagegen\NO31_瓶切り抜き透明\NO31_青瓶_背景透明_1600x1600.png。パソコン版の同じ絵＝PC版スーパーズコ\icons\hanbai-zuko-96.png。
+    icon: '<span class="ticon">🛒</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hanbai-192.png"></span>', label: 'No31\n販売管理' },
   // ★🍯ハチミツちゃん（2026-11-11 まるちゃん決定）＝トマトさんの相談と画像作り（op=hachimitsu）。既定は開発者だけ（共通ルール16）。
   { id: 'hachimitsu', cls: 'hachimitsu', view: 'hachimitsu',
     // ★2026-11-12 まるちゃん選択＝黄色と黒のしまの角のあるタニシ（ぷっくり立体・icons/hachimitsu-192.png・パソコン版も同じ）。絵を替えたら ?v= の数字を上げる（スマホが前の絵を覚えているため）。
