@@ -1929,7 +1929,10 @@ var TILE_DEFS_ = [
   // ★TimeTree＝タイムツリーを開かずに、月のカレンダー→日付→その日の予定→中身を見る（2026-09-15）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'timetree', cls: 'timetree', view: 'timetree',
-    icon: '<span class="ticon">' + TT_LOGO_ + '</span>', label: 'Time\nTree' },
+    // ★2026-11-13 まるちゃん「本物のアイコンを取り込んでTimeTreeのボタンに使う」＝開発版だけ、TimeTree公式のアプリのアイコン
+    //   （Google Play works.jubilee.timetree の白地に緑の5枚の花びら）。地が白なので白枠は付けない。パソコン版＝icons\timetree-real-96.png。
+    icon: '<span class="ticon">' + TT_LOGO_ + '</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/timetree-real-192.png"></span>', label: 'Time\nTree' },
   // ★T＆Tショップ履歴＝ネットショップ（T＆T SIGNATURE）に、どなたが・何回・何を見て・注文したか（2026-09-19）。
   //   事務所PCがまとめた shop_history.json を読んで出すだけ（まとめは 商品ページ（T＆Tショップ）の ショップ履歴.py）。
   { id: 'shophist', cls: 'shophist', view: 'shophist',
