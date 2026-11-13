@@ -16,7 +16,7 @@ function renderReservationHomePage_(base, staff, dev) {
   var menu =
     '<div class="rolemenu">' +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
-        '<span class="ricon">' + (dev ? '🆕️' : '📝') + '</span><span class="rname">新規の予約</span></a>' +
+        '<span class="ricon">' + (dev ? '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png" style="width:34px;height:34px;display:block">' : '📝') + '</span><span class="rname">新規の予約</span></a>' +
       ex + rp +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
