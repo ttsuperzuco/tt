@@ -19821,7 +19821,13 @@ function instaScript_(C) {
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igeX">キャンセル</button><b>情報を編集</b><button type="button" class="go" id="igeGo">完了</button></div>' +
       '<textarea id="igeTx"></textarea><div class="igccnt" id="igeCnt"></div></div>';
     document.body.appendChild(e);
-    var tx = document.getElementById('igeTx'); tx.value = POST.caption || '';
+    // ★2026-11-13 まるちゃん「直して」＝「下書き」の間に、修正の下書きがある投稿をもう一度編集すると、本番の文から始まって
+    //   1回目の修正が消え、2件目の「修正」ができていた。→ 画面に出ている下書きの文から始め、直せる人（作った本人・社長・開発）は
+    //   その下書きを上書きする（2件目を作らない）。直せない人は、下書きの文を元に新しい修正を預ける。
+    var capD = (DRAFT && !POST._apv) ? apvFind(function (it) { return it.kind === 'edit' && (it.light || {}).code === POST.code; }) : null;
+    var capMine = capD && (ISADMIN || capD.who === (window.__SZ_WHO_ || ''));
+    var base = capD ? String((capD.light || {}).caption || '') : String(POST.caption || '');
+    var tx = document.getElementById('igeTx'); tx.value = base;
     var cnt = function () { var n = tx.value.length, o = document.getElementById('igeCnt'); o.textContent = n + ' / ' + MAXCAP; o.className = 'igccnt' + (n > MAXCAP ? ' over' : ''); };
     tx.addEventListener('input', cnt); cnt();
     e.addEventListener('click', function (ev) {
@@ -19830,8 +19836,18 @@ function instaScript_(C) {
       var v = tx.value.trim();
       // ★2026-11-13 まるちゃん「なんで修正がないのにこれ出てるの？」＝文を変えずに「完了」を押すと、中身の同じ「修正」の下書きができていた。
       //   本物のインスタと同じく、何も変えていなければ閉じるだけ（下書きも本番の書き込みも作らない）。
-      if (v === String(POST.caption || '').trim()) { e.remove(); return; }
+      if (v === base.trim()) { e.remove(); return; }
       if (v.length > MAXCAP) { warn('キャプションは' + MAXCAP + '文字までです（絵文字は2文字に数えます）😊'); return; }
+      if (capMine) {
+        var aid3 = capD.id;
+        busyAsk({ kind: 'apv_upd', aid: aid3, patch: { caption: v } }, false, '下書きを修正しています', '', function (err) {
+          if (err) { warn(err); return; }
+          e.remove();
+          (APVL[CUR] || []).forEach(function (x) { if (x.id === aid3) x.light = Object.assign({}, x.light || {}, { caption: v }); });
+          drawPost(); doneBox('下書きの修正が完了しました');
+        });
+        return;
+      }
       if (POST._apv) {
         var aid2 = POST._apv;
         busyAsk({ kind: 'apv_upd', aid: aid2, patch: { caption: v } }, false, '下書きを修正しています', '', function (err) {
