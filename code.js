@@ -1790,7 +1790,7 @@ function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
 //   スタッフ版は今までの絵のまま（ボタンと同じく「公開して」まで変えない）。
 //   ボタンの無い画面（予約入力の中の新規・既存・変更）は、予約入力のトップで選んだ絵にそろえる。
 var HEAD_MARK_EXTRA_ = {
-  yoyaku_new: '🆕️', yoyaku_kizon: '📅',
+  yoyaku_new: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png">', yoyaku_kizon: '📅',
   yoyaku_henkou: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png">'
 };
 function devHeadMarkHtml_(view) {   // その画面の新しい絵（無ければ空）
@@ -6272,8 +6272,8 @@ function renderReservationHomePage_(base, staff, dev) {
   var menu =
     '<div class="rolemenu">' +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
-        // ★2026-11-13 まるちゃん選択＝🆕（開発版だけ・スタッフは📝のまま＝「公開して」まで変えない）
-        '<span class="ricon">' + (dev ? '🆕️' : '📝') + '</span><span class="rname">新規の予約</span></a>' +
+        // ★2026-11-13 まるちゃん選択＝🆕 → 11-14「NEWは黒バックに白文字でいい」＝黒い地に白いNEWの絵（開発版だけ・スタッフは📝のまま）
+        '<span class="ricon">' + (dev ? '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png" style="width:34px;height:34px;display:block">' : '📝') + '</span><span class="rname">新規の予約</span></a>' +
       ex + rp +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
