@@ -1879,7 +1879,9 @@ var TILE_DEFS_ = [
   //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発URL(?dev=1)専用
   //   （tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
-    icon: '<span class="ticon">💆</span>', label: '施術後の\n予約' },
+    // ★2026-11-13 まるちゃん選択＝目を閉じてにっこり笑う女の子の顔（子ども向けアニメ風・GPTで作成）＋右下に黄色い「次」。
+    //   前の 💆 は小さいと「万歳している人」に見えたため。パソコン版の同じ絵＝PC版スーパーズコ\icons\sejutsugo-zuko-96.png。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/sejutsugo-192.png"></span>', label: '施術後の\n予約' },
   // ★施術後のLINE送信（2026-10-31）＝施術後の予約と同じ画面（施術者→今日のお客様）を mode=line で開き、
   //   4つの送る物から選んで送る。開発中の機能の部屋だけ（開発者だけ）。
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
