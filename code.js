@@ -2306,12 +2306,14 @@ var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stri
 //   最初のフォルダの分け方は試しの仮（全員共通のフォルダはまるちゃんが決める）。本番に入れる時はホームの作りに組み込み直す。
 // ★同日まるちゃん決定の最初のフォルダ（スタッフ画面とTOMATO画面の18個を全部5つに分けた）：
 //   お知らせ・配信／施術直後／SNS／在庫売上管理／予約系。本番では、その人に見えるボタンだけがフォルダに入る形にする。
+//   ★同日まるちゃん「施術直後を左上、その右はSNS、予約系は直後の下、お知らせはその下」＝2列の並び：
+//     施術直後｜SNS ／ 予約系｜在庫売上管理 ／ お知らせ・配信
 var FOLDERTEST_START_ = [
-  { f: 'お知らせ・配信', items: ['zenjitsu', 'mita', 'bcast'] },
   { f: '施術直後', items: ['sejutsugo', 'sgline', 'shomeisho'] },
   { f: 'SNS', items: ['insta', 'threads', 'hachimitsu'] },
+  { f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'links', 'lt', 'conflict'] },
   { f: '在庫売上管理', items: ['procstock', 'hanbai', 'uriage'] },
-  { f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'links', 'lt', 'conflict'] }];
+  { f: 'お知らせ・配信', items: ['zenjitsu', 'mita', 'bcast'] }];
 function renderFolderTestPage_(base, staff, dev) {
   var tiles = {};
   var want = [];
@@ -2349,7 +2351,7 @@ var FOLDERTESTCSS_ =
   '  .ftzone { flex:1 1 40%; box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
   '  .ftzone.hinto { outline:3px solid #fbbf24; outline-offset:-3px; background:#fef3c7; transform:scale(1.04); transition:transform .12s ease; }';
 function folderTestBoot_(D) {
-  var T = D.tiles, KEY = 'sz_foldertest2';   // ★同日：最初のフォルダを変えたので名前を変えた（前の試しの並びは使わない）
+  var T = D.tiles, KEY = 'sz_foldertest3';   // ★同日：最初のフォルダ・並びを変えたので名前を変えた（前の試しの並びは使わない）
   var home = document.getElementById('ftHome');
   if (!home) return;
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
