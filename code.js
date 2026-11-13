@@ -1812,12 +1812,12 @@ var TILE_DEFS_ = [
     // ★2026-11-13 まるちゃん選択＝オレンジの目覚まし時計にピンクの虫めがねを重ねた絵（子ども向けアニメ風・GPTで作成）。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\akijikan-zuko-96.png。
     icon: '<span class="ticon">🕑</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png"></span>', label: '空き時間\n検索' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/akijikan-192.png?v=2"></span>', label: '空き時間\n検索' },
   { id: 'links', cls: 'links', view: 'links',
-    // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝オレンジの地にピンクと白の鎖の輪（GPTで作成・地の緑はLINEに見えるのでオレンジに塗り替え）。
+    // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝オレンジの地にピンクと白の鎖の輪（GPTで作成・地の緑はLINEに見えるのでオレンジに塗り替え→同日まるちゃん「ほかのみっつもおなじように」で予約入力と同じ黒い地＋細い白枠。空き時間検索・元祖TTも同じ）。
     //   まるちゃん「すたっふのいろはかえないで」＝ボタンの左はしの線の色（.tile.links）はそのまま。パソコン版の同じ絵＝PC版スーパーズコ\icons\links-zuko-96.png。
     icon: '<span class="ticon">🔗</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/links-192.png"></span>', label: '各種\nLINK' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/links-192.png?v=2"></span>', label: '各種\nLINK' },
   // ★元祖TTアプリ＝外部サイトへのリンクだけのボタン（GAS内のviewではない）。
   //   2026-07-16：他のボタンと同じく人ごとのON/OFF対象に変更（以前はalways:trueで常時表示
   //   固定だったが、ユーザー要望で「人ごとに見せる/見せない」を選べるようにした。初期値は
@@ -1829,7 +1829,7 @@ var TILE_DEFS_ = [
     // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝赤いのれんに白い大きな「元祖」の絵（GPTで作成）。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\ttapp-zuko-96.png。
     icon: '<span class="ticon">🗓️</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/ttapp-192.png"></span>', label: '元祖TT\nアプリ' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/ttapp-192.png?v=2"></span>', label: '元祖TT\nアプリ' },
   // ★自動監視＝開発URL(?dev=1)専用（DEFAULT_TILE_SETTINGS_のコメント参照）。
   { id: 'kanshi', cls: 'kanshi', view: 'kanshi',
     icon: '<span class="ticon">📟</span>', label: '自動監視\n（開発用）' },
