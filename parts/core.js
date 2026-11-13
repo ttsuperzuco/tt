@@ -1738,7 +1738,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var canSort = !asWho;   
   var defIdx = {};   
   for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
-  var mine = canSort ? homeMyOrder_() : null;
+  var mine = canSort ? homeMyOrder_() : ((asWho && cfg && cfg.asOrder && cfg.asOrder.length) ? cfg.asOrder : null);
   if (mine) {   
     var mineDefs = [], minePlaced = {};
     for (var mi = 0; mi < mine.length; mi++) {
