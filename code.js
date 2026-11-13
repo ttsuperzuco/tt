@@ -1804,7 +1804,9 @@ var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="tru
 //   esc_()は\nをエスケープしないので、.tname(white-space:pre-line)でそのまま改行になる。
 var TILE_DEFS_ = [
   { id: 'conflict', cls: 'conflict', view: 'conflict',
-    icon: '<span class="ticon">🛏️</span>', label: '部屋＆担当\n被り検出' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ）＝赤い三角に白い大きな「被」・黒い地＋細い白枠（AIなし）。パソコン版＝PC版スーパーズコ\icons\conflict-kuro-96.png。
+    icon: '<span class="ticon">🛏️</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/conflict-kuro-192.png"></span>', label: '部屋＆担当\n被り検出' },
   { id: 'lt', cls: 'lt', view: 'lt',
     icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'TimeTree\n予約記入漏れ' },
   { id: 'uriage', cls: 'uriage', view: 'uriage',

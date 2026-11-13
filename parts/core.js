@@ -1322,7 +1322,8 @@ var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="tru
   '<rect x="14.3" y="5.3" width="1.7" height="3.6" rx=".85" fill="#12864e"/></svg>';
 var TILE_DEFS_ = [
   { id: 'conflict', cls: 'conflict', view: 'conflict',
-    icon: '<span class="ticon">🛏️</span>', label: '部屋＆担当\n被り検出' },
+    icon: '<span class="ticon">🛏️</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/conflict-kuro-192.png"></span>', label: '部屋＆担当\n被り検出' },
   { id: 'lt', cls: 'lt', view: 'lt',
     icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'TimeTree\n予約記入漏れ' },
   { id: 'uriage', cls: 'uriage', view: 'uriage',
