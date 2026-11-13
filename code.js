@@ -2584,6 +2584,12 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var resetHtml = canSort
     ? '<span class="hreset"><button type="button" class="hresetbtn">↺ 初期の並びに戻す</button></span>'
     : '';   // ★2026-11-10 まるちゃん「戻るボタンの一番右隅」＝「← 戻る」と同じ行の右端に置く／「①あ」＝入れ替える前からいつも出す／「初期の並びに戻す にする」
+  // ★2026-11-13 まるちゃん「被り検出あり」「記入漏れあり」（被り・記入漏れがある時だけ出す注意ボタン）。
+  //   出すかどうかは index.html のホームの裏取りが数えて決める＝その人が開ける画面のデータしか取らないので、
+  //   見られない画面のボタンは出ない。開発版はスタッフ画面の見出しの右、ほかのホームは並びの上の右端（まるちゃん「staffにも出して」）。
+  var alertsHtml =
+    '<a class="hkaburi" data-go="conflict" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a>' +
+    '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>';
   var homeCls = canSort ? 'home hsort' : 'home';
   var sortScript = canSort ? HOMESORT_SCRIPT_ : '';
   var head =
@@ -2607,10 +2613,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         (R.id === 'jitsumu'
           ? '<div class="grouptitle gtk"><span>' + R.icon + ' ' + R.title + '</span>' +
               // ★同日「記入漏れあり も出す」＝同じ並びに2つ目（記入漏れがある時だけ・押すと記入漏れの画面）。
-              '<span class="halerts">' +
-              '<a class="hkaburi" data-go="conflict" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a>' +
-              '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>' +
-              '</span></div>'
+              '<span class="halerts">' + alertsHtml + '</span></div>'
           : '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>') +
         tilesBox_(list, BLANK_AFTER_[R.id]) + subs.map(function (S) {
           var sl = byG[S.id] || [];
@@ -2629,6 +2632,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
     // 戻るボタンの無いホーム（開発版以外）では、ボタンの並びの上の右端に置く。
     (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
+    (shown.length ? '<div class="halerts hrow">' + alertsHtml + '</div>' : '') +
     // ★2026-11-10 まるちゃん「パインさんの画面にはまだ何も出さない。この画面が開いたら完了、りゅうさんに連絡と出して」
     //   ＝スタッフで出すボタンが1つも無い時は、ボタンの並びの代わりに完了の案内を出す（ほかの人にも同じく効く）。
     (staff && !shown.length
@@ -23583,6 +23587,8 @@ var HOMECSS_ =
 '    border:2px solid #fff; border-radius:999px; padding:8px 16px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.22); }' +
 '  .hkaburi:active { transform:translateY(1px); }' +
 '  .hkaburi.hkinyu { background:#6366f1; }' +
+'  .halerts.hrow { margin:0; }' +
+'  .halerts.hrow .hkaburi { margin-bottom:12px; }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
 '  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
 '    gap:2px; text-align:left; text-decoration:none; color:var(--ink);' +

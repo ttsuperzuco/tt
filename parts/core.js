@@ -1713,6 +1713,9 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var resetHtml = canSort
     ? '<span class="hreset"><button type="button" class="hresetbtn">↺ 初期の並びに戻す</button></span>'
     : '';   
+  var alertsHtml =
+    '<a class="hkaburi" data-go="conflict" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a>' +
+    '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>';
   var homeCls = canSort ? 'home hsort' : 'home';
   var sortScript = canSort ? HOMESORT_SCRIPT_ : '';
   var head =
@@ -1732,10 +1735,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' + resetHtml + '</div>' +
         (R.id === 'jitsumu'
           ? '<div class="grouptitle gtk"><span>' + R.icon + ' ' + R.title + '</span>' +
-              '<span class="halerts">' +
-              '<a class="hkaburi" data-go="conflict" href="' + base + '?view=conflict' + sfx + '" target="_top" style="display:none">⚠️ 被り検出あり</a>' +
-              '<a class="hkaburi hkinyu" data-go="lt" href="' + base + '?view=lt' + sfx + '" target="_top" style="display:none">⚠️ 記入漏れあり</a>' +
-              '</span></div>'
+              '<span class="halerts">' + alertsHtml + '</span></div>'
           : '<div class="grouptitle">' + R.icon + ' ' + R.title + '</div>') +
         tilesBox_(list, BLANK_AFTER_[R.id]) + subs.map(function (S) {
           var sl = byG[S.id] || [];
@@ -1752,6 +1752,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
     (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
+    (shown.length ? '<div class="halerts hrow">' + alertsHtml + '</div>' : '') +
     (staff && !shown.length
       ? '<div class="hdone" style="background:#fff;color:#12303c;border-radius:18px;padding:22px 18px;margin:18px 4px 0;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.15);">' +
           '<div style="font-size:26px;font-weight:900;line-height:1.5;">ズコの準備ができました🎉</div>' +
@@ -3002,6 +3003,8 @@ var HOMECSS_ =
 '    border:2px solid #fff; border-radius:999px; padding:8px 16px; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,.22); }' +
 '  .hkaburi:active { transform:translateY(1px); }' +
 '  .hkaburi.hkinyu { background:#6366f1; }' +
+'  .halerts.hrow { margin:0; }' +
+'  .halerts.hrow .hkaburi { margin-bottom:12px; }' +
 '  .tiles { display:grid; grid-template-columns:1fr 1fr; gap:12px; }' +
 '  .tile { display:flex; flex-direction:row; align-items:center; justify-content:flex-start;' +
 '    gap:2px; text-align:left; text-decoration:none; color:var(--ink);' +
