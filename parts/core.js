@@ -800,7 +800,6 @@ var DEFAULT_TILE_SETTINGS_ = {
   rireki:     { exec: false, staff: false },   
   cost:       { exec: false, staff: false },
   koukoku:    { exec: false, staff: false },
-  instadm:    { exec: false, staff: false },
   claudetools: { exec: false, staff: false },
   procell:    { exec: false, staff: false },
   pcstatus:   { exec: false, staff: false },
@@ -820,7 +819,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   mita:       { exec: true, staff: true },
   shomeisho:  { exec: true, staff: true }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'instadm', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1353,8 +1352,6 @@ var TILE_DEFS_ = [
   { id: 'koukoku', cls: 'koukoku', view: 'koukoku',
     icon: '<span class="ticon">📣</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/koukoku-kuro-192.png"></span>', label: '広告費\n管理' },
-  { id: 'instadm', cls: 'instadm', view: 'instadm',
-    icon: '<span class="ticon">📩</span>', label: 'IGの\nDM' },
   { id: 'bcast', cls: 'bcast', view: 'bcast',
     icon: '<span class="ticon">📣</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/bcast-kuro-192.png?v=2"></span>', label: 'LINE\n一斉配信' },
@@ -1412,7 +1409,7 @@ var TILE_DEFS_ = [
 ];
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'keiei', koukoku: 'keiei', imglink: 'kanri',
-  instadm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
+  claudetools: 'kanri', pcstatus: 'kanri',
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
   hachimitsu: 'tomato',
@@ -1835,417 +1832,6 @@ function backBar_(base, staff, dev) {
 
 
 
-var INSTADM_CSS_ =
-'  .ubar { display:flex; align-items:center; gap:12px; margin:0 0 4px; }' +
-'  .uhome { flex:0 0 auto; font-size:.9rem; font-weight:700; color:var(--ink,#1c2430); text-decoration:none;' +
-'    background:var(--card,#fff); border:1px solid var(--line,#e6e9ef); border-radius:10px; padding:10px 14px; }' +
-'  .uhome:active { transform:translateY(1px); }' +
-'  .idmwrap { max-width:720px; margin:0 auto; }' +
-'  .idmwrap h1 { font-size:1.5rem; margin:6px 2px 12px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }' +
-'  .idmgen { color:#cfe3ec; font-size:.92rem; font-weight:600; }' +
-'  .idmacc { margin:20px 0 6px; font-size:1.32rem; font-weight:800; color:#fff;' +
-'    display:flex; align-items:center; gap:8px; flex-wrap:wrap; }' +
-'  .idmbadge { font-size:.9rem; font-weight:700; padding:3px 11px; border-radius:999px;' +
-'    background:rgba(255,255,255,.16); color:#fff; }' +
-'  .idmsec { font-size:1.1rem; font-weight:700; color:#eaf3f7; margin:14px 2px 4px; }' +
-'  .idmnote { color:#cfe3ec; font-size:.98rem; background:rgba(255,255,255,.06);' +
-'    border-radius:10px; padding:9px 12px; margin:4px 2px 6px; line-height:1.55; }' +
-'  .idmcard { background:var(--card,#0f2f3d); border:1px solid rgba(255,255,255,.08);' +
-'    border-radius:14px; padding:12px 14px; margin:8px 0; box-shadow:0 4px 12px rgba(0,0,0,.12); }' +
-'  .idmcard.wait { border-left:5px solid #e1306c; }' +
-'  .idmcard.tap { cursor:pointer; }' +
-'  .idmcard.tap:active { transform:translateY(1px); }' +
-'  @media (hover:hover){ .idmcard.tap:hover { border-color:rgba(225,48,108,.5); } }' +
-'  .idmnm { font-weight:800; font-size:1.18rem; color:#fff; word-break:break-word; }' +
-'  .idmpv { color:#dbe9f0; font-size:1.06rem; margin-top:4px; line-height:1.5; word-break:break-word;' +
-'    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }' +
-'  .idmmeta { display:flex; gap:8px; align-items:center; margin-top:7px; flex-wrap:wrap; }' +
-'  .idmtag { font-size:.86rem; font-weight:700; padding:3px 10px; border-radius:999px; }' +
-'  .idmtag.wait { background:#e1306c; color:#fff; }' +
-'  .idmtag.done { background:rgba(255,255,255,.14); color:#cfe3ec; }' +
-'  .idmtag.new  { background:#f59e0b; color:#3a2500; }' +
-'  .idmtag.spam { background:#dc2626; color:#fff; }' +
-'  .idmpvfull { -webkit-line-clamp:unset; display:block; overflow:visible; }' +
-'  .idmdetbtn { margin-left:auto; background:rgba(255,255,255,.16); color:#fff; border:0; border-radius:999px;' +
-'    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
-'  .idmdelbtn { background:#dc2626; color:#fff; border:0; border-radius:999px;' +
-'    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
-'  .idmresbtn { background:#16a34a; color:#fff; border:0; border-radius:999px;' +
-'    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
-'  .idmrepbtn { background:#2563eb; color:#fff; border:0; border-radius:999px;' +
-'    padding:7px 15px; font-size:.92rem; font-weight:800; cursor:pointer; }' +
-'  .idmreplybox { margin-top:10px; }' +
-'  .idmrtxt { width:100%; box-sizing:border-box; min-height:64px; border-radius:12px; border:0;' +
-'    padding:10px 12px; font-size:1rem; font-family:inherit; resize:vertical; }' +
-'  .idmrrow { display:flex; align-items:center; gap:10px; margin-top:8px; }' +
-'  .idmrsend { background:#2563eb; color:#fff; border:0; border-radius:999px;' +
-'    padding:9px 20px; font-size:.95rem; font-weight:800; cursor:pointer; }' +
-'  .idmrst { color:#cfe3ec; font-size:.9rem; }' +
-'  .idmdelst { color:#cfe3ec; font-size:.94rem; margin-top:6px; }' +
-'  .idmts { color:#9fb8c4; font-size:.92rem; }' +
-'  .idmopen { margin-left:auto; color:#f0a5c0; font-size:.92rem; font-weight:700; }' +
-'  .idmempty { color:#cfe3ec; text-align:center; padding:12px; font-size:1.02rem; }' +
-'  .idmmask { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none;' +
-'    align-items:flex-end; justify-content:center; z-index:50; }' +
-'  .idmmask.show { display:flex; }' +
-'  .idmmodal { background:var(--bg,#123); width:100%; max-width:720px; max-height:88vh;' +
-'    border-radius:18px 18px 0 0; display:flex; flex-direction:column; box-shadow:0 -6px 24px rgba(0,0,0,.4); }' +
-'  .idmmh { display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.1); }' +
-'  .idmmnm { font-weight:800; color:#fff; font-size:1.02rem; word-break:break-word; flex:1; }' +
-'  .idmmx { background:none; border:0; color:#fff; font-size:1.7rem; line-height:1; padding:0 4px; cursor:pointer; }' +
-'  .idmmlog { padding:14px 14px 20px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }' +
-'  .idmmsg { max-width:82%; display:flex; flex-direction:column; }' +
-'  .idmmsg.them { align-self:flex-start; align-items:flex-start; }' +
-'  .idmmsg.me { align-self:flex-end; align-items:flex-end; }' +
-'  .idmbub { padding:9px 12px; border-radius:14px; font-size:.96rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }' +
-'  .idmmsg.them .idmbub { background:#e9eef2; color:#12222b; border-bottom-left-radius:4px; }' +
-'  .idmmsg.me .idmbub { background:#e1306c; color:#fff; border-bottom-right-radius:4px; }' +
-'  .idmmt { color:#9fb8c4; font-size:.72rem; margin:2px 4px; }' +
-'  .idmgate { max-width:420px; margin:8vh auto 0; background:var(--card,#0f2f3d);' +
-'    border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:22px 20px;' +
-'    box-shadow:0 8px 24px rgba(0,0,0,.2); text-align:center; }' +
-'  .idmgt { font-size:1.15rem; font-weight:800; color:#fff; margin-bottom:8px; }' +
-'  .idmgm { color:#cfe3ec; font-size:.86rem; line-height:1.55; margin-bottom:14px; }' +
-'  .idmgerr { color:#ffd0d8; background:rgba(225,48,108,.18); border-radius:10px;' +
-'    padding:8px 10px; font-size:.85rem; margin-bottom:12px; }' +
-'  .idmginput { width:100%; box-sizing:border-box; padding:13px 14px; border-radius:12px;' +
-'    border:0; font-size:1.05rem; margin-bottom:12px; }' +
-'  .idmgbtn { width:100%; padding:13px; border:0; border-radius:12px; background:#e1306c;' +
-'    color:#fff; font-size:1.05rem; font-weight:800; cursor:pointer; }' +
-'  .idmchg { margin-left:auto; color:#f0a5c0; font-size:.78rem; font-weight:700;' +
-'    text-decoration:underline; cursor:pointer; }';
-var INSTADM_SCRIPT_ =
-'(function(){' +
-'  var data = window.__idmData || {accounts:[]};' +
-'  var mask = document.getElementById("idmMask"); if(!mask) return;' +
-'  function esc(s){ var d=document.createElement("div"); d.textContent=(s==null?"":String(s)); return d.innerHTML; }' +
-'  function open(ai, th){' +
-'    var a=data.accounts[ai]; if(!a) return; var t=(a.threads||[])[th]; if(!t) return;' +
-'    document.getElementById("idmMnm").textContent = (a.label||"") + " ／ " + (t.title||"");' +
-'    var log=document.getElementById("idmMlog"); log.innerHTML="";' +
-'    var ms=t.msgs||[];' +
-'    if(!ms.length){ log.innerHTML = "<div class=\\"idmempty\\">この会話の内容はまだ取得できていません。</div>"; }' +
-'    for(var i=0;i<ms.length;i++){ var m=ms[i];' +
-'      var row=document.createElement("div"); row.className="idmmsg "+(m.me?"me":"them");' +
-'      row.innerHTML = "<div class=\\"idmbub\\">"+esc(m.text)+"</div><div class=\\"idmmt\\">"+esc(m.ts)+"</div>";' +
-'      log.appendChild(row);' +
-'    }' +
-'    mask.classList.add("show"); log.scrollTop=log.scrollHeight;' +
-'  }' +
-'  function close(){ mask.classList.remove("show"); }' +
-'  [].slice.call(document.querySelectorAll(".idmcard.tap")).forEach(function(c){' +
-'    c.addEventListener("click", function(){ open(+c.getAttribute("data-acc"), +c.getAttribute("data-th")); });' +
-'  });' +
-'  var x=document.getElementById("idmMx"); if(x) x.addEventListener("click", close);' +
-'  mask.addEventListener("click", function(e){ if(e.target===mask) close(); });' +
-'})();';
-function idmWithinMonth_(ts) {
-  ts = (ts || '').trim();
-  if (!ts) return true;
-  var m = ts.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
-  if (m) {
-    var d = new Date(+m[1], +m[2] - 1, +m[3]);
-    return (Date.now() - d.getTime()) <= 31 * 24 * 3600 * 1000;
-  }
-  if (/ヶ月|か月|个月|年/.test(ts)) return false;          
-  var w = ts.match(/(\d+)\s*(週間|週|周)/);
-  if (w && +w[1] >= 5) return false;                        
-  return true;                                              
-}
-function renderInstaDmPage_(d, base, staff, dev) {
-  d = d || {};
-  var accounts = d.accounts || [];
-  function tcard(ai, j, name, snippet, ts, cls, tagHtml, resKey, resSig, accKey, thId) {
-    return '<div class="idmcard tap ' + cls + '" data-acc="' + ai + '" data-th="' + j +
-      '" data-rkind="t" data-racc="' + esc_(accKey || '') + '" data-rid="' + esc_(thId || '') + '">' +
-      '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
-      '<div class="idmpv">' + esc_(snippet || '（本文なし）') + '</div>' +
-      '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
-      '<button type="button" class="idmrepbtn" onclick="event.stopPropagation();idmReplyToggle(this)">↩ 返信</button>' +
-      '<button type="button" class="idmresbtn" data-key="' + esc_(resKey || '') + '" data-sig="' + esc_(resSig || '') +
-        '" onclick="event.stopPropagation();idmResolve(this)">✓ 解決済</button>' +
-      '<span class="idmopen">タップで全文 ›</span></div>' +
-      idmReplyBox_() +
-    '</div>';
-  }
-  function rcard(accKey, name, preview, ts, tagHtml, occ, resKey, resSig) {
-    var oc = String(occ || 0);
-    return '<div class="idmcard" data-rkind="r" data-racc="' + esc_(accKey || '') +
-      '" data-rname="' + esc_(name || '') + '" data-rocc="' + oc + '">' +
-      '<div class="idmnm">' + esc_(name || '（名前不明）') + '</div>' +
-      '<div class="idmpv idmpvfull">' + esc_(preview || '（本文なし）') + '</div>' +
-      '<div class="idmmeta">' + tagHtml + '<span class="idmts">' + esc_(ts || '') + '</span>' +
-        '<button type="button" class="idmrepbtn" onclick="idmReplyToggle(this)">↩ 返信</button>' +
-        '<button type="button" class="idmresbtn" data-key="' + esc_(resKey || '') + '" data-sig="' + esc_(resSig || '') +
-          '" onclick="idmResolve(this)">✓ 解決済</button>' +
-        '<button type="button" class="idmdetbtn" data-acc="' + esc_(accKey || '') +
-          '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
-          '" data-occ="' + oc + '" onclick="idmDoReqDetail(this)">詳細を見る</button>' +
-        '<button type="button" class="idmdelbtn" data-acc="' + esc_(accKey || '') +
-          '" data-name="' + esc_(name || '') + '" data-prev="' + esc_(preview || '') +
-          '" data-occ="' + oc + '" onclick="idmDelReq(this)">🚫 削除</button>' +
-      '</div>' +
-      idmReplyBox_() +
-      '<div class="idmdelst"></div>' +
-    '</div>';
-  }
-  var body = '';
-  if (!accounts.length) {
-    body = '<div class="idmempty">まだ読み取っていません。<br>少し待ってから、もう一度開いてください😊</div>';
-  } else {
-    for (var i = 0; i < accounts.length; i++) {
-      var a = accounts[i], threads = a.threads || [], reqs = a.requests || [];
-      var waiting = [], done = [];
-      for (var k = 0; k < threads.length; k++) {
-        var item = { t: threads[k], j: k };
-        (threads[k].waiting ? waiting : done).push(item);
-      }
-      var locRes = idmResGet_();
-      waiting = waiting.filter(function (x) {
-        var kk = 't:' + a.key + ':' + (x.t.id || '');
-        return idmWithinMonth_(x.t.last_ts) && !x.t.resolved && !idmLocHide_('t', locRes[kk], x.t.last_ts || '');
-      });
-      var reqsShown = reqs.filter(function (r) {
-        var kk = 'r:' + a.key + ':' + idmStripNum_(r.name);
-        return idmWithinMonth_(r.ts) && !r.resolved && !idmLocHide_('r', locRes[kk], idmReqSig_(r));
-      });
-      body += '<div class="idmacc">📷 ' + esc_(a.label || '') +
-        ' <span class="idmbadge">当店が未返信 ' + (waiting.length + reqsShown.length) + '</span></div>';
-      body += '<div class="idmsec">✉️ 当店が未返信</div>';
-      if (waiting.length + reqsShown.length) {
-        for (var w = 0; w < waiting.length; w++) {
-          var tw = waiting[w].t;
-          var tKey = 't:' + a.key + ':' + (tw.id || '');
-          body += tcard(i, waiting[w].j, tw.title, tw.last_text, tw.last_ts, 'wait',
-                        '<span class="idmtag wait">返事待ち</span>', tKey, tw.last_ts || '', a.key, tw.id || '');
-        }
-        for (var r = 0; r < reqsShown.length; r++) {
-          var un = reqsShown[r].unread ? '<span class="idmtag new">未読</span>' : '<span class="idmtag done">既読</span>';
-          var sp = reqsShown[r].spam ? '<span class="idmtag spam">🚫 スパムかも</span>' : '';
-          var occ = idmOccOf_(reqs, reqsShown[r]);   
-          var rKey = 'r:' + a.key + ':' + idmStripNum_(reqsShown[r].name);
-          var rSig = idmReqSig_(reqsShown[r]);
-          body += rcard(a.key, reqsShown[r].name, reqsShown[r].preview, reqsShown[r].ts, sp + un, occ, rKey, rSig);
-        }
-      } else { body += '<div class="idmempty">1ヶ月以内に未返信はありません。</div>'; }
-    }
-  }
-  return '<style>' + INSTADM_CSS_ + '</style>' +
-    backBar_(base, staff, dev) +
-    '<div class="idmwrap">' +
-      '<h1>📩 IGのDM<span class="idmgen">' + esc_(d.read_at || '—') + ' 時点</span>' +
-        '<span class="idmchg" onclick="if(window.idmClear)window.idmClear()">パスワードを変更</span></h1>' +
-      body +
-    '</div>' +
-    '<div class="idmmask" id="idmMask" role="dialog" aria-modal="true">' +
-      '<div class="idmmodal">' +
-        '<div class="idmmh"><div class="idmmnm" id="idmMnm"></div>' +
-          '<button type="button" class="idmmx" id="idmMx" aria-label="閉じる">&times;</button></div>' +
-        '<div class="idmmlog" id="idmMlog"></div>' +
-      '</div>' +
-    '</div>' +
-    '<script>' + INSTADM_SCRIPT_ + '<\/script>';
-}
-function idmNorm_(s) {
-  try { return String(s || '').normalize('NFKC').trim().toLowerCase(); }
-  catch (e) { return String(s || '').trim().toLowerCase(); }
-}
-function idmOccOf_(reqs, item) {
-  var nm = idmNorm_(item.name), idx = reqs.indexOf(item), c = 0;
-  for (var i = 0; i < reqs.length && i < idx; i++) { if (idmNorm_(reqs[i].name) === nm) c++; }
-  return c;
-}
-function idmStripNum_(s) { return idmNorm_(s).replace(/\s*\d+\s*$/, '').trim(); }
-function idmResGet_() { try { return JSON.parse(localStorage.getItem('idm_resolved') || '{}') || {}; } catch (e) { return {}; } }
-function idmResAdd_(key, sig) { try { var m = idmResGet_(); m[key] = sig; localStorage.setItem('idm_resolved', JSON.stringify(m)); } catch (e) {} }
-function idmResDel_(key) { try { var m = idmResGet_(); delete m[key]; localStorage.setItem('idm_resolved', JSON.stringify(m)); } catch (e) {} }
-function idmReqSig_(r) { return (r.preview || '') + '|u' + (r.unread ? '1' : '0'); }
-function idmLocHide_(kind, stored, now) {
-  if (!stored) return false;
-  if (kind === 't') {
-    if (!now) return true;
-    return String(now) <= String(stored);
-  }
-  var a = idmReqSplit_(stored), b = idmReqSplit_(now);
-  if (a.prev !== b.prev) return false;                 
-  if (a.unread === false && b.unread === true) return false;  
-  return true;
-}
-function idmReqSplit_(sig) {
-  var s = String(sig || ''), m = s.match(/\|u([01])$/);
-  if (m) return { prev: s.slice(0, s.length - m[0].length), unread: m[1] === '1' };
-  var i = s.lastIndexOf('|');
-  return { prev: i >= 0 ? s.slice(0, i) : s, unread: null };
-}
-function idmReplyBox_() {
-  return '<div class="idmreplybox" style="display:none" onclick="event.stopPropagation()">' +
-    '<textarea class="idmrtxt" placeholder="返信を入力（送るとお客さんに届きます）"></textarea>' +
-    '<div class="idmrrow"><button type="button" class="idmrsend" onclick="event.stopPropagation();idmSendReply(this)">送る</button>' +
-    '<span class="idmrst"></span></div></div>';
-}
-function idmReplyToggle(btn) {
-  var card = btn;
-  for (var k = 0; k < 4 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
-  if (!card) return;
-  var box = card.querySelector('.idmreplybox');
-  if (!box) return;
-  var show = (box.style.display === 'none' || !box.style.display);
-  box.style.display = show ? 'block' : 'none';
-  if (show) { var ta = box.querySelector('.idmrtxt'); if (ta) ta.focus(); }
-}
-function idmSendReply(btn) {
-  var card = btn;
-  for (var k = 0; k < 5 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
-  if (!card) return;
-  var box = card.querySelector('.idmreplybox');
-  var ta = box ? box.querySelector('.idmrtxt') : null;
-  var txt = ta ? ta.value.trim() : '';
-  var st = box ? box.querySelector('.idmrst') : null;
-  if (!txt) { if (st) st.textContent = '本文が空です。'; return; }
-  var kind = card.getAttribute('data-rkind') || '';
-  var acc = card.getAttribute('data-racc') || '';
-  function idmDone_(m) {
-    btn.disabled = false;
-    var ms = '' + (m || '');
-    if (st) st.textContent = ms;
-    if (ms.indexOf('送りました') >= 0) {
-      if (ta) ta.value = '';
-      if (box) box.style.display = 'none';
-      szPopup_(ms, { icon: '✓' });
-    }
-  }
-  function idmGo_(waitMsg, fn) {
-    btn.disabled = true;                       
-    if (st) st.textContent = waitMsg;
-    if (fn) fn(); else { btn.disabled = false; if (st) st.textContent = 'この画面からは送れません。'; }
-  }
-  if (kind === 't') {
-    var thId = card.getAttribute('data-rid') || '';
-    szPopup_('このお客さんに送りますか？😊\n\n' + txt, { icon: '✉️', cancel: true, yesLabel: '送る', onYes: function () {
-      idmGo_('送信中…', window.igdmReply && function () { window.igdmReply(acc, thId, txt, idmDone_); });
-    } });
-  } else if (kind === 'r') {
-    var name = card.getAttribute('data-rname') || '';
-    var occ = parseInt(card.getAttribute('data-rocc') || '0', 10) || 0;
-    szPopup_('この初めての人「' + name + '」を承認して、返信を送りますか？😊\n\n' + txt,
-      { icon: '✉️', cancel: true, yesLabel: '承認して送る', onYes: function () {
-        idmGo_('承認して送信中…', window.igdmApproveReply && function () { window.igdmApproveReply(acc, name, occ, txt, idmDone_); });
-      } });
-  }
-}
-function idmResolve(btn) {
-  if (!btn) return;
-  var key = btn.getAttribute('data-key') || '';
-  var sig = btn.getAttribute('data-sig') || '';
-  if (!key) return;
-  var card = btn;
-  for (var k = 0; k < 4 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
-  szPopup_('この相手を「解決済み」にして一覧から隠しますか？😊\n（削除はしません。相手から新しいメッセージが来たら、その時だけまた出ます）',
-    { icon: '✓', cancel: true, yesLabel: '解決済みにする', onYes: function () {
-      idmResAdd_(key, sig);                       
-      if (card) { card.style.transition = 'opacity .3s'; card.style.opacity = '0';
-        setTimeout(function () { if (card) card.style.display = 'none'; }, 300); }
-      if (!window.igdmResolve) return;
-      window.igdmResolve(key, sig, function (m) {
-        if (m && ('' + m).indexOf('解決済み') >= 0) return;   
-        idmResDel_(key);
-        if (card) { card.style.display = ''; card.style.opacity = '1'; }
-        szPopup_('うまくいきませんでした。もう一度押してください🙇\n（' + ('' + (m || 'つながりませんでした')) + '）');
-      });
-    } });
-}
-function idmDelReq(btn) {
-  if (!btn) return;
-  var acc = btn.getAttribute('data-acc') || '';
-  var name = btn.getAttribute('data-name') || '';
-  var prev = btn.getAttribute('data-prev') || '';
-  var occ = parseInt(btn.getAttribute('data-occ') || '0', 10) || 0;
-  if (!confirm('この初めての人「' + name + '」を削除しますか？😊\n元に戻せません。')) return;
-  var card = btn;
-  for (var k = 0; k < 4 && card && !(card.className && card.className.indexOf('idmcard') >= 0); k++) card = card.parentElement;
-  var st = card ? card.querySelector('.idmdelst') : null;
-  var t0 = new Date().getTime(), tick = null;
-  function stop() { if (tick) { clearInterval(tick); tick = null; } }
-  if (st) {
-    st.textContent = '削除を依頼中… 0秒';
-    tick = setInterval(function () {
-      if (!st) return stop();
-      st.textContent = '削除を依頼中… ' + Math.round((new Date().getTime() - t0) / 1000) + '秒';
-    }, 1000);
-  }
-  if (!window.igdmDelete) stop();
-  if (window.igdmDelete) window.igdmDelete(acc, name, prev, occ, function (m) {
-    stop();
-    if (st) st.textContent = m;
-    if (m && m.indexOf('削除しました') >= 0 && card && card.parentNode) {
-      card.style.transition = 'opacity .4s';
-      card.style.opacity = '0';
-      setTimeout(function () { if (card.parentNode) card.parentNode.removeChild(card); }, 400);
-    }
-  });
-}
-function idmShowMsgs(title, msgs) {
-  var mask = document.getElementById('idmMask');
-  var mnm = document.getElementById('idmMnm');
-  var log = document.getElementById('idmMlog');
-  msgs = msgs || [];
-  if (!mask || !log) {
-    szPopup_((title || '') + '\n\n' + msgs.map(function (m) { return (m.me ? '自分: ' : '相手: ') + m.text; }).join('\n'), { icon: '' });
-    return;
-  }
-  if (mnm) mnm.textContent = title || '';
-  log.innerHTML = '';
-  if (!msgs.length) log.innerHTML = '<div class="idmempty">内容がありませんでした。</div>';
-  msgs.forEach(function (m) {
-    var row = document.createElement('div'); row.className = 'idmmsg ' + (m.me ? 'me' : 'them');
-    row.innerHTML = '<div class="idmbub">' + esc_(m.text) + '</div><div class="idmmt">' + esc_(m.ts || '') + '</div>';
-    log.appendChild(row);
-  });
-  mask.classList.add('show'); log.scrollTop = log.scrollHeight;
-}
-function idmDoReqDetail(btn) {
-  if (!btn) return;
-  var acc = btn.getAttribute('data-acc') || '', name = btn.getAttribute('data-name') || '', prev = btn.getAttribute('data-prev') || '';
-  var occ = parseInt(btn.getAttribute('data-occ') || '0', 10) || 0;
-  var card = btn;
-  for (var k = 0; k < 5 && card && !(card.className && ('' + card.className).indexOf('idmcard') >= 0); k++) card = card.parentElement;
-  var st = card ? card.querySelector('.idmdelst') : null;
-  var t0 = new Date().getTime(), tick = null;
-  function stop() { if (tick) { clearInterval(tick); tick = null; } }
-  if (st) {
-    st.textContent = '内容を読み込んでいます… 0秒（開くので既読が付きます）';
-    tick = setInterval(function () {
-      if (!st) return stop();
-      st.textContent = '内容を読み込んでいます… ' + Math.round((new Date().getTime() - t0) / 1000) + '秒（開くので既読が付きます）';
-    }, 1000);
-  }
-  if (window.idmReqDetail) window.idmReqDetail(acc, name, prev, occ,
-    function (m) { stop(); if (st) st.textContent = m; },
-    function (d) { stop(); if (st) st.textContent = ''; idmShowMsgs(d.title, d.msgs); });
-  else stop();
-}
-function renderInstaDmGate_(msg, base, staff, dev) {
-  return '<style>' + INSTADM_CSS_ + '</style>' +
-    backBar_(base, staff, dev) +
-    '<div class="idmwrap">' +
-      '<h1>📩 IGのDM</h1>' +
-      '<div class="idmgate">' +
-        '<div class="idmgt">🔒 パスワードを入力してください😊</div>' +
-        '<div class="idmgm">この画面にはお客さまとの会話が入っています。パスワードを知っている端末だけ開けます。' +
-          '一度入力すると、この端末では次回から入力不要です。</div>' +
-        (msg ? '<div class="idmgerr">' + esc_(msg) + '</div>' : '') +
-        '<input id="idmPw" type="password" class="idmginput" placeholder="パスワード" autocomplete="off" />' +
-        '<button type="button" id="idmGo" class="idmgbtn">開く</button>' +
-      '</div>' +
-    '</div>' +
-    '<script>(function(){' +
-      'var i=document.getElementById("idmPw"), b=document.getElementById("idmGo");' +
-      'function go(){ if(window.idmSubmit) window.idmSubmit(i?i.value:""); }' +
-      'if(b) b.addEventListener("click", go);' +
-      'if(i) i.addEventListener("keydown", function(e){ if(e.key==="Enter") go(); });' +
-      'if(i) i.focus();' +
-    '})();<\/script>';
-}
 var KOUKOKU_FILENAME = 'koukoku.json';
 function getKoukokuFile_() {
   var it = DriveApp.getFilesByName(KOUKOKU_FILENAME);
@@ -3049,7 +2635,6 @@ var HOMECSS_ =
 '  .tile.zenjitsu::before { background:#db2777; }' +
 '  .tile.cost::before { background:#e0533d; }' +
 '  .tile.koukoku::before { background:#7c3aed; }' +
-'  .tile.instadm::before { background:#e1306c; }' +
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.hachimitsu::before { background:#eab308; }' +
 '  .tile.threads::before { background:#9ca3af; }  /* ★2026-11-11 まるちゃん「スレッズコだけ左の線がない」＝黒は暗いボタンに溶けて見えないので灰色に */' +
@@ -3084,7 +2669,6 @@ var HOMECSS_ =
 '  .tile.zenjitsu .ticon { background:rgba(219,39,119,.14); }' +
 '  .tile.cost .ticon { background:rgba(224,83,61,.16); }' +
 '  .tile.koukoku .ticon { background:rgba(124,58,237,.16); }' +
-'  .tile.instadm .ticon { background:rgba(225,48,108,.16); }' +
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .tile.sejutsugo .ticon { background:rgba(14,165,233,.16); }' +
 '  .tile.kizon .ticon { background:rgba(124,58,237,.16); }' +
