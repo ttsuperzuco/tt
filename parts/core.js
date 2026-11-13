@@ -2601,7 +2601,7 @@ var HOMECSS_ =
 '  .rolebtn { display:flex; flex-direction:row; align-items:center; gap:14px; text-align:left;' +
 '    color:var(--ink); cursor:pointer; background:var(--card); border:1px solid var(--line);' +
 '    border-radius:18px; padding:22px 18px; box-shadow:0 6px 18px rgba(0,0,0,.09); position:relative;' +
-'    overflow:hidden; width:100%; transition:transform .12s ease, box-shadow .12s ease; }' +
+'    overflow:hidden; width:100%; transition:transform .12s ease, box-shadow .12s ease; text-decoration:none; }' +
 '  .rolebtn::before { content:""; position:absolute; left:0; top:0; bottom:0; width:8px; }' +
 '  .rolebtn.keiei::before { background:#dc2626; }' +
 '  .rolebtn.kanri::before { background:#f59e0b; }' +
