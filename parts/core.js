@@ -1313,29 +1313,66 @@ var HEAD_MARK_EXTRA_ = {
   yoyaku_new: '🆕️', yoyaku_kizon: '📅',
   yoyaku_henkou: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png">'
 };
+function devHeadMarkHtml_(view) {   
+  if (HEAD_MARK_EXTRA_[view]) return HEAD_MARK_EXTRA_[view];
+  var q = (typeof location !== 'undefined') ? location.search : '';
+  var tid = '';   
+  if (view === 'yoyaku_sejutsugo') {
+    if (/[?&]mode=repeat(&|$)/.test(q)) return '';   
+    tid = /[?&]mode=line(&|$)/.test(q) ? 'sgline' : 'sejutsugo';
+  }
+  for (var i = 0; i < TILE_DEFS_.length; i++) {
+    var t = TILE_DEFS_[i];
+    if (!t.iconDev || (tid ? t.id !== tid : t.view !== view)) continue;
+    var tmp = document.createElement('div'); tmp.innerHTML = t.iconDev;
+    var el = tmp.querySelector('img,svg');
+    return el ? el.outerHTML : '';
+  }
+  return '';
+}
 function devHeadMark_(root, view, dev) {
   if (!dev || !root || !root.querySelector) return;
-  var bm = root.querySelector('.hhead span.bmark');
-  if (!bm) return;
-  var html = HEAD_MARK_EXTRA_[view] || '';
-  if (!html) {
-    var q = (typeof location !== 'undefined') ? location.search : '';
-    var tid = '';   
-    if (view === 'yoyaku_sejutsugo') {
-      if (/[?&]mode=repeat(&|$)/.test(q)) return;   
-      tid = /[?&]mode=line(&|$)/.test(q) ? 'sgline' : 'sejutsugo';
-    }
-    for (var i = 0; i < TILE_DEFS_.length && !html; i++) {
-      var t = TILE_DEFS_[i];
-      if (!t.iconDev || (tid ? t.id !== tid : t.view !== view)) continue;
-      var tmp = document.createElement('div'); tmp.innerHTML = t.iconDev;
-      var el = tmp.querySelector('img,svg');
-      html = el ? el.outerHTML : '';
-    }
-  }
+  var html = devHeadMarkHtml_(view);
   if (!html) return;
-  bm.innerHTML = html;
-  bm.classList.add('bmarkimg');
+  function once() {
+    var bm = root.querySelector('.hhead span.bmark');
+    if (bm) {
+      if (!bm.classList.contains('bmarkimg')) { bm.innerHTML = html; bm.classList.add('bmarkimg'); }
+      return true;
+    }
+    var hn = root.querySelector('img.hnico');
+    if (hn) {
+      var m = /src="([^"]+)"/.exec(html);
+      if (m && hn.getAttribute('data-devmark') !== '1') {
+        hn.setAttribute('src', m[1]); hn.style.borderRadius = '.25em'; hn.setAttribute('data-devmark', '1');
+      }
+      return true;
+    }
+    var h = root.querySelector('h1');
+    if (!h) return false;
+    if (h.getAttribute('data-devmark') === '1') return true;
+    var tn = h.firstChild;
+    if (!tn || tn.nodeType !== 3) return true;   
+    var txt = tn.nodeValue.replace(/^\s+/, ''), cp = txt.codePointAt ? txt.codePointAt(0) : 0;
+    if (!(cp >= 0x1F000 || (cp >= 0x2190 && cp <= 0x2BFF))) return true;   
+    var n = cp > 0xFFFF ? 2 : 1;
+    if (txt.charAt(n) === '️') n++;
+    tn.nodeValue = txt.slice(n).replace(/^\s+/, '');
+    var sp = document.createElement('span');
+    sp.innerHTML = html;
+    var im = sp.firstChild;
+    if (im && im.style) {
+      im.style.width = '1.15em'; im.style.height = '1.15em'; im.style.verticalAlign = '-.2em';
+      im.style.marginRight = '.3em'; im.style.borderRadius = '.2em'; im.style.display = 'inline-block';
+    }
+    h.insertBefore(sp, tn);
+    h.setAttribute('data-devmark', '1');
+    return true;
+  }
+  if (once() || typeof MutationObserver === 'undefined') return;
+  var ob = new MutationObserver(function () { if (once()) ob.disconnect(); });
+  ob.observe(root, { childList: true, subtree: true });
+  setTimeout(function () { ob.disconnect(); }, 10000);
 }
 
 var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
