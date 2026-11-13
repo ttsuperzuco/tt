@@ -804,7 +804,6 @@ var DEFAULT_TILE_SETTINGS_ = {
   cost:       { exec: false, staff: false },
   koukoku:    { exec: false, staff: false },
   instadm:    { exec: false, staff: false },
-  igdm:       { exec: false, staff: false },
   claudetools: { exec: false, staff: false },
   procell:    { exec: false, staff: false },
   pcstatus:   { exec: false, staff: false },
@@ -824,7 +823,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   mita:       { exec: true, staff: true },
   shomeisho:  { exec: true, staff: true }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'instadm', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1356,8 +1355,6 @@ var TILE_DEFS_ = [
   { id: 'koukoku', cls: 'koukoku', view: 'koukoku',
     icon: '<span class="ticon">📣</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/koukoku-kuro-192.png"></span>', label: '広告費\n管理' },
-  { id: 'igdm', cls: 'igdm', view: 'igdm',
-    icon: '<span class="ticon">📱</span>', label: 'DM\n再現' },
   { id: 'instadm', cls: 'instadm', view: 'instadm',
     icon: '<span class="ticon">📩</span>', label: 'IGの\nDM' },
   { id: 'honyaku', cls: 'honyaku', view: 'honyaku',
@@ -1419,7 +1416,7 @@ var TILE_DEFS_ = [
 ];
 var TILE_GROUP_ = {
   kanshi: 'kanri', mushitori: 'kanri', cost: 'keiei', koukoku: 'keiei', imglink: 'kanri',
-  instadm: 'kanri', igdm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
+  instadm: 'kanri', claudetools: 'kanri', pcstatus: 'kanri',
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
   hachimitsu: 'tomato',
@@ -2253,25 +2250,6 @@ function renderInstaDmGate_(msg, base, staff, dev) {
       'if(i) i.focus();' +
     '})();<\/script>';
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 var KOUKOKU_FILENAME = 'koukoku.json';
 function getKoukokuFile_() {
   var it = DriveApp.getFilesByName(KOUKOKU_FILENAME);
@@ -3077,7 +3055,6 @@ var HOMECSS_ =
 '  .tile.cost::before { background:#e0533d; }' +
 '  .tile.koukoku::before { background:#7c3aed; }' +
 '  .tile.instadm::before { background:#e1306c; }' +
-'  .tile.igdm::before { background:#c13584; }' +
 '  .tile.claudetools::before { background:#7c3aed; }' +
 '  .tile.hachimitsu::before { background:#eab308; }' +
 '  .tile.threads::before { background:#9ca3af; }  /* ★2026-11-11 まるちゃん「スレッズコだけ左の線がない」＝黒は暗いボタンに溶けて見えないので灰色に */' +
@@ -3113,7 +3090,6 @@ var HOMECSS_ =
 '  .tile.cost .ticon { background:rgba(224,83,61,.16); }' +
 '  .tile.koukoku .ticon { background:rgba(124,58,237,.16); }' +
 '  .tile.instadm .ticon { background:rgba(225,48,108,.16); }' +
-'  .tile.igdm .ticon { background:rgba(193,53,132,.16); }' +
 '  .tile.yoyaku .ticon { background:rgba(22,163,74,.16); }' +
 '  .tile.sejutsugo .ticon { background:rgba(14,165,233,.16); }' +
 '  .tile.kizon .ticon { background:rgba(124,58,237,.16); }' +
