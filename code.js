@@ -1812,10 +1812,40 @@ function devHeadMarkHtml_(view) {   // その画面の新しい絵（無けれ�
 }
 // 見出しの絵の置き方は画面によって3通り：①見出しの絵の欄（.hhead .bmark）②題名の頭の絵文字（<h1>🕑 空き時間検索）
 //   ③ハチミツちゃんの丸い絵。どれも1回だけ差し替える。あとから中身を描く画面もあるので、10秒間は描き足しを見張る。
+// ★2026-11-14 まるちゃん「題名に絵がない画面も、いれるんだよ」＝記入漏れ・LINE一斉配信・TimeTree・購入証明書。
+//   この4つは題名を描き直す（最新に更新・月を変える・手順ごとに題名が変わる）ので、字の頭に差し込むと消える。
+//   ＝見た目の決まり（::before）で題名の頭に絵を出す（描き直しても消えない）。購入証明書は中の画面（iframe）に入れる。
+var DEV_TITLE_SEL_ = { lt: '.lwrap > h1:first-of-type', bcast: '#bctitle', timetree: '#tvpick', shomeisho: '#ttl' };
+function devTitleCss_(sel, src) {
+  return sel + '::before{content:"";display:inline-block;width:1.15em;height:1.15em;margin-right:.3em;' +
+    'vertical-align:-.2em;border-radius:.2em;background:url("' + src + '") center/contain no-repeat;}';
+}
 function devHeadMark_(root, view, dev) {
   if (!dev || !root || !root.querySelector) return;
   var html = devHeadMarkHtml_(view);
   if (!html) return;
+  if (DEV_TITLE_SEL_[view]) {
+    var sm = /src="([^"]+)"/.exec(html);
+    if (!sm) return;
+    var css = devTitleCss_(DEV_TITLE_SEL_[view], sm[1]);
+    var put = function (doc) {
+      if (!doc || !doc.head || doc.getElementById('devTitleMark')) return;
+      var st = doc.createElement('style'); st.id = 'devTitleMark'; st.textContent = css; doc.head.appendChild(st);
+    };
+    if (view !== 'shomeisho') { put(document); return; }
+    var hook = function () {   // 購入証明書＝中の画面（iframe）ができたら、読み込むたびに入れる
+      var fr = root.querySelector('#smFrame');
+      if (!fr) return false;
+      var go = function () { try { put(fr.contentDocument); } catch (e) {} };
+      fr.addEventListener('load', go); go();
+      return true;
+    };
+    if (hook() || typeof MutationObserver === 'undefined') return;
+    var ob2 = new MutationObserver(function () { if (hook()) ob2.disconnect(); });
+    ob2.observe(root, { childList: true, subtree: true });
+    setTimeout(function () { ob2.disconnect(); }, 10000);
+    return;
+  }
   function once() {
     var bm = root.querySelector('.hhead span.bmark');
     if (bm) {
