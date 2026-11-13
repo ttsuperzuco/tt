@@ -1303,6 +1303,13 @@ function renderError_(err, base, staff, dev) {
 var LINE_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
   '<rect width="24" height="24" rx="7" fill="#06C755"/>' +
   '<path d="M12 6.2c-3.3 0-6 2.1-6 4.7 0 2.3 2 4.2 4.8 4.6.5.1.4.35.3.85l-.08.5c-.05.3.2.42.48.3 1.9-.8 4-2.55 5.3-4.05.68-.8 1.2-1.6 1.2-2.7 0-2.6-2.7-4.7-6-4.7z" fill="#fff"/></svg>';
+var LINE_BIG_BUBBLE_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
+  '<rect width="24" height="24" rx="7" fill="#06C755"/><g transform="matrix(1.35 0 0 1.35 -4.2 -3.92)">' +
+  '<path d="M12 6.2c-3.3 0-6 2.1-6 4.7 0 2.3 2 4.2 4.8 4.6.5.1.4.35.3.85l-.08.5c-.05.3.2.42.48.3 1.9-.8 4-2.55 5.3-4.05.68-.8 1.2-1.6 1.2-2.7 0-2.6-2.7-4.7-6-4.7z" fill="#fff"/>';
+var LINE_UNANS_LOGO_ = LINE_BIG_BUBBLE_ + '</g>' +
+  '<circle cx="19.4" cy="4.8" r="3.8" fill="#E24B4A" stroke="#fff" stroke-width=".9"/></svg>';
+var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
+  '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g></svg>';
 
 var TT_LOGO_ = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
   '<rect width="24" height="24" rx="7" fill="#2bad6f"/>' +
@@ -1318,7 +1325,7 @@ var TILE_DEFS_ = [
   { id: 'uriage', cls: 'uriage', view: 'uriage',
     icon: '<span class="ticon">💰</span>', label: '売上転記\nTimeTree' },
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
-    icon: '<span class="ticon">💬</span>', label: 'LINE未回答\n＆返信待ち' },
+    icon: '<span class="ticon">' + LINE_UNANS_LOGO_ + '</span>', label: 'LINE未回答\n＆返信待ち' },
   { id: 'akijikan', cls: 'akijikan', view: 'akijikan',
     icon: '<span class="ticon">🕑</span>', label: '空き時間\n検索' },
   { id: 'links', cls: 'links', view: 'links',
@@ -1354,7 +1361,7 @@ var TILE_DEFS_ = [
   { id: 'sejutsugo', cls: 'sejutsugo', view: 'yoyaku_sejutsugo',
     icon: '<span class="ticon">💆</span>', label: '施術後の\n予約' },
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
-    icon: '<span class="ticon">💌</span>', label: '施術後の\nLINE送信' },
+    icon: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
   { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
     icon: '<span class="ticon">📖</span>', label: '既存の\n予約' },
   { id: 'timetree', cls: 'timetree', view: 'timetree',
