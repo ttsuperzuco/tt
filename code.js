@@ -1921,7 +1921,10 @@ var TILE_DEFS_ = [
   // ★プロセル在庫＝品物を1つずつ数字ボタンで入れて、最後に一覧で確かめて登録（2026-10-02・実務者用）。
   //   登録は事務所PCの記録に残すだけ（受付係 op=procell_stock_save）。
   { id: 'procstock', cls: 'procstock', view: 'procstock',
-    icon: '<span class="ticon">📦</span>', label: 'プロセル\n在庫' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ・全部そろってから公開）＝白い地にプロセルの丸いマーク（本物のロゴから切り出し）＋右下に段ボール箱。
+    //   パソコン版の同じ絵＝PC版スーパーズコ\icons\procstock-zuko-96.png。
+    icon: '<span class="ticon">📦</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/procstock-192.png"></span>', label: 'プロセル\n在庫' },
   // ★TT売上帳簿（2026-11-07）＝今日の売上表を触る（受付係 op=uriagebook → 発票から売上表\programs\売上帳簿の係.py）。
   { id: 'uriagebook', cls: 'uriagebook', view: 'uriagebook',
     icon: '<span class="ticon">📒</span>', label: 'TT売上\n帳簿' },
