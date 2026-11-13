@@ -1739,6 +1739,9 @@ function instaScript_(C) {
   function closeDmThread() {
     ['igDmT', 'igDmIn'].forEach(function (k) { var e = document.getElementById(k); if (e) e.remove(); }); DMT = null;
   }
+  window.__igStoryImg = function (v) {      
+    var i = document.createElement('img'); i.src = v.src; i.referrerPolicy = 'no-referrer'; i.alt = ''; i.style.cssText = v.style.cssText; v.replaceWith(i);
+  };
   function drawDmThread() {
     var el = document.getElementById('igDmT'); if (!el || !DMT) return;
     var h = '<div class="w"><div class="igph"><button type="button" data-dmtback="1">' + IC.back + '</button>' +
@@ -1750,8 +1753,10 @@ function instaScript_(C) {
         var dt = new Date(m.at * 1000), day = (dt.getMonth() + 1) + '月' + dt.getDate() + '日';
         if (day !== lastDay) { h += '<div class="day">' + day + ' ' + dt.getHours() + ':' + ('0' + dt.getMinutes()).slice(-2) + '</div>'; lastDay = day; }
         var body = m.img ? '<img src="' + esc(m.img) + '" referrerpolicy="no-referrer" alt="">' : '';
+        if (m.story) body += '<video src="' + esc(m.story) + '" controls playsinline muted preload="metadata" style="display:block;max-width:160px;border-radius:14px;margin-bottom:6px" ' +
+          'onerror="window.__igStoryImg&&window.__igStoryImg(this)"></video>';
         if (m.t) body += esc(m.t);
-        if (!m.t && !m.img) body += esc(m.note || '');
+        if (!m.t && !m.img) body += (m.story ? '<span style="font-size:12px">' + esc(m.note || '') + '</span>' : esc(m.note || ''));
         if (m.link) body += (body ? '\n' : '') + '<a href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link) + '</a>';
         h += '<div class="m' + (m.mine ? ' me' : '') + '"><div class="b' + (!m.t && !m.img && m.note ? ' n' : '') + '">' + body + '</div></div>';
       });
