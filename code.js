@@ -2319,10 +2319,26 @@ function homeSortBoot_(KEY, OPT) {
           fy >= a.offsetTop && fy <= a.offsetTop + a.offsetHeight) { t = a; break; }
     }
     // 中に入れる先（フォルダ）の上では入れ替えず、光らせるだけ（OPT.into を書いた時だけ）。
+    //   OPT.into(持ち上げたボタン, 指の下のボタン, 横の位置0〜1, 縦の位置0〜1) の答え：
+    //     true＝中に入れる先／数（ミリ秒）＝そこに少し止めた時だけ入れ替える（通っただけでは入れ替えない）／それ以外＝ふつうに入れ替える
+    //   ★2026-11-14 まるちゃん「左上のフォルダの左に持っていけば1個1個ずれてそこの位置に入るようにしたい」用。
     var hit = OPT.zoneAt ? OPT.zoneAt(st.x, st.y, st.el) : null;
-    if (!hit && t && OPT.into && OPT.into(st.el, t)) hit = t;
+    var ans = (!hit && t && OPT.into)
+      ? OPT.into(st.el, t, (fx - t.offsetLeft) / (t.offsetWidth || 1), (fy - t.offsetTop) / (t.offsetHeight || 1)) : false;
+    if (!hit && ans === true) hit = t;
     if (st.into && st.into !== hit) { st.into.classList.remove('hinto'); st.into = null; }
+    var side = (!hit && typeof ans === 'number' && ans > 0) ? t : null;
+    if (st.side && st.side !== side) { st.side.classList.remove('hside'); st.side = null; st.sideAt = 0; }
     if (hit) { st.into = hit; hit.classList.add('hinto'); return; }
+    if (side) {   // 少し止めるまで待つ（その間は左に線を出す）
+      if (st.side !== side) {
+        st.side = side; st.sideAt = Date.now() + ans; side.classList.add('hside');
+        setTimeout(function () { if (st && st.drag && st.side === side) over(); }, ans + 20);   // 指を止めたままでも時間が来たら入れ替える
+        return;
+      }
+      if (Date.now() < st.sideAt) return;
+      side.classList.remove('hside'); st.side = null; st.sideAt = 0;
+    }
     if (!t) return;
     var before = rectsOf(st.box, st.el);
     if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
@@ -2407,6 +2423,7 @@ function homeSortBoot_(KEY, OPT) {
     el.classList.remove('tdrag'); home.classList.remove('hsorting');
     setTimeout(function () { el.style.transition = ''; el.style.zIndex = ''; }, 240);
     if (OPT.end) OPT.end(el);
+    if (s.side) s.side.classList.remove('hside');
     if (s.into) { s.into.classList.remove('hinto'); if (OPT.dropInto) OPT.dropInto(el, s.into); return; }
     if (!s.moved && OPT.still) { OPT.still(el); return; }
     if (idsOf(s.box).join(',') !== s.start) save();
@@ -2528,6 +2545,7 @@ var FOLDERTESTCSS_ =
   '  .ftlab .tname { flex:none; word-break:auto-phrase; }' +   // 2行になる時は言葉の切れ目で折る（「在庫売上管／理」にしない）
   '  .ftcount { display:block; font-size:.78rem; font-weight:800; opacity:.75; margin-top:2px; }' +
   '  .tile.hinto { outline:3px solid #fbbf24; outline-offset:-3px; transform:scale(1.06); transition:transform .12s ease; }' +
+  '  .tile.hside { box-shadow:-7px 0 0 0 #fbbf24; }' +   // フォルダの左の端＝ここに入る（少し止めるとずれる）の印
   '  .fttoast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#fff; color:#12303c; font-weight:800; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(0,0,0,.25); display:none; z-index:10002; font-size:.95rem; max-width:90vw; text-align:center; }' +
   '  .ftmbtn { display:block; width:100%; font:inherit; font-size:1.2rem; font-weight:800; padding:14px; margin:0 0 10px; border-radius:12px; border:0; background:#fff; color:#12303c; cursor:pointer; }' +
   '  .ftmtitle { font-size:1.3rem; font-weight:900; margin-bottom:14px; }' +
@@ -2728,8 +2746,11 @@ function folderTestBoot_(D) {
       save: sortSaved,
       clear: function () {},
       confirm: function (msg) { szPopup_(msg, { cancel: true, icon: '', onYes: resetAll }); },
-      into: function (dragEl, t) {
-        return !openF && (dragEl.getAttribute('data-tid') || '').charAt(0) !== '@' && (t.getAttribute('data-tid') || '').charAt(0) === '@';
+      // ★2026-11-14 まるちゃん「左上のフォルダの左に持っていけば、1個1個ずれてそこの位置に入るようにしたい」＝
+      //   フォルダの左の端（4分の1）で少し（0.3秒）止めると、フォルダがずれてその位置に入る。真ん中・右で離すと中に入る。
+      into: function (dragEl, t, px) {
+        if (openF || (dragEl.getAttribute('data-tid') || '').charAt(0) === '@' || (t.getAttribute('data-tid') || '').charAt(0) !== '@') return false;
+        return px < 0.25 ? 300 : true;
       },
       dropInto: function (dragEl, t) {
         var id = dragEl.getAttribute('data-tid'); if (!T[id]) return;

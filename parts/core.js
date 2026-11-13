@@ -1630,9 +1630,22 @@ function homeSortBoot_(KEY, OPT) {
           fy >= a.offsetTop && fy <= a.offsetTop + a.offsetHeight) { t = a; break; }
     }
     var hit = OPT.zoneAt ? OPT.zoneAt(st.x, st.y, st.el) : null;
-    if (!hit && t && OPT.into && OPT.into(st.el, t)) hit = t;
+    var ans = (!hit && t && OPT.into)
+      ? OPT.into(st.el, t, (fx - t.offsetLeft) / (t.offsetWidth || 1), (fy - t.offsetTop) / (t.offsetHeight || 1)) : false;
+    if (!hit && ans === true) hit = t;
     if (st.into && st.into !== hit) { st.into.classList.remove('hinto'); st.into = null; }
+    var side = (!hit && typeof ans === 'number' && ans > 0) ? t : null;
+    if (st.side && st.side !== side) { st.side.classList.remove('hside'); st.side = null; st.sideAt = 0; }
     if (hit) { st.into = hit; hit.classList.add('hinto'); return; }
+    if (side) {   
+      if (st.side !== side) {
+        st.side = side; st.sideAt = Date.now() + ans; side.classList.add('hside');
+        setTimeout(function () { if (st && st.drag && st.side === side) over(); }, ans + 20);   
+        return;
+      }
+      if (Date.now() < st.sideAt) return;
+      side.classList.remove('hside'); st.side = null; st.sideAt = 0;
+    }
     if (!t) return;
     var before = rectsOf(st.box, st.el);
     if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
@@ -1713,6 +1726,7 @@ function homeSortBoot_(KEY, OPT) {
     el.classList.remove('tdrag'); home.classList.remove('hsorting');
     setTimeout(function () { el.style.transition = ''; el.style.zIndex = ''; }, 240);
     if (OPT.end) OPT.end(el);
+    if (s.side) s.side.classList.remove('hside');
     if (s.into) { s.into.classList.remove('hinto'); if (OPT.dropInto) OPT.dropInto(el, s.into); return; }
     if (!s.moved && OPT.still) { OPT.still(el); return; }
     if (idsOf(s.box).join(',') !== s.start) save();
