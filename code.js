@@ -1804,7 +1804,9 @@ var TILE_DEFS_ = [
   { id: 'lt', cls: 'lt', view: 'lt',
     icon: '<span class="ticon"><span class="lt2">' + LINE_LOGO_ + TT_LOGO_ + '</span></span>', label: 'TimeTree\n予約記入漏れ' },
   { id: 'uriage', cls: 'uriage', view: 'uriage',
-    icon: '<span class="ticon">💰</span>', label: '売上転記\nTimeTree' },
+    // ★2026-11-13 まるちゃん選択（開発版だけ）＝ピンクのレジ（引き出しに小銭）・黒い地＋細い白枠（GPTで作成）。パソコン版＝PC版スーパーズコ\icons\uriage-kuro-96.png。
+    icon: '<span class="ticon">💰</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/uriage-kuro-192.png"></span>', label: '売上転記\nTimeTree' },
   { id: 'unanswered', cls: 'unanswered', view: 'unanswered',
     icon: '<span class="ticon">💬</span>',
     iconDev: '<span class="ticon">' + LINE_UNANS_LOGO_ + '</span>', label: 'LINE未回答\n＆返信待ち' },
@@ -1942,7 +1944,9 @@ var TILE_DEFS_ = [
   // ★🍯ハチミツちゃん（2026-11-11 まるちゃん決定）＝トマトさんの相談と画像作り（op=hachimitsu）。既定は開発者だけ（共通ルール16）。
   { id: 'hachimitsu', cls: 'hachimitsu', view: 'hachimitsu',
     // ★2026-11-12 まるちゃん選択＝黄色と黒のしまの角のあるタニシ（ぷっくり立体・icons/hachimitsu-192.png・パソコン版も同じ）。絵を替えたら ?v= の数字を上げる（スマホが前の絵を覚えているため）。
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-192.png?v=2"></span>', label: 'ハチミツ\nちゃん' },
+    // ★2026-11-13 まるちゃん「これらもおなじ」＝開発版だけ、同じ絵の地を黒にして細い白枠（hachimitsu-kuro-192.png・GPTで地だけ描き直し）。hachimitsu-192.png は触らない。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-192.png?v=2"></span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-kuro-192.png"></span>', label: 'ハチミツ\nちゃん' },
   // ★Threads投稿（2026-11-05 まるちゃん決定）＝スタッフがお店のThreadsに投稿・削除（パスワードは渡さない）。
   //   投稿・削除・本人確認は事務所PCの受付係（op=threads → Threads投稿\programs\threads_post.py）。既定は開発者だけ（共通ルール16）。
   { id: 'threads', cls: 'threads', view: 'threads',
@@ -1955,7 +1959,9 @@ var TILE_DEFS_ = [
   //   中身は受付係（op=insta → Instagram投稿\programs\insta_zuko.py）が専用ブラウザで読む。既定は開発者だけ（共通ルール16）。
   { id: 'insta', cls: 'insta', view: 'insta',
     // ★2026-11-10 まるちゃん「A-2採用・ボタンの右もそれにできる？」＝ボタンの絵も金魚がレンズをくぐる絵（icons/insta-192.png・パソコン版も同じ）
-    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>', label: 'インズコグラム' },   // ★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
+    // ★2026-11-13 まるちゃん「これらもおなじ」＝開発版だけ、同じ絵の地を黒にして細い白枠（insta-kuro-192.png・GPTで地だけ描き直し）。insta-192.png はホーム画面のアイコンにも使うので触らない。
+    icon: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-192.png"></span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/insta-kuro-192.png"></span>', label: 'インズコグラム' },   // ★2026-11-10 まるちゃん「ボタン名を インズコグラム にする」
   // ★📘Facebook（2026-11-10 まるちゃん決定「全部推奨で」）＝お店のFacebookページ3つを本物そっくりに見せる（第1段階＝読むだけ）。
   //   中身は受付係（op=facebook → Facebook投稿\programsb_zuko.py）がメタ公式の窓口で読む。既定は開発者だけ（共通ルール16）。
   { id: 'facebook', cls: 'facebook', view: 'facebook',
