@@ -1511,8 +1511,10 @@ function homeSortBoot_(KEY, OPT) {
       if (a !== st.el && fx >= a.offsetLeft && fx <= a.offsetLeft + a.offsetWidth &&
           fy >= a.offsetTop && fy <= a.offsetTop + a.offsetHeight) { t = a; break; }
     }
-    if (st.into && st.into !== t) { st.into.classList.remove('hinto'); st.into = null; }
-    if (t && OPT.into && OPT.into(st.el, t)) { st.into = t; t.classList.add('hinto'); return; }
+    var hit = OPT.zoneAt ? OPT.zoneAt(st.x, st.y, st.el) : null;
+    if (!hit && t && OPT.into && OPT.into(st.el, t)) hit = t;
+    if (st.into && st.into !== hit) { st.into.classList.remove('hinto'); st.into = null; }
+    if (hit) { st.into = hit; hit.classList.add('hinto'); return; }
     if (!t) return;
     var before = rectsOf(st.box, st.el);
     if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
@@ -1524,9 +1526,9 @@ function homeSortBoot_(KEY, OPT) {
   }
   function tick() {
     if (!st || !st.drag) return;
-    var h = window.innerHeight, v = 0, EDGE = 84;
+    var h = window.innerHeight - (OPT.bottomGap ? (OPT.bottomGap() || 0) : 0), v = 0, EDGE = 84;
     if (st.y < EDGE) v = -Math.ceil((EDGE - st.y) / 6);
-    else if (st.y > h - EDGE) v = Math.ceil((st.y - (h - EDGE)) / 6);
+    else if (st.y > h - EDGE && st.y <= h) v = Math.ceil((st.y - (h - EDGE)) / 6);
     if (v) {
       var y0 = window.pageYOffset;
       window.scrollBy(0, v);
@@ -1561,6 +1563,7 @@ function homeSortBoot_(KEY, OPT) {
     st.el.style.transition = 'box-shadow .12s ease';
     st.el.classList.add('tdrag'); home.classList.add('hsorting');
     try { if (navigator.vibrate) navigator.vibrate(25); } catch (e) {}
+    if (OPT.lift) OPT.lift(st.el);
     place();
     st.raf = requestAnimationFrame(tick);
   }
@@ -1590,6 +1593,7 @@ function homeSortBoot_(KEY, OPT) {
     el.style.transform = '';
     el.classList.remove('tdrag'); home.classList.remove('hsorting');
     setTimeout(function () { el.style.transition = ''; el.style.zIndex = ''; }, 240);
+    if (OPT.end) OPT.end(el);
     if (s.into) { s.into.classList.remove('hinto'); if (OPT.dropInto) OPT.dropInto(el, s.into); return; }
     if (!s.moved && OPT.still) { OPT.still(el); return; }
     if (idsOf(s.box).join(',') !== s.start) save();

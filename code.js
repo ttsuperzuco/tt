@@ -2054,6 +2054,10 @@ function homeMyOrder_() {
 //     into(持ち上げたボタン, 指の下のボタン)＝true なら、そこでは入れ替えずに「中に入れる先」として光らせる（.hinto）
 //     dropInto(持ち上げたボタン, 入れる先)＝光っている先の上で指を離した時に呼ぶ（並びは覚えない）
 //     still(ボタン)＝長押ししたまま動かさずに離した時に呼ぶ
+//   ★同日まるちゃん「それで大丈夫です。作って」（持ち上げた時だけ画面の下に行き先の帯を出す）用に、さらに3つ（書かなければ同じ）：
+//     lift(ボタン)＝持ち上げた時に呼ぶ（帯を出す）／end(ボタン)＝指を離した時に必ず呼ぶ（帯を消す）
+//     zoneAt(x, y, ボタン)＝指の下が行き先（箱の外の帯など）ならその要素を返す。光らせ、離すと dropInto に渡す
+//     bottomGap()＝画面の下に重なっている帯の高さ（帯のすぐ上で画面を下へ送る・帯の上では送らない）
 function homeSortBoot_(KEY, OPT) {
   OPT = OPT || {};
   var SEL = OPT.tile || 'a.tile', IDATTR = OPT.idAttr || 'data-tid';
@@ -2130,8 +2134,10 @@ function homeSortBoot_(KEY, OPT) {
           fy >= a.offsetTop && fy <= a.offsetTop + a.offsetHeight) { t = a; break; }
     }
     // 中に入れる先（フォルダ）の上では入れ替えず、光らせるだけ（OPT.into を書いた時だけ）。
-    if (st.into && st.into !== t) { st.into.classList.remove('hinto'); st.into = null; }
-    if (t && OPT.into && OPT.into(st.el, t)) { st.into = t; t.classList.add('hinto'); return; }
+    var hit = OPT.zoneAt ? OPT.zoneAt(st.x, st.y, st.el) : null;
+    if (!hit && t && OPT.into && OPT.into(st.el, t)) hit = t;
+    if (st.into && st.into !== hit) { st.into.classList.remove('hinto'); st.into = null; }
+    if (hit) { st.into = hit; hit.classList.add('hinto'); return; }
     if (!t) return;
     var before = rectsOf(st.box, st.el);
     if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
@@ -2144,9 +2150,10 @@ function homeSortBoot_(KEY, OPT) {
   // 画面の上下の端に近づいたら、画面を少しずつ送る。
   function tick() {
     if (!st || !st.drag) return;
-    var h = window.innerHeight, v = 0, EDGE = 84;
+    // ★bottomGap()＝画面の下に重なっている帯の高さ（書かなければ0）。帯のすぐ上で下へ送り、帯の上では送らない。
+    var h = window.innerHeight - (OPT.bottomGap ? (OPT.bottomGap() || 0) : 0), v = 0, EDGE = 84;
     if (st.y < EDGE) v = -Math.ceil((EDGE - st.y) / 6);
-    else if (st.y > h - EDGE) v = Math.ceil((st.y - (h - EDGE)) / 6);
+    else if (st.y > h - EDGE && st.y <= h) v = Math.ceil((st.y - (h - EDGE)) / 6);
     if (v) {
       var y0 = window.pageYOffset;
       window.scrollBy(0, v);
@@ -2182,6 +2189,7 @@ function homeSortBoot_(KEY, OPT) {
     st.el.style.transition = 'box-shadow .12s ease';
     st.el.classList.add('tdrag'); home.classList.add('hsorting');
     try { if (navigator.vibrate) navigator.vibrate(25); } catch (e) {}
+    if (OPT.lift) OPT.lift(st.el);
     place();
     st.raf = requestAnimationFrame(tick);
   }
@@ -2211,6 +2219,7 @@ function homeSortBoot_(KEY, OPT) {
     el.style.transform = '';
     el.classList.remove('tdrag'); home.classList.remove('hsorting');
     setTimeout(function () { el.style.transition = ''; el.style.zIndex = ''; }, 240);
+    if (OPT.end) OPT.end(el);
     if (s.into) { s.into.classList.remove('hinto'); if (OPT.dropInto) OPT.dropInto(el, s.into); return; }
     if (!s.moved && OPT.still) { OPT.still(el); return; }
     if (idsOf(s.box).join(',') !== s.start) save();
@@ -2287,8 +2296,9 @@ var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stri
 //   操作：
 //     長押しして動かす＝本物のホームと同じ並べ替え（共通\画面\ホーム並べ替え.js をそのまま使う）。
 //       ボタンをフォルダの上まで動かすとフォルダが光り、そこで離すとそのフォルダに入る（同日まるちゃん「元に戻して…入るのもつけて」）。
-//     長押しして動かさずに離す＝メニュー（フォルダに移動・新しいフォルダを作成・トップに移動・ほかのフォルダに移動・名前を変更・解除）。
-//       ★トップに戻す・ほかのフォルダに移動・新しいフォルダを作るは「別の仕組みを考えたい」（同日まるちゃん）＝メニューは決まるまでの仮。
+//     長押しして持ち上げた時だけ、画面の下に「行き先の帯」を出す（同日まるちゃん「それで大丈夫です。作って」）：
+//       トップ＝「＋ 新しいフォルダ」（離すと名前を入力）／フォルダの中＝「⬆️ トップに出す」とほかのフォルダ。
+//     フォルダを長押しして動かさずに離す＝メニュー（名前を変更・フォルダを解除）。ボタンのメニューはやめた。
 //   中が0個になったフォルダは自動で消す（1個のフォルダは残す＝メニューで1個から作れるため）。
 //   最初のフォルダの分け方は試しの仮（全員共通のフォルダはまるちゃんが決める）。本番に入れる時はホームの作りに組み込み直す。
 var FOLDERTEST_START_ = ['sejutsugo', 'yoyaku', 'akijikan', 'links', 'ttapp',
@@ -2320,7 +2330,12 @@ var FOLDERTESTCSS_ =
   '  .fttoast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#fff; color:#12303c; font-weight:800; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(0,0,0,.25); display:none; z-index:10002; font-size:.95rem; max-width:90vw; text-align:center; }' +
   '  .ftmbtn { display:block; width:100%; font:inherit; font-size:1.2rem; font-weight:800; padding:14px; margin:0 0 10px; border-radius:12px; border:0; background:#fff; color:#12303c; cursor:pointer; }' +
   '  .ftmtitle { font-size:1.3rem; font-weight:900; margin-bottom:14px; }' +
-  '  .ftname { width:100%; box-sizing:border-box; font:inherit; font-size:1.3rem; font-weight:800; padding:12px 14px; border-radius:12px; border:0; color:#12303c; }';
+  '  .ftname { width:100%; box-sizing:border-box; font:inherit; font-size:1.3rem; font-weight:800; padding:12px 14px; border-radius:12px; border:0; color:#12303c; }' +
+  '  .ftbar { position:fixed; left:0; right:0; bottom:0; z-index:50; display:none; background:rgba(18,48,60,.97); padding:12px 12px calc(16px + env(safe-area-inset-bottom)); border-radius:18px 18px 0 0; box-shadow:0 -8px 24px rgba(0,0,0,.3); }' +
+  '  .ftbhint { color:#fff; font-weight:800; font-size:.95rem; text-align:center; margin-bottom:10px; }' +
+  '  .ftzones { display:flex; flex-wrap:wrap; gap:10px; max-width:640px; margin:0 auto; }' +
+  '  .ftzone { flex:1 1 40%; box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
+  '  .ftzone.hinto { outline:3px solid #fbbf24; outline-offset:-3px; background:#fef3c7; transform:scale(1.04); transition:transform .12s ease; }';
 function folderTestBoot_(D) {
   var T = D.tiles, KEY = 'sz_foldertest';
   var home = document.getElementById('ftHome');
@@ -2385,9 +2400,7 @@ function folderTestBoot_(D) {
   }
   function done(m) { save(); render(); toast(m); }
 
-  // ── 長押しして動かさずに離した時のメニュー（ズコの共通の小窓 szPopup_ の中にボタンを並べる）──
-  //   ★2026-11-13 まるちゃん「トップに戻す・他のフォルダに移動・新しいフォルダを作るは別の仕組みを考えたい」＝
-  //     新しい仕組みが決まるまでの仮。決まったらここを入れ替える。
+  // ── フォルダを長押しして動かさずに離した時のメニュー（ズコの共通の小窓 szPopup_ の中にボタンを並べる）──
   function sheet(title, btns) {
     var html = '<div class="ftmtitle">' + title + '</div>' + btns.map(function (b, i) {
       return '<button type="button" class="ftmbtn" data-k="' + i + '">' + b.label + '</button>';
@@ -2428,13 +2441,33 @@ function folderTestBoot_(D) {
       done('新しいフォルダ「' + nm + '」を作成しました');
     });
   }
-  function pickFolder(id) {
-    var cur = where(id), btns = [];
-    items.forEach(function (x) {
-      if (typeof x !== 'string' && x !== cur) btns.push({ label: '📂 ' + esc(x.f), fn: function () { moveToFolder(id, x); } });
-    });
-    btns.push({ label: '＋ 新しいフォルダを作成', fn: function () { newFolder(id); } });
-    sheet('「' + esc(lbl(id)) + '」を<br>どのフォルダに移動しますか？😊', btns);
+  // ── 行き先の帯（★2026-11-13 まるちゃん「それで大丈夫です。作って」）──
+  //   ボタンを長押しして持ち上げた時だけ、画面の下に出す。行き先の上で離すとそこへ移る。指を離すと消える。
+  //   トップ＝「＋ 新しいフォルダ」／フォルダの中＝「⬆️ トップに出す」とほかのフォルダ。フォルダそのものを持ち上げた時は出さない。
+  function showBar(el) {
+    var tid = el.getAttribute('data-tid') || '';
+    if (!T[tid]) return;
+    var z = [];
+    if (!openF) z.push('<div class="ftzone" data-z="new">＋ 新しいフォルダ</div>');
+    else {
+      z.push('<div class="ftzone" data-z="top">⬆️ トップに出す</div>');
+      items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '">📂 ' + esc(x.f) + '</div>'); });
+    }
+    var bar = document.getElementById('ftBar');
+    if (!bar) { bar = document.createElement('div'); bar.id = 'ftBar'; bar.className = 'ftbar'; document.body.appendChild(bar); }
+    bar.innerHTML = '<div class="ftbhint">行き先の上で離してください😊</div><div class="ftzones">' + z.join('') + '</div>';
+    bar.style.display = 'block';
+    home.style.paddingBottom = (bar.offsetHeight + 16) + 'px';   // 一番下の段も帯の上まで送れるように
+  }
+  function hideBar() {
+    var bar = document.getElementById('ftBar'); if (bar) bar.style.display = 'none';
+    home.style.paddingBottom = '';
+  }
+  function barHeight() { var bar = document.getElementById('ftBar'); return (bar && bar.style.display !== 'none') ? bar.offsetHeight : 0; }
+  function zoneAt(x, y) {
+    if (!barHeight()) return null;
+    var u = document.elementFromPoint(x, y);
+    return (u && u.closest) ? u.closest('.ftzone') : null;
   }
   function toTop(id) {
     var F = where(id); if (!F) return;
@@ -2463,12 +2496,8 @@ function folderTestBoot_(D) {
       ]);
       return;
     }
-    var id = tid;
-    if (!openF) sheet('「' + esc(lbl(id)) + '」', [{ label: '📂 フォルダに移動', fn: function () { pickFolder(id); } }]);
-    else sheet('「' + esc(lbl(id)) + '」', [
-      { label: '⬆️ トップに移動', fn: function () { toTop(id); } },
-      { label: '📂 ほかのフォルダに移動', fn: function () { pickFolder(id); } }
-    ]);
+    // ★同日まるちゃん「それで」＝ボタンのメニューはやめた（移動は行き先の帯で行う）。
+    toast('動かして、下の行き先かフォルダの上で離してください😊');
   }
 
   // ── 長押しして動かす＝本物のホームと同じ並べ替え（共通\画面\ホーム並べ替え.js をそのまま使う）──
@@ -2498,10 +2527,19 @@ function folderTestBoot_(D) {
         return !openF && (dragEl.getAttribute('data-tid') || '').charAt(0) !== '@' && (t.getAttribute('data-tid') || '').charAt(0) === '@';
       },
       dropInto: function (dragEl, t) {
-        var F = folderByKey((t.getAttribute('data-tid') || '').slice(1)), id = dragEl.getAttribute('data-tid');
-        if (F && T[id]) moveToFolder(id, F);
+        var id = dragEl.getAttribute('data-tid'); if (!T[id]) return;
+        var z = t.getAttribute('data-z');
+        if (z) render();   // 帯まで動かす途中で入れ替わった並びは覚えない（画面を元の並びに戻してから移す）
+        if (z === 'new') { newFolder(id); return; }
+        if (z === 'top') { toTop(id); return; }
+        var F = folderByKey((z || t.getAttribute('data-tid') || '').slice(1));
+        if (F) moveToFolder(id, F);
       },
-      still: function (el) { menuFor(el); }
+      still: function (el) { menuFor(el); },
+      lift: showBar,
+      end: hideBar,
+      zoneAt: zoneAt,
+      bottomGap: barHeight
     });
     box.addEventListener('click', function (ev) {
       var a = (ev.target && ev.target.closest) ? ev.target.closest('a.tile') : null;

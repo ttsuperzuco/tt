@@ -29,7 +29,12 @@ var FOLDERTESTCSS_ =
   '  .fttoast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#fff; color:#12303c; font-weight:800; border-radius:14px; padding:12px 16px; box-shadow:0 6px 20px rgba(0,0,0,.25); display:none; z-index:10002; font-size:.95rem; max-width:90vw; text-align:center; }' +
   '  .ftmbtn { display:block; width:100%; font:inherit; font-size:1.2rem; font-weight:800; padding:14px; margin:0 0 10px; border-radius:12px; border:0; background:#fff; color:#12303c; cursor:pointer; }' +
   '  .ftmtitle { font-size:1.3rem; font-weight:900; margin-bottom:14px; }' +
-  '  .ftname { width:100%; box-sizing:border-box; font:inherit; font-size:1.3rem; font-weight:800; padding:12px 14px; border-radius:12px; border:0; color:#12303c; }';
+  '  .ftname { width:100%; box-sizing:border-box; font:inherit; font-size:1.3rem; font-weight:800; padding:12px 14px; border-radius:12px; border:0; color:#12303c; }' +
+  '  .ftbar { position:fixed; left:0; right:0; bottom:0; z-index:50; display:none; background:rgba(18,48,60,.97); padding:12px 12px calc(16px + env(safe-area-inset-bottom)); border-radius:18px 18px 0 0; box-shadow:0 -8px 24px rgba(0,0,0,.3); }' +
+  '  .ftbhint { color:#fff; font-weight:800; font-size:.95rem; text-align:center; margin-bottom:10px; }' +
+  '  .ftzones { display:flex; flex-wrap:wrap; gap:10px; max-width:640px; margin:0 auto; }' +
+  '  .ftzone { flex:1 1 40%; box-sizing:border-box; background:#fff; color:#12303c; font-weight:900; font-size:1.1rem; border-radius:14px; padding:16px 12px; text-align:center; }' +
+  '  .ftzone.hinto { outline:3px solid #fbbf24; outline-offset:-3px; background:#fef3c7; transform:scale(1.04); transition:transform .12s ease; }';
 function folderTestBoot_(D) {
   var T = D.tiles, KEY = 'sz_foldertest';
   var home = document.getElementById('ftHome');
@@ -132,13 +137,30 @@ function folderTestBoot_(D) {
       done('新しいフォルダ「' + nm + '」を作成しました');
     });
   }
-  function pickFolder(id) {
-    var cur = where(id), btns = [];
-    items.forEach(function (x) {
-      if (typeof x !== 'string' && x !== cur) btns.push({ label: '📂 ' + esc(x.f), fn: function () { moveToFolder(id, x); } });
-    });
-    btns.push({ label: '＋ 新しいフォルダを作成', fn: function () { newFolder(id); } });
-    sheet('「' + esc(lbl(id)) + '」を<br>どのフォルダに移動しますか？😊', btns);
+  function showBar(el) {
+    var tid = el.getAttribute('data-tid') || '';
+    if (!T[tid]) return;
+    var z = [];
+    if (!openF) z.push('<div class="ftzone" data-z="new">＋ 新しいフォルダ</div>');
+    else {
+      z.push('<div class="ftzone" data-z="top">⬆️ トップに出す</div>');
+      items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '">📂 ' + esc(x.f) + '</div>'); });
+    }
+    var bar = document.getElementById('ftBar');
+    if (!bar) { bar = document.createElement('div'); bar.id = 'ftBar'; bar.className = 'ftbar'; document.body.appendChild(bar); }
+    bar.innerHTML = '<div class="ftbhint">行き先の上で離してください😊</div><div class="ftzones">' + z.join('') + '</div>';
+    bar.style.display = 'block';
+    home.style.paddingBottom = (bar.offsetHeight + 16) + 'px';   
+  }
+  function hideBar() {
+    var bar = document.getElementById('ftBar'); if (bar) bar.style.display = 'none';
+    home.style.paddingBottom = '';
+  }
+  function barHeight() { var bar = document.getElementById('ftBar'); return (bar && bar.style.display !== 'none') ? bar.offsetHeight : 0; }
+  function zoneAt(x, y) {
+    if (!barHeight()) return null;
+    var u = document.elementFromPoint(x, y);
+    return (u && u.closest) ? u.closest('.ftzone') : null;
   }
   function toTop(id) {
     var F = where(id); if (!F) return;
@@ -167,12 +189,7 @@ function folderTestBoot_(D) {
       ]);
       return;
     }
-    var id = tid;
-    if (!openF) sheet('「' + esc(lbl(id)) + '」', [{ label: '📂 フォルダに移動', fn: function () { pickFolder(id); } }]);
-    else sheet('「' + esc(lbl(id)) + '」', [
-      { label: '⬆️ トップに移動', fn: function () { toTop(id); } },
-      { label: '📂 ほかのフォルダに移動', fn: function () { pickFolder(id); } }
-    ]);
+    toast('動かして、下の行き先かフォルダの上で離してください😊');
   }
 
   function sortSaved(ids) {
@@ -197,10 +214,19 @@ function folderTestBoot_(D) {
         return !openF && (dragEl.getAttribute('data-tid') || '').charAt(0) !== '@' && (t.getAttribute('data-tid') || '').charAt(0) === '@';
       },
       dropInto: function (dragEl, t) {
-        var F = folderByKey((t.getAttribute('data-tid') || '').slice(1)), id = dragEl.getAttribute('data-tid');
-        if (F && T[id]) moveToFolder(id, F);
+        var id = dragEl.getAttribute('data-tid'); if (!T[id]) return;
+        var z = t.getAttribute('data-z');
+        if (z) render();   
+        if (z === 'new') { newFolder(id); return; }
+        if (z === 'top') { toTop(id); return; }
+        var F = folderByKey((z || t.getAttribute('data-tid') || '').slice(1));
+        if (F) moveToFolder(id, F);
       },
-      still: function (el) { menuFor(el); }
+      still: function (el) { menuFor(el); },
+      lift: showBar,
+      end: hideBar,
+      zoneAt: zoneAt,
+      bottomGap: barHeight
     });
     box.addEventListener('click', function (ev) {
       var a = (ev.target && ev.target.closest) ? ev.target.closest('a.tile') : null;
