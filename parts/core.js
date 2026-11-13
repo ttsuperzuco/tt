@@ -824,7 +824,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   mita:       { exec: true, staff: true },
   shomeisho:  { exec: true, staff: true }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1358,8 +1358,6 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">📱</span>', label: 'DM\n再現' },
   { id: 'instadm', cls: 'instadm', view: 'instadm',
     icon: '<span class="ticon">📩</span>', label: 'IGの\nDM' },
-  { id: 'claudetools', cls: 'claudetools', view: 'claudetools',
-    icon: '<span class="ticon">🤖</span>', label: '自作Claude\nツール' },
   { id: 'honyaku', cls: 'honyaku', view: 'honyaku',
     icon: '<span class="ticon">🀄</span>', label: '翻訳\n日→台湾中国語' },
   { id: 'bcast', cls: 'bcast', view: 'bcast',
