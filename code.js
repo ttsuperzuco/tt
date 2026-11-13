@@ -1079,7 +1079,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'claudetools', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'igdm', 'instadm', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -1873,9 +1873,8 @@ var TILE_DEFS_ = [
   //   （koukoku/kanshiと同じ＝tile_settings.py に入れないので開発者だけに出る）。2026-08-02 第一弾。
   { id: 'instadm', cls: 'instadm', view: 'instadm',
     icon: '<span class="ticon">📩</span>', label: 'IGの\nDM' },
-  // ★自作Claudeツール＝Claudeに言う「合言葉」を並べる。タップでコピー→別のチャットに貼るだけ。開発URL(?dev=1)専用。
-  { id: 'claudetools', cls: 'claudetools', view: 'claudetools',
-    icon: '<span class="ticon">🤖</span>', label: '自作Claude\nツール' },
+  // ★2026-11-13 まるちゃん「この二つのボタン削除したい」＝自作Claudeツール(claudetools)のボタンを外した（パソコン版も同じ）。
+  //   画面（?view=claudetools）は残してある。
   // ★翻訳（日本語→台湾中国語）＝配信文を作る時に使う。開発URL(?dev=1)専用＝**開発者のスマホだけ**
   //   （まるちゃん決定 2026-08-24。tile_settings.py に入れないので他の人には出ない）。
   //   訳すのは事務所パソコン（受付係の op=translate に quality を付けて頼む）＝パソコン版と同じ訳し方。
