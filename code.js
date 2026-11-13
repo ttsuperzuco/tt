@@ -1883,7 +1883,7 @@ var TILE_DEFS_ = [
   { id: 'bcast', cls: 'bcast', view: 'bcast',
     // ★2026-11-13 まるちゃん「黒背景に白枠すればOK　画像生成AIはつかわずに」＝開発版だけ、今の絵を黒い地に置いて細い白枠。
     icon: '<span class="ticon">📣</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/bcast-kuro-192.png"></span>', label: 'LINE\n一斉配信' },
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/bcast-kuro-192.png?v=2"></span>', label: 'LINE\n一斉配信' },
   // ★予約入力＝貼って選ぶだけで新規予約を1件作る。開発URL(?dev=1)専用（kanshi/zenjitsu/costと同じ＝
   //   tile_settings.py に入れないので開発者だけに出る）。登録は事務所PC(edit_worker op=new_reservation)が実行。
   // ★プロセル残り本数＝美容液を何本注文するかの数（頭皮用・顔MD用・顔Pro用）。開発URL(?dev=1)専用。
