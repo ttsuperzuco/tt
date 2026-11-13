@@ -2327,10 +2327,11 @@ var FOLDERTESTCSS_ =
   '  .tile.foldertest::before { background:#94a3b8; }' +
   '  .tile.ftfolder::before { background:#94a3b8; }' +
   '  #ftHome .tiles { grid-auto-rows:1fr; }' +
-  '  .ftmini { flex:none; width:48px; height:48px; border-radius:11px; background:rgba(148,163,184,.22); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:2px; padding:3px; box-sizing:border-box; margin-right:4px; }' +
-  '  .ftmini .ticon { width:20px; height:20px; font-size:16px; border-radius:5px; background:transparent!important; margin:auto; }' +
-  '  .ftmini .ticon img { width:20px; height:20px; }' +
-  '  .ftmini .ftmore { font-size:12px; font-weight:900; color:#475569; display:grid; place-items:center; }' +
+  // ★同日まるちゃん「数は表示しなくていい。フォルダの中の1個のアイコンをもっと大きく。目に見えない」＝中の絵を20px→32pxに。
+  '  .ftmini { flex:none; width:74px; height:74px; border-radius:14px; background:rgba(148,163,184,.22); display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:3px; padding:3px; box-sizing:border-box; margin-right:6px; }' +
+  '  .ftmini .ticon { width:32px; height:32px; font-size:26px; border-radius:7px; background:transparent!important; margin:auto; }' +
+  '  .ftmini .ticon img { width:32px; height:32px; }' +
+  '  .ftmini .ftmore { font-size:16px; font-weight:900; color:#475569; display:grid; place-items:center; }' +
   '  .ftlab { flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; }' +
   '  .ftlab .tname { flex:none; word-break:auto-phrase; }' +   // 2行になる時は言葉の切れ目で折る（「在庫売上管／理」にしない）
   '  .ftcount { display:block; font-size:.78rem; font-weight:800; opacity:.75; margin-top:2px; }' +
@@ -2384,7 +2385,7 @@ function folderTestBoot_(D) {
     for (var k = 0; k < show; k++) cells += T[F.items[k]].icon;
     if (n > 4) cells += '<span class="ftmore">+' + (n - 3) + '</span>';
     return '<a class="tile ftfolder" href="#" data-tid="@' + F.k + '" draggable="false"><span class="ftmini">' + cells + '</span>' +
-      '<span class="ftlab"><span class="tname">' + esc(F.f) + '</span><span class="ftcount">' + n + '個</span></span></a>';   // 名前は2行まで使い、個数はその下（名前が長くても切れない）
+      '<span class="ftlab"><span class="tname">' + esc(F.f) + '</span></span></a>';   // 名前は2行まで（個数は出さない＝同日まるちゃん）
   }
   function render() {
     if (openF && items.indexOf(openF) < 0) openF = null;
