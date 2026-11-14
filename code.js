@@ -2754,13 +2754,13 @@ function homeFolderBoot_(OPT) {
     items.splice(0, 0, id); dropEmpty();
     done('「' + lbl(id) + '」をトップ画面に' + (copy ? 'コピー' : '移動') + 'しました');
   }
-  // ★2026-11-14 まるちゃん「あ　トップ画面から消す」＝トップのコピーを消す。最初からあるフォルダにも入っている時だけ（ボタンそのものは無くならない）。
+  // ★2026-11-14 まるちゃん「あ　トップ画面から消す」＝トップのコピーを削除する（2026-11-14 まるちゃん「①それで」＝言い方は「削除」）。最初からあるフォルダにも入っている時だけ（ボタンそのものは無くならない）。
   function inDefault(id) { for (var i = 0; i < items.length; i++) if (typeof items[i] !== 'string' && items[i].d && items[i].items.indexOf(id) >= 0) return items[i]; return null; }
   function delFromTop(id) {
     if (!inDefault(id)) return;
     var i = items.indexOf(id); if (i < 0) return;
     items.splice(i, 1);
-    done('「' + lbl(id) + '」をトップ画面から消しました');
+    done('「' + lbl(id) + '」をトップ画面から削除しました');
   }
   function ungroup(F) {
     var i = items.indexOf(F); if (i < 0 || F.d) return;
@@ -2796,7 +2796,7 @@ function homeFolderBoot_(OPT) {
       items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '" style="box-shadow:inset 7px 0 0 ' + x.c + '">📂 ' + esc(one(x.f)) + '</div>'); });
     }
     z.push('<div class="ftzone ftfull" data-z="new">＋ 新しいフォルダへ' + verb + '</div>');
-    if (!openF && inDefault(tid)) z.push('<div class="ftzone ftfull" data-z="del">🗑️ トップ画面から消す</div>');   // トップのコピーだけ
+    if (!openF && inDefault(tid)) z.push('<div class="ftzone ftfull" data-z="del">🗑️ トップ画面から削除</div>');   // トップのコピーだけ
     var bar = document.getElementById('ftBar');
     if (!bar) { bar = document.createElement('div'); bar.id = 'ftBar'; bar.className = 'ftbar'; document.body.appendChild(bar); }
     bar.innerHTML = '<div class="ftbhint">行き先の上で離してください😊</div><div class="ftzones">' + z.join('') + '</div>';
