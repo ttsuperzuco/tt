@@ -2258,6 +2258,8 @@ function homeSortBoot_(KEY, OPT) {
   function tilesOf(box) { return Array.prototype.slice.call(box.querySelectorAll(SEL)); }
   function idsOf(box) { return tilesOf(box).map(function (a) { return a.getAttribute(IDATTR); }); }
   // 「右を空けるボタン」の空きマスを、今の並びに合わせて置き直す（ホームを作る時と同じ決まり）。
+  //   ★2026-11-14 OPT.gapAfter(ボタン, 次のボタン)＝書いた時は、空けるかどうかを並びを見てその場で決める
+  //     （data-gaps の決まった名前で空けると、並べ替えた後に空ける場所がずれる＝フォルダの位置がずれた原因）。
   function regap(box) {
     var old = box.querySelectorAll('.tilegap');
     for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
@@ -2265,7 +2267,8 @@ function homeSortBoot_(KEY, OPT) {
     var t = tilesOf(box), n = 0;
     for (var j = 0; j < t.length; j++) {
       n++;
-      if (gaps.indexOf(t[j].getAttribute(IDATTR)) >= 0 && n % 2 === 1) {
+      var want = OPT.gapAfter ? OPT.gapAfter(t[j], t[j + 1] || null) : gaps.indexOf(t[j].getAttribute(IDATTR)) >= 0;
+      if (want && n % 2 === 1) {
         var g = document.createElement('div'); g.className = 'tilegap';
         box.insertBefore(g, t[j].nextSibling); n++;
       }
@@ -2341,6 +2344,8 @@ function homeSortBoot_(KEY, OPT) {
       side.classList.remove('hside'); st.side = null; st.sideAt = 0;
     }
     if (!t) return;
+    // ★2026-11-14 OPT.canSwap(持ち上げたボタン, 指の下のボタン)＝false ならそこでは入れ替えない（フォルダとふつうのボタンを混ぜない）。
+    if (OPT.canSwap && !OPT.canSwap(st.el, t)) return;
     var before = rectsOf(st.box, st.el);
     if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
     else st.box.insertBefore(st.el, t);
@@ -2651,13 +2656,23 @@ function homeFolderBoot_(OPT) {
       if (G) G.items = G.items.filter(function (y) { return y !== L.id; });
       if (F.items.indexOf(L.id) < 0) F.items.push(L.id);
       seenDef[L.id] = 1;
-      for (var i = out.length - 1; i >= 0; i--) if (out[i] === L.id) out.splice(i, 1);
-      delete seenFree[L.id];
+      // ★2026-11-14 まるちゃん「修正するたびに、せっかく設定したファイルのコピーが消える」＝トップに出してある分は消さない
+      //   （前はトップから外していたので、まるちゃんがトップにコピーしたボタンまで消えた）。最初からあるフォルダは
+      //   コピーの決まり（トップと両方にあってよい）なので、フォルダに入れるだけにする。
     });
     Object.keys(T).forEach(function (id) { if (!seenFree[id] && !seenDef[id]) out.push(id); });
     out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = (DEF[x.k] && DEF[x.k].c) || nextColor(out); });
-    return out;
+    return norm(out);
   }
+  // ★2026-11-14 まるちゃん「ボタンをどう動かしても、フォルダの位置は崩れないように」「最後のタイムツリーの右側が空白になってるはずでしょ？」
+  //   ＝トップはいつも「ふつうのボタン全部 → フォルダ全部」の順（混ぜない）。ボタンが奇数で終わったら右を空け、フォルダは新しい行から。
+  //   並べ替えても、初期の並びに戻しても、覚えている並びを読み直しても、必ずこの順に直す。
+  function norm(list) {
+    var a = [], b = [];
+    (list || []).forEach(function (x) { (typeof x === 'string' ? a : b).push(x); });
+    return a.concat(b);
+  }
+  function isFold(el) { return !!el && (el.getAttribute(IDATTR) || '').charAt(0) === '@'; }
   var ST = OPT.store || { local: 'sz_home_folders' };
   function load() {
     try {
@@ -2708,6 +2723,7 @@ function homeFolderBoot_(OPT) {
       // ★2026-11-14 まるちゃん「フォルダからトップに出したボタンが1個しかない時は、右隣を空白にしてフォルダの位置をずらさないで」
       //   ＝ボタンのすぐ後にフォルダが来る時、そのボタンが左の列なら右隣を空ける（フォルダはいつも左の列から始まる）。
       //   空けた所は data-gaps に書く＝長押しで動かしている間も並べ替えの部品（regap）が同じ決まりで空ける。
+      items = norm(items);
       var gapIds = [], col = 0;
       items.forEach(function (x, i) {
         box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); col++;
@@ -2857,8 +2873,9 @@ function homeFolderBoot_(OPT) {
   }
   function sortSaved(ids) {
     if (openF) { openF.items = ids.filter(function (x) { return !!T[x]; }); save(); return; }
-    items = ids.map(function (x) { return x.charAt(0) === '@' ? folderByKey(x.slice(1)) : x; }).filter(function (x) { return !!x; });
+    items = norm(ids.map(function (x) { return x.charAt(0) === '@' ? folderByKey(x.slice(1)) : x; }).filter(function (x) { return !!x; }));
     save();
+    setTimeout(render, 260);   // 離した後のすっと戻る動きが終わってから、決まった並び（ボタン → 空き → フォルダ）で置き直す
   }
   function resetAll() { forget(); items = clean(START); openF = null; render(); toast('初期の並びに戻しました'); }
 
@@ -2868,10 +2885,15 @@ function homeFolderBoot_(OPT) {
     save: sortSaved,
     clear: function () {},
     confirm: function (msg) { szPopup_(msg, { cancel: true, icon: '', onYes: resetAll }); },
+    // ★2026-11-14 フォルダの位置を崩さない：ボタンはボタンとだけ、フォルダはフォルダとだけ入れ替える。
+    //   ボタンをフォルダの左の端で止める＝一番前のフォルダの時だけ（＝ボタンの並びの一番最後に入る）。ほかのフォルダの上は「中に入れる」。
     into: function (dragEl, t, px) {
-      if (openF || (dragEl.getAttribute(IDATTR) || '').charAt(0) === '@' || (t.getAttribute(IDATTR) || '').charAt(0) !== '@') return false;
-      return px < 0.25 ? 300 : true;
+      if (openF || isFold(dragEl) || !isFold(t)) return false;
+      var first = box.querySelector('.ftfolder');
+      return (px < 0.25 && t === first) ? 300 : true;
     },
+    canSwap: function (dragEl, t) { return !!openF || isFold(dragEl) === isFold(t); },
+    gapAfter: function (el, nx) { return !openF && !isFold(el) && isFold(nx); },
     dropInto: function (dragEl, t) {
       var id = dragEl.getAttribute(IDATTR); if (!T[id]) return;
       var src = openF, z = t.getAttribute('data-z');
