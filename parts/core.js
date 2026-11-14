@@ -1896,7 +1896,7 @@ function homeFolderBoot_(OPT) {
       var it = x.items.filter(function (y) { if (!T[y] || seen[y] || (d && seenDef[y])) return false; seen[y] = 1; if (d) seenDef[y] = 1; return true; });
       var c = (typeof x.c === 'string' && /^#[0-9a-fA-F]{6}$/.test(x.c)) ? x.c : '';
       var m = (d && Array.isArray(x.m)) ? x.m.filter(function (y) { return typeof y === 'string'; }) : [];
-      if (it.length || d) out.push({ k: k, f: String(x.f || 'フォルダ'), items: it, c: c, d: d, m: m });
+      if (it.length || d) out.push({ k: k, f: d ? DEF[k].f : String(x.f || 'フォルダ'), items: it, c: c, d: d, m: m });   
     });
     START.forEach(function (F) { if (!keys[F.k]) out.push({ k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true, m: [] }); });
     function fold(k) { for (var i = 0; i < out.length; i++) if (typeof out[i] !== 'string' && out[i].k === k) return out[i]; return null; }
@@ -2065,10 +2065,11 @@ function homeFolderBoot_(OPT) {
     var tid = el.getAttribute(IDATTR) || '';
     if (tid.charAt(0) === '@') {
       var F = folderByKey(tid.slice(1)); if (!F) return;
+      if (F.d) return;
       var btns = [{ label: '✏️ 名前を変更', fn: function () {
         askName('フォルダの名前を入力してください😊', one(F.f), function (nm) { F.f = nm; done('名前を「' + nm + '」に変更しました'); });
       } }];
-      if (!F.d) btns.push({ label: '🗂️ フォルダを解除', fn: function () {   
+      btns.push({ label: '🗂️ フォルダを解除', fn: function () {   
         szPopup_('中のボタンは、すべてトップに戻ります。\nフォルダ「' + one(F.f) + '」を解除しますか？😊',
           { icon: '', cancel: true, yesLabel: '解除する', onYes: function () { ungroup(F); } });
       } });
