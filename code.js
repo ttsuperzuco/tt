@@ -2028,10 +2028,7 @@ var TILE_DEFS_ = [
   // ★既存の予約＝LINEで予約を受けた時に使う入口（いま作り替え中）。
   //   まるちゃん依頼 2026-09-25「一番トップの画面に出して。開発中だからしょっちゅう押す」。
   //   予約入力の中からも入れるが、すぐ呼べるようにホームにも置く。開発の住所(?dev=1)だけ。
-  { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
-    icon: '<span class="ticon">📖</span>',
-    // ★2026-11-13 予約入力のトップで選んだ📅にそろえた（開発版だけ）
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/kizon-pink-128.png"></span>', label: '既存の\n予約' },
+  // ★2026-11-14 まるちゃん「既存の予約はもう入っているから削除」＝ホームのボタンを外した（画面 view はそのまま）。PC版 super_pc.py と同じ。
   // ★TimeTree＝タイムツリーを開かずに、月のカレンダー→日付→その日の予定→中身を見る（2026-09-15）。
   //   開発URL(?dev=1)専用（tile_settings.py の TILES に入れないので開発者だけに出る・共通ルール16）。
   { id: 'timetree', cls: 'timetree', view: 'timetree',
@@ -2106,8 +2103,7 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
-  { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
-    icon: '<span class="ticon">📂</span>', label: 'フォルダの\n試し' }
+  // ★2026-11-14 まるちゃん「フォルダの試しボタンも消して」＝ホームのボタンを外した（画面 view はそのまま）。PC版 super_pc.py と同じ。
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 に外した（画面の住所 ?view=procamp&dev=1 は残してある）。
 ];
 
@@ -2525,10 +2521,17 @@ function homeFolderBoot_(OPT) {
   // 最初からあるフォルダ（d＝消えない・解除しない・出す時はコピー）。k は決まった印（覚えている並びと結び付けるため・変えない）。
   var START = [
     { k: 'd1', d: true, f: '施術直後', items: ['sejutsugo', 'sgline', 'shomeisho'] },
-    { k: 'd2', d: true, f: 'SNS', items: ['insta', 'threads', 'hachimitsu'] },
-    { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'links', 'lt', 'conflict'] },
-    { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage'] },
-    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] }];
+    // ★2026-11-14 まるちゃん「タイムツリーはSNSフォルダに」「TT売上帳簿は売上管理」「フェイズコブックもSNSに」
+    //   「顧客履歴検索は新しくお客様系というフォルダを作ってそこに。予約系に今入っているリンクもお客様系に」「LINE未回答・返信待ちもお客様系に」
+    { k: 'd2', d: true, f: 'SNS', items: ['insta', 'threads', 'hachimitsu', 'facebook', 'timetree'] },
+    { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'lt', 'conflict'] },
+    { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
+    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
+    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] }];
+  // ★2026-11-14 あとから最初のフォルダを変えた分（まるちゃん「全適用させて」）＝並びを覚えている端末にも1回だけ当てる。
+  //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
+  var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
+    { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' }];
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
   var group = document.querySelector(OPT.group || '#group-jitsumu');
   if (!group || !window.homeSortBoot_ && typeof homeSortBoot_ !== 'function') return;
@@ -2634,9 +2637,22 @@ function homeFolderBoot_(OPT) {
       var d = !!DEF[k], seen = d ? {} : seenFree;
       var it = x.items.filter(function (y) { if (!T[y] || seen[y] || (d && seenDef[y])) return false; seen[y] = 1; if (d) seenDef[y] = 1; return true; });
       var c = (typeof x.c === 'string' && /^#[0-9a-fA-F]{6}$/.test(x.c)) ? x.c : '';
-      if (it.length || d) out.push({ k: k, f: String(x.f || 'フォルダ'), items: it, c: c, d: d });
+      var m = (d && Array.isArray(x.m)) ? x.m.filter(function (y) { return typeof y === 'string'; }) : [];
+      if (it.length || d) out.push({ k: k, f: String(x.f || 'フォルダ'), items: it, c: c, d: d, m: m });
     });
-    START.forEach(function (F) { if (!keys[F.k]) out.push({ k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true }); });
+    START.forEach(function (F) { if (!keys[F.k]) out.push({ k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true, m: [] }); });
+    function fold(k) { for (var i = 0; i < out.length; i++) if (typeof out[i] !== 'string' && out[i].k === k) return out[i]; return null; }
+    MOVES.forEach(function (L) {   // あとから最初のフォルダを変えた分（上の MOVES）
+      var mk = (L.from ? L.from + '>' : '') + L.to + ':' + L.id, F = fold(L.to);
+      if (!F || !T[L.id] || F.m.indexOf(mk) >= 0) return;
+      F.m.push(mk);
+      var G = L.from ? fold(L.from) : null;
+      if (G) G.items = G.items.filter(function (y) { return y !== L.id; });
+      if (F.items.indexOf(L.id) < 0) F.items.push(L.id);
+      seenDef[L.id] = 1;
+      for (var i = out.length - 1; i >= 0; i--) if (out[i] === L.id) out.splice(i, 1);
+      delete seenFree[L.id];
+    });
     Object.keys(T).forEach(function (id) { if (!seenFree[id] && !seenDef[id]) out.push(id); });
     out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = (DEF[x.k] && DEF[x.k].c) || nextColor(out); });
     return out;
