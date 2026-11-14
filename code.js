@@ -2510,7 +2510,7 @@ var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stri
 //        start＝最初のフォルダ分け（書かなければ下の START）
 //   決まった動き（試しの画面で まるちゃんと決めた物・2026-11-13〜14）：
 //     長押しして動かす＝並べ替え／フォルダの上で離す＝中に入る／フォルダの左の端で少し止める＝フォルダがずれてその位置に入る
-//     持ち上げた時だけ画面の上に行き先の帯（トップ画面に移動／ほかのフォルダ／新しいフォルダへ移動）
+//     持ち上げた時だけ画面の上に行き先の帯（フォルダの中＝トップ画面に移動・新しいフォルダへ移動の2つだけ／トップ＝新しいフォルダへ移動・コピーなら削除）
 //     トップ画面に移動＝一番左上へ／フォルダを長押しして動かさずに離す＝名前を変更・フォルダを解除
 //     フォルダは耳と縁の色で見分ける（地は塗らない）・色はフォルダごと（新しいフォルダには使っていない色）
 //     トップのボタンは左の線なし・フォルダの中のボタンは左の線がフォルダの色
@@ -2793,7 +2793,7 @@ function homeFolderBoot_(OPT) {
     var z = [];
     if (openF) {
       z.push('<div class="ftzone ftfull" data-z="top">⬆️ トップ画面に' + verb + '</div>');
-      items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '" style="box-shadow:inset 7px 0 0 ' + x.c + '">📂 ' + esc(one(x.f)) + '</div>'); });
+      // ★2026-11-14 まるちゃん「トップ画面か新しいフォルダの2つのボタンだけにする。他へ移動やコピーはできない」＝ほかのフォルダは帯に出さない。
     }
     z.push('<div class="ftzone ftfull" data-z="new">＋ 新しいフォルダへ' + verb + '</div>');
     if (!openF && inDefault(tid)) z.push('<div class="ftzone ftfull" data-z="del">🗑️ トップ画面から削除</div>');   // トップのコピーだけ
