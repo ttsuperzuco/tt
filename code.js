@@ -2148,11 +2148,12 @@ var ROLE_DEFS_ = [
   //   ＝スタッフの果物の並びの絵（PC版スーパーズコ\icons\スタッフ画面_アイコンの元絵_果物の並び.png）から3つを切り抜き、
   //   後ろに左オリーブ・右みかん、前にトマト。部屋のボタンは開発版にしか出ないので直接入れた。PC版 super_pc.py の ROLES と同じ。
   // ★2026-11-14 まるちゃん「スタッフ画面の下に りゅう画面」＝この部屋（全部のボタン）は「りゅう画面」。スタッフ画面はトップの別ボタン（STAFF_ROOM_BTN_）。
-  { id: 'jitsumu', icon: '🐉', title: 'りゅう画面' },
+  // ★2026-11-14 まるちゃん「りゅう画面とりゅうツールのアイコンを入れ替えて」（PC版と同じ）
+  { id: 'jitsumu', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/ryutool-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'りゅう画面' },
   // ★2026-11-13 まるちゃん「龍のアイコンは、このりゅう」＝11/11にLINEグループのアイコンで使った黄色いりゅう
   //   （元＝C:\Users\User\SNS運用グループのアイコン案\りゅう_参考.png を切り抜いた物）。見出しでも同じ絵を小さく出す。
   //   この部屋は開発版（まるちゃん）にしか出ないので、iconDev にせず直接入れた。PC版 super_pc.py の ROLES と同じ。
-  { id: 'keiei', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/ryutool-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'りゅうツール' },
+  { id: 'keiei', icon: '🐉', title: 'りゅうツール' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
 function tileGroup_(id) { return TILE_GROUP_[id] || 'jitsumu'; }
