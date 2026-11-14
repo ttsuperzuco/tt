@@ -2741,7 +2741,9 @@ function homeFolderBoot_(OPT) {
       var copy = isCopy(src), pos;
       if (copy) pos = items.indexOf(src) + 1;
       else { pos = removeFrom(id, src); if (pos < 0) pos = src ? items.indexOf(src) + 1 : items.length; }
-      items.splice(pos, 0, { k: newKey(), f: nm, items: [id], c: nextColor(items), d: false }); dropEmpty();
+      var NF = { k: newKey(), f: nm, items: [id], c: nextColor(items), d: false };
+      items.splice(pos, 0, NF); dropEmpty();
+      openF = NF; window.scrollTo(0, 0);   // ★2026-11-14 まるちゃん「コピーしたあとはその画面に飛ぶ」＝新しいフォルダの中を開く
       done('新しいフォルダ「' + nm + '」を作成しました');
     });
   }
@@ -2752,6 +2754,7 @@ function homeFolderBoot_(OPT) {
     if (!copy) removeFrom(id, src);
     var i = items.indexOf(id); if (i >= 0) items.splice(i, 1);
     items.splice(0, 0, id); dropEmpty();
+    openF = null; window.scrollTo(0, 0);   // ★2026-11-14 まるちゃん「コピーしたあとはその画面に飛ぶ」＝トップ画面に戻る
     done('「' + lbl(id) + '」をトップ画面に' + (copy ? 'コピー' : '移動') + 'しました');
   }
   // ★2026-11-14 まるちゃん「あ　トップ画面から消す」＝トップのコピーを削除する（2026-11-14 まるちゃん「①それで」＝言い方は「削除」）。最初からあるフォルダにも入っている時だけ（ボタンそのものは無くならない）。
