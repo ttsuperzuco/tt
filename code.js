@@ -11962,7 +11962,16 @@ var UBCSS_ =
   '.ubpick .ubrsn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px;}' +
   '.ubpick .ubrsn button{border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:14px 4px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
   '.ubpick .ubrsn button.on{background:#dc2626;border-color:#dc2626;color:#fff;}' +
-  '.ubpick .go.red{background:#dc2626;}';
+  '.ubpick .go.red{background:#dc2626;}' +
+  // ★2026-11-14 作廢の認証（まるちゃんだけ）
+  '.ubmenu .ubem.auth{color:#15803d;}' +
+  '.ubac{background:#fff;border-radius:14px;padding:12px;margin:0 0 10px;color:#0f172a;box-shadow:0 3px 10px rgba(0,0,0,.14);}' +
+  '.ubac .t1{font-weight:900;font-size:16px;}' +
+  '.ubac .t2{font-weight:700;font-size:14px;color:#475569;margin:4px 0 8px;white-space:pre-wrap;}' +
+  '.ubac .ck{font-weight:800;font-size:14px;margin:2px 0;}' +
+  '.ubac .ck.ng{color:#b91c1c;}' +
+  '.ubac .go{display:block;width:100%;margin-top:10px;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:13px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
+  '.ubac.pend{opacity:.5;}';
 
 // ── 裏の書き込みの結果を、ズコのどの画面にいても箱で知らせる見張り（2026-11-07 まるちゃん） ──
 //  「書き込みが成功したら通知して、ズコを開いている限りどこの画面にいてもBOXで出す」。
@@ -12025,7 +12034,7 @@ function uriageBookScript_(C) {
   function yen(n) { return (n == null || n === '') ? '―' : Number(n).toLocaleString('ja-JP') + '元'; }
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
-  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid'];
+  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
   var D = null, busy = false, loading = false;
   // ★2026-11-07 まるちゃん「修正するをOKしたとき、かきこみおわるまでまつとうざいので、バックグラウンドで書き込みします…
@@ -12187,16 +12196,18 @@ function uriageBookScript_(C) {
   //  読み直し（quiet）＝黙って読む。書く用事＝裏で進める：「バックグラウンドで書き込みします」の箱（OK）を出して
   //  すぐ戻れる。画面には先に反映して見せ（その行は薄く）、失敗した時だけ知らせの小窓を出す（まるちゃん 2026-11-07）。
   function ask(fields, title, onOk, quiet) {
-    if (quiet) {
+    // ★2026-11-14 作廢の一覧（voidlist）は売上表の読み直しとは別に頼む（重なっても捨てない）
+    var lq = quiet && fields.action !== 'voidlist';
+    if (lq) {
       if (loading) return;
       loading = true; setWhen('最新の売上表を読んでいます…');
-    } else {
+    } else if (!quiet) {
       PEND.push(fields); applyPend(); draw();
       popup('バックグラウンドで書き込みします。しばらく時間がかかります。', { icon: '📝' });
       if (onOk) onOk();
     }
     function settle() {
-      if (quiet) { loading = false; return; }
+      if (quiet) { if (lq) loading = false; return; }
       var i = PEND.indexOf(fields); if (i >= 0) PEND.splice(i, 1);
     }
     function fail(msg) {
@@ -12205,6 +12216,10 @@ function uriageBookScript_(C) {
       if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇');
       fetchData();
     }
+    // ★2026-11-14 作廢の認証（まるちゃんだけ）は、この窓の鍵の指紋も添える（受付係が開発と確かめる・購入証明書と同じ）
+    var devAct = fields.action === 'voidlist' || fields.action === 'voidsend';
+    (devAct ? devKey : function (cb) { cb({}); })(function (ex) {
+    for (var ek in ex) fields[ek] = ex[ek];
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
             device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) }, function (r) {
       if (!r || !r.ok || !r.id) { fail(''); return; }
@@ -12222,10 +12237,21 @@ function uriageBookScript_(C) {
         jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
           if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
           if (s.status !== 'done') { fail(s.result || ''); return; }
-          settle(); fetchData();
+          settle(); if (fields.action === 'voidlist') fetchAuth(); else fetchData();
         });
       })();
     });
+    });
+  }
+  function devKey(cb) {
+    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    var dv = '', dk = '';
+    try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
+    if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(dk)).then(function (b) {
+      var h = Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      cb({ zdv: dv, zdh: h });
+    }, function () { cb({}); });
   }
 
   // 見張りが「書き込みが終わった」と知らせてきたら、その用事を薄い表示から外して読み直す
@@ -12234,6 +12260,7 @@ function uriageBookScript_(C) {
     var id = ev && ev.detail && ev.detail.id;
     for (var i = PEND.length - 1; i >= 0; i--) if (PEND[i].__id === id) PEND.splice(i, 1);
     fetchData();
+    if ($('ubAuth') && $('ubAuth').style.display !== 'none') { AUTHP = {}; fetchAuth(); }
   };
   window.addEventListener('ubdone', window.__ubDoneH);
 
@@ -12596,6 +12623,82 @@ function uriageBookScript_(C) {
   $('ubGoInv').addEventListener('click', function () { show('ubInv'); });
   $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
   $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
+  // ── 作廢の認証（2026-11-14 まるちゃん「俺だけ見れるように。おれが認証して実際に発票を書き込むための機能」）──
+  //   スタッフが記録した作廢（ボタン・売上表の手書きの「作廢HT-…」）のうち、発票サイトでまだ発行済みの物を並べる。
+  //   「認証して作廢」→確認の箱→係が発票サイトで本当に作廢する（国に届く取り消し・元に戻せない）。
+  //   ★ボタンは開発（まるちゃん）にだけ出す。受付係の係も開発と確かめられた依頼しか通さない（二重の守り）。
+  var AUTH = null, AUTHP = {};
+  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoAuth').style.display = '';
+  function fetchAuth() {
+    jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) { if (p && p.items) { AUTH = p; drawAuth(); } });
+  }
+  function drawAuth() {
+    if (!AUTH) { $('ubAuths').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
+    $('ubWhen5').textContent = String(AUTH.at || '').slice(5, 16).replace('-', '/') + ' 時点';
+    var h = '';
+    if (!AUTH.items.length) h = '<div class="ubnone">認証を待っている作廢はありません😊</div>';
+    for (var i = 0; i < AUTH.items.length; i++) {
+      var x = AUTH.items[i], d = x.day.slice(5).replace('-', '/').replace(/^0/, '');
+      h += '<div class="ubac' + (AUTHP[x.number] ? ' pend' : '') + '" data-i="' + i + '">' +
+        '<div class="t1">' + esc(d + ' ' + x.time + '　' + x.number.replace(/^([A-Z]{2})/, '$1-')) + '</div>' +
+        '<div class="t2">' + esc(((x.num || '') + ' ' + (x.name || '')).trim() + '　' + yen(x.amount) + (x.who ? '\n記録：' + x.who + 'さん（理由：' + (x.reason || '―') + '）' : '\n記録：売上表に手で記録')) + '</div>' +
+        '<div class="ck' + (x.memo ? '' : ' ng') + '">' + (x.memo ? '○ 売上表に作廢のメモがあります' : '✕ 売上表に作廢のメモがありません') + '</div>' +
+        '<div class="ck' + (x.row_in_prod ? ' ng' : '') + '">' + (x.row_in_prod ? '✕ 本番の売上表に売上の行が残っています' : '○ 本番の売上表に売上の行はありません') + '</div>' +
+        (AUTHP[x.number] ? '<div class="ck">作廢を送っています…</div>' : '<button type="button" class="go" data-a="auth">認証して作廢</button>') + '</div>';
+    }
+    if ((AUTH.done || []).length) {
+      h += '<div class="ubh">最近作廢した發票</div><div class="uboth">';
+      for (var j = 0; j < AUTH.done.length; j++) {
+        var y = AUTH.done[j];
+        h += '<div class="r"><span>' + esc(y.day.slice(5).replace('-', '/') + ' ' + y.number.replace(/^([A-Z]{2})/, '$1-') + ' ' + (y.name || y.num || '')) + '</span><span>' + yen(y.amount) + '</span></div>';
+      }
+      h += '</div>';
+    }
+    $('ubAuths').innerHTML = h;
+  }
+  function openAuth(x) {
+    var rs = (AUTH.reasons || {})[x.reason] || '開錯';
+    var warn = (!x.memo || x.row_in_prod) ? '⚠️ 売上表と食い違いがあります。ご確認くださいませ🙇\n' : '';
+    var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
+    var R2 = AUTH.reasons || { '打ち間違い': '開錯' }, rb = '';
+    for (var k in R2) rb += '<button type="button" data-r="' + esc(R2[k]) + '" class="' + (R2[k] === rs ? 'on' : '') + '">' + esc(R2[k]) + '<br><span style="font-size:13px">（' + esc(k) + '）</span></button>';
+    m.innerHTML = '<div class="ubpick"><div class="h">' + esc(x.number.replace(/^([A-Z]{2})/, '$1-') + '　' + ((x.num || '') + ' ' + (x.name || '')).trim() + '　' + yen(x.amount)) + '</div>' +
+      '<div class="s">' + esc(warn + '発票サイトでこの發票を作廢します。国に届く取り消しで、元に戻せません。\n発票サイトに送る理由を選択してください😊') + '</div>' +
+      '<div class="ubrsn">' + rb + '</div>' +
+      '<button type="button" class="go red" data-a="send">認証して作廢する</button><button type="button" class="x" data-a="close">閉じる</button></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', function (ev) {
+      if (ev.target === m) { closePick(); return; }
+      var b = ev.target.closest('button'); if (!b) return;
+      if (b.getAttribute('data-r')) {
+        rs = b.getAttribute('data-r');
+        var bs = m.querySelectorAll('.ubrsn button'); for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === b);
+        return;
+      }
+      var a = b.getAttribute('data-a');
+      if (a === 'close') { closePick(); return; }
+      if (a !== 'send') return;
+      closePick();
+      popup(x.number.replace(/^([A-Z]{2})/, '$1-') + '（' + yen(x.amount) + '）\n理由「' + rs + '」で、発票サイトで作廢します。\nよろしいでしょうか？😊', {
+        cancel: true, onYes: function () {
+          AUTHP[x.number] = 1; drawAuth();
+          ask({ action: 'voidsend', number: x.number, site_reason: rs }, '作廢を送っています');
+        }
+      });
+    });
+  }
+  $('ubAuths').addEventListener('click', function (e) {
+    if (!AUTH || !e.target.closest('button[data-a="auth"]')) return;
+    var c = e.target.closest('.ubac'); if (!c) return;
+    var x = AUTH.items[parseInt(c.getAttribute('data-i'), 10)]; if (x) openAuth(x);
+  });
+  $('ubGoAuth').addEventListener('click', function () {
+    show('ubAuth'); AUTH = null; AUTHP = {}; drawAuth();
+    fetchAuth();
+    ask({ action: 'voidlist' }, '', null, true);
+  });
+  $('ubReload5').addEventListener('click', function () { ask({ action: 'voidlist' }, '', null, true); });
+  $('ubAuthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubVoidBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubNoInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
@@ -12627,6 +12730,8 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
           // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
           '<button type="button" id="ubGoVoid">🚫 發票の<span class="ubem void">作廢</span></button>' +
+          // ★2026-11-14 まるちゃん「作廢の認証ボタン…俺だけ見れるように」＝開発の時だけ出す
+          '<button type="button" id="ubGoAuth" style="display:none">✅ 作廢の<span class="ubem auth">認証</span></button>' +
         '</div>' +
       '</div>' +
       // ★2026-11-08 まるちゃん「この画面はできるだけデータを出すのが重要。上の余白をできるだけ詰めて」
@@ -12656,6 +12761,14 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<div class="ubtop2"><span class="ubh ubhint">今日打った發票の中から、作廢にする發票の「作廢」を押してください😊</span></div>' +
         '<div id="ubVoids"></div>' +
+      '</div>' +
+      // ★2026-11-14 作廢の認証（開発だけ）
+      '<div id="ubAuth" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubAuthBack') + '<span class="bname ubttl">✅ 作廢の認証</span>' +
+          '<span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button>' +
+        '</div>' +
+        '<div class="ubtop2"><span class="ubh ubhint">内容を確認して「認証して作廢」を押してください😊（発票サイトで作廢します）</span></div>' +
+        '<div id="ubAuths"></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
