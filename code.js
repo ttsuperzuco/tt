@@ -2931,6 +2931,7 @@ var PERMLIST_CSS_ =
   '.plw { --pc:#ffffff; --pi:#0f172a; --ps:#64748b; --pl:#e2e8f0; position:fixed; inset:0; background:#2C7A99;' +
   '  display:flex; flex-direction:column; font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; }' +
   '@media (prefers-color-scheme: dark) { .plw { --pc:#151e30; --pi:#e8eef7; --ps:#94a3b8; --pl:#26324a; } }' +
+  '.plw, .plw * { box-sizing:border-box; }' +   // 外枠の余白を幅に含める（含めないとスマホで右にはみ出す）
   '.plin { flex:1; min-height:0; width:100%; max-width:1000px; margin:0 auto; padding:14px 12px 0; display:flex; flex-direction:column; }' +
   '.plw .ubar { margin:0 0 10px; }' +
   // 「← 戻る」はホームの戻ると同じ白い丸い形（ズコ共通の見た目）
