@@ -17366,6 +17366,9 @@ var INSTACSS_ =
   '.igtabs button.on{color:#000;border-bottom:1px solid #000;}' +
   '.iggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}' +
   // ★2026-11-12 承認制の札＝小さく重ねるだけ（並びも大きさも本番と同じまま）
+  // ★2026-11-14 まるちゃん「修正って言ってるけど、どの範囲を修正したのか見えない。社長にわかるように。修正も新規も」
+  //   ＝札（新規・修正・削除）が付いた所を、札と同じ色の枠で囲む。
+  '.igapvon{outline:3px solid #EF9F27 !important;outline-offset:-3px;border-radius:8px;background-color:rgba(239,159,39,.12);}' +
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
   // ★2026-11-14 まるちゃん：帯の色は最初の薄い色に戻し（「やっぱり最初の薄い色に戻して」）、右に青い「承認作業」のボタン（社長・開発）。
@@ -17805,7 +17808,7 @@ function instaScript_(C) {
     // ★2026-11-12 まるちゃん「下書きの段階だから、もうあらゆる編集ができて構わない」＝新しい下書きの投稿はマスを押すと本番と同じ投稿の画面
     //   （「…」から削除・編集）。札（新規・修正）を押した時だけ変更のカード。
     var isNew = p._apv && String(p.code || '').indexOf('apv_') === 0;
-    return '<button type="button" ' + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
+    return '<button type="button" ' + (p._mark ? 'class="igapvon" ' : '') + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
       (p.th ? '<img src="' + esc(p.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
       (k ? '<span class="k">' + k + '</span>' : '') + v + (p._mark ? '<span class="igapv"' + (p._apv ? ' data-apv="' + esc(p._apv) + '"' : '') + '>' + p._mark + '</span>' : '') + '</button>';
   }
@@ -18003,6 +18006,7 @@ function instaScript_(C) {
   function apvBadge(el, id, t) {
     if (!el || !id) return;
     if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    el.classList.add('igapvon');
     el.insertAdjacentHTML('beforeend', '<span class="igapv" data-apv="' + esc(id) + '">' + (t || '修正') + '</span>');
   }
   function apvMarks(root, M) {
@@ -19049,7 +19053,7 @@ function instaScript_(C) {
     var capA = DRAFT ? apvFind(function (it) { return it.kind === 'edit' && (it.light || {}).code === POST.code; }) : null;
     var capT = capA ? String((capA.light || {}).caption || '') : POST.caption;
     if (POST._apv) capA = { id: POST._apv };
-    if (capT || POST._apv) h += '<div class="igpcap" style="position:relative"><b>' + esc(p.user || '') + '</b> ' + esc(capT || '') + (capA ? '<span class="igapv" data-apv="' + esc(capA.id) + '">' + (POST._apv ? '新規' : '修正') + '</span>' : '') + '</div>';
+    if (capT || POST._apv) h += '<div class="igpcap' + (capA ? ' igapvon' : '') + '" style="position:relative"><b>' + esc(p.user || '') + '</b> ' + esc(capT || '') + (capA ? '<span class="igapv" data-apv="' + esc(capA.id) + '">' + (POST._apv ? '新規' : '修正') + '</span>' : '') + '</div>';
     h += '<div class="igpd">' + esc(ago(POST.at)) + (POST.comments_on || POST._apv ? '' : '　・　コメントはオフです') + '</div>';
     h += '<div class="igpcs">' + (POST.comments && POST.comments.length ? POST.comments.map(function (c) {
       return cmt(c, false) + (c.replies || []).map(function (r) { return cmt(r, true, c); }).join('');
@@ -19154,7 +19158,7 @@ function instaScript_(C) {
         h += '<div class="m' + (m.mine ? ' me' : '') + '"><div class="b' + (!m.t && !m.img && m.note ? ' n' : '') + '">' + body + '</div></div>';
       });
       if (DRAFT) apvAll().filter(function (it) { return it.kind === 'dm_send' && (it.light || {}).cid === DMT.id; }).forEach(function (it) {
-        h += '<div class="m me"><div class="b" style="position:relative">' + esc((it.light || {}).text || '') + '<span class="igapv" data-apv="' + esc(it.id) + '">新規</span></div></div>';
+        h += '<div class="m me"><div class="b igapvon" style="position:relative">' + esc((it.light || {}).text || '') + '<span class="igapv" data-apv="' + esc(it.id) + '">新規</span></div></div>';
       });
       if (!(DMT.msgs || []).length) h += '<div class="igempty">メッセージはありません。</div>';
     }

@@ -62,6 +62,7 @@ var INSTACSS_ =
   '.igtabs button{height:46px;display:flex;align-items:center;justify-content:center;color:#737373;border-bottom:1px solid transparent;}' +
   '.igtabs button.on{color:#000;border-bottom:1px solid #000;}' +
   '.iggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}' +
+  '.igapvon{outline:3px solid #EF9F27 !important;outline-offset:-3px;border-radius:8px;background-color:rgba(239,159,39,.12);}' +
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
   '.igapvbar{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:6px 0;background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
@@ -473,7 +474,7 @@ function instaScript_(C) {
     var pv = (p.plays != null && p.plays !== '') ? p.plays : p.vw;
     var v = (pv != null && pv !== '') ? '<span class="v">' + IC.eye + num(pv) + '</span>' : '';
     var isNew = p._apv && String(p.code || '').indexOf('apv_') === 0;
-    return '<button type="button" ' + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
+    return '<button type="button" ' + (p._mark ? 'class="igapvon" ' : '') + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
       (p.th ? '<img src="' + esc(p.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
       (k ? '<span class="k">' + k + '</span>' : '') + v + (p._mark ? '<span class="igapv"' + (p._apv ? ' data-apv="' + esc(p._apv) + '"' : '') + '>' + p._mark + '</span>' : '') + '</button>';
   }
@@ -653,6 +654,7 @@ function instaScript_(C) {
   function apvBadge(el, id, t) {
     if (!el || !id) return;
     if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    el.classList.add('igapvon');
     el.insertAdjacentHTML('beforeend', '<span class="igapv" data-apv="' + esc(id) + '">' + (t || '修正') + '</span>');
   }
   function apvMarks(root, M) {
@@ -1665,7 +1667,7 @@ function instaScript_(C) {
     var capA = DRAFT ? apvFind(function (it) { return it.kind === 'edit' && (it.light || {}).code === POST.code; }) : null;
     var capT = capA ? String((capA.light || {}).caption || '') : POST.caption;
     if (POST._apv) capA = { id: POST._apv };
-    if (capT || POST._apv) h += '<div class="igpcap" style="position:relative"><b>' + esc(p.user || '') + '</b> ' + esc(capT || '') + (capA ? '<span class="igapv" data-apv="' + esc(capA.id) + '">' + (POST._apv ? '新規' : '修正') + '</span>' : '') + '</div>';
+    if (capT || POST._apv) h += '<div class="igpcap' + (capA ? ' igapvon' : '') + '" style="position:relative"><b>' + esc(p.user || '') + '</b> ' + esc(capT || '') + (capA ? '<span class="igapv" data-apv="' + esc(capA.id) + '">' + (POST._apv ? '新規' : '修正') + '</span>' : '') + '</div>';
     h += '<div class="igpd">' + esc(ago(POST.at)) + (POST.comments_on || POST._apv ? '' : '　・　コメントはオフです') + '</div>';
     h += '<div class="igpcs">' + (POST.comments && POST.comments.length ? POST.comments.map(function (c) {
       return cmt(c, false) + (c.replies || []).map(function (r) { return cmt(r, true, c); }).join('');
@@ -1761,7 +1763,7 @@ function instaScript_(C) {
         h += '<div class="m' + (m.mine ? ' me' : '') + '"><div class="b' + (!m.t && !m.img && m.note ? ' n' : '') + '">' + body + '</div></div>';
       });
       if (DRAFT) apvAll().filter(function (it) { return it.kind === 'dm_send' && (it.light || {}).cid === DMT.id; }).forEach(function (it) {
-        h += '<div class="m me"><div class="b" style="position:relative">' + esc((it.light || {}).text || '') + '<span class="igapv" data-apv="' + esc(it.id) + '">新規</span></div></div>';
+        h += '<div class="m me"><div class="b igapvon" style="position:relative">' + esc((it.light || {}).text || '') + '<span class="igapv" data-apv="' + esc(it.id) + '">新規</span></div></div>';
       });
       if (!(DMT.msgs || []).length) h += '<div class="igempty">メッセージはありません。</div>';
     }
