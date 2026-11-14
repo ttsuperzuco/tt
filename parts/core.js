@@ -2194,7 +2194,8 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   for (var ok = 0; ok < TILE_DEFS_.length; ok++) {   
     if (!placed[TILE_DEFS_[ok].id]) orderedDefs.push(TILE_DEFS_[ok]);
   }
-  var canSort = !asWho;   
+  var mikokai = !!(dev && typeof window !== 'undefined' && window.__SZ_MIKOKAI_);
+  var canSort = !asWho && !mikokai;   
   var defIdx = {};   
   for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
   var mine = canSort ? homeMyOrder_() : ((asWho && cfg && cfg.asOrder && cfg.asOrder.length) ? cfg.asOrder : null);
@@ -2235,6 +2236,20 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var head =
     '<div class="hhead"><img class="bmark" src="https://ttsuperzuco.github.io/tt/icons/icon-180.png" alt=""><span class="bname">TTスーパーズコ</span></div>' +
     '<div class="hsub">' + subtitle + '</div>';
+  if (mikokai) {
+    var hid = shown.filter(function (t) {
+      var g = tileGroup_(t.id);
+      if (g === 'keiei' || g === 'kanri' || t.always) return false;
+      return !PEOPLE_.some(function (p) { return perms[p] && perms[p][t.id] === true; });
+    });
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="home">' + head +
+        '<div class="backbar"><a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a></div>' +
+        '<div class="grouptitle">🔒 スタッフ未公開（' + hid.length + '個）</div>' +
+        '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">りゅうツール以外で、まだどのスタッフにも表示していないボタンです。</div>' +
+        (hid.length ? tilesBox_(hid, []) : '<div style="color:#fff;font-weight:800">今はありません😊</div>') +
+      '</div>' + EXTLINK_SCRIPT_;
+  }
   if (dev) {
     var byG = { keiei: [], kanri: [], jitsumu: [], kaihatsu: [], tomato: [] };
     for (var gi = 0; gi < shown.length; gi++) { (byG[tileGroup_(shown[gi].id)] || byG.jitsumu).push(shown[gi]); }
@@ -2262,7 +2277,9 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       '<div class="' + homeCls + '">' + head +
         '<div class="rolemenu" id="rolemenu">' + menuHtml +
           '<button type="button" class="rolebtn jitsumu" data-go="' + base + '?view=home&dev=1&as=kanbu" onclick="window.top.location.href=this.dataset.go">' +
-          '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></button></div>' +
+          '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></button>' +
+          '<button type="button" class="rolebtn kaihatsu" data-go="' + base + '?view=mikokai&dev=1" onclick="window.top.location.href=this.dataset.go">' +
+          '<span class="ricon">🔒</span><span class="rname">スタッフ未公開</span></button></div>' +
         groupsHtml +
       '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript + HOMEFOLDER_SCRIPT_;
   }
