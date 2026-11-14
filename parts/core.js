@@ -1575,7 +1575,8 @@ function homeSortBoot_(KEY, OPT) {
     var t = tilesOf(box), n = 0;
     for (var j = 0; j < t.length; j++) {
       n++;
-      if (gaps.indexOf(t[j].getAttribute(IDATTR)) >= 0 && n % 2 === 1) {
+      var want = OPT.gapAfter ? OPT.gapAfter(t[j], t[j + 1] || null) : gaps.indexOf(t[j].getAttribute(IDATTR)) >= 0;
+      if (want && n % 2 === 1) {
         var g = document.createElement('div'); g.className = 'tilegap';
         box.insertBefore(g, t[j].nextSibling); n++;
       }
@@ -1642,6 +1643,7 @@ function homeSortBoot_(KEY, OPT) {
       side.classList.remove('hside'); st.side = null; st.sideAt = 0;
     }
     if (!t) return;
+    if (OPT.canSwap && !OPT.canSwap(st.el, t)) return;
     var before = rectsOf(st.box, st.el);
     if (all.indexOf(st.el) < all.indexOf(t)) st.box.insertBefore(st.el, t.nextSibling);
     else st.box.insertBefore(st.el, t);
@@ -1908,13 +1910,17 @@ function homeFolderBoot_(OPT) {
       if (G) G.items = G.items.filter(function (y) { return y !== L.id; });
       if (F.items.indexOf(L.id) < 0) F.items.push(L.id);
       seenDef[L.id] = 1;
-      for (var i = out.length - 1; i >= 0; i--) if (out[i] === L.id) out.splice(i, 1);
-      delete seenFree[L.id];
     });
     Object.keys(T).forEach(function (id) { if (!seenFree[id] && !seenDef[id]) out.push(id); });
     out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = (DEF[x.k] && DEF[x.k].c) || nextColor(out); });
-    return out;
+    return norm(out);
   }
+  function norm(list) {
+    var a = [], b = [];
+    (list || []).forEach(function (x) { (typeof x === 'string' ? a : b).push(x); });
+    return a.concat(b);
+  }
+  function isFold(el) { return !!el && (el.getAttribute(IDATTR) || '').charAt(0) === '@'; }
   var ST = OPT.store || { local: 'sz_home_folders' };
   function load() {
     try {
@@ -1962,6 +1968,7 @@ function homeFolderBoot_(OPT) {
     });
     if (!openF) {
       box.classList.add('fttop'); box.classList.remove('ftin'); box.style.removeProperty('--ftc');
+      items = norm(items);
       var gapIds = [], col = 0;
       items.forEach(function (x, i) {
         box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); col++;
@@ -2102,8 +2109,9 @@ function homeFolderBoot_(OPT) {
   }
   function sortSaved(ids) {
     if (openF) { openF.items = ids.filter(function (x) { return !!T[x]; }); save(); return; }
-    items = ids.map(function (x) { return x.charAt(0) === '@' ? folderByKey(x.slice(1)) : x; }).filter(function (x) { return !!x; });
+    items = norm(ids.map(function (x) { return x.charAt(0) === '@' ? folderByKey(x.slice(1)) : x; }).filter(function (x) { return !!x; }));
     save();
+    setTimeout(render, 260);   
   }
   function resetAll() { forget(); items = clean(START); openF = null; render(); toast('初期の並びに戻しました'); }
 
@@ -2114,9 +2122,12 @@ function homeFolderBoot_(OPT) {
     clear: function () {},
     confirm: function (msg) { szPopup_(msg, { cancel: true, icon: '', onYes: resetAll }); },
     into: function (dragEl, t, px) {
-      if (openF || (dragEl.getAttribute(IDATTR) || '').charAt(0) === '@' || (t.getAttribute(IDATTR) || '').charAt(0) !== '@') return false;
-      return px < 0.25 ? 300 : true;
+      if (openF || isFold(dragEl) || !isFold(t)) return false;
+      var first = box.querySelector('.ftfolder');
+      return (px < 0.25 && t === first) ? 300 : true;
     },
+    canSwap: function (dragEl, t) { return !!openF || isFold(dragEl) === isFold(t); },
+    gapAfter: function (el, nx) { return !openF && !isFold(el) && isFold(nx); },
     dropInto: function (dragEl, t) {
       var id = dragEl.getAttribute(IDATTR); if (!T[id]) return;
       var src = openF, z = t.getAttribute('data-z');
