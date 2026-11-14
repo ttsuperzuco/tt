@@ -2136,11 +2136,10 @@ var TILE_GROUP_ = {
   //   みかんさんに出ないボタンは、開発中なら開発者用・それ以外は管理者用へ（PC版 super_pc.py の GROUP_OF と同じ）。
   // ★2026-10-25 まるちゃん決定：「開発者用」→「開発中の機能」に改名し、TimeTreeを管理者用からここへ移した（PC版と同じ）。
   //   同日、LINE未回答(unanswered)と顧客履歴検索(rireki)も開発中の機能へ移した。
-  unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', facebook: 'kaihatsu',
-  // ★2026-11-12 まるちゃん「TT売上帳簿はスタッフやトマトさんにはまだ未公開にして」＝人ごとの表示を全員オフにし、開発中の機能に戻した（PC版 super_pc.py と同じ）。
-  uriagebook: 'kaihatsu',
-  foldertest: 'kaihatsu',   // ★2026-11-13 フォルダの試し（開発中の機能・PC版 super_pc.py と同じ）
+  // ★2026-11-12 まるちゃん「TT売上帳簿はスタッフやトマトさんにはまだ未公開にして」＝人ごとの表示を全員オフ（今もオフのまま）。
+  // ★2026-11-14 まるちゃん「ここの開発中のボタンを全部本番に入れて。でも出すのはりゅうだけね」＝開発中の機能にあった
+  //   LINE未回答・顧客履歴検索・TimeTree・既存の予約・フォーム変換・フェイズコブック・TT売上帳簿・フォルダの試しをスタッフ画面へ移した（ここに書かない）。
+  //   人ごとの表示はだれもONにしていない＝出るのは開発版（りゅう）だけ。開発中の機能の部屋は、中身が無い時はホームに出さない（PC版 super_pc.py と同じ）。
   // ★2026-11-06 まるちゃん「前日お知らせの右に見てくれた？」＝お知らせ見てくれた？(mita)はスタッフ画面（ここに書かない）
   // ★2026-11-06 まるちゃん「開発中の機能に戻す」＝Threads投稿は開発版では開発中の機能に置く（TOMATO・オリーブ・みかんのスマホには人ごとの表示で出る）。
   // ★2026-11-02 まるちゃん「施術後のLINE送信を本番にして」＝開発中の機能から外し、スタッフ画面（ここに書かない）へ移した。
@@ -3287,7 +3286,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
       var R = ROLE_DEFS_[ri], list = byG[R.id] || [], subs = SUB_ROLES_[R.id] || [], nsub = 0;
       for (var si = 0; si < subs.length; si++) nsub += (byG[subs[si].id] || []).length;
-      menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
+      if (list.length + nsub) menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
