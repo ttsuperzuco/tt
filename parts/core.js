@@ -144,6 +144,9 @@ function doGet(e) {
   } else if (view === 'mita') {
     title = 'お知らせ見てくれた？';                       
     html = renderMitaPage_({ error: 'スーパーズコのアプリから開いてください😊' }, base, staff, dev);
+  } else if (view === 'permlist') {
+    title = 'スタッフごと表示一覧';                               
+    html = renderPermListPage_(base, staff, dev);
   } else if (view === 'foldertest') {
     title = 'フォルダの試し';                                   
     html = renderFolderTestPage_(base, staff, dev);
@@ -2130,6 +2133,10 @@ var HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":
 
 
 
+
+
+
+
 function renderHome_(base, staff, dev, who) {
   var d = {};
   try { d = JSON.parse(getTileSettingsFile_().getBlob().getDataAsString('UTF-8')) || {}; } catch (ignore) {}
@@ -2233,6 +2240,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' +
+          (R.id === 'jitsumu' ? '<a class="hpermbtn" href="' + base + '?view=permlist' + sfx + '" target="_top">👥 スタッフごと表示一覧</a>' : '') +
           (R.id === 'jitsumu' ? resetHtml.replace('class="hresetbtn"', 'class="hresetbtn hfoldreset"') : resetHtml) + '</div>' +
         (R.id === 'jitsumu' ? homeAsRow_(base, '') : '') +   
         (R.id === 'jitsumu'
@@ -3106,6 +3114,10 @@ var HOMECSS_ =
 '  .hresetbtn { font:inherit; font-size:.9rem; font-weight:800; color:#fff; background:rgba(255,255,255,.16); white-space:nowrap;' +
 '    border:1px solid rgba(255,255,255,.55); border-radius:999px; padding:9px 14px; cursor:pointer; }' +
 '  .hresetbtn:active { transform:translateY(1px); }' +
+'  .hpermbtn { font:inherit; font-size:.9rem; font-weight:900; color:#12303c; background:#fff; white-space:nowrap; text-decoration:none;' +
+'    border-radius:999px; padding:9px 14px; margin-left:8px; box-shadow:0 4px 12px rgba(0,0,0,.14); }' +
+'  .hpermbtn:active { transform:translateY(1px); }' +
+'  .hsort .backbar { flex-wrap:wrap; row-gap:8px; }' +
 '  .tile.conflict::before { background:#e11d48; }' +
 '  .tile.lt::before { background:#6366f1; }' +
 '  .tile.uriage::before { background:#f59e0b; }' +
