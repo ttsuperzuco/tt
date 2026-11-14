@@ -3249,7 +3249,10 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   // ★2026-11-10 まるちゃん「ボタンを長押しして場所を入れ替えたい」＝そのスマホだけの並び（全員共通の並びは変えない）。
   //   最初は開発版だけだった。★2026-11-10 まるちゃん「トマトさんやら、みかんさんやら、オリーブさんやら、
   //   他の全スタッフにも反映して」＝全員のホーム（スタッフ版・TOMATOさん版・開発版）で使える。
-  var canSort = !asWho;   // ★その人の画面の見本では並べ替えない（自分の並びを変えないため・並びは全員共通の物）
+  // ★2026-11-14 まるちゃん「スタッフ画面の下に スタッフ未公開 ボタン。りゅうツールのような専用の管理のボタンは一生公開しないからいい。そうじゃなくて、公開状態になっているけど、スタッフにはだれにも表示させていないボタンの一覧」
+  //   ＝住所 ?view=mikokai&dev=1（index.html が __SZ_MIKOKAI_ を立てる）。りゅうツール（keiei）以外で、人ごとの表示がだれもオンでないボタン。
+  var mikokai = !!(dev && typeof window !== 'undefined' && window.__SZ_MIKOKAI_);
+  var canSort = !asWho && !mikokai;   // ★その人の画面の見本では並べ替えない（自分の並びを変えないため・並びは全員共通の物）
   var defIdx = {};   // 全員共通の並びでの順番（「初期の並びに戻す」で使う）
   for (var di = 0; di < orderedDefs.length; di++) defIdx[orderedDefs[di].id] = di;
   // ★2026-11-13 まるちゃん「スタッフのスマホのならびにしてよ」＝その人の画面の見本では、その人のスマホが
@@ -3300,6 +3303,20 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     '<div class="hhead"><img class="bmark" src="https://ttsuperzuco.github.io/tt/icons/icon-180.png" alt=""><span class="bname">TTスーパーズコ</span></div>' +
     '<div class="hsub">' + subtitle + '</div>';
   // 開発版(?dev=1)＝まず3つの大ボタン、押すとその仲間だけ表示（PC版と同じ見せ方）。それ以外は今まで通り一覧。
+  if (mikokai) {
+    var hid = shown.filter(function (t) {
+      var g = tileGroup_(t.id);
+      if (g === 'keiei' || g === 'kanri' || t.always) return false;
+      return !PEOPLE_.some(function (p) { return perms[p] && perms[p][t.id] === true; });
+    });
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="home">' + head +
+        '<div class="backbar"><a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a></div>' +
+        '<div class="grouptitle">🔒 スタッフ未公開（' + hid.length + '個）</div>' +
+        '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">りゅうツール以外で、まだどのスタッフにも表示していないボタンです。</div>' +
+        (hid.length ? tilesBox_(hid, []) : '<div style="color:#fff;font-weight:800">今はありません😊</div>') +
+      '</div>' + EXTLINK_SCRIPT_;
+  }
   if (dev) {
     var byG = { keiei: [], kanri: [], jitsumu: [], kaihatsu: [], tomato: [] };
     for (var gi = 0; gi < shown.length; gi++) { (byG[tileGroup_(shown[gi].id)] || byG.jitsumu).push(shown[gi]); }
@@ -3333,7 +3350,10 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         // ★2026-11-14 まるちゃん「スタッフ画面を一番下に置いて」＝押すとトマトの画面（他の大ボタンと同じ字にするため button）。PC版と同じ。
         '<div class="rolemenu" id="rolemenu">' + menuHtml +
           '<button type="button" class="rolebtn jitsumu" data-go="' + base + '?view=home&dev=1&as=kanbu" onclick="window.top.location.href=this.dataset.go">' +
-          '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></button></div>' +
+          '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></button>' +
+          // ★2026-11-14 まるちゃん「スタッフ画面の下に スタッフ未公開 ボタン。りゅうツールのような専用の管理のボタンは一生公開しないからいい。そうじゃなくて、公開状態になっているけど、スタッフにはだれにも表示させていないボタンの一覧」（スタッフ画面の下・PC版と同じ）
+          '<button type="button" class="rolebtn kaihatsu" data-go="' + base + '?view=mikokai&dev=1" onclick="window.top.location.href=this.dataset.go">' +
+          '<span class="ricon">🔒</span><span class="rname">スタッフ未公開</span></button></div>' +
         groupsHtml +
       '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript + HOMEFOLDER_SCRIPT_;
   }
