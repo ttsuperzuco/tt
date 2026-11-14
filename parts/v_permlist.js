@@ -4,6 +4,7 @@ var PERMLIST_CSS_ =
   '.plw { --pc:#ffffff; --pi:#0f172a; --ps:#64748b; --pl:#e2e8f0; position:fixed; inset:0; background:#2C7A99;' +
   '  display:flex; flex-direction:column; font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif; }' +
   '@media (prefers-color-scheme: dark) { .plw { --pc:#151e30; --pi:#e8eef7; --ps:#94a3b8; --pl:#26324a; } }' +
+  '.plw, .plw * { box-sizing:border-box; }' +   
   '.plin { flex:1; min-height:0; width:100%; max-width:1000px; margin:0 auto; padding:14px 12px 0; display:flex; flex-direction:column; }' +
   '.plw .ubar { margin:0 0 10px; }' +
   '.plw .uhome { display:inline-flex; align-items:center; gap:6px; background:#fff; color:#0f172a; border:1px solid #e2e8f0;' +
