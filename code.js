@@ -3071,9 +3071,8 @@ function permListBoot_(o) {
       rs.forEach(function (row) {
         h += '<tr><th class="pllab"><div class="pllw"><span class="plic">' + row.icon + '</span><span class="plt">' + esc(row.label) + '</span></div></th>';
         h += '<td><button type="button" class="plc on lk" data-p="ryu" data-t="' + esc(row.id) + '" title="りゅう：いつも出ています">✓</button></td>';
-        if (D.assignable.indexOf(row.id) < 0) {
-          h += '<td class="pldev" colspan="' + (cs.length - 1) + '">りゅうだけ（スタッフには表示できません）</td>';
-        } else {
+        // ★2026-11-14 まるちゃん「りゅうだけ…じゃなくて、選択できなきゃダメ」＝全部のボタンを人ごとに選べる（まだだれにも出していない物は空のマス）。
+        {
           cs.forEach(function (p) {
             if (p === 'ryu') return;
             var on = isOn(CUR, p, row.id), lk = locked(p, row.id), ch = on !== isOn(ORIG, p, row.id);
@@ -3100,6 +3099,7 @@ function permListBoot_(o) {
       var people = o.people.slice(), labels = copy(o.labels);
       (cfg.extraPeople || []).forEach(function (e) { if (e && e.id) { if (people.indexOf(e.id) < 0) people.push(e.id); labels[e.id] = e.label || e.id; } });
       var asg = {};
+      o.rows.forEach(function (r) { asg[r.id] = 1; });
       people.forEach(function (p) { var v = cfg.perms[p]; if (v && typeof v === 'object') for (var t in v) asg[t] = 1; });
       var perms = {};
       people.forEach(function (p) { perms[p] = {}; for (var t in asg) perms[p][t] = !!((cfg.perms[p] || {})[t]); });
