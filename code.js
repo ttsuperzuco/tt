@@ -2536,6 +2536,9 @@ function homeFolderBoot_(OPT) {
   var titleEl = group.querySelector('.grouptitle > span') || group.querySelector('.grouptitle');
   var titleHtml = titleEl ? titleEl.innerHTML : '';   // 部屋の見出し（絵の入った物もそのまま戻す）
   var backBtn = group.querySelector('.backbtn');
+  var backText = backBtn ? backBtn.textContent : '';
+  // ★2026-11-14 まるちゃん「フォルダの中で戻るは直感的におかしい。トップ画面へ戻るじゃないと。戻るはそのボタンに入った後」
+  var BACK_IN_FOLDER = '← トップ画面へ戻る';
   var resetBtn = group.querySelector('.hresetbtn');
 
   // ── 見た目（このファイルだけで持つ）──
@@ -2683,11 +2686,13 @@ function homeFolderBoot_(OPT) {
       box.classList.add('fttop'); box.classList.remove('ftin'); box.style.removeProperty('--ftc');
       items.forEach(function (x) { box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); });
       if (titleEl) titleEl.innerHTML = titleHtml;
+      if (backBtn) backBtn.textContent = backText;
       if (resetBtn) resetBtn.style.visibility = '';
     } else {
       box.classList.add('ftin'); box.classList.remove('fttop'); box.style.setProperty('--ftc', openF.c);
       openF.items.forEach(function (id) { box.appendChild(T[id]); });
       if (titleEl) titleEl.textContent = '📂 ' + one(openF.f);
+      if (backBtn) backBtn.textContent = BACK_IN_FOLDER;
       if (resetBtn) resetBtn.style.visibility = 'hidden';
     }
     Array.prototype.slice.call(box.children).forEach(function (c) { c.style.transform = ''; c.style.transition = ''; });
