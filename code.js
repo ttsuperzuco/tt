@@ -11870,7 +11870,16 @@ var UBCSS_ =
   '#ubCoins .ubkp{margin-top:12px;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
-  '.uboth .r:first-child{border-top:0;}';
+  '.uboth .r:first-child{border-top:0;}' +
+  // ★2026-11-14 發票の作廢（まるちゃん「作廢の入力ボタンを作る」）
+  '.ubmenu .ubem.void{color:#7c2d12;}' +
+  '.ubvb{background:#dc2626;color:#fff;border:0;border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap;}' +
+  '.ubvs{font-size:12px;font-weight:900;color:#64748b;white-space:nowrap;}' +
+  '.ubtbl tr.vd td{color:#94a3b8;}' +
+  '.ubpick .ubrsn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px;}' +
+  '.ubpick .ubrsn button{border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:14px 4px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
+  '.ubpick .ubrsn button.on{background:#dc2626;border-color:#dc2626;color:#fff;}' +
+  '.ubpick .go.red{background:#dc2626;}';
 
 // ── 裏の書き込みの結果を、ズコのどの画面にいても箱で知らせる見張り（2026-11-07 まるちゃん） ──
 //  「書き込みが成功したら通知して、ズコを開いている限りどこの画面にいてもBOXで出す」。
@@ -11933,7 +11942,7 @@ function uriageBookScript_(C) {
   function yen(n) { return (n == null || n === '') ? '―' : Number(n).toLocaleString('ja-JP') + '元'; }
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
-  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins'];
+  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
   var D = null, busy = false, loading = false;
   // ★2026-11-07 まるちゃん「修正するをOKしたとき、かきこみおわるまでまつとうざいので、バックグラウンドで書き込みします…
@@ -11958,6 +11967,11 @@ function uriageBookScript_(C) {
         else { var n2 = parseInt(String(g.value).replace(/[^\d\-]/g, ''), 10); if (!isNaN(n2)) y.amount = n2; }
       }
     }
+    for (var i3 = 0; i3 < PEND.length; i3++) {
+      var g3 = PEND[i3]; if (g3.action !== 'void') continue;
+      for (var j3 = 0; j3 < D.rows.length; j3++) if (String(D.rows[j3].no || '').replace(/^0+/, '') === String(g3.no).replace(/^0+/, '')) { D.rows[j3]._pend = true; D.rows[j3]._del = true; }
+      for (var k3 = 0; k3 < (D.invs || []).length; k3++) if (D.invs[k3].no === g3.no) D.invs[k3]._pend = true;
+    }
     for (var i = 0; i < PEND.length; i++) {
       var f = PEND[i];
       for (var j = 0; j < D.rows.length; j++) {
@@ -11974,7 +11988,7 @@ function uriageBookScript_(C) {
       }
     }
   }
-  function setWhen(t) { $('ubWhen').textContent = t; $('ubWhen2').textContent = t; $('ubWhen3').textContent = t; }
+  function setWhen(t) { $('ubWhen').textContent = t; $('ubWhen2').textContent = t; $('ubWhen3').textContent = t; $('ubWhen4').textContent = t; }
   function jsonp(p, cb) {
     var n = '__ubk' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
@@ -12031,6 +12045,53 @@ function uriageBookScript_(C) {
     }
     o += '</tbody><tfoot><tr class="ubsum"><td>合計</td><td class="n">' + (D.other_total == null ? '' : Number(D.other_total).toLocaleString('ja-JP')) + '</td><td></td></tr></tfoot></table></div>';
     $('ubOthers').innerHTML = o;
+    // ★2026-11-14 發票の作廢＝今日打った發票の記録（取り込みが残した物）から選ぶ。番号を打たせない（打ち間違い・書き忘れを無くす）。
+    var V = D.invs || [];
+    var v = '<div class="ubtbl"><table><colgroup><col style="width:13%"><col style="width:11%"><col style="width:15%"><col><col style="width:17%"><col style="width:18%"></colgroup>' +
+      '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="r">合計</th><th class="c">作廢</th></tr></thead><tbody>';
+    if (!V.length) v += '<tr><td colspan="6" class="ubnone">今日打った發票はまだありません</td></tr>';
+    for (var w = 0; w < V.length; w++) {
+      var z = V[w], done = z.status !== 2 || z.memo;
+      v += '<tr class="r' + (done ? ' vd' : '') + (z._pend ? ' pend' : '') + '" data-w="' + w + '"><td class="w">' + esc(z.time) + '</td><td class="w">' + esc(z.no) + '</td>' +
+        '<td class="w">' + esc(z.num) + '</td><td>' + esc(z.name) + '</td><td class="n">' + Number(z.amount || 0).toLocaleString('ja-JP') + '</td>' +
+        '<td class="xc">' + (z._pend ? '<span class="ubvs">記録中</span>' : z.status !== 2 ? '<span class="ubvs">作廢済み</span>' : z.memo ? '<span class="ubvs">記録済み</span>'
+          : '<button type="button" class="ubvb" data-a="void">作廢</button>') + '</td></tr>';
+    }
+    v += '</tbody></table></div>';
+    $('ubVoids').innerHTML = v;
+  }
+  // ── 發票の作廢：理由を選んで記録する（2026-11-14）──
+  //   係が ①売上表の「その他」に「作廢HT-…」（今まで手で書いていた形）②売上の行を外す ③りゅうさんにLINE。
+  //   発票サイトの作廢そのものはしない（まるちゃんのOKのあと）。間違えた時は發票なしの売上の「作廢HT-…」を×で消せば戻る。
+  function openVoid(z, note) {
+    var rsn = '';
+    var head = '<div class="h">' + [z.time, '發票番号' + z.no, ((z.num || '') + ' ' + (z.name || '')).trim(), yen(z.amount)].filter(function (q) { return q; }).map(esc).join('　') + '</div>' +
+      '<div class="s">' + esc((note ? note + '\n' : '') + 'この發票を作廢にします。売上の行は消え、發票なしの売上に「作廢' + String(z.number || '').replace(/^([A-Za-z]{2})/, '$1-') + '」と記録されます。\n理由を選択してください😊') + '</div>';
+    var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
+    m.innerHTML = '<div class="ubpick">' + head + '<div class="ubrsn"><button type="button" data-r="打ち間違い">打ち間違い</button><button type="button" data-r="お客様の取り消し">お客様の取り消し</button></div>' +
+      '<button type="button" class="go red" data-a="save">作廢として記録する</button><button type="button" class="x" data-a="close">閉じる</button></div>';
+    document.body.appendChild(m);
+    m.addEventListener('click', function (ev) {
+      if (ev.target === m) { closePick(); return; }
+      var b = ev.target.closest('button'); if (!b) return;
+      if (b.getAttribute('data-r')) {
+        rsn = b.getAttribute('data-r');
+        var bs = m.querySelectorAll('.ubrsn button'); for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === b);
+        return;
+      }
+      var a = b.getAttribute('data-a');
+      if (a === 'close') { closePick(); return; }
+      if (a !== 'save') return;
+      if (!rsn) { popup('作廢の理由を選択してください😊'); return; }
+      closePick();
+      ask({ action: 'void', no: z.no, number: z.number, amount: z.amount, reason: rsn, _k: 'v:' + z.no }, '作廢を記録しています');
+    });
+  }
+  function invOf(no) {
+    var k = String(no || '').replace(/^0+/, ''); if (!k || !D) return null;
+    var V = D.invs || [];
+    for (var i = 0; i < V.length; i++) if (V[i].no.replace(/^0+/, '') === k && V[i].status === 2 && !V[i].memo) return V[i];
+    return null;
   }
   function fetchData(after) {
     jsonp({ action: 'data', name: 'uriagebook.json' }, function (p) {
@@ -12260,6 +12321,11 @@ function uriageBookScript_(C) {
     var x = D.rows[parseInt(tr.getAttribute('data-j'), 10)]; if (!x) return;
     if (x._del) { popup('この行は削除中です。'); return; }
     // ×＝消す（まるちゃん指定の文：發票の入力間違いですか？そうであればこの行を削除します）
+    if (e.target.closest('button[data-a="del"]') && invOf(x.no)) {
+      // ★2026-11-14 発票を打った記録がある行は、消しても次の取り込みでまた入る＝作廢として記録する
+      openVoid(invOf(x.no), '打った發票の行は、削除しても次の取り込みでまた入ります。');
+      return;
+    }
     if (e.target.closest('button[data-a="del"]')) {
       // ★2026-11-08 まるちゃん「發票番号774にする」「時刻も最初に入れる」＝1行目は「17:13　發票番号774　F865 楊様　500元」
       var head1 = [x.time || '', x.no ? '發票番号' + x.no : '發票番号なし', ((x.num || '') + ' ' + (x.name || '')).trim(), yen(x.amount)]
@@ -12275,6 +12341,14 @@ function uriageBookScript_(C) {
   $('ubReload').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
   $('ubReload2').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
   $('ubReload3').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
+  $('ubReload4').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });
+  $('ubVoids').addEventListener('click', function (e) {
+    if (busy || !D) return;
+    if (!e.target.closest('button[data-a="void"]')) return;
+    var tr = e.target.closest('tr.r'); if (!tr) return;
+    var z = (D.invs || [])[parseInt(tr.getAttribute('data-w'), 10)]; if (!z) return;
+    openVoid(z, '');
+  });
 
   // ── 發票なしの売上：枠を押して直す・×で消す（2026-11-08 まるちゃん「發票ありと同じにして」）──
   function openPickO(y, col) {
@@ -12438,6 +12512,8 @@ function uriageBookScript_(C) {
   // ★2026-11-07 まるちゃん「發票ありの売上　發票なしの売上　小銭とお札　の三つのボタンにする」
   $('ubGoInv').addEventListener('click', function () { show('ubInv'); });
   $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
+  $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
+  $('ubVoidBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubNoInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
 
@@ -12466,6 +12542,8 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoInv">🧾 發票<span class="ubem ari">あり</span>の売上</button>' +
           '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
+          // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
+          '<button type="button" id="ubGoVoid">🚫 發票の<span class="ubem void">作廢</span></button>' +
         '</div>' +
       '</div>' +
       // ★2026-11-08 まるちゃん「この画面はできるだけデータを出すのが重要。上の余白をできるだけ詰めて」
@@ -12487,6 +12565,14 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<div class="ubtop2"><span class="ubh ubhint">各項目の枠内を押すと修正できます</span><button type="button" id="ubGoOther" class="ubadd">売上一行追加</button></div>' +
         '<div id="ubOthers"></div>' +
+      '</div>' +
+      // ★2026-11-14 發票の作廢＝今日打った發票の一覧から選ぶ（番号を打たせない）
+      '<div id="ubVoid" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubVoidBack') + '<span class="bname ubttl">🚫 發票の作廢</span>' +
+          '<span id="ubWhen4" class="ubwhen"></span><button type="button" id="ubReload4" class="ubsm">再読込</button>' +
+        '</div>' +
+        '<div class="ubtop2"><span class="ubh ubhint">今日打った發票の中から、作廢にする發票の「作廢」を押してください😊</span></div>' +
+        '<div id="ubVoids"></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
