@@ -2532,8 +2532,9 @@ function homeFolderBoot_(OPT) {
     { k: 'd2', d: true, f: 'SNS', items: ['insta', 'threads', 'hachimitsu', 'facebook', 'timetree'] },
     { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'lt', 'conflict'] },
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
-    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
-    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] }];
+    // ★2026-11-14 まるちゃん「お客様系とお知らせ＆配信のフォルダを入れ替えて。これは全員」＝お客様系を先に。
+    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] },
+    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] }];
   // ★2026-11-14 あとから最初のフォルダを変えた分（まるちゃん「全適用させて」）＝並びを覚えている端末にも1回だけ当てる。
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
@@ -2660,6 +2661,15 @@ function homeFolderBoot_(OPT) {
       //   （前はトップから外していたので、まるちゃんがトップにコピーしたボタンまで消えた）。最初からあるフォルダは
       //   コピーの決まり（トップと両方にあってよい）なので、フォルダに入れるだけにする。
     });
+    // ★2026-11-14 まるちゃん「お客様系とお知らせ＆配信のフォルダを入れ替えて。これは全員」＝並びを覚えている端末にも1回だけ当てる
+    //   （お知らせ＆配信がお客様系より前にあれば、2つの場所を入れ替える）。当てた印はお客様系のフォルダの m に残す＝2回目からは触らない。
+    (function () {
+      var F6 = fold('d6'), F5 = fold('d5'), mk = 'swap:d6<d5';
+      if (!F6 || !F5 || F6.m.indexOf(mk) >= 0) return;
+      F6.m.push(mk);
+      var i5 = out.indexOf(F5), i6 = out.indexOf(F6);
+      if (i5 >= 0 && i6 >= 0 && i5 < i6) { out[i5] = F6; out[i6] = F5; }
+    })();
     Object.keys(T).forEach(function (id) { if (!seenFree[id] && !seenDef[id]) out.push(id); });
     out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = (DEF[x.k] && DEF[x.k].c) || nextColor(out); });
     return norm(out);

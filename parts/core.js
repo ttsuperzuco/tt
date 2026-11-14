@@ -1795,8 +1795,8 @@ function homeFolderBoot_(OPT) {
     { k: 'd2', d: true, f: 'SNS', items: ['insta', 'threads', 'hachimitsu', 'facebook', 'timetree'] },
     { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'lt', 'conflict'] },
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
-    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
-    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] }];
+    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] },
+    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] }];
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' }];
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
@@ -1911,6 +1911,13 @@ function homeFolderBoot_(OPT) {
       if (F.items.indexOf(L.id) < 0) F.items.push(L.id);
       seenDef[L.id] = 1;
     });
+    (function () {
+      var F6 = fold('d6'), F5 = fold('d5'), mk = 'swap:d6<d5';
+      if (!F6 || !F5 || F6.m.indexOf(mk) >= 0) return;
+      F6.m.push(mk);
+      var i5 = out.indexOf(F5), i6 = out.indexOf(F6);
+      if (i5 >= 0 && i6 >= 0 && i5 < i6) { out[i5] = F6; out[i6] = F5; }
+    })();
     Object.keys(T).forEach(function (id) { if (!seenFree[id] && !seenDef[id]) out.push(id); });
     out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = (DEF[x.k] && DEF[x.k].c) || nextColor(out); });
     return norm(out);
