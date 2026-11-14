@@ -9431,7 +9431,10 @@ function renderExistingPage_(base, staff, dev, mode) {
     //   出来ているのに「時間切れ」と出ていた。
     'var lpolls=0;function pollPicks(id){lpolls++;if(lpolls>350){document.getElementById("expickst").textContent="時間切れです。もう一度試してもらえると嬉しいです🙇";return;}jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){document.getElementById("expickst").textContent="エラー："+((r&&r.error)||"不明");return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollPicks(id);},600);return;}if(r.status!=="done"){document.getElementById("expickst").textContent=esc(r.result||"エラー");return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}renderPicks((d.reservations)||[]);});}' +
     'function loadPicks(){isNewCust=false;document.getElementById("exNum").style.display="none";document.getElementById("exPick").style.display="";document.getElementById("expickwho").textContent="「"+disp()+"」の予約";document.getElementById("expicklist").innerHTML="";document.getElementById("expickst").textContent="予約を検索しています…（10秒ほどかかります）";window.scrollTo(0,0);jsonp({action:"submit",key:KEY,op:"customer_reservations",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp()})},function(r){if(!r||!r.ok||!r.id){document.getElementById("expickst").textContent="依頼を送れませんでした："+((r&&r.error)||"不明");return;}setTimeout(function(){pollPicks(r.id);},500);});}' +
-    'function renderPicks(list){var el=document.getElementById("expicklist");document.getElementById("expickst").textContent=list.length?"":(isNewCust?"番号なしの新規のお客様の予約が見つかりません。":"この番号の予約が見つかりません。");document.getElementById("expickwho").textContent=isNewCust?"新規のお客様（番号なし）":("「"+disp()+"」"+((list.length&&list[0].name)?list[0].name+"様":"の予約"));var h="";var dayCnt={};for(var q=0;q<list.length;q++){if(!list[q].is_past){dayCnt[list[q].date]=(dayCnt[list[q].date]||0)+1;}}for(var i=0;i<list.length;i++){var r=list[i];var pm=(r.parts||[]).join("・")||"—";var past=r.is_past?"（過去）":"";var rk=roomVal(r.room);var rc=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var nameLine=isNewCust?("<span class=\\"pname\\" style=\\"font-weight:900\\">お名前："+esc(r.name||"?")+"</span>"):"";var btn="<button class=\\"expickrow\\" data-i=\\""+i+"\\">"+nameLine+"<span class=\\"pd\\">"+past+r.date+" "+r.start_hm+" "+(r.dur_min||"")+"分</span><span class=\\"pm\\">担当 "+esc(r.staff_emoji||"?")+"　<span class=\\"proom\\" style=\\"background:"+rc+"\\">"+esc(rn)+"</span></span><span class=\\"ppart\\">施術部位："+esc(pm)+"</span></button>";h+=btn;}el.innerHTML=h;window.__PICKS=list;MSEL=[];MULTI_=null;MMODE=false;MOK=[];var anyM=false;for(var z=0;z<list.length;z++){MOK[z]=(!list[z].is_past&&dayCnt[list[z].date]>=2);if(MOK[z])anyM=true;}document.getElementById("expickmode").style.display=anyM?"":"none";MMODE=anyM;exMultiPre_();exMultiDraw();var rows=el.querySelectorAll(".expickrow");for(var j=0;j<rows.length;j++){(function(k){rows[k].addEventListener("click",function(){if(MMODE&&MOK[k]){exMultiToggle(k);return;}MULTI_=null;chosen=window.__PICKS[k];showMenu();});})(j);}}' +
+    'function renderPicks(list){var el=document.getElementById("expicklist");document.getElementById("expickst").textContent=list.length?"":(isNewCust?"番号なしの新規のお客様の予約が見つかりません。":"この番号の予約が見つかりません。");document.getElementById("expickwho").textContent=isNewCust?"新規のお客様（番号なし）":("「"+disp()+"」"+((list.length&&list[0].name)?list[0].name+"様":"の予約"));var h="";var dayCnt={};for(var q=0;q<list.length;q++){if(!list[q].is_past){dayCnt[list[q].date]=(dayCnt[list[q].date]||0)+1;}}for(var i=0;i<list.length;i++){var r=list[i];var pm=(r.parts||[]).join("・")||"—";var past=r.is_past?"（過去）":"";var rk=roomVal(r.room);var rc=(typeof roomColor_==="function")?roomColor_(rk):"#64748b";var rn=(typeof shortRoomName_==="function")?shortRoomName_(rk):rk;var nameLine=isNewCust?("<span class=\\"pname\\" style=\\"font-weight:900\\">お名前："+esc(r.name||"?")+"</span>"):"";var btn="<button class=\\"expickrow\\" data-i=\\""+i+"\\">"+nameLine+"<span class=\\"pd\\">"+past+r.date+" "+r.start_hm+" "+(r.dur_min||"")+"分</span><span class=\\"pm\\">担当 "+esc(r.staff_emoji||"?")+"　<span class=\\"proom\\" style=\\"background:"+rc+"\\">"+esc(rn)+"</span></span><span class=\\"ppart\\">施術部位："+esc(pm)+"</span></button>";h+=btn;}el.innerHTML=h;window.__PICKS=list;MSEL=[];MULTI_=null;MMODE=false;MOK=[];var anyM=false;for(var z=0;z<list.length;z++){MOK[z]=(!list[z].is_past&&dayCnt[list[z].date]>=2);if(MOK[z])anyM=true;}document.getElementById("expickmode").style.display=anyM?"":"none";MMODE=anyM;exMultiPre_();exMultiDraw();var rows=el.querySelectorAll(".expickrow");for(var j=0;j<rows.length;j++){(function(k){rows[k].addEventListener("click",function(){if(MMODE&&MOK[k]){exMultiToggle(k);return;}MULTI_=null;chosen=window.__PICKS[k];showMenu();});})(j);}' +
+      /* ★2026-11-14 ズコのTimeTreeの予約から来た時（tvev）は、その予約を選んだ状態にする */
+      'if(window.__TVEV){var tev=window.__TVEV;window.__TVEV="";for(var t2=0;t2<list.length;t2++){if(String(list[t2].event_id)===tev){MULTI_=null;MMODE=false;exMultiDraw();chosen=list[t2];showMenu();break;}}}' +
+    '}' +
     /* ★2026-09-30 まるちゃん決定：同じ日の予約をまとめて選ぶ（別の日の予約を選んだら、前に選んだ分は外す）。
        MSEL＝選んでいる番号の並び／MULTI_＝まとめて変更中の予約（時間の早い順）。1件だけ押した時は MULTI_=null＝今までどおり。 */
     'var MSEL=[],MULTI_=null,MMODE=false,MOK=[];' +
@@ -10272,6 +10275,11 @@ function renderExistingPage_(base, staff, dev, mode) {
         /* ★2026-10-27 2枠目から先の画面が「その時間に空いている担当」を聞く（空いている人だけ選ばせる決まり）。 */
         'freeAt:function(a,b){return freeStaffAt(a,b);}};' +
     '})();' +
+    /* ★2026-11-14 まるちゃん「タイムツリーの機能を全部」＝ズコのTimeTreeの予約の「日時・担当・部屋を変更」から来た時は、
+       番号を入れた状態で予約一覧を出し、その予約を選んだ状態から始める（変更の流れ・空き確認・書き込みは今のまま）。 */
+    '(function(){if(!ISCHANGE)return;var q0=null;try{q0=new URLSearchParams(location.search);}catch(e){return;}' +
+      'var n0=String(q0.get("tvnum")||"").toUpperCase();var m0=n0.match(/^([MF])([0-9]{1,4})$/);if(!m0)return;' +
+      'digits=m0[2];selSeg(m0[1]==="M"?0:1);upd();window.__TVEV=String(q0.get("tvev")||"");loadPicks();})();' +
     '})();</script>';
   // ★共通の部品（施術後の予約と同じ画面）は .ex の外に置く＝この画面のボタンの見た目が混ざらない。
   return '<style>' + HOMECSS_ + css + (isChange ? '' : sgCss_() + AKFCSS_) + '</style>' +
@@ -23328,6 +23336,13 @@ function ttviewStart_(exec, base, staff, dev) {
     h += '</div><div class="tvacts">';
     /* くり返しの予定は、メモを直すと全部の回が変わるので、ここからは直させない */
     if (!e.r) h += '<button class="tvedit" id="tvedit">✏️ 予約メモを修正</button>';
+    /* ★2026-11-14 日時・担当・部屋の変更（終日＝キャンセル・保留も）は、今の「既存の変更」の画面をそのまま使う
+       （空いている担当・部屋だけを出す決まり・メモの日付の直し・書き込みの道が全部そろっているため）。
+       部屋の予約で、題名にお客様番号（M／F）がある時だけ出す。 */
+    var numM = String(e.t || '').match(/([MF])\s?([0-9]{1,4})/);
+    if (!e.r && numM && (e.rm === 1 || e.rm === '1'))
+      h += '<a class="tvedit" style="text-decoration:none" href="' + esc(base + '?view=yoyaku_henkou' + roleSfx_(staff, dev) +
+        '&tvnum=' + numM[1] + numM[2] + '&tvev=' + encodeURIComponent(e.i)) + '" target="_top">📅 日時・担当・部屋を変更</a>';
     if (e.tt) h += '<a class="tvopen" href="' + esc(openHref(e)) + '" target="_blank" rel="noopener">実際のタイムツリーでこの予約メモを開く</a>';
     h += '</div>';
     body.innerHTML = h;

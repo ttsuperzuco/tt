@@ -748,6 +748,10 @@ function ttviewStart_(exec, base, staff, dev) {
     }
     h += '</div><div class="tvacts">';
     if (!e.r) h += '<button class="tvedit" id="tvedit">✏️ 予約メモを修正</button>';
+    var numM = String(e.t || '').match(/([MF])\s?([0-9]{1,4})/);
+    if (!e.r && numM && (e.rm === 1 || e.rm === '1'))
+      h += '<a class="tvedit" style="text-decoration:none" href="' + esc(base + '?view=yoyaku_henkou' + roleSfx_(staff, dev) +
+        '&tvnum=' + numM[1] + numM[2] + '&tvev=' + encodeURIComponent(e.i)) + '" target="_top">📅 日時・担当・部屋を変更</a>';
     if (e.tt) h += '<a class="tvopen" href="' + esc(openHref(e)) + '" target="_blank" rel="noopener">実際のタイムツリーでこの予約メモを開く</a>';
     h += '</div>';
     body.innerHTML = h;
