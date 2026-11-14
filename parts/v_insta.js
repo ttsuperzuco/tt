@@ -64,7 +64,7 @@ var INSTACSS_ =
   '.iggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}' +
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
-  '.igapvbar{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:6px 0;background:#EF9F27;color:#412402;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
+  '.igapvbar{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:6px 0;background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
   '.igapvbar button{background:#0095f6;border:0;color:#fff;border-radius:8px;padding:8px 18px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);}' +
   '.igmode{display:inline-flex;background:#fff;border-radius:999px;padding:2px;gap:2px;}' +
   '.igstat .igmode button{background:transparent;color:#64748b;padding:4px 12px;}' +

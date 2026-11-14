@@ -17344,8 +17344,8 @@ var INSTACSS_ =
   // ★2026-11-12 承認制の札＝小さく重ねるだけ（並びも大きさも本番と同じまま）
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
-  // ★2026-11-14 まるちゃん「下書き変更一覧のバーが薄い黄色で目立たない」＝下書きのスイッチと同じ濃いオレンジにして、一覧は白いボタンに。
-  '.igapvbar{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:6px 0;background:#EF9F27;color:#412402;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
+  // ★2026-11-14 まるちゃん：帯の色は最初の薄い色に戻し（「やっぱり最初の薄い色に戻して」）、右に青い「承認作業」のボタン（社長・開発）。
+  '.igapvbar{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:6px 0;background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
   '.igapvbar button{background:#0095f6;border:0;color:#fff;border-radius:8px;padding:8px 18px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);}' +
   // ★2026-11-12 まるちゃん「下書きをデフォルトに。本番を押すと本番になる。下書き本番のスイッチみたいなボタン」
   '.igmode{display:inline-flex;background:#fff;border-radius:999px;padding:2px;gap:2px;}' +
