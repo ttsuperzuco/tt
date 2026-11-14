@@ -55,11 +55,12 @@ var PERMLIST_CSS_ =
   '.plsave { font-size:1.02rem; color:#fff; background:#16a34a; padding:11px 20px; }' +
   '.plundo:disabled, .plsave:disabled { opacity:.4; cursor:default; }' +
   '@media (max-width:520px) { .pllw .plt { white-space:normal; max-width:7.5em; line-height:1.25; font-size:.8rem; } .plc { width:34px; } }' +
-  '@media (max-width:440px) { .plin { padding:12px 8px 0; } .pllw .plt { max-width:5.6em; font-size:.74rem; }' +
+  '@media (max-width:440px) { .plin { padding:12px 8px 0; } .pllw .plt { max-width:5em; font-size:.72rem; }' +
   '  .plic, .plic .ticon { width:24px !important; height:24px !important; } .pllab { padding:4px 3px 4px 6px; }' +
-  '  .pltab td { padding:4px 1px; } .plc { width:30px; height:30px; font-size:1rem; } .plm { font-size:20px; }' +
+  '  .pltab td { padding:4px 1px; } .plc { width:27px; height:28px; font-size:.95rem; border-radius:8px; } .plm { font-size:19px; }' +
   '  .plm.plmt { font-size:.6rem; padding:2px 3px; } .pln, .plk { font-size:.64rem; } }';
 var PERMLIST_MARKS_ = {
+  ryu: ['🐉', 'りゅう'],   
   kanbu: ['🍅', 'トマト'], mikan: ['🍊', 'みかん'], olive: ['🫒', 'オリーブ'], pine: ['🍍', 'パイン'],
   reception: ['受付PC', '受付PC'], reception_sp: ['受付スマホ', '受付スマホ'],
   ringo: ['🍎', 'りんご'], mango: ['🥭', 'マンゴー'], coconut: ['🥥', 'ココナッツ']
@@ -118,12 +119,12 @@ function permListBoot_(o) {
   function mark(p) { return o.marks[p] || [D.labels[p] || p, D.labels[p] || p]; }
   function mainCols() { return o.main.filter(function (p) { return D.people.indexOf(p) >= 0; }); }
   function restCols() { var m = mainCols(); return D.people.filter(function (p) { return m.indexOf(p) < 0; }); }
-  function cols() { return SHOW_REST ? mainCols().concat(restCols()) : mainCols(); }
+  function cols() { return ['ryu'].concat(SHOW_REST ? mainCols().concat(restCols()) : mainCols()); }
   function draw() {
     var cs = cols(), h = '<table class="pltab"><thead><tr><th class="pllab0">ボタン</th>';
     cs.forEach(function (p) {
-      var m = mark(p), n = 0, txt = m[0].length > 2, used = p === 'kanbu' || D.claimed.indexOf(p) >= 0;
-      D.assignable.forEach(function (t) { if (isOn(CUR, p, t)) n++; });
+      var m = mark(p), n = 0, txt = m[0].length > 2, used = p === 'ryu' || p === 'kanbu' || D.claimed.indexOf(p) >= 0;
+      if (p === 'ryu') n = D.rows.length; else D.assignable.forEach(function (t) { if (isOn(CUR, p, t)) n++; });
       h += '<th class="' + (used ? '' : 'plunused') + '"><div class="plm' + (txt ? ' plmt' : '') + '">' + esc(m[0]) + '</div>' +
         (txt ? '' : '<div class="pln">' + esc(m[1]) + '</div>') + '<div class="plk">' + n + '個</div>' +
         (used ? '' : '<div class="plz">使っていない</div>') + '</th>';
@@ -135,10 +136,12 @@ function permListBoot_(o) {
       h += '<tr class="plroom"><td colspan="' + (cs.length + 1) + '"><span class="plrin">' + r.icon + '</span>' + esc(r.title) + '</td></tr>';
       rs.forEach(function (row) {
         h += '<tr><th class="pllab"><div class="pllw"><span class="plic">' + row.icon + '</span><span class="plt">' + esc(row.label) + '</span></div></th>';
+        h += '<td><button type="button" class="plc on lk" data-p="ryu" data-t="' + esc(row.id) + '" title="りゅう：いつも出ています">✓</button></td>';
         if (D.assignable.indexOf(row.id) < 0) {
-          h += '<td class="pldev" colspan="' + cs.length + '">🐉 りゅうだけ（スタッフには表示できません）</td>';
+          h += '<td class="pldev" colspan="' + (cs.length - 1) + '">りゅうだけ（スタッフには表示できません）</td>';
         } else {
           cs.forEach(function (p) {
+            if (p === 'ryu') return;
             var on = isOn(CUR, p, row.id), lk = locked(p, row.id), ch = on !== isOn(ORIG, p, row.id);
             var tip = mark(p)[1] + '：' + row.label + (lk ? '（トマトにはいつも出します）' : (on ? 'を出しています' : 'を出していません'));
             h += '<td><button type="button" class="plc ' + (on ? 'on' : 'off') + (lk ? ' lk' : '') + (ch ? ' chg' : '') +
@@ -180,6 +183,7 @@ function permListBoot_(o) {
   grid.addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('.plc') : null; if (!b || !D) return;
     var p = b.getAttribute('data-p'), t = b.getAttribute('data-t');
+    if (p === 'ryu') { pop('りゅうさんのズコ（開発版）には、いつも全部のボタンが出ます。', { icon: '' }); return; }
     if (locked(p, t)) { pop('トマトの予約入力は、いつも出す決まりです。', { icon: '' }); return; }
     if (!CUR[p]) CUR[p] = {};
     CUR[p][t] = !isOn(CUR, p, t);
