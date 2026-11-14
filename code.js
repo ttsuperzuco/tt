@@ -3316,7 +3316,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     var href = t.url ? t.url : (base + '?view=' + t.view + sfx);
     var target = t.url ? '_blank' : '_top';
     var rel = t.url ? ' rel="noopener"' : '';
-    var sortAttr = canSort ? (' data-tid="' + esc_(t.id) + '" data-def="' + defIdx[t.id] + '" draggable="false"') : '';
+    var sortAttr = (canSort || simV) ? (' data-tid="' + esc_(t.id) + '" data-def="' + defIdx[t.id] + '" draggable="false"') : '';
     return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + sortAttr + '>' +
       tileIcon_(t, dev || simV) + '<span class="tname">' + esc_(t.label) + '</span></a>';
   }
