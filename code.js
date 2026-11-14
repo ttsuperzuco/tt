@@ -17944,7 +17944,7 @@ function instaScript_(C) {
     if (APVL[CUR] === undefined) { APVL[CUR] = null; apvLoad(CUR); }
     var all = APVL[CUR] || [], w = apvAll().length, ng = all.filter(function (it) { return it.status === 'rejected'; }).length;
     b.style.display = '';
-    b.innerHTML = '<span>' + (APVL[CUR] ? '下書き・変更' + w + '件' + (ng ? '（差し戻し' + ng + '件）' : '') : '下書きを読み込んでいます…') + '</span><button type="button" id="igApvList">' + (ISADMIN ? '承認' : '一覧') + '</button>';   // ★2026-11-14 まるちゃん「右側の一覧を承認という文字にしてボタンに」
+    b.innerHTML = '<span>' + (APVL[CUR] ? '下書き・変更' + w + '件' + (ng ? '（差し戻し' + ng + '件）' : '') : '下書きを読み込んでいます…') + '</span><button type="button" id="igApvList">' + (ISADMIN ? '承認作業' : '一覧') + '</button>';   // ★2026-11-14 まるちゃん「右側の一覧を承認という文字にしてボタンに」
   }
   // 承認待ちを重ねた完成形（本番の中身は書き換えない＝写しを作る）
   function apvView(v0) {
