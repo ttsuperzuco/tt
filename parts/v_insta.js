@@ -63,6 +63,7 @@ var INSTACSS_ =
   '.igtabs button.on{color:#000;border-bottom:1px solid #000;}' +
   '.iggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}' +
   '.igapvon{outline:3px solid #EF9F27 !important;outline-offset:-3px;border-radius:8px;background-color:rgba(239,159,39,.12);}' +
+  '.igapvdel img,.igapvdel .c,.igapvdel .t{opacity:.35;}' +
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
   '.igapvbar{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:6px 0;background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
@@ -474,7 +475,7 @@ function instaScript_(C) {
     var pv = (p.plays != null && p.plays !== '') ? p.plays : p.vw;
     var v = (pv != null && pv !== '') ? '<span class="v">' + IC.eye + num(pv) + '</span>' : '';
     var isNew = p._apv && String(p.code || '').indexOf('apv_') === 0;
-    return '<button type="button" ' + (p._mark ? 'class="igapvon" ' : '') + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
+    return '<button type="button" ' + (p._mark ? 'class="igapvon' + (p._del ? ' igapvdel' : '') + '" ' : '') + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
       (p.th ? '<img src="' + esc(p.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
       (k ? '<span class="k">' + k + '</span>' : '') + v + (p._mark ? '<span class="igapv"' + (p._apv ? ' data-apv="' + esc(p._apv) + '"' : '') + '>' + p._mark + '</span>' : '') + '</button>';
   }
@@ -640,10 +641,12 @@ function instaScript_(C) {
         var cv = (L.thumbs || [])[0] || '';
         if (ix >= 0) { var h2 = {}; for (var k3 in v.hl[ix]) h2[k3] = v.hl[ix][k3]; if (L.title != null) h2.t = L.title; if (cv) h2.cv = cv; h2._mark = t; h2._apv = it.id; v.hl[ix] = h2; }
         else v.hl.unshift({ t: L.title || '', cv: cv, _mark: t, _apv: it.id });
-      } else if (it.kind === 'hl_delete') v.hl = v.hl.filter(function (h) { return hlId(h) !== String(L.hid || ''); });
+      } else if (it.kind === 'hl_delete') {   
+        v.hl = v.hl.map(function (h) { if (hlId(h) !== String(L.hid || '')) return h; var h3 = {}; for (var k5 in h) h3[k5] = h[k5]; h3._mark = t; h3._apv = it.id; h3._del = true; return h3; });
+      }
       else if (it.kind === 'post' && L.type !== 'story') v.posts.unshift({ code: 'apv_' + it.id, th: (L.thumbs || [])[0] || '', k: (L.type === 'reel' ? 'reel' : ((L.n_media || 0) > 1 ? 'car' : '')), _mark: t, _apv: it.id });
       else if (it.kind === 'phone_reel') v.posts.unshift({ code: 'apv_' + it.id, th: (L.thumbs || [])[0] || '', k: 'reel', _mark: t, _apv: it.id });
-      else if (it.kind === 'delete' || it.kind === 'phone_archive') v.posts = v.posts.filter(function (x) { return x.code !== L.code; });
+      else if (it.kind === 'delete' || it.kind === 'phone_archive') v.posts = v.posts.map(function (x) { if (x.code !== L.code) return x; var y = {}; for (var k6 in x) y[k6] = x[k6]; y._mark = t; y._apv = it.id; y._del = true; return y; });
       else if (it.kind === 'edit' || it.kind === 'phone_pin' || it.kind === 'phone_unpin' || it.kind === 'likes' || it.kind === 'conoff') {
         v.posts = v.posts.map(function (x) { if (x.code !== L.code) return x; var y = {}; for (var k4 in x) y[k4] = x[k4]; y._mark = t; y._apv = it.id; if (it.kind === 'phone_pin') y.pin = true; if (it.kind === 'phone_unpin') y.pin = false; return y; });
       }
@@ -661,7 +664,7 @@ function instaScript_(C) {
     apvBadge(root.querySelector('.igav'), M.pic); apvBadge(root.querySelector('.nmw'), M.name); apvBadge(root.querySelector('.igbio'), M.bio);
     apvBadge(root.querySelector('.iglink'), M.links); apvBadge(root.querySelector('.igaddr'), M.addr);
     var hb = root.querySelectorAll('.ighl [data-hl]'), hls = (apvView(DATA.views[CUR]).hl || []);
-    for (var i = 0; i < hb.length; i++) { var h = hls[Number(hb[i].getAttribute('data-hl'))]; if (h && h._apv) { hb[i].setAttribute('data-apv', h._apv); apvBadge(hb[i], h._apv, h._mark); } }
+    for (var i = 0; i < hb.length; i++) { var h = hls[Number(hb[i].getAttribute('data-hl'))]; if (h && h._apv) { hb[i].setAttribute('data-apv', h._apv); apvBadge(hb[i], h._apv, h._mark); if (h._del) hb[i].classList.add('igapvdel'); } }
   }
   function apvWho(it) { return (typeof PERM_PEOPLE !== 'undefined' && PERM_PEOPLE[it.who]) || (it.who || '社長・開発'); }
   function apvWhen(t) { return t ? ago(new Date(t * 1000).toISOString()) : ''; }

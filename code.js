@@ -17399,6 +17399,7 @@ var INSTACSS_ =
   // ★2026-11-14 まるちゃん「修正って言ってるけど、どの範囲を修正したのか見えない。社長にわかるように。修正も新規も」
   //   ＝札（新規・修正・削除）が付いた所を、札と同じ色の枠で囲む。
   '.igapvon{outline:3px solid #EF9F27 !important;outline-offset:-3px;border-radius:8px;background-color:rgba(239,159,39,.12);}' +
+  '.igapvdel img,.igapvdel .c,.igapvdel .t{opacity:.35;}' +
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
   // ★2026-11-14 まるちゃん：帯の色は最初の薄い色に戻し（「やっぱり最初の薄い色に戻して」）、右に青い「承認作業」のボタン（社長・開発）。
@@ -17838,7 +17839,7 @@ function instaScript_(C) {
     // ★2026-11-12 まるちゃん「下書きの段階だから、もうあらゆる編集ができて構わない」＝新しい下書きの投稿はマスを押すと本番と同じ投稿の画面
     //   （「…」から削除・編集）。札（新規・修正）を押した時だけ変更のカード。
     var isNew = p._apv && String(p.code || '').indexOf('apv_') === 0;
-    return '<button type="button" ' + (p._mark ? 'class="igapvon" ' : '') + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
+    return '<button type="button" ' + (p._mark ? 'class="igapvon' + (p._del ? ' igapvdel' : '') + '" ' : '') + (isNew ? 'data-apvpost="' + esc(p._apv) + '"' : 'data-post="' + esc(p.code) + '"') + '>' +
       (p.th ? '<img src="' + esc(p.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' : '') +
       (k ? '<span class="k">' + k + '</span>' : '') + v + (p._mark ? '<span class="igapv"' + (p._apv ? ' data-apv="' + esc(p._apv) + '"' : '') + '>' + p._mark + '</span>' : '') + '</button>';
   }
@@ -18022,10 +18023,14 @@ function instaScript_(C) {
         var cv = (L.thumbs || [])[0] || '';
         if (ix >= 0) { var h2 = {}; for (var k3 in v.hl[ix]) h2[k3] = v.hl[ix][k3]; if (L.title != null) h2.t = L.title; if (cv) h2.cv = cv; h2._mark = t; h2._apv = it.id; v.hl[ix] = h2; }
         else v.hl.unshift({ t: L.title || '', cv: cv, _mark: t, _apv: it.id });
-      } else if (it.kind === 'hl_delete') v.hl = v.hl.filter(function (h) { return hlId(h) !== String(L.hid || ''); });
+      } else if (it.kind === 'hl_delete') {   // ★2026-11-14 まるちゃん①＝消したハイライトも消さずに薄く残し、「削除」の札と枠を付ける
+        v.hl = v.hl.map(function (h) { if (hlId(h) !== String(L.hid || '')) return h; var h3 = {}; for (var k5 in h) h3[k5] = h[k5]; h3._mark = t; h3._apv = it.id; h3._del = true; return h3; });
+      }
       else if (it.kind === 'post' && L.type !== 'story') v.posts.unshift({ code: 'apv_' + it.id, th: (L.thumbs || [])[0] || '', k: (L.type === 'reel' ? 'reel' : ((L.n_media || 0) > 1 ? 'car' : '')), _mark: t, _apv: it.id });
       else if (it.kind === 'phone_reel') v.posts.unshift({ code: 'apv_' + it.id, th: (L.thumbs || [])[0] || '', k: 'reel', _mark: t, _apv: it.id });
-      else if (it.kind === 'delete' || it.kind === 'phone_archive') v.posts = v.posts.filter(function (x) { return x.code !== L.code; });
+      // ★2026-11-14 まるちゃん「削除した場合はどういう画面？」→①＝消した投稿もマスから消さずに薄く残し、「削除」の札と枠を付ける
+      //   （前はマスから消えるだけで、どれを消したか承認作業の一覧を開かないと分からなかった）
+      else if (it.kind === 'delete' || it.kind === 'phone_archive') v.posts = v.posts.map(function (x) { if (x.code !== L.code) return x; var y = {}; for (var k6 in x) y[k6] = x[k6]; y._mark = t; y._apv = it.id; y._del = true; return y; });
       else if (it.kind === 'edit' || it.kind === 'phone_pin' || it.kind === 'phone_unpin' || it.kind === 'likes' || it.kind === 'conoff') {
         v.posts = v.posts.map(function (x) { if (x.code !== L.code) return x; var y = {}; for (var k4 in x) y[k4] = x[k4]; y._mark = t; y._apv = it.id; if (it.kind === 'phone_pin') y.pin = true; if (it.kind === 'phone_unpin') y.pin = false; return y; });
       }
@@ -18043,7 +18048,7 @@ function instaScript_(C) {
     apvBadge(root.querySelector('.igav'), M.pic); apvBadge(root.querySelector('.nmw'), M.name); apvBadge(root.querySelector('.igbio'), M.bio);
     apvBadge(root.querySelector('.iglink'), M.links); apvBadge(root.querySelector('.igaddr'), M.addr);
     var hb = root.querySelectorAll('.ighl [data-hl]'), hls = (apvView(DATA.views[CUR]).hl || []);
-    for (var i = 0; i < hb.length; i++) { var h = hls[Number(hb[i].getAttribute('data-hl'))]; if (h && h._apv) { hb[i].setAttribute('data-apv', h._apv); apvBadge(hb[i], h._apv, h._mark); } }
+    for (var i = 0; i < hb.length; i++) { var h = hls[Number(hb[i].getAttribute('data-hl'))]; if (h && h._apv) { hb[i].setAttribute('data-apv', h._apv); apvBadge(hb[i], h._apv, h._mark); if (h._del) hb[i].classList.add('igapvdel'); } }
   }
   function apvWho(it) { return (typeof PERM_PEOPLE !== 'undefined' && PERM_PEOPLE[it.who]) || (it.who || '社長・開発'); }
   function apvWhen(t) { return t ? ago(new Date(t * 1000).toISOString()) : ''; }
