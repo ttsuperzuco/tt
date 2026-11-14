@@ -1510,10 +1510,6 @@ var TILE_GROUP_ = {
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
   hachimitsu: 'tomato',
-  unanswered: 'kaihatsu', rireki: 'kaihatsu', timetree: 'kaihatsu', kizon: 'kaihatsu',
-  formconv: 'kaihatsu', facebook: 'kaihatsu',
-  uriagebook: 'kaihatsu',
-  foldertest: 'kaihatsu',   
 };
 var ROLE_DEFS_ = [
   { id: 'jitsumu', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/staffroom-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'スタッフ画面' },
@@ -2235,7 +2231,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
       var R = ROLE_DEFS_[ri], list = byG[R.id] || [], subs = SUB_ROLES_[R.id] || [], nsub = 0;
       for (var si = 0; si < subs.length; si++) nsub += (byG[subs[si].id] || []).length;
-      menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
+      if (list.length + nsub) menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
