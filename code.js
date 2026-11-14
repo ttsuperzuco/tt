@@ -2738,11 +2738,13 @@ function homeFolderBoot_(OPT) {
   }
   function newFolder(id, src) {
     askName('新しいフォルダの名前を入力してください😊', '新しいフォルダ', function (nm) {
-      var copy = isCopy(src), pos;
-      if (copy) pos = items.indexOf(src) + 1;
-      else { pos = removeFrom(id, src); if (pos < 0) pos = src ? items.indexOf(src) + 1 : items.length; }
+      if (!isCopy(src)) removeFrom(id, src);
+      dropEmpty();
+      // ★2026-11-14 まるちゃん「新しいフォルダは一番左上（フォルダの中で一番最初の位置）に作られる」＝フォルダの並びの先頭（トップのボタンの後ろ）。
+      var pos = items.length;
+      for (var q = 0; q < items.length; q++) if (typeof items[q] !== 'string') { pos = q; break; }
       var NF = { k: newKey(), f: nm, items: [id], c: nextColor(items), d: false };
-      items.splice(pos, 0, NF); dropEmpty();
+      items.splice(pos, 0, NF);
       openF = NF; window.scrollTo(0, 0);   // ★2026-11-14 まるちゃん「コピーしたあとはその画面に飛ぶ」＝新しいフォルダの中を開く
       done('新しいフォルダ「' + nm + '」を作成しました');
     });
