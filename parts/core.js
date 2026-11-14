@@ -2056,7 +2056,6 @@ function homeFolderBoot_(OPT) {
     var z = [];
     if (openF) {
       z.push('<div class="ftzone ftfull" data-z="top">⬆️ トップ画面に' + verb + '</div>');
-      items.forEach(function (x) { if (typeof x !== 'string' && x !== openF) z.push('<div class="ftzone" data-z="@' + x.k + '" style="box-shadow:inset 7px 0 0 ' + x.c + '">📂 ' + esc(one(x.f)) + '</div>'); });
     }
     z.push('<div class="ftzone ftfull" data-z="new">＋ 新しいフォルダへ' + verb + '</div>');
     if (!openF && inDefault(tid)) z.push('<div class="ftzone ftfull" data-z="del">🗑️ トップ画面から削除</div>');   
