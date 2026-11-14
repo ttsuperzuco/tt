@@ -2933,6 +2933,10 @@ var PERMLIST_CSS_ =
   '@media (prefers-color-scheme: dark) { .plw { --pc:#151e30; --pi:#e8eef7; --ps:#94a3b8; --pl:#26324a; } }' +
   '.plin { flex:1; min-height:0; width:100%; max-width:1000px; margin:0 auto; padding:14px 12px 0; display:flex; flex-direction:column; }' +
   '.plw .ubar { margin:0 0 10px; }' +
+  // 「← 戻る」はホームの戻ると同じ白い丸い形（ズコ共通の見た目）
+  '.plw .uhome { display:inline-flex; align-items:center; gap:6px; background:#fff; color:#0f172a; border:1px solid #e2e8f0;' +
+  '  border-radius:999px; padding:9px 18px; font-size:1rem; font-weight:800; text-decoration:none; box-shadow:0 4px 12px rgba(0,0,0,.08); }' +
+  '.plw .uhome:active { transform:translateY(1px); }' +
   '.pltitle { color:#fff; font-size:1.3rem; font-weight:900; margin:0 0 4px; }' +
   '.plhint { color:#e6f2f7; font-size:.84rem; line-height:1.7; margin:0 0 10px; }' +
   '.plhint .plc { width:24px; height:19px; font-size:.75rem; vertical-align:-4px; cursor:default; border-radius:6px; }' +
@@ -2977,7 +2981,12 @@ var PERMLIST_CSS_ =
   '.plundo { font-size:.92rem; color:#fff; background:#64748b; padding:11px 14px; }' +
   '.plsave { font-size:1.02rem; color:#fff; background:#16a34a; padding:11px 20px; }' +
   '.plundo:disabled, .plsave:disabled { opacity:.4; cursor:default; }' +
-  '@media (max-width:520px) { .pllw .plt { white-space:normal; max-width:7.5em; line-height:1.25; font-size:.8rem; } .plc { width:34px; } }';
+  '@media (max-width:520px) { .pllw .plt { white-space:normal; max-width:7.5em; line-height:1.25; font-size:.8rem; } .plc { width:34px; } }' +
+  // スマホの幅（375〜430）でも受付スマホの列まで1画面に収める
+  '@media (max-width:440px) { .plin { padding:12px 8px 0; } .pllw .plt { max-width:5.6em; font-size:.74rem; }' +
+  '  .plic, .plic .ticon { width:24px !important; height:24px !important; } .pllab { padding:4px 3px 4px 6px; }' +
+  '  .pltab td { padding:4px 1px; } .plc { width:30px; height:30px; font-size:1rem; } .plm { font-size:20px; }' +
+  '  .plm.plmt { font-size:.6rem; padding:2px 3px; } .pln, .plk { font-size:.64rem; } }';
 
 // 表の列の見出し（人の印・名前）。上の人のボタン（HOME_AS_PEOPLE_）と同じ印。ふだん使っていない名前の印も持つ。
 var PERMLIST_MARKS_ = {
