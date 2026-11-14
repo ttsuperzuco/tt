@@ -2231,8 +2231,8 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
       var R = ROLE_DEFS_[ri], list = byG[R.id] || [], subs = SUB_ROLES_[R.id] || [], nsub = 0;
       for (var si = 0; si < subs.length; si++) nsub += (byG[subs[si].id] || []).length;
-      if (R.id === 'jitsumu') menuHtml += '<a class="rolebtn jitsumu" href="' + base + '?view=home&dev=1&as=kanbu" target="_top">' +
-        '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></a>';   
+      if (R.id === 'jitsumu') menuHtml += '<button type="button" class="rolebtn jitsumu" data-go="' + base + '?view=home&dev=1&as=kanbu" onclick="window.top.location.href=this.dataset.go">' +
+        '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></button>';   
       if (list.length + nsub) menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
