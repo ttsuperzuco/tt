@@ -53,6 +53,29 @@ function renderTimeTreePage_(base, staff, dev) {
     '.tvdate{font-size:13px;font-weight:800;color:#555;padding:10px 16px 2px;}' +
     '.tvsmore{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 16px 10px;font-size:12px;color:#999;}' +
     '.tvdh{display:flex;align-items:center;gap:8px;padding:6px 14px 4px;}' +
+    '.tvmode{flex:none;display:flex;background:#f2f2f2;border-radius:9px;padding:2px;}' +
+    '.tvmode button{border:0;background:transparent;color:#777;font-size:13px;font-weight:800;padding:5px 10px;border-radius:7px;cursor:pointer;}' +
+    '.tvmode button.sel{background:#fff;color:#222;box-shadow:0 1px 3px rgba(0,0,0,.15);}' +
+    '.tvwkhd{display:grid;grid-template-columns:34px repeat(7,minmax(0,1fr));border-bottom:1px solid #eee;}' +
+    '.tvwkhd .d{text-align:center;padding:2px 0 4px;cursor:pointer;background:none;border:0;}' +
+    '.tvwkhd .d small{display:block;font-size:11px;color:#999;}' +
+    '.tvwkhd .d b{display:inline-block;width:24px;height:24px;line-height:24px;border-radius:50%;font-size:13px;font-weight:700;color:#333;}' +
+    '.tvwkhd .d.sat small,.tvwkhd .d.sat b{color:#3d8ae0;}.tvwkhd .d.sun small,.tvwkhd .d.sun b{color:#e85a5a;}' +
+    '.tvwkhd .d.today b{background:#222;color:#fff;}' +
+    '.tvwkad{display:grid;grid-template-columns:34px repeat(7,minmax(0,1fr));border-bottom:1px solid #eee;padding:2px 0;}' +
+    '.tvwkad .l{font-size:10px;color:#999;text-align:right;padding:2px 4px 0 0;}' +
+    '.tvwkad .c{min-width:0;display:flex;flex-direction:column;gap:2px;padding:0 1px;}' +
+    '.tvwkad .c .tvb{cursor:pointer;}' +
+    '.tvwkgrid{position:relative;display:grid;grid-template-columns:34px repeat(7,minmax(0,1fr));}' +
+    '.tvwkgrid .t{position:relative;}' +
+    '.tvwkgrid .t span{position:absolute;right:4px;font-size:10px;color:#999;transform:translateY(-50%);}' +
+    '.tvwkgrid .col{position:relative;border-left:1px solid #f0f0f0;min-width:0;}' +
+    '.tvwkgrid .col.today{background:#fafafa;}' +
+    '.tvwkgrid .hl{position:absolute;left:0;right:0;border-top:1px solid #f0f0f0;}' +
+    '.tvwkev{position:absolute;box-sizing:border-box;border-radius:3px;border-left:3px solid;padding:1px 2px;overflow:hidden;' +
+      'font-size:10px;font-weight:700;line-height:1.25;cursor:pointer;word-break:break-all;}' +
+    '.tvwkev small{display:block;font-size:9px;font-weight:600;opacity:.8;}' +
+    '.tvnow{position:absolute;left:0;right:0;border-top:2px solid #e85a5a;z-index:2;}' +
     '.tvdh .dt{flex:1;min-width:0;font-size:18px;font-weight:800;color:#222;}' +
     '.tvdchips{padding:0 2px 2px;}' +
     '.tvlist{padding:0 0 20px;}' +
@@ -245,6 +268,7 @@ function ttviewStart_(exec, base, staff, dev) {
     else if (st.step === 'day') drawDay();
     else if (st.step === 'memo') drawMemo();
     else if (st.step === 'search') drawSearch();
+    else if (st.step === 'week') drawWeek();
     else drawEvent();
   }
   function preload(k) {
@@ -291,6 +315,7 @@ function ttviewStart_(exec, base, staff, dev) {
     var k = st.k, m = monthOf(k);
     body.innerHTML = '<div class="tvmh">' +
         '<button class="tvym" id="tvpick">' + m.getFullYear() + '年' + (m.getMonth() + 1) + '月<i>▼</i></button>' +
+        modeHtml('month') +
         '<span class="tvsp"></span>' +
         (k !== 0 ? '<button class="tvtd" id="tvtoday">今日</button>' : '') +
         '<button class="tvic" id="tvsearch" title="予定を検索">' + SICO + '</button>' +
@@ -303,6 +328,10 @@ function ttviewStart_(exec, base, staff, dev) {
     document.getElementById('tvnext').onclick = next;
     document.getElementById('tvpick').onclick = openPicker;
     document.getElementById('tvsearch').onclick = function () { go({ step: 'search', k: st.k, q: '', lo: -1 }); };
+    bindMode(function () {
+      var base = (st.k === 0) ? iso(today) : iso(monthOf(st.k));
+      go({ step: 'week', k: kOfDate(base), date: base }, false);
+    });
     var tb = document.getElementById('tvtoday'); if (tb) tb.onclick = function () { go({ step: 'month', k: 0 }, false); };
     bindChips();
     swipe = function (d) { if (d > 0) next(); else prev(); };
@@ -345,6 +374,158 @@ function ttviewStart_(exec, base, staff, dev) {
       };
       preload(k);
     });
+  }
+
+  function modeHtml(cur) {
+    return '<span class="tvmode"><button data-mode="month"' + (cur === 'month' ? ' class="sel"' : '') + '>月</button>' +
+      '<button data-mode="week"' + (cur === 'week' ? ' class="sel"' : '') + '>週</button></span>';
+  }
+  function bindMode(toOther) {
+    var bs = body.querySelectorAll('[data-mode]');
+    for (var i = 0; i < bs.length; i++) bs[i].onclick = function () {
+      if (this.className === 'sel') return;
+      toOther();
+    };
+  }
+
+  function mins(hm) { var p = String(hm || '').split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); }
+  function drawWeek() {
+    setBack(function () { history.back(); });
+    var d0 = parseIso(st.date);
+    var mon = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() - (d0.getDay() + 6) % 7);
+    var days = [];
+    for (var i = 0; i < 7; i++) days.push(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + i));
+    var ks = [kOfDate(iso(days[0]))];
+    if (kOfDate(iso(days[6])) !== ks[0]) ks.push(kOfDate(iso(days[6])));
+    var prevW = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7), nextW = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
+    var canPrev = inRange(kOfDate(iso(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 1))));
+    var canNext = inRange(kOfDate(iso(nextW)));
+    var label = (days[0].getMonth() === days[6].getMonth())
+      ? days[0].getFullYear() + '年' + (days[0].getMonth() + 1) + '月'
+      : (days[0].getMonth() + 1) + '月〜' + (days[6].getMonth() + 1) + '月';
+    var tiso = iso(today);
+    var hasToday = tiso >= iso(days[0]) && tiso <= iso(days[6]);
+    body.innerHTML = '<div class="tvmh"><button class="tvym" id="tvpick">' + label + '<i>▼</i></button>' + modeHtml('week') +
+        '<span class="tvsp"></span>' +
+        (hasToday ? '' : '<button class="tvtd" id="tvtoday">今日</button>') +
+        '<button class="tvic" id="tvprev"' + (canPrev ? '' : ' disabled') + '>‹</button>' +
+        '<button class="tvic" id="tvnext"' + (canNext ? '' : ' disabled') + '>›</button></div>' +
+      chipsHtml() + '<div id="tvwk"><div class="tvstatus">予定を読んでいます...</div></div>';
+    function goPrev() { if (canPrev) go({ step: 'week', k: kOfDate(iso(prevW)), date: iso(prevW) }, false); }
+    function goNext() { if (canNext) go({ step: 'week', k: kOfDate(iso(nextW)), date: iso(nextW) }, false); }
+    document.getElementById('tvprev').onclick = goPrev;
+    document.getElementById('tvnext').onclick = goNext;
+    document.getElementById('tvpick').onclick = function () { st.k = kOfDate(iso(days[0])); openPicker(); };
+    var tb = document.getElementById('tvtoday'); if (tb) tb.onclick = function () { go({ step: 'week', k: 0, date: tiso }, false); };
+    bindChips();
+    bindMode(function () { go({ step: 'month', k: kOfDate(iso(days[0])) }, false); });
+    swipe = function (dd) { if (dd > 0) goNext(); else goPrev(); };
+    var got = {}, left = ks.length, myDate = st.date;
+    for (var a = 0; a < ks.length; a++) (function (kk) {
+      load(kk, function (p) {
+        got[kk] = p;
+        if (--left > 0) return;
+        if (st.step !== 'week' || st.date !== myDate) return;
+        paint();
+      });
+    })(ks[a]);
+    function paint() {
+      var box = document.getElementById('tvwk');
+      var evs = [], seen = {};
+      for (var b = 0; b < ks.length; b++) {
+        var p = got[ks[b]];
+        if (!p || p.error) { box.innerHTML = '<div class="tvstatus">' + esc(failText(p)) + '</div>'; return; }
+        for (var c = 0; c < p.events.length; c++) { var e = p.events[c], key = e.i + '|' + e.d; if (!seen[key]) { seen[key] = 1; evs.push(e); } }
+      }
+      var per = [], lo = 10 * 60, hi = 21 * 60;      
+      for (var j = 0; j < 7; j++) {
+        var od = onDay(evs, iso(days[j]));
+        per.push(od);
+        for (var t = 0; t < od.tm.length; t++) {
+          var s0 = mins(od.tm[t].s), f0 = od.tm[t].e === iso(days[j]) ? mins(od.tm[t].f) : 24 * 60;
+          if (s0 < lo) lo = Math.floor(s0 / 60) * 60;
+          if (f0 > hi) hi = Math.ceil(f0 / 60) * 60;
+        }
+      }
+      var H = 44;                                    
+      var h = '<div class="tvwkhd"><div></div>';
+      for (j = 0; j < 7; j++) {
+        var ds = iso(days[j]);
+        h += '<button class="d' + (j === 5 ? ' sat' : j === 6 ? ' sun' : '') + (ds === tiso ? ' today' : '') + '" data-day="' + ds + '">' +
+          '<small>' + WD[j] + '</small><b>' + days[j].getDate() + '</b></button>';
+      }
+      h += '</div>';
+      var anyAd = false;
+      for (j = 0; j < 7; j++) if (per[j].ad.length) anyAd = true;
+      var keep = [];
+      if (anyAd) {
+        h += '<div class="tvwkad"><div class="l">終日</div>';
+        for (j = 0; j < 7; j++) {
+          h += '<div class="c">';
+          var ad = per[j].ad;
+          for (var x = 0; x < ad.length && x < 3; x++) { h += barHtml(ad[x], iso(days[j])).replace('<span class="tvb', '<span data-w="' + keep.length + '" class="tvb'); keep.push(ad[x]); }
+          if (ad.length > 3) h += '<span class="tvmore" data-day="' + iso(days[j]) + '">+' + (ad.length - 3) + '</span>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+      var total = (hi - lo) / 60 * H;
+      h += '<div class="tvwkgrid" style="height:' + total + 'px"><div class="t">';
+      for (var hr = lo; hr <= hi; hr += 60) h += '<span style="top:' + ((hr - lo) / 60 * H) + 'px">' + (hr / 60) + ':00</span>';
+      h += '</div>';
+      for (j = 0; j < 7; j++) {
+        var dsj = iso(days[j]);
+        h += '<div class="col' + (dsj === tiso ? ' today' : '') + '">';
+        for (hr = lo; hr < hi; hr += 60) h += '<div class="hl" style="top:' + ((hr - lo) / 60 * H) + 'px"></div>';
+        var tm = per[j].tm.slice().sort(function (p1, p2) { return mins(p1.s) - mins(p2.s); });
+        var items = [], grp = [], grpEnd = -1;
+        var flush = function () { var n = 0; for (var g = 0; g < grp.length; g++) n = Math.max(n, grp[g].lane + 1); for (g = 0; g < grp.length; g++) grp[g].n = n; grp = []; };
+        for (var q = 0; q < tm.length; q++) {
+          var ev = tm[q], st0 = mins(ev.s), en0 = ev.e === dsj ? mins(ev.f) : 24 * 60;
+          if (en0 <= st0) en0 = st0 + 15;
+          if (st0 >= grpEnd && grp.length) flush();
+          var used = {};
+          for (var u = 0; u < grp.length; u++) if (grp[u].en > st0) used[grp[u].lane] = 1;
+          var lane = 0; while (used[lane]) lane++;
+          var it = { e: ev, st: st0, en: en0, lane: lane };
+          grp.push(it); items.push(it);
+          grpEnd = Math.max(grpEnd, en0);
+        }
+        if (grp.length) flush();
+        for (q = 0; q < items.length; q++) {
+          var it2 = items[q], top = (it2.st - lo) / 60 * H, ht = Math.max(14, (it2.en - it2.st) / 60 * H - 1);
+          var w = 100 / it2.n;
+          h += '<div class="tvwkev" data-w="' + keep.length + '" style="top:' + top + 'px;height:' + ht + 'px;left:calc(' + (w * it2.lane) + '% + 1px);width:calc(' + w + '% - 2px);' +
+            'background:' + tint(it2.e.col) + ';border-color:' + esc(it2.e.col) + ';color:' + esc(it2.e.col) + '">' +
+            esc(it2.e.t || '(タイトルなし)') + (ht >= 30 ? '<small>' + esc(it2.e.s) + '</small>' : '') + '</div>';
+          keep.push(it2.e);
+        }
+        if (dsj === tiso) {
+          var nw = new Date(), nm = nw.getHours() * 60 + nw.getMinutes();
+          if (nm >= lo && nm <= hi) h += '<div class="tvnow" style="top:' + ((nm - lo) / 60 * H) + 'px"></div>';
+        }
+        h += '</div>';
+      }
+      h += '</div>';
+      box.innerHTML = h;
+      var ws = box.querySelectorAll('[data-w]');
+      for (var r = 0; r < ws.length; r++) ws[r].onclick = function () {
+        var e = keep[parseInt(this.getAttribute('data-w'), 10)];
+        var col = this.closest('.c,.col'), ds2 = e.d;
+        var idx = Array.prototype.indexOf.call(col.parentNode.children, col) - 1;
+        if (idx >= 0 && idx < 7) ds2 = iso(days[idx]);
+        go({ step: 'event', k: kOfDate(ds2), date: ds2, ev: e });
+      };
+      var dd = box.querySelectorAll('[data-day]');
+      for (r = 0; r < dd.length; r++) dd[r].onclick = function () {
+        var dsx = this.getAttribute('data-day');
+        go({ step: 'day', k: kOfDate(dsx), date: dsx });
+      };
+      if (hasToday) {
+        var g2 = box.querySelector('.tvnow');
+        if (g2) setTimeout(function () { try { window.scrollTo(0, Math.max(0, g2.getBoundingClientRect().top + window.scrollY - 220)); } catch (x) {} }, 50);
+      }
+    }
   }
 
   function memo1(n) {
