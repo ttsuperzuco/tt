@@ -1465,9 +1465,6 @@ var TILE_DEFS_ = [
   { id: 'sgline', cls: 'sgline', view: 'yoyaku_sejutsugo&mode=line',
     icon: '<span class="ticon">💌</span>',
     iconDev: '<span class="ticon">' + LINE_HEART_LOGO_ + '</span>', label: '施術後の\nLINE送信' },
-  { id: 'kizon', cls: 'kizon', view: 'yoyaku_kizon',
-    icon: '<span class="ticon">📖</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/kizon-pink-128.png"></span>', label: '既存の\n予約' },
   { id: 'timetree', cls: 'timetree', view: 'timetree',
     icon: '<span class="ticon">' + TT_LOGO_ + '</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/timetree-real-192.png"></span>', label: 'Time\nTree' },
@@ -1501,8 +1498,6 @@ var TILE_DEFS_ = [
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
     icon: '<span class="ticon">🧾</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
-  { id: 'foldertest', cls: 'foldertest', view: 'foldertest',
-    icon: '<span class="ticon">📂</span>', label: 'フォルダの\n試し' }
 ];
 var TILE_GROUP_ = {
   kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
@@ -1795,10 +1790,13 @@ function homeFolderBoot_(OPT) {
   OPT = OPT || {};
   var START = [
     { k: 'd1', d: true, f: '施術直後', items: ['sejutsugo', 'sgline', 'shomeisho'] },
-    { k: 'd2', d: true, f: 'SNS', items: ['insta', 'threads', 'hachimitsu'] },
-    { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'links', 'lt', 'conflict'] },
-    { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage'] },
-    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] }];
+    { k: 'd2', d: true, f: 'SNS', items: ['insta', 'threads', 'hachimitsu', 'facebook', 'timetree'] },
+    { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'lt', 'conflict'] },
+    { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
+    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
+    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] }];
+  var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
+    { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' }];
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
   var group = document.querySelector(OPT.group || '#group-jitsumu');
   if (!group || !window.homeSortBoot_ && typeof homeSortBoot_ !== 'function') return;
@@ -1897,9 +1895,22 @@ function homeFolderBoot_(OPT) {
       var d = !!DEF[k], seen = d ? {} : seenFree;
       var it = x.items.filter(function (y) { if (!T[y] || seen[y] || (d && seenDef[y])) return false; seen[y] = 1; if (d) seenDef[y] = 1; return true; });
       var c = (typeof x.c === 'string' && /^#[0-9a-fA-F]{6}$/.test(x.c)) ? x.c : '';
-      if (it.length || d) out.push({ k: k, f: String(x.f || 'フォルダ'), items: it, c: c, d: d });
+      var m = (d && Array.isArray(x.m)) ? x.m.filter(function (y) { return typeof y === 'string'; }) : [];
+      if (it.length || d) out.push({ k: k, f: String(x.f || 'フォルダ'), items: it, c: c, d: d, m: m });
     });
-    START.forEach(function (F) { if (!keys[F.k]) out.push({ k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true }); });
+    START.forEach(function (F) { if (!keys[F.k]) out.push({ k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true, m: [] }); });
+    function fold(k) { for (var i = 0; i < out.length; i++) if (typeof out[i] !== 'string' && out[i].k === k) return out[i]; return null; }
+    MOVES.forEach(function (L) {   
+      var mk = (L.from ? L.from + '>' : '') + L.to + ':' + L.id, F = fold(L.to);
+      if (!F || !T[L.id] || F.m.indexOf(mk) >= 0) return;
+      F.m.push(mk);
+      var G = L.from ? fold(L.from) : null;
+      if (G) G.items = G.items.filter(function (y) { return y !== L.id; });
+      if (F.items.indexOf(L.id) < 0) F.items.push(L.id);
+      seenDef[L.id] = 1;
+      for (var i = out.length - 1; i >= 0; i--) if (out[i] === L.id) out.splice(i, 1);
+      delete seenFree[L.id];
+    });
     Object.keys(T).forEach(function (id) { if (!seenFree[id] && !seenDef[id]) out.push(id); });
     out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = (DEF[x.k] && DEF[x.k].c) || nextColor(out); });
     return out;
