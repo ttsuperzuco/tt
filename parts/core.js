@@ -2408,11 +2408,17 @@ function getKoukokuFile_() {
 function renderKoukoku_(base, staff, dev) {
   try {
     var d = JSON.parse(getKoukokuFile_().getBlob().getDataAsString('UTF-8'));
+    try {   
+      var it = DriveApp.getFilesByName('koukoku_now.json');
+      if (it.hasNext()) d.now = JSON.parse(it.next().getBlob().getDataAsString('UTF-8'));
+    } catch (e2) {}
     return renderKoukokuPage_(d, base, staff, dev);
   } catch (err) {
     return renderKoukokuPage_({ ads: [] }, base, staff, dev);
   }
 }
+
+
 
 
 
