@@ -2532,7 +2532,8 @@ var FOLDERTESTCSS_ =
   '  .tile.ftfolder::before { background:var(--ftc, #94a3b8); }' +
   // ★2026-11-14 まるちゃん「④」＝フォルダとボタンの見分け方は「耳＋地の色」：フォルダの上に紙のフォルダの耳を付け、
   //   フォルダ全体をそのフォルダの色で薄く塗って縁もその色に（左の線は出さない）。ボタンは今のまま（トップでは左の線なし）。
-  '  #ftHome a.tile.ftfolder { overflow:visible; background:var(--card); background:color-mix(in srgb, var(--ftc) 18%, var(--card)); border-color:var(--ftc); box-shadow:inset 0 0 0 1px var(--ftc), 0 6px 18px rgba(0,0,0,.07); }' +
+  //   ★同日まるちゃん「フォルダの薄い色背景は見にくくなるからやめよう」＝地は元のまま（耳と縁の色だけ）。絵の箱の地も元の薄さ(33)に戻した。
+  '  #ftHome a.tile.ftfolder { overflow:visible; border-color:var(--ftc); box-shadow:inset 0 0 0 1px var(--ftc), 0 6px 18px rgba(0,0,0,.07); }' +
   '  #ftHome a.tile.ftfolder::before { display:none; }' +
   '  #ftHome a.tile.ftfolder::after { content:""; position:absolute; left:14px; top:-10px; width:48px; height:11px; border-radius:8px 8px 0 0; background:var(--ftc); }' +
   '  #ftHome a.tile.ftfolder.hside { box-shadow:-7px 0 0 0 #fbbf24, inset 0 0 0 1px var(--ftc); }' +
@@ -2620,7 +2621,7 @@ function folderTestBoot_(D) {
     var n = F.items.length, cells = '', six = n > 4, show = n > 6 ? 5 : n;
     for (var k = 0; k < show; k++) cells += T[F.items[k]].icon;
     if (n > 6) cells += '<span class="ftmore">+' + (n - 5) + '</span>';
-    return '<a class="tile ftfolder" href="#" data-tid="@' + F.k + '" draggable="false" style="--ftc:' + F.c + '"><span class="ftmini' + (six ? ' ft6' : '') + '" style="background:' + F.c + '55">' + cells + '</span>' +
+    return '<a class="tile ftfolder" href="#" data-tid="@' + F.k + '" draggable="false" style="--ftc:' + F.c + '"><span class="ftmini' + (six ? ' ft6' : '') + '" style="background:' + F.c + '33">' + cells + '</span>' +
       '<span class="ftlab"><span class="tname">' + esc(F.f) + '</span></span></a>';   // 名前は2行まで（個数は出さない＝同日まるちゃん）
   }
   function render() {
