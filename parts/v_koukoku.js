@@ -92,6 +92,11 @@ var KOUKOKUCSS_ =
   '  .kkpsince { color:var(--sub,#64748b); font-size:.72rem; margin:5px 0 0; }' +
   '  .kkpdemo { margin-top:8px; font-size:.8rem; color:var(--ink,#0f172a); line-height:1.7; }' +
   '  .kkpdemo .kkpdk { display:inline-block; min-width:5.6em; color:var(--sub,#64748b); font-weight:700; }' +
+  '  .kkwarn { color:#dc2626 !important; font-weight:900; }' +
+  '  table.kkmt.kknow th, table.kkmt.kknow td { white-space:nowrap; }' +
+  '  .kknb { word-break:keep-all; overflow-wrap:anywhere; }' +
+  '  .kknw { white-space:nowrap; }' +
+  '  table.kkmt.kknow td.kknowsub { text-align:left; color:var(--sub,#64748b); font-size:.68rem; font-weight:600; padding-top:0; line-height:1.5; }' +
   '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.8); font-size:.72rem; text-align:center; line-height:1.6; }';
 var KOUKOKU_MONTH_DAYS_ = 31;
 function _kkShade_(v, mx) { var r = mx ? v / mx : 0; return 'background:rgba(224,83,61,' + (0.16 + r * 0.62).toFixed(2) + ')'; }
@@ -104,6 +109,62 @@ function _kkTot_(v, id, cls) {
   return '<td class="' + cls + ' kkval" id="' + id + '"' +
     ' data-day="' + esc_(_costYen_(v)) + '" data-month="' + esc_(_costYen_(v * KOUKOKU_MONTH_DAYS_)) + '">' +
     esc_(_costYen_(v)) + '</td>';
+}
+var KK_NOW_SRC_ = [['meta', 'メタ（管理画面）'], ['ig', 'インスタから'], ['google', 'グーグルマップ'], ['line', 'LINE広告']];
+function _kkNow_(n) {
+  if (!n || !n.items) return '';
+  var at = n.at || {};
+  function num(v) { return (v == null) ? '—' : esc_(_costYen_(v)); }
+  var tot = { c: 0, b: 0, y: 0, t: 0 };
+  var rows = KK_NOW_SRC_.map(function (sx) {
+    var its = n.items.filter(function (x) { return x.src === sx[0]; });
+    if (!its.length) return '';
+    var live = its.filter(function (x) { return x.live; });
+    var b = 0, y = 0, t = 0, hasSpend = false;
+    live.forEach(function (x) { b += Number(x.day_budget) || 0; });
+    its.forEach(function (x) {
+      if (x.spend_yday != null || x.spend_today != null) hasSpend = true;
+      y += Number(x.spend_yday) || 0; t += Number(x.spend_today) || 0;
+    });
+    tot.c += live.length; tot.b += b; tot.y += y; tot.t += t;
+    var sub = '';
+    if (!live.length) {
+      sub = its.map(function (x) {
+        return esc_(x.status || '止めている') + (x.day_budget ? '<br>始まると1日 ' + esc_(_costYen_(x.day_budget)) : '');
+      }).join('<br>');
+    }
+    return '<tr><th>' + esc_(sx[1]) + '</th>' +
+      '<td>' + live.length + '本</td><td>' + num(b) + '</td>' +
+      '<td>' + (hasSpend ? num(y) : '—') + '</td><td>' + (hasSpend ? num(t) : '—') + '</td></tr>' +
+      (sub ? '<tr><td colspan="5" class="kknowsub">' + sub + '</td></tr>' : '');
+  }).join('');
+  var places = '<div class="kkcard">' +
+    '<div class="kkmh">出している所ごと（1日の予算と使った額）</div>' +
+    '<table class="kkmt kknow"><thead><tr><th>出している所</th><th>配信中</th><th>予算/日</th><th>昨日</th><th>今日</th></tr></thead>' +
+    '<tbody>' + rows +
+    '<tr class="kkmsum"><th>合計</th><td>' + tot.c + '本</td><td>' + num(tot.b) + '</td><td>' + num(tot.y) + '</td><td>' + num(tot.t) + '</td></tr>' +
+    '</tbody></table>' +
+    '<div class="kkleg kknb" style="text-align:left;line-height:1.6;">' +
+      '※「今日」は読んだ時刻までの分です<wbr>（グーグルの数字は約3時間遅れ）。<wbr>止めた広告が使った分も<wbr>「昨日」「今日」に入っています。<br>' +
+      '※グーグルは日によって<wbr>1日の予算の2倍まで使います<wbr>（1か月で見ると<wbr>予算くらいになります）。<br>' +
+      '※読んだ時刻＝<wbr><span class="kknw">メタ ' + esc_(at.meta || '—') + '</span><wbr>／<span class="kknw">グーグル ' + esc_(at.google || '—') + '</span>' +
+      '<wbr>／LINE広告は<wbr>機械で読めないので<wbr>記録から<wbr><span class="kknw">（確認した日 ' + esc_(at.line || '—') + '）</span>' +
+    '</div>' +
+    ((n.errors && n.errors.length) ? '<div class="kkleg kknb" style="text-align:left;color:#d97706;">読めなかった所：<wbr>' +
+      esc_(n.errors.join('／')) + '<wbr>（前に読めた分を出しています）</div>' : '') +
+    '</div>';
+  var pre = (n.prepaid || []).map(function (p) {
+    var warn = (p.days != null && p.days <= 3);
+    return '<tr><th>' + esc_(p.name) + '</th><td>' + num(p.balance) + '</td><td>' + num(p.day_budget) + '</td>' +
+      '<td' + (warn ? ' class="kkwarn"' : '') + '>' + (p.days != null ? 'あと約' + esc_(p.days) + '日' + (warn ? ' ⚠' : '') : '—') + '</td></tr>';
+  }).join('');
+  var prepaid = pre ? '<div class="kkcard">' +
+    '<div class="kkmh">前払いの残り</div>' +
+    '<table class="kkmt kknow"><thead><tr><th>口座</th><th>残り</th><th>予算/日</th><th>もつ日数</th></tr></thead>' +
+    '<tbody>' + pre + '</tbody></table>' +
+    '<div class="kkleg kknb" style="text-align:left;">※残りが3日分を切ると<wbr>赤で出ます。<wbr>止まる前に<wbr>入金してください😊</div>' +
+    '</div>' : '';
+  return places + prepaid;
 }
 var KK_PLACE_ = { instagram: 'インスタ', facebook: 'フェイスブック', threads: 'スレッズ', messenger: 'メッセンジャー', audience_network: 'その他' };
 function _kkPlaces_(d) {
@@ -217,7 +278,17 @@ function renderKoukokuPage_(d, base, staff, dev) {
 
   var S = { jm: 0, jf: 0, tm: 0, tf: 0 }, unknown = 0;
   var mgrKeys = {};
-  accounts.forEach(function (acc) {
+  var NOW = (d.now && d.now.items) ? d.now : null;
+  if (NOW) {
+    NOW.items.forEach(function (x) {
+      if (!x.live) return;
+      var day = Number(x.day_budget) || 0;
+      if (!x.sex || !x.nat) { unknown += day; return; }
+      S[(x.nat === 'jp' ? 'j' : 't') + (x.sex === 'f' ? 'f' : 'm')] += day;
+    });
+    accounts.forEach(function (acc) { mgrKeys[acc.key] = 1; });   
+  }
+  if (!NOW) accounts.forEach(function (acc) {
     if (!acc.manager) return;
     mgrKeys[acc.key] = 1;
     acc.manager.forEach(function (r) {
@@ -236,7 +307,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
       S[(a.nat === 'jp' ? 'j' : 't') + (a.sex === 'f' ? 'f' : 'm')] += day;
     });
   });
-  if (!accounts.length) {
+  if (!accounts.length && !NOW) {
     allads.forEach(function (a) {
       if (a.status !== '配信中') return;
       var day = Number(a.day_budget) || 0;
@@ -257,7 +328,7 @@ function renderKoukokuPage_(d, base, staff, dev) {
       _kkTot_(S.jf + S.tf, 'kt-f', 'kktot') + _kkTot_(grand, 'kt-all', 'kkgrand') + '</tr>' +
     '</tbody></table>' +
     '<div class="kkleg">■ 色が濃い＝1日に使っている金額が多い</div>' +
-    '<div class="kkest">🧮 このペース（1日 合計 <b>' + esc_(_costYen_(grand)) + '</b>）で' + KOUKOKU_MONTH_DAYS_ + '日つづけると＝' +
+    '<div class="kkest kknb">🧮 このペース<wbr><span class="kknw">（1日 合計 <b>' + esc_(_costYen_(grand)) + '</b>）で</span><wbr><span class="kknw">' + KOUKOKU_MONTH_DAYS_ + '日つづけると＝</span><wbr>' +
       '<b class="kkestbig">' + esc_(_costYen_(grand * KOUKOKU_MONTH_DAYS_)) + '</b>（1ヶ月の目安）</div>' +
     (unknown ? '<div class="kkleg" style="text-align:center;color:#d97706;">※ 男女を読めなかった配信中の広告 1日 ' + esc_(_costYen_(unknown)) + ' 分は4マスに含めていません</div>' : '') +
     '</div>';
@@ -453,17 +524,19 @@ function renderKoukokuPage_(d, base, staff, dev) {
     '<div class="home">' +
       backBar_(base, staff, dev) +
       '<div class="hhead"><span class="bmark">📣</span><span class="bname">広告費管理</span></div>' +
-      '<div class="hsub" style="color:#fff;text-align:center;font-weight:700;margin:0 0 8px;letter-spacing:.06em;">インスタグラム広告</div>' +
+      '<div class="hsub" style="color:#fff;text-align:center;font-weight:700;margin:0 0 8px;letter-spacing:.06em;">' + (NOW ? 'インスタ・グーグルマップ・LINEの広告' : 'インスタグラム広告') + '</div>' +
       '<div class="kk">' +
-        '<div style="text-align:center;"><span class="kkbadge">✓ 毎日1回 自動で読み取り</span></div>' +
-        '<div class="kkwhen">' + when + '</div>' +
+        '<div style="text-align:center;"><span class="kkbadge">' + (NOW ? '✓ 朝と夜に自動で読み取り' : '✓ 毎日1回 自動で読み取り') + '</span></div>' +
+        '<div class="kkwhen">' + (NOW ? '今の予算の読み取り：' + esc_(NOW.read_at || '') : when) + '</div>' +
         '<div class="kkseg"><button id="kk-day" class="on" type="button">1日あたり</button>' +
           '<button id="kk-month" type="button">1か月あたり</button></div>' +
         table +
+        _kkNow_(NOW) +
         _kkPlaces_(d) +
         '<div class="kkacc" style="border-left-color:#7c3aed;">広告ごとの明細</div>' +
         list +
-        '<div class="kknote">4マスは「今 動いている広告の1日予算」を国籍×性別で合算（広告マネージャから読めた分は、公式LINEへ飛ばす広告も含む）。金額は台湾ドル（元）。</div>' +
+        (NOW ? '<div class="kknote kknb">4マスは<wbr>「今 配信中の広告の<wbr>1日の予算」を<wbr>国籍×性別で<wbr>合計しています<wbr>（メタ・<wbr>インスタから出した広告・<wbr>グーグルマップ広告・<wbr>LINE広告）。<wbr>広告ごとの明細は<wbr><span class="kknw">' + esc_(d.read_at || '') + '</span><wbr>に読んだ分です。<wbr>金額は台湾元。</div>'
+             : '<div class="kknote">4マスは「今 動いている広告の1日予算」を国籍×性別で合算（広告マネージャから読めた分は、公式LINEへ飛ばす広告も含む）。金額は台湾ドル（元）。</div>') +
       '</div>' +
     '</div>' + script + pscript;
 }
