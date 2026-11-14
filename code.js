@@ -17346,7 +17346,7 @@ var INSTACSS_ =
   '.iggrid button{position:relative;}' +
   // ★2026-11-14 まるちゃん「下書き変更一覧のバーが薄い黄色で目立たない」＝下書きのスイッチと同じ濃いオレンジにして、一覧は白いボタンに。
   '.igapvbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0;background:#EF9F27;color:#412402;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
-  '.igapvbar button{background:#fff;border:0;color:#412402;border-radius:8px;padding:6px 14px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
+  '.igapvbar button{background:#0095f6;border:0;color:#fff;border-radius:8px;padding:8px 18px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);}' +
   // ★2026-11-12 まるちゃん「下書きをデフォルトに。本番を押すと本番になる。下書き本番のスイッチみたいなボタン」
   '.igmode{display:inline-flex;background:#fff;border-radius:999px;padding:2px;gap:2px;}' +
   '.igstat .igmode button{background:transparent;color:#64748b;padding:4px 12px;}' +
@@ -17944,7 +17944,7 @@ function instaScript_(C) {
     if (APVL[CUR] === undefined) { APVL[CUR] = null; apvLoad(CUR); }
     var all = APVL[CUR] || [], w = apvAll().length, ng = all.filter(function (it) { return it.status === 'rejected'; }).length;
     b.style.display = '';
-    b.innerHTML = '<span>' + (APVL[CUR] ? '下書き・変更' + w + '件' + (ng ? '（差し戻し' + ng + '件）' : '') : '下書きを読み込んでいます…') + '</span><button type="button" id="igApvList">一覧</button>';
+    b.innerHTML = '<span>' + (APVL[CUR] ? '下書き・変更' + w + '件' + (ng ? '（差し戻し' + ng + '件）' : '') : '下書きを読み込んでいます…') + '</span><button type="button" id="igApvList">' + (ISADMIN ? '承認' : '一覧') + '</button>';   // ★2026-11-14 まるちゃん「右側の一覧を承認という文字にしてボタンに」
   }
   // 承認待ちを重ねた完成形（本番の中身は書き換えない＝写しを作る）
   function apvView(v0) {
