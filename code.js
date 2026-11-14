@@ -3307,8 +3307,6 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
       var R = ROLE_DEFS_[ri], list = byG[R.id] || [], subs = SUB_ROLES_[R.id] || [], nsub = 0;
       for (var si = 0; si < subs.length; si++) nsub += (byG[subs[si].id] || []).length;
-      if (R.id === 'jitsumu') menuHtml += '<button type="button" class="rolebtn jitsumu" data-go="' + base + '?view=home&dev=1&as=kanbu" onclick="window.top.location.href=this.dataset.go">' +
-        '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></button>';   // ★2026-11-14 押すとトマトの画面（他の大ボタンと同じ字にするため button）
       if (list.length + nsub) menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
@@ -3332,7 +3330,10 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     }
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="' + homeCls + '">' + head +
-        '<div class="rolemenu" id="rolemenu">' + menuHtml + '</div>' +
+        // ★2026-11-14 まるちゃん「スタッフ画面を一番下に置いて」＝押すとトマトの画面（他の大ボタンと同じ字にするため button）。PC版と同じ。
+        '<div class="rolemenu" id="rolemenu">' + menuHtml +
+          '<button type="button" class="rolebtn jitsumu" data-go="' + base + '?view=home&dev=1&as=kanbu" onclick="window.top.location.href=this.dataset.go">' +
+          '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></button></div>' +
         groupsHtml +
       '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript + HOMEFOLDER_SCRIPT_;
   }
