@@ -3304,24 +3304,26 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     '<div class="hsub">' + subtitle + '</div>';
   // 開発版(?dev=1)＝まず3つの大ボタン、押すとその仲間だけ表示（PC版と同じ見せ方）。それ以外は今まで通り一覧。
   if (mikokai) {
-    // ★2026-11-14 まるちゃん「スタッフに完全未公開と、トマトさんだけに公開っていうのをその下に入れて」＝住所に &only=tomato（index.html が __SZ_MIKOKAI_='tomato'）の時は、トマトさんだけに出しているボタン。
-    var onlyTomato = window.__SZ_MIKOKAI_ === 'tomato';
-    var hid = shown.filter(function (t) {
-      var g = tileGroup_(t.id);
-      if (t.always) return false;
+    // ★2026-11-14 まるちゃん「トップ画面はスタッフに未公開でいい。その中の話。トマトさんだけに公開もスタッフに未公開の中の下に入れて」＝トップのボタンは1つ（スタッフに未公開）。中に①スタッフに完全未公開 ②その下にトマトさんだけに公開。
+    var hidAll = [], hidTomato = [];
+    shown.forEach(function (t) {
+      if (t.always) return;
       var on = PEOPLE_.filter(function (p) { return perms[p] && perms[p][t.id] === true; });
-      if (onlyTomato) return on.length === 1 && on[0] === 'kanbu';
-      if (g === 'keiei' || g === 'kanri') return false;
-      return !on.length;
+      var g = tileGroup_(t.id);
+      if (!on.length) { if (g !== 'keiei' && g !== 'kanri') hidAll.push(t); }
+      else if (on.length === 1 && on[0] === 'kanbu') hidTomato.push(t);
     });
+    var note_ = function (txt) { return '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">' + txt + '</div>'; };
+    var none_ = '<div style="color:#fff;font-weight:800">今はありません😊</div>';
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="home">' + head +
         '<div class="backbar"><a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a></div>' +
-        '<div class="grouptitle">' + (onlyTomato ? '🍅 トマトさんだけに公開' : '🔒 スタッフに完全未公開') + '（' + hid.length + '個）</div>' +
-        '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">' +
-          (onlyTomato ? 'トマトさんにだけ表示していて、ほかのスタッフには表示していないボタンです。'
-                      : 'りゅうツール以外で、まだどのスタッフにも表示していないボタンです。') + '</div>' +
-        (hid.length ? tilesBox_(hid, []) : '<div style="color:#fff;font-weight:800">今はありません😊</div>') +
+        '<div class="grouptitle">🔒 スタッフに完全未公開（' + hidAll.length + '個）</div>' +
+        note_('りゅうツール以外で、まだどのスタッフにも表示していないボタンです。') +
+        (hidAll.length ? tilesBox_(hidAll, []) : none_) +
+        '<div class="grouptitle" style="margin-top:26px">🍅 トマトさんだけに公開（' + hidTomato.length + '個）</div>' +
+        note_('トマトさんにだけ表示していて、ほかのスタッフには表示していないボタンです。') +
+        (hidTomato.length ? tilesBox_(hidTomato, []) : none_) +
       '</div>' + EXTLINK_SCRIPT_;
   }
   if (dev) {
@@ -3360,10 +3362,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
           '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></button>' +
           // ★2026-11-14 まるちゃん「スタッフ画面の下に スタッフ未公開 ボタン。りゅうツールのような専用の管理のボタンは一生公開しないからいい。そうじゃなくて、公開状態になっているけど、スタッフにはだれにも表示させていないボタンの一覧」（スタッフ画面の下・PC版と同じ）
           '<button type="button" class="rolebtn kaihatsu" data-go="' + base + '?view=mikokai&dev=1" onclick="window.top.location.href=this.dataset.go">' +
-          '<span class="ricon">🔒</span><span class="rname">スタッフに完全未公開</span></button>' +
-          // ★2026-11-14 まるちゃん「スタッフに完全未公開と、トマトさんだけに公開っていうのをその下に入れて」（その下・PC版と同じ）
-          '<button type="button" class="rolebtn keiei" data-go="' + base + '?view=mikokai&dev=1&only=tomato" onclick="window.top.location.href=this.dataset.go">' +
-          '<span class="ricon">🍅</span><span class="rname">トマトさんだけに公開</span></button></div>' +
+          '<span class="ricon">🔒</span><span class="rname">スタッフに未公開</span></button></div>' +
         groupsHtml +
       '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript + HOMEFOLDER_SCRIPT_;
   }
