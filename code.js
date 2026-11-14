@@ -22571,6 +22571,15 @@ function renderTimeTreePage_(base, staff, dev) {
       'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}' +
     '.tvb.fill{color:#fff;}' +
     '.tvmore{font-size:10px;color:#999;font-weight:700;line-height:13px;}' +
+    '.tvic svg{width:18px;height:18px;display:block;margin:auto;}' +
+    /* ── 予定の検索 ── */
+    '.tvsrch{padding:4px 14px 8px;}' +
+    '.tvq{display:block;width:100%;box-sizing:border-box;border:0;background:#f2f2f2;border-radius:10px;padding:11px 12px;' +
+      'font:inherit;font-size:16px;color:#222;outline:none;}' +
+    '.tvscnt{font-size:12px;color:#999;font-weight:700;padding:4px 16px 2px;}' +
+    '.tvsechd{font-size:13px;font-weight:800;color:#888;padding:16px 16px 2px;border-top:1px solid #eee;margin-top:8px;}' +
+    '.tvdate{font-size:13px;font-weight:800;color:#555;padding:10px 16px 2px;}' +
+    '.tvsmore{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 16px 10px;font-size:12px;color:#999;}' +
     /* ── その日の予定 ── */
     '.tvdh{display:flex;align-items:center;gap:8px;padding:6px 14px 4px;}' +
     '.tvdh .dt{flex:1;min-width:0;font-size:18px;font-weight:800;color:#222;}' +
@@ -22655,6 +22664,7 @@ function ttviewStart_(exec, base, staff, dev) {
   var WD = ['月', '火', '水', '木', '金', '土', '日'];     // ズコの他の暦と同じく月曜はじまり（本物も月曜はじまりにできる）
   var JWD = ['日', '月', '火', '水', '木', '金', '土'];
   var cache = {};          // 年月 → 受け取った中身
+  var SICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/></svg>';
   var waiting = {};
   var today = new Date(); today.setHours(0, 0, 0, 0);
   var st = { step: 'month', k: 0, date: '', ev: null };
@@ -22784,6 +22794,7 @@ function ttviewStart_(exec, base, staff, dev) {
     if (st.step === 'month') drawMonth();
     else if (st.step === 'day') drawDay();
     else if (st.step === 'memo') drawMemo();
+    else if (st.step === 'search') drawSearch();
     else drawEvent();
   }
   function preload(k) {
@@ -22834,6 +22845,7 @@ function ttviewStart_(exec, base, staff, dev) {
         '<button class="tvym" id="tvpick">' + m.getFullYear() + '年' + (m.getMonth() + 1) + '月<i>▼</i></button>' +
         '<span class="tvsp"></span>' +
         (k !== 0 ? '<button class="tvtd" id="tvtoday">今日</button>' : '') +
+        '<button class="tvic" id="tvsearch" title="予定を検索">' + SICO + '</button>' +
         '<button class="tvic" id="tvprev"' + (inRange(k - 1) ? '' : ' disabled') + '>‹</button>' +
         '<button class="tvic" id="tvnext"' + (inRange(k + 1) ? '' : ' disabled') + '>›</button></div>' +
       chipsHtml() + '<div id="tvcal"><div class="tvstatus">予定を読んでいます...</div></div>';
@@ -22842,6 +22854,7 @@ function ttviewStart_(exec, base, staff, dev) {
     document.getElementById('tvprev').onclick = prev;
     document.getElementById('tvnext').onclick = next;
     document.getElementById('tvpick').onclick = openPicker;
+    document.getElementById('tvsearch').onclick = function () { go({ step: 'search', k: st.k, q: '', lo: -1 }); };
     var tb = document.getElementById('tvtoday'); if (tb) tb.onclick = function () { go({ step: 'month', k: 0 }, false); };
     bindChips();
     swipe = function (d) { if (d > 0) next(); else prev(); };
@@ -22894,14 +22907,15 @@ function ttviewStart_(exec, base, staff, dev) {
     for (var i = 0; i < ls.length; i++) { var t = ls[i].replace(/^\s+|\s+$/g, ''); if (t) return t; }
     return '';
   }
-  function rowHtml(e, idx, ds) {
+  function rowHtml(e, idx, ds, sub) {
+    if (sub == null) sub = memo1(e.n);   // 2行目＝ふつうはメモの1行目（検索の時は当たった行）
     var tm;
     if (isAllDay(e, ds)) tm = '終日';
     else tm = '<b>' + esc(e.s || '') + '</b>' + esc(e.e === ds ? (e.f || '') : '');   // 次の日まで続く予定は終わりの時刻を出さない（元と同じ）
     return '<button class="tvrow" data-i="' + idx + '"><span class="tm">' + tm + '</span>' +
       '<span class="ln" style="background:' + esc(e.col) + '"></span>' +
       '<span class="bd"><span class="ti">' + esc(e.t || '(タイトルなし)') + '</span>' +
-      (memo1(e.n) ? '<span class="mm">' + esc(memo1(e.n)) + '</span>' : '') + '</span>' +
+      (sub ? '<span class="mm">' + esc(sub) + '</span>' : '') + '</span>' +
       (e.au ? '<span class="av" title="' + esc(e.au) + '">' + esc(avOf(e.au)) + '</span>' : '') + '</button>';
   }
   function drawDay() {
@@ -22938,6 +22952,133 @@ function ttviewStart_(exec, base, staff, dev) {
         go({ step: 'event', k: st.k, date: ds, ev: e });
       };
     });
+  }
+
+  /* ── 予定の検索（2026-11-14 まるちゃん「順番に機能を追加して全部やって」の1つ目＝本物の検索と同じ） ──
+     題名・予約メモ・カレンダー名・部屋名から探す。空白で区切ると、全部の言葉を含む予定だけ出す。
+     半角・全角、大文字・小文字の違いは同じに扱う。探す範囲は最初「先月〜5か月先」
+     （月ごとの写しを受け取るため）。「もっと前の月も検索する」で半年ずつ過去へ広げる。
+     今日から先の予定を日付の順に上へ、過去の予定はその下に新しい順で並べる。読むだけ。 */
+  function norm(s) {
+    s = String(s == null ? '' : s);
+    try { s = s.normalize('NFKC'); } catch (x) {}
+    return s.toLowerCase();
+  }
+  function hitLine(e, words) {
+    /* 題名に無い言葉がメモにある時は、その言葉を含むメモの行を出す（どこが当たったか分かるように） */
+    var nt = norm(e.t);
+    for (var w = 0; w < words.length; w++) {
+      if (nt.indexOf(words[w]) >= 0) continue;
+      var ls = String(e.n || '').split(String.fromCharCode(10));
+      for (var i = 0; i < ls.length; i++) if (norm(ls[i]).indexOf(words[w]) >= 0) return ls[i].replace(/^\s+|\s+$/g, '');
+    }
+    return memo1(e.n);
+  }
+  function drawSearch() {
+    setBack(function () { history.back(); });
+    var lo = (st.lo == null) ? -1 : st.lo;
+    if (range && lo < range.lo) lo = range.lo;
+    var hi = range ? Math.min(5, range.hi) : 5;
+    body.innerHTML = '<div class="tvsrch"><input class="tvq" id="tvq" type="search" enterkeyhint="search" ' +
+      'placeholder="予定を検索（お名前・番号・メモ）" autocomplete="off"></div>' +
+      '<div class="tvdchips">' + chipsHtml() + '</div><div id="tvsres"></div>';
+    bindChips();
+    var q = document.getElementById('tvq');
+    q.value = st.q || '';
+    var timer = null;
+    q.addEventListener('input', function () {
+      st.q = q.value;
+      try { history.replaceState({ tv: st }, ''); } catch (x) {}
+      clearTimeout(timer);
+      timer = setTimeout(run, 300);
+    });
+    if (!st.q) setTimeout(function () { try { q.focus(); } catch (x) {} }, 50);
+    function run() {
+      var box = document.getElementById('tvsres');
+      if (!box || st.step !== 'search') return;
+      var words = norm(q.value).split(/\s+/).filter(function (w) { return w; });
+      if (!words.length) { box.innerHTML = '<div class="tvstatus">お名前・番号・メモの言葉を入力してください😊</div>'; return; }
+      var ks = [];
+      for (var k = lo; k <= hi; k++) ks.push(k);
+      var got = {}, left = ks.length;
+      box.innerHTML = '<div class="tvstatus">予定を検索しています...（' + (ks.length - left) + '/' + ks.length + 'か月）</div>';
+      for (var i = 0; i < ks.length; i++) (function (kk) {
+        load(kk, function (p) {
+          got[kk] = (p && !p.error) ? p.events : [];
+          left--;
+          if (st.step !== 'search') return;
+          if (left > 0) {
+            var b2 = document.getElementById('tvsres');
+            if (b2 && b2.firstChild && b2.firstChild.className === 'tvstatus') b2.firstChild.textContent = '予定を検索しています...（' + (ks.length - left) + '/' + ks.length + 'か月）';
+            return;
+          }
+          show(words, ks, got);
+        });
+      })(ks[i]);
+    }
+    function show(words, ks, got) {
+      var box = document.getElementById('tvsres');
+      if (!box || norm(q.value).split(/\s+/).filter(function (w) { return w; }).join(' ') !== words.join(' ')) return;
+      var seen = {}, list = [];
+      for (var a = 0; a < ks.length; a++) {
+        var evs = visible(got[ks[a]] || []);
+        for (var b = 0; b < evs.length; b++) {
+          var e = evs[b], key = e.i + '|' + e.d;
+          if (seen[key]) continue;
+          var hay = norm((e.t || '') + '\n' + (e.n || '') + '\n' + (e.cn || '') + '\n' + (e.rn || ''));
+          var ok = true;
+          for (var w = 0; w < words.length; w++) if (hay.indexOf(words[w]) < 0) { ok = false; break; }
+          if (!ok) continue;
+          seen[key] = 1;
+          list.push(e);
+        }
+      }
+      var tiso = iso(today);
+      var fut = list.filter(function (e) { return e.d >= tiso; }), past = list.filter(function (e) { return e.d < tiso; });
+      function byTime(x, y) { return x.d < y.d ? -1 : x.d > y.d ? 1 : ((isFill(x) ? '' : x.s || '') < (isFill(y) ? '' : y.s || '') ? -1 : 1); }
+      fut.sort(byTime);
+      past.sort(function (x, y) { return -byTime(x, y); });
+      var MAX = 200, shown = [], h = '';
+      function part(arr, title) {
+        if (!arr.length) return;
+        if (title) h += '<div class="tvsechd">' + title + '</div>';
+        var last = '';
+        for (var c = 0; c < arr.length && shown.length < MAX; c++) {
+          var e = arr[c];
+          if (e.d !== last) {
+            last = e.d;
+            var dd = parseIso(e.d);
+            h += '<div class="tvdate">' + (dd.getFullYear() !== today.getFullYear() ? dd.getFullYear() + '年' : '') + jpDay(e.d) + '</div>';
+          }
+          h += rowHtml(e, 's' + shown.length, e.d, hitLine(e, words));
+          shown.push(e);
+        }
+      }
+      if (!list.length) h = '<div class="tvstatus">見つかりませんでした。</div>';
+      else {
+        h = '<div class="tvscnt">' + list.length + '件' + (list.length > MAX ? '（最初の' + MAX + '件を表示しています。言葉を足して絞り込んでください😊）' : '') + '</div>';
+        part(fut, '');
+        part(past, '過去の予定');
+      }
+      var canMore = !range || lo > range.lo;
+      var m0 = monthOf(lo);
+      h += '<div class="tvsmore"><span>' + m0.getFullYear() + '年' + (m0.getMonth() + 1) + '月から検索しています</span>' +
+        (canMore ? '<button class="tvtd" id="tvsmore">もっと前の月も検索する</button>' : '') + '</div>';
+      box.innerHTML = h;
+      var bs = box.querySelectorAll('[data-i]');
+      for (var r = 0; r < bs.length; r++) bs[r].onclick = function () {
+        var e = shown[parseInt(this.getAttribute('data-i').slice(1), 10)];
+        go({ step: 'event', k: kOfDate(e.d), date: e.d, ev: e });
+      };
+      var mb = document.getElementById('tvsmore');
+      if (mb) mb.onclick = function () {
+        lo = range ? Math.max(range.lo, lo - 6) : lo - 6;
+        st.lo = lo;
+        try { history.replaceState({ tv: st }, ''); } catch (x) {}
+        run();
+      };
+    }
+    run();
   }
 
   /* ── 予定の中身（本物の予定の詳細画面の形） ── */
