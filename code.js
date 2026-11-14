@@ -3004,6 +3004,8 @@ function renderPermListPage_(base, staff, dev) {
     var subs = SUB_ROLES_[R.id] || [];
     for (var s = 0; s < subs.length; s++) rooms.push({ id: subs[s].id, title: subs[s].title, icon: subs[s].icon });
   }
+  // ★2026-11-14 まるちゃん「開発機能を一番上に表示」＝この表だけ、開発中の機能の部屋を先頭にする（ホームの並びは変えない）。
+  rooms.sort(function (a, b) { return (a.id === 'kaihatsu' ? 0 : 1) - (b.id === 'kaihatsu' ? 0 : 1); });
   var known = {};
   for (var k = 0; k < rooms.length; k++) known[rooms[k].id] = 1;
   var rows = TILE_DEFS_.map(function (t) {
