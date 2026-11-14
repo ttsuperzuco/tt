@@ -65,7 +65,7 @@ var INSTACSS_ =
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
   '.igapvbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0;background:#EF9F27;color:#412402;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
-  '.igapvbar button{background:#fff;border:0;color:#412402;border-radius:8px;padding:6px 14px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
+  '.igapvbar button{background:#0095f6;border:0;color:#fff;border-radius:8px;padding:8px 18px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);}' +
   '.igmode{display:inline-flex;background:#fff;border-radius:999px;padding:2px;gap:2px;}' +
   '.igstat .igmode button{background:transparent;color:#64748b;padding:4px 12px;}' +
   '.igstat .igmode button[data-mode="d"].on{background:#EF9F27;color:#412402;}' +
@@ -619,7 +619,7 @@ function instaScript_(C) {
     if (APVL[CUR] === undefined) { APVL[CUR] = null; apvLoad(CUR); }
     var all = APVL[CUR] || [], w = apvAll().length, ng = all.filter(function (it) { return it.status === 'rejected'; }).length;
     b.style.display = '';
-    b.innerHTML = '<span>' + (APVL[CUR] ? '下書き・変更' + w + '件' + (ng ? '（差し戻し' + ng + '件）' : '') : '下書きを読み込んでいます…') + '</span><button type="button" id="igApvList">一覧</button>';
+    b.innerHTML = '<span>' + (APVL[CUR] ? '下書き・変更' + w + '件' + (ng ? '（差し戻し' + ng + '件）' : '') : '下書きを読み込んでいます…') + '</span><button type="button" id="igApvList">' + (ISADMIN ? '承認' : '一覧') + '</button>';   
   }
   function apvView(v0) {
     var v = {}; for (var k in v0) v[k] = v0[k];
