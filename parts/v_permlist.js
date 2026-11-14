@@ -72,6 +72,7 @@ function renderPermListPage_(base, staff, dev) {
     var subs = SUB_ROLES_[R.id] || [];
     for (var s = 0; s < subs.length; s++) rooms.push({ id: subs[s].id, title: subs[s].title, icon: subs[s].icon });
   }
+  rooms.sort(function (a, b) { return (a.id === 'kaihatsu' ? 0 : 1) - (b.id === 'kaihatsu' ? 0 : 1); });
   var known = {};
   for (var k = 0; k < rooms.length; k++) known[rooms[k].id] = 1;
   var rows = TILE_DEFS_.map(function (t) {
