@@ -63,7 +63,7 @@ var INSTACSS_ =
   '.igtabs button.on{color:#000;border-bottom:1px solid #000;}' +
   '.iggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}' +
   '.igapvon{outline:3px solid #EF9F27 !important;outline-offset:-3px;border-radius:8px;background-color:rgba(239,159,39,.12);}' +
-  '.igapvdel img,.igapvdel .c,.igapvdel .t{opacity:.35;}' +
+  '.igapvdel img,.igapvdel .c,.igapvdel .t,.igapvdel .tx{opacity:.35;}' +
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
   '.igapvbar{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:6px 0;background:#FAEEDA;color:#633806;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
@@ -1672,8 +1672,19 @@ function instaScript_(C) {
     if (POST._apv) capA = { id: POST._apv };
     if (capT || POST._apv) h += '<div class="igpcap' + (capA ? ' igapvon' : '') + '" style="position:relative"><b>' + esc(p.user || '') + '</b> ' + esc(capT || '') + (capA ? '<span class="igapv" data-apv="' + esc(capA.id) + '">' + (POST._apv ? '新規' : '修正') + '</span>' : '') + '</div>';
     h += '<div class="igpd">' + esc(ago(POST.at)) + (POST.comments_on || POST._apv ? '' : '　・　コメントはオフです') + '</div>';
-    h += '<div class="igpcs">' + (POST.comments && POST.comments.length ? POST.comments.map(function (c) {
-      return cmt(c, false) + (c.replies || []).map(function (r) { return cmt(r, true, c); }).join('');
+    var CD = {}, CN = [], CR = {};
+    if (DRAFT && !POST._apv) apvAll().forEach(function (it) {
+      var L = it.light || {}; if (L.code !== POST.code) return;
+      if (it.kind === 'cdel') CD[String(L.comment_id)] = it;
+      else if (it.kind === 'comment') CN.push(it);
+      else if (it.kind === 'reply') (CR[String(L.comment_id)] = CR[String(L.comment_id)] || []).push(it);
+    });
+    var dnew = function (it) { return { id: 'apv_' + it.id, u: p.user || '', t: (it.light || {}).message || '', at: it.at, _mark: '新規', _apv: it.id }; };
+    var ddel = function (c) { var d = CD[String(c.id)]; if (!d) return c; var y = {}; for (var k7 in c) y[k7] = c[k7]; y._mark = '削除'; y._apv = d.id; y._del = true; return y; };
+    var CS = (POST.comments || []).concat(CN.map(dnew));
+    h += '<div class="igpcs">' + (CS.length ? CS.map(function (c0) {
+      var c = ddel(c0), rs = (c.replies || []).concat((CR[String(c.id)] || []).map(dnew));
+      return cmt(c, false) + rs.map(function (r) { return cmt(ddel(r), true, c); }).join('');
     }).join('') : '<div class="igpd">まだコメントはありません。</div>') + '</div></div>';
     el.innerHTML = h;
     drawInput();
@@ -2494,6 +2505,12 @@ function instaScript_(C) {
     });
   }
   function cmt(c, rep, parent) {
+    if (c._apv && !c._del) {   
+      return '<div class="igpc igapvon' + (rep ? ' rep' : '') + '" style="position:relative;padding-right:52px"><div class="tx"><b>' + esc(c.u) + '</b>' + esc(c.t) +
+        '<div class="meta"><span>' + esc(apvWhen(c.at)) + '</span></div></div><span class="igapv" data-apv="' + esc(c._apv) + '">' + c._mark + '</span></div>';
+    }
+    if (c._del) return '<div class="igpc igapvon igapvdel' + (rep ? ' rep' : '') + '" style="position:relative;padding-right:52px"><div class="tx"><b>' + esc(c.u) + '</b>' + esc(c.t) +
+      '<div class="meta"><span>' + esc(ago(c.at)) + '</span></div></div><span class="igapv" data-apv="' + esc(c._apv) + '">' + c._mark + '</span></div>';
     return '<div class="igpc' + (rep ? ' rep' : '') + (c.hidden ? ' hid' : '') + '"><div class="tx"><b>' + esc(c.u) + '</b>' + esc(c.t) +
       '<div class="meta"><span>' + esc(ago(c.at)) + (c.hidden ? '・非表示中' : '') + '</span>' +
       '<button type="button" data-rep="' + esc(rep ? parent.id : c.id) + '" data-ru="' + esc(c.u) + '">返信する</button></div></div>' +
