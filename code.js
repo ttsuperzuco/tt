@@ -3254,9 +3254,9 @@ function homeAsWho_(dev) {
   for (var i = 0; i < HOME_AS_PEOPLE_.length; i++) { if (HOME_AS_PEOPLE_[i].id && HOME_AS_PEOPLE_[i].id === m[1]) return m[1]; }
   return '';
 }
-function homeAsRow_(base, cur) {
+function homeAsRow_(base, cur, sim) {
   return '<div class="hasrow">' + HOME_AS_PEOPLE_.map(function (p) {
-    var href = base + '?view=home&dev=1' + (p.id ? '&as=' + p.id : '');
+    var href = base + '?view=home&dev=1' + (p.id ? '&as=' + p.id : '') + (sim ? '&sim=1' : '');   // ★2026-11-14 新しい形で見ている時は人を替えても新しい形のまま
     return '<a class="hasbtn' + (p.text ? ' hastx' : '') + (p.id === cur ? ' on' : '') + '" href="' + href +
       '" target="_top" title="' + esc_(p.title || p.text) + 'の画面">' + esc_(p.mark || p.text) + '</a>';
   }).join('') + '</div>';
@@ -3266,6 +3266,8 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var labels = (cfg && cfg.labels) || PERSON_LABEL_;
   // ★2026-11-13 その人の画面の見本（上の HOME_AS_PEOPLE_）。ボタンの行き先は開発版のまま（sfx は先に作る）。
   var asWho = homeAsWho_(dev);
+  // ★2026-11-14 まるちゃん「この新しいアイコンと新しいフォルダ分けを、オリーブちゃんの今出てるやつでやるとどう見えるか見たい。シミュレーションで作って」＝スタッフ画面（その人の画面）の住所に &sim=1 を付けると、その人に出しているボタンだけを、新しい絵・りゅう画面と同じフォルダ分けで出す（見るだけ）。並びはこの端末だけの試しの置き場（sz_home_folders_sim_<人>）に覚える＝りゅう画面の並びにも、スタッフのスマホにも触らない。
+  var simV = !!(asWho && typeof location !== 'undefined' && /[?&]sim=1(&|$)/.test(location.search || ''));
   var sfx = roleSfx_(staff, dev);
   if (asWho) { staff = asWho !== 'kanbu'; who = staff ? asWho : ''; dev = false; }
   var allow = personPerms_(perms, staff, dev, who);   // null=dev(全許可)
@@ -3316,7 +3318,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     var rel = t.url ? ' rel="noopener"' : '';
     var sortAttr = canSort ? (' data-tid="' + esc_(t.id) + '" data-def="' + defIdx[t.id] + '" draggable="false"') : '';
     return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + sortAttr + '>' +
-      tileIcon_(t, dev) + '<span class="tname">' + esc_(t.label) + '</span></a>';
+      tileIcon_(t, dev || simV) + '<span class="tname">' + esc_(t.label) + '</span></a>';
   }
   // ボタンの並ぶ箱。入れ替えのあとも「右を空けるボタン」の決まりを同じに保つため、箱に名前を持たせる。
   function tilesBox_(list, gaps, extraCls) {
@@ -3404,11 +3406,28 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         groupsHtml +
       '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript + HOMEFOLDER_SCRIPT_;
   }
+  if (simV) {   // ★2026-11-14 まるちゃん「この新しいアイコンと新しいフォルダ分けを、オ…（上の simV）
+    var simOpt = { group: '#group-jitsumu', tile: 'a.tile', idAttr: 'data-tid', store: { local: 'sz_home_folders_sim_' + asWho } };
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="home">' + head +
+        '<div class="group" id="group-jitsumu">' +
+          '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
+            '<a class="backbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '" target="_top" style="text-decoration:none">← 戻る</a>' +
+            '<a class="hpermbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '" target="_top">📋 今の形で見る</a></div>' +
+          homeAsRow_(base, asWho, true) +
+          '<div class="grouptitle"><span>🗂️ 新しい形の見本（見るだけ）</span></div>' +
+          '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">この人に出しているボタンを、新しい絵とフォルダ分けで並べています。スタッフのスマホはまだ今の形のままです。</div>' +
+          (shown.length ? tilesBox_(shown, [], 'hfold') : '<div style="color:#fff;font-weight:800">この人に出しているボタンはありません😊</div>') +
+        '</div>' +
+      '</div>' + EXTLINK_SCRIPT_ +
+      '<script>(' + homeFolderBoot_.toString() + ')(' + JSON.stringify(simOpt) + ');</' + 'script>';
+  }
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
     // ★2026-11-14 スタッフ画面＝「← 戻る」（トップへ）と「👥 スタッフごと表示一覧」（パソコン版ズコの中では独立した窓で開く）。
     (asWho ? '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
       '<a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a>' +
+      '<a class="hpermbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '&sim=1" target="_top">🗂️ 新しい形で見る</a>' +
       '<a class="hpermbtn" href="' + base + '?view=permlist&dev=1" target="_top" onclick="var a=window.pywebview&&window.pywebview.api;' +
         'if(a&&a.open_permlist){a.open_permlist();return false;}">👥 スタッフごと表示一覧</a></div>' : '') +
     (asWho ? homeAsRow_(base, asWho) : '') +   // ★2026-11-13 その人の画面の見本＝上に人のボタン（押した人が白く光る）

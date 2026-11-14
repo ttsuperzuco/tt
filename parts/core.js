@@ -2188,9 +2188,9 @@ function homeAsWho_(dev) {
   for (var i = 0; i < HOME_AS_PEOPLE_.length; i++) { if (HOME_AS_PEOPLE_[i].id && HOME_AS_PEOPLE_[i].id === m[1]) return m[1]; }
   return '';
 }
-function homeAsRow_(base, cur) {
+function homeAsRow_(base, cur, sim) {
   return '<div class="hasrow">' + HOME_AS_PEOPLE_.map(function (p) {
-    var href = base + '?view=home&dev=1' + (p.id ? '&as=' + p.id : '');
+    var href = base + '?view=home&dev=1' + (p.id ? '&as=' + p.id : '') + (sim ? '&sim=1' : '');   
     return '<a class="hasbtn' + (p.text ? ' hastx' : '') + (p.id === cur ? ' on' : '') + '" href="' + href +
       '" target="_top" title="' + esc_(p.title || p.text) + 'の画面">' + esc_(p.mark || p.text) + '</a>';
   }).join('') + '</div>';
@@ -2199,6 +2199,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var perms = (cfg && cfg.perms) || defaultPerms_();
   var labels = (cfg && cfg.labels) || PERSON_LABEL_;
   var asWho = homeAsWho_(dev);
+  var simV = !!(asWho && typeof location !== 'undefined' && /[?&]sim=1(&|$)/.test(location.search || ''));
   var sfx = roleSfx_(staff, dev);
   if (asWho) { staff = asWho !== 'kanbu'; who = staff ? asWho : ''; dev = false; }
   var allow = personPerms_(perms, staff, dev, who);   
@@ -2239,7 +2240,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     var rel = t.url ? ' rel="noopener"' : '';
     var sortAttr = canSort ? (' data-tid="' + esc_(t.id) + '" data-def="' + defIdx[t.id] + '" draggable="false"') : '';
     return '<a class="tile ' + t.cls + '" href="' + href + '" target="' + target + '"' + rel + sortAttr + '>' +
-      tileIcon_(t, dev) + '<span class="tname">' + esc_(t.label) + '</span></a>';
+      tileIcon_(t, dev || simV) + '<span class="tname">' + esc_(t.label) + '</span></a>';
   }
   function tilesBox_(list, gaps, extraCls) {
     return '<div class="tiles' + (extraCls ? ' ' + extraCls : '') + '"' + (canSort && gaps && gaps.length ? ' data-gaps="' + esc_(gaps.join(',')) + '"' : '') + '>' +
@@ -2312,10 +2313,27 @@ function renderHomePage_(cfg, base, staff, dev, who) {
         groupsHtml +
       '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript + HOMEFOLDER_SCRIPT_;
   }
+  if (simV) {   
+    var simOpt = { group: '#group-jitsumu', tile: 'a.tile', idAttr: 'data-tid', store: { local: 'sz_home_folders_sim_' + asWho } };
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="home">' + head +
+        '<div class="group" id="group-jitsumu">' +
+          '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
+            '<a class="backbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '" target="_top" style="text-decoration:none">← 戻る</a>' +
+            '<a class="hpermbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '" target="_top">📋 今の形で見る</a></div>' +
+          homeAsRow_(base, asWho, true) +
+          '<div class="grouptitle"><span>🗂️ 新しい形の見本（見るだけ）</span></div>' +
+          '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">この人に出しているボタンを、新しい絵とフォルダ分けで並べています。スタッフのスマホはまだ今の形のままです。</div>' +
+          (shown.length ? tilesBox_(shown, [], 'hfold') : '<div style="color:#fff;font-weight:800">この人に出しているボタンはありません😊</div>') +
+        '</div>' +
+      '</div>' + EXTLINK_SCRIPT_ +
+      '<script>(' + homeFolderBoot_.toString() + ')(' + JSON.stringify(simOpt) + ');</' + 'script>';
+  }
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
     (asWho ? '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
       '<a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a>' +
+      '<a class="hpermbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '&sim=1" target="_top">🗂️ 新しい形で見る</a>' +
       '<a class="hpermbtn" href="' + base + '?view=permlist&dev=1" target="_top" onclick="var a=window.pywebview&&window.pywebview.api;' +
         'if(a&&a.open_permlist){a.open_permlist();return false;}">👥 スタッフごと表示一覧</a></div>' : '') +
     (asWho ? homeAsRow_(base, asWho) : '') +   
