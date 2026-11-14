@@ -53,6 +53,11 @@ function renderTimeTreePage_(base, staff, dev) {
     '.tvdate{font-size:13px;font-weight:800;color:#555;padding:10px 16px 2px;}' +
     '.tvsmore{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 16px 10px;font-size:12px;color:#999;}' +
     '.tvdh{display:flex;align-items:center;gap:8px;padding:6px 14px 4px;}' +
+    '.tvadd{flex:none;width:34px;height:34px;border-radius:50%;border:0;background:#222;color:#fff;font-size:20px;font-weight:700;' +
+      'line-height:34px;padding:0;text-align:center;cursor:pointer;}' +
+    '.tvaddopt{display:block;text-decoration:none;background:#f5f5f5;border-radius:12px;padding:14px 16px;margin:0 0 10px;color:#222;}' +
+    '.tvaddopt b{display:block;font-size:17px;font-weight:800;}' +
+    '.tvaddopt small{display:block;font-size:12px;color:#888;margin-top:3px;}' +
     '.tvmode{flex:none;display:flex;background:#f2f2f2;border-radius:9px;padding:2px;}' +
     '.tvmode button{border:0;background:transparent;color:#777;font-size:13px;font-weight:800;padding:5px 10px;border-radius:7px;cursor:pointer;}' +
     '.tvmode button.sel{background:#fff;color:#222;box-shadow:0 1px 3px rgba(0,0,0,.15);}' +
@@ -528,6 +533,20 @@ function ttviewStart_(exec, base, staff, dev) {
     }
   }
 
+  function openAdd() {
+    var mask = document.createElement('div');
+    mask.className = 'tvpmask';
+    var sfx = roleSfx_(staff, dev);
+    mask.innerHTML = '<div class="tvpbox"><div class="tvpnav"><div class="t">予約を追加</div></div>' +
+      '<a class="tvaddopt" href="' + esc(base + '?view=yoyaku_new' + sfx) + '" target="_top"><b>🆕 新規のお客様</b><small>LINEの予約の文を貼り付けて登録します</small></a>' +
+      '<a class="tvaddopt" href="' + esc(base + '?view=yoyaku_kizon' + sfx) + '" target="_top"><b>📅 既存のお客様</b><small>お客様番号から登録します</small></a>' +
+      '<button class="tvpclose">閉じる</button></div>';
+    function close() { if (mask.parentNode) mask.parentNode.removeChild(mask); }
+    mask.onclick = function (ev) { if (ev.target === mask) close(); };
+    mask.querySelector('.tvpclose').onclick = close;
+    document.body.appendChild(mask);
+  }
+
   function memo1(n) {
     var ls = String(n || '').split(String.fromCharCode(10));   
     for (var i = 0; i < ls.length; i++) { var t = ls[i].replace(/^\s+|\s+$/g, ''); if (t) return t; }
@@ -551,6 +570,7 @@ function ttviewStart_(exec, base, staff, dev) {
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
     var pk = kOfDate(iso(prev)), nk = kOfDate(iso(next));
     body.innerHTML = '<div class="tvdh"><div class="dt">' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + JWD[d.getDay()] + '曜日</div>' +
+      '<button class="tvadd" id="tvadd" title="予約を追加">＋</button>' +
       '<button class="tvic" id="tvprev"' + (inRange(pk) ? '' : ' disabled') + '>‹</button>' +
       '<button class="tvic" id="tvnext"' + (inRange(nk) ? '' : ' disabled') + '>›</button></div>' +
       '<div class="tvdchips">' + chipsHtml() + '</div><div id="tvdaybox"><div class="tvstatus">予定を読んでいます...</div></div>';
@@ -558,6 +578,7 @@ function ttviewStart_(exec, base, staff, dev) {
     function goNext() { if (inRange(nk)) go({ step: 'day', k: nk, date: iso(next) }, false); }
     document.getElementById('tvprev').onclick = goPrev;
     document.getElementById('tvnext').onclick = goNext;
+    document.getElementById('tvadd').onclick = openAdd;
     bindChips();
     swipe = function (dd) { if (dd > 0) goNext(); else goPrev(); };
     load(st.k, function (p) {
