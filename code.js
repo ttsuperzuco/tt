@@ -17344,8 +17344,9 @@ var INSTACSS_ =
   // ★2026-11-12 承認制の札＝小さく重ねるだけ（並びも大きさも本番と同じまま）
   '.igapv{position:absolute;top:4px;right:4px;z-index:3;background:#EF9F27;color:#412402;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;white-space:nowrap;cursor:pointer;line-height:1.5;}' +
   '.iggrid button{position:relative;}' +
-  '.igapvbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0;background:#FAEEDA;color:#633806;border-radius:10px;padding:8px 12px;font-size:13px;}' +
-  '.igapvbar button{background:none;border:0;color:#633806;text-decoration:underline;font:inherit;font-weight:700;cursor:pointer;}' +
+  // ★2026-11-14 まるちゃん「下書き変更一覧のバーが薄い黄色で目立たない」＝下書きのスイッチと同じ濃いオレンジにして、一覧は白いボタンに。
+  '.igapvbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0;background:#EF9F27;color:#412402;border-radius:10px;padding:10px 12px;font-size:15px;font-weight:800;}' +
+  '.igapvbar button{background:#fff;border:0;color:#412402;border-radius:8px;padding:6px 14px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
   // ★2026-11-12 まるちゃん「下書きをデフォルトに。本番を押すと本番になる。下書き本番のスイッチみたいなボタン」
   '.igmode{display:inline-flex;background:#fff;border-radius:999px;padding:2px;gap:2px;}' +
   '.igstat .igmode button{background:transparent;color:#64748b;padding:4px 12px;}' +
