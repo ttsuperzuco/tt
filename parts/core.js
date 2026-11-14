@@ -2007,7 +2007,9 @@ function homeFolderBoot_(OPT) {
       var copy = isCopy(src), pos;
       if (copy) pos = items.indexOf(src) + 1;
       else { pos = removeFrom(id, src); if (pos < 0) pos = src ? items.indexOf(src) + 1 : items.length; }
-      items.splice(pos, 0, { k: newKey(), f: nm, items: [id], c: nextColor(items), d: false }); dropEmpty();
+      var NF = { k: newKey(), f: nm, items: [id], c: nextColor(items), d: false };
+      items.splice(pos, 0, NF); dropEmpty();
+      openF = NF; window.scrollTo(0, 0);   
       done('新しいフォルダ「' + nm + '」を作成しました');
     });
   }
@@ -2017,6 +2019,7 @@ function homeFolderBoot_(OPT) {
     if (!copy) removeFrom(id, src);
     var i = items.indexOf(id); if (i >= 0) items.splice(i, 1);
     items.splice(0, 0, id); dropEmpty();
+    openF = null; window.scrollTo(0, 0);   
     done('「' + lbl(id) + '」をトップ画面に' + (copy ? 'コピー' : '移動') + 'しました');
   }
   function inDefault(id) { for (var i = 0; i < items.length; i++) if (typeof items[i] !== 'string' && items[i].d && items[i].items.indexOf(id) >= 0) return items[i]; return null; }
