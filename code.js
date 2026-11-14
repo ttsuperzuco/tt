@@ -2146,11 +2146,13 @@ var TILE_GROUP_ = {
   // ★2026-10-07 まるちゃん「施術後の予約、開発終わったでしょ」＝開発者用から外し、実務者用（ここに書かない）へ移した。
 };
 // ★2026-10-25 まるちゃん「スタッフ画面を一番上にしたい」＝スタッフ画面を先頭へ（PC版 super_pc.py の ROLES と同じ順）。
+var STAFF_ROOM_ICON_ = '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/staffroom-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">';   // ★2026-11-14 トップのスタッフ画面のボタン
 var ROLE_DEFS_ = [
   // ★2026-11-13 まるちゃん「スタッフ画面のアイコンは、🍅、オリーブ、みかん、のみっつを使ったアイコン」
   //   ＝スタッフの果物の並びの絵（PC版スーパーズコ\icons\スタッフ画面_アイコンの元絵_果物の並び.png）から3つを切り抜き、
   //   後ろに左オリーブ・右みかん、前にトマト。部屋のボタンは開発版にしか出ないので直接入れた。PC版 super_pc.py の ROLES と同じ。
-  { id: 'jitsumu', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/staffroom-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'スタッフ画面' },
+  // ★2026-11-14 まるちゃん「スタッフ画面の下に りゅう画面」＝この部屋（全部のボタン）は「りゅう画面」。スタッフ画面はトップの別ボタン（STAFF_ROOM_BTN_）。
+  { id: 'jitsumu', icon: '🐉', title: 'りゅう画面' },
   // ★2026-11-13 まるちゃん「龍のアイコンは、このりゅう」＝11/11にLINEグループのアイコンで使った黄色いりゅう
   //   （元＝C:\Users\User\SNS運用グループのアイコン案\りゅう_参考.png を切り抜いた物）。見出しでも同じ絵を小さく出す。
   //   この部屋は開発版（まるちゃん）にしか出ないので、iconDev にせず直接入れた。PC版 super_pc.py の ROLES と同じ。
@@ -2183,7 +2185,7 @@ var ROLEMENU_SCRIPT_ =
 'function remember(id){try{if(id)sessionStorage.setItem("sz_home_group",id);else sessionStorage.removeItem("sz_home_group");}catch(e){}}' +
 'function showMenu(){remember("");menu.style.display="";var g=document.querySelectorAll(".group");for(var i=0;i<g.length;i++)g[i].style.display="none";window.scrollTo(0,0);}' +
 'function showGroup(id){remember(id);menu.style.display="none";var g=document.querySelectorAll(".group");for(var i=0;i<g.length;i++)g[i].style.display=(g[i].id==="group-"+id)?"":"none";window.scrollTo(0,0);}' +
-'var rb=menu.querySelectorAll(".rolebtn");for(var i=0;i<rb.length;i++){(function(b){b.addEventListener("click",function(){showGroup(b.getAttribute("data-role"));});})(rb[i]);}' +
+'var rb=menu.querySelectorAll(".rolebtn[data-role]");for(var i=0;i<rb.length;i++){(function(b){b.addEventListener("click",function(){showGroup(b.getAttribute("data-role"));});})(rb[i]);}' +
 'var bb=document.querySelectorAll(".backbtn");for(var j=0;j<bb.length;j++){bb[j].addEventListener("click",showMenu);}' +
 'try{var sg=sessionStorage.getItem("sz_home_group");if(sg&&document.getElementById("group-"+sg)){menu.style.display="none";var g2=document.querySelectorAll(".group");for(var k=0;k<g2.length;k++)g2[k].style.display=(g2[k].id==="group-"+sg)?"":"none";}}catch(e){}' +
 '})();</script>';
@@ -3178,8 +3180,11 @@ function renderHome_(base, staff, dev, who) {
 //   その人の画面をだす。受付以外は全部文字じゃなくマーク」＝開発版（?dev=1）だけの見本の仕組み。
 //   住所に &as=<人> を付けると、その人のホーム（見えるボタン・並び・ボタンの絵がその人と同じ）を出す。
 //   押した先の画面は開発版のまま開く（ボタンの行き先は開発版の住所）。PC版 super_pc.py の HOME_AS_PEOPLE と同じ並び。
+// ★2026-11-14 まるちゃん「トップのスタッフ画面の下に りゅう画面 を作って、スタッフ画面のりゅうのボタンをなくして。
+//   スタッフ画面はそのままでいい。スタッフ画面を開いた時に一番最初に出るのはトマトの画面に」
+//   ＝今までの部屋（jitsumu＝全部のボタン・フォルダ・TOMATO画面）の名前を「りゅう画面」にし、トップのその上に
+//   「スタッフ画面」（押すとトマトの画面＝&as=kanbu・上に人のボタン）を出す。人のボタンから🐉は外した。PC版 super_pc.py と同じ。
 var HOME_AS_PEOPLE_ = [
-  { id: '', mark: '🐉', title: 'りゅう（開発版）' },
   { id: 'kanbu', mark: '🍅', title: 'トマト' },
   { id: 'mikan', mark: '🍊', title: 'みかん' },
   { id: 'olive', mark: '🫒', title: 'オリーブ' },
@@ -3286,15 +3291,15 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
       var R = ROLE_DEFS_[ri], list = byG[R.id] || [], subs = SUB_ROLES_[R.id] || [], nsub = 0;
       for (var si = 0; si < subs.length; si++) nsub += (byG[subs[si].id] || []).length;
+      if (R.id === 'jitsumu') menuHtml += '<a class="rolebtn jitsumu" href="' + base + '?view=home&dev=1&as=kanbu" target="_top">' +
+        '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></a>';   // ★2026-11-14 押すとトマトの画面
       if (list.length + nsub) menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' +
-          // ★2026-11-14 まるちゃん「戻るの右に スタッフごと表示一覧 ボタン」（りゅうだけ＝ここは開発版の時だけ通る）
-          (R.id === 'jitsumu' ? '<a class="hpermbtn" href="' + base + '?view=permlist' + sfx + '" target="_top">👥 スタッフごと表示一覧</a>' : '') +
           (R.id === 'jitsumu' ? resetHtml.replace('class="hresetbtn"', 'class="hresetbtn hfoldreset"') : resetHtml) + '</div>' +
-        (R.id === 'jitsumu' ? homeAsRow_(base, '') : '') +   // ★2026-11-13 人のボタン（スタッフ画面の見出しの上）
+        // ★2026-11-14 人のボタンと「スタッフごと表示一覧」は、スタッフ画面（トマトの画面など・下の asWho の時）へ移した。
         // ★2026-11-13 まるちゃん「かぶりが出てる時には、スタッフ画面の右側に 被り検出あり っていう注意ボタンを出して。
         //   押すと、被りボタンに直接飛べるように」＝見出しの右。出すかどうかは index.html の裏取りが数えて決める（PC版と同じ）。
         (R.id === 'jitsumu'
@@ -3317,6 +3322,11 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
+    // ★2026-11-14 スタッフ画面＝「← 戻る」（トップへ）と「👥 スタッフごと表示一覧」（パソコン版ズコの中では独立した窓で開く）。
+    (asWho ? '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
+      '<a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a>' +
+      '<a class="hpermbtn" href="' + base + '?view=permlist&dev=1" target="_top" onclick="var a=window.pywebview&&window.pywebview.api;' +
+        'if(a&&a.open_permlist){a.open_permlist();return false;}">👥 スタッフごと表示一覧</a></div>' : '') +
     (asWho ? homeAsRow_(base, asWho) : '') +   // ★2026-11-13 その人の画面の見本＝上に人のボタン（押した人が白く光る）
     // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
     // 戻るボタンの無いホーム（開発版以外）では、ボタンの並びの上の右端に置く。

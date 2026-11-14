@@ -1511,8 +1511,9 @@ var TILE_GROUP_ = {
   uriage: 'tomato',
   hachimitsu: 'tomato',
 };
+var STAFF_ROOM_ICON_ = '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/staffroom-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">';
 var ROLE_DEFS_ = [
-  { id: 'jitsumu', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/staffroom-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'スタッフ画面' },
+  { id: 'jitsumu', icon: '🐉', title: 'りゅう画面' },
   { id: 'keiei', icon: '<img class="rimg" alt="" src="https://ttsuperzuco.github.io/tt/icons/ryutool-192.png" style="height:1.3em;width:auto;vertical-align:-.3em">', title: 'りゅうツール' },
   { id: 'kaihatsu', icon: '🧑‍💻', title: '開発中の機能' }
 ];
@@ -1533,7 +1534,7 @@ var ROLEMENU_SCRIPT_ =
 'function remember(id){try{if(id)sessionStorage.setItem("sz_home_group",id);else sessionStorage.removeItem("sz_home_group");}catch(e){}}' +
 'function showMenu(){remember("");menu.style.display="";var g=document.querySelectorAll(".group");for(var i=0;i<g.length;i++)g[i].style.display="none";window.scrollTo(0,0);}' +
 'function showGroup(id){remember(id);menu.style.display="none";var g=document.querySelectorAll(".group");for(var i=0;i<g.length;i++)g[i].style.display=(g[i].id==="group-"+id)?"":"none";window.scrollTo(0,0);}' +
-'var rb=menu.querySelectorAll(".rolebtn");for(var i=0;i<rb.length;i++){(function(b){b.addEventListener("click",function(){showGroup(b.getAttribute("data-role"));});})(rb[i]);}' +
+'var rb=menu.querySelectorAll(".rolebtn[data-role]");for(var i=0;i<rb.length;i++){(function(b){b.addEventListener("click",function(){showGroup(b.getAttribute("data-role"));});})(rb[i]);}' +
 'var bb=document.querySelectorAll(".backbtn");for(var j=0;j<bb.length;j++){bb[j].addEventListener("click",showMenu);}' +
 'try{var sg=sessionStorage.getItem("sz_home_group");if(sg&&document.getElementById("group-"+sg)){menu.style.display="none";var g2=document.querySelectorAll(".group");for(var k=0;k<g2.length;k++)g2[k].style.display=(g2[k].id==="group-"+sg)?"":"none";}}catch(e){}' +
 '})();</script>';
@@ -2140,7 +2141,6 @@ function renderHome_(base, staff, dev, who) {
                           base, staff, dev, who);
 }
 var HOME_AS_PEOPLE_ = [
-  { id: '', mark: '🐉', title: 'りゅう（開発版）' },
   { id: 'kanbu', mark: '🍅', title: 'トマト' },
   { id: 'mikan', mark: '🍊', title: 'みかん' },
   { id: 'olive', mark: '🫒', title: 'オリーブ' },
@@ -2231,14 +2231,14 @@ function renderHomePage_(cfg, base, staff, dev, who) {
     for (var ri = 0; ri < ROLE_DEFS_.length; ri++) {
       var R = ROLE_DEFS_[ri], list = byG[R.id] || [], subs = SUB_ROLES_[R.id] || [], nsub = 0;
       for (var si = 0; si < subs.length; si++) nsub += (byG[subs[si].id] || []).length;
+      if (R.id === 'jitsumu') menuHtml += '<a class="rolebtn jitsumu" href="' + base + '?view=home&dev=1&as=kanbu" target="_top">' +
+        '<span class="ricon">' + STAFF_ROOM_ICON_ + '</span><span class="rname">スタッフ画面</span></a>';   
       if (list.length + nsub) menuHtml += '<button type="button" class="rolebtn ' + R.id + '" data-role="' + R.id + '">' +
         '<span class="ricon">' + R.icon + '</span><span class="rname">' + R.title + '</span>' +
         '<span class="rcount">' + (list.length + nsub) + '個</span></button>';
       groupsHtml += '<div class="group" id="group-' + R.id + '" style="display:none">' +
         '<div class="backbar"><button type="button" class="backbtn">← 戻る</button>' +
-          (R.id === 'jitsumu' ? '<a class="hpermbtn" href="' + base + '?view=permlist' + sfx + '" target="_top">👥 スタッフごと表示一覧</a>' : '') +
           (R.id === 'jitsumu' ? resetHtml.replace('class="hresetbtn"', 'class="hresetbtn hfoldreset"') : resetHtml) + '</div>' +
-        (R.id === 'jitsumu' ? homeAsRow_(base, '') : '') +   
         (R.id === 'jitsumu'
           ? '<div class="grouptitle gtk"><span>' + R.icon + ' ' + R.title + '</span>' +
               '<span class="halerts">' + alertsHtml + '</span></div>'
@@ -2257,6 +2257,10 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }
   return '<style>' + HOMECSS_ + '</style>' +
   '<div class="' + homeCls + '">' + head +
+    (asWho ? '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
+      '<a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a>' +
+      '<a class="hpermbtn" href="' + base + '?view=permlist&dev=1" target="_top" onclick="var a=window.pywebview&&window.pywebview.api;' +
+        'if(a&&a.open_permlist){a.open_permlist();return false;}">👥 スタッフごと表示一覧</a></div>' : '') +
     (asWho ? homeAsRow_(base, asWho) : '') +   
     (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
     (shown.length ? '<div class="halerts hrow">' + alertsHtml + '</div>' : '') +
