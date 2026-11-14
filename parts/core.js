@@ -1962,13 +1962,22 @@ function homeFolderBoot_(OPT) {
     });
     if (!openF) {
       box.classList.add('fttop'); box.classList.remove('ftin'); box.style.removeProperty('--ftc');
-      items.forEach(function (x) { box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); });
+      var gapIds = [], col = 0;
+      items.forEach(function (x, i) {
+        box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); col++;
+        var nx = items[i + 1];
+        if (typeof x === 'string' && nx && typeof nx !== 'string' && col % 2 === 1) {
+          var g = document.createElement('div'); g.className = 'tilegap'; box.appendChild(g); col++; gapIds.push(x);
+        }
+      });
+      box.setAttribute('data-gaps', gapIds.join(','));
       if (titleEl) titleEl.innerHTML = titleHtml;
       if (backBtn) backBtn.textContent = backText;
       if (resetBtn) resetBtn.style.visibility = '';
     } else {
       box.classList.add('ftin'); box.classList.remove('fttop'); box.style.setProperty('--ftc', openF.c);
       openF.items.forEach(function (id) { box.appendChild(T[id]); });
+      box.setAttribute('data-gaps', '');
       if (titleEl) titleEl.textContent = '📂 ' + one(openF.f);
       if (backBtn) backBtn.textContent = BACK_IN_FOLDER;
       if (resetBtn) resetBtn.style.visibility = 'hidden';

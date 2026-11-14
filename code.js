@@ -2705,13 +2705,25 @@ function homeFolderBoot_(OPT) {
     });
     if (!openF) {
       box.classList.add('fttop'); box.classList.remove('ftin'); box.style.removeProperty('--ftc');
-      items.forEach(function (x) { box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); });
+      // ★2026-11-14 まるちゃん「フォルダからトップに出したボタンが1個しかない時は、右隣を空白にしてフォルダの位置をずらさないで」
+      //   ＝ボタンのすぐ後にフォルダが来る時、そのボタンが左の列なら右隣を空ける（フォルダはいつも左の列から始まる）。
+      //   空けた所は data-gaps に書く＝長押しで動かしている間も並べ替えの部品（regap）が同じ決まりで空ける。
+      var gapIds = [], col = 0;
+      items.forEach(function (x, i) {
+        box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); col++;
+        var nx = items[i + 1];
+        if (typeof x === 'string' && nx && typeof nx !== 'string' && col % 2 === 1) {
+          var g = document.createElement('div'); g.className = 'tilegap'; box.appendChild(g); col++; gapIds.push(x);
+        }
+      });
+      box.setAttribute('data-gaps', gapIds.join(','));
       if (titleEl) titleEl.innerHTML = titleHtml;
       if (backBtn) backBtn.textContent = backText;
       if (resetBtn) resetBtn.style.visibility = '';
     } else {
       box.classList.add('ftin'); box.classList.remove('fttop'); box.style.setProperty('--ftc', openF.c);
       openF.items.forEach(function (id) { box.appendChild(T[id]); });
+      box.setAttribute('data-gaps', '');
       if (titleEl) titleEl.textContent = '📂 ' + one(openF.f);
       if (backBtn) backBtn.textContent = BACK_IN_FOLDER;
       if (resetBtn) resetBtn.style.visibility = 'hidden';
