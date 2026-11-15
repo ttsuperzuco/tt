@@ -158,19 +158,144 @@
       st = 'pending'; window.__zkShowWait();
     });
   };
+  // ★★2026-11-15 まるちゃん「１２やる」＝ズコの近道（Cloudflareのトンネル zuko.staaa.jp → サーバー）。
+  //   どの画面も、グーグルの窓口へは最後にここ（読み込みの住所に鍵を添える所）を通る。ここで次の3つを近道へ回す：
+  //   ・依頼を積む（submit）／結果を聞く（status）＝前はサーバーが窓口を2〜3秒おきに見に行き、スマホも1.5秒おきに取りに行っていた
+  //     （受け渡しだけで約4秒）。近道は1往復約0.2秒で、終わった瞬間に答えが返る。
+  //   ・画面のデータ（data）＝サーバーが窓口へ送った物と同じ写しを渡す（窓口は1往復約0.7秒）。
+  //   近道が使えない時（札が無い・つながらない・受けない用事）は、今まで通り窓口の道で送る＝画面は何も変えなくてよい。
+  //   ★二重に実行しない：近道に送って返事が届かなかった時は、合図（__zn）を中身に入れて窓口へ送る。受付係が照らし合わせ、
+  //     近道で受けていれば実行しない（共通\zuko_direct.py）。
+  //   札（通行証）＝窓口がこの端末の鍵を確かめて出す12時間の札（まるちゃんのスマホは10分）。端末に覚えて、切れる前に裏で取り直す。
+  var ZD = 'https://zuko.staaa.jp', LS_PASS = 'zk_tpass2', LS_NAMES = 'zk_dnames';
+  var ZD_EXCL = { kanshi_ctl: 1, instaphone: 1, hachimitsu_pc: 1 };   // 窓口だけが受ける用事（自動監視・自宅PC）
+  var F0 = window.fetch, ZST = {};
+  function zPass() {
+    try { var c = JSON.parse(g(LS_PASS) || 'null'); if (c && c.t && c.exp - Date.now() > 60000) return c.t; } catch (e) {}
+    return '';
+  }
+  var zGetting = false;
+  function zGetPass() {
+    if (zGetting || !F0 || !g(LS_DK)) return;
+    zGetting = true;
+    var name = '__zkTp' + Date.now();
+    window[name] = function (r) {
+      try { delete window[name]; } catch (e) {}
+      zGetting = false;
+      if (r && r.ok && r.t) s(LS_PASS, JSON.stringify({ t: r.t, exp: r.exp }));
+    };
+    var el = document.createElement('script');
+    el.onerror = function () { zGetting = false; };
+    el.src = EXEC_URL + '?action=tpass&callback=' + name + '&cb=' + Date.now();
+    (document.head || document.documentElement).appendChild(el);
+  }
+  window.__zkPass = zPass;
+  function zPost(path, body, ms, k) {
+    var ctl = window.AbortController ? new AbortController() : null, fin = false;
+    var tm = setTimeout(function () { if (ctl) ctl.abort(); if (!fin) { fin = true; k(0, null); } }, ms);
+    F0.call(window, ZD + path, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' },
+                                 signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.text().then(function (tx) {
+        var j = null; try { j = JSON.parse(tx); } catch (e) {}
+        clearTimeout(tm); if (!fin) { fin = true; k(r.status, j); } }); })
+      .catch(function () { clearTimeout(tm); if (!fin) { fin = true; k(0, null); } });
+  }
+  function zNames() {
+    try { var c = JSON.parse(g(LS_NAMES) || 'null'); if (c && c.n && Date.now() - c.at < 6 * 3600 * 1000) return c.n; } catch (e) {}
+    return null;
+  }
+  function zQs(q) {        // 住所の続き（窓口が読む形のまま組み直す）
+    var a = []; q.forEach(function (v, k) { a.push(encodeURIComponent(k) + '=' + encodeURIComponent(v)); });
+    return a.join('&');
+  }
+  // true＝近道で引き受けた（この読み込みは窓口へ行かない）／false＝今まで通り窓口へ
+  function zDivert(el, u) {
+    try {
+      if (!F0 || !EXEC_RE.test(u) || st !== 'ok') return false;
+      var i = u.indexOf('?'); if (i < 0) return false;
+      var q = new URLSearchParams(u.slice(i + 1));
+      var a = q.get('action'), cb = q.get('callback');
+      if (!cb || typeof window[cb] !== 'function') return false;
+      if (a !== 'submit' && a !== 'status' && a !== 'data') return false;
+      var id = q.get('id') || '';
+      if (a === 'status' && id.charAt(0) !== 'z') return false;      // 窓口で積んだ依頼は窓口に聞く
+      if (a === 'submit' && ZD_EXCL[q.get('op') || '']) return false;
+      if (a === 'data') { var nl = zNames(); if (nl && nl.indexOf(q.get('name') || '') < 0) return false; }
+      var t = zPass();
+      if (!t && a !== 'status') { zGetPass(); return false; }
+      var base = u.slice(0, i);
+      var done = function (r) { var f = window[cb]; if (typeof f === 'function') f(r); };
+      var gas = function (url) {
+        var s2 = document.createElement('script');
+        s2.onerror = function (ev) { if (el.onerror) el.onerror(ev); };
+        d.set.call(s2, url);
+        (document.head || document.documentElement).appendChild(s2);
+      };
+      var bad = function (code) { if (code === 401) { rm(LS_PASS); zGetPass(); } };
+      var P = {}; q.forEach(function (v, k) { if (k !== 'callback' && k !== 'cb' && k !== 'dk' && k !== 'tk') P[k] = v; });
+      if (a === 'submit') {
+        var zn = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+        zPost('/s', { t: t, p: P, zn: zn }, 8000, function (code, j) {
+          if (code === 200 && j && (j.ok || !j.fallback)) { done(j); return; }
+          if (code === 429 && j) { done(j); return; }
+          bad(code);
+          // 近道で受け取れなかった（つながらない・札が古い・受けない用事）＝今まで通り窓口へ。合図を中身に入れて二重を防ぐ。
+          try {
+            var f = JSON.parse(q.get('fields') || '{}');
+            if (f && typeof f === 'object' && !Array.isArray(f)) { f.__zn = zn; q.set('fields', JSON.stringify(f)); }
+          } catch (e) {}
+          gas(base + '?' + zQs(q));
+        });
+        return true;
+      }
+      if (a === 'status') {
+        var o = ZST[id] || (ZST[id] = {});
+        if (o.fin) { var fr = o.fin; setTimeout(function () { done(fr); }, 0); return true; }
+        if (o.busy || !t) {    // 前の問い合わせが終わるのを待っている間は「まだ」と答える（同じ依頼に何本も待たせない）
+          if (!t) zGetPass();
+          setTimeout(function () { done({ ok: true, status: o.last || 'pending', result: '' }); }, 0);
+          return true;
+        }
+        o.busy = true;
+        zPost('/st', { t: t, id: id }, 20000, function (code, j) {
+          o.busy = false;
+          if (code === 200 && j && j.ok) {
+            o.last = j.status;
+            if (j.status === 'done' || j.status === 'error') o.fin = j;
+            done(j); return;
+          }
+          bad(code);
+          done({ ok: true, status: o.last || 'pending', result: '' });   // つながらない間は「まだ」＝画面は次に聞き直す
+        });
+        return true;
+      }
+      // data
+      zPost('/d', { t: t, name: q.get('name') || '' }, 6000, function (code, j) {
+        if (code === 200 && j) { done(j); return; }
+        if (j && j.names) s(LS_NAMES, JSON.stringify({ n: j.names, at: Date.now() }));
+        bad(code);
+        gas(u);
+      });
+      return true;
+    } catch (e) { return false; }
+  }
   try {
     var d = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
     Object.defineProperty(HTMLScriptElement.prototype, 'src', {
       configurable: true, enumerable: d.enumerable,
       get: function () { return d.get.call(this); },
-      set: function (v) { d.set.call(this, add(v)); }
+      set: function (v) { v = add(v); if (zDivert(this, v)) return; d.set.call(this, v); }
     });
     var sa = Element.prototype.setAttribute;
     Element.prototype.setAttribute = function (n, v) {
-      if (this instanceof HTMLScriptElement && String(n).toLowerCase() === 'src') v = add(v);
+      if (this instanceof HTMLScriptElement && String(n).toLowerCase() === 'src') {
+        v = add(v);
+        if (zDivert(this, v)) return;
+      }
       return sa.call(this, n, v);
     };
   } catch (e) {}
+  if (st === 'ok' && !zPass()) setTimeout(zGetPass, 0);   // 札が無ければ、開いてすぐ裏で取る（次の依頼から近道）
   if (window.fetch) {
     var f0 = window.fetch;
     window.fetch = function (i, o) { if (typeof i === 'string') i = add(i); return f0.call(this, i, o); };
