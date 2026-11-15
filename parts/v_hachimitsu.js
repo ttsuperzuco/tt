@@ -205,6 +205,17 @@ function honeyScript_(C) {
       } catch (e) {}
     });
   }
+  function getImg(n, cb) {
+    var viaPipe = function () { jsonp({ action: 'data', key: C.key, name: n }, cb); };
+    if (!window.fetch) { viaPipe(); return; }
+    tpass(function (t) {
+      if (!t) { viaPipe(); return; }
+      fetch(DIRECT + '/i', { method: 'POST', body: JSON.stringify({ t: t, n: n }), headers: { 'Content-Type': 'text/plain' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { return j; }, function () { return null; })
+        .then(function (j) { if (j && j.b64) cb(j); else viaPipe(); });
+    });
+  }
   function fillImg(el, next) {
     next = next || function () {};
     var n = el.getAttribute('data-n'); if (!n || el.getAttribute('data-done')) { next(); return; }
@@ -218,7 +229,7 @@ function honeyScript_(C) {
     if (cache[k]) { put(cache[k]); next(); return; }
     idbGet(k, function (src) {
       if (src) { cache[k] = src; put(src); next(); return; }
-      jsonp({ action: 'data', key: C.key, name: n }, function (r) {
+      getImg(n, function (r) {
         if (!(r && r.b64)) { el.removeAttribute('data-done'); next(); return; }
         var s2 = 'data:' + (r.mime || 'image/jpeg') + ';base64,' + r.b64;
         cache[k] = s2; put(s2);
