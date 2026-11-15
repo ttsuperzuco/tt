@@ -121,9 +121,9 @@ function renderAkijikanPage_(d, base, staff, dev) {
     '</div>' +
     '<div class="akidurrow">' +
       '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
-      '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
       '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
       '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
     '</div>' +
     '<div class="akidurpad" id="akiDurPad" hidden>' +
       '<div class="exbox" id="akiDurBox"></div>' +
@@ -498,7 +498,17 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
 '  .akiwd.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
-AKIDURCSS_ +
+'  .akidurrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
+'  .akidurbtn{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akisub);' +
+'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+'    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
+'  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akidurpad{ margin-top:12px; }' +
+'  .akidurpad[hidden]{ display:none; }' +
+'  .akidurpad .exbox{ margin-top:0; }' +
+'  .akidurpad .exgo{ margin-top:4px; }' +
+'  .akidurunit{ font-size:24px; }' +
+'  .akidurph{ color:#94a3b8; font-size:23px; font-weight:800; letter-spacing:normal; }' +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
 AKFCSS_ +

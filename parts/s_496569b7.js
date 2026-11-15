@@ -1,17 +1,5 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
 // この画面だけで使う部品：akijikan、yoyaku_henkou、yoyaku_kizon、yoyaku_sejutsugo
-var AKIDURCSS_ =
-  '.akidurrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
-  '.akidurbtn{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akisub);' +
-    'background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-    'padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
-  '.akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
-  '.akidurpad{ margin-top:12px; }' +
-  '.akidurpad[hidden]{ display:none; }' +
-  '.akidurpad .exbox{ margin-top:0; }' +
-  '.akidurpad .exgo{ margin-top:4px; }' +
-  '.akidurunit{ font-size:24px; }' +
-  '.akidurph{ color:#94a3b8; font-size:23px; font-weight:800; letter-spacing:normal; }';
 var AKI_ROOM_WRAP_ = { 'FREEDOM': ['FREE', 'DOM'], 'COSMOS': ['COS', 'MOS'], 'STAR/福': ['STAR', '/福'] };
 function akiStaffTag_(emoji, name) {
   var cs = Array.from(String(name || ''));

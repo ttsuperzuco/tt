@@ -14,9 +14,6 @@ function stepTimeCss_(p) {
 }
 function sgCss_() {
   return (
-    EXPADCSS_ + AKIDURCSS_ +
-    '#sgDurF{--akicard:#211f2c;--akisub:#9a95a9;--akiline:#34313f;--akiprimary:#a79fff;margin:0 0 12px;}' +
-    '@media (prefers-color-scheme:light){#sgDurF{--akicard:#ffffff;--akisub:#6b7280;--akiline:#d7dee8;--akiprimary:#2563eb;}}' +
     '.sg{max-width:560px;width:100%;min-width:0;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.sgstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:15px;margin:2px 4px 10px;}' +
     '.sgstaff{display:flex;flex-direction:column;gap:12px;margin:0 0 22px;}' +
@@ -124,19 +121,6 @@ function sgStepsHtml_() {
     '</div>' +
     '<div class="sg" id="sgFree" style="display:none">' +
       '<div class="sgct" id="sgfct"></div>' +
-      '<div id="sgDurF">' +
-        '<div class="akidurrow">' +
-          '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
-          '<button type="button" class="akidurbtn" data-dur="custom" id="sgDurC">◯分</button>' +
-          '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
-          '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
-        '</div>' +
-        '<div class="akidurpad" id="sgDurPad" hidden>' +
-          '<div class="exbox" id="sgDurBox"></div>' +
-          '<div class="expad" id="sgDurKeys">' + EXPADHTML_ + '</div>' +
-          '<button type="button" class="exgo" id="sgDurGo">この分数で表示する</button>' +
-        '</div>' +
-      '</div>' +
       '<div id="sgfree"></div>' +
       '<div class="sgstatus" id="sgstatus3"></div>' +
     '</div>' +
@@ -238,30 +222,7 @@ var SG_STEPS_JS_ =
         'if(typeof sgOnDate==="function")sgOnDate(PICKDATE);' +
         'goFree();};}}}' +
     'function goFree(){step=5;show();drawFree();window.scrollTo(0,0);}' +
-    'var DURLO=0,DURDIG="",DURVAL=0,DURBOUND=false;' +
-    'function sgDurDraw(){var b=$("sgDurBox");if(b)b.innerHTML=DURDIG?DURDIG+"<span class=akidurunit> 分</span>":"<span class=akidurph>数字を入力してください😊</span>";}' +
-    'function sgDurSet(b,lo){DURLO=lo;var bs=$("sgDurF").getElementsByClassName("akidurbtn");' +
-      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("on",bs[i]===b);' +
-      'var y=window.pageYOffset||0;drawFree();setTimeout(function(){window.scrollTo(0,y);},0);}' +
-    'function sgDurGo(){var n=parseInt(DURDIG,10);' +
-      'if(!(n>0)){szPopup_("分数を入力してください😊",{icon:""});return;}' +
-      'DURVAL=n;$("sgDurC").textContent=n+"分";$("sgDurPad").hidden=true;sgDurSet($("sgDurC"),n);}' +
-    'function sgDurPress(k){if(k==="clr")DURDIG="";else if(k==="del")DURDIG=DURDIG.slice(0,-1);' +
-      'else if(/^[0-9]$/.test(k)&&DURDIG.length<3)DURDIG=(DURDIG==="0")?k:DURDIG+k;sgDurDraw();}' +
-    'function sgDurBind(){if(DURBOUND||!$("sgDurF"))return;DURBOUND=true;' +
-      'var bs=$("sgDurF").getElementsByClassName("akidurbtn");' +
-      'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){var k=this.getAttribute("data-dur");var P=$("sgDurPad");' +
-        'if(k==="custom"){if(P.hidden){DURDIG=DURVAL?String(DURVAL):"";sgDurDraw();P.hidden=false;}else{P.hidden=true;}return;}' +
-        'P.hidden=true;sgDurSet(this,k==="all"?0:Number(k));};}' +
-      '$("sgDurKeys").onclick=function(e){var b=e.target.closest("button");if(!b)return;sgDurPress(b.getAttribute("data-k")||b.textContent);};' +
-      '$("sgDurGo").onclick=sgDurGo;' +
-      'document.addEventListener("keydown",function(e){var P=$("sgDurPad");if(!P||P.hidden||step!==5)return;' +
-        'if(/^[0-9]$/.test(e.key)){sgDurPress(e.key);e.preventDefault();}' +
-        'else if(e.key==="Backspace"){sgDurPress("del");e.preventDefault();}' +
-        'else if(e.key==="Enter"){sgDurGo();e.preventDefault();}' +
-        'else if(e.key==="Escape"){P.hidden=true;e.preventDefault();}});}' +
     'function drawFree(){' +
-      'sgDurBind();if($("sgDurF"))$("sgDurF").style.display=NEEDMIN?"none":"";' +
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
       '$("sgfct").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）の空き状況";' +
@@ -280,8 +241,6 @@ var SG_STEPS_JS_ =
       '$("sgfree").innerHTML=akiFullCard_(day);' +
       'var fs=$("sgfree").getElementsByClassName("akffree");' +
       'for(var f=0;f<fs.length;f++){' +
-        'if(DURLO&&(hm2m(fs[f].getAttribute("data-e"))-hm2m(fs[f].getAttribute("data-s")))<DURLO){' +
-          'fs[f].style.opacity="0.3";fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
         'if(fs[f].getAttribute("data-kind")!=="staff"){fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
         'if(typeof sgStaffOK==="function"&&!sgStaffOK(fs[f].getAttribute("data-who"))){' +
           'fs[f].style.opacity="0.3";fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
