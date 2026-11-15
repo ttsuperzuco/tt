@@ -4477,7 +4477,8 @@ var KOUKOKUCSS_ =
   '  table.kkmt.kknow th, table.kkmt.kknow td { white-space:nowrap; }' +
   '  .kknb { word-break:keep-all; overflow-wrap:anywhere; }' +
   '  .kknw { white-space:nowrap; }' +
-  '  table.kkmt.kknow td.kknowsub { text-align:left; color:var(--sub,#64748b); font-size:.68rem; font-weight:600; padding-top:0; line-height:1.5; }' +
+  '  table.kkmt.kknow td.kknowsub { text-align:left; color:var(--sub,#64748b); font-size:.68rem; font-weight:600; padding-top:0; line-height:1.5; white-space:normal; word-break:keep-all; overflow-wrap:anywhere; }' +
+  '  table.kkmt.kknow th.kkgsub { padding-left:1.4em; font-weight:600; color:var(--sub,#64748b); }' +
   '  .kknote { margin:14px 2px 0; color:rgba(255,255,255,.8); font-size:.72rem; text-align:center; line-height:1.6; }';
 
 var KOUKOKU_FILENAME = 'koukoku.json';
@@ -4582,7 +4583,55 @@ function _kkNow_(n) {
     '<tbody>' + pre + '</tbody></table>' +
     '<div class="kkleg kknb" style="text-align:left;">※残りが3日分を切ると<wbr>赤で出ます。<wbr>止まる前に<wbr>入金してください😊</div>' +
     '</div>' : '';
-  return places + prepaid;
+  return _kkGroups_(n) + places + prepaid;
+}
+
+// ★2026-11-15 まるちゃん依頼：「台湾人男性の中でLINEにいくら、インスタにいくら、グーグルマップにいくら」が
+//   見えないと、どこをどう調整するか分からない＝4マスの1マスずつを、出している所ごとに分けて出す。
+//   インスタ＝メタの管理画面から出した分とインスタから出した分を合わせた物。数え方は上の「出している所ごと」と同じ。
+var KK_GRP_ = [['jp', 'm', '日本人男性'], ['jp', 'f', '日本人女性'], ['tw', 'm', '台湾人男性'], ['tw', 'f', '台湾人女性']];
+var KK_GSRC_ = [['insta', 'インスタ'], ['google', 'グーグルマップ'], ['line', 'LINE広告']];
+function _kkGroups_(n) {
+  function num(v) { return esc_(_costYen_(v)); }
+  function srcOf(x) { return (x.src === 'meta' || x.src === 'ig') ? 'insta' : x.src; }
+  function sum(its) {
+    var live = its.filter(function (x) { return x.live; }), r = { c: live.length, b: 0, y: 0, t: 0 };
+    live.forEach(function (x) { r.b += Number(x.day_budget) || 0; });
+    its.forEach(function (x) { r.y += Number(x.spend_yday) || 0; r.t += Number(x.spend_today) || 0; });
+    return r;
+  }
+  var grps = KK_GRP_.slice();
+  n.items.forEach(function (x) {   // 男女の分からない広告があれば、その国籍の「男女どちらも」に出す（今は無い）
+    if (x.sex !== 'm' && x.sex !== 'f' && !grps.some(function (g) { return g[0] === x.nat && !g[1]; }))
+      grps.push([x.nat, null, (x.nat === 'jp' ? '日本人' : '台湾人') + '（男女どちらも）']);
+  });
+  var body = grps.map(function (g) {
+    var its = n.items.filter(function (x) { return x.nat === g[0] && (g[1] ? x.sex === g[1] : (x.sex !== 'm' && x.sex !== 'f')); });
+    if (!its.length) return '';
+    var s = sum(its);
+    var head = '<tr class="kkmsum"><th>' + esc_(g[2]) + '</th><td>' + s.c + '本</td><td>' + num(s.b) + '</td><td>' + num(s.y) + '</td><td>' + num(s.t) + '</td></tr>';
+    var subs = KK_GSRC_.map(function (sx) {
+      var si = its.filter(function (x) { return srcOf(x) === sx[0]; });
+      if (!si.length) return '';
+      var r = sum(si);
+      if (!r.c && !r.y && !r.t) {   // まだ配信していない・止めている所は、状態だけ出す
+        var st = si.map(function (x) {
+          return esc_(x.status || '止めている') + (x.day_budget ? '<wbr>（始まると1日 ' + num(x.day_budget) + '）' : '');
+        }).join('<br>');
+        return '<tr><th class="kkgsub">' + esc_(sx[1]) + '</th><td colspan="4" class="kknowsub">' + st + '</td></tr>';
+      }
+      return '<tr><th class="kkgsub">' + esc_(sx[1]) + '</th><td>' + r.c + '本</td><td>' + num(r.b) + '</td><td>' + num(r.y) + '</td><td>' + num(r.t) + '</td></tr>';
+    }).join('');
+    return head + subs;
+  }).join('');
+  if (!body) return '';
+  return '<div class="kkcard">' +
+    '<div class="kkmh">国籍・男女ごとの内訳<wbr>（どこにいくら使っているか）</div>' +
+    '<table class="kkmt kknow"><thead><tr><th>内訳</th><th>配信中</th><th>予算/日</th><th>昨日</th><th>今日</th></tr></thead>' +
+    '<tbody>' + body + '</tbody></table>' +
+    '<div class="kkleg kknb" style="text-align:left;line-height:1.6;">※インスタ＝<wbr>メタの管理画面から出した分と<wbr>インスタから出した分の合計です。<wbr>' +
+    '「予算/日」は配信中の広告だけ、<wbr>「昨日」「今日」は止めた広告が使った分も入ります。</div>' +
+    '</div>';
 }
 
 var KK_PLACE_ = { instagram: 'インスタ', facebook: 'フェイスブック', threads: 'スレッズ', messenger: 'メッセンジャー', audience_network: 'その他' };
