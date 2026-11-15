@@ -6716,7 +6716,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'delete p.b64;});});' +
   // ★中身は住所に載せない＝長すぎて窓口まで届かない（実測19,573文字／上限は約8,000）。
   //   画像と同じく置き場へ本文として預け、頼む時は預けた名前だけを渡す。
-  'var itemsName="bc_items_"+((idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d")+".json";' +
+  'var itemsName="bc_items_"+((idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d")+"_"+Math.random().toString(36).replace(/[^a-z0-9]/g,"").slice(0,8)+".json";' +
   'jobs.push(pushImage(itemsName,{items:items}));' +
   // ★2026-11-16：全部近道に預けられた時は待たずに頼む（窓口へ上げた時だけ、届くまでの1.2秒を待つ）
   'Promise.all(jobs).then(function(rs){return rs;},function(){return [];}).then(function(rs){var zw=(rs&&rs.length&&rs.every(function(x){return x==="z";}))?0:1200;setTimeout(function(){' +

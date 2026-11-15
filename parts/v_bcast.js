@@ -1086,7 +1086,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'var jobs=[];items.forEach(function(it){it.parts.forEach(function(p){' +
   'if(p.kind==="image"&&p.b64){var nm=rnd();p.src="upload:"+nm;jobs.push(pushImage(nm,{b64:p.b64,mime:"image/jpeg"}));}' +
   'delete p.b64;});});' +
-  'var itemsName="bc_items_"+((idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d")+".json";' +
+  'var itemsName="bc_items_"+((idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d")+"_"+Math.random().toString(36).replace(/[^a-z0-9]/g,"").slice(0,8)+".json";' +
   'jobs.push(pushImage(itemsName,{items:items}));' +
   'Promise.all(jobs).then(function(rs){return rs;},function(){return [];}).then(function(rs){var zw=(rs&&rs.length&&rs.every(function(x){return x==="z";}))?0:1200;setTimeout(function(){' +
   'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:d0,' +
