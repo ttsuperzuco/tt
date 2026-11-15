@@ -379,6 +379,25 @@ var SG_STEPS_JS_ =
       's.src=EXEC+"?action=data&name=akijikan.json&callback="+nm+"&cb="+Date.now();' +
       's.onerror=function(){AKIERR=true;var w=AKIWAIT;AKIWAIT=null;if(w)w();};' +
       'document.body.appendChild(s);})();' +
+    'function sgAkiLive(p){AKI=p;' +
+      'if(step===5){var y5=window.pageYOffset||0;drawFree();setTimeout(function(){window.scrollTo(0,y5);},0);return;}' +
+      'if(step!==6||!PICKDATE||!SLOT)return;' +
+      'var day=null;for(var i=0;i<AKI.days.length;i++){if(AKI.days[i].date===PICKDATE){day=AKI.days[i];break;}}' +
+      'if(!day||day.kind==="closed")return;' +
+      'DAYROOMS=day.rooms_free||[];DAYSTAFF=day.staff||[];' +
+      'if(!SLOT.toku&&SLOT.kind==="staff"){var band=null;' +
+        'for(var a=0;a<DAYSTAFF.length&&!band;a++){var st=DAYSTAFF[a];if(!st.emoji||String(SLOT.who||"").indexOf(st.emoji)<0)continue;' +
+          'for(var b=0;b<(st.slots||[]).length;b++){var b0=hm2m(st.slots[b].s),b1=hm2m(st.slots[b].e);if(b0<=TS&&TE<=b1){band=[b0,b1];break;}}}' +
+        'if(!band){szPopup_("選んだ施術者の空きが変わりました。空き状況から選び直してください🙇");goFree();return;}' +
+        'SLOT.s=band[0];SLOT.e=band[1];}' +
+      'var had=ROOM;drawTime();' +
+      'if(had&&!ROOM)szPopup_("選んでいた施術室に、別の予約が入りました。施術室を選び直してください🙇");}' +
+    'if(window.__zkWatch)window.__zkWatch(["akijikan.json"],function(){' +
+      'var nm2="__sgAkiL_"+Date.now();' +
+      'window[nm2]=function(p){try{delete window[nm2];}catch(e){}if(p&&p.days){try{sgAkiLive(p);}catch(e){}}};' +
+      'var s2=document.createElement("script");' +
+      's2.src=EXEC+"?action=data&name=akijikan.json&callback="+nm2+"&cb="+Date.now();' +
+      's2.onerror=function(){};document.body.appendChild(s2);});' +
     'function sgBindSteps(){var ps=document.getElementsByClassName("sgtpm");' +
       'for(var i=0;i<ps.length;i++){ps[i].onclick=function(){' +
         'if(!tapOK())return;' +

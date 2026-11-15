@@ -517,6 +517,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(!ti){szPopup_("予約メモのタイトルを入力してください😊");return;}' +
       'if(!PICKDATE||!ROOM){szPopup_("予約の日時と施術室が決まっていません。前に戻ってやり直してください🙇");return;}' +
       'var f={date:PICKDATE,start:m2hm(TS),end:m2hm(TE),room:ROOM,title:ti,memo:$("sgmtext").value||""};' +
+      'if(SLOT&&SLOT.toku)f.toku=1;' +
       'if(!REP&&!LN){f.ta=1;f.today_title=(CUST&&CUST.title)||"";' +
         'var a=sgAns();f.elight=a.el?1:0;f.el_parts=a.el_parts;f.first_dat=a.first?1:0;f.after_kinds=a.after.join(",");}' +
       'if(rcp()&&HOLD){f.hold_line=1;delete f.ta;delete f.elight;delete f.el_parts;delete f.first_dat;delete f.after_kinds;}' +
