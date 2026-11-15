@@ -2795,7 +2795,7 @@ function instaScript_(C) {
       '<button type="button" id="igpfLinkAdd" style="background:none;border:0;color:#0095f6;font:inherit;font-weight:700;padding:8px 0;cursor:pointer">＋ リンクを追加</button>' +
       '<div class="n">タイトルは、プロフィールに表示されるリンクの名前です。</div></div>' +
       '<div class="f"><div class="l">お店の公開情報</div><div id="igpfBiz"><button type="button" id="igpfBizOpen" style="background:none;border:0;color:#0095f6;font:inherit;font-weight:700;padding:6px 0;cursor:pointer">表示・変更する（読み込みに40秒ほどかかります）</button></div></div>' +
-      '<div class="igcnote">完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。</div></div>';
+      '<div class="igcnote">' + (DRAFT ? '完了を押すと、下書きに保存します。本番には、承認した時に出ます。' : '完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。') + '</div></div>';
     document.body.appendChild(e);
     var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
     nm.value = q.name || ''; bio.value = q.bio || '';

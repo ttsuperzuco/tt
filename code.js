@@ -20868,7 +20868,8 @@ function instaScript_(C) {
       '<div class="n">タイトルは、プロフィールに表示されるリンクの名前です。</div></div>' +
       // ★2026-11-09：お店の公開情報（メール・住所・電話・表示の切り替え）＝受付係がメタの管理画面で読む・保存する
       '<div class="f"><div class="l">お店の公開情報</div><div id="igpfBiz"><button type="button" id="igpfBizOpen" style="background:none;border:0;color:#0095f6;font:inherit;font-weight:700;padding:6px 0;cursor:pointer">表示・変更する（読み込みに40秒ほどかかります）</button></div></div>' +
-      '<div class="igcnote">完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。</div></div>';
+      // ★2026-11-15 「下書き」の間は本番に出ない＝下の説明も下書きの言い方にする（前は下書きの間も「すぐに変わります」と出ていた）
+      '<div class="igcnote">' + (DRAFT ? '完了を押すと、下書きに保存します。本番には、承認した時に出ます。' : '完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。') + '</div></div>';
     document.body.appendChild(e);
     var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
     nm.value = q.name || ''; bio.value = q.bio || '';
