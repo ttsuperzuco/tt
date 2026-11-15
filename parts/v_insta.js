@@ -752,6 +752,49 @@ function instaScript_(C) {
     }).join('');
     return '<div style="white-space:pre-wrap;word-break:break-word;background:#fafafa;border-radius:8px;padding:8px 10px;margin:4px 0 10px;line-height:1.7">' + h + '</div>';
   }
+  function apvEditsHtml(it) {
+    var E = (it.edits || []).slice().reverse(), can = apvCanEdit(it);
+    var row = function (x) {
+      var w = x.undel ? '削除から戻した' : (x.rev ? '元に戻した' : '修正');
+      return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;color:#737373;font-size:13px"><span style="flex:1;min-width:0">' + w + '：' + esc(apvName(x.who)) + '・' + esc(apvWhen(x.at)) + '</span>' +
+        (can && x.ver ? '<button type="button" data-rev="' + esc(x.ver) + '" style="flex:none;background:#efefef;border-radius:6px;padding:4px 8px;font-size:12px;color:#262626">この修正の前に戻す</button>' : '') + '</div>';
+    };
+    return E.slice(0, 5).map(row).join('') + (E.length > 5 ? '<details style="margin-top:4px"><summary style="color:#737373;font-size:12px;cursor:pointer">前の修正をすべて見る（' + (E.length - 5) + '件）</summary>' + E.slice(5).map(row).join('') + '</details>' : '');
+  }
+  function openApvTrash() {
+    var e = document.createElement('div'); e.className = 'igp igsr'; e.style.zIndex = 8660;
+    e.innerHTML = '<div class="w"><div class="igph"><button type="button" data-tx="1">' + IC.back + '</button><b>削除した下書き</b><span></span></div><div data-tl="1"><div class="igempty"><b>読み込んでいます…</b></div></div></div>';
+    document.body.appendChild(e);
+    var items = [];
+    var draw = function () {
+      var box = e.querySelector('[data-tl]'); if (!box) return;
+      box.innerHTML = '<div style="padding:10px 16px;color:#737373;font-size:12px">削除してから30日間、ここから元に戻せます。</div>' + (items.length ? items.map(function (it) {
+        return '<div style="display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid #efefef"><span class="igapv" style="position:static">' + apvTag(it) + '</span><span style="flex:1;min-width:0"><b>' + esc(it.name) + '</b>' +
+          '<small style="display:block;color:#737373;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">作成：' + esc(apvWho(it)) + (apvAfter(it) ? '・' + esc(apvAfter(it).replace(/\n/g, ' ')) : '') + '</small>' +
+          '<small style="display:block;color:#737373">削除：' + esc(apvName(it.deleted_by)) + '・' + esc(apvWhen(it.deleted_at)) + '</small></span>' +
+          (it.can ? '<button type="button" data-ud="' + esc(it.id) + '" style="flex:none;background:#0095f6;color:#fff;border-radius:8px;padding:8px 10px;font-weight:700">元に戻す</button>' : '') + '</div>';
+      }).join('') : '<div class="igempty"><b>削除した下書きはありません</b></div>');
+    };
+    var load = function () {
+      ask({ kind: 'apv_trash', acct: CUR }, function (err, d) {
+        if (err) { warn(err); e.remove(); return; }
+        items = (d && d.items) || []; draw();
+      });
+    };
+    load();
+    e.addEventListener('click', function (ev) {
+      if (ev.target.closest('[data-tx]')) { e.remove(); return; }
+      var u = ev.target.closest('[data-ud]'); if (!u) return;
+      var aid = u.getAttribute('data-ud');
+      szPopup_('この下書きを元に戻しますか？😊（本番には出ません。下書きに戻ります）', { cancel: true, onYes: function () {
+        busyAsk({ kind: 'apv_undel', aid: aid }, false, '下書きを元に戻しています', '', function (err) {
+          if (err) { warn(err); return; }
+          items = items.filter(function (x) { return x.id !== aid; }); draw();
+          apvLoad(CUR); loadWeb(CUR, true); doneBox('下書きを元に戻しました');
+        });
+      } });
+    });
+  }
   var APV_FULLCAP = {};      
   function openApvCard(id) {
     var it = (APVL[CUR] || []).filter(function (x) { return x.id === id; })[0]; if (!it) { warn('この変更は見つかりません（もう承認されたか、取り消されています）'); return; }
@@ -762,7 +805,7 @@ function instaScript_(C) {
     var pre = function (t) { return '<div style="white-space:pre-wrap;word-break:break-word;background:#fafafa;border-radius:8px;padding:8px 10px;margin:4px 0 10px">' + esc(t) + '</div>'; };
     e.innerHTML = '<div class="w"><div class="igph"><button type="button" data-cx="1">' + IC.back + '</button><b>' + esc(it.name) + '</b><span></span></div><div style="padding:12px 16px">' +
       '<div><span class="igapv" style="position:static">' + apvTag(it) + '</span>　作成：' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + '</div>' +
-      (it.edits || []).slice(-5).map(function (x) { return '<div style="margin-top:4px;color:#737373;font-size:13px">修正：' + esc(apvName(x.who)) + '・' + esc(apvWhen(x.at)) + '</div>'; }).join('') +
+      apvEditsHtml(it) +
       (it.status === 'rejected' ? '<div style="margin-top:10px;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</div>' : '') +
       (bef && aft ? '<div style="margin-top:12px;color:#737373;font-size:12px">変更した所（<span style="color:#A32D2D">赤＝削除</span>・<span style="color:#1e6b2d">緑＝追加</span>）</div>' +
         '<div data-apvdiff="1">' + (needFull ? '<div style="color:#737373;margin:4px 0 10px">本番の説明文を読み込んでいます…</div>' : apvDiffHtml(bef, aft)) + '</div>' +
@@ -804,6 +847,17 @@ function instaScript_(C) {
         busyAsk({ kind: 'apv_ng', aid: id, reason: r }, false, '差し戻しています', '', function (err) { if (err) { warn(err); return; } after(); });
         return;
       }
+      var rv = t.closest('[data-rev]');
+      if (rv) {   
+        szPopup_('この修正をする前の内容に戻しますか？😊（本番には出ません。いまの内容も記録に残るので、あとでまた戻せます）', { cancel: true, onYes: function () {
+          busyAsk({ kind: 'apv_rev', aid: id, ver: rv.getAttribute('data-rev') }, false, '下書きを元に戻しています', '', function (err, d) {
+            if (err) { warn(err); return; }
+            (APVL[CUR] || []).forEach(function (x) { if (x.id === id && d && d.item) for (var k in d.item) x[k] = d.item[k]; });
+            after(); doneBox('下書きを元に戻しました');
+          });
+        } });
+        return;
+      }
       if (t.closest('[data-aed]')) {   
         var ed = APV_EDIT[it.kind];
         if (ed === 'prof') { e.remove(); openProfEdit(); return; }
@@ -817,7 +871,7 @@ function instaScript_(C) {
       }
       if (t.closest('[data-del]')) {
         var isNew2 = apvTag(it) === '新規';
-        szPopup_(isNew2 ? 'この下書きを削除しますか？😊（本番には出ません）' : 'この変更を取り消しますか？😊（本番には出ません）', { cancel: true, onYes: function () {
+        szPopup_((isNew2 ? 'この下書きを削除しますか？😊' : 'この変更を取り消しますか？😊') + '（本番には出ません。30日間は「一覧」の「削除した下書き」から元に戻せます）', { cancel: true, onYes: function () {
           busyAsk({ kind: 'apv_del', aid: id }, false, isNew2 ? '削除しています' : '取り消しています', '', function (err) { if (err) { warn(err); return; } APVL[CUR] = (APVL[CUR] || []).filter(function (x) { return x.id !== id; }); apvBar(); drawApp(); after(); if (isNew2) doneBox('削除が完了しました'); });
         } });
       }
@@ -832,10 +886,12 @@ function instaScript_(C) {
           '<span class="igapv" style="position:static">' + apvTag(it) + '</span><span style="flex:1;min-width:0"><b>' + esc(it.name) + '</b>' +
           '<small style="display:block;color:#737373;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + (apvLastEdit(it) ? '・修正：' + esc(apvName(apvLastEdit(it).who)) : '') + (apvAfter(it) ? '・' + esc(apvAfter(it).replace(/\n/g, ' ')) : '') + '</small>' +
           (it.status === 'rejected' ? '<small style="display:block;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</small>' : '') + '</span></button>';
-      }).join('') : '<div class="igempty"><b>承認待ちはありません</b></div>') + '</div>';
+      }).join('') : '<div class="igempty"><b>承認待ちはありません</b></div>') +
+      '<button type="button" data-lt="1" style="display:block;margin:18px auto;color:#737373;font-size:13px;font-weight:700">削除した下書き（30日間）</button></div>';
     document.body.appendChild(e);
     e.addEventListener('click', function (ev) {
       if (ev.target.closest('[data-lx]')) { e.remove(); return; }
+      if (ev.target.closest('[data-lt]')) { openApvTrash(); return; }
       var r = ev.target.closest('[data-li]'); if (r) openApvCard(r.getAttribute('data-li'));
     });
   }
