@@ -7459,10 +7459,10 @@ var SG_STEPS_JS_ =
       'if(!SLOT.toku&&SLOT.kind==="staff"){var band=null;' +
         'for(var a=0;a<DAYSTAFF.length&&!band;a++){var st=DAYSTAFF[a];if(!st.emoji||String(SLOT.who||"").indexOf(st.emoji)<0)continue;' +
           'for(var b=0;b<(st.slots||[]).length;b++){var b0=hm2m(st.slots[b].s),b1=hm2m(st.slots[b].e);if(b0<=TS&&TE<=b1){band=[b0,b1];break;}}}' +
-        'if(!band){szPopup_("選んだ施術者の空きが変わりました。空き状況から選び直してください🙇");goFree();return;}' +
+        'if(!band){szPopup_("選択した施術者の空きが変わりました。空き状況から選択し直してください🙇");goFree();return;}' +
         'SLOT.s=band[0];SLOT.e=band[1];}' +
       'var had=ROOM;drawTime();' +
-      'if(had&&!ROOM)szPopup_("選んでいた施術室に、別の予約が入りました。施術室を選び直してください🙇");}' +
+      'if(had&&!ROOM)szPopup_("選択していた施術室に、別の予約が入りました。施術室を選択し直してください🙇");}' +
     'if(window.__zkWatch)window.__zkWatch(["akijikan.json"],function(){' +
       'var nm2="__sgAkiL_"+Date.now();' +
       'window[nm2]=function(p){try{delete window[nm2];}catch(e){}if(p&&p.days){try{sgAkiLive(p);}catch(e){}}};' +
@@ -8899,7 +8899,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'function nrLiveBusy(){var ov=document.getElementById("szBusyOv");return !!(ov&&ov.isConnected&&getComputedStyle(ov).display!=="none");}' +
     'function nrLive(){if(!window.__rvdt||!window.__nrDate||nrLiveBusy())return;var before=JSON.stringify(sel);' +
       'nrRecheckAvail(function(){var t0=Date.now();(function wt(){if(window.__nrAvPending&&Date.now()-t0<30000){setTimeout(wt,500);return;}' +
-        'if(JSON.stringify(sel)!==before&&!nrLiveBusy())szPopup_("選んでいた担当・部屋の時間に、別の予約が入りました。選び直した内容をご確認くださいませ🙇");})();});}' +
+        'if(JSON.stringify(sel)!==before&&!nrLiveBusy())szPopup_("選択していた担当・部屋の時間に、別の予約が入りました。選択し直した内容をご確認くださいませ🙇");})();});}' +
     'if(window.__zkWatch)window.__zkWatch(["akijikan.json"],function(){try{nrLive();}catch(e){}},"nr");' +
     'var nrAvRetried=0;function nrAvRetry(){if(nrAvRetried>=1){nrGoCheck();return;}nrAvRetried++;setTimeout(function(){nrRecheckAvail();},3000);}' +
     'function nrAvFailMain(msg){window.__nrAvFailMain=msg;nrGoCheck();nrAvRetry();}' +
@@ -10401,7 +10401,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(avail&&chosen&&ed&&ed.style.display!=="none"&&(chgtype==="staff"||chgtype==="room")){' +
         'var s0=document.querySelector((chgtype==="staff"?"#estaff":"#eroom")+" .exp.sel");loadAvail();' +
         'var t0=Date.now();(function wt(){if(!avail&&Date.now()-t0<20000){setTimeout(wt,500);return;}' +
-          'if(avail&&s0&&s0.style.display==="none")szPopup_("選んでいた"+(chgtype==="staff"?"担当":"部屋")+"の時間に、別の予約が入りました。選び直してください🙇");})();}' +
+          'if(avail&&s0&&s0.style.display==="none")szPopup_("選択していた"+(chgtype==="staff"?"担当":"部屋")+"の時間に、別の予約が入りました。選択し直してください🙇");})();}' +
       'var rv=document.getElementById("exrvstaff");if(rvAvail&&rv&&rv.offsetParent!==null)rvLoadAvail();}' +
     'if(window.__zkWatch)window.__zkWatch(["akijikan.json"],function(){try{exLive();}catch(e){}},"ex");' +
     'function pollAvail(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollAvail(id);},600);return;}if(r.status!=="done"){return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(d&&d.ok){avail=d;var ed=document.getElementById("exEdit");if(ed&&ed.style.display!=="none"&&(chgtype==="staff"||chgtype==="room")){filterAvail();}}});}' +

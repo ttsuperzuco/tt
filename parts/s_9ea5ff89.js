@@ -852,7 +852,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       'if(avail&&chosen&&ed&&ed.style.display!=="none"&&(chgtype==="staff"||chgtype==="room")){' +
         'var s0=document.querySelector((chgtype==="staff"?"#estaff":"#eroom")+" .exp.sel");loadAvail();' +
         'var t0=Date.now();(function wt(){if(!avail&&Date.now()-t0<20000){setTimeout(wt,500);return;}' +
-          'if(avail&&s0&&s0.style.display==="none")szPopup_("選んでいた"+(chgtype==="staff"?"担当":"部屋")+"の時間に、別の予約が入りました。選び直してください🙇");})();}' +
+          'if(avail&&s0&&s0.style.display==="none")szPopup_("選択していた"+(chgtype==="staff"?"担当":"部屋")+"の時間に、別の予約が入りました。選択し直してください🙇");})();}' +
       'var rv=document.getElementById("exrvstaff");if(rvAvail&&rv&&rv.offsetParent!==null)rvLoadAvail();}' +
     'if(window.__zkWatch)window.__zkWatch(["akijikan.json"],function(){try{exLive();}catch(e){}},"ex");' +
     'function pollAvail(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollAvail(id);},600);return;}if(r.status!=="done"){return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(d&&d.ok){avail=d;var ed=document.getElementById("exEdit");if(ed&&ed.style.display!=="none"&&(chgtype==="staff"||chgtype==="room")){filterAvail();}}});}' +
