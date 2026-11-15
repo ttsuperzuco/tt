@@ -6952,6 +6952,11 @@ function stepTimeCss_(p) {
 }
 function sgCss_() {
   return (
+    /* ★2026-11-15 空き状況の上の長さの絞り込み（全部・◯分・30分・60分）＝空き時間検索と同じ共通の部品。
+       色も空き時間検索と同じ（暗い時・明るい時）。 */
+    EXPADCSS_ + AKIDURCSS_ +
+    '#sgDurF{--akicard:#211f2c;--akisub:#9a95a9;--akiline:#34313f;--akiprimary:#a79fff;margin:0 0 12px;}' +
+    '@media (prefers-color-scheme:light){#sgDurF{--akicard:#ffffff;--akisub:#6b7280;--akiline:#d7dee8;--akiprimary:#2563eb;}}' +
     '.sg{max-width:560px;width:100%;min-width:0;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.sgstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:15px;margin:2px 4px 10px;}' +
     '.sgstaff{display:flex;flex-direction:column;gap:12px;margin:0 0 22px;}' +
@@ -7078,6 +7083,21 @@ function sgStepsHtml_() {
        （書き写さず akiFullCard_ をそのまま呼ぶ・まるちゃん 2026-09-11）。 */
     '<div class="sg" id="sgFree" style="display:none">' +
       '<div class="sgct" id="sgfct"></div>' +
+      /* ★2026-11-15 まるちゃん「1枚目の上の部分に絞り込みをおなじように」「デフォルトは全部。全部の右に〇分」＝
+         空き時間検索と同じ長さの絞り込み。施術時間を先に決めている時（既存の予約）は出さない（drawFree で出し入れ）。 */
+      '<div id="sgDurF">' +
+        '<div class="akidurrow">' +
+          '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
+          '<button type="button" class="akidurbtn" data-dur="custom" id="sgDurC">◯分</button>' +
+          '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
+          '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
+        '</div>' +
+        '<div class="akidurpad" id="sgDurPad" hidden>' +
+          '<div class="exbox" id="sgDurBox"></div>' +
+          '<div class="expad" id="sgDurKeys">' + EXPADHTML_ + '</div>' +
+          '<button type="button" class="exgo" id="sgDurGo">この分数で表示する</button>' +
+        '</div>' +
+      '</div>' +
       '<div id="sgfree"></div>' +
       '<div class="sgstatus" id="sgstatus3"></div>' +
     '</div>' +
@@ -7200,7 +7220,33 @@ var SG_STEPS_JS_ =
         'goFree();};}}}' +
     /* ── 5枚目：その日の空き状況（空き時間検索の「完全版」と同じ物） ── */
     'function goFree(){step=5;show();drawFree();window.scrollTo(0,0);}' +
+    /* ★2026-11-15 長さの絞り込み（全部・◯分・30分・60分）＝空き時間検索と同じ動き。最初は「全部」。
+       足りない空きは消さずに薄く出して押せなくする（施術時間を先に決めた時と同じ出し方＝時間割の形を崩さない）。
+       「◯分」は共通の数字ボタン。パソコンはキーボードの数字・Enter・BackSpace・Escでも入力できる。 */
+    'var DURLO=0,DURDIG="",DURVAL=0,DURBOUND=false;' +
+    'function sgDurDraw(){var b=$("sgDurBox");if(b)b.innerHTML=DURDIG?DURDIG+"<span class=akidurunit> 分</span>":"<span class=akidurph>数字を入力してください😊</span>";}' +
+    'function sgDurSet(b,lo){DURLO=lo;var bs=$("sgDurF").getElementsByClassName("akidurbtn");' +
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("on",bs[i]===b);' +
+      'var y=window.pageYOffset||0;drawFree();setTimeout(function(){window.scrollTo(0,y);},0);}' +
+    'function sgDurGo(){var n=parseInt(DURDIG,10);' +
+      'if(!(n>0)){szPopup_("分数を入力してください😊",{icon:""});return;}' +
+      'DURVAL=n;$("sgDurC").textContent=n+"分";$("sgDurPad").hidden=true;sgDurSet($("sgDurC"),n);}' +
+    'function sgDurPress(k){if(k==="clr")DURDIG="";else if(k==="del")DURDIG=DURDIG.slice(0,-1);' +
+      'else if(/^[0-9]$/.test(k)&&DURDIG.length<3)DURDIG=(DURDIG==="0")?k:DURDIG+k;sgDurDraw();}' +
+    'function sgDurBind(){if(DURBOUND||!$("sgDurF"))return;DURBOUND=true;' +
+      'var bs=$("sgDurF").getElementsByClassName("akidurbtn");' +
+      'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){var k=this.getAttribute("data-dur");var P=$("sgDurPad");' +
+        'if(k==="custom"){if(P.hidden){DURDIG=DURVAL?String(DURVAL):"";sgDurDraw();P.hidden=false;}else{P.hidden=true;}return;}' +
+        'P.hidden=true;sgDurSet(this,k==="all"?0:Number(k));};}' +
+      '$("sgDurKeys").onclick=function(e){var b=e.target.closest("button");if(!b)return;sgDurPress(b.getAttribute("data-k")||b.textContent);};' +
+      '$("sgDurGo").onclick=sgDurGo;' +
+      'document.addEventListener("keydown",function(e){var P=$("sgDurPad");if(!P||P.hidden||step!==5)return;' +
+        'if(/^[0-9]$/.test(e.key)){sgDurPress(e.key);e.preventDefault();}' +
+        'else if(e.key==="Backspace"){sgDurPress("del");e.preventDefault();}' +
+        'else if(e.key==="Enter"){sgDurGo();e.preventDefault();}' +
+        'else if(e.key==="Escape"){P.hidden=true;e.preventDefault();}});}' +
     'function drawFree(){' +
+      'sgDurBind();if($("sgDurF"))$("sgDurF").style.display=NEEDMIN?"none":"";' +
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
       '$("sgfct").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）の空き状況";' +
@@ -7220,6 +7266,9 @@ var SG_STEPS_JS_ =
       /* 空きの帯を押すと「予約時間設定」へ */
       'var fs=$("sgfree").getElementsByClassName("akffree");' +
       'for(var f=0;f<fs.length;f++){' +
+        /* ★2026-11-15 長さの絞り込み：選んだ分に足りない空きは、担当の帯も施術室の帯も薄く出して押せなくする。 */
+        'if(DURLO&&(hm2m(fs[f].getAttribute("data-e"))-hm2m(fs[f].getAttribute("data-s")))<DURLO){' +
+          'fs[f].style.opacity="0.3";fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
         /* ★2026-09-25 まるちゃん指摘「部屋も選べちゃう。担当者だけ押せるように」＝
            施術室の帯は見るだけ（部屋は次の画面で選ぶ）。押せるのは担当の帯だけ。 */
         'if(fs[f].getAttribute("data-kind")!=="staff"){fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
@@ -9297,6 +9346,21 @@ var EXPADHTML_ =
   '<button>4</button><button>5</button><button>6</button>' +
   '<button>7</button><button>8</button><button>9</button>' +
   '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>';
+// ★長さの絞り込みボタン（全部・◯分・30分・60分）と「◯分」の数字ボタンの置き場所＝共通（2026-11-15）。
+//   空き時間検索（AKICSS_）と施術後の予約・既存の予約の空き状況（sgCss_）の両方が使う。見た目を直す時はここだけ直す。
+//   色は置かれた画面の --akicard／--akisub／--akiline／--akiprimary で決まる。
+var AKIDURCSS_ =
+  '.akidurrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
+  '.akidurbtn{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akisub);' +
+    'background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+    'padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
+  '.akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+  '.akidurpad{ margin-top:12px; }' +
+  '.akidurpad[hidden]{ display:none; }' +
+  '.akidurpad .exbox{ margin-top:0; }' +
+  '.akidurpad .exgo{ margin-top:4px; }' +
+  '.akidurunit{ font-size:24px; }' +
+  '.akidurph{ color:#94a3b8; font-size:23px; font-weight:800; letter-spacing:normal; }';
 
 /** 既存の予約／既存の変更＝番号入力→日付選択の2画面（PC版と同じ青緑の見た目・日付選択まで）。
  *  ★2026-08-03：まるちゃん指示①＝まずは番号→日付の2画面だけ（予約えらび・登録は後回し）。 */
@@ -22191,11 +22255,13 @@ function renderAkijikanPage_(d, base, staff, dev) {
     // ★2026-11-15 まるちゃん指示：120分を消して、自由に分を入力できる「◯分」に置き換えた。
     //   押すとすぐ下に共通の数字ボタン（EXPADCSS_／EXPADHTML_）が出る＝スマホのキーボードは出さない
     //   （数字を入れる所は共通の数字ボタンを使う決まり）。確定すると、その分以上を表示し、ボタンは「90分」のように変わる。
+    // ★同日 まるちゃん「デフォルトは全部。全部の右に〇分をおいて。他の画面もそういう風に」＝並びは 全部・◯分・30分・60分
+    //   （施術後の予約・既存の予約の空き状況も同じ並び）。
     '<div class="akidurrow">' +
       '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
+      '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
       '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
       '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
-      '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
     '</div>' +
     '<div class="akidurpad" id="akiDurPad" hidden>' +
       '<div class="exbox" id="akiDurBox"></div>' +
@@ -22660,18 +22726,8 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
 '  .akiwd.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
-'  .akidurrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
-'  .akidurbtn{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akisub);' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
-'  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
-// ★2026-11-15「◯分」の数字ボタン＝共通の部品（EXPADCSS_）の見た目をそのまま使う。ここは置き場所と単位の字だけ。
-'  .akidurpad{ margin-top:12px; }' +
-'  .akidurpad[hidden]{ display:none; }' +
-'  .akidurpad .exbox{ margin-top:0; }' +
-'  .akidurpad .exgo{ margin-top:4px; }' +
-'  .akidurunit{ font-size:24px; }' +
-'  .akidurph{ color:#94a3b8; font-size:23px; font-weight:800; letter-spacing:normal; }' +
+// ★2026-11-15 長さの絞り込みボタンと「◯分」の数字ボタンの置き場所＝共通の部品（AKIDURCSS_・施術後の予約と同じ物）。
+AKIDURCSS_ +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
 AKFCSS_ +
