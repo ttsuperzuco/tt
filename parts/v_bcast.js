@@ -239,7 +239,8 @@ function renderBroadcastPage_(base, staff, dev) {
   'function jsonp(params,onR){var cb="__bc"+Date.now()+Math.floor(Math.random()*1000);window[cb]=function(r){try{delete window[cb];}catch(e){}onR(r||{});};' +
   'var qs="callback="+cb;for(var k in params){qs+="&"+k+"="+encodeURIComponent(params[k]);}' +
   'var sc=document.createElement("script");sc.src=EXEC+"?"+qs+"&cb="+Date.now();sc.onerror=function(){onR({ok:false,error:"通信エラー"});};document.body.appendChild(sc);}' +
-  'function pushImage(name,obj){return fetch(EXEC+"?action=push&key="+KEY+"&name="+name,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(obj)});}' +
+  'function pushGas(name,obj){return fetch(EXEC+"?action=push&key="+KEY+"&name="+name,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(obj)});}' +
+  'function pushImage(name,obj){if(window.__zkPut&&/^bc_(img|items)_/.test(name)){return window.__zkPut(name,obj).then(function(ok){return ok?"z":pushGas(name,obj);});}return pushGas(name,obj);}' +
   'function rnd(){var s="bc_img_",c="abcdefghijklmnopqrstuvwxyz0123456789",i;for(i=0;i<12;i++)s+=c[Math.floor(Math.random()*36)];return s+".json";}' +
   'function ask(op,fields,onDone,onFail,iv){iv=iv||700;' +
   'var f=fields||{};var p={action:"submit",key:KEY,op:op,who:idn.who,role:idn.role,device:idn.device};' +
@@ -1087,7 +1088,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'delete p.b64;});});' +
   'var itemsName="bc_items_"+((idn.device||"x").replace(/[^a-z0-9_]/g,"").slice(0,20)||"d")+".json";' +
   'jobs.push(pushImage(itemsName,{items:items}));' +
-  'Promise.all(jobs).catch(function(){}).then(function(){setTimeout(function(){' +
+  'Promise.all(jobs).then(function(rs){return rs;},function(){return [];}).then(function(rs){var zw=(rs&&rs.length&&rs.every(function(x){return x==="z";}))?0:1200;setTimeout(function(){' +
   'ask("line_broadcast",{fields:JSON.stringify({category:CAT,date:d0,' +
   'time:t0,now:(now?1:0),items_from:itemsName,who:idn.who})},' +
   'function(d){if(go)go.disabled=false;szOvHide_();' +
@@ -1098,7 +1099,7 @@ function renderBroadcastPage_(base, staff, dev) {
   'MZBODYS=["","","",""];TAGS=[];' +
   'WTEXT="";SRES=null;SPER="";SIDX=0;FRESH=false;LMODE="";' +
   'wipClear();step=0;page="l";mode="";draw();}},' +
-  'function(m2){if(go)go.disabled=false;szOvHide_();status(m2,true);});},1200);});' +
+  'function(m2){if(go)go.disabled=false;szOvHide_();status(m2,true);});},zw);});' +
   '}catch(err){var g2=document.getElementById(now?"bcnow":"bcplace");' +
   'if(g2)g2.disabled=false;try{szOvHide_();}catch(e2){}' +
   'status((now?"送れませんでした：":"予約できませんでした：")+' +
