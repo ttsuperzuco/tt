@@ -258,6 +258,11 @@ function renderNewReservationPage_(base, staff, dev) {
     'else if(titleStale){btn.disabled=true;if(ngbox){ngbox.textContent="タイトルを作っています。少し待っててくださいね🥺";ngbox.style.display="";}}}' +
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     'var nrAvTimer=null;function nrScheduleAvail(){nrAvRetried=0;if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
+    'function nrLiveBusy(){var ov=document.getElementById("szBusyOv");return !!(ov&&ov.isConnected&&getComputedStyle(ov).display!=="none");}' +
+    'function nrLive(){if(!window.__rvdt||!window.__nrDate||nrLiveBusy())return;var before=JSON.stringify(sel);' +
+      'nrRecheckAvail(function(){var t0=Date.now();(function wt(){if(window.__nrAvPending&&Date.now()-t0<30000){setTimeout(wt,500);return;}' +
+        'if(JSON.stringify(sel)!==before&&!nrLiveBusy())szPopup_("選んでいた担当・部屋の時間に、別の予約が入りました。選び直した内容をご確認くださいませ🙇");})();});}' +
+    'if(window.__zkWatch)window.__zkWatch(["akijikan.json"],function(){try{nrLive();}catch(e){}},"nr");' +
     'var nrAvRetried=0;function nrAvRetry(){if(nrAvRetried>=1){nrGoCheck();return;}nrAvRetried++;setTimeout(function(){nrRecheckAvail();},3000);}' +
     'function nrAvFailMain(msg){window.__nrAvFailMain=msg;nrGoCheck();nrAvRetry();}' +
     'var nrAvPolls=0;function nrRecheckAvail(done){var d=window.__rvdt;if(!d||!window.__nrDate){if(done)done();return;}' +

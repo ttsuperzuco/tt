@@ -6952,6 +6952,11 @@ function stepTimeCss_(p) {
 }
 function sgCss_() {
   return (
+    /* ★2026-11-15 空き状況の上の長さの絞り込み（全部・◯分・30分・60分）＝空き時間検索と同じ共通の部品。
+       色も空き時間検索と同じ（暗い時・明るい時）。 */
+    EXPADCSS_ + AKIDURCSS_ +
+    '#sgDurF{--akicard:#211f2c;--akisub:#9a95a9;--akiline:#34313f;--akiprimary:#a79fff;margin:0 0 12px;}' +
+    '@media (prefers-color-scheme:light){#sgDurF{--akicard:#ffffff;--akisub:#6b7280;--akiline:#d7dee8;--akiprimary:#2563eb;}}' +
     '.sg{max-width:560px;width:100%;min-width:0;margin:0 auto;padding:0 6px 60px;text-align:left;}' +
     '.sgstep{color:#eaf6fb;font-weight:800;letter-spacing:.06em;font-size:15px;margin:2px 4px 10px;}' +
     '.sgstaff{display:flex;flex-direction:column;gap:12px;margin:0 0 22px;}' +
@@ -7078,6 +7083,21 @@ function sgStepsHtml_() {
        （書き写さず akiFullCard_ をそのまま呼ぶ・まるちゃん 2026-09-11）。 */
     '<div class="sg" id="sgFree" style="display:none">' +
       '<div class="sgct" id="sgfct"></div>' +
+      /* ★2026-11-15 まるちゃん「1枚目の上の部分に絞り込みをおなじように」「デフォルトは全部。全部の右に〇分」＝
+         空き時間検索と同じ長さの絞り込み。施術時間を先に決めている時（既存の予約）は出さない（drawFree で出し入れ）。 */
+      '<div id="sgDurF">' +
+        '<div class="akidurrow">' +
+          '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
+          '<button type="button" class="akidurbtn" data-dur="custom" id="sgDurC">◯分</button>' +
+          '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
+          '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
+        '</div>' +
+        '<div class="akidurpad" id="sgDurPad" hidden>' +
+          '<div class="exbox" id="sgDurBox"></div>' +
+          '<div class="expad" id="sgDurKeys">' + EXPADHTML_ + '</div>' +
+          '<button type="button" class="exgo" id="sgDurGo">この分数で表示する</button>' +
+        '</div>' +
+      '</div>' +
       '<div id="sgfree"></div>' +
       '<div class="sgstatus" id="sgstatus3"></div>' +
     '</div>' +
@@ -7200,7 +7220,33 @@ var SG_STEPS_JS_ =
         'goFree();};}}}' +
     /* ── 5枚目：その日の空き状況（空き時間検索の「完全版」と同じ物） ── */
     'function goFree(){step=5;show();drawFree();window.scrollTo(0,0);}' +
+    /* ★2026-11-15 長さの絞り込み（全部・◯分・30分・60分）＝空き時間検索と同じ動き。最初は「全部」。
+       足りない空きは消さずに薄く出して押せなくする（施術時間を先に決めた時と同じ出し方＝時間割の形を崩さない）。
+       「◯分」は共通の数字ボタン。パソコンはキーボードの数字・Enter・BackSpace・Escでも入力できる。 */
+    'var DURLO=0,DURDIG="",DURVAL=0,DURBOUND=false;' +
+    'function sgDurDraw(){var b=$("sgDurBox");if(b)b.innerHTML=DURDIG?DURDIG+"<span class=akidurunit> 分</span>":"<span class=akidurph>数字を入力してください😊</span>";}' +
+    'function sgDurSet(b,lo){DURLO=lo;var bs=$("sgDurF").getElementsByClassName("akidurbtn");' +
+      'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("on",bs[i]===b);' +
+      'var y=window.pageYOffset||0;drawFree();setTimeout(function(){window.scrollTo(0,y);},0);}' +
+    'function sgDurGo(){var n=parseInt(DURDIG,10);' +
+      'if(!(n>0)){szPopup_("分数を入力してください😊",{icon:""});return;}' +
+      'DURVAL=n;$("sgDurC").textContent=n+"分";$("sgDurPad").hidden=true;sgDurSet($("sgDurC"),n);}' +
+    'function sgDurPress(k){if(k==="clr")DURDIG="";else if(k==="del")DURDIG=DURDIG.slice(0,-1);' +
+      'else if(/^[0-9]$/.test(k)&&DURDIG.length<3)DURDIG=(DURDIG==="0")?k:DURDIG+k;sgDurDraw();}' +
+    'function sgDurBind(){if(DURBOUND||!$("sgDurF"))return;DURBOUND=true;' +
+      'var bs=$("sgDurF").getElementsByClassName("akidurbtn");' +
+      'for(var i=0;i<bs.length;i++){bs[i].onclick=function(){var k=this.getAttribute("data-dur");var P=$("sgDurPad");' +
+        'if(k==="custom"){if(P.hidden){DURDIG=DURVAL?String(DURVAL):"";sgDurDraw();P.hidden=false;}else{P.hidden=true;}return;}' +
+        'P.hidden=true;sgDurSet(this,k==="all"?0:Number(k));};}' +
+      '$("sgDurKeys").onclick=function(e){var b=e.target.closest("button");if(!b)return;sgDurPress(b.getAttribute("data-k")||b.textContent);};' +
+      '$("sgDurGo").onclick=sgDurGo;' +
+      'document.addEventListener("keydown",function(e){var P=$("sgDurPad");if(!P||P.hidden||step!==5)return;' +
+        'if(/^[0-9]$/.test(e.key)){sgDurPress(e.key);e.preventDefault();}' +
+        'else if(e.key==="Backspace"){sgDurPress("del");e.preventDefault();}' +
+        'else if(e.key==="Enter"){sgDurGo();e.preventDefault();}' +
+        'else if(e.key==="Escape"){P.hidden=true;e.preventDefault();}});}' +
     'function drawFree(){' +
+      'sgDurBind();if($("sgDurF"))$("sgDurF").style.display=NEEDMIN?"none":"";' +
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
       '$("sgfct").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）の空き状況";' +
@@ -7220,6 +7266,9 @@ var SG_STEPS_JS_ =
       /* 空きの帯を押すと「予約時間設定」へ */
       'var fs=$("sgfree").getElementsByClassName("akffree");' +
       'for(var f=0;f<fs.length;f++){' +
+        /* ★2026-11-15 長さの絞り込み：選んだ分に足りない空きは、担当の帯も施術室の帯も薄く出して押せなくする。 */
+        'if(DURLO&&(hm2m(fs[f].getAttribute("data-e"))-hm2m(fs[f].getAttribute("data-s")))<DURLO){' +
+          'fs[f].style.opacity="0.3";fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
         /* ★2026-09-25 まるちゃん指摘「部屋も選べちゃう。担当者だけ押せるように」＝
            施術室の帯は見るだけ（部屋は次の画面で選ぶ）。押せるのは担当の帯だけ。 */
         'if(fs[f].getAttribute("data-kind")!=="staff"){fs[f].style.cursor="default";fs[f].onclick=null;continue;}' +
@@ -7419,7 +7468,7 @@ var SG_STEPS_JS_ =
       'window[nm2]=function(p){try{delete window[nm2];}catch(e){}if(p&&p.days){try{sgAkiLive(p);}catch(e){}}};' +
       'var s2=document.createElement("script");' +
       's2.src=EXEC+"?action=data&name=akijikan.json&callback="+nm2+"&cb="+Date.now();' +
-      's2.onerror=function(){};document.body.appendChild(s2);});' +
+      's2.onerror=function(){};document.body.appendChild(s2);},"sg");' +
     'function sgBindSteps(){var ps=document.getElementsByClassName("sgtpm");' +
       'for(var i=0;i<ps.length;i++){ps[i].onclick=function(){' +
         'if(!tapOK())return;' +
@@ -8844,6 +8893,14 @@ function renderNewReservationPage_(base, staff, dev) {
     'function nrShowStart(){var e=document.getElementById("nrStartDisp");if(e)e.textContent=nrStartText();}' +
     // ★開始時間・所要時間・カウンセリングの有無が変わったら、空きを見直す（事務所PCに聞く）。
     'var nrAvTimer=null;function nrScheduleAvail(){nrAvRetried=0;if(nrAvTimer)clearTimeout(nrAvTimer);nrAvTimer=setTimeout(function(){nrRecheckAvail();},300);}' +
+    /* ★2026-11-15 まるちゃん「そちらも進めて」＝予約表が変わったら（近道の見張り・空き時間のデータで気づく）、空いている担当・部屋をその場で聞き直す。
+       聞き直すのは、日時が決まっていて、登録中・完了の画面が出ていない時だけ。選んでいた担当・部屋が埋まって選び直しになった時は知らせる
+       （選び直しの決め方は今までと同じ＝時間を変えた時と同じ処理）。 */
+    'function nrLiveBusy(){var ov=document.getElementById("szBusyOv");return !!(ov&&ov.isConnected&&getComputedStyle(ov).display!=="none");}' +
+    'function nrLive(){if(!window.__rvdt||!window.__nrDate||nrLiveBusy())return;var before=JSON.stringify(sel);' +
+      'nrRecheckAvail(function(){var t0=Date.now();(function wt(){if(window.__nrAvPending&&Date.now()-t0<30000){setTimeout(wt,500);return;}' +
+        'if(JSON.stringify(sel)!==before&&!nrLiveBusy())szPopup_("選んでいた担当・部屋の時間に、別の予約が入りました。選び直した内容をご確認くださいませ🙇");})();});}' +
+    'if(window.__zkWatch)window.__zkWatch(["akijikan.json"],function(){try{nrLive();}catch(e){}},"nr");' +
     'var nrAvRetried=0;function nrAvRetry(){if(nrAvRetried>=1){nrGoCheck();return;}nrAvRetried++;setTimeout(function(){nrRecheckAvail();},3000);}' +
     'function nrAvFailMain(msg){window.__nrAvFailMain=msg;nrGoCheck();nrAvRetry();}' +
     'var nrAvPolls=0;function nrRecheckAvail(done){var d=window.__rvdt;if(!d||!window.__nrDate){if(done)done();return;}' +
@@ -9289,6 +9346,21 @@ var EXPADHTML_ =
   '<button>4</button><button>5</button><button>6</button>' +
   '<button>7</button><button>8</button><button>9</button>' +
   '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>';
+// ★長さの絞り込みボタン（全部・◯分・30分・60分）と「◯分」の数字ボタンの置き場所＝共通（2026-11-15）。
+//   空き時間検索（AKICSS_）と施術後の予約・既存の予約の空き状況（sgCss_）の両方が使う。見た目を直す時はここだけ直す。
+//   色は置かれた画面の --akicard／--akisub／--akiline／--akiprimary で決まる。
+var AKIDURCSS_ =
+  '.akidurrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
+  '.akidurbtn{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akisub);' +
+    'background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
+    'padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
+  '.akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+  '.akidurpad{ margin-top:12px; }' +
+  '.akidurpad[hidden]{ display:none; }' +
+  '.akidurpad .exbox{ margin-top:0; }' +
+  '.akidurpad .exgo{ margin-top:4px; }' +
+  '.akidurunit{ font-size:24px; }' +
+  '.akidurph{ color:#94a3b8; font-size:23px; font-weight:800; letter-spacing:normal; }';
 
 /** 既存の予約／既存の変更＝番号入力→日付選択の2画面（PC版と同じ青緑の見た目・日付選択まで）。
  *  ★2026-08-03：まるちゃん指示①＝まずは番号→日付の2画面だけ（予約えらび・登録は後回し）。 */
@@ -10320,6 +10392,18 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function nameSuffix(){return (chosen&&chosen.name)?chosen.name+"様":"";}' +
     'var avail=null;' +
     'function loadAvail(){avail=null;jsonp({action:"submit",key:KEY,op:"availability",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({date:chosen.date,start_min:(chosen.start_min!=null?chosen.start_min:0),dur:(chosen.dur_min||30),exclude_number:disp()})},function(r){if(!r||!r.ok||!r.id){return;}pollAvail(r.id);});}' +
+    /* ★2026-11-15 まるちゃん「そちらも進めて」＝予約表が変わったら（近道の見張り・空き時間のデータで気づく）、担当・部屋の選択画面の空きを聞き直す。
+       ・既存の変更（担当／部屋を変える画面）＝選んでいた担当・部屋が埋まったら知らせる。
+       ・既存の予約（担当・部屋を選ぶ画面）＝今までの「その時間は埋まっています」の知らせがそのまま出る。
+       登録中・完了の画面が出ている時は聞き直さない。日時を選ぶ画面は空き状況の部品（sgAkiLive）が入れ替える。 */
+    'function exLive(){var ov=document.getElementById("szBusyOv");if(ov&&ov.isConnected&&getComputedStyle(ov).display!=="none")return;' +
+      'var ed=document.getElementById("exEdit");' +
+      'if(avail&&chosen&&ed&&ed.style.display!=="none"&&(chgtype==="staff"||chgtype==="room")){' +
+        'var s0=document.querySelector((chgtype==="staff"?"#estaff":"#eroom")+" .exp.sel");loadAvail();' +
+        'var t0=Date.now();(function wt(){if(!avail&&Date.now()-t0<20000){setTimeout(wt,500);return;}' +
+          'if(avail&&s0&&s0.style.display==="none")szPopup_("選んでいた"+(chgtype==="staff"?"担当":"部屋")+"の時間に、別の予約が入りました。選び直してください🙇");})();}' +
+      'var rv=document.getElementById("exrvstaff");if(rvAvail&&rv&&rv.offsetParent!==null)rvLoadAvail();}' +
+    'if(window.__zkWatch)window.__zkWatch(["akijikan.json"],function(){try{exLive();}catch(e){}},"ex");' +
     'function pollAvail(id){jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){pollAvail(id);},600);return;}if(r.status!=="done"){return;}var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}if(d&&d.ok){avail=d;var ed=document.getElementById("exEdit");if(ed&&ed.style.display!=="none"&&(chgtype==="staff"||chgtype==="room")){filterAvail();}}});}' +
     'function filterAvail(){if(!avail)return;var fs=(avail.free_staff||[]).map(String),fr=(avail.free_rooms||[]).map(String);var sp=document.querySelectorAll("#estaff .exp");for(var i=0;i<sp.length;i++){sp[i].style.display=(fs.indexOf(sp[i].getAttribute("data-ev"))>=0)?"":"none";}var rp=document.querySelectorAll("#eroom .exp");for(var j=0;j<rp.length;j++){rp[j].style.display=(fr.indexOf(rp[j].getAttribute("data-ev"))>=0)?"":"none";}var none=document.getElementById("exeditnone"),go=document.getElementById("exEditGo");if(chgtype==="staff"||chgtype==="room"){var empty=(chgtype==="staff")?(fs.length===0):(fr.length===0);var sec=document.getElementById(chgtype==="staff"?"secStaff":"secRoom");if(empty){if(none){none.style.display="";none.textContent=(chgtype==="staff")?"その時間は、担当の空きがありません":"その時間は部屋が空いていません";}if(sec)sec.style.display="none";if(go)go.style.display="none";}else{if(none)none.style.display="none";if(sec)sec.style.display="";if(go)go.style.display="";}}}' +
     'function hideSteps(){var ids=["exNum","exPick","exMenu","exDate","exTime","exEdit","exMemo","exStaffPick","exRoomPick","exResv","exrvMenu","exAsk","exPickItems","exAdd","exSplit","exGroup","exStaffSel","exDur","exOrder","exSlotPick","sgbackbar","sgMonth","sgDay","sgFree","sgTime"];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el)el.style.display="none";}setExTop();}' +
@@ -18459,6 +18543,10 @@ function instaScript_(C) {
                              'phone_unarchive', 'phone_pin', 'phone_unpin'] };
   var APV_DEL = ['delete', 'hl_delete', 'story_delete', 'cdel', 'sched_del', 'phone_archive'];
   var APV_NEW = ['post', 'comment', 'reply', 'dm_send', 'dm_image', 'phone_story', 'phone_reel', 'sched_add', 'phone_banner'];
+  // ★2026-11-15 下書きの「編集」で開く画面（prof＝プロフィールを編集／hl＝ハイライトの編集／[項目, 名前, 文字数]＝文の編集）
+  var APV_EDIT = { prof_save: 'prof', links_save: 'prof', biz_save: 'prof', hl_save: 'hl',
+                   post: ['caption', '説明文', 2200], edit: ['caption', '説明文', 2200],
+                   comment: ['message', 'コメント', 2200], reply: ['message', '返信', 2200], dm_send: ['text', 'メッセージ', 1000] };
   // ★2026-11-12 まるちゃん「両方とも下書きをデフォルトに。本番を押すと本番になる」＝開くといつも「下書き」。
   //   社長・開発も「下書き」の間の書き込みは承認待ちに預ける（札から承認すると本番）。「本番」に切り替えた時だけ、そのまま本番へ出す。
   //   スタッフは「本番」にしても見た目が本番になるだけで、書き込みはいつも承認待ち。
@@ -18544,8 +18632,46 @@ function instaScript_(C) {
     var hb = root.querySelectorAll('.ighl [data-hl]'), hls = (apvView(DATA.views[CUR]).hl || []);
     for (var i = 0; i < hb.length; i++) { var h = hls[Number(hb[i].getAttribute('data-hl'))]; if (h && h._apv) { hb[i].setAttribute('data-apv', h._apv); apvBadge(hb[i], h._apv, h._mark); if (h._del) hb[i].classList.add('igapvdel'); } }
   }
-  function apvWho(it) { return (typeof PERM_PEOPLE !== 'undefined' && PERM_PEOPLE[it.who]) || (it.who || '社長・開発'); }
+  function apvName(w) { return (typeof PERM_PEOPLE !== 'undefined' && PERM_PEOPLE[w]) || (w || '社長・開発'); }
+  function apvWho(it) { return apvName(it.who); }
   function apvWhen(t) { return t ? ago(new Date(t * 1000).toISOString()) : ''; }
+  // ★2026-11-15 まるちゃん「本人と同じことが下書きでもりゅう、とまとができるように」「誰が直したか出るようにすれば？」
+  //   ＝下書きの間も、本番と同じ画面・同じ操作で下書きの中身を直せる（直すと同じ下書きを上書き＝2件目を作らない）。
+  //   直せる人＝作った本人・社長・開発（サーバーの apv_upd も同じ決まりで守る）。直した人と時刻はカードに出す。
+  function apvCanEdit(it) { return !!it && it.status === 'wait' && (ISADMIN || it.who === (window.__SZ_WHO_ || '')); }
+  function apvMineOf(kind) { return apvFind(function (x) { return x.kind === kind && apvCanEdit(x); }); }
+  function apvLastEdit(it) { var E = it.edits || []; return E.length ? E[E.length - 1] : null; }
+  function apvUpd(id, patch, big, done) {
+    busyAsk({ kind: 'apv_upd', aid: id, patch: patch }, big, '下書きを修正しています', '', function (err, d) {
+      if (err) { done(err); return; }
+      (APVL[CUR] || []).forEach(function (x) { if (x.id === id && d && d.item) for (var k in d.item) x[k] = d.item[k]; });
+      done(null, d);
+    });
+  }
+  // 文だけの下書き（説明文・コメント・返信・メッセージ）を、本番の編集と同じ画面で直す
+  function apvTextEdit(it, key, label, max, after) {
+    var base = String((it.light || {})[key] || '');
+    var e = document.createElement('div'); e.className = 'igpe igc'; e.style.zIndex = 8800;
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igatX">キャンセル</button><b>' + esc(label) + 'を編集</b><button type="button" class="go" id="igatGo">完了</button></div>' +
+      '<textarea id="igatTx"></textarea><div class="igccnt" id="igatCnt"></div></div>';
+    document.body.appendChild(e);
+    var tx = document.getElementById('igatTx'); tx.value = base;
+    var cnt = function () { var n = tx.value.length, o = document.getElementById('igatCnt'); o.textContent = n + ' / ' + max; o.className = 'igccnt' + (n > max ? ' over' : ''); };
+    tx.addEventListener('input', cnt); cnt();
+    e.addEventListener('click', function (ev) {
+      if (ev.target.id === 'igatX') { e.remove(); return; }
+      if (ev.target.id !== 'igatGo') return;
+      var v = tx.value.trim();
+      if (v === base.trim()) { e.remove(); return; }
+      if (!v) { warn(label + 'を入力してください😊'); return; }
+      if (v.length > max) { warn(label + 'は' + max + '文字までです（絵文字は2文字に数えます）😊'); return; }
+      var pt = {}; pt[key] = v;
+      apvUpd(it.id, pt, false, function (err) {
+        if (err) { warn(err); return; }
+        e.remove(); if (after) after(); doneBox('下書きの修正が完了しました');
+      });
+    });
+  }
   function apvBefore(it) {
     var L = it.light || {}, p = prof(), g = L.code ? gridPost(L.code) : null;
     if (it.kind === 'prof_save') return [L.name != null ? '名前：' + (p.name || '') : '', L.bio != null ? '自己紹介：' + (p.bio || '') : ''].filter(Boolean).join('\n');
@@ -18604,7 +18730,8 @@ function instaScript_(C) {
     var e = document.createElement('div'); e.className = 'igp igsr'; e.style.zIndex = 8700;
     var pre = function (t) { return '<div style="white-space:pre-wrap;word-break:break-word;background:#fafafa;border-radius:8px;padding:8px 10px;margin:4px 0 10px">' + esc(t) + '</div>'; };
     e.innerHTML = '<div class="w"><div class="igph"><button type="button" data-cx="1">' + IC.back + '</button><b>' + esc(it.name) + '</b><span></span></div><div style="padding:12px 16px">' +
-      '<div><span class="igapv" style="position:static">' + apvTag(it) + '</span>　' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + '</div>' +
+      '<div><span class="igapv" style="position:static">' + apvTag(it) + '</span>　作成：' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + '</div>' +
+      (it.edits || []).slice(-5).map(function (x) { return '<div style="margin-top:4px;color:#737373;font-size:13px">修正：' + esc(apvName(x.who)) + '・' + esc(apvWhen(x.at)) + '</div>'; }).join('') +
       (it.status === 'rejected' ? '<div style="margin-top:10px;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</div>' : '') +
       (bef && aft ? '<div style="margin-top:12px;color:#737373;font-size:12px">変更した所（<span style="color:#A32D2D">赤＝削除</span>・<span style="color:#1e6b2d">緑＝追加</span>）</div>' +
         '<div data-apvdiff="1">' + (needFull ? '<div style="color:#737373;margin:4px 0 10px">本番の説明文を読み込んでいます…</div>' : apvDiffHtml(bef, aft)) + '</div>' +
@@ -18617,7 +18744,7 @@ function instaScript_(C) {
       (L.n_media && !(L.thumbs || []).length ? '<div style="color:#737373;margin-bottom:10px">写真・動画 ' + L.n_media + '件</div>' : '') +
       (ISADMIN && it.status === 'wait' ? '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-ok="1" style="flex:1;background:#0095f6;color:#fff;border-radius:8px;padding:10px">承認する</button>' +
         '<button type="button" data-ng="1" style="flex:1;background:#efefef;border-radius:8px;padding:10px">差し戻す</button></div>' : '') +
-      ((ISADMIN || mine) && it.status === 'wait' && it.kind === 'hl_save' ? '<button type="button" data-hlt="1" style="display:block;width:100%;margin-top:10px;background:#efefef;border-radius:8px;padding:10px">ハイライトの名前を修正</button>' : '') +
+      (apvCanEdit(it) && APV_EDIT[it.kind] && !(it.kind === 'post' && L.type === 'story') ? '<button type="button" data-aed="1" style="display:block;width:100%;margin-top:10px;background:#efefef;border-radius:8px;padding:10px;font-weight:700">編集</button>' : '') +
       ((ISADMIN || mine) ? '<button type="button" data-del="1" style="display:block;margin:14px auto 0;color:#A32D2D;font-weight:700">' + (apvTag(it) === '新規' ? '削除' : 'この変更を取り消す') + '</button>' : '') +
       '</div></div>';
     document.body.appendChild(e);
@@ -18646,10 +18773,15 @@ function instaScript_(C) {
         busyAsk({ kind: 'apv_ng', aid: id, reason: r }, false, '差し戻しています', '', function (err) { if (err) { warn(err); return; } after(); });
         return;
       }
-      if (t.closest('[data-hlt]')) {
-        var nt = window.prompt('ハイライトの名前を入力してください😊', String(L.title || ''));
-        if (nt === null) return;
-        busyAsk({ kind: 'apv_upd', aid: id, patch: { title: nt } }, false, '下書きを修正しています', '', function (err) { if (err) { warn(err); return; } after(); doneBox('下書きの修正が完了しました'); });
+      if (t.closest('[data-aed]')) {   // ★2026-11-15 下書きを本番と同じ画面で直す（同じ下書きを上書き）
+        var ed = APV_EDIT[it.kind];
+        if (ed === 'prof') { e.remove(); openProfEdit(); return; }
+        if (ed === 'hl') {
+          e.remove();
+          var hv0 = DATA && DATA.views && DATA.views[CUR], hh = L.hid ? ((hv0 && hv0.hl) || []).filter(function (x) { return hlId(x) === String(L.hid); })[0] || null : null;
+          openHlEdit(hh, [], it); return;
+        }
+        apvTextEdit(it, ed[0], ed[1], ed[2], after);
         return;
       }
       if (t.closest('[data-del]')) {
@@ -18667,7 +18799,7 @@ function instaScript_(C) {
       (L.length ? L.map(function (it) {
         return '<button type="button" data-li="' + esc(it.id) + '" style="display:flex;gap:10px;align-items:center;width:100%;padding:12px 16px;border-bottom:1px solid #efefef;text-align:left">' +
           '<span class="igapv" style="position:static">' + apvTag(it) + '</span><span style="flex:1;min-width:0"><b>' + esc(it.name) + '</b>' +
-          '<small style="display:block;color:#737373;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + (apvAfter(it) ? '・' + esc(apvAfter(it).replace(/\n/g, ' ')) : '') + '</small>' +
+          '<small style="display:block;color:#737373;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + (apvLastEdit(it) ? '・修正：' + esc(apvName(apvLastEdit(it).who)) : '') + (apvAfter(it) ? '・' + esc(apvAfter(it).replace(/\n/g, ' ')) : '') + '</small>' +
           (it.status === 'rejected' ? '<small style="display:block;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</small>' : '') + '</span></button>';
       }).join('') : '<div class="igempty"><b>承認待ちはありません</b></div>') + '</div>';
     document.body.appendChild(e);
@@ -20702,10 +20834,14 @@ function instaScript_(C) {
     if (!can('profile')) { warn(NOPERM); return; }
     var v = DATA && DATA.views && DATA.views[CUR], p = (v && v.prof) || {};
     if (!p.user) { warn('プロフィールの読み込みが終わるまで、少し待っててくださいね🥺'); return; }
-    var PIC = null, links = p.links || [], acct = CUR;
+    // ★2026-11-15 「下書き」の間は、下書きを重ねた中身（画面に出ている物）から始める。直せる下書き（作った本人・社長・開発）が
+    //   あれば、保存の時にその下書きを上書きする（前は本番の中身から始まり、保存すると2件目の下書きができていた）。
+    var DP = null, DL = null, DB = null, q = p;
+    if (DRAFT) { DP = apvMineOf('prof_save'); DL = apvMineOf('links_save'); DB = apvMineOf('biz_save'); q = apvView(v).prof || p; }
+    var PIC = null, links = q.links || [], acct = CUR;
     var e = document.createElement('div'); e.className = 'igc igpf'; e.id = 'igProf';
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igpfX" title="キャンセル">' + IC.back + '</button><b>プロフィールを編集</b><button type="button" class="go" id="igpfGo">完了</button></div>' +
-      '<div class="av"><img id="igpfPic" src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><label>写真を編集<input type="file" id="igpfFile" accept="image/*"></label></div>' +
+      '<div class="av"><img id="igpfPic" src="' + esc(q.pic || '') + '" referrerpolicy="no-referrer" alt=""><label>写真を編集<input type="file" id="igpfFile" accept="image/*"></label></div>' +
       '<div class="f"><div class="l">名前</div><input id="igpfName" maxlength="64"><div class="n">名前は14日以内に2回まで変更できます（インスタの決まり）。</div></div>' +
       '<div class="f ro"><div class="l">ユーザーネーム</div><div class="v">' + esc(p.user || '') + '</div><div class="n">ユーザーネームはここでは変更できません。</div></div>' +
       '<div class="f"><div class="l">自己紹介</div><textarea id="igpfBio"></textarea><div class="c" id="igpfCnt"></div></div>' +
@@ -20718,7 +20854,7 @@ function instaScript_(C) {
       '<div class="igcnote">完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。</div></div>';
     document.body.appendChild(e);
     var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
-    nm.value = p.name || ''; bio.value = p.bio || '';
+    nm.value = q.name || ''; bio.value = q.bio || '';
     var LK = links.map(function (x) { return { t: x.t || '', u: x.u || '' }; });
     var lkKey = function (a) { return JSON.stringify(a.filter(function (x) { return String(x.u).trim(); }).map(function (x) { return [String(x.t).trim(), String(x.u).trim()]; })); };
     var lk0 = lkKey(LK);
@@ -20748,7 +20884,57 @@ function instaScript_(C) {
           '<div class="n" style="margin-top:8px">電話番号（台湾 +886）</div>' + inp('igbPhone', '例：0987654321', BIZ.phone, 'tel') +
           '<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px"><input type="checkbox" id="igbShowContact" style="width:auto"' + (BIZ.show_contact ? ' checked' : '') + '>メール・住所・電話番号をプロフィールに表示する</label>' +
           '<label style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:14px"><input type="checkbox" id="igbShowCat" style="width:auto"' + (BIZ.show_category ? ' checked' : '') + '>カテゴリをプロフィールに表示する</label>';
+        // ★2026-11-15 直せる公開情報の下書きがあれば、その中身を入れた状態から始める（比べる相手は本番のまま）
+        var DBL = DB && DB.light;
+        if (DBL) {
+          var put = function (id, k) { if (DBL[k] != null) document.getElementById(id).value = DBL[k]; };
+          put('igbEmail', 'email'); put('igbStreet', 'street'); put('igbCity', 'city'); put('igbZip', 'zip'); put('igbPhone', 'phone');
+          if (DBL.show_contact != null) document.getElementById('igbShowContact').checked = !!DBL.show_contact;
+          if (DBL.show_category != null) document.getElementById('igbShowCat').checked = !!DBL.show_category;
+        }
       });
+    };
+    var BIZ_KEYS = ['email', 'street', 'city', 'zip', 'phone', 'show_contact', 'show_category'];
+    var bizOf = function (it) { var o = {}, L2 = (it && it.light) || {}; BIZ_KEYS.forEach(function (k) { if (L2[k] != null) o[k] = L2[k]; }); return o; };
+    // ★2026-11-15 下書きの上書き（直せる下書きが1つでもある時）。本番と比べて違う所だけを下書きに残し、本番と同じに戻った所は外す。
+    //   全部が本番と同じに戻ったら、その下書きは消す。直せる下書きの無い部分は、今までどおり新しい下書きを作る。
+    var saveDraft = function (nv, bv, lkNew, lkCh) {
+      var pn = String(p.name || '').trim(), pb = String(p.bio || '').replace(/\r/g, '').trim(), jobs = [];
+      if (nv !== String(q.name || '').trim() || bv !== String(q.bio || '').replace(/\r/g, '').trim() || PIC) {
+        if (!nv) { warn('名前を入力してください😊'); return; }
+        if (bv.length > BIO_MAX) { warn('自己紹介は' + BIO_MAX + '文字までです（絵文字は2文字に数えます）😊'); return; }
+        if (DP) {
+          var pt = { name: nv !== pn ? nv : null, bio: bv !== pb ? bv : null }; if (PIC) pt.media = [{ b64: PIC }];
+          var gone = pt.name === null && pt.bio === null && !PIC && !((DP.light || {}).n_media);
+          jobs.push(gone ? { del: DP.id } : { upd: DP.id, patch: pt, big: !!PIC });
+        } else {
+          var nf = { kind: 'prof_save', acct: acct }; if (nv !== pn) nf.name = nv; if (bv !== pb) nf.bio = bv; if (PIC) nf.media = [{ b64: PIC }];
+          if (nf.name != null || nf.bio != null || PIC) jobs.push({ add: nf, big: !!PIC });
+        }
+      }
+      if (lkCh) {
+        var same = lkKey(p.links || []) === lkKey(LK);
+        if (DL) jobs.push(same ? { del: DL.id } : { upd: DL.id, patch: { links: lkNew } });
+        else if (!same) jobs.push({ add: { kind: 'links_save', acct: acct, links: lkNew } });
+      }
+      if (BIZ) {
+        var bz2 = bizChanges() || {};
+        if (JSON.stringify(bz2) !== JSON.stringify(DB ? bizOf(DB) : {})) {
+          if (DB) {
+            if (!Object.keys(bz2).length) jobs.push({ del: DB.id });
+            else { var bp = {}; BIZ_KEYS.forEach(function (k) { if (k in bz2) bp[k] = bz2[k]; else if ((DB.light || {})[k] != null) bp[k] = null; }); jobs.push({ upd: DB.id, patch: bp }); }
+          } else { var g2 = { kind: 'biz_save', acct: acct }; for (var k2 in bz2) g2[k2] = bz2[k2]; jobs.push({ add: g2 }); }
+        }
+      }
+      if (!jobs.length) { e.remove(); return; }
+      var run = function (i) {
+        if (i >= jobs.length) { e.remove(); APV_FULLCAP = {}; apvLoad(acct); doneBox('下書きの修正が完了しました'); return; }
+        var j = jobs[i], next = function (err) { if (err && err !== APV_MSG && err !== APV_MSG_ADMIN) { warn(err); apvLoad(acct); return; } run(i + 1); };
+        if (j.upd) apvUpd(j.upd, j.patch, !!j.big, next);
+        else if (j.del) busyAsk({ kind: 'apv_del', aid: j.del }, false, '下書きを修正しています', '', next);
+        else busyAsk(j.add, !!j.big, '下書きを修正しています', '', next);   // 新しい下書き（apvWrap が承認待ちに回す）
+      };
+      run(0);
     };
     var bizChanges = function () {
       if (!BIZ) return null;
@@ -20801,6 +20987,9 @@ function instaScript_(C) {
         if (!/^(https?:\/\/)?[^\s\/]+\.[^\s]+$/.test(lkNew[li].u)) { warn('リンクの住所が正しくありません：' + lkNew[li].u + '\n確認してから、もう一度保存してください😊'); return; }
       }
       var nv = nm.value.trim(), bv = bio.value.replace(/\r/g, '').trim();
+      // ★2026-11-15 「下書き」の間：直せる下書きがあれば上書き。無くても、開いた時の中身から何も変えていなければ閉じるだけ。
+      if (DRAFT && (DP || DL || DB)) { saveDraft(nv, bv, lkNew, lkCh); return; }
+      if (DRAFT && nv === String(q.name || '').trim() && bv === String(q.bio || '').replace(/\r/g, '').trim() && !PIC && !lkCh && !bizChanges()) { e.remove(); return; }
       if (nv !== String(p.name || '').trim()) {
         if (!nv) { warn('名前を入力してください😊'); return; }
         f.name = nv; ch.push('名前');
@@ -20902,11 +21091,16 @@ function instaScript_(C) {
     });
   }
   // ハイライトの作成・編集（本物のアプリと同じく：カバー・ハイライト名・「選択済み」「ストーリーズ」）
-  function openHlEdit(h, items) {
+  function openHlEdit(h, items, dr) {
     if (!can('highlight')) { warn(NOPERM); return; }
     var isNew = !h, acct = CUR;
     var SEL = (items || []).slice(), COVER = '', NAME = isNew ? '' : String(h.t || ''), TABH = isNew ? 'all' : 'sel';
-    var keys0 = SEL.map(function (s) { return s.key; }).join(','), name0 = NAME;
+    // ★2026-11-15 ハイライトの下書きを直す（dr＝承認待ちの下書き）＝下書きの名前・カバー・選んだストーリーズから始め、同じ下書きを上書きする。
+    //   選んだストーリーズは番号だけ預かっている＝保存したストーリーズ（アーカイブ）が読めたら写真に置き換える。
+    //   アーカイブの読み込み範囲に無い番号（古いストーリーズ）は、消さずにそのまま残す（MISS）。
+    var DK = null, MISS = [];
+    if (dr) { var DL0 = dr.light || {}; NAME = String(DL0.title || ''); COVER = String(DL0.cover || ''); DK = (DL0.keys || []).map(String); TABH = 'sel'; }
+    var keys0 = DK ? DK.join(',') : SEL.map(function (s) { return s.key; }).join(','), name0 = NAME, cover0 = COVER;
     var e = document.createElement('div'); e.className = 'igc ighe'; e.id = 'igHe';
     var idx = function (k) { for (var i = 0; i < SEL.length; i++) if (SEL[i].key === k) return i; return -1; };
     var coverSrc = function () {
@@ -20926,6 +21120,7 @@ function instaScript_(C) {
       tb.innerHTML = '<button type="button" data-ht="sel"' + (TABH === 'sel' ? ' class="on"' : '') + '>選択済み（' + SEL.length + '）</button>' +
         '<button type="button" data-ht="all"' + (TABH === 'all' ? ' class="on"' : '') + '>ストーリーズ</button>';
       var list = TABH === 'sel' ? SEL : ARCH[acct];
+      if (TABH === 'sel' && DK) { g.innerHTML = '<div class="em">' + (ARCH_ERR[acct] ? esc(ARCH_ERR[acct]) : '下書きのストーリーズを読み込み中です…<br>1分ほどかかるので、少し待っててくださいね🥺') + '</div>'; return; }
       if (TABH === 'all' && !list) {
         g.innerHTML = '<div class="em">' + (ARCH_ERR[acct] ? esc(ARCH_ERR[acct]) : '保存したストーリーズを読み込み中です…<br>1分ほどかかるので、少し待っててくださいね🥺') + '</div>';
         return;
@@ -20940,8 +21135,8 @@ function instaScript_(C) {
         (TABH === 'all' && ARCH_MORE[acct] === 'loading' ? '<div class="em">さらに古いストーリーズを読み込み中です…<br>2〜3分かかるので、少し待っててくださいね🥺</div>' : '');
       var ci = document.getElementById('igheCvImg'); if (ci) ci.src = coverSrc();
     };
-    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igheX">キャンセル</button><b>' + (isNew ? '新しいハイライト' : 'ハイライトを編集') + '</b>' +
-      '<button type="button" class="go" id="igheGo">' + (isNew ? '追加' : '完了') + '</button></div>' +
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igheX">キャンセル</button><b>' + (isNew && !dr ? '新しいハイライト' : 'ハイライトを編集') + '</b>' +
+      '<button type="button" class="go" id="igheGo">' + (isNew && !dr ? '追加' : '完了') + '</button></div>' +
       '<div class="cv"><div class="c"><img id="igheCvImg" src="' + esc(coverSrc()) + '" referrerpolicy="no-referrer" alt=""></div><button type="button" id="igheCv">カバーを編集</button></div>' +
       '<input class="nm" id="igheNm" placeholder="ハイライト名" maxlength="' + HL_MAX + '">' +
       '<div class="tabs" id="igheTabs"></div><div id="igheGrid"></div>' +
@@ -20959,9 +21154,16 @@ function instaScript_(C) {
         if (more) ARCH_MORE[acct] = err ? '' : 'done';
         if (err) { if (more) warn(err); else ARCH_ERR[acct] = err; }
         else ARCH[acct] = (d && d.arch) || [];
-        drawGrid();
+        fillSel(); drawGrid();
       });
     };
+    var fillSel = function () {
+      if (!DK || !ARCH[acct]) return;
+      var by = {}; ARCH[acct].concat(SEL).forEach(function (s) { by[s.key] = s; });
+      SEL = DK.filter(function (k) { return by[k]; }).map(function (k) { return by[k]; });
+      MISS = DK.filter(function (k) { return !by[k]; }); DK = null;
+    };
+    fillSel(); drawGrid();
     loadArch(false);
     var find = function (k) {
       var all = SEL.concat(ARCH[acct] || []);
@@ -20995,7 +21197,7 @@ function instaScript_(C) {
         document.body.appendChild(sh); return;
       }
       if (t.id === 'igheX') {
-        var changed = NAME !== name0 || SEL.map(function (s) { return s.key; }).join(',') !== keys0 || COVER;
+        var changed = NAME !== name0 || (!DK && SEL.map(function (s) { return s.key; }).concat(MISS).join(',') !== keys0) || COVER !== cover0;
         if (!changed) { e.remove(); return; }
         szPopup_('変更を破棄しますか？😊', { cancel: true, onYes: function () { e.remove(); } });
         return;
@@ -21004,7 +21206,17 @@ function instaScript_(C) {
       var title = NAME.trim();
       if (!title) { warn('ハイライト名を入力してください😊'); return; }
       if (Array.from(title).length > HL_MAX) { warn('ハイライト名は' + HL_MAX + '文字までです😊'); return; }
-      if (!SEL.length) { warn('ストーリーズを1つ以上選択してください😊'); return; }
+      if (DK) { warn('下書きのストーリーズを読み込み中です。少し待っててくださいね🥺'); return; }
+      if (!SEL.length && !MISS.length) { warn('ストーリーズを1つ以上選択してください😊'); return; }
+      if (dr) {
+        var nk = SEL.map(function (s) { return s.key; }).concat(MISS);
+        if (title === name0 && nk.join(',') === keys0 && COVER === cover0) { e.remove(); return; }
+        apvUpd(dr.id, { title: title, keys: nk, cover: COVER }, false, function (err) {
+          if (err) { warn(err); return; }
+          e.remove(); apvLoad(acct); doneBox('下書きの修正が完了しました');
+        });
+        return;
+      }
       szPopup_('お店のインスタのハイライト「' + title + '」を' + (isNew ? '作成' : '変更') + 'します。\nよろしいでしょうか？😊', { cancel: true, onYes: function () {
         busyAsk({ kind: 'hl_save', acct: acct, hid: isNew ? '' : hlId(h), title: title,
                   keys: SEL.map(function (s) { return s.key; }), cover: COVER },
@@ -22171,11 +22383,13 @@ function renderAkijikanPage_(d, base, staff, dev) {
     // ★2026-11-15 まるちゃん指示：120分を消して、自由に分を入力できる「◯分」に置き換えた。
     //   押すとすぐ下に共通の数字ボタン（EXPADCSS_／EXPADHTML_）が出る＝スマホのキーボードは出さない
     //   （数字を入れる所は共通の数字ボタンを使う決まり）。確定すると、その分以上を表示し、ボタンは「90分」のように変わる。
+    // ★同日 まるちゃん「デフォルトは全部。全部の右に〇分をおいて。他の画面もそういう風に」＝並びは 全部・◯分・30分・60分
+    //   （施術後の予約・既存の予約の空き状況も同じ並び）。
     '<div class="akidurrow">' +
       '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
+      '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
       '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
       '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
-      '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
     '</div>' +
     '<div class="akidurpad" id="akiDurPad" hidden>' +
       '<div class="exbox" id="akiDurBox"></div>' +
@@ -22640,18 +22854,8 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
 '  .akiwd.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
-'  .akidurrow{ display:flex; gap:8px; flex-wrap:wrap; width:100%; margin-top:8px; }' +
-'  .akidurbtn{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akisub);' +
-'    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
-'    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
-'  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
-// ★2026-11-15「◯分」の数字ボタン＝共通の部品（EXPADCSS_）の見た目をそのまま使う。ここは置き場所と単位の字だけ。
-'  .akidurpad{ margin-top:12px; }' +
-'  .akidurpad[hidden]{ display:none; }' +
-'  .akidurpad .exbox{ margin-top:0; }' +
-'  .akidurpad .exgo{ margin-top:4px; }' +
-'  .akidurunit{ font-size:24px; }' +
-'  .akidurph{ color:#94a3b8; font-size:23px; font-weight:800; letter-spacing:normal; }' +
+// ★2026-11-15 長さの絞り込みボタンと「◯分」の数字ボタンの置き場所＝共通の部品（AKIDURCSS_・施術後の予約と同じ物）。
+AKIDURCSS_ +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
 AKFCSS_ +
