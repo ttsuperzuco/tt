@@ -265,7 +265,8 @@
       var id = q.get('id') || '';
       if (a === 'status' && id.charAt(0) !== 'z') return false;      // 窓口で積んだ依頼は窓口に聞く
       if (a === 'submit' && ZD_EXCL[q.get('op') || '']) return false;
-      if (a === 'data') { var nl = zNames(); if (nl && nl.indexOf(q.get('name') || '') < 0) return false; }
+      // ★頼まれてその場で作った結果（端末ごとの前日お知らせの確認画面）は、覚えた一覧に無くても近道に聞く（無ければ窓口へ）
+      if (a === 'data') { var nl = zNames(), dn = q.get('name') || ''; if (nl && nl.indexOf(dn) < 0 && !/^notice_[a-z0-9_]+\.json$/.test(dn)) return false; }
       var t = zPass();
       if (!t && a !== 'status') { zGetPass(); return false; }
       var base = u.slice(0, i);
@@ -280,7 +281,7 @@
       var P = {}; q.forEach(function (v, k) { if (k !== 'callback' && k !== 'cb' && k !== 'dk' && k !== 'tk') P[k] = v; });
       if (a === 'submit') {
         var zn = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-        zPost('/s', { t: t, p: P, zn: zn }, 8000, function (code, j) {
+        zPost('/s', { t: t, p: P, zn: zn, zr: 1 }, 8000, function (code, j) {
           if (code === 200 && j && (j.ok || !j.fallback)) { done(j); return; }
           if (code === 429 && j) { done(j); return; }
           bad(code);
