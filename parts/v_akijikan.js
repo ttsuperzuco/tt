@@ -123,7 +123,8 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
       '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
       '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
-      '<button type="button" class="akidurbtn" data-dur="120">120分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
+      '<input type="number" inputmode="numeric" min="1" max="600" class="akidurin" id="akiDurIn" placeholder="分" hidden>' +
     '</div>' +
   '</div>' +
   '<div class="akichips">' +
@@ -395,14 +396,31 @@ var AKISCRIPT_ =
 '  }); });' +
 '  var durBtns=[].slice.call(document.querySelectorAll(".akidurbtn"));' +
 '  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur]"));' +
-'  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
+'  function applyDur_(b, lo){' +
 '    durBtns.forEach(function(x){ x.classList.toggle("on", x===b); });' +
-'    var kind=b.getAttribute("data-dur");' +
-'    var lo = kind==="all" ? 0 : Number(kind);' +
 '    durRows.forEach(function(el){' +
 '      var dur=Number(el.getAttribute("data-dur"));' +
 '      el.classList.toggle("akidurhide", dur<lo);' +
 '    });' +
+'  }' +
+'  var durIn=document.getElementById("akiDurIn"), durCustom=document.getElementById("akiDurCustom"), durVal=0;' +
+'  function durCommit_(){' +
+'    if(!durIn || durIn.hidden) return;' +
+'    var n=Math.round(Number(durIn.value));' +
+'    durIn.hidden=true; durCustom.hidden=false;' +
+'    if(n>0){ durVal=n; durCustom.textContent=n+"分"; applyDur_(durCustom, n); }' +
+'  }' +
+'  if(durIn){' +
+'    durIn.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); durCommit_(); durIn.blur(); } });' +
+'    durIn.addEventListener("blur", durCommit_);' +
+'  }' +
+'  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
+'    var kind=b.getAttribute("data-dur");' +
+'    if(kind==="custom"){' +
+'      durCustom.hidden=true; durIn.hidden=false; durIn.value=durVal ? String(durVal) : ""; durIn.focus();' +
+'      return;' +
+'    }' +
+'    applyDur_(b, kind==="all" ? 0 : Number(kind));' +
 '  }); });' +
 '  setRange(minD, thisWeekEnd_(minD));' +   
 '}' +
@@ -465,6 +483,10 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
 '  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akidurbtn[hidden], .akidurin[hidden]{ display:none; }' +
+'  .akidurin{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akiink);' +
+'    background:var(--akicard); border:2px solid var(--akiprimary); border-radius:10px;' +
+'    padding:10px 8px; width:5.5em; box-sizing:border-box; text-align:center; }' +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
 AKFCSS_ +

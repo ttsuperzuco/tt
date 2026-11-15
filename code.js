@@ -22141,12 +22141,15 @@ function renderAkijikanPage_(d, base, staff, dev) {
       '<button type="button" class="akiwd" data-wd="6">土</button>' +
     '</div>' +
     // 空き時間の長さで絞り込み（2026-07-17ユーザー指示・以上ロジックに変更）。単一選択＝1つだけON。
-    // 30分＝30分以上を全部／60分＝60分以上を全部／120分＝120分以上を全部（すべて同じ「以上」ロジック）。
+    // 30分＝30分以上を全部／60分＝60分以上を全部（すべて同じ「以上」ロジック）。
+    // ★2026-11-15 まるちゃん指示：120分を消して、自由に分を入力できる「◯分」に置き換えた。
+    //   押すと同じ場所に入力欄が出て、入力した分以上を表示する（ボタンは「90分」のように変わる）。
     '<div class="akidurrow">' +
       '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
       '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
       '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
-      '<button type="button" class="akidurbtn" data-dur="120">120分</button>' +
+      '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
+      '<input type="number" inputmode="numeric" min="1" max="600" class="akidurin" id="akiDurIn" placeholder="分" hidden>' +
     '</div>' +
   '</div>' +
   '<div class="akichips">' +
@@ -22457,14 +22460,33 @@ var AKISCRIPT_ =
 // 対象は各時間帯別の1行(.akirow[data-dur])とスタッフ別/施術室別の枠チップ(.akislot[data-dur])。
 '  var durBtns=[].slice.call(document.querySelectorAll(".akidurbtn"));' +
 '  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur]"));' +
-'  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
+'  function applyDur_(b, lo){' +
 '    durBtns.forEach(function(x){ x.classList.toggle("on", x===b); });' +
-'    var kind=b.getAttribute("data-dur");' +
-'    var lo = kind==="all" ? 0 : Number(kind);' +
 '    durRows.forEach(function(el){' +
 '      var dur=Number(el.getAttribute("data-dur"));' +
 '      el.classList.toggle("akidurhide", dur<lo);' +
 '    });' +
+'  }' +
+// ★2026-11-15「◯分」＝押すと同じ場所に入力欄を出す。確定（Enter・欄の外を押す）で、その分以上を表示。
+//   空のまま確定した時は何も変えない（前の選択のまま）。
+'  var durIn=document.getElementById("akiDurIn"), durCustom=document.getElementById("akiDurCustom"), durVal=0;' +
+'  function durCommit_(){' +
+'    if(!durIn || durIn.hidden) return;' +
+'    var n=Math.round(Number(durIn.value));' +
+'    durIn.hidden=true; durCustom.hidden=false;' +
+'    if(n>0){ durVal=n; durCustom.textContent=n+"分"; applyDur_(durCustom, n); }' +
+'  }' +
+'  if(durIn){' +
+'    durIn.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); durCommit_(); durIn.blur(); } });' +
+'    durIn.addEventListener("blur", durCommit_);' +
+'  }' +
+'  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
+'    var kind=b.getAttribute("data-dur");' +
+'    if(kind==="custom"){' +
+'      durCustom.hidden=true; durIn.hidden=false; durIn.value=durVal ? String(durVal) : ""; durIn.focus();' +
+'      return;' +
+'    }' +
+'    applyDur_(b, kind==="all" ? 0 : Number(kind));' +
 '  }); });' +
 '  setRange(minD, thisWeekEnd_(minD));' +   // 初期表示＝今週（2026-10-01 まるちゃん指示。前は今・来週）
 '}' +
@@ -22575,6 +22597,10 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
 '  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
+'  .akidurbtn[hidden], .akidurin[hidden]{ display:none; }' +
+'  .akidurin{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akiink);' +
+'    background:var(--akicard); border:2px solid var(--akiprimary); border-radius:10px;' +
+'    padding:10px 8px; width:5.5em; box-sizing:border-box; text-align:center; }' +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
 AKFCSS_ +
