@@ -190,6 +190,38 @@
     (document.head || document.documentElement).appendChild(el);
   }
   window.__zkPass = zPass;
+  // ★★2026-11-15 まるちゃん「①やる」＝見るだけの画面の自動更新。開いている画面のデータの版をサーバーに伝え、
+  //   新しくなった瞬間に返してもらう（最大25秒待って、変わりが無ければすぐ聞き直す）。数秒おきに読み直す形より
+  //   通信がずっと少ない（被り検出なら1台1時間 約15MB→約0.3MB）。画面を裏に回している間は止め、戻ったらすぐ聞き直す。
+  var ZDV = {}, ZW = { gen: 0, names: null, cb: null, paused: 0 };
+  function zwLoop(gen) {
+    if (gen !== ZW.gen || !ZW.names) return;
+    if (document.hidden) { ZW.paused = gen; return; }
+    var t = zPass();
+    if (!t) { zGetPass(); setTimeout(function () { zwLoop(gen); }, 5000); return; }
+    var v = {}; ZW.names.forEach(function (n) { v[n] = ZDV[n] || ''; });
+    zPost('/wch', { t: t, v: v }, 45000, function (code, j) {
+      if (gen !== ZW.gen) return;
+      if (code === 200 && j && j.ok) {
+        for (var n in (j.v || {})) ZDV[n] = j.v[n];
+        if (j.ch && j.ch.length) { try { ZW.cb(j.ch); } catch (e) {} }
+        setTimeout(function () { zwLoop(gen); }, 300);
+        return;
+      }
+      if (j && j.stop) return;                          // 近道で見張れない画面
+      if (code === 401) { rm(LS_PASS); zGetPass(); }
+      setTimeout(function () { zwLoop(gen); }, 10000);  // つながらない時は少し間をあけて聞き直す
+    });
+  }
+  window.__zkWatch = function (names, onChange) {
+    if (!F0 || st !== 'ok' || !names || !names.length) return;
+    ZW.gen++; ZW.names = names.slice(0); ZW.cb = onChange; ZW.paused = 0;
+    zwLoop(ZW.gen);
+  };
+  window.__zkWatchStop = function () { ZW.gen++; ZW.names = null; };
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && ZW.paused && ZW.paused === ZW.gen) { var g0 = ZW.paused; ZW.paused = 0; zwLoop(g0); }
+  });
   function zPost(path, body, ms, k) {
     var ctl = window.AbortController ? new AbortController() : null, fin = false;
     var tm = setTimeout(function () { if (ctl) ctl.abort(); if (!fin) { fin = true; k(0, null); } }, ms);
@@ -197,7 +229,7 @@
                                  signal: ctl ? ctl.signal : undefined })
       .then(function (r) { return r.text().then(function (tx) {
         var j = null; try { j = JSON.parse(tx); } catch (e) {}
-        clearTimeout(tm); if (!fin) { fin = true; k(r.status, j); } }); })
+        clearTimeout(tm); if (!fin) { fin = true; k(r.status, j, r.headers); } }); })
       .catch(function () { clearTimeout(tm); if (!fin) { fin = true; k(0, null); } });
   }
   function zNames() {
@@ -270,8 +302,11 @@
         return true;
       }
       // data
-      zPost('/d', { t: t, name: q.get('name') || '' }, 6000, function (code, j) {
-        if (code === 200 && j) { done(j); return; }
+      zPost('/d', { t: t, name: q.get('name') || '' }, 6000, function (code, j, hd) {
+        if (code === 200 && j) {
+          try { var zv = hd && hd.get('X-Zv'); if (zv) ZDV[q.get('name') || ''] = zv; } catch (e) {}
+          done(j); return;
+        }
         if (j && j.names) s(LS_NAMES, JSON.stringify({ n: j.names, at: Date.now() }));
         bad(code);
         gas(u);
@@ -846,8 +881,68 @@
   //   3行で書けば、先読み・裏取り・ちらつき防止（同じ中身なら描き直さない）が全部乗る。
   // ★2026-09-16：画面の中の埋め込みの仕掛け（施術後の予約など）からも同じ取り方を使えるようにする。
   window.__szShowPrefetchable_ = showPrefetchable_;
+  // ★★2026-11-15 まるちゃん「①やる」＝見るだけの画面は、データが新しくなったら自動で描き直す（近道の見張り＝上の __zkWatch）。
+  //   ・まだ画面を触っていない（押す・入力する・選ぶをしていない）＝そのまま描き直す（見ていた位置は保つ）。
+  //   ・触った後＝操作の途中の内容を消さないよう、上に「新しい内容があります」の帯を出し、押した時に描き直す。
+  //   ・入力しながら進む画面（施術後の予約など）はここに入れない（まるちゃん「②はそのあと考える」）。
+  //     記入漏れ（lt）は前から5秒ごとに自分で読み直しているので入れない。
+  var AUTO_VIEWS_ = { conflict: 1, uriage: 1, unanswered: 1, akijikan: 1, procell: 1 };
+  var szTouchedAt_ = 0;
+  ['click', 'input', 'change', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      if (e && e.target && e.target.closest && e.target.closest('#szNewBar')) return;
+      szTouchedAt_ = Date.now();
+    }, true);
+  });
+  function szAutoRefresh_(view, draw, firstStr) {
+    var name = (window.__SZ_VIEWS_ || {})[view];
+    if (!AUTO_VIEWS_[view] || !name || !window.__zkWatch) return;
+    var lastStr = firstStr, pending = null, startedAt = Date.now();
+    function redraw(p) {
+      var y = window.pageYOffset || 0;
+      lastStr = JSON.stringify(p); pending = null;
+      draw(p);
+      var bar = document.getElementById('szNewBar'); if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+      setTimeout(function () { try { window.scrollTo(0, y); } catch (e) {} }, 0);
+      szTouchedAt_ = 0; startedAt = Date.now();
+    }
+    function showBar() {
+      if (document.getElementById('szNewBar')) return;
+      var root = document.getElementById('root'); if (!root) return;
+      var b = document.createElement('div');
+      b.id = 'szNewBar';
+      b.style.cssText = 'position:sticky;top:0;z-index:60;margin:6px 8px;padding:8px 10px 8px 14px;border-radius:12px;' +
+        'background:#fff4d6;border:1px solid #f2c45a;color:#6b4a00;display:flex;align-items:center;gap:10px;' +
+        'box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:14px;word-break:keep-all;overflow-wrap:anywhere;';
+      b.innerHTML = '<span style="flex:1"><span style="white-space:nowrap">新しい内容が</span><wbr><span style="white-space:nowrap">あります</span></span>' +
+        '<button type="button" style="border:0;border-radius:999px;padding:7px 14px;background:#e8a317;color:#fff;font-weight:700;font-size:14px;white-space:nowrap">最新を表示する</button>';
+      b.querySelector('button').onclick = function () { if (pending) redraw(pending); };
+      root.insertBefore(b, root.firstChild);
+    }
+    window.__zkWatch([name], function () {
+      var cb = '__szAuto_' + view + '_' + Date.now();
+      window[cb] = function (p) {
+        try { delete window[cb]; } catch (e) {}
+        if (!p || p.error) return;                    // 読めなかった時は黙って次の知らせを待つ（画面は壊さない）
+        var ps = JSON.stringify(p);
+        if (ps === lastStr) return;                   // 中身が同じ＝描き直さない
+        if (szTouchedAt_ > startedAt) { pending = p; showBar(); return; }
+        redraw(p);
+      };
+      var s = document.createElement('script');
+      s.src = EXEC + '?action=data&name=' + name + '&callback=' + cb + '&cb=' + Date.now();
+      s.onerror = function () {};
+      document.body.appendChild(s);
+    });
+  }
   function showPrefetchable_(view, onPayload) {
     var entry = window.__PF_ && window.__PF_[view];
+    // 最初に正しく描けた時に、自動更新の見張りを始める（1つの画面につき1回）
+    var autoOn = false, drawOnly = onPayload;
+    onPayload = function (p) {
+      drawOnly(p);
+      if (!autoOn && p && !p.error) { autoOn = true; try { szAutoRefresh_(view, drawOnly, JSON.stringify(p)); } catch (e) {} }
+    };
 
     // ★2026-09-16：パソコンの窓が手元のデータを渡してくれたら、それを出して、あとから来るグーグルの返事は使わない
     //   （手元の方が新しい・グーグルの失敗でエラー画面に変わらない）。スマホは渡されないので今までどおり。
