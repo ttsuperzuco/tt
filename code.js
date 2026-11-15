@@ -13148,10 +13148,66 @@ function honeyScript_(C) {
   function ask(fields, busy, done) {
     devKey(function (ex) { for (var k in ex) fields[k] = ex[k]; ask0(fields, busy, done); });
   }
+  // ★★2026-11-15 まるちゃん「本番にして」：近道＝Cloudflareのトンネル（zuko.staaa.jp）でサーバーへ直接送る。
+  //   前はグーグルの窓口に積んで、サーバーが2秒おき・スマホが1.5秒おきに見に行っていた（受け渡しだけで約5秒）。
+  //   近道は1往復約0.1秒。サーバーは最大25秒その場で待って答えをそのまま返す（長い仕事は番号を返し、/w で待ち直す）。
+  //   通行証＝窓口が許可済みの鍵（dv+dk）を確かめて出す10分の札（窓口の tpass）。本人確認は受付係で今までと同じ物を通る。
+  //   ★近道が使えない時（札がもらえない・つながらない・すぐ失敗）は、今まで通りグーグルの窓口の道で送る。
+  //   ★受け付けられた後に切れた時は、窓口の道で送り直さない（同じ頼みを二重に出さない）＝「もう一度」を返す。
+  //   ★自宅PC（op=hachimitsu_pc）は今まで通り窓口の道だけ（自宅PCにトンネルは無い）。
+  var DIRECT = 'https://zuko.staaa.jp';
+  function tpass(cb) {
+    var c = null;
+    try { c = JSON.parse(sessionStorage.getItem('zk_tpass') || 'null'); } catch (e) {}
+    if (c && c.t && c.exp - Date.now() > 60000) { cb(c.t); return; }
+    jsonp({ action: 'tpass', key: C.key }, function (r) {
+      if (r && r.ok && r.t) {
+        try { sessionStorage.setItem('zk_tpass', JSON.stringify({ t: r.t, exp: r.exp })); } catch (e) {}
+        cb(r.t);
+      } else cb(null);
+    });
+  }
+  function direct(fields, me, cb) {
+    if (!window.fetch || opName() !== 'hachimitsu') { cb('fallback'); return; }
+    tpass(function (t) {
+      if (!t) { cb('fallback'); return; }
+      var accepted = false, t0 = Date.now();
+      var req = function (path, body, k) {
+        var ctl = window.AbortController ? new AbortController() : null;
+        var tm = setTimeout(function () { if (ctl) ctl.abort(); }, 40000);
+        fetch(DIRECT + path, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' },
+                               signal: ctl ? ctl.signal : undefined })
+          .then(function (r) { clearTimeout(tm); return r.json().then(function (j) { k(r.status, j); }, function () { k(r.status, null); }); })
+          .catch(function () { clearTimeout(tm); k(0, null); });
+      };
+      var fail = function (msg) {
+        // まだ受け付けられていない＆すぐ失敗した時だけ窓口の道へ（遅い失敗は届いている恐れがある＝二重に出さない）
+        if (!accepted && Date.now() - t0 < 8000) { cb('fallback'); return; }
+        cb(msg || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇');
+      };
+      var handle = function (s, j) {
+        if (s === 401) { try { sessionStorage.removeItem('zk_tpass'); } catch (e) {} fail(); return; }
+        if (!j) { fail(); return; }
+        if (j.status === 'pending') { accepted = true; req('/w', { t: t, id: j.id }, handle); return; }
+        if (j.status === 'notfound') { cb(j.error || 'もう一度試してもらえると嬉しいです🙇'); return; }
+        if (!j.ok) { fail(j.error); return; }
+        accepted = true;
+        if (j.status !== 'done') { cb(j.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
+        var d = null; try { d = JSON.parse(j.result || '{}'); } catch (e) {}
+        cb(null, d || {});
+      };
+      req('/h', { t: t, who: me.who, role: me.role, fields: fields }, handle);
+    });
+  }
   function ask0(fields, busy, done) {
     if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
     var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     var me = idn();
+    direct(fields, me, function (err, d) {
+      if (err === 'fallback') { viaPipe(); return; }
+      end(err, d);
+    });
+    function viaPipe() {
     var poll = function (id) {
       var n = 0, max = full ? 1700 : 480;    // 絵は数分かかる＝約12分まで待つ（全部の権限の仕事は最大40分＝約45分まで待つ）
       var tick = function () {
@@ -13185,6 +13241,7 @@ function honeyScript_(C) {
     BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'hachimitsu', op: opName(),
                   who: me.who, role: me.role, device: me.device, fields: fields },
       send, function () { end('写真を送信できませんでした。枚数を減らして、もう一度試してもらえると嬉しいです🙇'); });
+    }
   }
   // ★2026-11-11 まるちゃん「スマホに残す形にすれば？」＝一度見た絵はこのスマホの中（IndexedDB）に残し、次からはそこから出す
   //   （通信しない）。残すのは新しい30枚まで（古い物から消す＝スマホが重くならない・約20MB）。

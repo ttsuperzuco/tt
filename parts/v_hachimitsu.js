@@ -70,10 +70,58 @@ function honeyScript_(C) {
   function ask(fields, busy, done) {
     devKey(function (ex) { for (var k in ex) fields[k] = ex[k]; ask0(fields, busy, done); });
   }
+  var DIRECT = 'https://zuko.staaa.jp';
+  function tpass(cb) {
+    var c = null;
+    try { c = JSON.parse(sessionStorage.getItem('zk_tpass') || 'null'); } catch (e) {}
+    if (c && c.t && c.exp - Date.now() > 60000) { cb(c.t); return; }
+    jsonp({ action: 'tpass', key: C.key }, function (r) {
+      if (r && r.ok && r.t) {
+        try { sessionStorage.setItem('zk_tpass', JSON.stringify({ t: r.t, exp: r.exp })); } catch (e) {}
+        cb(r.t);
+      } else cb(null);
+    });
+  }
+  function direct(fields, me, cb) {
+    if (!window.fetch || opName() !== 'hachimitsu') { cb('fallback'); return; }
+    tpass(function (t) {
+      if (!t) { cb('fallback'); return; }
+      var accepted = false, t0 = Date.now();
+      var req = function (path, body, k) {
+        var ctl = window.AbortController ? new AbortController() : null;
+        var tm = setTimeout(function () { if (ctl) ctl.abort(); }, 40000);
+        fetch(DIRECT + path, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' },
+                               signal: ctl ? ctl.signal : undefined })
+          .then(function (r) { clearTimeout(tm); return r.json().then(function (j) { k(r.status, j); }, function () { k(r.status, null); }); })
+          .catch(function () { clearTimeout(tm); k(0, null); });
+      };
+      var fail = function (msg) {
+        if (!accepted && Date.now() - t0 < 8000) { cb('fallback'); return; }
+        cb(msg || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇');
+      };
+      var handle = function (s, j) {
+        if (s === 401) { try { sessionStorage.removeItem('zk_tpass'); } catch (e) {} fail(); return; }
+        if (!j) { fail(); return; }
+        if (j.status === 'pending') { accepted = true; req('/w', { t: t, id: j.id }, handle); return; }
+        if (j.status === 'notfound') { cb(j.error || 'もう一度試してもらえると嬉しいです🙇'); return; }
+        if (!j.ok) { fail(j.error); return; }
+        accepted = true;
+        if (j.status !== 'done') { cb(j.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
+        var d = null; try { d = JSON.parse(j.result || '{}'); } catch (e) {}
+        cb(null, d || {});
+      };
+      req('/h', { t: t, who: me.who, role: me.role, fields: fields }, handle);
+    });
+  }
   function ask0(fields, busy, done) {
     if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
     var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     var me = idn();
+    direct(fields, me, function (err, d) {
+      if (err === 'fallback') { viaPipe(); return; }
+      end(err, d);
+    });
+    function viaPipe() {
     var poll = function (id) {
       var n = 0, max = full ? 1700 : 480;    
       var tick = function () {
@@ -107,6 +155,7 @@ function honeyScript_(C) {
     BIG.prepare({ exec: C.exec, key: C.key, slot: me.device || 'x', tag: 'hachimitsu', op: opName(),
                   who: me.who, role: me.role, device: me.device, fields: fields },
       send, function () { end('写真を送信できませんでした。枚数を減らして、もう一度試してもらえると嬉しいです🙇'); });
+    }
   }
   var DBN = 'zk_honey', ST = 'img', KEEP = 30, dbp = null;      
   function db() {
