@@ -1822,5 +1822,61 @@
   ["input","change","blur"].forEach(function(ev){document.addEventListener(ev,back,true);});
 })();
 </script>
+<script>
+/* ★2026-11-15 まるちゃん「なおってねえ」→「仕組みも直して」。
+   直して公開しても、①パソコン版の独立した窓（空き時間検索・売上帳簿など）は「もう開いていれば前に出すだけ」なので
+   開きっぱなしの窓は古い画面のまま ②開く時にネットが1.5秒より遅いと、保管係が前回保存した古い画面で先に開く、
+   の2つで、修正前の画面が出続けていた（空き時間検索の120分が残っていた）。
+   → 開いた直後と、窓・アプリに戻ってきた時に「公開中の版」を小さく確かめ、今の画面より新しければ1回だけ読み直す。
+   ・入力の途中（文字の欄に入力中・全画面の処理中・小窓が出ている）は読み直さない＝次に戻ってきた時にもう一度確かめる。
+   ・確かめるのは開いた直後の1回と、戻ってきた時（1分に1回まで）だけ。同じ版で2回は読み直さない（読み直しが続かない）。
+   ・見比べるのは「本体の版（部品一覧の番号）」と「入口が読む ?v= 付きの部品」。 */
+(function () {
+  var last = 0, KEY = 'sz_reload_for';
+  function myVer() {
+    var p = window.__SZ_PARTS_ || {}, v = [p.id || ''];
+    var ss = document.querySelectorAll('script[src*="?v="]');
+    for (var i = 0; i < ss.length; i++) v.push(ss[i].getAttribute('src'));
+    return v;
+  }
+  function busy() {
+    var a = document.activeElement;
+    if (a && (a.tagName === 'TEXTAREA' || a.isContentEditable ||
+        (a.tagName === 'INPUT' && !a.readOnly && /^(text|search|tel|number|email|url|password|)$/.test(a.type || '')))) return true;
+    var ov = document.getElementById('szBusyOv');
+    if (ov && ov.style.display !== 'none' && ov.innerHTML) return true;
+    if (document.querySelector('.szpopmask')) return true;
+    return false;
+  }
+  function check(force) {
+    var now = Date.now();
+    if (!force && now - last < 60000) return;
+    if (!window.fetch || !window.__SZ_PARTS_) return;
+    last = now;
+    fetch(location.pathname + '?cb=' + now, { cache: 'no-store' }).then(function (r) {
+      return r.ok ? r.text() : '';
+    }).then(function (t) {
+      if (!t) return;
+      var m = t.match(/__SZ_PARTS_=\{"id":"([0-9a-f]+)"/);
+      if (!m) return;
+      var mine = myVer(), newer = (m[1] !== mine[0]);
+      if (!newer) {
+        var re = /<script src="([^"]+\?v=[0-9a-f]+)"/g, x;
+        while ((x = re.exec(t))) { if (mine.indexOf(x[1]) < 0) { newer = true; break; } }
+      }
+      if (!newer) return;
+      var tag = m[1] + '|' + t.length;
+      try { if (sessionStorage.getItem(KEY) === tag) return; } catch (e) {}   // 同じ版で2回は読み直さない
+      if (busy()) { last = 0; return; }                                     // 入力の途中＝次に戻ってきた時に
+      try { sessionStorage.setItem(KEY, tag); } catch (e) {}
+      try { window.__btMark && window.__btMark('新しい版に読み直し'); } catch (e) {}
+      location.reload();
+    })['catch'](function () {});
+  }
+  window.addEventListener('load', function () { setTimeout(function () { check(true); }, 1500); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) check(false); });
+  window.addEventListener('focus', function () { check(false); });
+})();
+</script>
 </body>
 </html>
