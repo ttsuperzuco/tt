@@ -18543,6 +18543,10 @@ function instaScript_(C) {
                              'phone_unarchive', 'phone_pin', 'phone_unpin'] };
   var APV_DEL = ['delete', 'hl_delete', 'story_delete', 'cdel', 'sched_del', 'phone_archive'];
   var APV_NEW = ['post', 'comment', 'reply', 'dm_send', 'dm_image', 'phone_story', 'phone_reel', 'sched_add', 'phone_banner'];
+  // ★2026-11-15 下書きの「編集」で開く画面（prof＝プロフィールを編集／hl＝ハイライトの編集／[項目, 名前, 文字数]＝文の編集）
+  var APV_EDIT = { prof_save: 'prof', links_save: 'prof', biz_save: 'prof', hl_save: 'hl',
+                   post: ['caption', '説明文', 2200], edit: ['caption', '説明文', 2200],
+                   comment: ['message', 'コメント', 2200], reply: ['message', '返信', 2200], dm_send: ['text', 'メッセージ', 1000] };
   // ★2026-11-12 まるちゃん「両方とも下書きをデフォルトに。本番を押すと本番になる」＝開くといつも「下書き」。
   //   社長・開発も「下書き」の間の書き込みは承認待ちに預ける（札から承認すると本番）。「本番」に切り替えた時だけ、そのまま本番へ出す。
   //   スタッフは「本番」にしても見た目が本番になるだけで、書き込みはいつも承認待ち。
@@ -18628,8 +18632,46 @@ function instaScript_(C) {
     var hb = root.querySelectorAll('.ighl [data-hl]'), hls = (apvView(DATA.views[CUR]).hl || []);
     for (var i = 0; i < hb.length; i++) { var h = hls[Number(hb[i].getAttribute('data-hl'))]; if (h && h._apv) { hb[i].setAttribute('data-apv', h._apv); apvBadge(hb[i], h._apv, h._mark); if (h._del) hb[i].classList.add('igapvdel'); } }
   }
-  function apvWho(it) { return (typeof PERM_PEOPLE !== 'undefined' && PERM_PEOPLE[it.who]) || (it.who || '社長・開発'); }
+  function apvName(w) { return (typeof PERM_PEOPLE !== 'undefined' && PERM_PEOPLE[w]) || (w || '社長・開発'); }
+  function apvWho(it) { return apvName(it.who); }
   function apvWhen(t) { return t ? ago(new Date(t * 1000).toISOString()) : ''; }
+  // ★2026-11-15 まるちゃん「本人と同じことが下書きでもりゅう、とまとができるように」「誰が直したか出るようにすれば？」
+  //   ＝下書きの間も、本番と同じ画面・同じ操作で下書きの中身を直せる（直すと同じ下書きを上書き＝2件目を作らない）。
+  //   直せる人＝作った本人・社長・開発（サーバーの apv_upd も同じ決まりで守る）。直した人と時刻はカードに出す。
+  function apvCanEdit(it) { return !!it && it.status === 'wait' && (ISADMIN || it.who === (window.__SZ_WHO_ || '')); }
+  function apvMineOf(kind) { return apvFind(function (x) { return x.kind === kind && apvCanEdit(x); }); }
+  function apvLastEdit(it) { var E = it.edits || []; return E.length ? E[E.length - 1] : null; }
+  function apvUpd(id, patch, big, done) {
+    busyAsk({ kind: 'apv_upd', aid: id, patch: patch }, big, '下書きを修正しています', '', function (err, d) {
+      if (err) { done(err); return; }
+      (APVL[CUR] || []).forEach(function (x) { if (x.id === id && d && d.item) for (var k in d.item) x[k] = d.item[k]; });
+      done(null, d);
+    });
+  }
+  // 文だけの下書き（説明文・コメント・返信・メッセージ）を、本番の編集と同じ画面で直す
+  function apvTextEdit(it, key, label, max, after) {
+    var base = String((it.light || {})[key] || '');
+    var e = document.createElement('div'); e.className = 'igpe igc'; e.style.zIndex = 8800;
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igatX">キャンセル</button><b>' + esc(label) + 'を編集</b><button type="button" class="go" id="igatGo">完了</button></div>' +
+      '<textarea id="igatTx"></textarea><div class="igccnt" id="igatCnt"></div></div>';
+    document.body.appendChild(e);
+    var tx = document.getElementById('igatTx'); tx.value = base;
+    var cnt = function () { var n = tx.value.length, o = document.getElementById('igatCnt'); o.textContent = n + ' / ' + max; o.className = 'igccnt' + (n > max ? ' over' : ''); };
+    tx.addEventListener('input', cnt); cnt();
+    e.addEventListener('click', function (ev) {
+      if (ev.target.id === 'igatX') { e.remove(); return; }
+      if (ev.target.id !== 'igatGo') return;
+      var v = tx.value.trim();
+      if (v === base.trim()) { e.remove(); return; }
+      if (!v) { warn(label + 'を入力してください😊'); return; }
+      if (v.length > max) { warn(label + 'は' + max + '文字までです（絵文字は2文字に数えます）😊'); return; }
+      var pt = {}; pt[key] = v;
+      apvUpd(it.id, pt, false, function (err) {
+        if (err) { warn(err); return; }
+        e.remove(); if (after) after(); doneBox('下書きの修正が完了しました');
+      });
+    });
+  }
   function apvBefore(it) {
     var L = it.light || {}, p = prof(), g = L.code ? gridPost(L.code) : null;
     if (it.kind === 'prof_save') return [L.name != null ? '名前：' + (p.name || '') : '', L.bio != null ? '自己紹介：' + (p.bio || '') : ''].filter(Boolean).join('\n');
@@ -18688,7 +18730,8 @@ function instaScript_(C) {
     var e = document.createElement('div'); e.className = 'igp igsr'; e.style.zIndex = 8700;
     var pre = function (t) { return '<div style="white-space:pre-wrap;word-break:break-word;background:#fafafa;border-radius:8px;padding:8px 10px;margin:4px 0 10px">' + esc(t) + '</div>'; };
     e.innerHTML = '<div class="w"><div class="igph"><button type="button" data-cx="1">' + IC.back + '</button><b>' + esc(it.name) + '</b><span></span></div><div style="padding:12px 16px">' +
-      '<div><span class="igapv" style="position:static">' + apvTag(it) + '</span>　' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + '</div>' +
+      '<div><span class="igapv" style="position:static">' + apvTag(it) + '</span>　作成：' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + '</div>' +
+      (it.edits || []).slice(-5).map(function (x) { return '<div style="margin-top:4px;color:#737373;font-size:13px">修正：' + esc(apvName(x.who)) + '・' + esc(apvWhen(x.at)) + '</div>'; }).join('') +
       (it.status === 'rejected' ? '<div style="margin-top:10px;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</div>' : '') +
       (bef && aft ? '<div style="margin-top:12px;color:#737373;font-size:12px">変更した所（<span style="color:#A32D2D">赤＝削除</span>・<span style="color:#1e6b2d">緑＝追加</span>）</div>' +
         '<div data-apvdiff="1">' + (needFull ? '<div style="color:#737373;margin:4px 0 10px">本番の説明文を読み込んでいます…</div>' : apvDiffHtml(bef, aft)) + '</div>' +
@@ -18701,7 +18744,7 @@ function instaScript_(C) {
       (L.n_media && !(L.thumbs || []).length ? '<div style="color:#737373;margin-bottom:10px">写真・動画 ' + L.n_media + '件</div>' : '') +
       (ISADMIN && it.status === 'wait' ? '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-ok="1" style="flex:1;background:#0095f6;color:#fff;border-radius:8px;padding:10px">承認する</button>' +
         '<button type="button" data-ng="1" style="flex:1;background:#efefef;border-radius:8px;padding:10px">差し戻す</button></div>' : '') +
-      ((ISADMIN || mine) && it.status === 'wait' && it.kind === 'hl_save' ? '<button type="button" data-hlt="1" style="display:block;width:100%;margin-top:10px;background:#efefef;border-radius:8px;padding:10px">ハイライトの名前を修正</button>' : '') +
+      (apvCanEdit(it) && APV_EDIT[it.kind] && !(it.kind === 'post' && L.type === 'story') ? '<button type="button" data-aed="1" style="display:block;width:100%;margin-top:10px;background:#efefef;border-radius:8px;padding:10px;font-weight:700">編集</button>' : '') +
       ((ISADMIN || mine) ? '<button type="button" data-del="1" style="display:block;margin:14px auto 0;color:#A32D2D;font-weight:700">' + (apvTag(it) === '新規' ? '削除' : 'この変更を取り消す') + '</button>' : '') +
       '</div></div>';
     document.body.appendChild(e);
@@ -18730,10 +18773,15 @@ function instaScript_(C) {
         busyAsk({ kind: 'apv_ng', aid: id, reason: r }, false, '差し戻しています', '', function (err) { if (err) { warn(err); return; } after(); });
         return;
       }
-      if (t.closest('[data-hlt]')) {
-        var nt = window.prompt('ハイライトの名前を入力してください😊', String(L.title || ''));
-        if (nt === null) return;
-        busyAsk({ kind: 'apv_upd', aid: id, patch: { title: nt } }, false, '下書きを修正しています', '', function (err) { if (err) { warn(err); return; } after(); doneBox('下書きの修正が完了しました'); });
+      if (t.closest('[data-aed]')) {   // ★2026-11-15 下書きを本番と同じ画面で直す（同じ下書きを上書き）
+        var ed = APV_EDIT[it.kind];
+        if (ed === 'prof') { e.remove(); openProfEdit(); return; }
+        if (ed === 'hl') {
+          e.remove();
+          var hv0 = DATA && DATA.views && DATA.views[CUR], hh = L.hid ? ((hv0 && hv0.hl) || []).filter(function (x) { return hlId(x) === String(L.hid); })[0] || null : null;
+          openHlEdit(hh, [], it); return;
+        }
+        apvTextEdit(it, ed[0], ed[1], ed[2], after);
         return;
       }
       if (t.closest('[data-del]')) {
@@ -18751,7 +18799,7 @@ function instaScript_(C) {
       (L.length ? L.map(function (it) {
         return '<button type="button" data-li="' + esc(it.id) + '" style="display:flex;gap:10px;align-items:center;width:100%;padding:12px 16px;border-bottom:1px solid #efefef;text-align:left">' +
           '<span class="igapv" style="position:static">' + apvTag(it) + '</span><span style="flex:1;min-width:0"><b>' + esc(it.name) + '</b>' +
-          '<small style="display:block;color:#737373;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + (apvAfter(it) ? '・' + esc(apvAfter(it).replace(/\n/g, ' ')) : '') + '</small>' +
+          '<small style="display:block;color:#737373;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + (apvLastEdit(it) ? '・修正：' + esc(apvName(apvLastEdit(it).who)) : '') + (apvAfter(it) ? '・' + esc(apvAfter(it).replace(/\n/g, ' ')) : '') + '</small>' +
           (it.status === 'rejected' ? '<small style="display:block;color:#A32D2D">差し戻し：' + esc(it.reason || '') + '</small>' : '') + '</span></button>';
       }).join('') : '<div class="igempty"><b>承認待ちはありません</b></div>') + '</div>';
     document.body.appendChild(e);
@@ -20623,7 +20671,11 @@ function instaScript_(C) {
             });
           } });
         } },
-        { t: '編集', go: openEdit }
+        { t: '編集', go: openEdit },
+        // ★2026-11-15 下書きの投稿でも、本番と同じく「いいね！」数の表示を切り替えられる（下書きの中身を上書き）
+        { t: POST.likes_hidden ? '「いいね！」数を他の人に表示する' : '「いいね！」数を他の人に表示しない', go: function () {
+          apvUpd(aid, { hide_likes: !POST.likes_hidden }, false, function (err) { if (err) { warn(err); return; } POST.likes_hidden = !POST.likes_hidden; drawPost(); });
+        } }
       ]);
       return;
     }
@@ -20666,6 +20718,17 @@ function instaScript_(C) {
     }
     if (cl('[data-pmenu]') && POST && !POST.loading) {
       var lh = POST.likes_hidden, gi = gridPost(POST.code) || {}, pinned = !!gi.pin;
+      // ★2026-11-15 「下書き」の間は、下書きの切り替えを重ねた状態をメニューに出す。直せる下書きがある時に元へ戻すと、
+      //   その下書きを取り消す（同じ物の下書きを2件作らない＝本番と同じ操作で下書きが直る）。
+      var dLk = DRAFT ? apvFind(function (x) { return x.kind === 'likes' && (x.light || {}).code === POST.code; }) : null;
+      var dCo = DRAFT ? apvFind(function (x) { return x.kind === 'conoff' && (x.light || {}).code === POST.code; }) : null;
+      if (dLk) lh = !!(dLk.light || {}).hide;
+      var con = dCo ? !!(dCo.light || {}).on : POST.comments_on;
+      var undoDraft = function (d) {
+        busyAsk({ kind: 'apv_del', aid: d.id }, false, '切り替えています', '', function (err) {
+          if (err) { warn(err); return; } APVL[CUR] = (APVL[CUR] || []).filter(function (x) { return x.id !== d.id; }); apvBar(); drawPost(); drawApp(); apvLoad(CUR);
+        });
+      };
       // ★2026-11-09 固定・アーカイブは疑似スマホが並びのマスを1つずつ開いて探す＝文の書き出しと投稿した時刻で本人確認する材料を添える
       var meta = { cap: String(POST.caption || gi.cap || '').slice(0, 200), at: Math.floor(Date.parse(POST.at || '') / 1000) || gi.at || 0,
                    th: gi.th || POST.thumb || '', k: gi.k || 'img' };
@@ -20705,12 +20768,14 @@ function instaScript_(C) {
           } });
         } },
         { t: lh ? '「いいね！」数を他の人に表示する' : '「いいね！」数を他の人に表示しない', go: function () {
+          if (dLk && apvCanEdit(dLk)) { undoDraft(dLk); return; }
           simple({ kind: 'likes', acct: CUR, code: POST.code, hide: !lh }, '切り替えています', function (err, d) {
             if (err) { warn(err); return; } POST.likes_hidden = !!d.hidden; drawPost();
           });
         } },
-        { t: POST.comments_on ? 'コメントをオフにする' : 'コメントをオンにする', go: function () {
-          simple({ kind: 'conoff', acct: CUR, code: POST.code, on: !POST.comments_on }, '切り替えています', function (err) {
+        { t: con ? 'コメントをオフにする' : 'コメントをオンにする', go: function () {
+          if (dCo && apvCanEdit(dCo)) { undoDraft(dCo); return; }
+          simple({ kind: 'conoff', acct: CUR, code: POST.code, on: !con }, '切り替えています', function (err) {
             if (err) { warn(err); return; } POST.comments_on = !POST.comments_on; drawPost();
           });
         } }
@@ -20786,10 +20851,14 @@ function instaScript_(C) {
     if (!can('profile')) { warn(NOPERM); return; }
     var v = DATA && DATA.views && DATA.views[CUR], p = (v && v.prof) || {};
     if (!p.user) { warn('プロフィールの読み込みが終わるまで、少し待っててくださいね🥺'); return; }
-    var PIC = null, links = p.links || [], acct = CUR;
+    // ★2026-11-15 「下書き」の間は、下書きを重ねた中身（画面に出ている物）から始める。直せる下書き（作った本人・社長・開発）が
+    //   あれば、保存の時にその下書きを上書きする（前は本番の中身から始まり、保存すると2件目の下書きができていた）。
+    var DP = null, DL = null, DB = null, q = p;
+    if (DRAFT) { DP = apvMineOf('prof_save'); DL = apvMineOf('links_save'); DB = apvMineOf('biz_save'); q = apvView(v).prof || p; }
+    var PIC = null, links = q.links || [], acct = CUR;
     var e = document.createElement('div'); e.className = 'igc igpf'; e.id = 'igProf';
     e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igpfX" title="キャンセル">' + IC.back + '</button><b>プロフィールを編集</b><button type="button" class="go" id="igpfGo">完了</button></div>' +
-      '<div class="av"><img id="igpfPic" src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><label>写真を編集<input type="file" id="igpfFile" accept="image/*"></label></div>' +
+      '<div class="av"><img id="igpfPic" src="' + esc(q.pic || '') + '" referrerpolicy="no-referrer" alt=""><label>写真を編集<input type="file" id="igpfFile" accept="image/*"></label></div>' +
       '<div class="f"><div class="l">名前</div><input id="igpfName" maxlength="64"><div class="n">名前は14日以内に2回まで変更できます（インスタの決まり）。</div></div>' +
       '<div class="f ro"><div class="l">ユーザーネーム</div><div class="v">' + esc(p.user || '') + '</div><div class="n">ユーザーネームはここでは変更できません。</div></div>' +
       '<div class="f"><div class="l">自己紹介</div><textarea id="igpfBio"></textarea><div class="c" id="igpfCnt"></div></div>' +
@@ -20802,7 +20871,7 @@ function instaScript_(C) {
       '<div class="igcnote">完了を押すと、お店のインスタのプロフィールがすぐに変わります。保存には1〜2分かかります。</div></div>';
     document.body.appendChild(e);
     var nm = document.getElementById('igpfName'), bio = document.getElementById('igpfBio');
-    nm.value = p.name || ''; bio.value = p.bio || '';
+    nm.value = q.name || ''; bio.value = q.bio || '';
     var LK = links.map(function (x) { return { t: x.t || '', u: x.u || '' }; });
     var lkKey = function (a) { return JSON.stringify(a.filter(function (x) { return String(x.u).trim(); }).map(function (x) { return [String(x.t).trim(), String(x.u).trim()]; })); };
     var lk0 = lkKey(LK);
@@ -20832,7 +20901,57 @@ function instaScript_(C) {
           '<div class="n" style="margin-top:8px">電話番号（台湾 +886）</div>' + inp('igbPhone', '例：0987654321', BIZ.phone, 'tel') +
           '<label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:14px"><input type="checkbox" id="igbShowContact" style="width:auto"' + (BIZ.show_contact ? ' checked' : '') + '>メール・住所・電話番号をプロフィールに表示する</label>' +
           '<label style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:14px"><input type="checkbox" id="igbShowCat" style="width:auto"' + (BIZ.show_category ? ' checked' : '') + '>カテゴリをプロフィールに表示する</label>';
+        // ★2026-11-15 直せる公開情報の下書きがあれば、その中身を入れた状態から始める（比べる相手は本番のまま）
+        var DBL = DB && DB.light;
+        if (DBL) {
+          var put = function (id, k) { if (DBL[k] != null) document.getElementById(id).value = DBL[k]; };
+          put('igbEmail', 'email'); put('igbStreet', 'street'); put('igbCity', 'city'); put('igbZip', 'zip'); put('igbPhone', 'phone');
+          if (DBL.show_contact != null) document.getElementById('igbShowContact').checked = !!DBL.show_contact;
+          if (DBL.show_category != null) document.getElementById('igbShowCat').checked = !!DBL.show_category;
+        }
       });
+    };
+    var BIZ_KEYS = ['email', 'street', 'city', 'zip', 'phone', 'show_contact', 'show_category'];
+    var bizOf = function (it) { var o = {}, L2 = (it && it.light) || {}; BIZ_KEYS.forEach(function (k) { if (L2[k] != null) o[k] = L2[k]; }); return o; };
+    // ★2026-11-15 下書きの上書き（直せる下書きが1つでもある時）。本番と比べて違う所だけを下書きに残し、本番と同じに戻った所は外す。
+    //   全部が本番と同じに戻ったら、その下書きは消す。直せる下書きの無い部分は、今までどおり新しい下書きを作る。
+    var saveDraft = function (nv, bv, lkNew, lkCh) {
+      var pn = String(p.name || '').trim(), pb = String(p.bio || '').replace(/\r/g, '').trim(), jobs = [];
+      if (nv !== String(q.name || '').trim() || bv !== String(q.bio || '').replace(/\r/g, '').trim() || PIC) {
+        if (!nv) { warn('名前を入力してください😊'); return; }
+        if (bv.length > BIO_MAX) { warn('自己紹介は' + BIO_MAX + '文字までです（絵文字は2文字に数えます）😊'); return; }
+        if (DP) {
+          var pt = { name: nv !== pn ? nv : null, bio: bv !== pb ? bv : null }; if (PIC) pt.media = [{ b64: PIC }];
+          var gone = pt.name === null && pt.bio === null && !PIC && !((DP.light || {}).n_media);
+          jobs.push(gone ? { del: DP.id } : { upd: DP.id, patch: pt, big: !!PIC });
+        } else {
+          var nf = { kind: 'prof_save', acct: acct }; if (nv !== pn) nf.name = nv; if (bv !== pb) nf.bio = bv; if (PIC) nf.media = [{ b64: PIC }];
+          if (nf.name != null || nf.bio != null || PIC) jobs.push({ add: nf, big: !!PIC });
+        }
+      }
+      if (lkCh) {
+        var same = lkKey(p.links || []) === lkKey(LK);
+        if (DL) jobs.push(same ? { del: DL.id } : { upd: DL.id, patch: { links: lkNew } });
+        else if (!same) jobs.push({ add: { kind: 'links_save', acct: acct, links: lkNew } });
+      }
+      if (BIZ) {
+        var bz2 = bizChanges() || {};
+        if (JSON.stringify(bz2) !== JSON.stringify(DB ? bizOf(DB) : {})) {
+          if (DB) {
+            if (!Object.keys(bz2).length) jobs.push({ del: DB.id });
+            else { var bp = {}; BIZ_KEYS.forEach(function (k) { if (k in bz2) bp[k] = bz2[k]; else if ((DB.light || {})[k] != null) bp[k] = null; }); jobs.push({ upd: DB.id, patch: bp }); }
+          } else { var g2 = { kind: 'biz_save', acct: acct }; for (var k2 in bz2) g2[k2] = bz2[k2]; jobs.push({ add: g2 }); }
+        }
+      }
+      if (!jobs.length) { e.remove(); return; }
+      var run = function (i) {
+        if (i >= jobs.length) { e.remove(); APV_FULLCAP = {}; apvLoad(acct); doneBox('下書きの修正が完了しました'); return; }
+        var j = jobs[i], next = function (err) { if (err && err !== APV_MSG && err !== APV_MSG_ADMIN) { warn(err); apvLoad(acct); return; } run(i + 1); };
+        if (j.upd) apvUpd(j.upd, j.patch, !!j.big, next);
+        else if (j.del) busyAsk({ kind: 'apv_del', aid: j.del }, false, '下書きを修正しています', '', next);
+        else busyAsk(j.add, !!j.big, '下書きを修正しています', '', next);   // 新しい下書き（apvWrap が承認待ちに回す）
+      };
+      run(0);
     };
     var bizChanges = function () {
       if (!BIZ) return null;
@@ -20885,6 +21004,9 @@ function instaScript_(C) {
         if (!/^(https?:\/\/)?[^\s\/]+\.[^\s]+$/.test(lkNew[li].u)) { warn('リンクの住所が正しくありません：' + lkNew[li].u + '\n確認してから、もう一度保存してください😊'); return; }
       }
       var nv = nm.value.trim(), bv = bio.value.replace(/\r/g, '').trim();
+      // ★2026-11-15 「下書き」の間：直せる下書きがあれば上書き。無くても、開いた時の中身から何も変えていなければ閉じるだけ。
+      if (DRAFT && (DP || DL || DB)) { saveDraft(nv, bv, lkNew, lkCh); return; }
+      if (DRAFT && nv === String(q.name || '').trim() && bv === String(q.bio || '').replace(/\r/g, '').trim() && !PIC && !lkCh && !bizChanges()) { e.remove(); return; }
       if (nv !== String(p.name || '').trim()) {
         if (!nv) { warn('名前を入力してください😊'); return; }
         f.name = nv; ch.push('名前');
@@ -20986,11 +21108,16 @@ function instaScript_(C) {
     });
   }
   // ハイライトの作成・編集（本物のアプリと同じく：カバー・ハイライト名・「選択済み」「ストーリーズ」）
-  function openHlEdit(h, items) {
+  function openHlEdit(h, items, dr) {
     if (!can('highlight')) { warn(NOPERM); return; }
     var isNew = !h, acct = CUR;
     var SEL = (items || []).slice(), COVER = '', NAME = isNew ? '' : String(h.t || ''), TABH = isNew ? 'all' : 'sel';
-    var keys0 = SEL.map(function (s) { return s.key; }).join(','), name0 = NAME;
+    // ★2026-11-15 ハイライトの下書きを直す（dr＝承認待ちの下書き）＝下書きの名前・カバー・選んだストーリーズから始め、同じ下書きを上書きする。
+    //   選んだストーリーズは番号だけ預かっている＝保存したストーリーズ（アーカイブ）が読めたら写真に置き換える。
+    //   アーカイブの読み込み範囲に無い番号（古いストーリーズ）は、消さずにそのまま残す（MISS）。
+    var DK = null, MISS = [];
+    if (dr) { var DL0 = dr.light || {}; NAME = String(DL0.title || ''); COVER = String(DL0.cover || ''); DK = (DL0.keys || []).map(String); TABH = 'sel'; }
+    var keys0 = DK ? DK.join(',') : SEL.map(function (s) { return s.key; }).join(','), name0 = NAME, cover0 = COVER;
     var e = document.createElement('div'); e.className = 'igc ighe'; e.id = 'igHe';
     var idx = function (k) { for (var i = 0; i < SEL.length; i++) if (SEL[i].key === k) return i; return -1; };
     var coverSrc = function () {
@@ -21010,6 +21137,7 @@ function instaScript_(C) {
       tb.innerHTML = '<button type="button" data-ht="sel"' + (TABH === 'sel' ? ' class="on"' : '') + '>選択済み（' + SEL.length + '）</button>' +
         '<button type="button" data-ht="all"' + (TABH === 'all' ? ' class="on"' : '') + '>ストーリーズ</button>';
       var list = TABH === 'sel' ? SEL : ARCH[acct];
+      if (TABH === 'sel' && DK) { g.innerHTML = '<div class="em">' + (ARCH_ERR[acct] ? esc(ARCH_ERR[acct]) : '下書きのストーリーズを読み込み中です…<br>1分ほどかかるので、少し待っててくださいね🥺') + '</div>'; return; }
       if (TABH === 'all' && !list) {
         g.innerHTML = '<div class="em">' + (ARCH_ERR[acct] ? esc(ARCH_ERR[acct]) : '保存したストーリーズを読み込み中です…<br>1分ほどかかるので、少し待っててくださいね🥺') + '</div>';
         return;
@@ -21024,8 +21152,8 @@ function instaScript_(C) {
         (TABH === 'all' && ARCH_MORE[acct] === 'loading' ? '<div class="em">さらに古いストーリーズを読み込み中です…<br>2〜3分かかるので、少し待っててくださいね🥺</div>' : '');
       var ci = document.getElementById('igheCvImg'); if (ci) ci.src = coverSrc();
     };
-    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igheX">キャンセル</button><b>' + (isNew ? '新しいハイライト' : 'ハイライトを編集') + '</b>' +
-      '<button type="button" class="go" id="igheGo">' + (isNew ? '追加' : '完了') + '</button></div>' +
+    e.innerHTML = '<div class="w"><div class="igch"><button type="button" id="igheX">キャンセル</button><b>' + (isNew && !dr ? '新しいハイライト' : 'ハイライトを編集') + '</b>' +
+      '<button type="button" class="go" id="igheGo">' + (isNew && !dr ? '追加' : '完了') + '</button></div>' +
       '<div class="cv"><div class="c"><img id="igheCvImg" src="' + esc(coverSrc()) + '" referrerpolicy="no-referrer" alt=""></div><button type="button" id="igheCv">カバーを編集</button></div>' +
       '<input class="nm" id="igheNm" placeholder="ハイライト名" maxlength="' + HL_MAX + '">' +
       '<div class="tabs" id="igheTabs"></div><div id="igheGrid"></div>' +
@@ -21043,9 +21171,16 @@ function instaScript_(C) {
         if (more) ARCH_MORE[acct] = err ? '' : 'done';
         if (err) { if (more) warn(err); else ARCH_ERR[acct] = err; }
         else ARCH[acct] = (d && d.arch) || [];
-        drawGrid();
+        fillSel(); drawGrid();
       });
     };
+    var fillSel = function () {
+      if (!DK || !ARCH[acct]) return;
+      var by = {}; ARCH[acct].concat(SEL).forEach(function (s) { by[s.key] = s; });
+      SEL = DK.filter(function (k) { return by[k]; }).map(function (k) { return by[k]; });
+      MISS = DK.filter(function (k) { return !by[k]; }); DK = null;
+    };
+    fillSel(); drawGrid();
     loadArch(false);
     var find = function (k) {
       var all = SEL.concat(ARCH[acct] || []);
@@ -21079,7 +21214,7 @@ function instaScript_(C) {
         document.body.appendChild(sh); return;
       }
       if (t.id === 'igheX') {
-        var changed = NAME !== name0 || SEL.map(function (s) { return s.key; }).join(',') !== keys0 || COVER;
+        var changed = NAME !== name0 || (!DK && SEL.map(function (s) { return s.key; }).concat(MISS).join(',') !== keys0) || COVER !== cover0;
         if (!changed) { e.remove(); return; }
         szPopup_('変更を破棄しますか？😊', { cancel: true, onYes: function () { e.remove(); } });
         return;
@@ -21088,7 +21223,17 @@ function instaScript_(C) {
       var title = NAME.trim();
       if (!title) { warn('ハイライト名を入力してください😊'); return; }
       if (Array.from(title).length > HL_MAX) { warn('ハイライト名は' + HL_MAX + '文字までです😊'); return; }
-      if (!SEL.length) { warn('ストーリーズを1つ以上選択してください😊'); return; }
+      if (DK) { warn('下書きのストーリーズを読み込み中です。少し待っててくださいね🥺'); return; }
+      if (!SEL.length && !MISS.length) { warn('ストーリーズを1つ以上選択してください😊'); return; }
+      if (dr) {
+        var nk = SEL.map(function (s) { return s.key; }).concat(MISS);
+        if (title === name0 && nk.join(',') === keys0 && COVER === cover0) { e.remove(); return; }
+        apvUpd(dr.id, { title: title, keys: nk, cover: COVER }, false, function (err) {
+          if (err) { warn(err); return; }
+          e.remove(); apvLoad(acct); doneBox('下書きの修正が完了しました');
+        });
+        return;
+      }
       szPopup_('お店のインスタのハイライト「' + title + '」を' + (isNew ? '作成' : '変更') + 'します。\nよろしいでしょうか？😊', { cancel: true, onYes: function () {
         busyAsk({ kind: 'hl_save', acct: acct, hid: isNew ? '' : hlId(h), title: title,
                   keys: SEL.map(function (s) { return s.key; }), cover: COVER },
