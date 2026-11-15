@@ -22111,7 +22111,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
     : '';
 
   return '' +
-'<style>' + AKICSS_ + '</style>' +
+'<style>' + EXPADCSS_ + AKICSS_ + '</style>' +   /* 数字ボタンは共通の部品（「◯分」で使う・2026-11-15） */
 '<div class="akiwrap">' +
   '<div class="akibar">' +
     '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
@@ -22143,13 +22143,18 @@ function renderAkijikanPage_(d, base, staff, dev) {
     // 空き時間の長さで絞り込み（2026-07-17ユーザー指示・以上ロジックに変更）。単一選択＝1つだけON。
     // 30分＝30分以上を全部／60分＝60分以上を全部（すべて同じ「以上」ロジック）。
     // ★2026-11-15 まるちゃん指示：120分を消して、自由に分を入力できる「◯分」に置き換えた。
-    //   押すと同じ場所に入力欄が出て、入力した分以上を表示する（ボタンは「90分」のように変わる）。
+    //   押すとすぐ下に共通の数字ボタン（EXPADCSS_／EXPADHTML_）が出る＝スマホのキーボードは出さない
+    //   （数字を入れる所は共通の数字ボタンを使う決まり）。確定すると、その分以上を表示し、ボタンは「90分」のように変わる。
     '<div class="akidurrow">' +
       '<button type="button" class="akidurbtn on" data-dur="all">全部</button>' +
       '<button type="button" class="akidurbtn" data-dur="30">30分</button>' +
       '<button type="button" class="akidurbtn" data-dur="60">60分</button>' +
       '<button type="button" class="akidurbtn" data-dur="custom" id="akiDurCustom">◯分</button>' +
-      '<input type="number" inputmode="numeric" min="1" max="600" class="akidurin" id="akiDurIn" placeholder="分" hidden>' +
+    '</div>' +
+    '<div class="akidurpad" id="akiDurPad" hidden>' +
+      '<div class="exbox" id="akiDurBox"></div>' +
+      '<div class="expad" id="akiDurKeys">' + EXPADHTML_ + '</div>' +
+      '<button type="button" class="exgo" id="akiDurGo">この分数で表示する</button>' +
     '</div>' +
   '</div>' +
   '<div class="akichips">' +
@@ -22467,25 +22472,42 @@ var AKISCRIPT_ =
 '      el.classList.toggle("akidurhide", dur<lo);' +
 '    });' +
 '  }' +
-// ★2026-11-15「◯分」＝押すと同じ場所に入力欄を出す。確定（Enter・欄の外を押す）で、その分以上を表示。
-//   空のまま確定した時は何も変えない（前の選択のまま）。
-'  var durIn=document.getElementById("akiDurIn"), durCustom=document.getElementById("akiDurCustom"), durVal=0;' +
-'  function durCommit_(){' +
-'    if(!durIn || durIn.hidden) return;' +
-'    var n=Math.round(Number(durIn.value));' +
-'    durIn.hidden=true; durCustom.hidden=false;' +
-'    if(n>0){ durVal=n; durCustom.textContent=n+"分"; applyDur_(durCustom, n); }' +
+// ★2026-11-15「◯分」＝押すとすぐ下に共通の数字ボタンを出す（スマホのキーボードは出さない）。
+//   「この分数で表示する」で、その分以上を表示。空のまま押した時は数字を入力するようお願いする。
+//   もう一度「◯分」を押すと数字ボタンを閉じる。パソコンはキーボードの数字・Enter・BackSpaceでも入力できる。
+'  var durCustom=document.getElementById("akiDurCustom"), durPad=document.getElementById("akiDurPad"),' +
+'      durBox=document.getElementById("akiDurBox"), durDig="", durVal=0;' +
+'  function durDraw_(){ durBox.innerHTML = durDig ? durDig + "<span class=akidurunit> 分</span>" : "<span class=akidurph>数字を入力してください😊</span>"; }' +
+'  function durPress_(k){' +
+'    if(k==="clr") durDig="";' +
+'    else if(k==="del") durDig=durDig.slice(0,-1);' +
+'    else if(/^[0-9]$/.test(k) && durDig.length<3) durDig=(durDig==="0") ? k : durDig+k;' +
+'    durDraw_();' +
 '  }' +
-'  if(durIn){' +
-'    durIn.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); durCommit_(); durIn.blur(); } });' +
-'    durIn.addEventListener("blur", durCommit_);' +
+'  function durOpen_(){ durDig=durVal ? String(durVal) : ""; durDraw_(); durPad.hidden=false; }' +
+'  function durClose_(){ durPad.hidden=true; }' +
+'  function durGo_(){' +
+'    var n=parseInt(durDig,10);' +
+'    if(!(n>0)){ if(typeof szPopup_==="function") szPopup_("分数を入力してください😊",{icon:""}); return; }' +
+'    durVal=n; durCustom.textContent=n+"分"; durPad.hidden=true;' +
+'    applyDur_(durCustom, n);' +
 '  }' +
+'  document.getElementById("akiDurKeys").addEventListener("click",function(e){' +
+'    var b=e.target.closest("button"); if(!b) return;' +
+'    durPress_(b.getAttribute("data-k") || b.textContent);' +
+'  });' +
+'  document.getElementById("akiDurGo").addEventListener("click", durGo_);' +
+'  document.addEventListener("keydown",function(e){' +
+'    if(durPad.hidden) return;' +
+'    if(/^[0-9]$/.test(e.key)){ durPress_(e.key); e.preventDefault(); }' +
+'    else if(e.key==="Backspace"){ durPress_("del"); e.preventDefault(); }' +
+'    else if(e.key==="Enter"){ durGo_(); e.preventDefault(); }' +
+'    else if(e.key==="Escape"){ durClose_(); e.preventDefault(); }' +
+'  });' +
 '  durBtns.forEach(function(b){ b.addEventListener("click",function(){' +
 '    var kind=b.getAttribute("data-dur");' +
-'    if(kind==="custom"){' +
-'      durCustom.hidden=true; durIn.hidden=false; durIn.value=durVal ? String(durVal) : ""; durIn.focus();' +
-'      return;' +
-'    }' +
+'    if(kind==="custom"){ if(durPad.hidden) durOpen_(); else durClose_(); return; }' +
+'    durPad.hidden=true;' +
 '    applyDur_(b, kind==="all" ? 0 : Number(kind));' +
 '  }); });' +
 '  setRange(minD, thisWeekEnd_(minD));' +   // 初期表示＝今週（2026-10-01 まるちゃん指示。前は今・来週）
@@ -22597,10 +22619,13 @@ var AKICSS_ =
 '    background:var(--akicard); border:1px solid var(--akiline); border-radius:10px;' +
 '    padding:11px clamp(9px,4.2vw,16px); cursor:pointer; }' +
 '  .akidurbtn.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
-'  .akidurbtn[hidden], .akidurin[hidden]{ display:none; }' +
-'  .akidurin{ font-family:inherit; font-size:clamp(13px,4.2vw,16px); font-weight:700; color:var(--akiink);' +
-'    background:var(--akicard); border:2px solid var(--akiprimary); border-radius:10px;' +
-'    padding:10px 8px; width:5.5em; box-sizing:border-box; text-align:center; }' +
+// ★2026-11-15「◯分」の数字ボタン＝共通の部品（EXPADCSS_）の見た目をそのまま使う。ここは置き場所と単位の字だけ。
+'  .akidurpad{ margin-top:12px; }' +
+'  .akidurpad[hidden]{ display:none; }' +
+'  .akidurpad .exbox{ margin-top:0; }' +
+'  .akidurpad .exgo{ margin-top:4px; }' +
+'  .akidurunit{ font-size:24px; }' +
+'  .akidurph{ color:#94a3b8; font-size:23px; font-weight:800; letter-spacing:normal; }' +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
 '  .akiday.akidatehide{ display:none; }' +
 AKFCSS_ +
