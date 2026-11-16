@@ -12135,7 +12135,8 @@ var UBCSS_ =
   '.ubac .ck.ng{color:#b91c1c;}' +
   '.ubac .go{display:block;width:100%;margin-top:10px;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:13px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
   '.ubac.pend{opacity:.5;}' +
-  '.ubdonebtn{display:block;margin:14px 0 8px;padding:10px 16px;font-size:16px;}' +
+  '.ubdonebtn{display:flex;justify-content:space-between;align-items:center;width:100%;box-sizing:border-box;margin:18px 0 8px;padding:12px 16px;' +
+    'background:transparent;color:#fff;border:2px solid rgba(255,255,255,.75);border-radius:12px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
   '.ubac .t1{font-size:18px;}.ubac .t2{font-size:16px;}.ubac .ck{font-size:16px;}';
 
 // ── 裏の書き込みの結果を、ズコのどの画面にいても箱で知らせる見張り（2026-11-07 まるちゃん） ──
@@ -12814,7 +12815,8 @@ function uriageBookScript_(C) {
     }
     // ★2026-11-14 まるちゃん「直近二か月の作廢を表示　ボタンにする　デフォルトは非表示」
     var DN = AUTH.done || [];
-    h += '<button type="button" class="ubsm ubdonebtn" data-a="done">' + (AUTHDONE ? '直近2か月の作廢を閉じる' : '直近2か月の作廢を表示（' + DN.length + '件）') + '</button>';
+    // ★2026-11-16 まるちゃん「ほかと差別化がない」＝白いカードと区別できるよう、枠だけの開け閉めの帯（▼▲付き）にした
+    h += '<button type="button" class="ubdonebtn" data-a="done"><span>直近2か月の作廢（' + DN.length + '件）</span><span>' + (AUTHDONE ? '▲ 閉じる' : '▼ 表示') + '</span></button>';
     if (AUTHDONE) {
       h += '<div class="uboth">';
       if (!DN.length) h += '<div class="r"><span>直近2か月の作廢はありません</span></div>';
