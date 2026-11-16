@@ -116,7 +116,8 @@ var UBCSS_ =
   '.ubac .ck.ng{color:#b91c1c;}' +
   '.ubac .go{display:block;width:100%;margin-top:10px;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:13px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
   '.ubac.pend{opacity:.5;}' +
-  '.ubtop2 .ubhint.ubauthhint{font-size:18px;line-height:1.5;}' +
+  '.ubtop2 .ubhint.ubauthhint{font-size:min(30px,calc((100vw - 34px) / 15.5));line-height:1.4;font-weight:900;white-space:nowrap;}' +
+  '.ubdonebtn{display:block;margin:14px 0 8px;padding:10px 16px;font-size:16px;}' +
   '.ubac .t1{font-size:18px;}.ubac .t2{font-size:16px;}.ubac .ck{font-size:16px;}';
 function ubPendAdd_(o) { var a = ubPendList_(); a.push(o); ubPendSave_(a); ubWatch_(); }
 function uriageBookScript_(C) {
@@ -653,7 +654,7 @@ function uriageBookScript_(C) {
   $('ubGoInv').addEventListener('click', function () { show('ubInv'); });
   $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
   $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
-  var AUTH = null, AUTHP = {};
+  var AUTH = null, AUTHP = {}, AUTHDONE = false;
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoAuth').style.display = '';
   function fetchAuth() {
     jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) { if (p && p.items) { AUTH = p; drawAuth(); } });
@@ -672,11 +673,14 @@ function uriageBookScript_(C) {
         (x.row_in_prod ? '<div class="ck ng">✕ 本番の売上表に売上の行が残っています</div>' : '') +
         (AUTHP[x.number] ? '<div class="ck">作廢を送っています…</div>' : '<button type="button" class="go" data-a="auth">認証して作廢</button>') + '</div>';
     }
-    if ((AUTH.done || []).length) {
-      h += '<div class="ubh">最近作廢した發票</div><div class="uboth">';
-      for (var j = 0; j < AUTH.done.length; j++) {
-        var y = AUTH.done[j];
-        h += '<div class="r"><span>' + esc(y.day.slice(5).replace('-', '/') + ' ' + y.number.replace(/^([A-Z]{2})/, '$1-') + ' ' + (y.name || y.num || '')) + '</span><span>' + yen(y.amount) + '</span></div>';
+    var DN = AUTH.done || [];
+    h += '<button type="button" class="ubsm ubdonebtn" data-a="done">' + (AUTHDONE ? '直近2か月の作廢を閉じる' : '直近2か月の作廢を表示（' + DN.length + '件）') + '</button>';
+    if (AUTHDONE) {
+      h += '<div class="uboth">';
+      if (!DN.length) h += '<div class="r"><span>直近2か月の作廢はありません</span></div>';
+      for (var j = 0; j < DN.length; j++) {
+        var y = DN[j];
+        h += '<div class="r"><span>' + esc(y.day.slice(5).replace('-', '/').replace(/^0/, '') + ' ' + (y.time || '') + '　' + y.number.replace(/^([A-Z]{2})/, '$1-') + '　' + ((y.num || '') + ' ' + (y.name || '')).trim()) + '</span><span>' + yen(y.amount) + '</span></div>';
       }
       h += '</div>';
     }
@@ -714,12 +718,13 @@ function uriageBookScript_(C) {
     });
   }
   $('ubAuths').addEventListener('click', function (e) {
+    if (AUTH && e.target.closest('button[data-a="done"]')) { AUTHDONE = !AUTHDONE; drawAuth(); return; }
     if (!AUTH || !e.target.closest('button[data-a="auth"]')) return;
     var c = e.target.closest('.ubac'); if (!c) return;
     var x = AUTH.items[parseInt(c.getAttribute('data-i'), 10)]; if (x) openAuth(x);
   });
   $('ubGoAuth').addEventListener('click', function () {
-    show('ubAuth'); AUTH = null; AUTHP = {}; drawAuth();
+    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false; drawAuth();
     fetchAuth();
     ask({ action: 'voidlist' }, '', null, true);
   });
@@ -781,7 +786,7 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubtop">' + inBack('ubAuthBack') + '<span class="bname ubttl">✅ 作廢の認証</span>' +
           '<span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button>' +
         '</div>' +
-        '<div class="ubtop2"><span class="ubh ubhint ubauthhint">内容を確認して「認証して作廢」を押してください😊<br>認証したら本物の発票システムに作廢が反映されます</span></div>' +
+        '<div class="ubtop2"><span class="ubh ubhint ubauthhint">認証したら本物の発票システムに<br>作廢が反映されます</span></div>' +
         '<div id="ubAuths"></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
