@@ -187,8 +187,8 @@ function uriageBookScript_(C) {
     if (!D.rows.length) L = '<div class="ubnone">まだ売上の行がありません</div>';
     else {
       L = '<div class="ubtbl"><table><colgroup><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:12%">' +
-        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:9%"></colgroup>' +
-        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">削除</th></tr></thead><tbody>';
+        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>' +
+        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">作廢</th></tr></thead><tbody>';   
       var run = 0;
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
@@ -198,7 +198,8 @@ function uriageBookScript_(C) {
           '<td class="p e' + (x.pay ? '' : ' np') + '" data-c="D">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '未選択') + '</td>' +
           '<td class="d e" data-c="E">' + esc(x.detail) + '</td><td class="n e" data-c="F">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td>' +
           '<td class="n">' + (x._del ? '' : run.toLocaleString('ja-JP')) + '</td>' +
-          '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
+          '<td class="xc">' + (invOf(x.no) ? '<button type="button" class="ubvb" data-a="del">作廢</button>'
+            : '<button type="button" class="ubx" data-a="del" aria-label="削除">×</button>') + '</td></tr>';
       }
       L += '</tbody></table></div>';
     }
@@ -488,7 +489,7 @@ function uriageBookScript_(C) {
     var x = D.rows[parseInt(tr.getAttribute('data-j'), 10)]; if (!x) return;
     if (x._del) { popup('この行は削除中です。'); return; }
     if (e.target.closest('button[data-a="del"]') && invOf(x.no)) {
-      openVoid(invOf(x.no), '打った發票の行は、削除しても次の取り込みでまた入ります。');
+      openVoid(invOf(x.no));
       return;
     }
     if (e.target.closest('button[data-a="del"]')) {

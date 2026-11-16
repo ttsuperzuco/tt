@@ -12278,8 +12278,8 @@ function uriageBookScript_(C) {
       //   足し方は売上表の式と同じ（上の行から順に合計を足していく）。画面の中で数えるので、裏で修正・削除中の行もすぐ反映される
       //   （削除中の行は足さない）。
       L = '<div class="ubtbl"><table><colgroup><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:12%">' +
-        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:9%"></colgroup>' +
-        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">削除</th></tr></thead><tbody>';
+        '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>' +
+        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">作廢</th></tr></thead><tbody>';   // ★2026-11-16 まるちゃん「削除じゃなくて作廢」
       var run = 0;
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
@@ -12289,7 +12289,9 @@ function uriageBookScript_(C) {
           '<td class="p e' + (x.pay ? '' : ' np') + '" data-c="D">' + esc(x.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x.pay] || x.pay) : '未選択') + '</td>' +
           '<td class="d e" data-c="E">' + esc(x.detail) + '</td><td class="n e" data-c="F">' + (x.amount == null ? '' : Number(x.amount).toLocaleString('ja-JP')) + '</td>' +
           '<td class="n">' + (x._del ? '' : run.toLocaleString('ja-JP')) + '</td>' +
-          '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
+          // 發票を打った記録がある行＝作廢のボタン（作廢の理由→確認）。記録の無い行（手で足した行）は今までどおり×で削除。
+          '<td class="xc">' + (invOf(x.no) ? '<button type="button" class="ubvb" data-a="del">作廢</button>'
+            : '<button type="button" class="ubx" data-a="del" aria-label="削除">×</button>') + '</td></tr>';
       }
       L += '</tbody></table></div>';
     }
@@ -12613,7 +12615,7 @@ function uriageBookScript_(C) {
     // ×＝消す（まるちゃん指定の文：發票の入力間違いですか？そうであればこの行を削除します）
     if (e.target.closest('button[data-a="del"]') && invOf(x.no)) {
       // ★2026-11-14 発票を打った記録がある行は、消しても次の取り込みでまた入る＝作廢として記録する
-      openVoid(invOf(x.no), '打った發票の行は、削除しても次の取り込みでまた入ります。');
+      openVoid(invOf(x.no));
       return;
     }
     if (e.target.closest('button[data-a="del"]')) {
