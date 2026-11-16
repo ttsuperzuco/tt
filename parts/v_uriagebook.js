@@ -217,15 +217,16 @@ function uriageBookScript_(C) {
     o += '</tbody><tfoot><tr class="ubsum"><td>合計</td><td class="n">' + (D.other_total == null ? '' : Number(D.other_total).toLocaleString('ja-JP')) + '</td><td></td></tr></tfoot></table></div>';
     $('ubOthers').innerHTML = o;
     var V = D.invs || [];
-    var v = '<div class="ubtbl"><table><colgroup><col style="width:13%"><col style="width:11%"><col style="width:15%"><col><col style="width:17%"><col style="width:18%"></colgroup>' +
-      '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="r">合計</th><th class="c">作廢</th></tr></thead><tbody>';
+    var v = '<div class="ubtbl"><table><colgroup><col style="width:18%"><col style="width:13%"><col style="width:11%"><col style="width:15%"><col><col style="width:17%"></colgroup>' +
+      '<thead><tr><th class="c">作廢</th><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="r">合計</th></tr></thead><tbody>';
     if (!V.length) v += '<tr><td colspan="6" class="ubnone">今日打った發票はまだありません</td></tr>';
     for (var w = 0; w < V.length; w++) {
       var z = V[w], done = z.status !== 2 || z.memo;
-      v += '<tr class="r' + (done ? ' vd' : '') + (z._pend ? ' pend' : '') + '" data-w="' + w + '"><td class="w">' + esc(z.time) + '</td><td class="w">' + esc(z.no) + '</td>' +
-        '<td class="w">' + esc(z.num) + '</td><td>' + esc(z.name) + '</td><td class="n">' + Number(z.amount || 0).toLocaleString('ja-JP') + '</td>' +
+      v += '<tr class="r' + (done ? ' vd' : '') + (z._pend ? ' pend' : '') + '" data-w="' + w + '">' +
         '<td class="xc">' + (z._pend ? '<span class="ubvs">記録中</span>' : z.status !== 2 ? '<span class="ubvs">作廢済み</span>' : z.memo ? '<span class="ubvs">記録済み</span>'
-          : '<button type="button" class="ubvb" data-a="void">作廢</button>') + '</td></tr>';
+          : '<button type="button" class="ubvb" data-a="void">作廢</button>') + '</td>' +
+        '<td class="w">' + esc(z.time) + '</td><td class="w">' + esc(z.no) + '</td>' +
+        '<td class="w">' + esc(z.num) + '</td><td>' + esc(z.name) + '</td><td class="n">' + Number(z.amount || 0).toLocaleString('ja-JP') + '</td></tr>';
     }
     v += '</tbody></table></div>';
     $('ubVoids').innerHTML = v;
