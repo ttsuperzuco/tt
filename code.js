@@ -12807,7 +12807,7 @@ function uriageBookScript_(C) {
       var x = AUTH.items[i], d = x.day.slice(5).replace('-', '/').replace(/^0/, '');
       h += '<div class="ubac' + (AUTHP[x.number] ? ' pend' : '') + '" data-i="' + i + '">' +
         '<div class="t1">' + esc(d + ' ' + x.time + '　' + x.number.replace(/^([A-Z]{2})/, '$1-')) + '</div>' +
-        '<div class="t2">' + esc(((x.num || '') + ' ' + (x.name || '')).trim() + '　' + yen(x.amount) + (x.who ? '\n記録：' + x.who + 'さん（理由：' + (x.reason || '―') + '）' : '\n記録：売上表に手で記録')) + '</div>' +
+        '<div class="t2">' + esc(((x.num || '') + ' ' + (x.name || '')).trim() + '　' + yen(x.amount) + (x.who ? '\n記録：' + x.who + 'さん（理由：' + (x.reason || '―') + '）' : '')) + '</div>' +
         // ★2026-11-14 まるちゃん「○の2行いらない」＝売上表と一致している時は出さない。食い違う時（✕）だけ出す。
         (x.memo ? '' : '<div class="ck ng">✕ 売上表に作廢のメモがありません</div>') +
         (x.row_in_prod ? '<div class="ck ng">✕ 本番の売上表に売上の行が残っています</div>' : '') +
