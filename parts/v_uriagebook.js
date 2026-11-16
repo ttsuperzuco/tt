@@ -662,7 +662,7 @@ function uriageBookScript_(C) {
   $('ubCoinBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubGoInv').addEventListener('click', function () { show('ubInv'); });
   $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
-  $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
+  if ($('ubGoVoid')) $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
   var AUTH = null, AUTHP = {}, AUTHDONE = false;
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoAuth').style.display = '';
   function fetchAuth() {
@@ -766,7 +766,6 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoInv">🧾 發票<span class="ubem ari">あり</span>の売上</button>' +
           '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
-          '<button type="button" id="ubGoVoid">🚫 發票の<span class="ubem void">作廢</span></button>' +
           '<button type="button" id="ubGoAuth" style="display:none">✅ 作廢の<span class="ubem auth">認証</span></button>' +
         '</div>' +
       '</div>' +

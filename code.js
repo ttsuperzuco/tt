@@ -12806,7 +12806,7 @@ function uriageBookScript_(C) {
   // ★2026-11-07 まるちゃん「發票ありの売上　發票なしの売上　小銭とお札　の三つのボタンにする」
   $('ubGoInv').addEventListener('click', function () { show('ubInv'); });
   $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
-  $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
+  if ($('ubGoVoid')) $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
   // ── 作廢の認証（2026-11-14 まるちゃん「俺だけ見れるように。おれが認証して実際に発票を書き込むための機能」）──
   //   スタッフが記録した作廢（ボタン・売上表の手書きの「作廢HT-…」）のうち、発票サイトでまだ発行済みの物を並べる。
   //   「認証して作廢」→確認の箱→係が発票サイトで本当に作廢する（国に届く取り消し・元に戻せない）。
@@ -12920,7 +12920,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
           // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
-          '<button type="button" id="ubGoVoid">🚫 發票の<span class="ubem void">作廢</span></button>' +
+          // ★2026-11-16 まるちゃん「このボタンいらない」＝發票の作廢は發票ありの売上の「作廢」の列から行う（メニューのボタンを消した）
           // ★2026-11-14 まるちゃん「作廢の認証ボタン…俺だけ見れるように」＝開発の時だけ出す
           '<button type="button" id="ubGoAuth" style="display:none">✅ 作廢の<span class="ubem auth">認証</span></button>' +
         '</div>' +
