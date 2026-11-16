@@ -12941,7 +12941,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button>' +
         '</div>' +
         // ★2026-11-16 まるちゃん＝注意書きは「テスト中」と同じ薄い黄色の帯・普通の大きさ
-        '<div class="ubtest">認証したら本物の発票システムに作廢が反映されます</div>' +
+        '<div class="ubtest" style="width:fit-content;max-width:100%;box-sizing:border-box;margin:4px auto 10px;padding:8px 18px">認証したら本物の発票システムに作廢が反映されます</div>' +   // ★2026-11-16 まるちゃん「黄色は文字の長さに合わせて短く」
         '<div id="ubAuths"></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
