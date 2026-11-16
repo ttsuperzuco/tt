@@ -8,6 +8,7 @@ var UBCSS_ =
   '.ubtop .uhome{padding:7px 12px;}' +
   '.ubttl{font-size:20px;line-height:1.2;margin:0;}' +
   '.ubwhen{color:#eaf6fb;font-weight:800;font-size:15px;}' +
+  '.ubwg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;}' +
   '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop2 .ubhint{font-size:15px;margin:0;}' +
   '.ubtop2 .ubadd{padding:7px 14px;}' +   
@@ -771,28 +772,28 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubInv" style="display:none">' +
         '<div class="ubtop">' + inBack('ubInvBack') + '<span class="bname ubttl">🧾 發票ありの売上</span>' +
-          '<span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button></span>' +
         '</div>' +
         '<div class="ubtop2"><button type="button" id="ubGoAdd" class="ubadd">売上一行追加</button><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
         '<div id="ubList"></div>' +
       '</div>' +
       '<div id="ubNoInv" style="display:none">' +
         '<div class="ubtop">' + inBack('ubNoInvBack') + '<span class="bname ubttl">📝 發票なしの売上</span>' +
-          '<span id="ubWhen2" class="ubwhen"></span><button type="button" id="ubReload2" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen2" class="ubwhen"></span><button type="button" id="ubReload2" class="ubsm">再読込</button></span>' +
         '</div>' +
         '<div class="ubtop2"><button type="button" id="ubGoOther" class="ubadd">売上一行追加</button><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
         '<div id="ubOthers"></div>' +
       '</div>' +
       '<div id="ubVoid" style="display:none">' +
         '<div class="ubtop">' + inBack('ubVoidBack') + '<span class="bname ubttl">🚫 發票の作廢</span>' +
-          '<span id="ubWhen4" class="ubwhen"></span><button type="button" id="ubReload4" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen4" class="ubwhen"></span><button type="button" id="ubReload4" class="ubsm">再読込</button></span>' +
         '</div>' +
         '<div class="ubtop2"><span class="ubh ubhint">今日打った發票の中から、作廢にする發票の「作廢」を押してください😊</span></div>' +
         '<div id="ubVoids"></div>' +
       '</div>' +
       '<div id="ubAuth" style="display:none">' +
         '<div class="ubtop">' + inBack('ubAuthBack') + '<span class="bname ubttl">✅ 作廢の認証</span>' +
-          '<span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button></span>' +
         '</div>' +
         '<div class="ubtest" style="width:fit-content;max-width:100%;box-sizing:border-box;margin:4px auto 10px;padding:8px 18px">認証したら本物の発票システムに作廢が反映されます</div>' +   
         '<div id="ubAuths"></div>' +
@@ -827,7 +828,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubCoins" style="display:none">' +
         '<div class="ubtop">' + inBack('ubCoinBack') + '<span class="bname ubttl">🪙 小銭とお札</span>' +
-          '<span id="ubWhen3" class="ubwhen"></span><button type="button" id="ubReload3" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen3" class="ubwhen"></span><button type="button" id="ubReload3" class="ubsm">再読込</button></span>' +
         '</div>' +
         '<div class="ubrow"><div class="ubcoin">' +
           [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]

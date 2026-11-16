@@ -12016,6 +12016,8 @@ var UBCSS_ =
   '.ubtop .uhome{padding:7px 12px;}' +
   '.ubttl{font-size:20px;line-height:1.2;margin:0;}' +
   '.ubwhen{color:#eaf6fb;font-weight:800;font-size:15px;}' +
+  // ★2026-11-16 まるちゃん「再読込は時点の右だろ　一行に収めて」＝時点と再読込を離さない
+  '.ubwg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;}' +
   '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop2 .ubhint{font-size:15px;margin:0;}' +
   '.ubtop2 .ubadd{padding:7px 14px;}' +   // ★2026-11-16 まるちゃん「売上一行追加は一番左に、その右に各項目の文字」
@@ -12928,7 +12930,7 @@ function renderUriageBookPage_(base, staff, dev) {
       //   （前＝2026-11-07「時点のすぐ右に再読込ボタン小さめに」「修正できますの右側右寄せで売上追加ボタン」の並びはそのまま）
       '<div id="ubInv" style="display:none">' +
         '<div class="ubtop">' + inBack('ubInvBack') + '<span class="bname ubttl">🧾 發票ありの売上</span>' +
-          '<span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button></span>' +
         '</div>' +
         // ★2026-11-08 まるちゃん「枠を押すと修正できます・売上追加ボタンは二行目の左寄せで」
         '<div class="ubtop2"><button type="button" id="ubGoAdd" class="ubadd">売上一行追加</button><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
@@ -12938,7 +12940,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '<div id="ubNoInv" style="display:none">' +
         // ★2026-11-08 まるちゃん「枠を押すと編集の、あの文字や再読込など、發票ありと同じにして」
         '<div class="ubtop">' + inBack('ubNoInvBack') + '<span class="bname ubttl">📝 發票なしの売上</span>' +
-          '<span id="ubWhen2" class="ubwhen"></span><button type="button" id="ubReload2" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen2" class="ubwhen"></span><button type="button" id="ubReload2" class="ubsm">再読込</button></span>' +
         '</div>' +
         '<div class="ubtop2"><button type="button" id="ubGoOther" class="ubadd">売上一行追加</button><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
         '<div id="ubOthers"></div>' +
@@ -12946,7 +12948,7 @@ function renderUriageBookPage_(base, staff, dev) {
       // ★2026-11-14 發票の作廢＝今日打った發票の一覧から選ぶ（番号を打たせない）
       '<div id="ubVoid" style="display:none">' +
         '<div class="ubtop">' + inBack('ubVoidBack') + '<span class="bname ubttl">🚫 發票の作廢</span>' +
-          '<span id="ubWhen4" class="ubwhen"></span><button type="button" id="ubReload4" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen4" class="ubwhen"></span><button type="button" id="ubReload4" class="ubsm">再読込</button></span>' +
         '</div>' +
         '<div class="ubtop2"><span class="ubh ubhint">今日打った發票の中から、作廢にする發票の「作廢」を押してください😊</span></div>' +
         '<div id="ubVoids"></div>' +
@@ -12954,7 +12956,7 @@ function renderUriageBookPage_(base, staff, dev) {
       // ★2026-11-14 作廢の認証（開発だけ）
       '<div id="ubAuth" style="display:none">' +
         '<div class="ubtop">' + inBack('ubAuthBack') + '<span class="bname ubttl">✅ 作廢の認証</span>' +
-          '<span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button></span>' +
         '</div>' +
         // ★2026-11-16 まるちゃん＝注意書きは「テスト中」と同じ薄い黄色の帯・普通の大きさ
         '<div class="ubtest" style="width:fit-content;max-width:100%;box-sizing:border-box;margin:4px auto 10px;padding:8px 18px">認証したら本物の発票システムに作廢が反映されます</div>' +   // ★2026-11-16 まるちゃん「黄色は文字の長さに合わせて短く」
@@ -12997,7 +12999,7 @@ function renderUriageBookPage_(base, staff, dev) {
       //   数字は売上帳簿の共通の数字パネル（枠を押した時だけ出る・入力OKで閉じる）。
       '<div id="ubCoins" style="display:none">' +
         '<div class="ubtop">' + inBack('ubCoinBack') + '<span class="bname ubttl">🪙 小銭とお札</span>' +
-          '<span id="ubWhen3" class="ubwhen"></span><button type="button" id="ubReload3" class="ubsm">再読込</button>' +
+          '<span class="ubwg"><span id="ubWhen3" class="ubwhen"></span><button type="button" id="ubReload3" class="ubsm">再読込</button></span>' +
         '</div>' +
         '<div class="ubrow"><div class="ubcoin">' +
           [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]
