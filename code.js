@@ -12134,7 +12134,9 @@ var UBCSS_ =
   '.ubac .ck{font-weight:800;font-size:14px;margin:2px 0;}' +
   '.ubac .ck.ng{color:#b91c1c;}' +
   '.ubac .go{display:block;width:100%;margin-top:10px;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:13px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
-  '.ubac.pend{opacity:.5;}';
+  '.ubac.pend{opacity:.5;}' +
+  '.ubtop2 .ubhint.ubauthhint{font-size:18px;line-height:1.5;}' +
+  '.ubac .t1{font-size:18px;}.ubac .t2{font-size:16px;}.ubac .ck{font-size:16px;}';
 
 // ── 裏の書き込みの結果を、ズコのどの画面にいても箱で知らせる見張り（2026-11-07 まるちゃん） ──
 //  「書き込みが成功したら通知して、ズコを開いている限りどこの画面にいてもBOXで出す」。
@@ -12805,8 +12807,9 @@ function uriageBookScript_(C) {
       h += '<div class="ubac' + (AUTHP[x.number] ? ' pend' : '') + '" data-i="' + i + '">' +
         '<div class="t1">' + esc(d + ' ' + x.time + '　' + x.number.replace(/^([A-Z]{2})/, '$1-')) + '</div>' +
         '<div class="t2">' + esc(((x.num || '') + ' ' + (x.name || '')).trim() + '　' + yen(x.amount) + (x.who ? '\n記録：' + x.who + 'さん（理由：' + (x.reason || '―') + '）' : '\n記録：売上表に手で記録')) + '</div>' +
-        '<div class="ck' + (x.memo ? '' : ' ng') + '">' + (x.memo ? '○ 売上表に作廢のメモがあります' : '✕ 売上表に作廢のメモがありません') + '</div>' +
-        '<div class="ck' + (x.row_in_prod ? ' ng' : '') + '">' + (x.row_in_prod ? '✕ 本番の売上表に売上の行が残っています' : '○ 本番の売上表に売上の行はありません') + '</div>' +
+        // ★2026-11-14 まるちゃん「○の2行いらない」＝売上表と一致している時は出さない。食い違う時（✕）だけ出す。
+        (x.memo ? '' : '<div class="ck ng">✕ 売上表に作廢のメモがありません</div>') +
+        (x.row_in_prod ? '<div class="ck ng">✕ 本番の売上表に売上の行が残っています</div>' : '') +
         (AUTHP[x.number] ? '<div class="ck">作廢を送っています…</div>' : '<button type="button" class="go" data-a="auth">認証して作廢</button>') + '</div>';
     }
     if ((AUTH.done || []).length) {
@@ -12930,7 +12933,8 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubtop">' + inBack('ubAuthBack') + '<span class="bname ubttl">✅ 作廢の認証</span>' +
           '<span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button>' +
         '</div>' +
-        '<div class="ubtop2"><span class="ubh ubhint">内容を確認して「認証して作廢」を押してください😊（発票サイトで作廢します）</span></div>' +
+        // ★2026-11-14 まるちゃん「認証したら本物の発票システムに作廢が反映されます・文字を少し大きめ」
+        '<div class="ubtop2"><span class="ubh ubhint ubauthhint">内容を確認して「認証して作廢」を押してください😊<br>認証したら本物の発票システムに作廢が反映されます</span></div>' +
         '<div id="ubAuths"></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
