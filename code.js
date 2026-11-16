@@ -12124,7 +12124,7 @@ var UBCSS_ =
   '.ubtbl tr.vd td{color:#94a3b8;}' +
   '.ubpick .ubrsn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px;}' +
   '.ubpick .ubrsn button{border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:14px 4px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
-  '.ubpick .ubrsn button.on{background:#dc2626;border-color:#dc2626;color:#fff;}' +
+  '.ubpick .ubrsn button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +   // ★2026-11-16 まるちゃん「赤は認証のボタンだけ」
   '.ubpick .go.red{background:#dc2626;}' +
   // ★2026-11-14 作廢の認証（まるちゃんだけ）
   '.ubmenu .ubem.auth{color:#15803d;}' +
@@ -12835,7 +12835,7 @@ function uriageBookScript_(C) {
     var R2 = AUTH.reasons || { '打ち間違い': '開錯' }, rb = '';
     for (var k in R2) rb += '<button type="button" data-r="' + esc(R2[k]) + '" class="' + (R2[k] === rs ? 'on' : '') + '">' + esc(R2[k]) + '<br><span style="font-size:13px">（' + esc(k) + '）</span></button>';
     m.innerHTML = '<div class="ubpick"><div class="h">' + esc(x.number.replace(/^([A-Z]{2})/, '$1-') + '　' + ((x.num || '') + ' ' + (x.name || '')).trim() + '　' + yen(x.amount)) + '</div>' +
-      '<div class="s">' + esc(warn + '発票サイトでこの發票を作廢します。国に届く取り消しで、元に戻せません。\n発票サイトに送る理由を選択してください😊') + '</div>' +
+      '<div class="s">' + esc(warn + '認証すると国税局に直接届き、元に戻せません。\n作廢の理由を選択してください😊') + '</div>' +
       '<div class="ubrsn">' + rb + '</div>' +
       '<button type="button" class="go red" data-a="send">認証して作廢する</button><button type="button" class="x" data-a="close">閉じる</button></div>';
     document.body.appendChild(m);
