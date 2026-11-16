@@ -10,7 +10,7 @@ var UBCSS_ =
   '.ubwhen{color:#eaf6fb;font-weight:800;font-size:15px;}' +
   '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop2 .ubhint{font-size:15px;margin:0;}' +
-  '.ubtop2 .ubadd{padding:7px 14px;margin-left:auto;}' +
+  '.ubtop2 .ubadd{padding:7px 14px;}' +   
   '#ubMenu,#ubNoInv,#ubAdd,#ubOther,#ubCoins{max-width:560px;margin:0 auto;}' +
   '@media (min-width:700px){.ubtbl table{table-layout:auto;font-size:14px;}.ubtbl col{width:auto!important;}' +
   '.ubtbl th,.ubtbl td{white-space:nowrap;padding-left:8px;padding-right:8px;}.ubtbl th br{display:none;}.ubtbl td.d{white-space:normal;width:100%;}}' +
@@ -772,14 +772,14 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubtop">' + inBack('ubInvBack') + '<span class="bname ubttl">🧾 發票ありの売上</span>' +
           '<span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button>' +
         '</div>' +
-        '<div class="ubtop2"><span class="ubh ubhint">各項目の枠内を押すと修正できます</span><button type="button" id="ubGoAdd" class="ubadd">売上一行追加</button></div>' +
+        '<div class="ubtop2"><button type="button" id="ubGoAdd" class="ubadd">売上一行追加</button><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
         '<div id="ubList"></div>' +
       '</div>' +
       '<div id="ubNoInv" style="display:none">' +
         '<div class="ubtop">' + inBack('ubNoInvBack') + '<span class="bname ubttl">📝 發票なしの売上</span>' +
           '<span id="ubWhen2" class="ubwhen"></span><button type="button" id="ubReload2" class="ubsm">再読込</button>' +
         '</div>' +
-        '<div class="ubtop2"><span class="ubh ubhint">各項目の枠内を押すと修正できます</span><button type="button" id="ubGoOther" class="ubadd">売上一行追加</button></div>' +
+        '<div class="ubtop2"><button type="button" id="ubGoOther" class="ubadd">売上一行追加</button><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
         '<div id="ubOthers"></div>' +
       '</div>' +
       '<div id="ubVoid" style="display:none">' +
