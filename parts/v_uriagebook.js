@@ -598,7 +598,7 @@ function uriageBookScript_(C) {
   $('ubAddName').addEventListener('focus', AK.close);
   $('ubAddDetail').addEventListener('focus', AK.close);
   var addPay = '';
-  $('ubGoAdd').addEventListener('click', function () {
+  if ($('ubGoAdd')) $('ubGoAdd').addEventListener('click', function () {
     var d = new Date();
     AW.reset();
     AK.set('h', p2(d.getHours())); AK.set('m', p2(d.getMinutes())); AK.set('no', ''); AK.set('num', ''); AK.set('amt', '');
@@ -774,7 +774,7 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubtop">' + inBack('ubInvBack') + '<span class="bname ubttl">🧾 發票ありの売上</span>' +
           '<span class="ubwg"><span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button></span>' +
         '</div>' +
-        '<div class="ubtop2"><button type="button" id="ubGoAdd" class="ubadd">売上一行追加</button><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
+        '<div class="ubtop2"><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
         '<div id="ubList"></div>' +
       '</div>' +
       '<div id="ubNoInv" style="display:none">' +

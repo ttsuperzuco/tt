@@ -12738,7 +12738,7 @@ function uriageBookScript_(C) {
   $('ubAddName').addEventListener('focus', AK.close);
   $('ubAddDetail').addEventListener('focus', AK.close);
   var addPay = '';
-  $('ubGoAdd').addEventListener('click', function () {
+  if ($('ubGoAdd')) $('ubGoAdd').addEventListener('click', function () {
     var d = new Date();
     AW.reset();
     AK.set('h', p2(d.getHours())); AK.set('m', p2(d.getMinutes())); AK.set('no', ''); AK.set('num', ''); AK.set('amt', '');
@@ -12933,7 +12933,9 @@ function renderUriageBookPage_(base, staff, dev) {
           '<span class="ubwg"><span id="ubWhen" class="ubwhen"></span><button type="button" id="ubReload" class="ubsm">再読込</button></span>' +
         '</div>' +
         // ★2026-11-08 まるちゃん「枠を押すと修正できます・売上追加ボタンは二行目の左寄せで」
-        '<div class="ubtop2"><button type="button" id="ubGoAdd" class="ubadd">売上一行追加</button><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
+        // ★2026-11-16 まるちゃん「發票ありの売上追加できたらおかしくない？」＝追加のボタンを消した（發票の行は自動で入る。
+        //   發票の無い売上は發票なしの売上で追加する）。追加の画面と処理は残してある（ボタンが無いので開かない）。
+        '<div class="ubtop2"><span class="ubh ubhint">各項目の枠内を押すと修正できます</span></div>' +
         '<div id="ubList"></div>' +
       '</div>' +
       // ★2026-11-08 まるちゃん「こちらも売上追加ボタンにして上に」＝發票ありと同じ並び（1行目＝戻る・見出し／2行目の左＝売上追加）
