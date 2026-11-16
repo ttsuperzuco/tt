@@ -12124,6 +12124,9 @@ var UBCSS_ =
   '.ubtbl tr.vd td{color:#94a3b8;}' +
   '.ubpick .ubrsn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px;}' +
   '.ubpick .ubrsn button{border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:14px 4px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
+  '.ubpick .ubvoidq{white-space:nowrap;color:#1f2937;font-size:min(23px,calc((100vw - 64px) / 15.4));margin:6px 0 14px;}' +
+  '.ubpick .ubrsn1{grid-template-columns:1fr;gap:12px;margin:0 0 14px;}' +
+  '.ubpick .ubrsn1 button{padding:22px 8px;font-size:22px;}' +
   '.ubpick .ubrsn button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +   // ★2026-11-16 まるちゃん「赤は認証のボタンだけ」
   '.ubpick .go.red{background:#dc2626;}' +
   // ★2026-11-14 作廢の認証（まるちゃんだけ）
@@ -12326,23 +12329,20 @@ function uriageBookScript_(C) {
     var head = '<div class="h">' + [z.time, '發票番号' + z.no, ((z.num || '') + ' ' + (z.name || '')).trim(), yen(z.amount)].filter(function (q) { return q; }).map(esc).join('　') + '</div>' +
       // ★2026-11-16 まるちゃん「この發票を作廢にすると　の文はいらない　大き目の文字で、作廢の理由を選択してください😊でいい」
       (note ? '<div class="s">' + esc(note) + '</div>' : '') +
-      '<div class="s" style="font-size:18px;color:#1f2937">作廢の理由を選択してください😊</div>';
+      // ★2026-11-16 まるちゃん「一行で表示できる最大の文字の大きさに」「打ち間違いとお客様の取り消しを上下に並べて大きなボタンに。
+      //   確定させるのボタンはいらない」＝理由のボタンを押したらそのまま記録する（確定のボタンを消した）。
+      '<div class="s ubvoidq">作廢の理由を選択してください😊</div>';
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
-    m.innerHTML = '<div class="ubpick">' + head + '<div class="ubrsn"><button type="button" data-r="打ち間違い">打ち間違い</button><button type="button" data-r="お客様の取り消し">お客様の取り消し</button></div>' +
-      '<button type="button" class="go red" data-a="save">作廢を確定させる</button><button type="button" class="x" data-a="close">閉じる</button></div>';
+    m.innerHTML = '<div class="ubpick">' + head + '<div class="ubrsn ubrsn1"><button type="button" data-r="打ち間違い">打ち間違い</button><button type="button" data-r="お客様の取り消し">お客様の取り消し</button></div>' +
+      '<button type="button" class="x" data-a="close">閉じる</button></div>';
     document.body.appendChild(m);
     m.addEventListener('click', function (ev) {
       if (ev.target === m) { closePick(); return; }
       var b = ev.target.closest('button'); if (!b) return;
-      if (b.getAttribute('data-r')) {
-        rsn = b.getAttribute('data-r');
-        var bs = m.querySelectorAll('.ubrsn button'); for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === b);
-        return;
-      }
       var a = b.getAttribute('data-a');
       if (a === 'close') { closePick(); return; }
-      if (a !== 'save') return;
-      if (!rsn) { popup('作廢の理由を選択してください😊'); return; }
+      if (!b.getAttribute('data-r')) return;
+      rsn = b.getAttribute('data-r');
       closePick();
       ask({ action: 'void', no: z.no, number: z.number, amount: z.amount, reason: rsn, _k: 'v:' + z.no }, '作廢を記録しています');
     });
