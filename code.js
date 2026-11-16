@@ -12324,7 +12324,9 @@ function uriageBookScript_(C) {
   function openVoid(z, note) {
     var rsn = '';
     var head = '<div class="h">' + [z.time, '發票番号' + z.no, ((z.num || '') + ' ' + (z.name || '')).trim(), yen(z.amount)].filter(function (q) { return q; }).map(esc).join('　') + '</div>' +
-      '<div class="s">' + esc((note ? note + '\n' : '') + 'この發票を作廢にします。売上の行は消え、發票なしの売上に「作廢' + String(z.number || '').replace(/^([A-Za-z]{2})/, '$1-') + '」と記録されます。\n理由を選択してください😊') + '</div>';
+      // ★2026-11-16 まるちゃん「この發票を作廢にすると　の文はいらない　大き目の文字で、作廢の理由を選択してください😊でいい」
+      (note ? '<div class="s">' + esc(note) + '</div>' : '') +
+      '<div class="s" style="font-size:18px;color:#1f2937">作廢の理由を選択してください😊</div>';
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
     m.innerHTML = '<div class="ubpick">' + head + '<div class="ubrsn"><button type="button" data-r="打ち間違い">打ち間違い</button><button type="button" data-r="お客様の取り消し">お客様の取り消し</button></div>' +
       '<button type="button" class="go red" data-a="save">作廢として記録する</button><button type="button" class="x" data-a="close">閉じる</button></div>';
