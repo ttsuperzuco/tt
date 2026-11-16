@@ -12085,7 +12085,7 @@ var UBCSS_ =
   '.ubtbl td.n{text-align:right;white-space:nowrap;}' +
   '.ubtbl td.d{white-space:pre-wrap;font-weight:600;}' +
   '.ubtbl td.p{text-align:center;font-weight:800;font-size:12px;}' +
-  '.ubtbl td.p.np{background:#fde68a;color:#9a3412;}' +
+  '.ubtbl td.p.np{background:#ffd60a;color:#9a3412;}' +   // ★2026-11-16 まるちゃん「未選択をもっと鮮やかな黄色に」
   '.ubmask{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;}' +
   '.ubpick{background:#fff;border-radius:16px;padding:16px;width:100%;max-width:420px;color:#0f172a;box-shadow:0 8px 24px rgba(0,0,0,.3);}' +
   '.ubpick .h{font-weight:900;font-size:18px;margin-bottom:4px;}' +
