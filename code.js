@@ -12329,7 +12329,7 @@ function uriageBookScript_(C) {
       '<div class="s" style="font-size:18px;color:#1f2937">作廢の理由を選択してください😊</div>';
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
     m.innerHTML = '<div class="ubpick">' + head + '<div class="ubrsn"><button type="button" data-r="打ち間違い">打ち間違い</button><button type="button" data-r="お客様の取り消し">お客様の取り消し</button></div>' +
-      '<button type="button" class="go red" data-a="save">作廢として記録する</button><button type="button" class="x" data-a="close">閉じる</button></div>';
+      '<button type="button" class="go red" data-a="save">作廢を確定させる</button><button type="button" class="x" data-a="close">閉じる</button></div>';
     document.body.appendChild(m);
     m.addEventListener('click', function (ev) {
       if (ev.target === m) { closePick(); return; }
