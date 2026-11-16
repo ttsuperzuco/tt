@@ -18276,7 +18276,17 @@ var INSTACSS_ =
   '.ighe .gr button.on img{opacity:.75;}' +
   '.ighe .gr .vd{position:absolute;right:6px;top:6px;color:#fff;font-size:12px;text-shadow:0 0 3px #000;}' +
   '.ighe .gr .cvm{position:absolute;left:0;right:0;bottom:0;background:rgba(0,149,246,.9);color:#fff;font-size:11px;text-align:center;padding:2px 0;}' +
-  '.ighe .em{padding:30px 16px;text-align:center;color:#737373;font-size:14px;line-height:1.6;}';
+  '.ighe .em{padding:30px 16px;text-align:center;color:#737373;font-size:14px;line-height:1.6;}' +
+  // ★2026-11-16 カバーを写真から（本物のアプリと同じく：丸い枠の中で位置と大きさを合わせる）
+  '.ighe .cvbox{position:relative;width:240px;height:240px;margin:12px auto 8px;border-radius:50%;overflow:hidden;background:#efefef;touch-action:none;}' +
+  '.ighe .cvbox img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none;}' +
+  '.ighe .cvbox.ph{cursor:grab;}' +
+  '.ighe .cvz{display:flex;align-items:center;gap:10px;margin:0 24px 6px;font-size:12px;color:#737373;}' +
+  '.ighe .cvz input{flex:1;}' +
+  '.ighe .cvn{text-align:center;font-size:12px;color:#737373;margin:0 16px 8px;min-height:16px;}' +
+  '.ighe .cvpick{display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 16px 12px;padding:10px 0;border:1px solid #dbdbdb;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}' +
+  '.ighe .cvpick input{display:none;}' +
+  '.ighe .cvok{display:flex;justify-content:center;width:calc(100% - 32px);margin:14px 16px 6px;padding:11px 0;border:0;border-radius:8px;background:#0095f6;color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer;}';
 
 function renderInstaPage_(base, staff, dev) {
   var head = '<div class="hhead"><span class="bmark">📸</span><span class="bname">インズコグラム</span></div>';
@@ -21211,11 +21221,17 @@ function instaScript_(C) {
     //   選んだストーリーズは番号だけ預かっている＝保存したストーリーズ（アーカイブ）が読めたら写真に置き換える。
     //   アーカイブの読み込み範囲に無い番号（古いストーリーズ）は、消さずにそのまま残す（MISS）。
     var DK = null, MISS = [];
-    if (dr) { var DL0 = dr.light || {}; NAME = String(DL0.title || ''); COVER = String(DL0.cover || ''); DK = (DL0.keys || []).map(String); TABH = 'sel'; }
-    var keys0 = DK ? DK.join(',') : SEL.map(function (s) { return s.key; }).join(','), name0 = NAME, cover0 = COVER;
+    // ★2026-11-16 パインさん「カバー画像を個人の画像アルバムから追加できるように（公式と同じ仕様）」＝
+    //   CVIMG＝写真から選んで丸く合わせたカバー（正方形のJPEG）。DRPIC＝下書きに写真のカバーが入っている（変えなければそのまま）。
+    var CVIMG = null, CVURL = '', DRPIC = false, DRPIC_SRC = '';
+    if (dr) { var DL0 = dr.light || {}; NAME = String(DL0.title || ''); COVER = String(DL0.cover || ''); DK = (DL0.keys || []).map(String); TABH = 'sel';
+              DRPIC = !!DL0.n_media; DRPIC_SRC = (DL0.thumbs || [])[0] || ''; }
+    var keys0 = DK ? DK.join(',') : SEL.map(function (s) { return s.key; }).join(','), name0 = NAME, cover0 = COVER, drpic0 = DRPIC;
     var e = document.createElement('div'); e.className = 'igc ighe'; e.id = 'igHe';
     var idx = function (k) { for (var i = 0; i < SEL.length; i++) if (SEL[i].key === k) return i; return -1; };
     var coverSrc = function () {
+      if (CVURL) return CVURL;
+      if (DRPIC && DRPIC_SRC) return DRPIC_SRC;
       var i = idx(COVER); if (i >= 0) return SEL[i].th;
       if (!isNew && h.cv) return h.cv;
       return SEL[0] ? SEL[0].th : '';
@@ -21297,19 +21313,90 @@ function instaScript_(C) {
       if (t.id === 'igheCv') {
         // ★2026-11-09：ブラウザ版の画面では、もともと入っているストーリーをカバーにできないが、
         //   受付係が保存の時にカバーの指定を添える作りにした（試しのハイライトで確認）＝選んだ物から全部選べる。
+        // ★2026-11-16 本物のアプリと同じく、カバーは「選んだストーリーズ」か「写真（スマホのアルバム）」から選べる。
+        //   写真は丸い枠の中で、指で動かして位置を、下のバーで大きさを合わせる→「完了」で正方形に切り抜く。
         if (!SEL.length) { warn('先にストーリーズを選択してください😊'); return; }
+        var TC = CVIMG ? '' : COVER, PH = null, BOX = 240;
         var sh = document.createElement('div'); sh.className = 'igsheet';
-        sh.innerHTML = '<div class="in ighe" style="max-height:80vh;overflow-y:auto"><div class="bar"></div><b>カバーにする写真を選択してください😊</b>' +
-          '<div class="gr">' + SEL.map(function (s) { return cell(s, 'cv'); }).join('') + '</div></div>';
+        var scell = function (s) {
+          return '<button type="button" data-cv="' + esc(s.key) + '"><img src="' + esc(s.th) + '" loading="lazy" referrerpolicy="no-referrer" alt="">' +
+            (s.key === TC && !PH ? '<span class="cvm">カバー</span>' : '') + '</button>';
+        };
+        sh.innerHTML = '<div class="in ighe" style="max-height:88vh;overflow-y:auto"><div class="bar"></div><b>カバーを編集</b>' +
+          '<div class="cvbox" id="igheCvBox"><img id="igheCvPv" src="' + esc(coverSrc()) + '" referrerpolicy="no-referrer" alt=""></div>' +
+          '<div class="cvz" id="igheCvZ" style="display:none"><span>小</span><input type="range" id="igheCvZr" min="1" max="4" step="0.01" value="1"><span>大</span></div>' +
+          '<div class="cvn" id="igheCvN"></div>' +
+          '<label class="cvpick">' + S('<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="9" cy="9.5" r="1.8"/><path d="M20.5 15.5l-4.5-4.5-9 9"/>', 20) +
+          '写真から選択<input type="file" id="igheCvFile" accept="image/*"></label>' +
+          '<div class="gr" id="igheCvGr">' + SEL.map(scell).join('') + '</div>' +
+          '<button type="button" class="cvok" id="igheCvOk">完了</button></div>';
+        document.body.appendChild(sh);
+        var box = document.getElementById('igheCvBox'), pv = document.getElementById('igheCvPv'), zr = document.getElementById('igheCvZr');
+        var redrawCells = function () { document.getElementById('igheCvGr').innerHTML = SEL.map(scell).join(''); };
+        // 写真の位置と大きさ（PH.x / PH.y＝枠の左上から見た写真の左上・PH.k＝枠に合わせた倍率×バーの倍率）
+        var fit = function () {
+          var k0 = BOX / Math.min(PH.w, PH.h), k = k0 * Number(zr.value), w = PH.w * k, hh = PH.h * k;
+          PH.k = k;
+          PH.x = Math.min(0, Math.max(BOX - w, PH.x)); PH.y = Math.min(0, Math.max(BOX - hh, PH.y));
+          pv.style.objectFit = 'fill'; pv.style.width = w + 'px'; pv.style.height = hh + 'px'; pv.style.left = PH.x + 'px'; pv.style.top = PH.y + 'px';
+        };
+        var plain = function (src) {
+          PH = null; box.classList.remove('ph'); document.getElementById('igheCvZ').style.display = 'none'; document.getElementById('igheCvN').textContent = '';
+          pv.removeAttribute('style'); pv.src = src;
+        };
+        if (CVIMG) { document.getElementById('igheCvN').textContent = '写真から選択したカバーです。'; }
+        document.getElementById('igheCvFile').addEventListener('change', function () {
+          var fl = (this.files || [])[0]; this.value = '';
+          if (!fl || !/^image\//.test(fl.type)) { if (fl) warn('写真を選択してください😊'); return; }
+          var fr = new FileReader();
+          fr.onload = function () {
+            var im = new Image();
+            im.onload = function () {
+              PH = { im: im, w: im.naturalWidth, h: im.naturalHeight, x: 0, y: 0, k: 1 };
+              zr.value = '1'; pv.src = fr.result; box.classList.add('ph');
+              document.getElementById('igheCvZ').style.display = '';
+              document.getElementById('igheCvN').textContent = '写真を指で動かして位置を、バーで大きさを調整してください😊';
+              var k0 = BOX / Math.min(PH.w, PH.h); PH.x = (BOX - PH.w * k0) / 2; PH.y = (BOX - PH.h * k0) / 2;
+              fit(); redrawCells();
+            };
+            im.onerror = function () { warn('この写真は読み込めませんでした。別の写真を選択してください😊'); };
+            im.src = fr.result;
+          };
+          fr.readAsDataURL(fl);
+        });
+        zr.addEventListener('input', function () {
+          if (!PH) return;
+          // 真ん中を中心に大きさを変える
+          var cx = (BOX / 2 - PH.x) / PH.k, cy = (BOX / 2 - PH.y) / PH.k, k = BOX / Math.min(PH.w, PH.h) * Number(zr.value);
+          PH.x = BOX / 2 - cx * k; PH.y = BOX / 2 - cy * k; fit();
+        });
+        var drag = null;
+        box.addEventListener('pointerdown', function (ev) { if (!PH) return; drag = { sx: ev.clientX, sy: ev.clientY, x: PH.x, y: PH.y }; try { box.setPointerCapture(ev.pointerId); } catch (er) {} ev.preventDefault(); });
+        box.addEventListener('pointermove', function (ev) { if (!PH || !drag) return; PH.x = drag.x + ev.clientX - drag.sx; PH.y = drag.y + ev.clientY - drag.sy; fit(); });
+        var endDrag = function () { drag = null; };
+        box.addEventListener('pointerup', endDrag); box.addEventListener('pointercancel', endDrag);
         sh.addEventListener('click', function (x) {
           var c = x.target.closest && x.target.closest('[data-cv]');
-          if (c) { COVER = c.getAttribute('data-cv'); sh.remove(); drawGrid(); return; }
+          if (c) { TC = c.getAttribute('data-cv'); var s0 = find(TC); plain(s0 ? s0.th : ''); redrawCells(); return; }
+          if (x.target.id === 'igheCvOk') {
+            if (PH) {
+              // 枠の中に見えている所を正方形に切り抜く（小さい写真を引き伸ばさない・1辺1080まで）
+              var sw = BOX / PH.k, out = Math.max(320, Math.min(1080, Math.round(sw)));
+              var cv = document.createElement('canvas'); cv.width = out; cv.height = out;
+              var g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, out, out);
+              g.drawImage(PH.im, -PH.x / PH.k, -PH.y / PH.k, sw, sw, 0, 0, out, out);
+              CVURL = cv.toDataURL('image/jpeg', 0.9); CVIMG = CVURL.split(',')[1]; DRPIC = false;
+            } else if (TC) {
+              COVER = TC; CVIMG = null; CVURL = ''; DRPIC = false;
+            }
+            sh.remove(); drawGrid(); return;
+          }
           if (x.target === sh) sh.remove();
         });
-        document.body.appendChild(sh); return;
+        return;
       }
       if (t.id === 'igheX') {
-        var changed = NAME !== name0 || (!DK && SEL.map(function (s) { return s.key; }).concat(MISS).join(',') !== keys0) || COVER !== cover0;
+        var changed = NAME !== name0 || (!DK && SEL.map(function (s) { return s.key; }).concat(MISS).join(',') !== keys0) || COVER !== cover0 || !!CVIMG || DRPIC !== drpic0;
         if (!changed) { e.remove(); return; }
         szPopup_('変更を破棄しますか？😊', { cancel: true, onYes: function () { e.remove(); } });
         return;
@@ -21322,23 +21409,27 @@ function instaScript_(C) {
       if (!SEL.length && !MISS.length) { warn('ストーリーズを1つ以上選択してください😊'); return; }
       if (dr) {
         var nk = SEL.map(function (s) { return s.key; }).concat(MISS);
-        if (title === name0 && nk.join(',') === keys0 && COVER === cover0) { e.remove(); return; }
-        apvUpd(dr.id, { title: title, keys: nk, cover: COVER }, false, function (err) {
+        if (title === name0 && nk.join(',') === keys0 && COVER === cover0 && !CVIMG && DRPIC === drpic0) { e.remove(); return; }
+        var hp = { title: title, keys: nk, cover: CVIMG ? '' : COVER };
+        if (CVIMG) hp.media = [{ b64: CVIMG }];
+        else if (drpic0 && !DRPIC) hp.media = null;      // 写真のカバーをやめてストーリーズに戻した
+        apvUpd(dr.id, hp, !!CVIMG, function (err) {
           if (err) { warn(err); return; }
           e.remove(); apvLoad(acct); doneBox('下書きの修正が完了しました');
         });
         return;
       }
       szPopup_('お店のインスタのハイライト「' + title + '」を' + (isNew ? '作成' : '変更') + 'します。\nよろしいでしょうか？😊', { cancel: true, onYes: function () {
-        busyAsk({ kind: 'hl_save', acct: acct, hid: isNew ? '' : hlId(h), title: title,
-                  keys: SEL.map(function (s) { return s.key; }), cover: COVER },
-          false, 'ハイライトを保存しています', '1〜2分かかるので、少し待っててくださいね🥺', function (err, d) {
+        var hf = { kind: 'hl_save', acct: acct, hid: isNew ? '' : hlId(h), title: title,
+                   keys: SEL.map(function (s) { return s.key; }), cover: CVIMG ? '' : COVER };
+        if (CVIMG) hf.media = [{ b64: CVIMG }];
+        busyAsk(hf, !!CVIMG, 'ハイライトを保存しています', '1〜2分かかるので、少し待っててくださいね🥺', function (err, d) {
             if (err) { warn(err); return; }
             var v = DATA && DATA.views && DATA.views[acct];
             if (v) {
-              var cvu = COVER ? coverSrc() : (isNew ? (SEL[0] || {}).th : h.cv);
+              var cvu = CVIMG ? ((d && d.cv) || CVURL) : COVER ? coverSrc() : (isNew ? (SEL[0] || {}).th : h.cv);
               var hit = (v.hl || []).filter(function (x) { return hlId(x) === String(d.id || ''); })[0];
-              if (hit) { hit.t = d.title || title; if (COVER) hit.cv = cvu; }
+              if (hit) { hit.t = d.title || title; if (COVER || CVIMG) hit.cv = cvu; }
               else { v.hl = [{ id: 'highlight:' + d.id, t: d.title || title, cv: cvu }].concat(v.hl || []); }
               cacheSet(DATA);
             }
