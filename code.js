@@ -12279,7 +12279,7 @@ function uriageBookScript_(C) {
       //   （削除中の行は足さない）。
       L = '<div class="ubtbl"><table><colgroup><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:12%">' +
         '<col style="width:10%"><col><col style="width:12%"><col style="width:12%"><col style="width:12%"></colgroup>' +
-        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">作廢</th></tr></thead><tbody>';   // ★2026-11-16 まるちゃん「削除じゃなくて作廢」
+        '<thead><tr><th>時刻</th><th>發票<br>下3桁</th><th>顧客<br>番号</th><th>顧客名</th><th class="c">支払<br>方法</th><th>明細</th><th class="r">合計</th><th class="r">総計</th><th class="c">作廢</th></tr></thead><tbody>';   // ★2026-11-16 まるちゃん「削除じゃなくて作廢」
       var run = 0;
       for (var j = 0; j < D.rows.length; j++) {
         var x = D.rows[j];
