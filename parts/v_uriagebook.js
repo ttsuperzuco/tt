@@ -248,7 +248,13 @@ function uriageBookScript_(C) {
       if (!b.getAttribute('data-r')) return;
       rsn = b.getAttribute('data-r');
       closePick();
-      ask({ action: 'void', no: z.no, number: z.number, amount: z.amount, reason: rsn, _k: 'v:' + z.no }, '作廢を記録しています');
+      popup('發票' + z.no + '番（' + (((z.num || '') + ' ' + (z.name || '')).trim() || '番号なし') + '・' + yen(z.amount) + '）を\n「' + rsn + '」で作廢します。\nよろしいですか？', {
+        icon: '🚫', cancel: true, noLabel: '戻る', yesLabel: '作廢する',
+        onYes: function () {
+          ask({ action: 'void', no: z.no, number: z.number, amount: z.amount, reason: rsn, _k: 'v:' + z.no }, '作廢を記録しています');
+        },
+        onNo: function () { openVoid(z, note); }      
+      });
     });
   }
   function invOf(no) {

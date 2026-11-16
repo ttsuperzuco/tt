@@ -12334,7 +12334,7 @@ function uriageBookScript_(C) {
       // ★2026-11-16 まるちゃん「この發票を作廢にすると　の文はいらない　大き目の文字で、作廢の理由を選択してください😊でいい」
       (note ? '<div class="s">' + esc(note) + '</div>' : '') +
       // ★2026-11-16 まるちゃん「一行で表示できる最大の文字の大きさに」「打ち間違いとお客様の取り消しを上下に並べて大きなボタンに。
-      //   確定させるのボタンはいらない」＝理由のボタンを押したらそのまま記録する（確定のボタンを消した）。
+      //   確定させるのボタンはいらない」＝確定のボタンを消し、理由のボタンを押すと確認の小窓（作廢する／戻る）が出る。
       '<div class="s ubvoidq">作廢の理由を選択してください😊</div>';
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
     m.innerHTML = '<div class="ubpick">' + head + '<div class="ubrsn ubrsn1"><button type="button" data-r="打ち間違い">打ち間違い</button><button type="button" data-r="お客様の取り消し">お客様の取り消し</button></div>' +
@@ -12348,7 +12348,15 @@ function uriageBookScript_(C) {
       if (!b.getAttribute('data-r')) return;
       rsn = b.getAttribute('data-r');
       closePick();
-      ask({ action: 'void', no: z.no, number: z.number, amount: z.amount, reason: rsn, _k: 'v:' + z.no }, '作廢を記録しています');
+      // ★2026-11-16 まるちゃん「ボタン押したときに確認のメッセージ出なかったからこうなった」（押し間違いで800番を作廢した）
+      //   ＝理由を押したら、共通の確認の小窓で「作廢する／戻る」を聞いてから記録する。
+      popup('發票' + z.no + '番（' + (((z.num || '') + ' ' + (z.name || '')).trim() || '番号なし') + '・' + yen(z.amount) + '）を\n「' + rsn + '」で作廢します。\nよろしいですか？', {
+        icon: '🚫', cancel: true, noLabel: '戻る', yesLabel: '作廢する',
+        onYes: function () {
+          ask({ action: 'void', no: z.no, number: z.number, amount: z.amount, reason: rsn, _k: 'v:' + z.no }, '作廢を記録しています');
+        },
+        onNo: function () { openVoid(z, note); }      // 戻る＝理由を選ぶ小窓に戻る
+      });
     });
   }
   function invOf(no) {
