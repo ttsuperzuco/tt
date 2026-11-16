@@ -12135,7 +12135,6 @@ var UBCSS_ =
   '.ubac .ck.ng{color:#b91c1c;}' +
   '.ubac .go{display:block;width:100%;margin-top:10px;background:#dc2626;color:#fff;border:0;border-radius:10px;padding:13px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
   '.ubac.pend{opacity:.5;}' +
-  '.ubtop2 .ubhint.ubauthhint{font-size:min(30px,calc((100vw - 34px) / 15.5));line-height:1.4;font-weight:900;white-space:nowrap;}' +
   '.ubdonebtn{display:block;margin:14px 0 8px;padding:10px 16px;font-size:16px;}' +
   '.ubac .t1{font-size:18px;}.ubac .t2{font-size:16px;}.ubac .ck{font-size:16px;}';
 
@@ -12939,8 +12938,8 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubtop">' + inBack('ubAuthBack') + '<span class="bname ubttl">✅ 作廢の認証</span>' +
           '<span id="ubWhen5" class="ubwhen"></span><button type="button" id="ubReload5" class="ubsm">再読込</button>' +
         '</div>' +
-        // ★2026-11-14 まるちゃん「認証したら本物の発票システムに作廢が反映されます」だけ・ちょうど2行に収まる大きさ（言葉の切れ目で改行）
-        '<div class="ubtop2"><span class="ubh ubhint ubauthhint">認証したら本物の発票システムに<br>作廢が反映されます</span></div>' +
+        // ★2026-11-16 まるちゃん＝注意書きは「テスト中」と同じ薄い黄色の帯・普通の大きさ
+        '<div class="ubtest">認証したら本物の発票システムに作廢が反映されます</div>' +
         '<div id="ubAuths"></div>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
