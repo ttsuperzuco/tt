@@ -106,7 +106,7 @@ var UBCSS_ =
   '.ubtbl tr.vd td{color:#94a3b8;}' +
   '.ubpick .ubrsn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px;}' +
   '.ubpick .ubrsn button{border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:14px 4px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
-  '.ubpick .ubvoidq{white-space:nowrap;color:#1f2937;font-size:min(23px,calc((100vw - 64px) / 15.4));margin:6px 0 14px;}' +
+  '.ubpick .ubvoidq{white-space:nowrap;color:#1f2937;font-size:min(26px,calc((100vw - 64px) / 13.7));margin:6px 0 14px;}' +
   '.ubpick .ubrsn1{grid-template-columns:1fr;gap:12px;margin:0 0 14px;}' +
   '.ubpick .ubrsn1 button{padding:22px 8px;font-size:22px;}' +
   '.ubpick .ubrsn button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +   
