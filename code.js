@@ -9714,7 +9714,7 @@ function renderExistingPage_(base, staff, dev, mode) {
       '<button type="button" class="exgo" id="exgrpGo">これで決定→</button>' +
     '</div>';
   /* ★2026-10-27 まるちゃん決定：施術時間の前に担当を選ぶ。選んだ担当の**いちばん最近の分数**を
-     次の画面で最初に選んでおく（発端＝○○様F857。オリーブさんの時は毎回60分なのに、前回だけ
+     次の画面で最初に選んでおく（発端＝F857様。オリーブさんの時は毎回60分なのに、前回だけ
      トマトさんで70分だったので、オリーブさんで入れても70分が最初に選ばれていた）。 */
   var staffSelSec =
     '<div id="exStaffSel" style="display:none">' +
@@ -9954,7 +9954,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     'function exChosen(){var a=[];for(var i=0;i<rvitems.length;i++){if(rvitems[i].do&&!rvitems[i].finish)a.push(rvitems[i].name);}' +
       'for(var k=0;k<rvNewItems.length;k++)a.push(rvNewItems[k]);return a;}' +
     /* ★2026-09-30 まるちゃん指摘：**1枚のプランの中でも、部位ごとに部屋・担当が違うことがある**
-       （○○様M420「ピカピカキャB（VIO＋足全部）」）。だから「分けられる単位」は施術の行ではなく
+       （M420様「ピカピカキャB（VIO＋足全部）」）。だから「分けられる単位」は施術の行ではなく
        **部位**。事務所パソコンが行ごとに渡した部位（parts）が2つ以上ならそれを1つずつの単位にする。 */
     'function exUnits(){var a=[],mi={};' +
       /* 同じ部位が2回並ばないようにする（プランの中の部位と、単品で足した同じ部位が重なる時） */
@@ -10202,7 +10202,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     /* ★2026-09-30 「はい」＝**聞いた施術をやる**。ここで全部を『やる』に戻すと、
    前回やっていない施術まで今回やることになり、1つしか聞いていないのに
    『担当者・部屋を分けますか？』が出てしまう（まるちゃん指摘）。今の状態のまま進む。 */
-    /* ★2026-10-27 まるちゃん「なんでいいえボタンしかでない？」（○○様F514）＝
+    /* ★2026-10-27 まるちゃん「なんでいいえボタンしかでない？」（F514様）＝
        「いいえ」で選択を全部外したまま「← 戻る」で聞く画面に戻ると、聞く施術が無くなって
        「はい」が消えていた。→「いいえ」を押す前の選択を覚えておき、戻る時に元どおりにする。
        次の画面からの「← 戻る」も、選び直し画面から来た時は選び直し画面へ（1つ前に戻る）。 */
@@ -12603,7 +12603,7 @@ function uriageBookScript_(C) {
       return;
     }
     if (e.target.closest('button[data-a="del"]')) {
-      // ★2026-11-08 まるちゃん「發票番号774にする」「時刻も最初に入れる」＝1行目は「17:13　發票番号774　F865 ○○様　500元」
+      // ★2026-11-08 まるちゃん「發票番号774にする」「時刻も最初に入れる」＝1行目は「17:13　發票番号774　F000 ○○様　500元」
       var head1 = [x.time || '', x.no ? '發票番号' + x.no : '發票番号なし', ((x.num || '') + ' ' + (x.name || '')).trim(), yen(x.amount)]
         .filter(function (v) { return v; }).join('　');
       popup(head1 + '\n發票の入力間違いですか？\nそうであればこの行を削除します', {
@@ -12965,7 +12965,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '<div id="ubOther" style="display:none">' + inBack('ubOthBack') + head('📝', '發票なしの売上を追加') +
         '<div class="ubf">' +
           // ★2026-11-08 まるちゃん「顧客番号（未記入可）・氏名（未記入可）の欄（ひとますでいい・欄の後ろに様）」
-          //   表には今までと同じ形「F791○○様　プロセルアフターセラム」で書く（番号＋氏名＋様＋全角の空白＋内容）。
+          //   表には今までと同じ形「F000○○様　プロセルアフターセラム」で書く（番号＋氏名＋様＋全角の空白＋内容）。
           '<label>顧客番号（未記入可）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
           '<label>氏名（未記入可）</label><div class="ubnamerow"><input id="ubOthName"><span class="ubu">様</span></div>' +
