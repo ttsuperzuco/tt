@@ -12127,7 +12127,7 @@ var UBCSS_ =
   '.ubpick .ubvoidq{white-space:nowrap;color:#1f2937;font-size:min(26px,calc((100vw - 64px) / 13.7));margin:6px 0 14px;}' +
   // ★2026-11-16 まるちゃん「左右に並べて。ボタンにして　色もないし文字もボタンぽくない」
   '.ubpick .ubrsn1{grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;}' +
-  '.ubpick .ubrsn1 button{min-height:96px;padding:12px 6px;font-size:20px;line-height:1.35;color:#fff;background:linear-gradient(180deg,#3a93b5,#2C7A99);border:none;border-bottom:4px solid #1d5a73;border-radius:14px;box-shadow:0 3px 8px rgba(0,0,0,.22);}' +
+  '.ubpick .ubrsn1 button{min-height:96px;padding:12px 6px;font-size:20px;line-height:1.35;color:#fff;background:linear-gradient(180deg,#34b36a,#1f8f4e);border:none;border-bottom:4px solid #166b3a;border-radius:14px;box-shadow:0 3px 8px rgba(0,0,0,.22);}' +
   '.ubpick .ubrsn1 button:active{transform:translateY(2px);border-bottom-width:2px;box-shadow:0 1px 3px rgba(0,0,0,.2);}' +
   '.ubpick .ubrsn button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +   // ★2026-11-16 まるちゃん「赤は認証のボタンだけ」
   '.ubpick .go.red{background:#dc2626;}' +
