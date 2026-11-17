@@ -3005,7 +3005,9 @@ var STAFF_HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"g
 // ★2026-11-17 まるちゃん「（よく使う）ボタンをトップにコピーして 受付PC 順番は、前日、施術後、LINK、元祖、No31」
 //   ＝その人のトップの一番前に、決まった順でコピーを置く（その端末に1回だけ・あとで並べ替えた分は崩さない＝正本の topOnce）。
 var STAFF_TOP_ONCE_ = {
-  reception: { mark: 'reception-2026-11-17', ids: ['zenjitsu', 'sejutsugo', 'links', 'ttapp', 'hanbai'] }
+  reception: { mark: 'reception-2026-11-17', ids: ['zenjitsu', 'sejutsugo', 'links', 'ttapp', 'hanbai'] },
+  // ★2026-11-17 まるちゃん「パインちゃんはトップ画面にインズコとスレッズコのコピー置いて」
+  pine: { mark: 'pine-2026-11-17', ids: ['insta', 'threads'] }
 };
 function staffHomeFolderScript_(who) {
   var t = STAFF_TOP_ONCE_[who];
@@ -3491,6 +3493,8 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }
   if (simV) {   // ★2026-11-14 まるちゃん「この新しいアイコンと新しいフォルダ分けを、オ…（上の simV）
     var simOpt = { group: '#group-jitsumu', tile: 'a.tile', idAttr: 'data-tid', hideEmpty: true, store: { local: 'sz_home_folders_sim_' + asWho } };
+    // ★2026-11-17 見本にも、その人のトップに最初から置くボタン（STAFF_TOP_ONCE_）を同じように出す
+    if (STAFF_TOP_ONCE_[asWho]) simOpt.topOnce = STAFF_TOP_ONCE_[asWho];
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="home">' + head +
         '<div class="group" id="group-jitsumu">' +

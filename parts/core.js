@@ -2211,7 +2211,8 @@ var STAFF_HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"g
   '"hideEmpty":true,"backOnlyInFolder":true,"store":{"local":"sz_home_folders_staff"},' +
   '"onRender":function(o){var r=document.querySelector("#group-jitsumu .hfresetbar");if(r)r.style.display=o?"none":"";}});</' + 'script>';
 var STAFF_TOP_ONCE_ = {
-  reception: { mark: 'reception-2026-11-17', ids: ['zenjitsu', 'sejutsugo', 'links', 'ttapp', 'hanbai'] }
+  reception: { mark: 'reception-2026-11-17', ids: ['zenjitsu', 'sejutsugo', 'links', 'ttapp', 'hanbai'] },
+  pine: { mark: 'pine-2026-11-17', ids: ['insta', 'threads'] }
 };
 function staffHomeFolderScript_(who) {
   var t = STAFF_TOP_ONCE_[who];
@@ -2374,6 +2375,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   }
   if (simV) {   
     var simOpt = { group: '#group-jitsumu', tile: 'a.tile', idAttr: 'data-tid', hideEmpty: true, store: { local: 'sz_home_folders_sim_' + asWho } };
+    if (STAFF_TOP_ONCE_[asWho]) simOpt.topOnce = STAFF_TOP_ONCE_[asWho];
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="home">' + head +
         '<div class="group" id="group-jitsumu">' +
