@@ -1782,6 +1782,108 @@
 })();
 </script>
 <script>
+// ★★2026-11-17 まるちゃん決定：ズコに不具合がある時は、全部の画面ですぐ知らせる（共通\ズコの調子.py が判断して置き場へ出す）。
+//   まるちゃん「スタッフは客相手にやってんだよ。押してすぐに…判断できないの？」「すべての、ズコシステムが動かない可能性があるなら知らせないといみないだろ」
+//   ①20秒ごとに置き場（zuko_status.json）を読み、どこか1つでも動かない時・置き場が古い（受付係が止まっている）時は、画面の一番上に案内を出す。
+//   ②書き込む依頼を押して、15秒たっても受付係が受け取らない（「実行中」にならない）時は、すぐ小窓で知らせる（サーバーごと止まった時）。
+//   ③予約を書き込むブラウザが答えない時は、受付係がその場で断って同じ文を返す（各画面のいつもの小窓に出る）。
+//   ★文はまるちゃん決定（「問題はきついので不具合で」）。どの画面にも何も書かなくてよい（ここが全画面の入口）。
+//   ★試し：住所に &zkfuguai=1 を付けると、その端末だけ案内が出る（スタッフの画面には出ない）。
+(function () {
+  var EXEC = "https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec";
+  var MSG0 = 'ただいまズコに不具合が発生しています。りゅうさんに連絡してください🙇';
+  var ST = null, BAD = false, MSG = MSG0, LOCAL_BAD_AT = 0, TEST = /[?&]zkfuguai=1(&|$)/.test(location.search);
+  var css = document.createElement('style');
+  css.textContent = '#zkFuguai{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:calc(100% - 24px);max-width:720px;' +
+    'margin:12px auto;padding:16px;text-align:left;background:#fff7ed;color:#9a3412;border:3px solid #f97316;border-radius:18px;' +
+    'box-shadow:0 6px 18px rgba(0,0,0,.12);font-weight:700;font-size:16px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere;position:relative;z-index:5;}' +
+    '#zkFuguai .i{font-size:30px;flex:0 0 auto;}';
+  (document.head || document.documentElement).appendChild(css);
+  function txt() { return '<span style="white-space:nowrap">ただいまズコに</span><wbr><span style="white-space:nowrap">不具合が発生しています。</span><wbr>' +
+    '<span style="white-space:nowrap">りゅうさんに</span><wbr><span style="white-space:nowrap">連絡してください🙇</span>'; }
+  function bad() { return TEST || BAD || (LOCAL_BAD_AT && Date.now() - LOCAL_BAD_AT < 5 * 60 * 1000); }
+  function paint() {
+    if (!document.body) return;
+    var el = document.getElementById('zkFuguai');
+    if (bad()) {
+      if (!el) {
+        el = document.createElement('div'); el.id = 'zkFuguai';
+        el.innerHTML = '<span class="i">⚠️</span><span>' + txt() + '</span>';
+        document.body.insertBefore(el, document.body.firstChild);
+      } else if (el !== document.body.firstChild) { document.body.insertBefore(el, document.body.firstChild); }
+    } else if (el) { el.parentNode.removeChild(el); }
+  }
+  function popup() {
+    if (typeof window.szPopup_ === 'function') window.szPopup_(MSG);
+    else if (typeof window.ccPopup_ === 'function') window.ccPopup_(MSG, false);
+  }
+  // ①置き場を読む
+  function check() {
+    var cb = '__zkChoshi' + Date.now() + Math.floor(Math.random() * 1000);
+    window[cb] = function (s) {
+      try { delete window[cb]; } catch (e) {}
+      if (!s || s.error || !s.at) return;          // 読めない時は黙る（スマホの電波の問題かもしれない）
+      ST = s; if (s.msg) MSG = s.msg;
+      var stale = Date.now() - Number(s.at) > (Number(s.stale_sec) || 300) * 1000;
+      BAD = (s.ok === false) || stale;
+      paint();
+    };
+    var sc = document.createElement('script');
+    sc.src = EXEC + '?action=data&name=zuko_status.json&callback=' + cb + '&cb=' + Date.now();
+    sc.onerror = function () { try { delete window[cb]; } catch (e) {} };
+    (document.body || document.head).appendChild(sc);
+  }
+  // ②押した依頼が受け取られたかを見る（全画面の通信の入口に差し込む）
+  var T = {};
+  function watching(op) { return !!(ST && ST.watch_ops && ST.watch_ops.indexOf(op) >= 0); }
+  function look(u) {
+    try {
+      u = String(u); if (u.indexOf(EXEC) !== 0) return;
+      var q = new URLSearchParams(u.split('?')[1] || ''), cb = q.get('callback'), act = q.get('action');
+      if (!cb || typeof window[cb] !== 'function') return;
+      var orig = window[cb];
+      if (act === 'submit') {
+        var op = q.get('op') || '';
+        if (!watching(op)) return;
+        window[cb] = function (r) { try { if (r && r.id) T[r.id] = { t: Date.now(), w: 0 }; } catch (e) {} return orig.apply(this, arguments); };
+      } else if (act === 'status') {
+        var id = q.get('id') || '', rec = T[id];
+        if (!rec) return;
+        window[cb] = function (r) {
+          try {
+            var waiting = r && (r.status === 'pending' || r.status === 'queued' || r.status === '');
+            if (!waiting) delete T[id];
+            else if (!rec.w && Date.now() - rec.t > (Number(ST && ST.watch_sec) || 15) * 1000) {
+              rec.w = 1; LOCAL_BAD_AT = Date.now(); paint(); popup();
+            }
+          } catch (e) {}
+          return orig.apply(this, arguments);
+        };
+      }
+    } catch (e) {}
+  }
+  try {
+    var d = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
+    Object.defineProperty(HTMLScriptElement.prototype, 'src', {
+      configurable: true, enumerable: d.enumerable,
+      get: function () { return d.get.call(this); },
+      set: function (v) { look(v); d.set.call(this, v); }
+    });
+    var sa = Element.prototype.setAttribute;
+    Element.prototype.setAttribute = function (n, v) {
+      if (this instanceof HTMLScriptElement && String(n).toLowerCase() === 'src') look(v);
+      return sa.call(this, n, v);
+    };
+  } catch (e) {}
+  // 画面が描き直されて案内が消えても、すぐ戻す
+  try { new MutationObserver(function () { if (bad() && !document.getElementById('zkFuguai')) paint(); })
+          .observe(document.documentElement, { childList: true, subtree: true }); } catch (e) {}
+  function start() { paint(); check(); setInterval(function () { if (!document.hidden) check(); }, 20000); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
+})();
+</script>
+<script>
 // ★★2026-09-16 まるちゃん決定：戻るボタンは全部「← 戻る」にそろえ、押したら本当に1つ前の画面に戻る。
 //   ①画面の上の戻る（別の画面へ移る住所付きの物）＝アプリの中から来ていれば、来た画面へ戻る（履歴を1つ戻す）。
 //     アプリの外から直接開いた時（履歴が無い時）だけ、住所どおりホームへ行く。
