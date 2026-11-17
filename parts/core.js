@@ -1311,7 +1311,7 @@ var LINE_UNANS_LOGO_ = LINE_BIG_BUBBLE_ + '</g>' +
 var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
   '<path d="M12 13.4C9.6 11.8 9.2 10.8 9.6 10c.5-.9 1.7-.8 2.4.1.7-.9 1.9-1 2.4-.1.4.8 0 1.8-2.4 3.4z" fill="#ED93B1"/></g>' +
   '<rect x="1.18" y="1.18" width="21.64" height="21.64" rx="4.7" fill="none" stroke="#fff" stroke-width=".67"/></svg>';
-function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
+function tileIcon_(t, dev) { return t.iconDev || t.icon; }
 var HEAD_MARK_EXTRA_ = {
   yoyaku_new: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png">', yoyaku_kizon: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/kizon-pink-128.png">',
   yoyaku_henkou: '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/henkou-orange-128.png">'
@@ -1339,7 +1339,7 @@ function devTitleCss_(sel, src) {
     'vertical-align:-.2em;border-radius:.2em;background:url("' + src + '") center/contain no-repeat;}';
 }
 function devHeadMark_(root, view, dev) {
-  if (!dev || !root || !root.querySelector) return;
+  if (!root || !root.querySelector) return;
   var html = devHeadMarkHtml_(view);
   if (!html) return;
   if (DEV_TITLE_SEL_[view]) {

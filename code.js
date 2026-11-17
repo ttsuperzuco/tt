@@ -1786,7 +1786,8 @@ var LINE_HEART_LOGO_ = LINE_BIG_BUBBLE_ +
 // ★2026-11-13 まるちゃん「アイコンをいったん全部もどす。あたらしいあいこんは開発者だけにだす。ぜんぶかんせいしてからみせる」
 //   ＝ボタンに iconDev（新しい絵）があれば、開発版（dev）の画面だけそれを出す。スタッフ版・TOMATOさん版は今までの icon のまま。
 //   全部そろって公開する時は、各ボタンの iconDev を icon に移して iconDev を消す。
-function tileIcon_(t, dev) { return (dev && t.iconDev) ? t.iconDev : t.icon; }
+// ★2026-11-17 まるちゃん「アイコン全部一新したのにスタッフに反映されてない。全部反映して」＝新しい絵（iconDev）を全員に出す。
+function tileIcon_(t, dev) { return t.iconDev || t.icon; }
 // ★2026-11-13 まるちゃん「ズコ内のアイコンがほとんどかわってない。ちゃんと最新のに全部かえて」
 //   ＝各画面の一番上の見出しの絵（🧴 プロセル 残り本数 など）も、開発版ではそのボタンの新しい絵にする。
 //   画面ごとに書き換えると漏れるので、画面を出す共通の所（index.html の mount）から1か所で差し替える。
@@ -1824,7 +1825,8 @@ function devTitleCss_(sel, src) {
     'vertical-align:-.2em;border-radius:.2em;background:url("' + src + '") center/contain no-repeat;}';
 }
 function devHeadMark_(root, view, dev) {
-  if (!dev || !root || !root.querySelector) return;
+  // ★2026-11-17 まるちゃん「全部反映して」＝見出しの絵も全員に新しい絵（開発版だけの条件を外した）
+  if (!root || !root.querySelector) return;
   var html = devHeadMarkHtml_(view);
   if (!html) return;
   if (DEV_TITLE_SEL_[view]) {
@@ -6994,7 +6996,7 @@ function renderReservationHomePage_(base, staff, dev) {
     '<div class="rolemenu">' +
       '<a class="rolebtn jitsumu" href="' + base + '?view=yoyaku_new' + sfx + '" target="_top">' +
         // ★2026-11-13 まるちゃん選択＝🆕 → 11-14「NEWは黒バックに白文字でいい」＝黒い地に白いNEWの絵（開発版だけ・スタッフは📝のまま）
-        '<span class="ricon">' + (dev ? '<img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png" style="width:34px;height:34px;display:block">' : '📝') + '</span><span class="rname">新規の予約</span></a>' +
+        '<span class="ricon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/new-kuro-128.png" style="width:34px;height:34px;display:block"></span><span class="rname">新規の予約</span></a>' +
       ex + rp +
     '</div>';
   return '<style>' + HOMECSS_ + '</style>' +
