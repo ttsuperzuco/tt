@@ -2506,7 +2506,9 @@ var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stri
 // ★ホームのスタッフ画面をフォルダにまとめる（2026-11-14 まるちゃん「これでOK。りゅうの本番画面に反映して。ほかのスタッフには反映しない」）。
 //   スマホ版とパソコン版で同じ1本。正本＝AI自動プログラム\共通\画面\ホームのフォルダ.js（直すのはここだけ）。
 //   ・スマホ版（ttsuperzuco/tt の code.js）には、共通\画面\スマホへ配る.py がこの中身をそのまま写す（手で写さない）。
-//     開発版（?dev=1）のホームのスタッフ画面だけで動く（スタッフ版・TOMATOさん版は今までどおり）。
+//     開発版（?dev=1）のホームのスタッフ画面で動く。
+//     ★2026-11-17 まるちゃん「パインさんも含めすべてのスタッフの画面に適用」＝スタッフ版・TOMATOさん版のホームもフォルダにした。
+//       スタッフの画面では hideEmpty（その人に見えるボタンが1つも入っていない最初のフォルダは出さない）と backOnlyInFolder を渡す。
 //   ・パソコン版（PC版スーパーズコ\programs\super_pc.py）は、ホームを作る時にこのファイルを読んで差し込む。
 //   中身を文字にして画面に差し込むので、外の変数は使わない（要る物は OPT で受け取る）。
 //   画面にある本物のボタン（押すと開く・起動する）をそのまま使い、並べ替えるだけ＝押した時の動きはスマホ・パソコンそれぞれのまま。
@@ -2514,6 +2516,7 @@ var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stri
 //   OPT：group＝部屋の箱（'#group-jitsumu'）／tile＝ボタンの見つけ方（'a.tile' か 'button.tile'）／idAttr＝ボタンの名前の所（'data-tid' か 'data-id'）
 //        store＝{ local:'覚える名前' }（スマホ＝このスマホだけ）か { pc:true, saved:[…] }（パソコン＝このパソコンだけ・api.save_folders で覚える）
 //        start＝最初のフォルダ分け（書かなければ下の START）
+//        hideEmpty＝中身が空の最初のフォルダを画面に出さない（覚えている並びには残す＝あとでボタンが増えたら元の場所に出る・2026-11-17）
 //   決まった動き（試しの画面で まるちゃんと決めた物・2026-11-13〜14）：
 //     長押しして動かす＝並べ替え／フォルダの上で離す＝中に入る／フォルダの左の端で少し止める＝フォルダがずれてその位置に入る
 //     持ち上げた時だけ画面の上に行き先の帯（フォルダの中＝トップ画面に移動・新しいフォルダへ移動の2つだけ／トップ＝新しいフォルダへ移動・コピーなら削除）
@@ -2539,6 +2542,8 @@ function homeFolderBoot_(OPT) {
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' }];
+  // ★2026-11-16 OPT.start＝最初のフォルダ分けを渡した時はそれを使う（パソコン版の一番トップの画面＝最初のフォルダ無し）。その時は MOVES も当てない。
+  if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
   var group = document.querySelector(OPT.group || '#group-jitsumu');
   if (!group || !window.homeSortBoot_ && typeof homeSortBoot_ !== 'function') return;
@@ -2683,23 +2688,28 @@ function homeFolderBoot_(OPT) {
     return a.concat(b);
   }
   function isFold(el) { return !!el && (el.getAttribute(IDATTR) || '').charAt(0) === '@'; }
+  // ★2026-11-17 hideEmpty＝その人に見えるボタンが1つも入っていない最初のフォルダは画面に出さない（スタッフの画面・空のフォルダで迷わないため）。
+  function isHiddenEmpty(x) { return !!OPT.hideEmpty && typeof x !== 'string' && !!x && x.d && !x.items.length; }
   var ST = OPT.store || { local: 'sz_home_folders' };
+  if (typeof OPT.storeFn === 'function') ST.fn = OPT.storeFn;   // ★2026-11-16 覚え方を外から渡す（パソコン版の一番トップの画面）
   function load() {
     try {
-      if (ST.pc) { if (ST.saved && ST.saved.length) return clean(ST.saved); }
+      if (ST.pc || ST.fn) { if (ST.saved && ST.saved.length) return clean(ST.saved); }
       else { var s = localStorage.getItem(ST.local); if (s) return clean(JSON.parse(s)); }
     } catch (e) {}
     return clean(START);
   }
   function save() {
     try {
-      if (ST.pc) { if (window.pywebview && window.pywebview.api && window.pywebview.api.save_folders) window.pywebview.api.save_folders(items); }
+      if (ST.fn) ST.fn(items);   // ★2026-11-16 覚え方を渡した時（パソコン版の一番トップの画面）
+      else if (ST.pc) { if (window.pywebview && window.pywebview.api && window.pywebview.api.save_folders) window.pywebview.api.save_folders(items); }
       else localStorage.setItem(ST.local, JSON.stringify(items));
     } catch (e) {}
   }
   function forget() {
     try {
-      if (ST.pc) { if (window.pywebview && window.pywebview.api && window.pywebview.api.save_folders) window.pywebview.api.save_folders(null); }
+      if (ST.fn) ST.fn(null);
+      else if (ST.pc) { if (window.pywebview && window.pywebview.api && window.pywebview.api.save_folders) window.pywebview.api.save_folders(null); }
       else localStorage.removeItem(ST.local);
     } catch (e) {}
   }
@@ -2734,10 +2744,10 @@ function homeFolderBoot_(OPT) {
       //   ＝ボタンのすぐ後にフォルダが来る時、そのボタンが左の列なら右隣を空ける（フォルダはいつも左の列から始まる）。
       //   空けた所は data-gaps に書く＝長押しで動かしている間も並べ替えの部品（regap）が同じ決まりで空ける。
       items = norm(items);
-      var gapIds = [], col = 0;
-      items.forEach(function (x, i) {
+      var gapIds = [], col = 0, vis = items.filter(function (x) { return !isHiddenEmpty(x); });
+      vis.forEach(function (x, i) {
         box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); col++;
-        var nx = items[i + 1];
+        var nx = vis[i + 1];
         if (typeof x === 'string' && nx && typeof nx !== 'string' && col % 2 === 1) {
           var g = document.createElement('div'); g.className = 'tilegap'; box.appendChild(g); col++; gapIds.push(x);
         }
@@ -2755,6 +2765,12 @@ function homeFolderBoot_(OPT) {
       if (resetBtn) resetBtn.style.visibility = 'hidden';
     }
     Array.prototype.slice.call(box.children).forEach(function (c) { c.style.transform = ''; c.style.transition = ''; });
+    // ★2026-11-16 OPT.backOnlyInFolder＝戻るボタンと見出しはフォルダを開いている時だけ出す（パソコン版の一番トップの画面）
+    if (OPT.backOnlyInFolder) {
+      if (backBtn) (backBtn.parentNode || backBtn).style.display = openF ? '' : 'none';
+      if (titleEl) (titleEl.parentNode && titleEl.parentNode !== group ? titleEl.parentNode : titleEl).style.display = openF ? '' : 'none';
+    }
+    if (typeof OPT.onRender === 'function') OPT.onRender(!!openF);
   }
   var toastTm = null;
   function toast(m) {
@@ -2826,10 +2842,16 @@ function homeFolderBoot_(OPT) {
   // ★2026-11-14 まるちゃん「あ　トップ画面から消す」＝トップのコピーを削除する（2026-11-14 まるちゃん「①それで」＝言い方は「削除」）。最初からあるフォルダにも入っている時だけ（ボタンそのものは無くならない）。
   function inDefault(id) { for (var i = 0; i < items.length; i++) if (typeof items[i] !== 'string' && items[i].d && items[i].items.indexOf(id) >= 0) return items[i]; return null; }
   function delFromTop(id) {
-    if (!inDefault(id)) return;
+    // ★2026-11-16 OPT.delAny＝どのボタンも削除できる（パソコン版の一番トップの画面＝コピーして置いた物だけが並ぶ所）。フォルダの中ならそのフォルダから。
+    if (OPT.delAny && openF) {
+      var j = openF.items.indexOf(id); if (j < 0) return;
+      openF.items.splice(j, 1); var nm0 = one(openF.f); dropEmpty();
+      done('「' + lbl(id) + '」を「' + nm0 + '」から削除しました'); return;
+    }
+    if (!OPT.delAny && !inDefault(id)) return;
     var i = items.indexOf(id); if (i < 0) return;
     items.splice(i, 1);
-    done('「' + lbl(id) + '」をトップ画面から削除しました');
+    done('「' + lbl(id) + '」を' + (OPT.topName || 'トップ画面') + 'から削除しました');
   }
   function ungroup(F) {
     var i = items.indexOf(F); if (i < 0 || F.d) return;
@@ -2863,12 +2885,19 @@ function homeFolderBoot_(OPT) {
     if (!T[tid]) return;
     var verb = isCopy(openF) ? 'コピー' : '移動';
     var z = [];
+    // ★2026-11-16 まるちゃん「一番トップの画面にコピー・一つ上の画面にコピーの二つを付ける」（パソコン版＝OPT.toHome を渡した時だけ）。
+    //   一番トップの画面＝パソコン版の最初の画面（部屋の外）。一つ上の画面＝フォルダの中ならこの部屋のトップ。部屋のトップでは一つ上＝一番トップなので1つだけ。
+    var HOME = typeof OPT.toHome === 'function';
+    // ★2026-11-16 まるちゃん「4つにして」＝①一番トップの画面にコピー ②一番トップの画面の新しいフォルダへコピー ③一つ上の画面に〜 ④一つ上の画面の新しいフォルダへ〜
+    if (HOME) z.push('<div class="ftzone ftfull" data-z="home">⏫ 一番トップの画面にコピー</div>');
+    if (HOME && typeof OPT.toHomeNew === 'function') z.push('<div class="ftzone ftfull" data-z="homenew">⏫ 一番トップの画面の新しいフォルダへコピー</div>');
     if (openF) {
-      z.push('<div class="ftzone ftfull" data-z="top">⬆️ トップ画面に' + verb + '</div>');
+      z.push('<div class="ftzone ftfull" data-z="top">⬆️ ' + (HOME ? '一つ上の画面に' : (OPT.topName || 'トップ画面') + 'に') + verb + '</div>');
       // ★2026-11-14 まるちゃん「トップ画面か新しいフォルダの2つのボタンだけにする。他へ移動やコピーはできない」＝ほかのフォルダは帯に出さない。
     }
-    z.push('<div class="ftzone ftfull" data-z="new">＋ 新しいフォルダへ' + verb + '</div>');
-    if (!openF && inDefault(tid)) z.push('<div class="ftzone ftfull" data-z="del">🗑️ トップ画面から削除</div>');   // トップのコピーだけ
+    z.push('<div class="ftzone ftfull" data-z="new">' + (HOME && openF ? '⬆️ 一つ上の画面の新しいフォルダへ' : '＋ 新しいフォルダへ') + verb + '</div>');
+    if (OPT.delAny) z.push('<div class="ftzone ftfull" data-z="del">🗑️ ' + (openF ? '「' + esc(one(openF.f)) + '」から削除' : (OPT.topName || 'トップ画面') + 'から削除') + '</div>');
+    else if (!openF && inDefault(tid)) z.push('<div class="ftzone ftfull" data-z="del">🗑️ ' + (HOME ? 'この画面から削除' : 'トップ画面から削除') + '</div>');   // トップのコピーだけ
     var bar = document.getElementById('ftBar');
     if (!bar) { bar = document.createElement('div'); bar.id = 'ftBar'; bar.className = 'ftbar'; document.body.appendChild(bar); }
     bar.innerHTML = '<div class="ftbhint">行き先の上で離してください😊</div><div class="ftzones">' + z.join('') + '</div>';
@@ -2883,13 +2912,15 @@ function homeFolderBoot_(OPT) {
   }
   function sortSaved(ids) {
     if (openF) { openF.items = ids.filter(function (x) { return !!T[x]; }); save(); return; }
-    items = norm(ids.map(function (x) { return x.charAt(0) === '@' ? folderByKey(x.slice(1)) : x; }).filter(function (x) { return !!x; }));
+    var hid = items.filter(isHiddenEmpty);   // 画面に出していない空の最初のフォルダは、並びから落とさず後ろに残す（hideEmpty）
+    items = norm(ids.map(function (x) { return x.charAt(0) === '@' ? folderByKey(x.slice(1)) : x; }).filter(function (x) { return !!x; }).concat(hid));
     save();
     setTimeout(render, 260);   // 離した後のすっと戻る動きが終わってから、決まった並び（ボタン → 空き → フォルダ）で置き直す
   }
   function resetAll() { forget(); items = clean(START); openF = null; render(); toast('初期の並びに戻しました'); }
 
   render();
+  if (typeof OPT.expose === 'function') OPT.expose({ items: function () { return items; } });   // ★2026-11-16 今の並びを外から読む（パソコン版の一番トップの画面）
   homeSortBoot_(null, {
     tile: SEL, idAttr: IDATTR, boxes: (OPT.group || '#group-jitsumu') + ' .tiles.hfold', resetSel: (OPT.group || '#group-jitsumu') + ' .hresetbtn',
     save: sortSaved,
@@ -2908,6 +2939,8 @@ function homeFolderBoot_(OPT) {
       var id = dragEl.getAttribute(IDATTR); if (!T[id]) return;
       var src = openF, z = t.getAttribute('data-z');
       if (z) render();
+      if (z === 'home') { openF = null; render(); OPT.toHome(id); return; }   // 一番トップの画面へコピー（元の場所には残す）
+      if (z === 'homenew') { openF = null; render(); OPT.toHomeNew(id); return; }   // 一番トップの画面の新しいフォルダへコピー
       if (z === 'new') { newFolder(id, src); return; }
       if (z === 'top') { toTop(id, src); return; }
       if (z === 'del') { delFromTop(id); return; }
@@ -2940,6 +2973,12 @@ function homeFolderBoot_(OPT) {
 // ★2026-11-14 まるちゃん「これでOK。りゅうの本番画面に反映して。ほかのスタッフには反映しない」＝開発版のホームのスタッフ画面だけフォルダにする。
 //   並びはこのスマホだけが覚える（sz_home_folders）。スタッフ版・TOMATOさん版のホームは今までどおり。
 var HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":"#group-jitsumu","tile":"a.tile","idAttr":"data-tid","store":{"local":"sz_home_folders"}});</' + 'script>';
+// ★2026-11-17 まるちゃん「パインさんも含めすべてのスタッフの画面に適用」＝スタッフ版・TOMATOさん版のホーム用。
+//   りゅう画面と覚える名前を分ける（同じスマホでTOMATOさん版を開いて動かしても、りゅう画面の並びは消えない）。
+//   空のフォルダは出さない・戻ると見出しはフォルダを開いた時だけ・フォルダを開いている間は「初期の並びに戻す」の行を隠す。
+var STAFF_HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":"#group-jitsumu","tile":"a.tile","idAttr":"data-tid",' +
+  '"hideEmpty":true,"backOnlyInFolder":true,"store":{"local":"sz_home_folders_staff"},' +
+  '"onRender":function(o){var r=document.querySelector("#group-jitsumu .hfresetbar");if(r)r.style.display=o?"none":"";}});</' + 'script>';
 
 // ★フォルダの試し（2026-11-13 まるちゃん「①②③全部それで　開発トップにテストボタンをつくってそのなかに再現して」）。開発中の機能のボタン。
 //   ★2026-11-14 本番のホーム（開発版のスタッフ画面・パソコン版）と同じ1本（共通\画面\ホームのフォルダ.js）を使う形にした
@@ -3277,7 +3316,8 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   // ★2026-11-13 その人の画面の見本（上の HOME_AS_PEOPLE_）。ボタンの行き先は開発版のまま（sfx は先に作る）。
   var asWho = homeAsWho_(dev);
   // ★2026-11-14 まるちゃん「この新しいアイコンと新しいフォルダ分けを、オリーブちゃんの今出てるやつでやるとどう見えるか見たい。シミュレーションで作って」＝スタッフ画面（その人の画面）の住所に &sim=1 を付けると、その人に出しているボタンだけを、新しい絵・りゅう画面と同じフォルダ分けで出す（見るだけ）。並びはこの端末だけの試しの置き場（sz_home_folders_sim_<人>）に覚える＝りゅう画面の並びにも、スタッフのスマホにも触らない。
-  var simV = !!(asWho && typeof location !== 'undefined' && /[?&]sim=1(&|$)/.test(location.search || ''));
+  // ★2026-11-17 まるちゃん「パインさんも含めすべてのスタッフの画面に適用」＝スタッフ全員のホームがフォルダになったので、その人の画面の見本はいつもフォルダの形（&sim=1 は不要になった）。
+  var simV = !!asWho;
   var sfx = roleSfx_(staff, dev);
   if (asWho) { staff = asWho !== 'kanbu'; who = staff ? asWho : ''; dev = false; }
   var allow = personPerms_(perms, staff, dev, who);   // null=dev(全許可)
@@ -3417,43 +3457,47 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript + HOMEFOLDER_SCRIPT_;
   }
   if (simV) {   // ★2026-11-14 まるちゃん「この新しいアイコンと新しいフォルダ分けを、オ…（上の simV）
-    var simOpt = { group: '#group-jitsumu', tile: 'a.tile', idAttr: 'data-tid', store: { local: 'sz_home_folders_sim_' + asWho } };
+    var simOpt = { group: '#group-jitsumu', tile: 'a.tile', idAttr: 'data-tid', hideEmpty: true, store: { local: 'sz_home_folders_sim_' + asWho } };
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="home">' + head +
         '<div class="group" id="group-jitsumu">' +
           '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
-            '<a class="backbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '" target="_top" style="text-decoration:none">← 戻る</a>' +
-            '<a class="hpermbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '" target="_top">📋 今の形で見る</a></div>' +
-          homeAsRow_(base, asWho, true) +
-          '<div class="grouptitle"><span>🗂️ 新しい形の見本（見るだけ）</span></div>' +
-          '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">この人に出しているボタンを、新しい絵とフォルダ分けで並べています。スタッフのスマホはまだ今の形のままです。</div>' +
+            '<a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a>' +
+            '<a class="hpermbtn" href="' + base + '?view=permlist&dev=1" target="_top" onclick="var a=window.pywebview&&window.pywebview.api;' +
+              'if(a&&a.open_permlist){a.open_permlist();return false;}">👥 スタッフごと表示一覧</a></div>' +
+          homeAsRow_(base, asWho) +
+          '<div class="grouptitle"><span>🗂️ この人のホーム（見本・見るだけ）</span></div>' +
+          '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">この人に出しているボタンを、フォルダの形で並べています。その人に見えるボタンが入っていないフォルダは出しません。</div>' +
           (shown.length ? tilesBox_(shown, [], 'hfold') : '<div style="color:#fff;font-weight:800">この人に出しているボタンはありません😊</div>') +
         '</div>' +
       '</div>' + EXTLINK_SCRIPT_ +
       '<script>(' + homeFolderBoot_.toString() + ')(' + JSON.stringify(simOpt) + ');</' + 'script>';
   }
-  return '<style>' + HOMECSS_ + '</style>' +
-  '<div class="' + homeCls + '">' + head +
-    // ★2026-11-14 スタッフ画面＝「← 戻る」（トップへ）と「👥 スタッフごと表示一覧」（パソコン版ズコの中では独立した窓で開く）。
-    (asWho ? '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
-      '<a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a>' +
-      '<a class="hpermbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '&sim=1" target="_top">🗂️ 新しい形で見る</a>' +
-      '<a class="hpermbtn" href="' + base + '?view=permlist&dev=1" target="_top" onclick="var a=window.pywebview&&window.pywebview.api;' +
-        'if(a&&a.open_permlist){a.open_permlist();return false;}">👥 スタッフごと表示一覧</a></div>' : '') +
-    (asWho ? homeAsRow_(base, asWho) : '') +   // ★2026-11-13 その人の画面の見本＝上に人のボタン（押した人が白く光る）
-    // ★2026-10-21 まるちゃん「スタッフのスマホにも空き時間の右の空白を入れて」＝スタッフ版も開発版のスタッフ画面と同じ空白。
-    // 戻るボタンの無いホーム（開発版以外）では、ボタンの並びの上の右端に置く。
-    (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
-    (shown.length ? '<div class="halerts hrow">' + alertsHtml + '</div>' : '') +
+  // ★2026-11-17 まるちゃん「パインさんも含めすべてのスタッフの画面に適用」＝スタッフ版・TOMATOさん版のホームも、りゅう画面と同じフォルダの形
+  //   （共通\画面\ホームのフォルダ.js）。その人に見えるボタンが入っていないフォルダは出さない（hideEmpty）。
+  //   「← トップ画面へ戻る」と見出しはフォルダを開いている時だけ出す（backOnlyInFolder）。並びはそのスマホだけ（sz_home_folders_staff）。
+  if (staff && !shown.length) {
     // ★2026-11-10 まるちゃん「パインさんの画面にはまだ何も出さない。この画面が開いたら完了、りゅうさんに連絡と出して」
     //   ＝スタッフで出すボタンが1つも無い時は、ボタンの並びの代わりに完了の案内を出す（ほかの人にも同じく効く）。
-    (staff && !shown.length
-      ? '<div class="hdone" style="background:#fff;color:#12303c;border-radius:18px;padding:22px 18px;margin:18px 4px 0;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.15);">' +
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="' + homeCls + '">' + head +
+        '<div class="hdone" style="background:#fff;color:#12303c;border-radius:18px;padding:22px 18px;margin:18px 4px 0;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.15);">' +
           '<div style="font-size:26px;font-weight:900;line-height:1.5;">ズコの準備ができました🎉</div>' +
           '<div style="font-size:18px;font-weight:700;line-height:1.8;margin-top:10px;">この画面が開いたら、完了です。<br>りゅうさんに「完了しました」と<br>連絡してください😊</div>' +
-        '</div>'
-      : tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : [])) +
-  '</div>' + EXTLINK_SCRIPT_ + sortScript;
+        '</div>' +
+      '</div>' + EXTLINK_SCRIPT_;
+  }
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="' + homeCls + '">' + head +
+    '<div class="group" id="group-jitsumu">' +
+      // 戻るボタンの無いホームでは「初期の並びに戻す」を並びの上の右端に置く（フォルダを開いている間は隠す）。
+      (canSort ? '<div class="backbar hbaronly hfresetbar">' + resetHtml.replace('class="hresetbtn"', 'class="hresetbtn hfoldreset"') + '</div>' : '') +
+      (shown.length ? '<div class="halerts hrow">' + alertsHtml + '</div>' : '') +
+      '<div class="backbar" style="display:none"><button type="button" class="backbtn">← 戻る</button></div>' +
+      '<div class="grouptitle" style="display:none"><span></span></div>' +
+      tilesBox_(shown, [], 'hfold') +
+    '</div>' +
+  '</div>' + EXTLINK_SCRIPT_ + sortScript + STAFF_HOMEFOLDER_SCRIPT_;
 }
 
 /** L⇔T予約照合（LINEの予約 と TimeTree の予定を突き合わせた結果を表示）。

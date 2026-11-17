@@ -1799,6 +1799,7 @@ function homeFolderBoot_(OPT) {
     { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] }];
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' }];
+  if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
   var group = document.querySelector(OPT.group || '#group-jitsumu');
   if (!group || !window.homeSortBoot_ && typeof homeSortBoot_ !== 'function') return;
@@ -1928,23 +1929,27 @@ function homeFolderBoot_(OPT) {
     return a.concat(b);
   }
   function isFold(el) { return !!el && (el.getAttribute(IDATTR) || '').charAt(0) === '@'; }
+  function isHiddenEmpty(x) { return !!OPT.hideEmpty && typeof x !== 'string' && !!x && x.d && !x.items.length; }
   var ST = OPT.store || { local: 'sz_home_folders' };
+  if (typeof OPT.storeFn === 'function') ST.fn = OPT.storeFn;   
   function load() {
     try {
-      if (ST.pc) { if (ST.saved && ST.saved.length) return clean(ST.saved); }
+      if (ST.pc || ST.fn) { if (ST.saved && ST.saved.length) return clean(ST.saved); }
       else { var s = localStorage.getItem(ST.local); if (s) return clean(JSON.parse(s)); }
     } catch (e) {}
     return clean(START);
   }
   function save() {
     try {
-      if (ST.pc) { if (window.pywebview && window.pywebview.api && window.pywebview.api.save_folders) window.pywebview.api.save_folders(items); }
+      if (ST.fn) ST.fn(items);   
+      else if (ST.pc) { if (window.pywebview && window.pywebview.api && window.pywebview.api.save_folders) window.pywebview.api.save_folders(items); }
       else localStorage.setItem(ST.local, JSON.stringify(items));
     } catch (e) {}
   }
   function forget() {
     try {
-      if (ST.pc) { if (window.pywebview && window.pywebview.api && window.pywebview.api.save_folders) window.pywebview.api.save_folders(null); }
+      if (ST.fn) ST.fn(null);
+      else if (ST.pc) { if (window.pywebview && window.pywebview.api && window.pywebview.api.save_folders) window.pywebview.api.save_folders(null); }
       else localStorage.removeItem(ST.local);
     } catch (e) {}
   }
@@ -1976,10 +1981,10 @@ function homeFolderBoot_(OPT) {
     if (!openF) {
       box.classList.add('fttop'); box.classList.remove('ftin'); box.style.removeProperty('--ftc');
       items = norm(items);
-      var gapIds = [], col = 0;
-      items.forEach(function (x, i) {
+      var gapIds = [], col = 0, vis = items.filter(function (x) { return !isHiddenEmpty(x); });
+      vis.forEach(function (x, i) {
         box.appendChild(typeof x === 'string' ? T[x] : folderEl(x)); col++;
-        var nx = items[i + 1];
+        var nx = vis[i + 1];
         if (typeof x === 'string' && nx && typeof nx !== 'string' && col % 2 === 1) {
           var g = document.createElement('div'); g.className = 'tilegap'; box.appendChild(g); col++; gapIds.push(x);
         }
@@ -1997,6 +2002,11 @@ function homeFolderBoot_(OPT) {
       if (resetBtn) resetBtn.style.visibility = 'hidden';
     }
     Array.prototype.slice.call(box.children).forEach(function (c) { c.style.transform = ''; c.style.transition = ''; });
+    if (OPT.backOnlyInFolder) {
+      if (backBtn) (backBtn.parentNode || backBtn).style.display = openF ? '' : 'none';
+      if (titleEl) (titleEl.parentNode && titleEl.parentNode !== group ? titleEl.parentNode : titleEl).style.display = openF ? '' : 'none';
+    }
+    if (typeof OPT.onRender === 'function') OPT.onRender(!!openF);
   }
   var toastTm = null;
   function toast(m) {
@@ -2063,10 +2073,15 @@ function homeFolderBoot_(OPT) {
   }
   function inDefault(id) { for (var i = 0; i < items.length; i++) if (typeof items[i] !== 'string' && items[i].d && items[i].items.indexOf(id) >= 0) return items[i]; return null; }
   function delFromTop(id) {
-    if (!inDefault(id)) return;
+    if (OPT.delAny && openF) {
+      var j = openF.items.indexOf(id); if (j < 0) return;
+      openF.items.splice(j, 1); var nm0 = one(openF.f); dropEmpty();
+      done('「' + lbl(id) + '」を「' + nm0 + '」から削除しました'); return;
+    }
+    if (!OPT.delAny && !inDefault(id)) return;
     var i = items.indexOf(id); if (i < 0) return;
     items.splice(i, 1);
-    done('「' + lbl(id) + '」をトップ画面から削除しました');
+    done('「' + lbl(id) + '」を' + (OPT.topName || 'トップ画面') + 'から削除しました');
   }
   function ungroup(F) {
     var i = items.indexOf(F); if (i < 0 || F.d) return;
@@ -2097,11 +2112,15 @@ function homeFolderBoot_(OPT) {
     if (!T[tid]) return;
     var verb = isCopy(openF) ? 'コピー' : '移動';
     var z = [];
+    var HOME = typeof OPT.toHome === 'function';
+    if (HOME) z.push('<div class="ftzone ftfull" data-z="home">⏫ 一番トップの画面にコピー</div>');
+    if (HOME && typeof OPT.toHomeNew === 'function') z.push('<div class="ftzone ftfull" data-z="homenew">⏫ 一番トップの画面の新しいフォルダへコピー</div>');
     if (openF) {
-      z.push('<div class="ftzone ftfull" data-z="top">⬆️ トップ画面に' + verb + '</div>');
+      z.push('<div class="ftzone ftfull" data-z="top">⬆️ ' + (HOME ? '一つ上の画面に' : (OPT.topName || 'トップ画面') + 'に') + verb + '</div>');
     }
-    z.push('<div class="ftzone ftfull" data-z="new">＋ 新しいフォルダへ' + verb + '</div>');
-    if (!openF && inDefault(tid)) z.push('<div class="ftzone ftfull" data-z="del">🗑️ トップ画面から削除</div>');   
+    z.push('<div class="ftzone ftfull" data-z="new">' + (HOME && openF ? '⬆️ 一つ上の画面の新しいフォルダへ' : '＋ 新しいフォルダへ') + verb + '</div>');
+    if (OPT.delAny) z.push('<div class="ftzone ftfull" data-z="del">🗑️ ' + (openF ? '「' + esc(one(openF.f)) + '」から削除' : (OPT.topName || 'トップ画面') + 'から削除') + '</div>');
+    else if (!openF && inDefault(tid)) z.push('<div class="ftzone ftfull" data-z="del">🗑️ ' + (HOME ? 'この画面から削除' : 'トップ画面から削除') + '</div>');   
     var bar = document.getElementById('ftBar');
     if (!bar) { bar = document.createElement('div'); bar.id = 'ftBar'; bar.className = 'ftbar'; document.body.appendChild(bar); }
     bar.innerHTML = '<div class="ftbhint">行き先の上で離してください😊</div><div class="ftzones">' + z.join('') + '</div>';
@@ -2116,13 +2135,15 @@ function homeFolderBoot_(OPT) {
   }
   function sortSaved(ids) {
     if (openF) { openF.items = ids.filter(function (x) { return !!T[x]; }); save(); return; }
-    items = norm(ids.map(function (x) { return x.charAt(0) === '@' ? folderByKey(x.slice(1)) : x; }).filter(function (x) { return !!x; }));
+    var hid = items.filter(isHiddenEmpty);   
+    items = norm(ids.map(function (x) { return x.charAt(0) === '@' ? folderByKey(x.slice(1)) : x; }).filter(function (x) { return !!x; }).concat(hid));
     save();
     setTimeout(render, 260);   
   }
   function resetAll() { forget(); items = clean(START); openF = null; render(); toast('初期の並びに戻しました'); }
 
   render();
+  if (typeof OPT.expose === 'function') OPT.expose({ items: function () { return items; } });   
   homeSortBoot_(null, {
     tile: SEL, idAttr: IDATTR, boxes: (OPT.group || '#group-jitsumu') + ' .tiles.hfold', resetSel: (OPT.group || '#group-jitsumu') + ' .hresetbtn',
     save: sortSaved,
@@ -2139,6 +2160,8 @@ function homeFolderBoot_(OPT) {
       var id = dragEl.getAttribute(IDATTR); if (!T[id]) return;
       var src = openF, z = t.getAttribute('data-z');
       if (z) render();
+      if (z === 'home') { openF = null; render(); OPT.toHome(id); return; }   
+      if (z === 'homenew') { openF = null; render(); OPT.toHomeNew(id); return; }   
       if (z === 'new') { newFolder(id, src); return; }
       if (z === 'top') { toTop(id, src); return; }
       if (z === 'del') { delFromTop(id); return; }
@@ -2166,6 +2189,9 @@ function homeFolderBoot_(OPT) {
   }, true);
 }
 var HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":"#group-jitsumu","tile":"a.tile","idAttr":"data-tid","store":{"local":"sz_home_folders"}});</' + 'script>';
+var STAFF_HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":"#group-jitsumu","tile":"a.tile","idAttr":"data-tid",' +
+  '"hideEmpty":true,"backOnlyInFolder":true,"store":{"local":"sz_home_folders_staff"},' +
+  '"onRender":function(o){var r=document.querySelector("#group-jitsumu .hfresetbar");if(r)r.style.display=o?"none":"";}});</' + 'script>';
 
 
 
@@ -2206,7 +2232,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
   var perms = (cfg && cfg.perms) || defaultPerms_();
   var labels = (cfg && cfg.labels) || PERSON_LABEL_;
   var asWho = homeAsWho_(dev);
-  var simV = !!(asWho && typeof location !== 'undefined' && /[?&]sim=1(&|$)/.test(location.search || ''));
+  var simV = !!asWho;
   var sfx = roleSfx_(staff, dev);
   if (asWho) { staff = asWho !== 'kanbu'; who = staff ? asWho : ''; dev = false; }
   var allow = personPerms_(perms, staff, dev, who);   
@@ -2321,38 +2347,41 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       '</div>' + ROLEMENU_SCRIPT_ + EXTLINK_SCRIPT_ + sortScript + HOMEFOLDER_SCRIPT_;
   }
   if (simV) {   
-    var simOpt = { group: '#group-jitsumu', tile: 'a.tile', idAttr: 'data-tid', store: { local: 'sz_home_folders_sim_' + asWho } };
+    var simOpt = { group: '#group-jitsumu', tile: 'a.tile', idAttr: 'data-tid', hideEmpty: true, store: { local: 'sz_home_folders_sim_' + asWho } };
     return '<style>' + HOMECSS_ + '</style>' +
       '<div class="home">' + head +
         '<div class="group" id="group-jitsumu">' +
           '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
-            '<a class="backbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '" target="_top" style="text-decoration:none">← 戻る</a>' +
-            '<a class="hpermbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '" target="_top">📋 今の形で見る</a></div>' +
-          homeAsRow_(base, asWho, true) +
-          '<div class="grouptitle"><span>🗂️ 新しい形の見本（見るだけ）</span></div>' +
-          '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">この人に出しているボタンを、新しい絵とフォルダ分けで並べています。スタッフのスマホはまだ今の形のままです。</div>' +
+            '<a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a>' +
+            '<a class="hpermbtn" href="' + base + '?view=permlist&dev=1" target="_top" onclick="var a=window.pywebview&&window.pywebview.api;' +
+              'if(a&&a.open_permlist){a.open_permlist();return false;}">👥 スタッフごと表示一覧</a></div>' +
+          homeAsRow_(base, asWho) +
+          '<div class="grouptitle"><span>🗂️ この人のホーム（見本・見るだけ）</span></div>' +
+          '<div style="color:#fff;font-weight:700;margin:-6px 0 14px;line-height:1.6">この人に出しているボタンを、フォルダの形で並べています。その人に見えるボタンが入っていないフォルダは出しません。</div>' +
           (shown.length ? tilesBox_(shown, [], 'hfold') : '<div style="color:#fff;font-weight:800">この人に出しているボタンはありません😊</div>') +
         '</div>' +
       '</div>' + EXTLINK_SCRIPT_ +
       '<script>(' + homeFolderBoot_.toString() + ')(' + JSON.stringify(simOpt) + ');</' + 'script>';
   }
-  return '<style>' + HOMECSS_ + '</style>' +
-  '<div class="' + homeCls + '">' + head +
-    (asWho ? '<div class="backbar" style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">' +
-      '<a class="backbtn" href="' + base + '?view=home&dev=1" target="_top" style="text-decoration:none">← 戻る</a>' +
-      '<a class="hpermbtn" href="' + base + '?view=home&dev=1&as=' + asWho + '&sim=1" target="_top">🗂️ 新しい形で見る</a>' +
-      '<a class="hpermbtn" href="' + base + '?view=permlist&dev=1" target="_top" onclick="var a=window.pywebview&&window.pywebview.api;' +
-        'if(a&&a.open_permlist){a.open_permlist();return false;}">👥 スタッフごと表示一覧</a></div>' : '') +
-    (asWho ? homeAsRow_(base, asWho) : '') +   
-    (canSort ? '<div class="backbar hbaronly">' + resetHtml + '</div>' : '') +
-    (shown.length ? '<div class="halerts hrow">' + alertsHtml + '</div>' : '') +
-    (staff && !shown.length
-      ? '<div class="hdone" style="background:#fff;color:#12303c;border-radius:18px;padding:22px 18px;margin:18px 4px 0;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.15);">' +
+  if (staff && !shown.length) {
+    return '<style>' + HOMECSS_ + '</style>' +
+      '<div class="' + homeCls + '">' + head +
+        '<div class="hdone" style="background:#fff;color:#12303c;border-radius:18px;padding:22px 18px;margin:18px 4px 0;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.15);">' +
           '<div style="font-size:26px;font-weight:900;line-height:1.5;">ズコの準備ができました🎉</div>' +
           '<div style="font-size:18px;font-weight:700;line-height:1.8;margin-top:10px;">この画面が開いたら、完了です。<br>りゅうさんに「完了しました」と<br>連絡してください😊</div>' +
-        '</div>'
-      : tilesBox_(shown, staff ? BLANK_AFTER_.jitsumu : [])) +
-  '</div>' + EXTLINK_SCRIPT_ + sortScript;
+        '</div>' +
+      '</div>' + EXTLINK_SCRIPT_;
+  }
+  return '<style>' + HOMECSS_ + '</style>' +
+  '<div class="' + homeCls + '">' + head +
+    '<div class="group" id="group-jitsumu">' +
+      (canSort ? '<div class="backbar hbaronly hfresetbar">' + resetHtml.replace('class="hresetbtn"', 'class="hresetbtn hfoldreset"') + '</div>' : '') +
+      (shown.length ? '<div class="halerts hrow">' + alertsHtml + '</div>' : '') +
+      '<div class="backbar" style="display:none"><button type="button" class="backbtn">← 戻る</button></div>' +
+      '<div class="grouptitle" style="display:none"><span></span></div>' +
+      tilesBox_(shown, [], 'hfold') +
+    '</div>' +
+  '</div>' + EXTLINK_SCRIPT_ + sortScript + STAFF_HOMEFOLDER_SCRIPT_;
 }
 function renderLT_(base, staff, dev) {
   try {
