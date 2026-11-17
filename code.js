@@ -13398,7 +13398,7 @@ function honeyScript_(C) {
       } else cb(null);
     });
   }
-  function direct(fields, me, cb) {
+  function direct(fields, me, cb, prog) {
     if (!window.fetch || opName() !== 'hachimitsu') { cb('fallback'); return; }
     tpass(function (t) {
       if (!t) { cb('fallback'); return; }
@@ -13419,7 +13419,7 @@ function honeyScript_(C) {
       var handle = function (s, j) {
         if (s === 401) { try { sessionStorage.removeItem('zk_tpass'); } catch (e) {} fail(); return; }
         if (!j) { fail(); return; }
-        if (j.status === 'pending') { accepted = true; req('/w', { t: t, id: j.id }, handle); return; }
+        if (j.status === 'pending') { accepted = true; if (j.progress && prog) prog(j.progress); req('/w', { t: t, id: j.id }, handle); return; }
         if (j.status === 'notfound') { cb(j.error || 'もう一度試してもらえると嬉しいです🙇'); return; }
         if (!j.ok) { fail(j.error); return; }
         accepted = true;
@@ -13434,10 +13434,12 @@ function honeyScript_(C) {
     if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
     var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     var me = idn();
+    // ★2026-11-17 まるちゃん「段階を出す」＝ハチミツちゃんが今している作業を、作業中の画面の下に出す（近道の時）。
+    var prog = function (t) { if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, '<span style="word-break:keep-all;overflow-wrap:anywhere">' + esc(t) + '</span>'), '#2C7A99'); };
     direct(fields, me, function (err, d) {
       if (err === 'fallback') { viaPipe(); return; }
       end(err, d);
-    });
+    }, prog);
     function viaPipe() {
     var poll = function (id) {
       var n = 0, max = full ? 1700 : 480;    // 絵は数分かかる＝約12分まで待つ（全部の権限の仕事は最大40分＝約45分まで待つ）
