@@ -13192,7 +13192,10 @@ function shomeishoScript_(C) {
   window.addEventListener('resize', fit);
   $('smZoom').onclick = function () { zoom = !zoom; fit(); };
   // 紙の中の「印刷する」と同じ＝紙のページそのものを印刷する（ズコの画面は刷らない）
-  $('smPrint').onclick = function () { try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
+  // ★2026-11-18 まるちゃん「印刷ボタンを押してないよ」→「１」＝証明書は印刷ボタンを押した時に初めて過去履歴に残す。
+  //   印刷を押したら、購入証明書の画面（枠の中）へ「印刷した」と知らせる（紙の中の「印刷する」から来た知らせも同じく渡す）。
+  function printed() { try { frame.contentWindow.postMessage({ szsm: 'printed' }, '*'); } catch (e) {} }
+  $('smPrint').onclick = function () { printed(); try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
   function exit() { var a = document.querySelector('#smHome a'); if (a) a.click(); }
   // ★★スマホには何も覚えない（2026-11-10 まるちゃん「はんえいされてない」「なんどもおなじこと」＝同じ日に3回）。
   //   前の作り＝画面とまとめた答えをスマホに覚えて、開いた瞬間にそれを出し、裏で最新を取って差し替える。
@@ -13253,6 +13256,7 @@ function shomeishoScript_(C) {
   // 枠の中の画面からの頼み（計算して／紙を出して／ズコのホームへ戻る）
   if (window.__smMsgH) window.removeEventListener('message', window.__smMsgH);
   window.__smMsgH = function (ev) {
+    if (cert.contentWindow && ev.source === cert.contentWindow) { if ((ev.data || {}).szsm === 'printed') printed(); return; }
     if (!frame.contentWindow || ev.source !== frame.contentWindow) return;
     var d = ev.data || {};
     if (d.szsm === 'call') {

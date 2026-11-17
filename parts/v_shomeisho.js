@@ -75,7 +75,8 @@ function shomeishoScript_(C) {
   cert.onload = function () { setTimeout(fit, 60); setTimeout(fit, 1500); };
   window.addEventListener('resize', fit);
   $('smZoom').onclick = function () { zoom = !zoom; fit(); };
-  $('smPrint').onclick = function () { try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
+  function printed() { try { frame.contentWindow.postMessage({ szsm: 'printed' }, '*'); } catch (e) {} }
+  $('smPrint').onclick = function () { printed(); try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
   function exit() { var a = document.querySelector('#smHome a'); if (a) a.click(); }
   var LSK = 'sz_shomeisho_page', VIEW = 'shomeisho_view.json', shown = '';
   function showPage(h) { frame.srcdoc = h; frame.style.display = ''; $('smMsg').style.display = 'none'; }
@@ -124,6 +125,7 @@ function shomeishoScript_(C) {
   }
   if (window.__smMsgH) window.removeEventListener('message', window.__smMsgH);
   window.__smMsgH = function (ev) {
+    if (cert.contentWindow && ev.source === cert.contentWindow) { if ((ev.data || {}).szsm === 'printed') printed(); return; }
     if (!frame.contentWindow || ev.source !== frame.contentWindow) return;
     var d = ev.data || {};
     if (d.szsm === 'call') {
