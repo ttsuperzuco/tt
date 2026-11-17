@@ -13311,6 +13311,8 @@ var HONEYCSS_ =
   '.hnimg{display:block;width:100%;max-width:420px;border-radius:12px;margin-top:8px;background:#e2e8f0;min-height:120px;}' +
   '.hnqimg{display:block;width:120px;border-radius:10px;margin-top:6px;background:#e2e8f0;min-height:60px;}' +
   '.hnsave{display:inline-block;margin-top:6px;font-size:14px;font-weight:800;color:#0e7490;}' +
+  '.hnpdf{display:block;margin-top:8px;background:#0e7490;color:#fff;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:16px;font-weight:800;text-align:left;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
+  '.hnpdf span{font-size:13px;font-weight:700;opacity:.9;word-break:break-all;}' +
   '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
   '.hnbar button.on{background:#dc2626;color:#fff;}' +
   // ★2026-11-12 まるちゃん「戻るのすぐ右にハチミツちゃん（少し小さめの文字）、その右に会話を初期化ボタン。そこのトップはスクロールしていても常に表示」
@@ -13576,6 +13578,30 @@ function honeyScript_(C) {
     });
     return h;
   }
+  // ★2026-11-17 まるちゃん「PDFを作れるようにして」＝ハチミツちゃんが作ったPDFは「PDFを保存」のボタンで出す。
+  //   押した時だけ取り寄せる（絵と同じ置き場・近道）。スマホの中には残さない（大きいため）。
+  function pdfs(list) {
+    return (list || []).map(function (x) {
+      return '<button type="button" class="hnpdf" data-pn="' + esc(x.n) + '" data-pf="' + esc(x.fname || 'hachimitsu.pdf') + '">📄 PDFを保存<br><span>' + esc(x.fname || '') + '</span></button>';
+    }).join('');
+  }
+  function savePdf(btn) {
+    if (btn.getAttribute('data-busy')) return;
+    btn.setAttribute('data-busy', '1');
+    getImg(btn.getAttribute('data-pn'), function (r) {
+      btn.removeAttribute('data-busy');
+      if (!(r && r.b64)) { popup('PDFを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
+      try {
+        var bin = atob(r.b64), u8 = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+        var url = URL.createObjectURL(new Blob([u8], { type: 'application/pdf' }));
+        var a = document.createElement('a');
+        a.href = url; a.download = btn.getAttribute('data-pf') || 'hachimitsu.pdf';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      } catch (e) { popup('PDFを保存できませんでした。もう一度試してもらえると嬉しいです🙇'); }
+    });
+  }
   // ★2026-11-11 まるちゃん「スマホに文字データを保存してるはずなのに、読み取るのが長い」＝会話の文字は開くたびにサーバーへ取りに行っていた（約18秒）。
   //   会話の文字もこのスマホに残し、開いた瞬間に出す。サーバーの最新は裏で確かめ、違っていた時だけ描き直す。
   //   残すのは会話の控えと同じ最大50通（数十KB）。
@@ -13591,7 +13617,7 @@ function honeyScript_(C) {
     var out = '';
     items.forEach(function (x) {
       if (x.q || (x.qimg && x.qimg.length)) out += '<div class="ccq">' + esc(x.q || '') + imgs(x.qimg, 'hnqimg', false) + '</div>';
-      out += '<div class="cca">' + esc(x.a || '') + imgs(x.img, 'hnimg', true) + '<div class="cct">' + esc(x.at || '') + '</div></div>';
+      out += '<div class="cca">' + esc(x.a || '') + imgs(x.img, 'hnimg', true) + pdfs(x.file) + '<div class="cct">' + esc(x.at || '') + '</div></div>';
     });
     $('hnLog').innerHTML = out;
     fillAll();
@@ -13733,6 +13759,10 @@ function honeyScript_(C) {
     loadHist('少し待っててくださいね🥺');
   });
   drawSw();
+  $('hnLog').addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('.hnpdf') : null;
+    if (b) savePdf(b);
+  });
   // ★2026-11-12 まるちゃん「会話を初期化ボタン」＝これまでの会話を消して、最初から話す。
   $('hnReset').addEventListener('click', function () {
     if (sending) return;
