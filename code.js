@@ -2517,6 +2517,7 @@ var HOMESORT_SCRIPT_ = '<script>(' + homeSortBoot_.toString() + ')(' + JSON.stri
 //        store＝{ local:'覚える名前' }（スマホ＝このスマホだけ）か { pc:true, saved:[…] }（パソコン＝このパソコンだけ・api.save_folders で覚える）
 //        start＝最初のフォルダ分け（書かなければ下の START）
 //        hideEmpty＝中身が空の最初のフォルダを画面に出さない（覚えている並びには残す＝あとでボタンが増えたら元の場所に出る・2026-11-17）
+//        topOnce＝{ mark, ids }＝トップの一番前に決まった順でコピーを置く（その端末に1回だけ・2026-11-17 受付PC）
 //   決まった動き（試しの画面で まるちゃんと決めた物・2026-11-13〜14）：
 //     長押しして動かす＝並べ替え／フォルダの上で離す＝中に入る／フォルダの左の端で少し止める＝フォルダがずれてその位置に入る
 //     持ち上げた時だけ画面の上に行き先の帯（フォルダの中＝トップ画面に移動・新しいフォルダへ移動の2つだけ／トップ＝新しいフォルダへ移動・コピーなら削除）
@@ -2674,6 +2675,28 @@ function homeFolderBoot_(OPT) {
       F6.m.push(mk);
       var i5 = out.indexOf(F5), i6 = out.indexOf(F6);
       if (i5 >= 0 && i6 >= 0 && i5 < i6) { out[i5] = F6; out[i6] = F5; }
+    })();
+    // ★2026-11-17 まるちゃん「（よく使う）ボタンをトップにコピーして 受付PC 順番は、前日、施術後、LINK、元祖、No31」
+    //   OPT.topOnce＝{ mark:'印', ids:[…] }＝その人のトップの一番前に、決まった順でコピーを置く。並びを覚えている端末にも1回だけ当てる
+    //   （当てた印は施術直後のフォルダ d1 の m に残す＝2回目からは触らない＝あとでスタッフが並べ替えた分は崩さない）。
+    //   最初からあるフォルダの物はそのまま残る（コピーの決まり）。トップや自分で作ったフォルダに同じボタンがあれば、そこから外して前へ持ってくる。
+    (function () {
+      var TO = OPT.topOnce, F1 = fold('d1');
+      if (!TO || !TO.mark || !Array.isArray(TO.ids) || !F1) return;
+      var mk = 'top:' + TO.mark;
+      if (F1.m.indexOf(mk) >= 0) return;
+      F1.m.push(mk);
+      var ids = TO.ids.filter(function (id, i, a) { return !!T[id] && a.indexOf(id) === i; });
+      if (!ids.length) return;
+      for (var i = out.length - 1; i >= 0; i--) {
+        var x = out[i];
+        if (typeof x === 'string') { if (ids.indexOf(x) >= 0) out.splice(i, 1); continue; }
+        if (x.d) continue;
+        x.items = x.items.filter(function (y) { return ids.indexOf(y) < 0; });
+        if (!x.items.length) out.splice(i, 1);
+      }
+      Array.prototype.unshift.apply(out, ids);
+      ids.forEach(function (id) { seenFree[id] = 1; });
     })();
     Object.keys(T).forEach(function (id) { if (!seenFree[id] && !seenDef[id]) out.push(id); });
     out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = (DEF[x.k] && DEF[x.k].c) || nextColor(out); });
@@ -2979,6 +3002,16 @@ var HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":
 var STAFF_HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":"#group-jitsumu","tile":"a.tile","idAttr":"data-tid",' +
   '"hideEmpty":true,"backOnlyInFolder":true,"store":{"local":"sz_home_folders_staff"},' +
   '"onRender":function(o){var r=document.querySelector("#group-jitsumu .hfresetbar");if(r)r.style.display=o?"none":"";}});</' + 'script>';
+// ★2026-11-17 まるちゃん「（よく使う）ボタンをトップにコピーして 受付PC 順番は、前日、施術後、LINK、元祖、No31」
+//   ＝その人のトップの一番前に、決まった順でコピーを置く（その端末に1回だけ・あとで並べ替えた分は崩さない＝正本の topOnce）。
+var STAFF_TOP_ONCE_ = {
+  reception: { mark: 'reception-2026-11-17', ids: ['zenjitsu', 'sejutsugo', 'links', 'ttapp', 'hanbai'] }
+};
+function staffHomeFolderScript_(who) {
+  var t = STAFF_TOP_ONCE_[who];
+  if (!t) return STAFF_HOMEFOLDER_SCRIPT_;
+  return STAFF_HOMEFOLDER_SCRIPT_.replace('"hideEmpty":true,', '"hideEmpty":true,"topOnce":' + JSON.stringify(t) + ',');
+}
 
 // ★フォルダの試し（2026-11-13 まるちゃん「①②③全部それで　開発トップにテストボタンをつくってそのなかに再現して」）。開発中の機能のボタン。
 //   ★2026-11-14 本番のホーム（開発版のスタッフ画面・パソコン版）と同じ1本（共通\画面\ホームのフォルダ.js）を使う形にした
@@ -3497,7 +3530,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       '<div class="grouptitle" style="display:none"><span></span></div>' +
       tilesBox_(shown, [], 'hfold') +
     '</div>' +
-  '</div>' + EXTLINK_SCRIPT_ + sortScript + STAFF_HOMEFOLDER_SCRIPT_;
+  '</div>' + EXTLINK_SCRIPT_ + sortScript + staffHomeFolderScript_(who);
 }
 
 /** L⇔T予約照合（LINEの予約 と TimeTree の予定を突き合わせた結果を表示）。

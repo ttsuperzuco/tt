@@ -1919,6 +1919,24 @@ function homeFolderBoot_(OPT) {
       var i5 = out.indexOf(F5), i6 = out.indexOf(F6);
       if (i5 >= 0 && i6 >= 0 && i5 < i6) { out[i5] = F6; out[i6] = F5; }
     })();
+    (function () {
+      var TO = OPT.topOnce, F1 = fold('d1');
+      if (!TO || !TO.mark || !Array.isArray(TO.ids) || !F1) return;
+      var mk = 'top:' + TO.mark;
+      if (F1.m.indexOf(mk) >= 0) return;
+      F1.m.push(mk);
+      var ids = TO.ids.filter(function (id, i, a) { return !!T[id] && a.indexOf(id) === i; });
+      if (!ids.length) return;
+      for (var i = out.length - 1; i >= 0; i--) {
+        var x = out[i];
+        if (typeof x === 'string') { if (ids.indexOf(x) >= 0) out.splice(i, 1); continue; }
+        if (x.d) continue;
+        x.items = x.items.filter(function (y) { return ids.indexOf(y) < 0; });
+        if (!x.items.length) out.splice(i, 1);
+      }
+      Array.prototype.unshift.apply(out, ids);
+      ids.forEach(function (id) { seenFree[id] = 1; });
+    })();
     Object.keys(T).forEach(function (id) { if (!seenFree[id] && !seenDef[id]) out.push(id); });
     out.forEach(function (x) { if (typeof x !== 'string' && !x.c) x.c = (DEF[x.k] && DEF[x.k].c) || nextColor(out); });
     return norm(out);
@@ -2192,6 +2210,14 @@ var HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":
 var STAFF_HOMEFOLDER_SCRIPT_ = '<script>(' + homeFolderBoot_.toString() + ')({"group":"#group-jitsumu","tile":"a.tile","idAttr":"data-tid",' +
   '"hideEmpty":true,"backOnlyInFolder":true,"store":{"local":"sz_home_folders_staff"},' +
   '"onRender":function(o){var r=document.querySelector("#group-jitsumu .hfresetbar");if(r)r.style.display=o?"none":"";}});</' + 'script>';
+var STAFF_TOP_ONCE_ = {
+  reception: { mark: 'reception-2026-11-17', ids: ['zenjitsu', 'sejutsugo', 'links', 'ttapp', 'hanbai'] }
+};
+function staffHomeFolderScript_(who) {
+  var t = STAFF_TOP_ONCE_[who];
+  if (!t) return STAFF_HOMEFOLDER_SCRIPT_;
+  return STAFF_HOMEFOLDER_SCRIPT_.replace('"hideEmpty":true,', '"hideEmpty":true,"topOnce":' + JSON.stringify(t) + ',');
+}
 
 
 
@@ -2381,7 +2407,7 @@ function renderHomePage_(cfg, base, staff, dev, who) {
       '<div class="grouptitle" style="display:none"><span></span></div>' +
       tilesBox_(shown, [], 'hfold') +
     '</div>' +
-  '</div>' + EXTLINK_SCRIPT_ + sortScript + STAFF_HOMEFOLDER_SCRIPT_;
+  '</div>' + EXTLINK_SCRIPT_ + sortScript + staffHomeFolderScript_(who);
 }
 function renderLT_(base, staff, dev) {
   try {
