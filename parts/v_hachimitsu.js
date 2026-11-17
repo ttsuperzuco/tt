@@ -84,35 +84,83 @@ function honeyScript_(C) {
       } else cb(null);
     });
   }
+  var PKEY = 'zk_honey_pending', leaving = false;
+  window.addEventListener('pagehide', function () { leaving = true; });
+  window.addEventListener('beforeunload', function () { leaving = true; });
+  window.addEventListener('pageshow', function () { leaving = false; });
+  function pendSet(v) { try { if (v) localStorage.setItem(PKEY, JSON.stringify(v)); else localStorage.removeItem(PKEY); } catch (e) {} }
+  function pendGet() {
+    var v = null;
+    try { v = JSON.parse(localStorage.getItem(PKEY) || 'null'); } catch (e) {}
+    return (v && v.id && Date.now() - v.at < 45 * 60000) ? v : null;
+  }
+  function post(path, body, k) {
+    var ctl = window.AbortController ? new AbortController() : null;
+    var tm = setTimeout(function () { if (ctl) ctl.abort(); }, 40000);
+    fetch(DIRECT + path, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' },
+                           signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { clearTimeout(tm); return r.json().then(function (j) { k(r.status, j); }, function () { k(r.status, null); }); })
+      .catch(function () { clearTimeout(tm); k(0, null); });
+    return ctl;
+  }
+  function follow(rid, body, t0, cb, prog) {
+    var heard = false, done = false, gen = 0, timer = null, ctl = null, fails = 0;
+    var finish = function (err, d) {
+      if (done) return;
+      done = true; clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVis);
+      var p = pendGet(); if (p && p.id === rid) pendSet(null);
+      cb(err, d);
+    };
+    var again = function (ms) { clearTimeout(timer); timer = setTimeout(step, ms); };
+    var onVis = function () {      
+      if (document.hidden || done) return;
+      if (ctl) { try { ctl.abort(); } catch (e) {} }
+      gen++; again(0);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    function step() {
+      if (done) return;
+      if (Date.now() - t0 > 40 * 60000) { finish('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
+      var my = ++gen;
+      tpass(function (t) {
+        if (my !== gen || done) return;
+        if (!t) { again(4000); return; }
+        var first = body && !heard;
+        ctl = post(first ? '/h' : '/w', first ? { t: t, rid: rid, who: body.who, role: body.role, fields: body.fields } : { t: t, id: rid }, function (s, j) {
+          if (my !== gen || done) return;
+          ctl = null;
+          if (s === 401) { try { sessionStorage.removeItem('zk_tpass'); } catch (e) {} again(300); return; }
+          if (!j) {
+            if (leaving) return;      
+            if (first && !document.hidden && Date.now() - t0 < 8000) { finish('fallback'); return; }
+            if (!document.hidden) {
+              fails++;
+              if (!body && fails >= 6) { finish('notfound'); return; }
+              if (fails >= 20) { finish('通信に失敗しました。答えは会話に残るので、少し待ってから開き直してもらえると嬉しいです🙇'); return; }
+            }
+            again(Math.min(1500 + 1000 * fails, 8000)); return;
+          }
+          fails = 0; heard = true;
+          if (j.status === 'pending') { if (j.progress && prog) prog(j.progress); again(0); return; }
+          if (j.status === 'notfound') { finish(body ? (j.error || 'もう一度試してもらえると嬉しいです🙇') : 'notfound'); return; }
+          if (!j.ok) { finish(j.error || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
+          if (j.status !== 'done') { finish(j.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
+          var d = null; try { d = JSON.parse(j.result || '{}'); } catch (e) {}
+          finish(null, d || {});
+        });
+      });
+    }
+    step();
+  }
   function direct(fields, me, cb, prog) {
     if (!window.fetch || opName() !== 'hachimitsu') { cb('fallback'); return; }
     tpass(function (t) {
       if (!t) { cb('fallback'); return; }
-      var accepted = false, t0 = Date.now();
-      var req = function (path, body, k) {
-        var ctl = window.AbortController ? new AbortController() : null;
-        var tm = setTimeout(function () { if (ctl) ctl.abort(); }, 40000);
-        fetch(DIRECT + path, { method: 'POST', body: JSON.stringify(body), headers: { 'Content-Type': 'text/plain' },
-                               signal: ctl ? ctl.signal : undefined })
-          .then(function (r) { clearTimeout(tm); return r.json().then(function (j) { k(r.status, j); }, function () { k(r.status, null); }); })
-          .catch(function () { clearTimeout(tm); k(0, null); });
-      };
-      var fail = function (msg) {
-        if (!accepted && Date.now() - t0 < 8000) { cb('fallback'); return; }
-        cb(msg || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇');
-      };
-      var handle = function (s, j) {
-        if (s === 401) { try { sessionStorage.removeItem('zk_tpass'); } catch (e) {} fail(); return; }
-        if (!j) { fail(); return; }
-        if (j.status === 'pending') { accepted = true; if (j.progress && prog) prog(j.progress); req('/w', { t: t, id: j.id }, handle); return; }
-        if (j.status === 'notfound') { cb(j.error || 'もう一度試してもらえると嬉しいです🙇'); return; }
-        if (!j.ok) { fail(j.error); return; }
-        accepted = true;
-        if (j.status !== 'done') { cb(j.result || 'エラーが発生しました。りゅうさんに連絡しました。'); return; }
-        var d = null; try { d = JSON.parse(j.result || '{}'); } catch (e) {}
-        cb(null, d || {});
-      };
-      req('/h', { t: t, who: me.who, role: me.role, fields: fields }, handle);
+      var rid = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      var t0 = Date.now();
+      if (fields.act === 'send') pendSet({ id: rid, at: t0 });
+      follow(rid, { who: me.who, role: me.role, fields: fields }, t0, cb, prog);
     });
   }
   function ask0(fields, busy, done) {
@@ -462,7 +510,22 @@ function honeyScript_(C) {
   $('hnLog').addEventListener('load', function () { if (stick) toBottom(); }, true);
   var cached = histGet();
   if (cached) { draw(cached); stickBottom(); }
-  loadHist('');
+  var pend = pendGet();
+  if (pend && opName() === 'hachimitsu' && window.fetch) {
+    var BUSY = 'ハチミツちゃんが作業中です🍯';
+    sending = true; $('hnSend').disabled = true;
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(BUSY, false), '#2C7A99');
+    follow(pend.id, null, pend.at, function (err, d) {
+      if (typeof szOvHide_ === 'function') szOvHide_();
+      sending = false; $('hnSend').disabled = false;
+      if (err || !d) { loadHist(''); if (err && err !== 'notfound') popup(err); return; }
+      setFull(d); draw(d.items); stickBottom();
+    }, function (t) {
+      if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(BUSY, '<span style="word-break:keep-all;overflow-wrap:anywhere">' + esc(t) + '</span>'), '#2C7A99');
+    });
+  } else {
+    loadHist('');
+  }
 }
 function renderHoneyPage_(base, staff, dev) {
   var C = {
