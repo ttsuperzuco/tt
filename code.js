@@ -13137,7 +13137,8 @@ function shomeishoScript_(C) {
   }
   // 開発版だけ：この窓の鍵の指紋を添える（パソコンの窓は端末番号が窓ごとにばらばら＝受付係が指紋で見分ける・Threads投稿と同じ）
   function devKey(cb) {
-    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    // ★2026-11-17 りゅうさんの「その人の画面」の見本（&as=）でも鍵を添える（添えないと受付係が開発の端末と分からず「権限がありません」になっていた）
+    if ((window.__SZ_ROLE_ || '') !== '開発' && !window.__SZ_AS_) { cb({}); return; }
     var dv = '', dk = '';
     try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
     if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }

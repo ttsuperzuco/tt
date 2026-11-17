@@ -24,7 +24,7 @@ function shomeishoScript_(C) {
     s.onerror = function () { cb({ ok: false, error: '通信エラーです' }); }; document.body.appendChild(s);
   }
   function devKey(cb) {
-    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    if ((window.__SZ_ROLE_ || '') !== '開発' && !window.__SZ_AS_) { cb({}); return; }
     var dv = '', dk = '';
     try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
     if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }
