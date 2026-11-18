@@ -12266,7 +12266,8 @@ var UBPAYCSS_ =
   '.ubplt .tm.cy{cursor:pointer;border:1.5px solid #7dd3fc;}' +
   '.ubpfree{display:block;width:100%;box-sizing:border-box;border:2px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;font-size:17px;margin:4px 0 8px;}' +
   '.ubpick{max-height:88vh;overflow-y:auto;}' +
-  '.ubpbd.cert{background:#ede9fe;color:#5b21b6;}.ubpnote.cert{background:#ede9fe;color:#4c1d95;}';
+  '.ubpbd.cert{background:#ede9fe;color:#5b21b6;}.ubpnote.cert{background:#ede9fe;color:#4c1d95;}' +
+  '#ubPFpay button.on{background:#fde047;border-color:#fde047;color:#0f172a;}';
 
 // ── 裏の書き込みの結果を、ズコのどの画面にいても箱で知らせる見張り（2026-11-07 まるちゃん） ──
 //  「書き込みが成功したら通知して、ズコを開いている限りどこの画面にいてもBOXで出す」。

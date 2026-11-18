@@ -158,7 +158,8 @@ var UBPAYCSS_ =
   '.ubplt .tm.cy{cursor:pointer;border:1.5px solid #7dd3fc;}' +
   '.ubpfree{display:block;width:100%;box-sizing:border-box;border:2px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;font-size:17px;margin:4px 0 8px;}' +
   '.ubpick{max-height:88vh;overflow-y:auto;}' +
-  '.ubpbd.cert{background:#ede9fe;color:#5b21b6;}.ubpnote.cert{background:#ede9fe;color:#4c1d95;}';
+  '.ubpbd.cert{background:#ede9fe;color:#5b21b6;}.ubpnote.cert{background:#ede9fe;color:#4c1d95;}' +
+  '#ubPFpay button.on{background:#fde047;border-color:#fde047;color:#0f172a;}';
 function ubPendAdd_(o) { var a = ubPendList_(); a.push(o); ubPendSave_(a); ubWatch_(); }
 function uriageBookScript_(C) {
   function $(id) { return document.getElementById(id); }
