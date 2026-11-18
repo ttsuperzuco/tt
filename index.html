@@ -200,6 +200,15 @@
   var ZD = 'https://zuko.staaa.jp', LS_PASS = 'zk_tpass2', LS_NAMES = 'zk_dnames';
   var ZD_EXCL = { kanshi_ctl: 1, instaphone: 1, hachimitsu_pc: 1 };   // 窓口だけが受ける用事（自動監視・自宅PC）
   var F0 = window.fetch, ZST = {};
+  // ★2026-11-18 まるちゃん「②でいれて」＝近道が1回でも届かなかったら（3秒待っても返事が無い・Cloudflareのエラー）、
+  //   この端末は5分間、近道を使わずに最初から窓口の道で送る。5分たったらまた近道を試す。
+  //   きっかけ＝11/18 21:45〜 Cloudflareの日本の障害で近道が止まり、ボタンを押すたびに8秒待ってから窓口の道に回っていた。
+  //   ★近道で受けた依頼の結果を聞く時（番号が z で始まる）は、休んでいても近道に聞く（その結果は近道にしか無い）。
+  var LS_OFF = 'zk_off_until', ZD_REST_MS = 5 * 60 * 1000;
+  function zOff() { var u = parseInt(g(LS_OFF) || '0', 10) || 0; return Date.now() < u; }
+  function zRest(code) {          // 届かなかった（0）・Cloudflareのエラー（500番台）の時だけ休む。札の期限切れ（401）・混雑（429）は休まない
+    if (code === 0 || code >= 500) s(LS_OFF, String(Date.now() + ZD_REST_MS));
+  }
   function zPass() {
     try { var c = JSON.parse(g(LS_PASS) || 'null'); if (c && c.t && c.exp - Date.now() > 60000) return c.t; } catch (e) {}
     return '';
@@ -236,6 +245,7 @@
     if (document.hidden) { ZW.paused = gen; return; }
     var t = zPass();
     if (!t) { zGetPass(); setTimeout(function () { zwLoop(gen); }, 5000); return; }
+    if (zOff()) { setTimeout(function () { zwLoop(gen); }, 30000); return; }   // 近道を休んでいる間は見張らない
     var v = {}; names.forEach(function (n) { v[n] = ZDV[n] || ''; });
     zPost('/wch', { t: t, v: v }, 45000, function (code, j) {
       if (gen !== ZW.gen) return;
@@ -264,10 +274,11 @@
   // ★2026-11-16：大きい中身（一斉配信の文と写真）を近道に直接預ける。預けられたら true（だめなら呼ぶ側が窓口へ上げる）。
   window.__zkPut = function (name, obj) {
     return new Promise(function (res) {
-      if (!F0 || st !== 'ok') { res(false); return; }
+      if (!F0 || st !== 'ok' || zOff()) { res(false); return; }
       var t = zPass(); if (!t) { zGetPass(); res(false); return; }
       zPost('/p', { t: t, name: name, d: obj }, 30000, function (code, j) {
         if (code === 401) { rm(LS_PASS); zGetPass(); }
+        zRest(code);
         res(code === 200 && !!j && j.ok === true);
       });
     });
@@ -305,6 +316,7 @@
       if (a !== 'submit' && a !== 'status' && a !== 'data') return false;
       var id = q.get('id') || '';
       if (a === 'status' && id.charAt(0) !== 'z') return false;      // 窓口で積んだ依頼は窓口に聞く
+      if (a !== 'status' && zOff()) return false;                    // 近道を休んでいる間は窓口の道へ（5分）
       if (a === 'submit' && ZD_EXCL[q.get('op') || '']) return false;
       // ★頼まれてその場で作った結果（端末ごとの前日お知らせの確認画面）は、覚えた一覧に無くても近道に聞く（無ければ窓口へ）
       if (a === 'data') { var nl = zNames(), dn = q.get('name') || ''; if (nl && nl.indexOf(dn) < 0 && !/^notice_[a-z0-9_]+\.json$/.test(dn)) return false; }
@@ -318,11 +330,14 @@
         d.set.call(s2, url);
         (document.head || document.documentElement).appendChild(s2);
       };
-      var bad = function (code) { if (code === 401) { rm(LS_PASS); zGetPass(); } };
+      var bad = function (code) { if (code === 401) { rm(LS_PASS); zGetPass(); } zRest(code); };
       var P = {}; q.forEach(function (v, k) { if (k !== 'callback' && k !== 'cb' && k !== 'dk' && k !== 'tk') P[k] = v; });
       if (a === 'submit') {
         var zn = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-        zPost('/s', { t: t, p: P, zn: zn, zr: 1 }, 8000, function (code, j) {
+        // ★2026-11-18 待つのは3秒（ふだんは0.3〜0.8秒で返事が来る）。中身が大きい時だけ送る時間を見て8秒。
+        //   3秒を超えて窓口の道に回っても、同じ依頼は二重に実行されない（下の合図 __zn）。
+        var sms = (q.get('fields') || '').length > 20000 ? 8000 : 3000;
+        zPost('/s', { t: t, p: P, zn: zn, zr: 1 }, sms, function (code, j) {
           if (code === 200 && j && (j.ok || !j.fallback)) { done(j); return; }
           if (code === 429 && j) { done(j); return; }
           bad(code);
@@ -357,7 +372,8 @@
         return true;
       }
       // data
-      zPost('/d', { t: t, name: q.get('name') || '' }, 6000, function (code, j, hd) {
+      // 画面のデータは中身が大きい物もある（受け取り切るまでの時間）＝5秒（前は6秒）
+      zPost('/d', { t: t, name: q.get('name') || '' }, 5000, function (code, j, hd) {
         if (code === 200 && j) {
           try { var zv = hd && hd.get('X-Zv'); if (zv) ZDV[q.get('name') || ''] = zv; } catch (e) {}
           done(j); return;
