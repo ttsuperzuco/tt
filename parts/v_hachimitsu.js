@@ -604,6 +604,12 @@ function honeyScript_(C) {
   window.addEventListener('resize', fitBox);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', fitBox);
   $('hnOpen').addEventListener('click', function () { panel(true); });
+  var backA = document.querySelector('.hntop .uhome');
+  if (backA) backA.addEventListener('click', function (e) {
+    if (!HOME.classList.contains('hnwrite')) return;
+    e.preventDefault();
+    panel(false);
+  });
   function setFs(f) {
     if (!/^[sml]$/.test(f || '')) f = 'm';
     HOME.classList.remove('fs-s', 'fs-m', 'fs-l'); HOME.classList.add('fs-' + f);

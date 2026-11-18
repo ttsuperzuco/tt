@@ -13991,6 +13991,15 @@ function honeyScript_(C) {
   window.addEventListener('resize', fitBox);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', fitBox);
   $('hnOpen').addEventListener('click', function () { panel(true); });
+  // ★2026-11-18 まるちゃん「入力ボックスを出すと会話の画面に戻れない」→「戻るボタンを、ここだけ会話に戻るボタンに」
+  //   ＝入力ボックスを開いている間だけ、上の「← 戻る」で会話の画面に戻す（入力した文・選んだ写真はそのまま残す）。
+  //   会話の画面では今までどおり1つ前の画面へ（入口の戻る処理は、画面が止めた時は何もしない作り）。
+  var backA = document.querySelector('.hntop .uhome');
+  if (backA) backA.addEventListener('click', function (e) {
+    if (!HOME.classList.contains('hnwrite')) return;
+    e.preventDefault();
+    panel(false);
+  });
   // 文字の大きさ（小・中・大）。このスマホに覚えておく。中＝今までの大きさ。
   function setFs(f) {
     if (!/^[sml]$/.test(f || '')) f = 'm';
