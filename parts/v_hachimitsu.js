@@ -16,6 +16,10 @@ var HONEYCSS_ =
   '.hnpdf{display:block;margin-top:8px;background:#0e7490;color:#fff;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:16px;font-weight:800;text-align:left;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.hnpdf span{font-size:13px;font-weight:700;opacity:.9;word-break:break-all;}' +
   '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
+  '.hnhome .cca{font-weight:700;color:#000;}' +
+  '.hnhome .cca .cct{color:#334155;}' +
+  '.hnhome .ccin{font-weight:700;color:#000;}' +
+  '.hnhome .ccin::placeholder{color:#475569;font-weight:700;opacity:1;}' +
   '.hnlive .hntxt:empty{display:none;}' +
   '.hnst{display:flex;align-items:center;gap:8px;font-size:15px;color:#475569;white-space:normal;}' +
   '.hnsec{font-weight:800;color:#0f172a;min-width:30px;}' +
