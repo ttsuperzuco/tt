@@ -838,7 +838,7 @@ function uriageBookScript_(C) {
             buyer: '', useBuyer: false };
     show('ubPayF'); drawCheckout();
   }
-  function cp(x) { return { key: x.key || '', label: x.label, cat: x.cat, timing: x.timing, unit: x.unit || '', qty: x.qty || 1, on: !!x.on, note: '', kind: x.kind || '' }; }
+  function cp(x) { return { key: x.key || '', label: x.label, cat: x.cat, timing: x.timing, unit: x.unit || '', qty: x.qty || 1, on: !!x.on, def: !!x.on, note: '', kind: x.kind || '' }; }
   function curTotal() { return CUR.lines.filter(function (l) { return l.on; }).reduce(function (a, l) { return a + lineSum(l); }, 0); }
   function drawCheckout() {
     var p = CUR.p, h = '';
@@ -1031,7 +1031,7 @@ function uriageBookScript_(C) {
   function drawResult(o) {
     if (!o || !o.invoice) { $('ubPRbody').innerHTML = '<div class="ubnone">結果を表示できませんでした。もう一度試してもらえると嬉しいです🙇</div>'; return; }
     LASTR = o;
-    CUR.lines = CUR.lines.filter(function (l) { return !l.on; });          
+    CUR.lines = CUR.lines.filter(function (l) { return !l.on && (l.def || !l.key); });
     CUR.lines.forEach(function (l) { l.on = true; });
     var v = o.invoice, s = o.sheet, h = '';
     h += '<div class="ubtest">テストのため、発票サイトには送っていません。印刷も売上表への書き込みもしていません</div>';
