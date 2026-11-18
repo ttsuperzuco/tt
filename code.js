@@ -12260,7 +12260,10 @@ var UBPAYCSS_ =
   '.ubpseg button{flex:1 1 0;border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:10px 4px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;}' +
   '.ubpseg button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +
   '.ubchips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px;}' +
-  '.ubchip{background:#fff;color:#0f172a;border:2px solid #cbd5e1;border-radius:999px;padding:8px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}';
+  '.ubchip{background:#fff;color:#0f172a;border:2px solid #cbd5e1;border-radius:999px;padding:8px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
+  '.ubplt .tm.cy{cursor:pointer;border:1.5px solid #7dd3fc;}' +
+  '.ubpfree{display:block;width:100%;box-sizing:border-box;border:2px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;font-size:17px;margin:4px 0 8px;}' +
+  '.ubpick{max-height:88vh;overflow-y:auto;}';
 
 // ── 裏の書き込みの結果を、ズコのどの画面にいても箱で知らせる見張り（2026-11-07 まるちゃん） ──
 //  「書き込みが成功したら通知して、ズコを開いている限りどこの画面にいてもBOXで出す」。
@@ -13042,8 +13045,10 @@ function uriageBookScript_(C) {
     });
   }
   function payDayStr(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
-  function lineSum(l) { return (parseInt(l.unit, 10) || 0) * (l.timing === 'まとめ' ? (parseInt(l.qty, 10) || 1) : 1); }
-  function tWord(l) { return l.timing === 'まとめ' ? (l.qty || 1) + '回分' : (l.timing === '体験' ? '' : l.timing); }
+  function lineSum(l) { return (parseInt(l.unit, 10) || 0) * (l.timing === 'まとめ' ? (parseInt(l.qty, 10) || 1) : l.timing === '両方' ? 2 : 1); }
+  function tWord(l) { return l.timing === 'まとめ' ? (l.qty || 1) + '回分' : l.timing === '両方' ? '本日分＋次回分' : (l.timing === '体験' ? '' : l.timing); }
+  // ★2026-11-18 札を押すと 本日分→次回分→本日分＋次回分 と切り替わる（再現テストで切り替えは16件＝専用のボタンは作らない）
+  var CYCLE = { '本日分': '次回分', '次回分': '両方', '両方': '本日分' };
   function loadPay() {
     $('ubPays').innerHTML = '<div class="ubnone">予約を読んでいます…</div>';
     $('ubPayDay').textContent = PDAY.slice(5).replace('-', '/').replace(/^0/, '');
@@ -13085,14 +13090,15 @@ function uriageBookScript_(C) {
     if (!CUR.lines.length) h += '<div class="ubnone">お会計の行がありません。下の「＋」から追加してください😊</div>';
     CUR.lines.forEach(function (l, i) {
       h += '<div class="ubpl' + (l.on ? ' on' : '') + '" data-l="' + i + '"><button type="button" class="ubpck" data-ck="' + i + '">' + (l.on ? '✓' : '') + '</button>' +
-        '<div class="ubplt" data-ed="' + i + '"><span class="nm">' + esc(l.label) + '</span>' + (tWord(l) ? '<span class="tm">' + esc(tWord(l)) + '</span>' : '') +
+        '<div class="ubplt" data-ed="' + i + '"><span class="nm">' + esc(l.label) + '</span>' + (tWord(l) ? '<span class="tm' + (CYCLE[l.timing] ? ' cy' : '') + '"' + (CYCLE[l.timing] ? ' data-tp="' + i + '"' : '') + '>' + esc(tWord(l)) + '</span>' : '') +
         (l.note ? '<span class="dc">' + esc(l.note) + '</span>' : '') + '</div><div class="ubpla" data-ed="' + i + '">' + (l.unit ? yen(lineSum(l)) : '<span class="nf">金額を入力</span>') + '</div></div>';
     });
     h += '</div>';
     var nx = (p.next || []).filter(function (x) { return !CUR.lines.some(function (l) { return l.key && l.key === x.key; }); });
     h += '<div class="ubpadds">';
     if (nx.length) h += '<button type="button" data-add="next">＋ 次回分' + (p.next_day ? '（' + esc(p.next_day.slice(5).replace('-', '/').replace(/^0/, '')) + 'の予約）' : '') + '</button>';
-    h += '<button type="button" data-add="bulk">＋ まとめ買い</button><button type="button" data-add="part">＋ ほかを追加</button></div>';
+    h += '<button type="button" data-add="menu">＋ メニューから追加</button><button type="button" data-add="bulk">＋ まとめ買い</button>' +
+      '<button type="button" data-add="zan">＋ 残金・差額</button><button type="button" data-add="free">＋ 自由に入力</button></div>';
     h += '<div class="ubptot">合計 ' + yen(curTotal()) + '</div>';
     h += '<div class="ubpay" id="ubPFpay">' + PAYS.map(function (v) { return '<button type="button" data-pay="' + esc(v) + '" class="' + (CUR.pay === v ? 'on' : '') + '">' + esc(v === '街口支付' ? '街口' : v) + '</button>'; }).join('') + '</div>';
     var bid = CUR.buyer || p.buyer || '';
@@ -13114,14 +13120,51 @@ function uriageBookScript_(C) {
       closePick(); onPick(items[+i]);
     });
   }
-  function partPrice(x) { var g = CUR.p.gender || (String(CUR.num).charAt(0) === 'M' ? '男' : '女'); return (g === '男' ? x.m : x.f) || x.f || x.m || ''; }
+  function partPriceOld_(x) { var g = CUR.p.gender || (String(CUR.num).charAt(0) === 'M' ? '男' : '女'); return (g === '男' ? x.m : x.f) || x.f || x.m || ''; }
+  function sexOf() { var g = CUR.p.gender || ''; if (!g) g = String(CUR.num).charAt(0) === 'M' ? '男' : String(CUR.num).charAt(0) === 'F' ? '女' : ''; return g; }
+  function menuLabel(it, pr) {
+    var t = pr.t === '通常' ? '' : pr.t.replace(/[\[\]]/g, '').replace('トライアル', 'トラ').replace('キャンペーン', 'キャ');
+    return (it.label + (t ? ' ' + t : '')).slice(0, 40);
+  }
+  // ★メニューから追加＝料金表の全部を分類して選ぶ（再現テストで出せなかった51行のうち約40行がこれで出せる）
+  function pickMenu(onPick) {
+    var M = (PL && PL.menu) || [], sx = sexOf(), groups = [];
+    M.forEach(function (x) { if (groups.indexOf(x.g) < 0) groups.push(x.g); });
+    if (!groups.length) { popup('メニューを読み込めていません。一覧に戻ってから、もう一度試してもらえると嬉しいです🙇'); return; }
+    chipPick('メニューから追加', groups.map(function (g) { return { t: g }; }), function (gg) {
+      var items = M.filter(function (x) { return x.g === gg.t && x.prices.some(function (q) { return !sx || q.sex === '共通' || q.sex === sx; }); });
+      chipPick(gg.t, items.map(function (x) { return { t: x.label, x: x }; }), function (ii) {
+        var ps = ii.x.prices.filter(function (q) { return !sx || q.sex === '共通' || q.sex === sx; });
+        if (ps.length === 1) { onPick(ii.x, ps[0]); return; }
+        chipPick(ii.x.label + '（値段を選択してください😊）', ps.map(function (q) { return { t: q.t + '　' + Number(q.a).toLocaleString() + '元', q: q }; }), function (pp) { onPick(ii.x, pp.q); });
+      });
+    });
+  }
+  // 自由に入力＝最後の手段（内容と金額）
+  function freeLine() {
+    var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
+    m.innerHTML = '<div class="ubpick"><div class="h">自由に入力</div><div class="s">内容（発票の明細・40文字まで）</div><input id="ubFreeT" maxlength="40" class="ubpfree">' +
+      '<div class="s">金額</div><div class="ubrow"><div class="ubbox" data-pk="u" data-ph="押して入力"></div></div>' +
+      '<button type="button" class="go" data-a="ok" style="margin-top:12px">追加する</button><button type="button" class="x" data-a="close">閉じる</button></div>';
+    document.body.appendChild(m);
+    var PF = padKit(m.querySelector('.ubpick'), { u: { kind: 'int', max: 6, comma: true, open: true } }); PF.open('u');
+    m.addEventListener('click', function (ev) {
+      var b = ev.target.closest('button'); if (ev.target === m || (b && b.getAttribute('data-a') === 'close')) { closePick(); return; }
+      if (!b || b.getAttribute('data-a') !== 'ok') return;
+      var t = $('ubFreeT').value.trim(), u = PF.raw('u');
+      if (!t) { popup('内容を入力してください😊'); return; }
+      if (!(parseInt(u, 10) > 0)) { popup('金額を入力してください😊'); return; }
+      CUR.lines.push({ key: '', label: t, cat: /プロセル/.test(t) ? 'プロセル' : /パリ/.test(t) ? 'パリジェンヌ' : /ハイドラ|マツヤニ/.test(t) ? 'フェイシャル' : '脫毛', timing: '', unit: u, qty: 1, on: true, note: '', kind: '' });
+      closePick(); drawCheckout();
+    });
+  }
   // 1行を直す小窓：本日分／次回分／体験／まとめ買い・金額（数字ボタン）・割引・外す
   function editLine(i) {
     var l = CUR.lines[i], m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
     var w = { timing: l.timing, unit: l.unit, qty: l.qty || 1, note: l.note, base: l.unit };
     function body() {
-      var h = '<div class="h">' + esc(l.label) + '</div><div class="ubpseg">' + ['本日分', '次回分', '体験', 'まとめ'].map(function (t) {
-        return '<button type="button" data-tm="' + t + '" class="' + (w.timing === t ? 'on' : '') + '">' + (t === 'まとめ' ? 'まとめ買い' : t) + '</button>'; }).join('') + '</div>';
+      var h = '<div class="h">' + esc(l.label) + '</div><div class="ubpseg">' + ['本日分', '次回分', '両方', '体験', 'まとめ'].map(function (t) {
+        return '<button type="button" data-tm="' + t + '" class="' + (w.timing === t ? 'on' : '') + '">' + ({ 'まとめ': 'まとめ買い', '両方': '本日分＋次回分' }[t] || t) + '</button>'; }).join('') + '</div>';
       if (w.timing === 'まとめ') h += '<div class="s">回数</div><div class="ubpseg">' + [3, 4, 5, 8, 10].map(function (q) {
         return '<button type="button" data-q="' + q + '" class="' + (+w.qty === q ? 'on' : '') + '">' + q + '回</button>'; }).join('') + '</div>';
       h += '<div class="s">' + (w.timing === 'まとめ' ? '1回あたりの金額' : '金額') + '</div><div class="ubrow"><div class="ubbox" data-pk="u" data-ph="押して入力"></div></div>';
@@ -13154,6 +13197,8 @@ function uriageBookScript_(C) {
     });
   }
   $('ubPayF').addEventListener('click', function (e) {
+    var tp = e.target.closest('[data-tp]');
+    if (tp && CUR) { var lt = CUR.lines[+tp.getAttribute('data-tp')]; lt.timing = CYCLE[lt.timing] || lt.timing; lt.on = true; drawCheckout(); return; }
     var b = e.target.closest('button,[data-ed]'); if (!b || !CUR) return;
     if (b.hasAttribute('data-ck')) { var l = CUR.lines[+b.getAttribute('data-ck')]; l.on = !l.on; drawCheckout(); return; }
     if (b.hasAttribute('data-ed')) { editLine(+b.getAttribute('data-ed')); return; }
@@ -13179,16 +13224,30 @@ function uriageBookScript_(C) {
         var c = cp(it.x); c.on = true; c.timing = '次回分'; CUR.lines.push(c); drawCheckout(); });
       return;
     }
-    if (ad === 'bulk' || ad === 'part') {
-      var src = CUR.lines.map(function (l) { return { t: l.label, l: l }; }).concat((PL ? PL.parts : []).map(function (x) { return { t: x.label, x: x }; }));
-      chipPick(ad === 'bulk' ? 'まとめ買いする部位' : '追加する部位', src, function (it) {
-        var n = it.l ? { key: '', label: it.l.label, cat: it.l.cat, timing: '本日分', unit: it.l.unit, qty: 1, on: true, note: '', kind: '' }
-                     : { key: '', label: it.x.label, cat: it.x.cat, timing: '本日分', unit: partPrice(it.x), qty: 1, on: true, note: '', kind: '' };
-        if (ad === 'bulk') { n.timing = 'まとめ'; n.qty = 5; }
-        CUR.lines.push(n); drawCheckout(); editLine(CUR.lines.length - 1);
+    if (ad === 'menu') { pickMenu(function (it, pr) {
+        CUR.lines.push({ key: '', label: menuLabel(it, pr), cat: it.cat, timing: /セット|まとめ|コース総額/.test(pr.t) ? '' : '本日分', unit: pr.a, qty: 1, on: true, note: '', kind: '' });
+        drawCheckout(); }); return; }
+    if (ad === 'bulk') {
+      var src = CUR.lines.map(function (l) { return { t: l.label, l: l }; });
+      var addBulk = function (n) { n.timing = 'まとめ'; n.qty = 5; n.on = true; CUR.lines.push(n); drawCheckout(); editLine(CUR.lines.length - 1); };
+      var fromMenu = function () { pickMenu(function (it, pr) { addBulk({ key: '', label: menuLabel(it, pr), cat: it.cat, unit: pr.a, note: '', kind: '' }); }); };
+      if (!src.length) { fromMenu(); return; }
+      src.push({ t: 'メニューから選ぶ…', menu: true });
+      chipPick('まとめ買いする部位', src, function (it) {
+        if (it.menu) { fromMenu(); return; }
+        addBulk({ key: '', label: it.l.label, cat: it.l.cat, unit: it.l.unit, note: '', kind: '' });
       });
       return;
     }
+    if (ad === 'zan') {
+      // ★残金・差額＝金額だけ入れる（明細は自動）。再現テストで「前回残金」「差額」が5件
+      chipPick('残金・差額', [{ t: '前回残金' }, { t: '差額' }, { t: '次回の残金' }], function (it) {
+        CUR.lines.push({ key: '', label: it.t, cat: CUR.lines.length ? CUR.lines[0].cat : '脫毛', timing: '', unit: '', qty: 1, on: true, note: '', kind: '' });
+        drawCheckout(); editLine(CUR.lines.length - 1);
+      });
+      return;
+    }
+    if (ad === 'free') { freeLine(); return; }
     if (b.id !== 'ubPFgo') return;
     issue(false);
   });
