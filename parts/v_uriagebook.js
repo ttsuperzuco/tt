@@ -1073,8 +1073,9 @@ function uriageBookScript_(C) {
       '\n売上 ' + g.salesAmount + '元・税額 ' + g.taxAmount + '元・合計 ' + g.totalAmount + '元' +
       '\n送信：' + (g.sent ? '送りました' : '送っていません（' + g.why + '）') +
       (g.errors && g.errors.length ? '\n確認：' + g.errors.join('／') : '')) + '</div></div>';
-    h += '<div class="ubac"><div class="t1">売上表（本番ならこの1行を追加）</div><div class="t2">' + esc(
-      s.A + '　' + (s.B || '番号なし') + '　' + (s.C || '') + '　' + s.D + '\n' + s.E + '\n合計 ' + Number(s.F).toLocaleString() + '元') + '</div></div>';
+    h += '<div class="ubac"><div class="t1">売上表（本番なら発票を出した時にこの1行を自動で追加）</div><div class="t2">' + esc(
+      'A 発票番号：' + s.A + '\nB 顧客番号：' + (s.B || '（なし）') + '\nC 顧客名：' + (s.C || '（なし）') + '\nD 支払方法：' + (s.D || '（なし）') + '\nE 明細：' + String(s.E || '').split('\n').join('\n　　') + '\nF 合計：' + Number(s.F).toLocaleString() + '元' +
+      (o.sheet_write ? '\n書き込み：' + (o.sheet_write.written ? '書きました' : '書いていません（' + (o.sheet_write.why || o.sheet_write.lock) + '）') : '')) + '</div></div>';
     if (CUR.lines.length) h += '<button type="button" class="exgo" id="ubPRnext" style="background:#2C7A99">残りの' + CUR.lines.length + '行で次の発票を出す</button>';
     h += '<button type="button" class="exgo" id="ubPRlist">一覧に戻る</button>';
     $('ubPRbody').innerHTML = h;
