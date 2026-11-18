@@ -33,6 +33,15 @@ var HONEYCSS_ =
   '.hnhome .cc{padding-bottom:0;}' +
   '.hnhome #hnSend{margin-bottom:0;}' +
   '.hnhome #hnOpen{margin:4px 0 0;padding:14px 10px;font-size:20px;}' +
+  '.hnhome.hnwrite #hnLog{display:none;}' +
+  '.hnhome.hnwrite .ccin{resize:none;}' +
+  '.hnfs{flex:0 0 auto;display:flex;background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:2px;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
+  '.hnfs button{border:0;background:transparent;color:#475569;border-radius:999px;padding:6px 9px;font:inherit;font-size:.85rem;font-weight:900;cursor:pointer;}' +
+  '.hnfs button.on{background:#2C7A99;color:#fff;}' +
+  '.hnhome.fs-s .ccq,.hnhome.fs-s .cca{font-size:14px;}' +
+  '.hnhome.fs-s .ccin{font-size:16px;}' +
+  '.hnhome.fs-l .ccq,.hnhome.fs-l .cca{font-size:22px;}' +
+  '.hnhome.fs-l .ccin{font-size:24px;}' +
   '.hntop{position:sticky;top:0;z-index:30;background:#2C7A99;display:flex;align-items:center;gap:6px;margin:-34px -18px 10px;padding:10px 12px 8px;}' +
   '.hntop .ubar{margin:0;flex:0 0 auto;}' +
   '.hntop .uhome{padding:8px 11px;font-size:.95rem;}' +
@@ -531,12 +540,37 @@ function honeyScript_(C) {
       go({ act: 'clear' }, '少し待っててくださいね🥺', function (err, d) { if (err) { popup(err); return; } setFull(d); draw(d.items); });
     } });
   });
+  var HOME = document.querySelector('.hnhome');
+  function fitBox() {
+    if (!HOME.classList.contains('hnwrite')) return;
+    var ta = $('hnText'), vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    var rest = $('hnTail').offsetHeight + 24;      
+    ta.style.height = Math.max(160, Math.floor(vh - ta.getBoundingClientRect().top - rest)) + 'px';
+  }
   function panel(open) {
     $('hnPanel').style.display = open ? '' : 'none';
     $('hnOpen').style.display = open ? 'none' : '';
-    if (open) { stickBottom(); try { $('hnText').focus(); } catch (e) {} }
+    HOME.classList.toggle('hnwrite', !!open);
+    if (open) {
+      window.scrollTo(0, 0); fitBox();
+      try { $('hnText').focus(); } catch (e) {}
+    } else {
+      $('hnText').style.height = '';
+      stickBottom();
+    }
   }
+  window.addEventListener('resize', fitBox);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fitBox);
   $('hnOpen').addEventListener('click', function () { panel(true); });
+  function setFs(f) {
+    if (!/^[sml]$/.test(f || '')) f = 'm';
+    HOME.classList.remove('fs-s', 'fs-m', 'fs-l'); HOME.classList.add('fs-' + f);
+    Array.prototype.forEach.call($('hnFs').querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-f') === f); });
+    lsSet('zk_honey_fs', f);
+    if (HOME.classList.contains('hnwrite')) fitBox(); else if (stick) toBottom();
+  }
+  $('hnFs').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) setFs(b.getAttribute('data-f')); });
+  setFs(lsGet('zk_honey_fs'));
   $('hnSend').addEventListener('click', function () {
     if (sending) return;
     var t = $('hnText').value.replace(/^\s+|\s+$/g, '');
@@ -611,6 +645,7 @@ function renderHoneyPage_(base, staff, dev) {
     '<div class="hntop">' + backBar_(base, staff, dev) +
       '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png?v=2"><span class="hntxt">ハチミツちゃん</span></span>' +
       '<div class="hnsw" id="hnSw" style="display:none"><button type="button" data-w="server">サーバー</button><button type="button" data-w="pc">自宅PC</button></div>' +
+      '<div class="hnfs" id="hnFs"><button type="button" data-f="s">小</button><button type="button" data-f="m">中</button><button type="button" data-f="l">大</button></div>' +
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
@@ -618,10 +653,11 @@ function renderHoneyPage_(base, staff, dev) {
       '<div id="hnPanel" style="display:none">' +
       '<div class="hnbox"><div class="hnthumbs" id="hnThumbs"></div>' +
       '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea></div>' +
+      '<div id="hnTail">' +
       '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼️ 画像選択</button></div>' +
       '<input type="file" id="hnFile" accept="image/*,application/pdf" multiple style="display:none">' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
-      '</div>' +
+      '</div></div>' +
     '</div></div>' +
     '<script>(' + honeyScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
