@@ -13766,7 +13766,7 @@ function shomeishoScript_(C) {
 }
 // ★📶お店のWi-Fiの設定（2026-11-19 まるちゃん）＝中華電信ルーターの設定の説明書を、表紙から順に上から下へ見るだけの画面。
 //   画像を差し替える時は manual/wifi/p00〜p11.jpg を上げ直し、WIFIMAN_VER_ の数字を上げる（スマホが前の画像を覚えているため）。
-var WIFIMAN_VER_ = 1;
+var WIFIMAN_VER_ = 2;
 function renderWifiManualPage_(base, staff, dev) {
   var imgs = '';
   for (var i = 0; i < 12; i++) {

@@ -1,6 +1,6 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
 // この画面だけで使う部品：wifiman
-var WIFIMAN_VER_ = 1;
+var WIFIMAN_VER_ = 2;
 function renderWifiManualPage_(base, staff, dev) {
   var imgs = '';
   for (var i = 0; i < 12; i++) {
