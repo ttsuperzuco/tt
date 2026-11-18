@@ -13338,6 +13338,7 @@ var HONEYCSS_ =
   '.home.hnhome{padding-bottom:10px;}' +
   '.hnhome .cc{padding-bottom:0;}' +
   '.hnhome #hnSend{margin-bottom:0;}' +
+  '.hnhome #hnOpen{margin:4px 0 0;padding:14px 10px;font-size:20px;}' +
   '.hntop{position:sticky;top:0;z-index:30;background:#2C7A99;display:flex;align-items:center;gap:6px;margin:-34px -18px 10px;padding:10px 12px 8px;}' +
   '.hntop .ubar{margin:0;flex:0 0 auto;}' +
   '.hntop .uhome{padding:8px 11px;font-size:.95rem;}' +
@@ -13899,6 +13900,13 @@ function honeyScript_(C) {
       go({ act: 'clear' }, '少し待っててくださいね🥺', function (err, d) { if (err) { popup(err); return; } setFull(d); draw(d.items); });
     } });
   });
+  // ★2026-11-18：入力ボックスは普段しまっておき、「入力ボックスを表示」で出す。送信したらまたしまう（失敗したら出したまま）。
+  function panel(open) {
+    $('hnPanel').style.display = open ? '' : 'none';
+    $('hnOpen').style.display = open ? 'none' : '';
+    if (open) { stickBottom(); try { $('hnText').focus(); } catch (e) {} }
+  }
+  $('hnOpen').addEventListener('click', function () { panel(true); });
   $('hnSend').addEventListener('click', function () {
     if (sending) return;
     var t = $('hnText').value.replace(/^\s+|\s+$/g, '');
@@ -13909,13 +13917,13 @@ function honeyScript_(C) {
     // ★2026-11-18：作業中の画面は出さず、送った文と返事の吹き出し（くるくる・秒数・今の段階→打ち込み）を会話に出す。
     //   入力欄は送った時点で空にする（失敗したら戻す）。
     var sentPicks = picks, live = Live(t, picks.length, Date.now());
-    $('hnText').value = ''; picks = []; drawPicks();
+    $('hnText').value = ''; picks = []; drawPicks(); panel(false);
     go({ act: 'send', text: t, images: sentPicks }, '', function (err, d) {
       if (err) {
         sending = false; $('hnSend').disabled = false;
         live.fail();
         if (!$('hnText').value) { $('hnText').value = t; picks = sentPicks; drawPicks(); }
-        popup(err); return;
+        panel(true); popup(err); return;
       }
       var last = (d.items || [])[(d.items || []).length - 1] || {};
       live.done(last.a || '', function () {
@@ -13987,6 +13995,10 @@ function renderHoneyPage_(base, staff, dev) {
       '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
+      // ★2026-11-18 まるちゃん「入力ボックスと音声入力・画像選択・送信は普段は出さず、1行の長い緑の『入力ボックスを表示』だけ。
+      //   押すと今のように出る」＝会話を広く見られるように。送信したらまた1行に戻る。
+      '<button type="button" class="exgo hnopen" id="hnOpen">入力ボックスを表示</button>' +
+      '<div id="hnPanel" style="display:none">' +
       '<div class="hnbox"><div class="hnthumbs" id="hnThumbs"></div>' +
       '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea></div>' +
       '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼️ 画像選択</button></div>' +
@@ -13995,6 +14007,7 @@ function renderHoneyPage_(base, staff, dev) {
       //   PDFも混ぜて頼むと切り替わらず、スマホのファイルの画面（最近・画像・ダウンロード・フォルダ）から選べる。画像以外を選んだら知らせる。
       '<input type="file" id="hnFile" accept="image/*,application/pdf" multiple style="display:none">' +
       '<button type="button" class="exgo" id="hnSend">送信</button>' +
+      '</div>' +
     '</div></div>' +
     '<script>(' + honeyScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
 }
