@@ -12515,7 +12515,9 @@ function uriageBookScript_(C) {
   }
   function fetchData(after) {
     jsonp({ action: 'data', name: 'uriagebook.json' }, function (p) {
-      if (p && p.rows) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); }
+      // 先に頼んだ古い中身が後から届いても、新しい中身を上書きしない（同じ日の時刻で比べる）
+      var older = p && D && p.tab === D.tab && String(p.at || '') < String(D.at || '');
+      if (p && p.rows && !older) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); }
       if (after) after(p);
     });
   }
@@ -12973,7 +12975,7 @@ function uriageBookScript_(C) {
   function fetchAuth(fresh, after) {
     jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) {
       if (fresh) AUTHWAIT = false;
-      if (p && p.items) AUTH = p;
+      if (p && p.items && !(AUTH && String(p.at || '') < String(AUTH.at || ''))) AUTH = p;
       else if (fresh) AUTHERR = true;
       drawAuth();
       if (after) after();
@@ -13401,7 +13403,9 @@ function uriageBookScript_(C) {
   //   （作廢の認証を押した時には、ほぼ最新の一覧が届いている）。
   var isDev = (window.__SZ_ROLE_ || '') === '開発';
   if (isDev) VOIDS_INFLIGHT = true;
-  fetchData(function () { ask(isDev ? { action: 'load', voids: 1 } : { action: 'load' }, '', null, true); });
+  // ★2026-11-18 前回の中身を読み終わるのを待たずに、すぐ読み直しを頼む（前は読み終わるまで2〜6秒待ってから頼んでいた）
+  fetchData();
+  ask(isDev ? { action: 'load', voids: 1 } : { action: 'load' }, '', null, true);
 }
 
 function renderUriageBookPage_(base, staff, dev) {

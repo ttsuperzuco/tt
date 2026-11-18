@@ -304,7 +304,8 @@ function uriageBookScript_(C) {
   }
   function fetchData(after) {
     jsonp({ action: 'data', name: 'uriagebook.json' }, function (p) {
-      if (p && p.rows) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); }
+      var older = p && D && p.tab === D.tab && String(p.at || '') < String(D.at || '');
+      if (p && p.rows && !older) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); }
       if (after) after(p);
     });
   }
@@ -714,7 +715,7 @@ function uriageBookScript_(C) {
   function fetchAuth(fresh, after) {
     jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) {
       if (fresh) AUTHWAIT = false;
-      if (p && p.items) AUTH = p;
+      if (p && p.items && !(AUTH && String(p.at || '') < String(AUTH.at || ''))) AUTH = p;
       else if (fresh) AUTHERR = true;
       drawAuth();
       if (after) after();
@@ -1117,7 +1118,8 @@ function uriageBookScript_(C) {
   show('ubMenu'); draw();
   var isDev = (window.__SZ_ROLE_ || '') === '開発';
   if (isDev) VOIDS_INFLIGHT = true;
-  fetchData(function () { ask(isDev ? { action: 'load', voids: 1 } : { action: 'load' }, '', null, true); });
+  fetchData();
+  ask(isDev ? { action: 'load', voids: 1 } : { action: 'load' }, '', null, true);
 }
 function renderUriageBookPage_(base, staff, dev) {
   var head = function (icon, name) {
