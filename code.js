@@ -13336,10 +13336,11 @@ var HONEYCSS_ =
   // ★2026-11-12 まるちゃん「戻るのすぐ右にハチミツちゃん（少し小さめの文字）、その右に会話を初期化ボタン。そこのトップはスクロールしていても常に表示」
   // ★2026-11-12 まるちゃん「送信の下の余白はほんの少しでいい」
   '.home.hnhome{padding-bottom:10px;}' +
-  // ★2026-11-18 まるちゃん：吹き出しの色「黒」＝背景は今まで通りの青のまま、吹き出しの中だけ黒地に白い文字（返事＝黒・送った文＝濃い灰色）
+  // ★2026-11-18 まるちゃん：吹き出しの色「黒」＝背景は今まで通りの青のまま、吹き出しの中だけ黒地に白い文字（返事＝黒・送った文は白の時と同じ黄色）
   '.hncl .cca{background:#1f1f1e;color:#f5f4ef !important;}' +
   '.hncl .cca .cct{color:#8f8d86 !important;}' +
-  '.hncl .ccq{background:#3b3a37;color:#f5f4ef;box-shadow:none;}' +
+  // ★同日 まるちゃん「（送った文が濃い灰色だと）自分の会話か相手の会話かわからない」＝黒の時も送った文は白の時と同じ黄色に黒い文字
+  '.hncl .ccq{background:#fde047;color:#0f172a;}' +
   '.hncl .hnst{color:#b8b6ae;}' +
   '.hncl .hnsec{color:#f5f4ef;}' +
   '.hnhome .cc{padding-bottom:0;}' +

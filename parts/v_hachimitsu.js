@@ -32,7 +32,7 @@ var HONEYCSS_ =
   '.home.hnhome{padding-bottom:10px;}' +
   '.hncl .cca{background:#1f1f1e;color:#f5f4ef !important;}' +
   '.hncl .cca .cct{color:#8f8d86 !important;}' +
-  '.hncl .ccq{background:#3b3a37;color:#f5f4ef;box-shadow:none;}' +
+  '.hncl .ccq{background:#fde047;color:#0f172a;}' +
   '.hncl .hnst{color:#b8b6ae;}' +
   '.hncl .hnsec{color:#f5f4ef;}' +
   '.hnhome .cc{padding-bottom:0;}' +
