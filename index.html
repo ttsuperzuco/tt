@@ -161,7 +161,20 @@
     if (r.state === 'taken') { newDv(); rm(LS_DK); code = g(LS_DV).slice(-4).toUpperCase(); ask(function (r2) { settle(r2, prev); }); return; }
     if (prev === 'need') { st = 'pending'; window.__zkShowWait(); }   // 通信に失敗＝許可待ちの画面で待つ
   }
-  if (st !== 'ok') { var prev0 = st; ask(function (r) { settle(r, prev0); }); }
+  // ★2026-11-18 まるちゃん「（許可待ちは）絶対にあなたがテストする時に出してしまったもの。テストの時は開発の同じ物を使えと言っているのに、
+  //   別の会話がルールを破って新しいのを出す」＝決まりだけでは守られないので仕組みで止める：
+  //   試しのブラウザ（手元の写し localhost・Claudeの内蔵ブラウザ・自動で動かすブラウザ）で鍵が無い時は、新しい端末として登録しない。
+  //   （スタッフのスマホ・パソコンはどれにも当たらない。試しは必ず番号と鍵を付けた住所で開く）
+  var ZK_TEST = /^(localhost|127\.0\.0\.1|\[::1\])$|\.localhost$/.test(location.hostname) ||
+    / Claude\/|HeadlessChrome/.test(navigator.userAgent || '');
+  if (st !== 'ok' && ZK_TEST) {
+    st = 'need';
+    window.__zkShowWait = function () {
+      var root = document.getElementById('root');
+      if (root) root.innerHTML = '<div class="pkwrap" style="text-align:center"><div class="pktitle">試しのブラウザです</div>' +
+        '<div style="color:#fff;font-size:18px;line-height:1.7;margin-top:12px">新しい端末としては登録しません。<br>番号と鍵を付けた住所で開いてください。</div></div>';
+    };
+  } else if (st !== 'ok') { var prev0 = st; ask(function (r) { settle(r, prev0); }); }
 
   window.__zkAuthFail = function () {
     if (st === 'need' || st === 'pending') return;      // 確認中・許可待ちの画面が出ている
