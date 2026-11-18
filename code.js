@@ -178,6 +178,9 @@ function doGet(e) {
   } else if (view === 'uriagebook') {
     title = 'TT売上帳簿';                               // ★今日の売上表を触る（純JS・書くのは受付係→売上帳簿の係）
     html = renderUriageBookPage_(base, staff, dev);
+  } else if (view === 'wifiman') {
+    title = 'お店のWi-Fiの設定';                               // ★マニュアルの画像を並べて見るだけ（純JS・開発者だけ）
+    html = renderWifiManualPage_(base, staff, dev);
   } else if (view === 'shomeisho') {
     title = '購入証明書作成';                                 // ★画面と紙は係から受け取って枠に出す（純JS・計算は受付係 op=shomeisho）
     html = renderShomeishoPage_(base, staff, dev);
@@ -1072,7 +1075,11 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★2026-11-06 まるちゃん「①だす」＝全スタッフにON（人ごとの表示で入切できる）。
   mita:       { exec: true, staff: true },
   // ★購入証明書作成（2026-11-11 まるちゃん「全スタッフにだして」）＝全スタッフにON（人ごとの表示で入切できる）。
-  shomeisho:  { exec: true, staff: true }
+  shomeisho:  { exec: true, staff: true },
+  // ★📶お店のWi-Fiの設定（2026-11-19 まるちゃん「龍の画面にマニュアルフォルダをつくって、このマニュアルいれて」「おれだけ」）
+  //   ＝中華電信ルーターの設定の説明書（12枚の画像）を見るだけの画面。りゅう画面の「マニュアル」フォルダに入る。
+  //   開発者だけ（共通ルール16・tile_settings.py の TILES に入れない＝誰もONにできない）。
+  wifiman:    { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1080,7 +1087,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -2105,6 +2112,10 @@ var TILE_DEFS_ = [
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\shomeisho-zuko-96.png。
     icon: '<span class="ticon">🧾</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
+  // ★📶お店のWi-Fiの設定（2026-11-19 まるちゃん）＝マニュアルの画像を上から順に見る画面（renderWifiManualPage_）。開発者だけ。
+  //   画像＝manual/wifi/p00〜p11.jpg（元＝AI自動プログラム\マニュアル一覧\お店のWi-Fiの設定（中華電信ルーター）・写真のWi-Fiの名前はぼかしてある）。PC版 super_pc.py も同じ。
+  { id: 'wifiman', cls: 'wifiman', view: 'wifiman',
+    icon: '<span class="ticon">📶</span>', label: 'お店の\nWi-Fiの設定' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   // ★2026-11-14 まるちゃん「フォルダの試しボタンも消して」＝ホームのボタンを外した（画面 view はそのまま）。PC版 super_pc.py と同じ。
@@ -2542,7 +2553,10 @@ function homeFolderBoot_(OPT) {
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
     // ★2026-11-14 まるちゃん「お客様系とお知らせ＆配信のフォルダを入れ替えて。これは全員」＝お客様系を先に。
     { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] },
-    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] }];
+    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
+    // ★2026-11-19 まるちゃん「龍の画面にマニュアルフォルダをつくって、このマニュアルいれて」「おれだけ」＝中のボタンは開発者だけ
+    //   （スタッフ・TOMATOさんの画面では中が空になる＝hideEmpty でフォルダごと出ない）。マニュアルを足す時は items に足す。
+    { k: 'd7', d: true, f: 'マニュアル', items: ['wifiman'] }];
   // ★2026-11-14 あとから最初のフォルダを変えた分（まるちゃん「全適用させて」）＝並びを覚えている端末にも1回だけ当てる。
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
@@ -13750,6 +13764,25 @@ function shomeishoScript_(C) {
   $('smCertBack').onclick = function () { box.style.display = 'none'; cert.srcdoc = ''; };
   load();
 }
+// ★📶お店のWi-Fiの設定（2026-11-19 まるちゃん）＝中華電信ルーターの設定の説明書を、表紙から順に上から下へ見るだけの画面。
+//   画像を差し替える時は manual/wifi/p00〜p11.jpg を上げ直し、WIFIMAN_VER_ の数字を上げる（スマホが前の画像を覚えているため）。
+var WIFIMAN_VER_ = 1;
+function renderWifiManualPage_(base, staff, dev) {
+  var imgs = '';
+  for (var i = 0; i < 12; i++) {
+    imgs += '<img class="wmimg" alt="' + (i ? i + 'ページ' : '表紙') + '"' + (i > 1 ? ' loading="lazy"' : '') +
+      ' src="https://ttsuperzuco.github.io/tt/manual/wifi/p' + (i < 10 ? '0' : '') + i + '.jpg?v=' + WIFIMAN_VER_ + '">';
+  }
+  return '<style>' + HOMECSS_ +
+    '.wmwrap{max-width:720px;margin:0 auto;padding:0 2px 30px}' +
+    '.wmtitle{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 14px}' +
+    '.wmimg{display:block;width:100%;height:auto;border-radius:14px;margin:0 0 14px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18)}' +
+    '</style>' +
+    '<div class="home">' + backBar_(base, staff, dev) +
+    '<div class="wmtitle">📶 お店のWi-Fiの設定</div>' +
+    '<div class="wmwrap">' + imgs + '</div></div>';
+}
+
 function renderShomeishoPage_(base, staff, dev) {
   var C = {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
@@ -25975,6 +26008,7 @@ var HOMECSS_ =
 '  .tile.procstock::before { background:#7a5c2e; }' +
 '  .tile.uriagebook::before { background:#0f766e; }' +
 '  .tile.shomeisho::before { background:#b5757e; }' +   // ★購入証明書＝PC版と同じ色（super_pc.py）
+'  .tile.wifiman::before { background:#2563eb; }' +   // ★📶お店のWi-Fiの設定（2026-11-19）＝PC版と同じ色（super_pc.py）
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -26002,6 +26036,7 @@ var HOMECSS_ =
 '  .tile.procstock .ticon { background:rgba(122,92,46,.16); }' +
 '  .tile.uriagebook .ticon { background:rgba(15,118,110,.16); }' +
 '  .tile.shomeisho .ticon { background:rgba(181,117,126,.18); }' +
+'  .tile.wifiman .ticon { background:rgba(37,99,235,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +

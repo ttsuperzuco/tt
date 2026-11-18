@@ -138,6 +138,9 @@ function doGet(e) {
   } else if (view === 'uriagebook') {
     title = 'TT売上帳簿';                               
     html = renderUriageBookPage_(base, staff, dev);
+  } else if (view === 'wifiman') {
+    title = 'お店のWi-Fiの設定';                               
+    html = renderWifiManualPage_(base, staff, dev);
   } else if (view === 'shomeisho') {
     title = '購入証明書作成';                                 
     html = renderShomeishoPage_(base, staff, dev);
@@ -821,9 +824,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   insta:      { exec: false, staff: false },
   facebook:   { exec: false, staff: false },
   mita:       { exec: true, staff: true },
-  shomeisho:  { exec: true, staff: true }
+  shomeisho:  { exec: true, staff: true },
+  wifiman:    { exec: false, staff: false }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1551,6 +1555,8 @@ var TILE_DEFS_ = [
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
     icon: '<span class="ticon">🧾</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
+  { id: 'wifiman', cls: 'wifiman', view: 'wifiman',
+    icon: '<span class="ticon">📶</span>', label: 'お店の\nWi-Fiの設定' },
 ];
 var TILE_GROUP_ = {
   kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
@@ -1849,7 +1855,8 @@ function homeFolderBoot_(OPT) {
     { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'lt', 'conflict'] },
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
     { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] },
-    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] }];
+    { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
+    { k: 'd7', d: true, f: 'マニュアル', items: ['wifiman'] }];
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' }];
   if (OPT.start) { START = OPT.start; MOVES = []; }
@@ -2872,6 +2879,8 @@ try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined'
 
 
 
+
+
 function renderPcStatus_(base, staff, dev) {
   try {
     return renderPcStatusPage_(
@@ -3361,6 +3370,7 @@ var HOMECSS_ =
 '  .tile.procstock::before { background:#7a5c2e; }' +
 '  .tile.uriagebook::before { background:#0f766e; }' +
 '  .tile.shomeisho::before { background:#b5757e; }' +   
+'  .tile.wifiman::before { background:#2563eb; }' +   
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -3388,6 +3398,7 @@ var HOMECSS_ =
 '  .tile.procstock .ticon { background:rgba(122,92,46,.16); }' +
 '  .tile.uriagebook .ticon { background:rgba(15,118,110,.16); }' +
 '  .tile.shomeisho .ticon { background:rgba(181,117,126,.18); }' +
+'  .tile.wifiman .ticon { background:rgba(37,99,235,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
