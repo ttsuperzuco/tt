@@ -14134,21 +14134,57 @@ function honeyScript_(C) {
       return '<button type="button" class="hnpdf" data-pn="' + esc(x.n) + '" data-pf="' + esc(x.fname || 'hachimitsu.pdf') + '">📄 PDFを保存<br><span>' + esc(x.fname || '') + '</span></button>';
     }).join('');
   }
+  // ★2026-11-18 社長「ハチミツちゃんが動かない」＝iPhoneのホーム画面のズコでは「ダウンロード」の形（a.download）の保存が効かず、
+  //   PDFを作れていても押して何も起きなかった（サーバーではPDFができて会話にも残っていた）。
+  //   → iPhoneでは共有の画面（「ファイルに保存」・印刷・LINE等を選べる）で渡す。共有の画面は押した直後でないと開けないので、
+  //     PDFは返事を描いた時に先に取り寄せておく（押した時にまだ無ければ取り寄せてから「もう一度押す」を知らせる）。パソコンは今まで通りダウンロード。
+  var pdfData = {};
+  function prefetchPdfs() {
+    var bs = Array.prototype.slice.call($('hnLog').querySelectorAll('button.hnpdf[data-pn]')).slice(-4);
+    bs.forEach(function (b) {
+      var n = b.getAttribute('data-pn');
+      if (pdfData[n] || pdfData[n + '|w']) return;
+      pdfData[n + '|w'] = 1;
+      getImg(n, function (r) { delete pdfData[n + '|w']; if (r && r.b64) pdfData[n] = r.b64; });
+    });
+  }
+  function pdfFile(b64, fname) {
+    var bin = atob(b64), u8 = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return { u8: u8, file: (window.File ? new File([u8], fname, { type: 'application/pdf' }) : null) };
+  }
+  function pdfDownload(u8, fname) {
+    var url = URL.createObjectURL(new Blob([u8], { type: 'application/pdf' }));
+    var a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+  function pdfGive(b64, fname, again) {
+    try {
+      var p = pdfFile(b64, fname);
+      var phone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '') || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent || ''));
+      if (phone && p.file && navigator.share && navigator.canShare && navigator.canShare({ files: [p.file] })) {
+        navigator.share({ files: [p.file] }).catch(function (e) {
+          if (e && e.name === 'AbortError') return;      // 共有の画面を閉じただけ
+          if (e && e.name === 'NotAllowedError' && again) { popup('PDFの準備ができました。もう一度「PDFを保存」を押してください😊'); return; }
+          popup('PDFを保存できませんでした。もう一度試してもらえると嬉しいです🙇');
+        });
+        return;
+      }
+      pdfDownload(p.u8, fname);
+    } catch (e) { popup('PDFを保存できませんでした。もう一度試してもらえると嬉しいです🙇'); }
+  }
   function savePdf(btn) {
+    var n = btn.getAttribute('data-pn'), fname = btn.getAttribute('data-pf') || 'hachimitsu.pdf';
+    if (pdfData[n]) { pdfGive(pdfData[n], fname, false); return; }
     if (btn.getAttribute('data-busy')) return;
     btn.setAttribute('data-busy', '1');
-    getImg(btn.getAttribute('data-pn'), function (r) {
+    getImg(n, function (r) {
       btn.removeAttribute('data-busy');
       if (!(r && r.b64)) { popup('PDFを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
-      try {
-        var bin = atob(r.b64), u8 = new Uint8Array(bin.length);
-        for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-        var url = URL.createObjectURL(new Blob([u8], { type: 'application/pdf' }));
-        var a = document.createElement('a');
-        a.href = url; a.download = btn.getAttribute('data-pf') || 'hachimitsu.pdf';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
-      } catch (e) { popup('PDFを保存できませんでした。もう一度試してもらえると嬉しいです🙇'); }
+      pdfData[n] = r.b64;
+      pdfGive(r.b64, fname, true);
     });
   }
   // ★2026-11-11 まるちゃん「スマホに文字データを保存してるはずなのに、読み取るのが長い」＝会話の文字は開くたびにサーバーへ取りに行っていた（約18秒）。
@@ -14170,6 +14206,7 @@ function honeyScript_(C) {
     });
     $('hnLog').innerHTML = out;
     fillAll();
+    prefetchPdfs();
   }
   // ★2026-11-18 まるちゃん：画像を添付したら、その右に大きな「PDF変換」。押すと小窓で「どちらにしますか？」と
   //   「白黒」「カラー」のボタンが出て、押すとPDFを作る依頼をそのまま送る。
