@@ -409,8 +409,9 @@ function honeyScript_(C) {
     fillAll();
     prefetchPdfs();
   }
-  var PDF_ASK = { bw: 'この画像を、そのまま白黒（グレー）にしてPDFにしてください。写っている物は何も消さず、色だけを抜いてください。',
-                  cl: 'この画像を、カラーのままPDFにしてください。' };
+  var PDF_PAPER = 'PDFの紙はA4（横長の画像はA4の横向き）にして、画像は縦横の比率を変えずに紙の真ん中に置き、左右の余白と上下の余白をそれぞれ同じ幅にしてください（いちばん狭い所でも1cm）。';
+  var PDF_ASK = { bw: 'この画像を、そのまま白黒（グレー）にしてPDFにしてください。写っている物は何も消さず、色だけを抜いてください。' + PDF_PAPER,
+                  cl: 'この画像を、カラーのままPDFにしてください。' + PDF_PAPER };
   function drawPicks() {
     $('hnThumbs').innerHTML = picks.map(function (p, i) {
       return '<div class="hnth"><img src="data:image/jpeg;base64,' + p.b64 + '" alt=""><button type="button" data-i="' + i + '">×</button></div>';
