@@ -13838,7 +13838,8 @@ function honeyScript_(C) {
     }
     var a = document.createElement('div'); a.className = 'cca hnlive';
     a.innerHTML = '<div class="hntxt"></div><div class="hnst"><span class="hnspin"><i></i><i></i><i></i></span>' +
-      '<b class="hnsec">0s</b><span class="hnstg">ご依頼の内容を確認しています😊</span></div>';
+      // ★2026-11-18 まるちゃん「ご依頼の内容を、じゃなく、なすさんのご依頼を、にして」（全部の権限の時はりゅうさん）
+      '<b class="hnsec">0s</b><span class="hnstg">' + (full ? 'りゅうさん' : 'なすさん') + 'のご依頼を確認しています😊</span></div>';
     log.appendChild(a);
     var txt = a.querySelector('.hntxt'), st = a.querySelector('.hnst'), sec = a.querySelector('.hnsec'), stg = a.querySelector('.hnstg');
     var target = '', shown = '', typing = null, finishCb = null;
