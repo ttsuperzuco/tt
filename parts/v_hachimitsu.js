@@ -69,7 +69,11 @@ var HONEYCSS_ =
   '.hnthumbs:empty{display:none;}' +
   '.hnth{position:relative;}' +
   '.hnth img{display:block;width:76px;height:76px;object-fit:cover;border-radius:10px;}' +
-  '.hnth button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:14px;line-height:24px;padding:0;cursor:pointer;}';
+  '.hnth button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:14px;line-height:24px;padding:0;cursor:pointer;}' +
+  '.hnthumbs .hnpdf{display:flex;flex-direction:column;gap:6px;justify-content:center;background:none;padding:0;box-shadow:none;border-radius:0;}' +
+  '.hnpdf button{min-width:96px;height:35px;border:0;border-radius:10px;background:#2C7A99;color:#fff;font:inherit;font-size:15px;font-weight:800;padding:0 12px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.15);}' +
+  '.hnpdf button.on{background:#0f172a;}' +
+  '.hnpdf button.bw{background:#fff;color:#0f172a;border:2px solid #0f172a;}';
 function honeyScript_(C) {
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -372,10 +376,14 @@ function honeyScript_(C) {
     $('hnLog').innerHTML = out;
     fillAll();
   }
+  var pdfOpen = false;
+  var PDF_BW = 'この画像を、印刷用の白黒のPDFにしてください（背景は真っ白、文字は黒）。';
   function drawPicks() {
+    if (!picks.length) pdfOpen = false;
     $('hnThumbs').innerHTML = picks.map(function (p, i) {
       return '<div class="hnth"><img src="data:image/jpeg;base64,' + p.b64 + '" alt=""><button type="button" data-i="' + i + '">×</button></div>';
-    }).join('');
+    }).join('') + (picks.length ? '<div class="hnpdf"><button type="button" data-pdf="1"' + (pdfOpen ? ' class="on"' : '') + '>PDF変換</button>' +
+      (pdfOpen ? '<button type="button" class="bw" data-bw="1">白黒</button>' : '') + '</div>' : '');
   }
   function addFile(f) {
     if (!/^image\//.test(f.type)) { popup('画像を選択してください😊'); return; }
@@ -450,6 +458,15 @@ function honeyScript_(C) {
   $('hnFile').addEventListener('change', function () { Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = ''; });
   $('hnThumbs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
+    if (b.getAttribute('data-pdf')) { pdfOpen = !pdfOpen; drawPicks(); return; }
+    if (b.getAttribute('data-bw')) {      
+      if (sending) return;
+      var typed = $('hnText').value.replace(/^\s+|\s+$/g, '');
+      $('hnText').value = PDF_BW + (typed ? '\n' + typed : '');
+      pdfOpen = false;
+      $('hnSend').click();
+      return;
+    }
     picks.splice(Number(b.getAttribute('data-i')), 1); drawPicks();
   });
   var PC_OFF = '自宅PCが動いていません。自宅PCの電源を確認するか、スイッチをサーバーに切り替えてください🙇';
