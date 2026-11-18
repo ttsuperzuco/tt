@@ -12,7 +12,6 @@
   /* 用事ごとに事務所パソコンが使ってよい秒数（受付係のコードから写した物）。 */
   LIMITS.sec = {
     "availability": 120,
-    "bc_waku": 400,
     "bc_wakuimg": 400,
     "cost": 180,
     "cust_search": 30,
