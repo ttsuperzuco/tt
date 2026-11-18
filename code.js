@@ -13364,6 +13364,15 @@ function uriageBookScript_(C) {
       '備註：' + (v.mainRemark || '（なし）') + (v.buyerIdentifier ? '　統一編號：' + v.buyerIdentifier : '') + '\n' +
       v.items.map(function (r) { return '・' + r.remark1 + '　' + r.itemAmount.toLocaleString() + '元（' + r.itemNo + '／印字「' + r.itemName + '」' + (r.quantity > 1 ? '・' + r.unitPrice + '元×' + r.quantity : '') + '）'; }).join('\n') +
       '\n合計 ' + Number(v.totalAmount).toLocaleString() + '元') + '</div></div>';
+    // ★発票サイトに送る中身（開立の画面と同じ並び・同じ計算）。鍵がかかっているので送らない・印刷もされない
+    var g = o.gwis;
+    if (g) h += '<div class="ubac"><div class="t1">発票サイトに送る内容（開立の画面と同じ）</div><div class="t2">' + esc(
+      '会社：' + g.company + '\n種類：' + g.type + '\n発票機：' + g.printer + '\n備註：' + (g.remark || '（なし）') +
+      (g.buyer ? '\n統一編號：' + g.buyer : '') + '\n' +
+      g.rows.map(function (r) { return '・' + r.itemNo + '（印字「' + r.itemName + '」）' + r.unitPrice + '元×' + r.quantity + '＝' + r.amount + '元　明細「' + r.remark1 + '」'; }).join('\n') +
+      '\n売上 ' + g.salesAmount + '元・税額 ' + g.taxAmount + '元・合計 ' + g.totalAmount + '元' +
+      '\n送信：' + (g.sent ? '送りました' : '送っていません（' + g.why + '）') +
+      (g.errors && g.errors.length ? '\n確認：' + g.errors.join('／') : '')) + '</div></div>';
     h += '<div class="ubac"><div class="t1">売上表（本番ならこの1行を追加）</div><div class="t2">' + esc(
       s.A + '　' + (s.B || '番号なし') + '　' + (s.C || '') + '　' + s.D + '\n' + s.E + '\n合計 ' + Number(s.F).toLocaleString() + '元') + '</div></div>';
     if (CUR.lines.length) h += '<button type="button" class="exgo" id="ubPRnext" style="background:#2C7A99">残りの' + CUR.lines.length + '行で次の発票を出す</button>';
