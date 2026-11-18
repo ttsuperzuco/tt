@@ -830,7 +830,7 @@ function uriageBookScript_(C) {
     FORM.rows.forEach(function (r, i) {
       h += '<div class="ubprow" data-r="' + i + '"><div class="ubprh"><span>品目 ' + (i + 1) + '</span>' +
         (FORM.rows.length > 1 ? '<button type="button" class="ubpdel" data-del="' + i + '">この行を削除</button>' : '') + '</div>' +
-        '<div class="ubpcat">' + PCATS.map(function (c) { return '<button type="button" data-cat="' + i + '" data-v="' + esc(c) + '" class="' + (r.cat === c ? 'on' : '') + '">' + esc(c) + '</button>'; }).join('') + '</div>' +
+        '<div class="ubpcat">' + PCATS.map(function (c) { return '<button type="button" data-cat="' + i + '" data-v="' + esc(c) + '" class="' + (r.cat === c ? 'on' : '') + '">' + esc(c === 'パリジェンヌ' ? 'パリ' : c === '脫毛' ? '脱毛' : c) + '</button>'; }).join('') + '</div>' +
         '<label>明細（発票の明細備註・40文字まで）</label><input data-det="' + i + '" value="' + esc(r.detail) + '" maxlength="40">' +
         '<div class="ubpsuf"><button type="button" data-suf="' + i + '" data-v="本日分">本日分</button><button type="button" data-suf="' + i + '" data-v="次回分">次回分</button><button type="button" data-suf="' + i + '" data-v="">付けない</button></div>' +
         '<div class="ubp2"><div><label>単価（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="u' + i + '" data-ph="押して入力"></div>' +
