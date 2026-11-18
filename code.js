@@ -13740,10 +13740,17 @@ function honeyScript_(C) {
       return '<div class="hnth"><img src="data:image/jpeg;base64,' + p.b64 + '" alt=""><button type="button" data-i="' + i + '">×</button></div>';
     }).join('') + (picks.length ? '<div class="hnpdf"><button type="button" data-pdf="1">PDF変換</button></div>' : '');
   }
+  // ★同日 まるちゃん「（PDFの名前が『見せる』になった）もともとのファイル名プラス、カッコ、白黒、とかでいいんじゃないの」
+  //   ＝選んだ写真の元のファイル名（1枚目）＋「（白黒）」「（カラー）」を、ファイル名として依頼に書く。
+  function pdfName(kind) {
+    var n = String((picks[0] && picks[0].name) || '').replace(/\.[^.]*$/, '').replace(/[\\\/:*?"<>|\r\n]/g, '').replace(/^\s+|\s+$/g, '');
+    return n ? n + (kind === 'bw' ? '（白黒）' : '（カラー）') + '.pdf' : '';
+  }
   function sendPdf(kind) {      // 入力欄に文があれば、依頼の後ろに付けて一緒に送る
     if (sending || !picks.length) return;
     var typed = $('hnText').value.replace(/^\s+|\s+$/g, '');
-    $('hnText').value = PDF_ASK[kind] + (typed ? '\n' + typed : '');
+    var nm = pdfName(kind);
+    $('hnText').value = PDF_ASK[kind] + (nm ? 'PDFのファイル名は「' + nm + '」にしてください。' : '') + (typed ? '\n' + typed : '');
     $('hnSend').click();
   }
   function askPdf() {      // 共通の小窓（左＝白黒・右＝カラー）。外側を押したら何もせず閉じる
@@ -13766,7 +13773,7 @@ function honeyScript_(C) {
         if (w > mx || h > mx) { if (w >= h) { h = Math.round(h * mx / w); w = mx; } else { w = Math.round(w * mx / h); h = mx; } }
         var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
         cv.getContext('2d').drawImage(im, 0, 0, w, h);
-        picks.push({ b64: cv.toDataURL('image/jpeg', 0.88).split(',')[1], mime: 'image/jpeg' });
+        picks.push({ b64: cv.toDataURL('image/jpeg', 0.88).split(',')[1], mime: 'image/jpeg', name: f.name || '' });
         drawPicks();
       };
       im.src = fr.result;
@@ -14024,7 +14031,7 @@ function honeyScript_(C) {
     //   入力欄は送った時点で空にする（失敗したら戻す）。
     var sentPicks = picks, live = Live(t, picks.length, Date.now());
     $('hnText').value = ''; picks = []; drawPicks(); panel(false);
-    go({ act: 'send', text: t, images: sentPicks }, '', function (err, d) {
+    go({ act: 'send', text: t, images: sentPicks.map(function (p) { return { b64: p.b64, mime: p.mime }; }) }, '', function (err, d) {
       if (err) {
         sending = false; $('hnSend').disabled = false;
         live.fail();
