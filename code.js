@@ -13336,6 +13336,12 @@ var HONEYCSS_ =
   // ★2026-11-12 まるちゃん「戻るのすぐ右にハチミツちゃん（少し小さめの文字）、その右に会話を初期化ボタン。そこのトップはスクロールしていても常に表示」
   // ★2026-11-12 まるちゃん「送信の下の余白はほんの少しでいい」
   '.home.hnhome{padding-bottom:10px;}' +
+  // ★2026-11-18 まるちゃん：吹き出しの色「黒」＝背景は今まで通りの青のまま、吹き出しの中だけ黒地に白い文字（返事＝黒・送った文＝濃い灰色）
+  '.hncl .cca{background:#1f1f1e;color:#f5f4ef !important;}' +
+  '.hncl .cca .cct{color:#8f8d86 !important;}' +
+  '.hncl .ccq{background:#3b3a37;color:#f5f4ef;box-shadow:none;}' +
+  '.hncl .hnst{color:#b8b6ae;}' +
+  '.hncl .hnsec{color:#f5f4ef;}' +
   '.hnhome .cc{padding-bottom:0;}' +
   '.hnhome #hnSend{margin-bottom:0;}' +
   '.hnhome #hnOpen{margin:4px 0 0;padding:14px 10px;font-size:20px;}' +
@@ -13357,6 +13363,8 @@ var HONEYCSS_ =
   '.hnico{width:1.6em;height:1.6em;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;}' +
   '.hnreset{flex:0 0 auto;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:999px;padding:8px 10px;font:inherit;font-size:.85rem;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
   '.hnreset:active{transform:translateY(1px);}' +
+  '.hntop{flex-wrap:wrap;}' +
+  '.hnrow2{flex:0 0 100%;display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:6px;}' +
   // ★2026-11-12 まるちゃん「初期化の左に サーバー／事務所PC のスイッチボタン」（画面には「事務所」と書かない決まり＝自宅PC）。
   //   りゅうさんのスマホ（全部の権限）の時だけ出す。押した方の機械のClaudeが答える（会話も機械ごとに別）。
   '.hnsw{flex:0 0 auto;display:flex;background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:2px;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
@@ -13916,6 +13924,15 @@ function honeyScript_(C) {
   // ★2026-11-18：入力ボックスは普段しまっておき、「入力ボックスを表示」で出す。送信したらまたしまう（失敗したら出したまま）。
   //   出している間は、今までの会話を隠して、入力欄を画面の残りいっぱいの高さにする。
   var HOME = document.querySelector('.hnhome');
+  // 吹き出しの色（黒地に白い文字＝黒／白地に黒い文字＝白）。このスマホに覚えておく。白＝今までの見た目。
+  function setBg(b) {
+    if (b !== 'k') b = 'w';
+    HOME.classList.toggle('hncl', b === 'k');
+    Array.prototype.forEach.call($('hnBg').querySelectorAll('button'), function (x) { x.classList.toggle('on', x.getAttribute('data-b') === b); });
+    lsSet('zk_honey_bg', b);
+  }
+  $('hnBg').addEventListener('click', function (e) { var x = e.target.closest('button'); if (x) setBg(x.getAttribute('data-b')); });
+  setBg(lsGet('zk_honey_bg'));
   // ★2026-11-18 まるちゃん「入力ボックスは最初は今までと同じくらいの大きさで、文字をたくさん打って高くなってくると、どんどん広がっていく」
   //   ＝最初は今までの高さ（120）。文字が増えたら中身に合わせて伸ばし、画面の残りいっぱい（その下に音声入力・画像選択・送信が収まる所）で止める。
   function fitBox() {
@@ -14038,8 +14055,11 @@ function renderHoneyPage_(base, staff, dev) {
     '<div class="hntop">' + backBar_(base, staff, dev) +
       '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png?v=2"><span class="hntxt">ハチミツちゃん</span></span>' +
       '<div class="hnsw" id="hnSw" style="display:none"><button type="button" data-w="server">サーバー</button><button type="button" data-w="pc">自宅PC</button></div>' +
+      // ★2026-11-18 まるちゃん「スマホでハチミツちゃんの文字が消えちゃう」→「2行目に直接表示。吹き出し・文字の大きさの説明はいらん」
+      //   ＝上の段の2行目に、吹き出しの色（黒・白）・文字の大きさ（小・中・大）・会話を初期化をそのまま並べる。
+      '<div class="hnrow2"><div class="hnfs" id="hnBg"><button type="button" data-b="k">黒</button><button type="button" data-b="w">白</button></div>' +
       '<div class="hnfs" id="hnFs"><button type="button" data-f="s">小</button><button type="button" data-f="m">中</button><button type="button" data-f="l">大</button></div>' +
-      '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
+      '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
       // ★2026-11-18 まるちゃん「入力ボックスと音声入力・画像選択・送信は普段は出さず、1行の長い緑の『入力ボックスを表示』だけ。

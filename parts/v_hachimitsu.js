@@ -30,6 +30,11 @@ var HONEYCSS_ =
   '@keyframes hnspin{0%,80%,100%{transform:scale(.5);opacity:.4;}40%{transform:scale(1);opacity:1;}}' +
   '.hnbar button.on{background:#dc2626;color:#fff;}' +
   '.home.hnhome{padding-bottom:10px;}' +
+  '.hncl .cca{background:#1f1f1e;color:#f5f4ef !important;}' +
+  '.hncl .cca .cct{color:#8f8d86 !important;}' +
+  '.hncl .ccq{background:#3b3a37;color:#f5f4ef;box-shadow:none;}' +
+  '.hncl .hnst{color:#b8b6ae;}' +
+  '.hncl .hnsec{color:#f5f4ef;}' +
   '.hnhome .cc{padding-bottom:0;}' +
   '.hnhome #hnSend{margin-bottom:0;}' +
   '.hnhome #hnOpen{margin:4px 0 0;padding:14px 10px;font-size:20px;}' +
@@ -49,6 +54,8 @@ var HONEYCSS_ =
   '.hnico{width:1.6em;height:1.6em;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;}' +
   '.hnreset{flex:0 0 auto;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:999px;padding:8px 10px;font:inherit;font-size:.85rem;font-weight:800;white-space:nowrap;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
   '.hnreset:active{transform:translateY(1px);}' +
+  '.hntop{flex-wrap:wrap;}' +
+  '.hnrow2{flex:0 0 100%;display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:6px;}' +
   '.hnsw{flex:0 0 auto;display:flex;background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:2px;box-shadow:0 4px 12px rgba(0,0,0,.10);}' +
   '.hnsw button{border:0;background:transparent;color:#475569;border-radius:999px;padding:6px 8px;font:inherit;font-size:.78rem;font-weight:800;white-space:nowrap;cursor:pointer;}' +
   '.hnsw button.on{background:#2C7A99;color:#fff;}' +
@@ -542,6 +549,14 @@ function honeyScript_(C) {
     } });
   });
   var HOME = document.querySelector('.hnhome');
+  function setBg(b) {
+    if (b !== 'k') b = 'w';
+    HOME.classList.toggle('hncl', b === 'k');
+    Array.prototype.forEach.call($('hnBg').querySelectorAll('button'), function (x) { x.classList.toggle('on', x.getAttribute('data-b') === b); });
+    lsSet('zk_honey_bg', b);
+  }
+  $('hnBg').addEventListener('click', function (e) { var x = e.target.closest('button'); if (x) setBg(x.getAttribute('data-b')); });
+  setBg(lsGet('zk_honey_bg'));
   function fitBox() {
     if (!HOME.classList.contains('hnwrite')) return;
     var ta = $('hnText'), vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
@@ -650,8 +665,9 @@ function renderHoneyPage_(base, staff, dev) {
     '<div class="hntop">' + backBar_(base, staff, dev) +
       '<span class="hnttl"><img class="hnico" alt="" src="https://ttsuperzuco.github.io/tt/icons/hachimitsu-180.png?v=2"><span class="hntxt">ハチミツちゃん</span></span>' +
       '<div class="hnsw" id="hnSw" style="display:none"><button type="button" data-w="server">サーバー</button><button type="button" data-w="pc">自宅PC</button></div>' +
+      '<div class="hnrow2"><div class="hnfs" id="hnBg"><button type="button" data-b="k">黒</button><button type="button" data-b="w">白</button></div>' +
       '<div class="hnfs" id="hnFs"><button type="button" data-f="s">小</button><button type="button" data-f="m">中</button><button type="button" data-f="l">大</button></div>' +
-      '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div>' +
+      '<button type="button" class="hnreset" id="hnReset">会話を初期化</button></div></div>' +
     '<div class="cc">' +
       '<div class="cclog" id="hnLog"><div class="ccnone">読み込み中です…</div></div>' +
       '<button type="button" class="exgo hnopen" id="hnOpen">入力ボックスを表示</button>' +
