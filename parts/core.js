@@ -2791,6 +2791,18 @@ function ubPendList_() { try { return JSON.parse(localStorage.getItem(UB_PEND_KE
 function ubPendSave_(a) { try { localStorage.setItem(UB_PEND_KEY_, JSON.stringify(a)); } catch (e) {} }
 
 function ubPendDrop_(id) { ubPendSave_(ubPendList_().filter(function (x) { return x.id !== id; })); }
+var UB_VS_KEY_ = 'sz_ub_voidsending';
+function ubVsGet_() {
+  var o = {}, now = Date.now();
+  try { o = JSON.parse(localStorage.getItem(UB_VS_KEY_) || '{}') || {}; } catch (e) { o = {}; }
+  for (var k in o) if (!(now - o[k] < 30 * 60 * 1000)) delete o[k];
+  return o;
+}
+function ubVsSet_(num, on) {
+  if (!num) return;
+  var o = ubVsGet_(); if (on) o[num] = Date.now(); else delete o[num];
+  try { localStorage.setItem(UB_VS_KEY_, JSON.stringify(o)); } catch (e) {}
+}
 function ubJsonp_(p, cb) {
   var n = '__ubw' + Date.now() + Math.floor(Math.random() * 1000);
   window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
@@ -2806,6 +2818,7 @@ function ubShowNextPop_() {
 }
 function ubDone_(o, ok, text) {
   ubPendDrop_(o.id);
+  if (o.action === 'voidsend') ubVsSet_(o.number, false);
   var t2 = String(text || '').trim(); if (t2 && !/[。！？]$/.test(t2)) t2 += '。';
   var e2 = function (v) { return String(v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   ubPopQ_.push(ok ? { icon: '✅', html: '<div style="white-space:nowrap;font-size:min(1.5rem,4.2vw)">売上帳簿への書き込みが終わりました。</div>' + (t2 ? '<div>' + e2(t2) + '</div>' : '') }

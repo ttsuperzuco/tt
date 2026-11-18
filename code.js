@@ -12302,6 +12302,21 @@ function ubPendList_() { try { return JSON.parse(localStorage.getItem(UB_PEND_KE
 function ubPendSave_(a) { try { localStorage.setItem(UB_PEND_KEY_, JSON.stringify(a)); } catch (e) {} }
 function ubPendAdd_(o) { var a = ubPendList_(); a.push(o); ubPendSave_(a); ubWatch_(); }
 function ubPendDrop_(id) { ubPendSave_(ubPendList_().filter(function (x) { return x.id !== id; })); }
+// ★2026-11-18 まるちゃん「実行中なのにまたボタンが押せる状態になってる」＝作廢を送っている印を画面の中の変数だけに持っていたため、
+//   画面を出入りする・画面が読み直される・ほかの書き込みが終わると印が消え、「認証して作廢」がまた出ていた。
+//   → 印はこのズコの中（localStorage）に番号ごとに残し、その作廢の結果が返った時（成功でも失敗でも）だけ消す。30分で自然に消える。
+var UB_VS_KEY_ = 'sz_ub_voidsending';
+function ubVsGet_() {
+  var o = {}, now = Date.now();
+  try { o = JSON.parse(localStorage.getItem(UB_VS_KEY_) || '{}') || {}; } catch (e) { o = {}; }
+  for (var k in o) if (!(now - o[k] < 30 * 60 * 1000)) delete o[k];
+  return o;
+}
+function ubVsSet_(num, on) {
+  if (!num) return;
+  var o = ubVsGet_(); if (on) o[num] = Date.now(); else delete o[num];
+  try { localStorage.setItem(UB_VS_KEY_, JSON.stringify(o)); } catch (e) {}
+}
 function ubJsonp_(p, cb) {
   var n = '__ubw' + Date.now() + Math.floor(Math.random() * 1000);
   window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
@@ -12317,6 +12332,7 @@ function ubShowNextPop_() {
 }
 function ubDone_(o, ok, text) {
   ubPendDrop_(o.id);
+  if (o.action === 'voidsend') ubVsSet_(o.number, false);
   // ★2026-11-08 まるちゃん「上を一行におさめて　二行目も。つけて」＝1行目は小さめの字で折り返さない・2行目の終わりに「。」
   var t2 = String(text || '').trim(); if (t2 && !/[。！？]$/.test(t2)) t2 += '。';
   var e2 = function (v) { return String(v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
@@ -12549,6 +12565,7 @@ function uriageBookScript_(C) {
       settle();
       if (fields.voids) { VOIDS_INFLIGHT = false; if (AUTHWAIT) reloadAuth(); }
       if (fields.action === 'voidlist') authFailed();
+      if (fields.action === 'voidsend') { ubVsSet_(fields.number, false); drawAuth(); }   // 送れなかった時はボタンを戻す
       // ★2026-11-07 まるちゃん指定の文（分からない失敗・時間切れ・送れない時）。中身が変わっていた等の理由は受付係の文をそのまま出す。
       if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇');
       fetchData();
@@ -12564,7 +12581,7 @@ function uriageBookScript_(C) {
         // ★書く用事の結果は、ズコのどの画面にいても箱で知らせる見張り（ubPendAdd_）に任せる。
         //   この画面が開いていれば、終わった合図（ubdone）で薄い表示を戻して読み直す。
         fields.__id = r.id;
-        ubPendAdd_({ id: r.id, at: Date.now(), row: fields.row || 0, action: fields.action });
+        ubPendAdd_({ id: r.id, at: Date.now(), row: fields.row || 0, action: fields.action, number: fields.number || '' });
         return;
       }
       var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('uriagebook', 1000) : 300;
@@ -12599,7 +12616,7 @@ function uriageBookScript_(C) {
     var id = ev && ev.detail && ev.detail.id;
     for (var i = PEND.length - 1; i >= 0; i--) if (PEND[i].__id === id) PEND.splice(i, 1);
     fetchData();
-    if ($('ubAuth') && $('ubAuth').style.display !== 'none') { AUTHP = {}; fetchAuth(); }
+    if ($('ubAuth') && $('ubAuth').style.display !== 'none') fetchAuth();   // ★送っている印は消さない（結果が返った作廢の印だけ ubDone_ が消す）
   };
   window.addEventListener('ubdone', window.__ubDoneH);
 
@@ -12966,7 +12983,7 @@ function uriageBookScript_(C) {
   //   スタッフが記録した作廢（ボタン・売上表の手書きの「作廢HT-…」）のうち、発票サイトでまだ発行済みの物を並べる。
   //   「認証して作廢」→確認の箱→係が発票サイトで本当に作廢する（国に届く取り消し・元に戻せない）。
   //   ★ボタンは開発（まるちゃん）にだけ出す。受付係の係も開発と確かめられた依頼しか通さない（二重の守り）。
-  var AUTH = null, AUTHP = {}, AUTHDONE = false;
+  var AUTH = null, AUTHDONE = false;
   // ★2026-11-18 まるちゃん「あるはずなのにでてない」＝一覧は頼まれた時だけ作り直す（10〜40秒かかる）。
   //   その間、前に作った古い一覧（11/16 14:08）を今の状態のように「ありません」と見せていた。
   //   → 読み直している間（AUTHWAIT）は「最新を読んでいます」と出し、「ありません」と認証ボタンは出さない。失敗した時も黙らずに出す（AUTHERR）。
@@ -12996,7 +13013,7 @@ function uriageBookScript_(C) {
       : (AUTHERR ? '<div class="ubnone">最新の作廢を読み込めませんでした。再読込してください🙇</div>' : '');
     if (!AUTH) { $('ubAuths').innerHTML = top || '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubWhen5').textContent = String(AUTH.at || '').slice(5, 16).replace('-', '/') + ' 時点';
-    var h = top;
+    var h = top, AUTHP = ubVsGet_();
     if (!AUTH.items.length && !AUTHWAIT) h += '<div class="ubnone">認証を待っている作廢はありません😊</div>';
     for (var i = 0; i < AUTH.items.length; i++) {
       var x = AUTH.items[i], d = x.day.slice(5).replace('-', '/').replace(/^0/, '');
@@ -13048,7 +13065,7 @@ function uriageBookScript_(C) {
       closePick();
       popup(x.number.replace(/^([A-Z]{2})/, '$1-') + '（' + yen(x.amount) + '）\n理由「' + rs + '」で、発票サイトで作廢します。\nよろしいでしょうか？😊', {
         cancel: true, onYes: function () {
-          AUTHP[x.number] = 1; drawAuth();
+          ubVsSet_(x.number, true); drawAuth();
           ask({ action: 'voidsend', number: x.number, site_reason: rs }, '作廢を送っています');
         }
       });
@@ -13061,7 +13078,7 @@ function uriageBookScript_(C) {
     var x = AUTH.items[parseInt(c.getAttribute('data-i'), 10)]; if (x) openAuth(x);
   });
   $('ubGoAuth').addEventListener('click', function () {
-    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false; AUTHERR = false;
+    show('ubAuth'); AUTH = null; AUTHDONE = false; AUTHERR = false;
     // ★2026-11-18 まるちゃん「よむのにじかんかかりすぎ」：
     //   売上帳簿を開いた時の読み直しで一覧を作っている最中なら、それを待つ（同じ物をもう一度頼まない）。
     //   5分以内に作った一覧なら、待たずにそのまま出す（再読込で作り直せる）。それより古い時だけ作り直してもらう。

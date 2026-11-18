@@ -332,6 +332,7 @@ function uriageBookScript_(C) {
       settle();
       if (fields.voids) { VOIDS_INFLIGHT = false; if (AUTHWAIT) reloadAuth(); }
       if (fields.action === 'voidlist') authFailed();
+      if (fields.action === 'voidsend') { ubVsSet_(fields.number, false); drawAuth(); }   
       if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇');
       fetchData();
     }
@@ -343,7 +344,7 @@ function uriageBookScript_(C) {
       if (!r || !r.ok || !r.id) { fail(''); return; }
       if (!quiet) {
         fields.__id = r.id;
-        ubPendAdd_({ id: r.id, at: Date.now(), row: fields.row || 0, action: fields.action });
+        ubPendAdd_({ id: r.id, at: Date.now(), row: fields.row || 0, action: fields.action, number: fields.number || '' });
         return;
       }
       var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('uriagebook', 1000) : 300;
@@ -377,7 +378,7 @@ function uriageBookScript_(C) {
     var id = ev && ev.detail && ev.detail.id;
     for (var i = PEND.length - 1; i >= 0; i--) if (PEND[i].__id === id) PEND.splice(i, 1);
     fetchData();
-    if ($('ubAuth') && $('ubAuth').style.display !== 'none') { AUTHP = {}; fetchAuth(); }
+    if ($('ubAuth') && $('ubAuth').style.display !== 'none') fetchAuth();   
   };
   window.addEventListener('ubdone', window.__ubDoneH);
 
@@ -709,7 +710,7 @@ function uriageBookScript_(C) {
   $('ubGoInv').addEventListener('click', function () { show('ubInv'); });
   $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
   if ($('ubGoVoid')) $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
-  var AUTH = null, AUTHP = {}, AUTHDONE = false;
+  var AUTH = null, AUTHDONE = false;
   var AUTHWAIT = false, AUTHERR = false, VOIDS_INFLIGHT = false;
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoAuth').style.display = '';
   function fetchAuth(fresh, after) {
@@ -735,7 +736,7 @@ function uriageBookScript_(C) {
       : (AUTHERR ? '<div class="ubnone">最新の作廢を読み込めませんでした。再読込してください🙇</div>' : '');
     if (!AUTH) { $('ubAuths').innerHTML = top || '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubWhen5').textContent = String(AUTH.at || '').slice(5, 16).replace('-', '/') + ' 時点';
-    var h = top;
+    var h = top, AUTHP = ubVsGet_();
     if (!AUTH.items.length && !AUTHWAIT) h += '<div class="ubnone">認証を待っている作廢はありません😊</div>';
     for (var i = 0; i < AUTH.items.length; i++) {
       var x = AUTH.items[i], d = x.day.slice(5).replace('-', '/').replace(/^0/, '');
@@ -784,7 +785,7 @@ function uriageBookScript_(C) {
       closePick();
       popup(x.number.replace(/^([A-Z]{2})/, '$1-') + '（' + yen(x.amount) + '）\n理由「' + rs + '」で、発票サイトで作廢します。\nよろしいでしょうか？😊', {
         cancel: true, onYes: function () {
-          AUTHP[x.number] = 1; drawAuth();
+          ubVsSet_(x.number, true); drawAuth();
           ask({ action: 'voidsend', number: x.number, site_reason: rs }, '作廢を送っています');
         }
       });
@@ -797,7 +798,7 @@ function uriageBookScript_(C) {
     var x = AUTH.items[parseInt(c.getAttribute('data-i'), 10)]; if (x) openAuth(x);
   });
   $('ubGoAuth').addEventListener('click', function () {
-    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false; AUTHERR = false;
+    show('ubAuth'); AUTH = null; AUTHDONE = false; AUTHERR = false;
     AUTHWAIT = VOIDS_INFLIGHT; drawAuth();
     fetchAuth(false, function () {
       if (!VOIDS_INFLIGHT && authAgeMin() > 5) reloadAuth();
