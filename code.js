@@ -13050,8 +13050,9 @@ function uriageBookScript_(C) {
   }
   function payDayStr(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function lineSum(l) { return (parseInt(l.unit, 10) || 0) * (l.timing === 'まとめ' ? (parseInt(l.qty, 10) || 1) : l.timing === '両方' ? 2 : 1); }
-  function tWord(l) { return l.timing === 'まとめ' ? (l.qty || 1) + '回分' : l.timing === '両方' ? '本日分＋次回分' : (l.timing === '体験' ? '' : l.timing); }
-  // ★2026-11-18 札を押すと 本日分→次回分→本日分＋次回分 と切り替わる（再現テストで切り替えは16件＝専用のボタンは作らない）
+  // ★明細と同じ言い方（スタッフの発票の書き方＝当日分・当日、次回分・◯回分・体験は時期なし）
+  function tWord(l) { return l.timing === 'まとめ' ? (l.qty || 1) + '回分' : l.timing === '両方' ? '当日、次回分' : l.timing === '本日分' ? (/トラ|初回/.test(l.label || '') ? '' : '当日分') : (l.timing === '体験' ? '' : l.timing); }
+  // ★2026-11-18 札を押すと 当日分→次回分→当日、次回分 と切り替わる（再現テストで切り替えは16件＝専用のボタンは作らない）
   var CYCLE = { '本日分': '次回分', '次回分': '両方', '両方': '本日分' };
   function loadPay() {
     $('ubPays').innerHTML = '<div class="ubnone">予約を読んでいます…</div>';
@@ -13092,7 +13093,7 @@ function uriageBookScript_(C) {
     var p = CUR.p, h = '';
     var st = p.state === '支払い済み' ? '<span class="ubpbd paid">予約メモ：支払い済み</span>' : p.state === '未払い' ? '<span class="ubpbd unpaid">予約メモ：未払い</span>' : '';
     h += '<div class="ubpwho"><div><div class="ubpnm">' + esc(CUR.name || '（お名前なし）') + '</div><div class="ubpnum">' + esc(CUR.num || '番号なし') + '</div></div>' + st + '</div>';
-    if (p.state === '支払い済み' && !p.cert) h += '<div class="ubpnote">本日分はお支払い済みです。払うのは次回分・まとめ買いだけです</div>';
+    if (p.state === '支払い済み' && !p.cert) h += '<div class="ubpnote">当日分はお支払い済みです。払うのは次回分・まとめ買いだけです</div>';
     if (p.cert) h += '<div class="ubpnote cert">購入証明書（' + esc(p.cert.at) + ' 印刷）の内容です：' + esc(p.cert.summary) +
       (p.cert.mode === 'part' ? '<br>一部払い＝今日のお支払いは入金分だけです（未払い残金 ' + yen(p.cert.unpaid) + '）' : '') + '</div>';
     h += '<div class="ubplist">';
@@ -13173,7 +13174,7 @@ function uriageBookScript_(C) {
     var w = { timing: l.timing, unit: l.unit, qty: l.qty || 1, note: l.note, base: l.unit };
     function body() {
       var h = '<div class="h">' + esc(l.label) + '</div><div class="ubpseg">' + ['本日分', '次回分', '両方', '体験', 'まとめ'].map(function (t) {
-        return '<button type="button" data-tm="' + t + '" class="' + (w.timing === t ? 'on' : '') + '">' + ({ 'まとめ': 'まとめ買い', '両方': '本日分＋次回分' }[t] || t) + '</button>'; }).join('') + '</div>';
+        return '<button type="button" data-tm="' + t + '" class="' + (w.timing === t ? 'on' : '') + '">' + ({ 'まとめ': 'まとめ買い', '両方': '当日、次回分', '本日分': '当日分' }[t] || t) + '</button>'; }).join('') + '</div>';
       if (w.timing === 'まとめ') h += '<div class="s">回数</div><div class="ubpseg">' + [3, 4, 5, 8, 10].map(function (q) {
         return '<button type="button" data-q="' + q + '" class="' + (+w.qty === q ? 'on' : '') + '">' + q + '回</button>'; }).join('') + '</div>';
       h += '<div class="s">' + (w.timing === 'まとめ' ? '1回あたりの金額' : '金額') + '</div><div class="ubrow"><div class="ubbox" data-pk="u" data-ph="押して入力"></div></div>';
