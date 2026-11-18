@@ -7665,6 +7665,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig sgph" data-k="yes"><span class="sgrbi">💆</span><span>YES（<span class="sgemr">頭皮の</span>プロセルをやった）</span></button>' +
       '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span><span>NO（<span class="sgemr">頭皮の</span>プロセルをやっていない）</span></button>' +
     '</div>' +
+    /* 17枚目＝本日ホホバエッセンス「No.31」をお渡ししましたか？（2026-11-18 まるちゃん決定）。施術に関係なく渡すので全員に聞く
+       （今は開発版だけ＝jjAsk）。頭皮プロセルの次・最後の質問。YES＝☆次回の文／施術後のLINEに使い方のリンクを入れる（紙は無い）。 */
+    '<div class="sg" id="sgJJ" style="display:none">' +
+      '<div class="sgwho"><span style="white-space:nowrap">本日、ホホバエッセンス</span><wbr><span style="white-space:nowrap">「No.31」を</span><wbr><span style="white-space:nowrap">お渡ししましたか？</span></div>' +
+      '<div class="sgmnote">販売・プレゼントのどちらも「YES」です。<wbr>YESの時は、使い方のご案内を<wbr>お客様に送ります。</div>' +
+      '<button type="button" class="sgrbig sgjj" data-k="yes"><span class="sgrbi">🧴</span><span>YES（お渡しした）</span></button>' +
+      '<button type="button" class="sgrbig sgjj" data-k="no"><span class="sgrbi">🙅</span><span>NO（お渡ししていない）</span></button>' +
+    '</div>' +
     /* 15枚目＝確認の一覧（2026-11-09 まるちゃん決定・受付の端末だけ・今は開発版だけ）。予約メモの確定のあとに出す。
        お客様が退店された後に、担当した施術者へ聞く物を全部並べる。「全て確認しました」で各確認の画面へ。文は共通の判断（SG.checkItems）。 */
     '<div class="sg" id="sgCheck" style="display:none">' +
@@ -7767,7 +7775,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={};' +
     /* ★2026-11-01：お客様を選んだあとに出す画面の並び（SEQ）＝イーライト(9)→はじめての脱毛(11)→パリジェンヌ(12)→当てはまる物(10)。
        出さない画面は並びに入れない。次へ・戻るはこの並びだけで決める。LASHANS＝パリジェンヌの答え（null／"yes"／"no"）。 */
-    'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null;' +
+    'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null,JJANS=null;' +
+    /* ★2026-11-18：ホホバの質問（17枚目）を出すか。リピート入力では聞かない。今は開発版だけ（公開する時は DEVMODE を外す）。 */
+    'function jjAsk(){return DEVMODE&&!REP;}' +
     /* ★2026-11-01：9枚目のイーライトの答え（null＝聞いていない・"vio"／"both"／"other"／"no"）。 */
     'var ELANS=null;' +
     /* ★2026-11-13：昨日の未送信（YD＝一覧・YDM＝その一覧から来た・YNX＝送っていない☆次回の予約＝届いていない時は自動で一緒に送る・TNX＝今日の方の分） */
@@ -7858,9 +7868,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '$("sgLash").style.display=step===12?"":"none";' +
       '$("sgPF").style.display=step===13?"":"none";' +
       '$("sgPH").style.display=step===14?"":"none";' +
+      '$("sgJJ").style.display=step===17?"":"none";' +
       '$("sgCheck").style.display=step===15?"":"none";' +
       /* ★2026-11-13：昨日のお客様の質問は「本日〜」でなく「昨日〜」と聞く（施術後のLINE送信の「まだ送っていないお客様」から来た時だけ） */
-      'var wq=["sgElight","sgFirst","sgLash","sgPF","sgPH"];for(var wi=0;wi<wq.length;wi++){var we=$(wq[wi]);if(!we)continue;' +
+      'var wq=["sgElight","sgFirst","sgLash","sgPF","sgPH","sgJJ"];for(var wi=0;wi<wq.length;wi++){var we=$(wq[wi]);if(!we)continue;' +
         /* 見出しと選ぶボタンの文（元の文を覚えておき、昨日の方の時だけ「本日／今日」→「昨日」。はじめての脱毛の見出しは goFirst が書く） */
         'var wh=we.querySelectorAll(".sgwho,.sgrbig");for(var wj=0;wj<wh.length;wj++){var wx=wh[wj];if(wx.id==="sgfdq")continue;' +
           'if(wx.getAttribute("data-o")===null)wx.setAttribute("data-o",wx.innerHTML);' +
@@ -7878,7 +7889,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'if(rcp()&&step===8){var sv8=seqv();if(sv8.length){goStep(sv8[sv8.length-1]);}else{goCheck();}return;}' +
       'if(rcp()&&step===15){if(RB2){RB2=null;goPick();return;}step=7;show();growMemo();window.scrollTo(0,0);return;}' +
       'if(rcp()&&step===3){goList();return;}' +
-      'if(rcp()&&step>=9&&step<=14){if(!prevOf(step))goCheck();return;}' +
+      'if(rcp()&&((step>=9&&step<=14)||step===17)){if(!prevOf(step))goCheck();return;}' +
       'if(step===8){step=7;show();growMemo();window.scrollTo(0,0);}' +
       'else if(step===7){step=6;show();drawTime();window.scrollTo(0,0);}' +
       'else if(step===6){goFree();}else if(step===5){goDay();}' +
@@ -7887,7 +7898,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'else if(step===4){goMonth();}else if(step===3&&!REP&&!LN&&seqv().length){goStep(seqv()[seqv().length-1]);}' +
       'else if(step===3&&!REP&&!LN){goList();}' +
       'else if(SEQ.indexOf(step)>0&&prevOf(step)){}' +
-      'else if(step===3||(step>=9&&step<=14)){goList();}else{goPick();}}' +
+      'else if(step===3||(step>=9&&step<=14)||step===17){goList();}else{goPick();}}' +
     /* ── 1枚目：施術者をえらぶ ── */
     'function drawPick(){' +
       'var r=SG.staffOrder(BK,WHO,NOW());' +
@@ -7955,8 +7966,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         /* ★2026-11-01 まるちゃん「すぴーどがいのち」：記録の答えは今日の予定表と一緒に先に届いている＝選んだ瞬間に決まる。 */
         'else if(FDASK==null&&CUST&&FDMAP[CUST.id]){FIRSTDAT=FDMAP[CUST.id][0];FDASK=FDMAP[CUST.id][1];}' +
         'YNX=(LN&&TNX&&typeof codeOf==="function")?(TNX[codeOf((CUST&&CUST.title)||"")||""]||null):null;' +
-        'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT&&!(LN&&lnHasNext()&&!YNX))SEQ.push(11);' +
+        'ELANS=null;LASHANS=null;PFANS=null;PHANS=null;JJANS=null;SEQ=[];if(ELJ.ask)SEQ.push(9);if(DT&&!(LN&&lnHasNext()&&!YNX))SEQ.push(11);' +
         'if(ACQ.indexOf("lash")>=0)SEQ.push(12);if(ACQ.indexOf("procell_face")>=0)SEQ.push(13);if(ACQ.indexOf("procell_scalp")>=0)SEQ.push(14);' +
+        'if(jjAsk())SEQ.push(17);' +
         /* ★受付の端末（開発版だけ）は、ここでは聞かずに日にちの選択へ（確認は予約メモの確定のあと）。 */
         'if(seqv().length&&!rcp()){goStep(seqv()[0]);}else if(LN){lnFinish();}else{goMonth();}};}}' +
     /* ★お名前が2行にならないように、入りきらないカードだけ字を小さくする。
@@ -8094,7 +8106,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'window.scrollTo(0,0);}' +
     'function goToday(){step=10;show();taDraw();window.scrollTo(0,0);}' +
     'function goStep(n){if(n===9)goElight();else if(n===11)goFirst();else if(n===12)goLash();' +
-      'else if(n===13)goYN(13,"sgPF","sgpf",PFANS||"yes");else if(n===14)goYN(14,"sgPH","sgph",PHANS||"yes");else goToday();}' +
+      'else if(n===13)goYN(13,"sgPF","sgpf",PFANS||"yes");else if(n===14)goYN(14,"sgPH","sgph",PHANS||"yes");' +
+      /* ホホバは予約メモから分からないので、前もって印を付けない（押した答えだけ） */
+      'else if(n===17)goYN(17,"sgJJ","sgjj",JJANS||"");else goToday();}' +
     'function goYN(n,id,cls,ans){step=n;show();var bs=$(id).getElementsByClassName(cls);' +
       'for(var i=0;i<bs.length;i++)bs[i].classList.toggle("sel",bs[i].getAttribute("data-k")===ans);window.scrollTo(0,0);}' +
     /* ★2026-11-01 まるちゃん「かこのきろくみるっていったじゃん？」＝はじめての脱毛の画面(11)は、記録で聞く日だけ出す
@@ -8109,8 +8123,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'o.push("パリジェンヌ："+(SEQ.indexOf(12)>=0?(YN[LASHANS]||"-"):"（聞いていない）"));' +
       'o.push("顔プロセル："+(SEQ.indexOf(13)>=0?(YN[PFANS]||"-"):"（聞いていない）"));' +
       'o.push("頭皮プロセル："+(SEQ.indexOf(14)>=0?(YN[PHANS]||"-"):"（聞いていない）"));' +
+      'o.push("ホホバ："+(SEQ.indexOf(17)>=0?(YN[JJANS]||"-"):"（聞いていない）"));' +
       'var adds=[];if(ELANS&&ELANS!=="no")adds.push("イーライト");if(LASHANS==="yes")adds.push("パリジェンヌ");' +
-      'if(PFANS==="yes")adds.push("顔プロセル");if(PHANS==="yes")adds.push("頭皮プロセル");' +
+      'if(PFANS==="yes")adds.push("顔プロセル");if(PHANS==="yes")adds.push("頭皮プロセル");if(JJANS==="yes")adds.push("ホホバの使い方");' +
       'o.push("→ 送る文："+(FDANS==="yes"?"脱毛の長いお礼文（次回の日時入り）":"☆次回の短い文")+(adds.length?"＋"+adds.join("・")+"の注意事項":""));' +
       'return o.join("<br>");}' +
     /* ★2026-11-02 まるちゃん「予約メモには、顔のプロセルを施術する、と記入されています。今日本当に、顔のプロセルはやりませんでしたか？
@@ -8123,7 +8138,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'return {el:el,el_parts:el==="vio"?"VIO":(el==="both"?"VIO,その他":(el==="other"?"その他":"")),' +
         'first:FDANS==="yes",' +
         'after:[LASHANS==="yes"?"lash":"",PFANS==="yes"?"procell_face":"",' +
-          'PHANS==="yes"?"procell_scalp":""].filter(function(x){return x;})};}' +
+          'PHANS==="yes"?"procell_scalp":"",JJANS==="yes"?"jojoba":""].filter(function(x){return x;})};}' +
     'function seqv(){return SEQ.filter(seqShown);}' +
     'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}if(LN){lnFinish();return;}if(rcp()){rcpFinish();return;}goMonth();}' +
     /* ★2026-11-09 まるちゃん決定（受付の端末・今は開発版だけ）：予約メモの確定のあとに確認する並び。
@@ -8283,7 +8298,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 1枚目＝施術者のボタンだけ（今日の予約を読まない＝番号検索では要らないため）。今日の日付はこの端末の日付。 */
     'var RLOADED=false;' +
     /* ── 施術後のLINE送信（31枚目）：送る物を選ぶ→確かめる→事務所PCが文を作って「いま送る」で積む ── */
-    'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",elight_vio:"イーライト（VIOのみ）",elight_both:"イーライト（VIO＋髭等）",elight_other:"イーライト（髭等）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮"},lsending=false;' +
+    'var LNNAME={new_nobook:"新規脱毛（次回予約なし）",elight_vio:"イーライト（VIOのみ）",elight_both:"イーライト（VIO＋髭等）",elight_other:"イーライト（髭等）",lash:"パリジェンヌ",procell_face:"プロセル顔",procell_scalp:"プロセル頭皮",jojoba:"ホホバエッセンス「No.31」の使い方"},lsending=false;' +
     /* 今日より先に同じ番号の予約がある＝次回の予約がもう入っている（「はじめての脱毛」の質問を出さない＝予約なしの文は送らない）。 */
     /* ── ★2026-11-13 まるちゃん決定：施術後のLINE送信の「昨日のお客様で、施術後のLINEをまだ送っていない方がいます」（同日スタッフにも公開）──
        一覧は事務所の見回りが5分ごとに作って置く（aftercare_yesterday.json）＝まだ送っていない物の判断は送り忘れの知らせと同じ1本。
@@ -8329,13 +8344,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       'CUST={mark:mk,start:e.start_at_ms,end:e.end_at_ms,title:e.title||"",note:e.note||"",room:rn,' +
         'st:e.start_time||"",et:e.end_time||"",id:e.event_id||"",dname:x.name||""};' +
       'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];TA={};' +
-      'FIRSTDAT=null;FDANS=null;FDASK=null;ELANS=null;LASHANS=null;PFANS=null;PHANS=null;' +
+      'FIRSTDAT=null;FDANS=null;FDASK=null;ELANS=null;LASHANS=null;PFANS=null;PHANS=null;JJANS=null;' +
       'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}' +
       'ACQ=["lash","procell_face","procell_scalp"].filter(function(k){return ks.indexOf(k)>=0;});' +
       'ELJ=(SG.elightAsk)?SG.elightAsk(CUST.title,CUST.note):{ask:false,parts:[]};' +
       'YNX=(ks.indexOf("next")>=0&&x.next)?x.next:null;' +
       'SEQ=[];if(ks.indexOf("elight")>=0)SEQ.push(9);if(ks.indexOf("first")>=0)SEQ.push(11);' +
       'if(ks.indexOf("lash")>=0)SEQ.push(12);if(ks.indexOf("procell_face")>=0)SEQ.push(13);if(ks.indexOf("procell_scalp")>=0)SEQ.push(14);' +
+      'if(jjAsk())SEQ.push(17);' +
       'if(seqv().length){goStep(seqv()[0]);}else{lnFinish();}}' +
     'function lnHasNext(){var c=(typeof codeOf==="function")?(codeOf((CUST&&CUST.title)||"")||""):"";return !!(c&&NXC[c]);}' +
     /* 質問の答えから送る物を決める（施術後の予約の☆次回の文に足す物と同じ決め方）。 */
@@ -8597,7 +8613,10 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'if(k==="no"){noCheck("顔のプロセル",go);return;}go();};}' +
         'var hb=$("sgPH").getElementsByClassName("sgph");' +
         'for(var hi=0;hi<hb.length;hi++){hb[hi].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){PHANS=k;nextOf(14);};' +
-          'if(k==="no"){noCheck("頭皮のプロセル",go);return;}go();};}}' +
+          'if(k==="no"){noCheck("頭皮のプロセル",go);return;}go();};}' +
+        /* ★17枚目：ホホバ＝押すとすぐ次へ（予約メモに書かない物なので、NOの確かめは出さない）。 */
+        'var jb=$("sgJJ").getElementsByClassName("sgjj");' +
+        'for(var ji=0;ji<jb.length;ji++){jb[ji].onclick=function(){if(!tapOK())return;JJANS=this.getAttribute("data-k");nextOf(17);};}}' +
       'var yb=$("sgyb");if(yb)yb.onclick=function(){if(!tapOK())return;goYList();};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgckgo").onclick=function(){if(!tapOK())return;var sv=seqv();if(sv.length){goStep(sv[0]);}else{rcpFinish();}};' +
