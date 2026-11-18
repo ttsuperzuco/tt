@@ -143,9 +143,9 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var ASK=false;' +
     'var ACQ=[],ACNAME={lash:"パリジェンヌ",procell_face:"顔プロセル",procell_scalp:"頭皮プロセル"};' +
     'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
-    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={};' +
+    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={},FGN={};' +
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null,JJANS=null;' +
-    'function jjAsk(){return DEVMODE&&!REP;}' +
+    'function jjAsk(){return DEVMODE&&!REP&&!(CUST&&FGN[CUST.id]);}' +
     'var ELANS=null;' +
     'var YD=null,YDL=false,YDM=false,YNX=null,TNX={};' +
     'var PAID=null;' +
@@ -186,7 +186,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       's.onerror=function(){cb({error:"net"});};document.body.appendChild(s);}' +
     'function build(p){' +
       'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読み込めませんでした。通信環境をご確認くださいませ🙇";return;}' +
-      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};NXC={};' +
+      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};FGN=p.foreign||{};NXC={};' +
       'var day=[];' +
       'for(var i=0;i<p.events.length;i++){var e=p.events[i];' +
         'if(e.date>today&&typeof codeOf==="function"){var c0=codeOf(e.title||"");if(c0)NXC[c0]=1;}' +
@@ -611,7 +611,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'st:e.start_time||"",et:e.end_time||"",id:e.event_id||"",dname:x.name||""};' +
       'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];TA={};' +
       'FIRSTDAT=null;FDANS=null;FDASK=null;ELANS=null;LASHANS=null;PFANS=null;PHANS=null;JJANS=null;' +
-      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}' +
+      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}if(x.foreign&&CUST.id)FGN[CUST.id]=1;' +
       'ACQ=["lash","procell_face","procell_scalp"].filter(function(k){return ks.indexOf(k)>=0;});' +
       'ELJ=(SG.elightAsk)?SG.elightAsk(CUST.title,CUST.note):{ask:false,parts:[]};' +
       'YNX=(ks.indexOf("next")>=0&&x.next)?x.next:null;' +

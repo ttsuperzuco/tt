@@ -7772,12 +7772,14 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
     /* ★2026-11-01：11枚目（本日が当店はじめての脱毛ですか？）を出す日か（DT）と答え（FDANS＝null／"yes"／"no"）。 */
     /* FDASK＝記録で「はじめての脱毛」の画面を出すか（受付係の ask_first。null＝まだ届いていない＝出す）。 */
-    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={};' +
+    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={},FGN={};' +
     /* ★2026-11-01：お客様を選んだあとに出す画面の並び（SEQ）＝イーライト(9)→はじめての脱毛(11)→パリジェンヌ(12)→当てはまる物(10)。
        出さない画面は並びに入れない。次へ・戻るはこの並びだけで決める。LASHANS＝パリジェンヌの答え（null／"yes"／"no"）。 */
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null,JJANS=null;' +
-    /* ★2026-11-18：ホホバの質問（17枚目）を出すか。リピート入力では聞かない。今は開発版だけ（公開する時は DEVMODE を外す）。 */
-    'function jjAsk(){return DEVMODE&&!REP;}' +
+    /* ★2026-11-18：ホホバの質問（17枚目）を出すか。リピート入力では聞かない。今は開発版だけ（公開する時は DEVMODE を外す）。
+       まるちゃん「外国人の客にはださない」＝英語で送るお客様（事務所側が予定表と一緒に渡す foreign の印）には出さない
+       （使い方の案内に英語版が無いため）。 */
+    'function jjAsk(){return DEVMODE&&!REP&&!(CUST&&FGN[CUST.id]);}' +
     /* ★2026-11-01：9枚目のイーライトの答え（null＝聞いていない・"vio"／"both"／"other"／"no"）。 */
     'var ELANS=null;' +
     /* ★2026-11-13：昨日の未送信（YD＝一覧・YDM＝その一覧から来た・YNX＝送っていない☆次回の予約＝届いていない時は自動で一緒に送る・TNX＝今日の方の分） */
@@ -7832,7 +7834,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 受け取った予定から「今日・うちの施術者の分」だけ取り出す */
     'function build(p){' +
       'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読み込めませんでした。通信環境をご確認くださいませ🙇";return;}' +
-      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};NXC={};' +
+      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};FGN=p.foreign||{};NXC={};' +
       'var day=[];' +
       /* ★2026-11-02：今日より先に同じ番号の予約がある方＝次回の予約がもう入っている（施術後のLINE送信の「新規脱毛（次回予約なし）」に印を付けない） */
       'for(var i=0;i<p.events.length;i++){var e=p.events[i];' +
@@ -8345,7 +8347,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'st:e.start_time||"",et:e.end_time||"",id:e.event_id||"",dname:x.name||""};' +
       'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];TA={};' +
       'FIRSTDAT=null;FDANS=null;FDASK=null;ELANS=null;LASHANS=null;PFANS=null;PHANS=null;JJANS=null;' +
-      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}' +
+      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}if(x.foreign&&CUST.id)FGN[CUST.id]=1;' +
       'ACQ=["lash","procell_face","procell_scalp"].filter(function(k){return ks.indexOf(k)>=0;});' +
       'ELJ=(SG.elightAsk)?SG.elightAsk(CUST.title,CUST.note):{ask:false,parts:[]};' +
       'YNX=(ks.indexOf("next")>=0&&x.next)?x.next:null;' +
