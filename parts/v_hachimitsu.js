@@ -538,7 +538,7 @@ function honeyScript_(C) {
   function drawSw() {
     $('hnSw').style.display = full ? '' : 'none';
     document.querySelector('.hntop').classList.toggle('sw', full);
-    $('hnText').placeholder = (full ? 'りゅうさん' : 'なすさん') + 'をお助けしたいですの！相談事をここに入力してね😊';
+    $('hnText').placeholder = (full ? 'りゅうさん' : 'なすさん') + 'をお助けしたいですの！相談事をここに入力してくださいね😊';
     Array.prototype.forEach.call($('hnSw').querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-w') === where); });
   }
   function setFull(d) {
@@ -708,7 +708,7 @@ function renderHoneyPage_(base, staff, dev) {
       '<button type="button" class="exgo hnopen" id="hnOpen">入力ボックスを表示</button>' +
       '<div id="hnPanel" style="display:none">' +
       '<div class="hnbox"><div class="hnthumbs" id="hnThumbs"></div>' +
-      '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea></div>' +
+      '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してくださいね😊"></textarea></div>' +
       '<div id="hnTail">' +
       '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼️ 画像選択</button></div>' +
       '<input type="file" id="hnFile" accept="image/*,application/pdf" multiple style="display:none">' +

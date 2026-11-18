@@ -12477,7 +12477,7 @@ function uriageBookScript_(C) {
       closePick();
       // ★2026-11-16 まるちゃん「ボタン押したときに確認のメッセージ出なかったからこうなった」（押し間違いで800番を作廢した）
       //   ＝理由を押したら、共通の確認の小窓で「作廢する／戻る」を聞いてから記録する。
-      popup('發票' + z.no + '番（' + (((z.num || '') + ' ' + (z.name || '')).trim() || '番号なし') + '・' + yen(z.amount) + '）を\n「' + rsn + '」で作廢します。\nよろしいですか？', {
+      popup('發票' + z.no + '番（' + (((z.num || '') + ' ' + (z.name || '')).trim() || '番号なし') + '・' + yen(z.amount) + '）を\n「' + rsn + '」で作廢します。\nよろしいでしょうか？😊', {
         icon: '🚫', cancel: true, noLabel: '戻る', yesLabel: '作廢する',
         onYes: function () {
           ask({ action: 'void', no: z.no, number: z.number, amount: z.amount, reason: rsn, _k: 'v:' + z.no }, '作廢を記録しています');
@@ -14300,7 +14300,7 @@ function honeyScript_(C) {
     $('hnSw').style.display = full ? '' : 'none';
     document.querySelector('.hntop').classList.toggle('sw', full);
     // ★2026-11-12 まるちゃん「りゅうのばあいは りゅうさん にして スマホもPCも」＝全部の権限（りゅうさんのスマホ・自宅PCの窓）の時は呼びかけを「りゅうさん」に。
-    $('hnText').placeholder = (full ? 'りゅうさん' : 'なすさん') + 'をお助けしたいですの！相談事をここに入力してね😊';
+    $('hnText').placeholder = (full ? 'りゅうさん' : 'なすさん') + 'をお助けしたいですの！相談事をここに入力してくださいね😊';
     Array.prototype.forEach.call($('hnSw').querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-w') === where); });
   }
   function setFull(d) {
@@ -14496,7 +14496,7 @@ function renderHoneyPage_(base, staff, dev) {
       '<button type="button" class="exgo hnopen" id="hnOpen">入力ボックスを表示</button>' +
       '<div id="hnPanel" style="display:none">' +
       '<div class="hnbox"><div class="hnthumbs" id="hnThumbs"></div>' +
-      '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してね😊"></textarea></div>' +
+      '<textarea class="ccin" id="hnText" placeholder="なすさんをお助けしたいですの！相談事をここに入力してくださいね😊"></textarea></div>' +
       '<div id="hnTail">' +
       '<div class="hnbar"><button type="button" id="hnMic">🎤 音声入力</button><button type="button" id="hnPick">🖼️ 画像選択</button></div>' +
       // ★2026-11-12 まるちゃん「スマホ内を押すと、スマホの中から選べるようにして。一瞬その画面が出たけど、すぐに写真・コレクションの画面に行っちゃう」
@@ -25089,7 +25089,7 @@ function ttviewStart_(exec, base, staff, dev) {
       }
       if (!list.length) h = '<div class="tvstatus">見つかりませんでした。</div>';
       else {
-        h = '<div class="tvscnt">' + list.length + '件' + (list.length > MAX ? '（最初の' + MAX + '件を表示しています。言葉を足して絞り込んでください😊）' : '') + '</div>';
+        h = '<div class="tvscnt">' + list.length + '件' + (list.length > MAX ? '（最初の' + MAX + '件を表示しています。言葉を追加して絞り込んでください😊）' : '') + '</div>';
         part(fut, '');
         part(past, '過去の予定');
       }

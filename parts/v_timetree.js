@@ -697,7 +697,7 @@ function ttviewStart_(exec, base, staff, dev) {
       }
       if (!list.length) h = '<div class="tvstatus">見つかりませんでした。</div>';
       else {
-        h = '<div class="tvscnt">' + list.length + '件' + (list.length > MAX ? '（最初の' + MAX + '件を表示しています。言葉を足して絞り込んでください😊）' : '') + '</div>';
+        h = '<div class="tvscnt">' + list.length + '件' + (list.length > MAX ? '（最初の' + MAX + '件を表示しています。言葉を追加して絞り込んでください😊）' : '') + '</div>';
         part(fut, '');
         part(past, '過去の予定');
       }
