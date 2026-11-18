@@ -376,7 +376,7 @@ function honeyScript_(C) {
     $('hnLog').innerHTML = out;
     fillAll();
   }
-  var PDF_ASK = { bw: 'この画像を、印刷用の白黒のPDFにしてください（背景は真っ白、文字は黒）。',
+  var PDF_ASK = { bw: 'この画像を、そのまま白黒（グレー）にしてPDFにしてください。写っている物は何も消さず、色だけを抜いてください。',
                   cl: 'この画像を、カラーのままPDFにしてください。' };
   function drawPicks() {
     $('hnThumbs').innerHTML = picks.map(function (p, i) {
