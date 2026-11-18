@@ -72,11 +72,7 @@ var HONEYCSS_ =
   '.hnth button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:14px;line-height:24px;padding:0;cursor:pointer;}' +
   '.hnthumbs .hnpdf{flex:1 1 150px;display:flex;flex-direction:column;gap:8px;background:none;padding:0;box-shadow:none;border-radius:0;}' +
   '.hnpdf button{width:100%;height:76px;border:0;border-radius:12px;background:#2C7A99;color:#fff;font:inherit;font-size:22px;font-weight:800;padding:0 12px;cursor:pointer;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.18);}' +
-  '.hnpdf button.on{background:#0f172a;}' +
-  '.hnpdf .hnpdf2{display:flex;gap:8px;}' +
-  '.hnpdf .hnpdf2 button{flex:1;}' +
-  '.hnpdf button.bw{background:#fff;color:#0f172a;border:2px solid #0f172a;}' +
-  '.hnpdf button.cl{background:linear-gradient(135deg,#f97316,#ec4899 50%,#3b82f6);color:#fff;}';
+  '';
 function honeyScript_(C) {
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -379,15 +375,25 @@ function honeyScript_(C) {
     $('hnLog').innerHTML = out;
     fillAll();
   }
-  var pdfOpen = false;
   var PDF_ASK = { bw: 'この画像を、印刷用の白黒のPDFにしてください（背景は真っ白、文字は黒）。',
                   cl: 'この画像を、カラーのままPDFにしてください。' };
   function drawPicks() {
-    if (!picks.length) pdfOpen = false;
     $('hnThumbs').innerHTML = picks.map(function (p, i) {
       return '<div class="hnth"><img src="data:image/jpeg;base64,' + p.b64 + '" alt=""><button type="button" data-i="' + i + '">×</button></div>';
-    }).join('') + (picks.length ? '<div class="hnpdf"><button type="button" data-pdf="1"' + (pdfOpen ? ' class="on"' : '') + '>PDF変換</button>' +
-      (pdfOpen ? '<div class="hnpdf2"><button type="button" class="bw" data-kind="bw">白黒</button><button type="button" class="cl" data-kind="cl">カラー</button></div>' : '') + '</div>' : '');
+    }).join('') + (picks.length ? '<div class="hnpdf"><button type="button" data-pdf="1">PDF変換</button></div>' : '');
+  }
+  function sendPdf(kind) {      
+    if (sending || !picks.length) return;
+    var typed = $('hnText').value.replace(/^\s+|\s+$/g, '');
+    $('hnText').value = PDF_ASK[kind] + (typed ? '\n' + typed : '');
+    $('hnSend').click();
+  }
+  function askPdf() {      
+    var m = szPopup_('どちらにしますか？😊', { icon: '📄️', cancel: true, noLabel: '白黒', yesLabel: 'カラー',
+      onNo: function () { sendPdf('bw'); }, onYes: function () { sendPdf('cl'); } });
+    var no = m.querySelector('.szpopno');
+    if (no) no.style.cssText += ';border:0;background:#fff;color:#0f172a;';
+    m.addEventListener('click', function (e) { if (e.target === m && m.parentNode) m.parentNode.removeChild(m); });
   }
   function addFile(f) {
     if (!/^image\//.test(f.type)) { popup('画像を選択してください😊'); return; }
@@ -462,16 +468,7 @@ function honeyScript_(C) {
   $('hnFile').addEventListener('change', function () { Array.prototype.slice.call(this.files || []).forEach(addFile); this.value = ''; });
   $('hnThumbs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    if (b.getAttribute('data-pdf')) { pdfOpen = !pdfOpen; drawPicks(); return; }
-    var kind = b.getAttribute('data-kind');
-    if (kind) {      
-      if (sending) return;
-      var typed = $('hnText').value.replace(/^\s+|\s+$/g, '');
-      $('hnText').value = PDF_ASK[kind] + (typed ? '\n' + typed : '');
-      pdfOpen = false;
-      $('hnSend').click();
-      return;
-    }
+    if (b.getAttribute('data-pdf')) { askPdf(); return; }
     picks.splice(Number(b.getAttribute('data-i')), 1); drawPicks();
   });
   var PC_OFF = '自宅PCが動いていません。自宅PCの電源を確認するか、スイッチをサーバーに切り替えてください🙇';
