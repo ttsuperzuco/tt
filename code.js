@@ -12265,7 +12265,8 @@ var UBPAYCSS_ =
   '.ubchip{background:#fff;color:#0f172a;border:2px solid #cbd5e1;border-radius:999px;padding:8px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
   '.ubplt .tm.cy{cursor:pointer;border:1.5px solid #7dd3fc;}' +
   '.ubpfree{display:block;width:100%;box-sizing:border-box;border:2px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;font-size:17px;margin:4px 0 8px;}' +
-  '.ubpick{max-height:88vh;overflow-y:auto;}';
+  '.ubpick{max-height:88vh;overflow-y:auto;}' +
+  '.ubpbd.cert{background:#ede9fe;color:#5b21b6;}.ubpnote.cert{background:#ede9fe;color:#4c1d95;}';
 
 // ── 裏の書き込みの結果を、ズコのどの画面にいても箱で知らせる見張り（2026-11-07 まるちゃん） ──
 //  「書き込みが成功したら通知して、ズコを開いている限りどこの画面にいてもBOXで出す」。
@@ -13066,6 +13067,7 @@ function uriageBookScript_(C) {
     for (var i = 0; i < PL.people.length; i++) {
       var p = PL.people[i], tot = startTotal(p), iss = p.issued || [];
       var badge = iss.length ? '<span class="ubpbd done">お会計済み ' + iss.length + '枚</span>'
+        : p.cert ? '<span class="ubpbd cert">購入証明書あり</span>'
         : p.state === '支払い済み' ? '<span class="ubpbd paid">支払い済み</span>' : p.state === '未払い' ? '<span class="ubpbd unpaid">未払い</span>' : '';
       h += '<div class="ubac ubpc' + (iss.length ? ' pend' : '') + '" data-i="' + i + '"><div class="ubpch"><span class="t1">' + esc(p.name || '（お名前なし）') + '</span>' + badge + '</div>' +
         '<div class="ubpcs"><span>' + esc(p.time + '　' + (p.num || '番号なし')) + '</span><span class="ubpamt">' + (tot ? yen(tot) : '―') + '</span></div></div>';
@@ -13077,7 +13079,9 @@ function uriageBookScript_(C) {
     var lines = [];
     (p.lines || []).forEach(function (x) { lines.push(cp(x)); });
     (p.next || []).forEach(function (x) { if (x.on) lines.push(cp(x)); });
-    CUR = { p: p, num: p.num || '', name: p.name || '', lines: lines, pay: p.num && !p.lines.length && p.next.length ? '振込' : '',
+    // ★購入証明書がある日は、証明書のお支払い方法を最初から選んでおく（一部払いは今日払った分の方法）
+    CUR = { p: p, num: p.num || '', name: p.name || '', lines: lines,
+            pay: (p.cert && p.cert.method) || (p.num && !p.lines.length && p.next.length ? '振込' : ''),
             buyer: '', useBuyer: false };
     show('ubPayF'); drawCheckout();
   }
@@ -13087,7 +13091,9 @@ function uriageBookScript_(C) {
     var p = CUR.p, h = '';
     var st = p.state === '支払い済み' ? '<span class="ubpbd paid">予約メモ：支払い済み</span>' : p.state === '未払い' ? '<span class="ubpbd unpaid">予約メモ：未払い</span>' : '';
     h += '<div class="ubpwho"><div><div class="ubpnm">' + esc(CUR.name || '（お名前なし）') + '</div><div class="ubpnum">' + esc(CUR.num || '番号なし') + '</div></div>' + st + '</div>';
-    if (p.state === '支払い済み') h += '<div class="ubpnote">本日分はお支払い済みです。払うのは次回分・まとめ買いだけです</div>';
+    if (p.state === '支払い済み' && !p.cert) h += '<div class="ubpnote">本日分はお支払い済みです。払うのは次回分・まとめ買いだけです</div>';
+    if (p.cert) h += '<div class="ubpnote cert">購入証明書（' + esc(p.cert.at) + ' 印刷）の内容です：' + esc(p.cert.summary) +
+      (p.cert.mode === 'part' ? '<br>一部払い＝今日のお支払いは入金分だけです（未払い残金 ' + yen(p.cert.unpaid) + '）' : '') + '</div>';
     h += '<div class="ubplist">';
     if (!CUR.lines.length) h += '<div class="ubnone">お会計の行がありません。下の「＋」から追加してください😊</div>';
     CUR.lines.forEach(function (l, i) {
