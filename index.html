@@ -829,6 +829,19 @@
       HOME_AS_PEOPLE_.some(function (p) { return p.id && p.id === a0; }));
     if (!ok) return;
     window.__SZ_AS_ = a0;
+    // ★2026-11-18 まるちゃん「スタッフの画面はスタッフの本物と同じにしてよ。はちみつちゃんだけじゃなくて、全部のボタン」：
+    //   見本はまるちゃんのパソコン（同じブラウザ）で開くので、各画面が覚えている控え（会話・一覧・下書き等）が
+    //   まるちゃん本人の物と同じ置き場だった＝トマトさんの画面にまるちゃんのテストの会話が出ていた。
+    //   → 見本の間は、ブラウザに覚える物を「その人の見本」用の置き場に分ける（全部の画面に効く）。
+    //     端末の番号・鍵・名乗り（本人確認に使う物）だけは今まで通りの置き場を使う。
+    try {
+      var KEEP = /^(zk_dv|zk_dk|zk_tk|zk_tpass|zk_fail_once|sz_device|sz_who|sz_role|sz_label|sz_pw_ok|sz_parts_full|sz_reload_for)/;
+      var px = 'as:' + a0 + ':', SP = Storage.prototype, g0 = SP.getItem, s0 = SP.setItem, r0 = SP.removeItem;
+      var kk = function (k) { k = String(k); return KEEP.test(k) ? k : px + k; };
+      SP.getItem = function (k) { return g0.call(this, kk(k)); };
+      SP.setItem = function (k, v) { return s0.call(this, kk(k), v); };
+      SP.removeItem = function (k) { return r0.call(this, kk(k)); };
+    } catch (e) {}
     staff = a0 !== 'kanbu'; dev = false; who = staff ? a0 : '';
     // ★同日「まったくおなじにしてよ スタッフの画面と」＝画面の中の出し分け（役割・名前で決めている所）も、
     //   受付係が返す中身も、その人と同じにする。役割・名前をその人の物で名乗り、端末はまるちゃんの物のまま送る。
