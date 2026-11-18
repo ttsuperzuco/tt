@@ -12532,7 +12532,7 @@ function uriageBookScript_(C) {
       return;
     }
     if (lq) {
-      if (loading) return;
+      if (loading) { if (fields.voids) VOIDS_INFLIGHT = false; return; }
       loading = true; setWhen('最新の売上表を読んでいます…');
     } else if (!quiet) {
       PEND.push(fields); applyPend(); draw();
@@ -12545,13 +12545,14 @@ function uriageBookScript_(C) {
     }
     function fail(msg) {
       settle();
+      if (fields.voids) { VOIDS_INFLIGHT = false; if (AUTHWAIT) reloadAuth(); }
       if (fields.action === 'voidlist') authFailed();
       // ★2026-11-07 まるちゃん指定の文（分からない失敗・時間切れ・送れない時）。中身が変わっていた等の理由は受付係の文をそのまま出す。
       if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇');
       fetchData();
     }
     // ★2026-11-14 作廢の認証（まるちゃんだけ）は、この窓の鍵の指紋も添える（受付係が開発と確かめる・購入証明書と同じ）
-    var devAct = fields.action === 'voidlist' || fields.action === 'voidsend';
+    var devAct = fields.action === 'voidlist' || fields.action === 'voidsend' || !!fields.voids;
     (devAct ? devKey : function (cb) { cb({}); })(function (ex) {
     for (var ek in ex) fields[ek] = ex[ek];
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
@@ -12571,7 +12572,9 @@ function uriageBookScript_(C) {
         jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
           if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
           if (s.status !== 'done') { fail(s.result || ''); return; }
-          settle(); if (fields.action === 'voidlist') fetchAuth(true); else fetchData();
+          settle();
+          if (fields.voids) { VOIDS_INFLIGHT = false; fetchAuth(AUTHWAIT); }
+          if (fields.action === 'voidlist') fetchAuth(true); else fetchData();
         });
       })();
     });
@@ -12965,15 +12968,21 @@ function uriageBookScript_(C) {
   // ★2026-11-18 まるちゃん「あるはずなのにでてない」＝一覧は頼まれた時だけ作り直す（10〜40秒かかる）。
   //   その間、前に作った古い一覧（11/16 14:08）を今の状態のように「ありません」と見せていた。
   //   → 読み直している間（AUTHWAIT）は「最新を読んでいます」と出し、「ありません」と認証ボタンは出さない。失敗した時も黙らずに出す（AUTHERR）。
-  var AUTHWAIT = false, AUTHERR = false;
+  var AUTHWAIT = false, AUTHERR = false, VOIDS_INFLIGHT = false;
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoAuth').style.display = '';
-  function fetchAuth(fresh) {
+  function fetchAuth(fresh, after) {
     jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) {
       if (fresh) AUTHWAIT = false;
       if (p && p.items) AUTH = p;
       else if (fresh) AUTHERR = true;
       drawAuth();
+      if (after) after();
     });
+  }
+  // 一覧が何分前に作られたか（台湾の時刻で書いてある）。読めない時は大きな数＝古い扱い。
+  function authAgeMin() {
+    var t = AUTH && AUTH.at ? Date.parse(String(AUTH.at).replace(' ', 'T') + '+08:00') : NaN;
+    return isNaN(t) ? 1e9 : (Date.now() - t) / 60000;
   }
   function reloadAuth() {
     AUTHWAIT = true; AUTHERR = false; drawAuth();
@@ -13050,9 +13059,14 @@ function uriageBookScript_(C) {
     var x = AUTH.items[parseInt(c.getAttribute('data-i'), 10)]; if (x) openAuth(x);
   });
   $('ubGoAuth').addEventListener('click', function () {
-    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false;
-    fetchAuth();
-    reloadAuth();
+    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false; AUTHERR = false;
+    // ★2026-11-18 まるちゃん「よむのにじかんかかりすぎ」：
+    //   売上帳簿を開いた時の読み直しで一覧を作っている最中なら、それを待つ（同じ物をもう一度頼まない）。
+    //   5分以内に作った一覧なら、待たずにそのまま出す（再読込で作り直せる）。それより古い時だけ作り直してもらう。
+    AUTHWAIT = VOIDS_INFLIGHT; drawAuth();
+    fetchAuth(false, function () {
+      if (!VOIDS_INFLIGHT && authAgeMin() > 5) reloadAuth();
+    });
   });
   $('ubReload5').addEventListener('click', function () { if (!AUTHWAIT) reloadAuth(); });
   $('ubAuthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
@@ -13383,7 +13397,11 @@ function uriageBookScript_(C) {
 
   // ── はじめ：前に送られた中身をすぐ出し、裏で最新を読み直す（待たせない） ──
   show('ubMenu'); draw();
-  fetchData(function () { ask({ action: 'load' }, '', null, true); });
+  // ★2026-11-18 まるちゃん「よむのにじかんかかりすぎ」＝開発の時は、売上表の読み直しと同じ回で作廢の一覧も作ってもらう
+  //   （作廢の認証を押した時には、ほぼ最新の一覧が届いている）。
+  var isDev = (window.__SZ_ROLE_ || '') === '開発';
+  if (isDev) VOIDS_INFLIGHT = true;
+  fetchData(function () { ask(isDev ? { action: 'load', voids: 1 } : { action: 'load' }, '', null, true); });
 }
 
 function renderUriageBookPage_(base, staff, dev) {

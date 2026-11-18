@@ -316,7 +316,7 @@ function uriageBookScript_(C) {
       return;
     }
     if (lq) {
-      if (loading) return;
+      if (loading) { if (fields.voids) VOIDS_INFLIGHT = false; return; }
       loading = true; setWhen('最新の売上表を読んでいます…');
     } else if (!quiet) {
       PEND.push(fields); applyPend(); draw();
@@ -329,11 +329,12 @@ function uriageBookScript_(C) {
     }
     function fail(msg) {
       settle();
+      if (fields.voids) { VOIDS_INFLIGHT = false; if (AUTHWAIT) reloadAuth(); }
       if (fields.action === 'voidlist') authFailed();
       if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇');
       fetchData();
     }
-    var devAct = fields.action === 'voidlist' || fields.action === 'voidsend';
+    var devAct = fields.action === 'voidlist' || fields.action === 'voidsend' || !!fields.voids;
     (devAct ? devKey : function (cb) { cb({}); })(function (ex) {
     for (var ek in ex) fields[ek] = ex[ek];
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
@@ -351,7 +352,9 @@ function uriageBookScript_(C) {
         jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
           if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
           if (s.status !== 'done') { fail(s.result || ''); return; }
-          settle(); if (fields.action === 'voidlist') fetchAuth(true); else fetchData();
+          settle();
+          if (fields.voids) { VOIDS_INFLIGHT = false; fetchAuth(AUTHWAIT); }
+          if (fields.action === 'voidlist') fetchAuth(true); else fetchData();
         });
       })();
     });
@@ -706,15 +709,20 @@ function uriageBookScript_(C) {
   $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
   if ($('ubGoVoid')) $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
   var AUTH = null, AUTHP = {}, AUTHDONE = false;
-  var AUTHWAIT = false, AUTHERR = false;
+  var AUTHWAIT = false, AUTHERR = false, VOIDS_INFLIGHT = false;
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoAuth').style.display = '';
-  function fetchAuth(fresh) {
+  function fetchAuth(fresh, after) {
     jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) {
       if (fresh) AUTHWAIT = false;
       if (p && p.items) AUTH = p;
       else if (fresh) AUTHERR = true;
       drawAuth();
+      if (after) after();
     });
+  }
+  function authAgeMin() {
+    var t = AUTH && AUTH.at ? Date.parse(String(AUTH.at).replace(' ', 'T') + '+08:00') : NaN;
+    return isNaN(t) ? 1e9 : (Date.now() - t) / 60000;
   }
   function reloadAuth() {
     AUTHWAIT = true; AUTHERR = false; drawAuth();
@@ -788,9 +796,11 @@ function uriageBookScript_(C) {
     var x = AUTH.items[parseInt(c.getAttribute('data-i'), 10)]; if (x) openAuth(x);
   });
   $('ubGoAuth').addEventListener('click', function () {
-    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false;
-    fetchAuth();
-    reloadAuth();
+    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false; AUTHERR = false;
+    AUTHWAIT = VOIDS_INFLIGHT; drawAuth();
+    fetchAuth(false, function () {
+      if (!VOIDS_INFLIGHT && authAgeMin() > 5) reloadAuth();
+    });
   });
   $('ubReload5').addEventListener('click', function () { if (!AUTHWAIT) reloadAuth(); });
   $('ubAuthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
@@ -1105,7 +1115,9 @@ function uriageBookScript_(C) {
   $('ubPayRBack').addEventListener('click', function (e) { e.preventDefault(); show('ubPay'); loadPay(); });
 
   show('ubMenu'); draw();
-  fetchData(function () { ask({ action: 'load' }, '', null, true); });
+  var isDev = (window.__SZ_ROLE_ || '') === '開発';
+  if (isDev) VOIDS_INFLIGHT = true;
+  fetchData(function () { ask(isDev ? { action: 'load', voids: 1 } : { action: 'load' }, '', null, true); });
 }
 function renderUriageBookPage_(base, staff, dev) {
   var head = function (icon, name) {
