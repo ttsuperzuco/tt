@@ -406,6 +406,7 @@ function honeyScript_(C) {
       said = t;
       if (t) gotText = true;
       $('hnText').value = base + t;
+      if (typeof fitBox === 'function') fitBox();      
     };
     rec.onerror = function (e) {
       if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) {
@@ -545,8 +546,12 @@ function honeyScript_(C) {
     if (!HOME.classList.contains('hnwrite')) return;
     var ta = $('hnText'), vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
     var rest = $('hnTail').offsetHeight + 24;      
-    ta.style.height = Math.max(160, Math.floor(vh - ta.getBoundingClientRect().top - rest)) + 'px';
+    var max = Math.max(120, Math.floor(vh - ta.getBoundingClientRect().top - rest));
+    ta.style.height = '120px';
+    ta.style.height = Math.min(max, Math.max(120, ta.scrollHeight)) + 'px';
+    ta.style.overflowY = ta.scrollHeight > max ? 'auto' : 'hidden';
   }
+  $('hnText').addEventListener('input', fitBox);
   function panel(open) {
     $('hnPanel').style.display = open ? '' : 'none';
     $('hnOpen').style.display = open ? 'none' : '';

@@ -13764,6 +13764,7 @@ function honeyScript_(C) {
       said = t;
       if (t) gotText = true;
       $('hnText').value = base + t;
+      if (typeof fitBox === 'function') fitBox();      // 音声入力で文字が増えた時も入力欄を伸ばす
     };
     rec.onerror = function (e) {
       if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) {
@@ -13914,12 +13915,18 @@ function honeyScript_(C) {
   // ★2026-11-18：入力ボックスは普段しまっておき、「入力ボックスを表示」で出す。送信したらまたしまう（失敗したら出したまま）。
   //   出している間は、今までの会話を隠して、入力欄を画面の残りいっぱいの高さにする。
   var HOME = document.querySelector('.hnhome');
+  // ★2026-11-18 まるちゃん「入力ボックスは最初は今までと同じくらいの大きさで、文字をたくさん打って高くなってくると、どんどん広がっていく」
+  //   ＝最初は今までの高さ（120）。文字が増えたら中身に合わせて伸ばし、画面の残りいっぱい（その下に音声入力・画像選択・送信が収まる所）で止める。
   function fitBox() {
     if (!HOME.classList.contains('hnwrite')) return;
     var ta = $('hnText'), vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
     var rest = $('hnTail').offsetHeight + 24;      // 入力欄の下＝音声入力・画像選択・送信の分
-    ta.style.height = Math.max(160, Math.floor(vh - ta.getBoundingClientRect().top - rest)) + 'px';
+    var max = Math.max(120, Math.floor(vh - ta.getBoundingClientRect().top - rest));
+    ta.style.height = '120px';
+    ta.style.height = Math.min(max, Math.max(120, ta.scrollHeight)) + 'px';
+    ta.style.overflowY = ta.scrollHeight > max ? 'auto' : 'hidden';
   }
+  $('hnText').addEventListener('input', fitBox);
   function panel(open) {
     $('hnPanel').style.display = open ? '' : 'none';
     $('hnOpen').style.display = open ? 'none' : '';
