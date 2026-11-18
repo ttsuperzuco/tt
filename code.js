@@ -13980,6 +13980,9 @@ function honeyScript_(C) {
     $('hnPanel').style.display = open ? '' : 'none';
     $('hnOpen').style.display = open ? 'none' : '';
     HOME.classList.toggle('hnwrite', !!open);
+    // ★2026-11-18 まるちゃん「戻るボタンじゃなくて会話に戻るボタン」＝入力ボックスを開いている間は文字も「← 会話に戻る」
+    var ba = document.querySelector('.hntop .uhome');
+    if (ba) ba.textContent = open ? '← 会話に戻る' : '← 戻る';
     if (open) {
       window.scrollTo(0, 0); fitBox();
       try { $('hnText').focus(); } catch (e) {}
