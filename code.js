@@ -12545,6 +12545,7 @@ function uriageBookScript_(C) {
     }
     function fail(msg) {
       settle();
+      if (fields.action === 'voidlist') authFailed();
       // ★2026-11-07 まるちゃん指定の文（分からない失敗・時間切れ・送れない時）。中身が変わっていた等の理由は受付係の文をそのまま出す。
       if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇');
       fetchData();
@@ -12570,7 +12571,7 @@ function uriageBookScript_(C) {
         jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
           if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
           if (s.status !== 'done') { fail(s.result || ''); return; }
-          settle(); if (fields.action === 'voidlist') fetchAuth(); else fetchData();
+          settle(); if (fields.action === 'voidlist') fetchAuth(true); else fetchData();
         });
       })();
     });
@@ -12961,15 +12962,31 @@ function uriageBookScript_(C) {
   //   「認証して作廢」→確認の箱→係が発票サイトで本当に作廢する（国に届く取り消し・元に戻せない）。
   //   ★ボタンは開発（まるちゃん）にだけ出す。受付係の係も開発と確かめられた依頼しか通さない（二重の守り）。
   var AUTH = null, AUTHP = {}, AUTHDONE = false;
+  // ★2026-11-18 まるちゃん「あるはずなのにでてない」＝一覧は頼まれた時だけ作り直す（10〜40秒かかる）。
+  //   その間、前に作った古い一覧（11/16 14:08）を今の状態のように「ありません」と見せていた。
+  //   → 読み直している間（AUTHWAIT）は「最新を読んでいます」と出し、「ありません」と認証ボタンは出さない。失敗した時も黙らずに出す（AUTHERR）。
+  var AUTHWAIT = false, AUTHERR = false;
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoAuth').style.display = '';
-  function fetchAuth() {
-    jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) { if (p && p.items) { AUTH = p; drawAuth(); } });
+  function fetchAuth(fresh) {
+    jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) {
+      if (fresh) AUTHWAIT = false;
+      if (p && p.items) AUTH = p;
+      else if (fresh) AUTHERR = true;
+      drawAuth();
+    });
   }
+  function reloadAuth() {
+    AUTHWAIT = true; AUTHERR = false; drawAuth();
+    ask({ action: 'voidlist' }, '', null, true);
+  }
+  function authFailed() { AUTHWAIT = false; AUTHERR = true; drawAuth(); }
   function drawAuth() {
-    if (!AUTH) { $('ubAuths').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
+    var top = AUTHWAIT ? '<div class="ubnone">最新の作廢を読んでいます。少し待っててくださいね🥺</div>'
+      : (AUTHERR ? '<div class="ubnone">最新の作廢を読み込めませんでした。再読込してください🙇</div>' : '');
+    if (!AUTH) { $('ubAuths').innerHTML = top || '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubWhen5').textContent = String(AUTH.at || '').slice(5, 16).replace('-', '/') + ' 時点';
-    var h = '';
-    if (!AUTH.items.length) h = '<div class="ubnone">認証を待っている作廢はありません😊</div>';
+    var h = top;
+    if (!AUTH.items.length && !AUTHWAIT) h += '<div class="ubnone">認証を待っている作廢はありません😊</div>';
     for (var i = 0; i < AUTH.items.length; i++) {
       var x = AUTH.items[i], d = x.day.slice(5).replace('-', '/').replace(/^0/, '');
       h += '<div class="ubac' + (AUTHP[x.number] ? ' pend' : '') + '" data-i="' + i + '">' +
@@ -12978,7 +12995,7 @@ function uriageBookScript_(C) {
         // ★2026-11-14 まるちゃん「○の2行いらない」＝売上表と一致している時は出さない。食い違う時（✕）だけ出す。
         (x.memo ? '' : '<div class="ck ng">✕ 売上表に作廢のメモがありません</div>') +
         (x.row_in_prod ? '<div class="ck ng">✕ 本番の売上表に売上の行が残っています</div>' : '') +
-        (AUTHP[x.number] ? '<div class="ck">作廢を送っています…</div>' : '<button type="button" class="go" data-a="auth">認証して作廢</button>') + '</div>';
+        (AUTHP[x.number] ? '<div class="ck">作廢を送っています…</div>' : (AUTHWAIT ? '' : '<button type="button" class="go" data-a="auth">認証して作廢</button>')) + '</div>';
     }
     // ★2026-11-14 まるちゃん「直近二か月の作廢を表示　ボタンにする　デフォルトは非表示」
     var DN = AUTH.done || [];
@@ -13033,11 +13050,11 @@ function uriageBookScript_(C) {
     var x = AUTH.items[parseInt(c.getAttribute('data-i'), 10)]; if (x) openAuth(x);
   });
   $('ubGoAuth').addEventListener('click', function () {
-    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false; drawAuth();
+    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false;
     fetchAuth();
-    ask({ action: 'voidlist' }, '', null, true);
+    reloadAuth();
   });
-  $('ubReload5').addEventListener('click', function () { ask({ action: 'voidlist' }, '', null, true); });
+  $('ubReload5').addEventListener('click', function () { if (!AUTHWAIT) reloadAuth(); });
   $('ubAuthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubVoidBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });

@@ -329,6 +329,7 @@ function uriageBookScript_(C) {
     }
     function fail(msg) {
       settle();
+      if (fields.action === 'voidlist') authFailed();
       if (!quiet) popup(msg || 'スプレッドシートの売上帳簿への書き込みが失敗しました。りゅうさんに連絡してください🙇');
       fetchData();
     }
@@ -350,7 +351,7 @@ function uriageBookScript_(C) {
         jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
           if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
           if (s.status !== 'done') { fail(s.result || ''); return; }
-          settle(); if (fields.action === 'voidlist') fetchAuth(); else fetchData();
+          settle(); if (fields.action === 'voidlist') fetchAuth(true); else fetchData();
         });
       })();
     });
@@ -705,15 +706,28 @@ function uriageBookScript_(C) {
   $('ubGoNoInv').addEventListener('click', function () { show('ubNoInv'); });
   if ($('ubGoVoid')) $('ubGoVoid').addEventListener('click', function () { show('ubVoid'); });
   var AUTH = null, AUTHP = {}, AUTHDONE = false;
+  var AUTHWAIT = false, AUTHERR = false;
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoAuth').style.display = '';
-  function fetchAuth() {
-    jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) { if (p && p.items) { AUTH = p; drawAuth(); } });
+  function fetchAuth(fresh) {
+    jsonp({ action: 'data', name: 'uriagebook_voids.json' }, function (p) {
+      if (fresh) AUTHWAIT = false;
+      if (p && p.items) AUTH = p;
+      else if (fresh) AUTHERR = true;
+      drawAuth();
+    });
   }
+  function reloadAuth() {
+    AUTHWAIT = true; AUTHERR = false; drawAuth();
+    ask({ action: 'voidlist' }, '', null, true);
+  }
+  function authFailed() { AUTHWAIT = false; AUTHERR = true; drawAuth(); }
   function drawAuth() {
-    if (!AUTH) { $('ubAuths').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
+    var top = AUTHWAIT ? '<div class="ubnone">最新の作廢を読んでいます。少し待っててくださいね🥺</div>'
+      : (AUTHERR ? '<div class="ubnone">最新の作廢を読み込めませんでした。再読込してください🙇</div>' : '');
+    if (!AUTH) { $('ubAuths').innerHTML = top || '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubWhen5').textContent = String(AUTH.at || '').slice(5, 16).replace('-', '/') + ' 時点';
-    var h = '';
-    if (!AUTH.items.length) h = '<div class="ubnone">認証を待っている作廢はありません😊</div>';
+    var h = top;
+    if (!AUTH.items.length && !AUTHWAIT) h += '<div class="ubnone">認証を待っている作廢はありません😊</div>';
     for (var i = 0; i < AUTH.items.length; i++) {
       var x = AUTH.items[i], d = x.day.slice(5).replace('-', '/').replace(/^0/, '');
       h += '<div class="ubac' + (AUTHP[x.number] ? ' pend' : '') + '" data-i="' + i + '">' +
@@ -721,7 +735,7 @@ function uriageBookScript_(C) {
         '<div class="t2">' + esc(((x.num || '') + ' ' + (x.name || '')).trim() + '　' + yen(x.amount) + (x.who ? '\n記録：' + x.who + 'さん（理由：' + (x.reason || '―') + '）' : '')) + '</div>' +
         (x.memo ? '' : '<div class="ck ng">✕ 売上表に作廢のメモがありません</div>') +
         (x.row_in_prod ? '<div class="ck ng">✕ 本番の売上表に売上の行が残っています</div>' : '') +
-        (AUTHP[x.number] ? '<div class="ck">作廢を送っています…</div>' : '<button type="button" class="go" data-a="auth">認証して作廢</button>') + '</div>';
+        (AUTHP[x.number] ? '<div class="ck">作廢を送っています…</div>' : (AUTHWAIT ? '' : '<button type="button" class="go" data-a="auth">認証して作廢</button>')) + '</div>';
     }
     var DN = AUTH.done || [];
     h += '<button type="button" class="ubdonebtn" data-a="done"><span>直近2か月の作廢（' + DN.length + '件）</span><span>' + (AUTHDONE ? '▲ 閉じる' : '▼ 表示') + '</span></button>';
@@ -774,11 +788,11 @@ function uriageBookScript_(C) {
     var x = AUTH.items[parseInt(c.getAttribute('data-i'), 10)]; if (x) openAuth(x);
   });
   $('ubGoAuth').addEventListener('click', function () {
-    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false; drawAuth();
+    show('ubAuth'); AUTH = null; AUTHP = {}; AUTHDONE = false;
     fetchAuth();
-    ask({ action: 'voidlist' }, '', null, true);
+    reloadAuth();
   });
-  $('ubReload5').addEventListener('click', function () { ask({ action: 'voidlist' }, '', null, true); });
+  $('ubReload5').addEventListener('click', function () { if (!AUTHWAIT) reloadAuth(); });
   $('ubAuthBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubVoidBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
