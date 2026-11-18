@@ -13318,6 +13318,15 @@ var HONEYCSS_ =
   '.hnpdf{display:block;margin-top:8px;background:#0e7490;color:#fff;border:0;border-radius:12px;padding:12px 16px;font:inherit;font-size:16px;font-weight:800;text-align:left;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15);}' +
   '.hnpdf span{font-size:13px;font-weight:700;opacity:.9;word-break:break-all;}' +
   '.hnbar{display:flex;gap:8px;margin:0 0 10px;}' +
+  // ★2026-11-18 返事の吹き出しの中の「くるくる＋秒数＋今の段階😊」（作業中の画面の代わり）
+  '.hnlive .hntxt:empty{display:none;}' +
+  '.hnst{display:flex;align-items:center;gap:8px;font-size:15px;color:#475569;white-space:normal;}' +
+  '.hnsec{font-weight:800;color:#0f172a;min-width:30px;}' +
+  '.hnspin{display:inline-flex;gap:4px;}' +
+  '.hnspin i{width:7px;height:7px;border-radius:50%;background:#f97316;animation:hnspin 1s infinite ease-in-out;}' +
+  '.hnspin i:nth-child(2){background:#ef4444;animation-delay:.15s;}' +
+  '.hnspin i:nth-child(3){background:#f59e0b;animation-delay:.3s;}' +
+  '@keyframes hnspin{0%,80%,100%{transform:scale(.5);opacity:.4;}40%{transform:scale(1);opacity:1;}}' +
   '.hnbar button.on{background:#dc2626;color:#fff;}' +
   // ★2026-11-12 まるちゃん「戻るのすぐ右にハチミツちゃん（少し小さめの文字）、その右に会話を初期化ボタン。そこのトップはスクロールしていても常に表示」
   // ★2026-11-12 まるちゃん「送信の下の余白はほんの少しでいい」
@@ -13380,8 +13389,8 @@ function honeyScript_(C) {
       cb({ zdv: dv, zdh: h });
     }, function () { cb({}); });
   }
-  function ask(fields, busy, done) {
-    devKey(function (ex) { for (var k in ex) fields[k] = ex[k]; ask0(fields, busy, done); });
+  function ask(fields, busy, done, onProg) {
+    devKey(function (ex) { for (var k in ex) fields[k] = ex[k]; ask0(fields, busy, done, onProg); });
   }
   // ★★2026-11-15 まるちゃん「本番にして」：近道＝Cloudflareのトンネル（zuko.staaa.jp）でサーバーへ直接送る。
   //   前はグーグルの窓口に積んで、サーバーが2秒おき・スマホが1.5秒おきに見に行っていた（受け渡しだけで約5秒）。
@@ -13487,16 +13496,17 @@ function honeyScript_(C) {
       if (!t) { cb('fallback'); return; }
       var rid = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
       var t0 = Date.now();
-      if (fields.act === 'send') pendSet({ id: rid, at: t0 });
+      if (fields.act === 'send') pendSet({ id: rid, at: t0, q: String(fields.text || '').slice(0, 2000), n: (fields.images || []).length });
       follow(rid, { who: me.who, role: me.role, fields: fields }, t0, cb, prog);
     });
   }
-  function ask0(fields, busy, done) {
+  function ask0(fields, busy, done, onProg) {
     if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, false), '#2C7A99');
     var end = function (err, d) { if (busy && typeof szOvHide_ === 'function') szOvHide_(); done(err, d); };
     var me = idn();
     // ★2026-11-17 まるちゃん「段階を出す」＝ハチミツちゃんが今している作業を、作業中の画面の下に出す（近道の時）。
-    var prog = function (t) { if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, '<span style="word-break:keep-all;overflow-wrap:anywhere">' + esc(t) + '</span>'), '#2C7A99'); };
+    // ★2026-11-18：送信は作業中の画面を出さず、返事の吹き出しに打ち込むように出す（onProg が受け取る）。
+    var prog = onProg || function (t) { if (busy && typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(busy, '<span style="word-break:keep-all;overflow-wrap:anywhere">' + esc(stageOf(t)) + '</span>'), '#2C7A99'); };
     direct(fields, me, function (err, d) {
       if (err === 'fallback') { viaPipe(); return; }
       end(err, d);
@@ -13781,15 +13791,66 @@ function honeyScript_(C) {
   // ── サーバー／自宅PC のスイッチ（2026-11-12 まるちゃん）──
   //   自宅PCは1分ごとの仕事が受ける＝動いている印（honey_pc_alive.json）が古い時は、送らずにすぐ知らせる（📸インスタと同じ）。
   var PC_OFF = '自宅PCが動いていません。自宅PCの電源を確認するか、スイッチをサーバーに切り替えてください🙇';
-  function go(fields, busy, done) {
-    if (opName() !== 'hachimitsu_pc') { ask(fields, busy, done); return; }
+  function go(fields, busy, done, onProg) {
+    if (opName() !== 'hachimitsu_pc') { ask(fields, busy, done, onProg); return; }
     jsonp({ action: 'data', key: C.key, name: 'honey_pc_alive.json' }, function (y) {
       var v = null;
       try { v = (y && typeof y.result === 'string') ? JSON.parse(y.result) : (y && y.at ? y : (y && y.result)); } catch (e) {}
       var age = (v && v.at) ? Date.now() / 1000 - Number(v.at) : 1e9;
       if (!(age < 150)) { done(PC_OFF); return; }
-      ask(fields, busy, done);
+      ask(fields, busy, done, onProg);
     });
+  }
+  // ★2026-11-18 まるちゃん「作業中の画面は出さずに、直接回答の吹き出しに、本当のAIみたいにパチパチ打っていく感じで」
+  //   「くるくる＋秒数＋ご依頼の内容を確認しています😊 の形で表示」。
+  //   サーバーからは {"stage": 今の段階, "text": ここまでに書いた返事} が届く（前の形＝段階の文だけ、も読める）。
+  function liveOf(t) {
+    if (t && t.charAt(0) === '{') { try { var o = JSON.parse(t); return { stage: o.stage || '', text: o.text || '' }; } catch (e) {} }
+    return { stage: t || '', text: '' };
+  }
+  function stageOf(t) { return liveOf(t).stage; }
+  // 返事の吹き出し（打ち込み中）。q＝送った文（開き直した後の続きの時は空）。t0＝送った時刻。
+  function Live(q, qn, t0) {
+    var log = $('hnLog');
+    var none = log.querySelector('.ccnone'); if (none) none.remove();
+    if (q || qn) {
+      var qd = document.createElement('div'); qd.className = 'ccq hnlq';
+      qd.textContent = q + (qn ? (q ? '\n' : '') + '（写真' + qn + '枚）' : '');
+      log.appendChild(qd);
+    }
+    var a = document.createElement('div'); a.className = 'cca hnlive';
+    a.innerHTML = '<div class="hntxt"></div><div class="hnst"><span class="hnspin"><i></i><i></i><i></i></span>' +
+      '<b class="hnsec">0s</b><span class="hnstg">ご依頼の内容を確認しています😊</span></div>';
+    log.appendChild(a);
+    var txt = a.querySelector('.hntxt'), st = a.querySelector('.hnst'), sec = a.querySelector('.hnsec'), stg = a.querySelector('.hnstg');
+    var target = '', shown = '', typing = null, finishCb = null;
+    var tick = setInterval(function () { sec.textContent = Math.max(0, Math.floor((Date.now() - t0) / 1000)) + 's'; }, 500);
+    function type() {
+      if (shown === target) { clearInterval(typing); typing = null; if (finishCb) { var f = finishCb; finishCb = null; f(); } return; }
+      if (target.indexOf(shown) !== 0) shown = '';
+      var n = Math.max(1, Math.ceil((target.length - shown.length) / 25));      // 残りが多いほど速く打つ（約1〜2秒で追いつく）
+      shown = target.slice(0, shown.length + n);
+      txt.textContent = shown;
+      if (stick) toBottom();
+    }
+    function aim(t) { target = t || ''; if (!typing) typing = setInterval(type, 40); }
+    stickBottom();
+    return {
+      prog: function (raw) {
+        var o = liveOf(raw);
+        if (o.stage) stg.textContent = o.stage + '😊';
+        // まるちゃん「結果が出たら、文字を打っていく感じで出して、同時にくるくる・秒数・段階は非表示。結果だけ出していく」
+        if (o.text) { st.style.display = 'none'; aim(o.text); }
+      },
+      // 答えが出た＝最後の文まで打ち終わってから会話を描き直す（打ち込みの途中で文が一気に入れ替わらないように）
+      done: function (finalText, then) {
+        clearInterval(tick); st.style.display = 'none';
+        var wait = setTimeout(function () { finishCb = null; then(); }, 4000);
+        finishCb = function () { clearTimeout(wait); then(); };
+        aim(finalText);
+      },
+      fail: function () { clearInterval(tick); clearInterval(typing); if (a.parentNode) a.remove(); var q2 = log.querySelector('.hnlq'); if (q2) q2.remove(); }
+    };
   }
   function drawSw() {
     $('hnSw').style.display = full ? '' : 'none';
@@ -13840,13 +13901,23 @@ function honeyScript_(C) {
     if (t.length > 2000) { popup('長すぎます。2000文字までにしてください😊'); return; }
     if (wantMic) micStop();
     sending = true; $('hnSend').disabled = true;
-    go({ act: 'send', text: t, images: picks }, 'ハチミツちゃんが作業中です🍯', function (err, d) {
-      sending = false; $('hnSend').disabled = false;
-      if (err) { popup(err); return; }
-      setFull(d);
-      $('hnText').value = ''; picks = []; drawPicks(); draw(d.items);
-      stickBottom();
-    });
+    // ★2026-11-18：作業中の画面は出さず、送った文と返事の吹き出し（くるくる・秒数・今の段階→打ち込み）を会話に出す。
+    //   入力欄は送った時点で空にする（失敗したら戻す）。
+    var sentPicks = picks, live = Live(t, picks.length, Date.now());
+    $('hnText').value = ''; picks = []; drawPicks();
+    go({ act: 'send', text: t, images: sentPicks }, '', function (err, d) {
+      if (err) {
+        sending = false; $('hnSend').disabled = false;
+        live.fail();
+        if (!$('hnText').value) { $('hnText').value = t; picks = sentPicks; drawPicks(); }
+        popup(err); return;
+      }
+      var last = (d.items || [])[(d.items || []).length - 1] || {};
+      live.done(last.a || '', function () {
+        sending = false; $('hnSend').disabled = false;
+        setFull(d); draw(d.items); stickBottom();
+      });
+    }, live.prog);
   });
   // ★2026-11-12 まるちゃん「開いた時に、最新の会話とBOXや送信ボタンが見えたい状態だろ」
   //   ＝前は会話を出した瞬間に一番下へ動かすだけで、そのあと絵が読み込まれて高さが伸び、途中の位置で止まっていた。
@@ -13880,17 +13951,19 @@ function honeyScript_(C) {
   //   答えが出たら会話に出す。サーバーが番号を知らない（受付係の再起動など）時は、会話を読み直すだけ（終わっていれば会話に入っている）。
   var pend = pendGet();
   if (pend && opName() === 'hachimitsu' && window.fetch) {
-    var BUSY = 'ハチミツちゃんが作業中です🍯';
     sending = true; $('hnSend').disabled = true;
-    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(BUSY, false), '#2C7A99');
+    var rlive = Live(pend.q || '', pend.n || 0, pend.at);      // 送った文と写真の枚数も覚えてある
     follow(pend.id, null, pend.at, function (err, d) {
-      if (typeof szOvHide_ === 'function') szOvHide_();
-      sending = false; $('hnSend').disabled = false;
-      if (err || !d) { loadHist(''); if (err && err !== 'notfound') popup(err); return; }
-      setFull(d); draw(d.items); stickBottom();
-    }, function (t) {
-      if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_(BUSY, '<span style="word-break:keep-all;overflow-wrap:anywhere">' + esc(t) + '</span>'), '#2C7A99');
-    });
+      if (err || !d) {
+        sending = false; $('hnSend').disabled = false;
+        rlive.fail(); loadHist(''); if (err && err !== 'notfound') popup(err); return;
+      }
+      var last = (d.items || [])[(d.items || []).length - 1] || {};
+      rlive.done(last.a || '', function () {
+        sending = false; $('hnSend').disabled = false;
+        setFull(d); draw(d.items); stickBottom();
+      });
+    }, rlive.prog);
   } else {
     loadHist('');
   }
