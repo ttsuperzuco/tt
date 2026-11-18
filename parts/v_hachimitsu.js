@@ -71,7 +71,8 @@ var HONEYCSS_ =
   '.hnth img{display:block;width:76px;height:76px;object-fit:cover;border-radius:10px;}' +
   '.hnth button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border:0;border-radius:50%;background:#0f172a;color:#fff;font-size:14px;line-height:24px;padding:0;cursor:pointer;}' +
   '.hnthumbs .hnpdf{flex:1 1 150px;display:flex;flex-direction:column;gap:8px;background:none;padding:0;box-shadow:none;border-radius:0;}' +
-  '.hnpdf button{width:100%;height:76px;border:0;border-radius:12px;background:#2C7A99;color:#fff;font:inherit;font-size:22px;font-weight:800;padding:0 12px;cursor:pointer;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.18);}' +
+  '.hnpdf button{width:100%;height:72px;margin-bottom:4px;border:0;border-radius:12px;background:linear-gradient(180deg,#ef4444,#dc2626);color:#fff;font:inherit;font-size:22px;font-weight:800;padding:0 12px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 0 #991b1b,0 6px 12px rgba(0,0,0,.25);}' +
+  '.hnpdf button:active{transform:translateY(3px);box-shadow:0 1px 0 #991b1b,0 2px 6px rgba(0,0,0,.25);}' +
   '';
 function honeyScript_(C) {
   function $(id) { return document.getElementById(id); }
@@ -393,6 +394,8 @@ function honeyScript_(C) {
       onNo: function () { sendPdf('bw'); }, onYes: function () { sendPdf('cl'); } });
     var no = m.querySelector('.szpopno');
     if (no) no.style.cssText += ';border:0;background:#fff;color:#0f172a;';
+    var yes = m.querySelector('.szpopyes');      
+    if (yes) yes.style.cssText += ';background:linear-gradient(135deg,#f97316,#ec4899 50%,#3b82f6);color:#fff;';
     m.addEventListener('click', function (e) { if (e.target === m && m.parentNode) m.parentNode.removeChild(m); });
   }
   function addFile(f) {
