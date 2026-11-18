@@ -124,6 +124,23 @@ var UBCSS_ =
   '.ubdonebtn{display:flex;justify-content:space-between;align-items:center;width:100%;box-sizing:border-box;margin:18px 0 8px;padding:12px 16px;' +
     'background:transparent;color:#fff;border:2px solid rgba(255,255,255,.75);border-radius:12px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
   '.ubac .t1{font-size:18px;}.ubac .t2{font-size:16px;}.ubac .ck{font-size:16px;}';
+var UBPAYCSS_ =
+  '.ubpnew{display:block;width:100%;margin:0 0 10px;padding:14px;background:transparent;color:#fff;border:2px dashed rgba(255,255,255,.8);border-radius:14px;font:inherit;font-size:17px;font-weight:900;cursor:pointer;}' +
+  '.ubpc{cursor:pointer;}' +
+  '.ubpwarn{margin:8px 0;}' +
+  '.ubchips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px;}' +
+  '.ubchip{background:#fff;color:#0f172a;border:2px solid #cbd5e1;border-radius:999px;padding:8px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
+  '.ubprow{background:rgba(255,255,255,.12);border-radius:14px;padding:10px;margin:12px 0;}' +
+  '.ubprh{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:900;font-size:16px;}' +
+  '.ubpdel{background:#fff;color:#b91c1c;border:0;border-radius:10px;padding:6px 10px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;}' +
+  '.ubpcat{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:8px 0 4px;}' +
+  '.ubpcat button,.ubpsuf button{border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:9px 2px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;}' +
+  '.ubpcat button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +
+  '.ubpsuf{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:6px 0;}' +
+  '.ubp2{display:grid;grid-template-columns:2fr 1fr;gap:8px;}' +
+  '.ubpsub{color:#fff;font-weight:900;text-align:right;margin-top:6px;}' +
+  '.ubpadd{display:block;width:100%;padding:12px;background:transparent;color:#fff;border:2px dashed rgba(255,255,255,.8);border-radius:12px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
+  '.ubptot{color:#fff;font-size:22px;font-weight:900;text-align:right;margin:12px 4px 4px;}';
 function ubPendAdd_(o) { var a = ubPendList_(); a.push(o); ubPendSave_(a); ubWatch_(); }
 function uriageBookScript_(C) {
   function $(id) { return document.getElementById(id); }
@@ -131,7 +148,7 @@ function uriageBookScript_(C) {
   function yen(n) { return (n == null || n === '') ? '―' : Number(n).toLocaleString('ja-JP') + '元'; }
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
-  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth'];
+  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
   var D = null, busy = false, loading = false;
   var PEND = [];          
@@ -748,6 +765,164 @@ function uriageBookScript_(C) {
   $('ubInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubNoInvBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
 
+  var PL = null, PDAY = '', FORM = null, PKF = null;
+  var PCATS = ['脫毛', 'パリジェンヌ', 'プロセル', 'フェイシャル', '商品'];
+  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoPay').style.display = '';
+  function askDev(fields, cb) {
+    devKey(function (ex) {
+      for (var ek in ex) fields[ek] = ex[ek];
+      jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
+              device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) }, function (r) {
+        if (!r || !r.ok || !r.id) { cb(false, '通信エラーです。もう一度試してもらえると嬉しいです🙇'); return; }
+        var n = 0;
+        (function poll() {
+          if (++n > 300) { cb(false, '時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
+          jsonp({ action: 'status', key: C.key, id: r.id }, function (s) {
+            if (!s || !s.ok || s.status === 'pending' || s.status === 'running' || s.status === 'queued' || s.status === '') { setTimeout(poll, 1000); return; }
+            cb(s.status === 'done', s.result || '');
+          });
+        })();
+      });
+    });
+  }
+  function payDayStr(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function loadPay() {
+    $('ubPays').innerHTML = '<div class="ubnone">予約を読んでいます…</div>';
+    askDev({ action: 'paylist', day: PDAY }, function (ok, msg) {
+      if (!ok) { $('ubPays').innerHTML = '<div class="ubnone">' + esc(msg || '読み込めませんでした') + '</div>'; return; }
+      jsonp({ action: 'data', name: 'uriagebook_paylist.json' }, function (p) { if (p && p.people) { PL = p; drawPay(); } });
+    });
+  }
+  function drawPay() {
+    var d = PL.day.slice(5).replace('-', '/').replace(/^0/, '');
+    $('ubPayDay').textContent = d + ' の予約';
+    var h = '<button type="button" class="ubpnew" data-i="-1">＋ 予約のないお客様のお会計</button>';
+    if (!PL.people.length) h += '<div class="ubnone">この日の予約はありません</div>';
+    for (var i = 0; i < PL.people.length; i++) {
+      var p = PL.people[i], ls = p.lines.filter(function (x) { return x.on; });
+      var sum = ls.reduce(function (a, x) { return a + (x.unit || 0); }, 0);
+      h += '<div class="ubac ubpc" data-i="' + i + '"><div class="t1">' + esc(p.time + '　' + (p.num || '番号なし') + ' ' + p.name) + '</div>' +
+        '<div class="t2">' + esc(p.lines.map(function (x) { return (x.on ? '● ' : '○ ') + x.detail + (x.unit ? ' ' + x.unit + '元' : ''); }).join('\n') || '（予約メモに施術の行がありません）') + '</div>' +
+        (p.pays.length ? '<div class="ck ng">' + esc(p.pays.join('／')) + '</div>' : '') +
+        '<div class="ck">候補の合計：' + (sum ? yen(sum) : '金額の候補なし') + '</div></div>';
+    }
+    $('ubPays').innerHTML = h;
+  }
+  function openForm(p) {
+    FORM = { num: (p && p.num) || '', name: (p && p.name) || '', pay: '', person: p || null, rows: [] };
+    if (p) p.lines.forEach(function (x) { if (x.on) FORM.rows.push({ cat: x.cat, detail: x.detail, unit: x.unit || '', qty: 1 }); });
+    if (!FORM.rows.length) FORM.rows.push({ cat: '脫毛', detail: '', unit: '', qty: 1 });
+    show('ubPayF'); drawForm();
+  }
+  function formTotal() { return FORM.rows.reduce(function (a, r) { return a + (parseInt(r.unit, 10) || 0) * (parseInt(r.qty, 10) || 0); }, 0); }
+  function drawForm() {
+    var old = $('ubPFbody'), box = document.createElement('div'); box.id = 'ubPFbody';
+    var p = FORM.person, h = '';
+    h += '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
+         '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
+         '<div class="ubpn" id="ubPFname">' + esc(FORM.name ? '顧客名：' + FORM.name : '') + '</div>';
+    if (p && p.pays.length) h += '<div class="ubtest ubpwarn">予約メモのお支払い状況：' + esc(p.pays.join('／')) + '</div>';
+    if (p && p.lines.length) {
+      h += '<label>予約メモの候補（押すと品目に追加）</label><div class="ubchips">';
+      p.lines.forEach(function (x, i) { h += '<button type="button" class="ubchip" data-c="' + i + '">' + esc(x.detail + (x.unit ? ' ' + x.unit + '元' : '') + '（' + (x.kind || '―') + '）') + '</button>'; });
+      h += '</div>';
+    }
+    FORM.rows.forEach(function (r, i) {
+      h += '<div class="ubprow" data-r="' + i + '"><div class="ubprh"><span>品目 ' + (i + 1) + '</span>' +
+        (FORM.rows.length > 1 ? '<button type="button" class="ubpdel" data-del="' + i + '">この行を削除</button>' : '') + '</div>' +
+        '<div class="ubpcat">' + PCATS.map(function (c) { return '<button type="button" data-cat="' + i + '" data-v="' + esc(c) + '" class="' + (r.cat === c ? 'on' : '') + '">' + esc(c) + '</button>'; }).join('') + '</div>' +
+        '<label>明細（発票の明細備註・40文字まで）</label><input data-det="' + i + '" value="' + esc(r.detail) + '" maxlength="40">' +
+        '<div class="ubpsuf"><button type="button" data-suf="' + i + '" data-v="本日分">本日分</button><button type="button" data-suf="' + i + '" data-v="次回分">次回分</button><button type="button" data-suf="' + i + '" data-v="">付けない</button></div>' +
+        '<div class="ubp2"><div><label>単価（元）</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="u' + i + '" data-ph="押して入力"></div>' +
+        '<button type="button" data-pok="u' + i + '" class="ubok" style="display:none">入力OK</button></div></div></div>' +
+        '<div><label>数量</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="q' + i + '" data-ph="1"></div>' +
+        '<button type="button" data-pok="q' + i + '" class="ubok" style="display:none">入力OK</button></div></div></div></div>' +
+        '<div class="ubpsub" id="ubPsub' + i + '"></div></div>';
+    });
+    h += '<button type="button" class="ubpadd" id="ubPFadd">＋ 品目の行を追加</button>' +
+      '<div class="ubptot" id="ubPFtot"></div>' +
+      '<label>支払方法</label><div class="ubpay" id="ubPFpay">' + PAYS.map(function (v) { return '<button type="button" data-pay="' + esc(v) + '" class="' + (FORM.pay === v ? 'on' : '') + '">' + esc(v === '街口支付' ? '街口' : v) + '</button>'; }).join('') + '</div>' +
+      '<button type="button" class="exgo" id="ubPFgo">発行（テスト）</button>';
+    box.innerHTML = h; box.className = 'ubf';
+    old.parentNode.replaceChild(box, old);
+    var spec = { num: { kind: 'num', max: 4 } };
+    FORM.rows.forEach(function (r, i) { spec['u' + i] = { kind: 'int', max: 6, comma: true }; spec['q' + i] = { kind: 'int', max: 2, lim: 99 }; });
+    PKF = padKit(box, spec, function (k) {
+      if (k === 'num') {
+        FORM.num = PKF.get('num'); var fn = nameOf(FORM.num), el = $('ubPFname');
+        if (fn) { FORM.name = fn; el.className = 'ubpn'; el.textContent = '顧客名：' + fn; }
+        else if (FORM.num && szName_.ready()) { FORM.name = ''; el.className = 'ubnf'; el.textContent = '該当する顧客が存在しません'; }
+        return;
+      }
+      var i = parseInt(k.slice(1), 10);
+      if (k.charAt(0) === 'u') FORM.rows[i].unit = PKF.raw(k); else FORM.rows[i].qty = PKF.raw(k);
+      sums();
+    });
+    var keepName = FORM.name;
+    if (FORM.num) PKF.set('num', FORM.num);
+    if (keepName && !FORM.name) { FORM.name = keepName; $('ubPFname').className = 'ubpn'; $('ubPFname').textContent = '顧客名：' + keepName; }
+    FORM.rows.forEach(function (r, i) { if (r.unit !== '') PKF.set('u' + i, r.unit); PKF.set('q' + i, r.qty || 1); });
+    sums();
+  }
+  function sums() {
+    FORM.rows.forEach(function (r, i) { var el = $('ubPsub' + i); if (el) el.textContent = '小計 ' + yen((parseInt(r.unit, 10) || 0) * (parseInt(r.qty, 10) || 0)); });
+    var t = $('ubPFtot'); if (t) t.textContent = '合計 ' + yen(formTotal());
+  }
+  $('ubPayF').addEventListener('input', function (e) {
+    var d = e.target.getAttribute('data-det'); if (d != null) FORM.rows[+d].detail = e.target.value;
+  });
+  $('ubPayF').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b || !FORM) return;
+    if (b.hasAttribute('data-cat')) { FORM.rows[+b.getAttribute('data-cat')].cat = b.getAttribute('data-v'); drawForm(); return; }
+    if (b.hasAttribute('data-suf')) {
+      var r = FORM.rows[+b.getAttribute('data-suf')];
+      r.detail = r.detail.replace(/(本日分|次回分|当日分|今日分)$/, '') + b.getAttribute('data-v'); drawForm(); return;
+    }
+    if (b.hasAttribute('data-del')) { FORM.rows.splice(+b.getAttribute('data-del'), 1); drawForm(); return; }
+    if (b.hasAttribute('data-c')) {
+      var x = FORM.person.lines[+b.getAttribute('data-c')];
+      FORM.rows.push({ cat: x.cat, detail: x.detail, unit: x.unit || '', qty: 1 }); drawForm(); return;
+    }
+    if (b.hasAttribute('data-pay')) { FORM.pay = b.getAttribute('data-pay'); var bs = $('ubPFpay').querySelectorAll('button'); for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i] === b); return; }
+    if (b.id === 'ubPFadd') { FORM.rows.push({ cat: '脫毛', detail: '', unit: '', qty: 1 }); drawForm(); return; }
+    if (b.id !== 'ubPFgo') return;
+    if (!FORM.pay) { popup('支払方法を選択してください😊'); return; }
+    var items = FORM.rows.map(function (r) { return { cat: r.cat, detail: r.detail.trim(), unit: r.unit, qty: r.qty || 1 }; });
+    popup('テストです。発票サイトには送らず、印刷も売上表への書き込みもしません。\n合計 ' + yen(formTotal()) + '（' + FORM.pay + '）で発行（テスト）しますか？😊', {
+      cancel: true, onYes: function () {
+        $('ubPRbody').innerHTML = '<div class="ubnone">確認しています…</div>'; show('ubPayR');
+        askDev({ action: 'paytest', day: PL ? PL.day : '', num: FORM.num, name: FORM.name, pay: FORM.pay, items_json: JSON.stringify(items) }, function (ok, msg) {
+          if (!ok) { show('ubPayF'); popup(msg || '確認できませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
+          jsonp({ action: 'data', name: 'uriagebook_paytest.json' }, function (o) { drawResult(o); });
+        });
+      }
+    });
+  });
+  function drawResult(o) {
+    if (!o || !o.invoice) { $('ubPRbody').innerHTML = '<div class="ubnone">結果を読めませんでした</div>'; return; }
+    var v = o.invoice, s = o.sheet, h = '';
+    h += '<div class="ubtest">テストのため、発票サイトには送っていません。印刷も売上表への書き込みもしていません。</div>';
+    h += '<div class="ubac"><div class="t1">① 発票サイトに送る中身（本番の時）</div><div class="t2">' + esc(
+      '会社：' + v.sellerName + '（' + v.sellerIdentifier + '）\n備註（顧客番号）：' + (v.mainRemark || '（なし）') + '\n' +
+      v.items.map(function (r, i) { return '品目' + (i + 1) + '：' + r.itemNo + '（印字「' + r.itemName + '」）\n　明細備註：' + r.remark1 + '\n　単価 ' + r.unitPrice + '元 × ' + r.quantity + ' ＝ ' + r.itemAmount + '元'; }).join('\n') +
+      '\n合計：' + Number(v.totalAmount).toLocaleString() + '元（税込・5%）') + '</div></div>';
+    h += '<div class="ubac"><div class="t1">② 売上表に書く1行（本番の時）</div><div class="t2">' + esc(
+      '發票番号：' + s.A + '\n顧客番号：' + s.B + '\n顧客名：' + (s.C || '（なし）') + '\n支払方法：' + s.D + '\n明細：' + s.E.replace(/\n/g, ' ／ ') + '\n合計：' + Number(s.F).toLocaleString() + '元') + '</div></div>';
+    h += '<div class="ck" style="color:#fff">テストの記録番号：' + esc(o.id) + '（' + esc(String(o.at).slice(11, 16)) + '）</div>';
+    $('ubPRbody').innerHTML = h;
+  }
+  $('ubPays').addEventListener('click', function (e) {
+    var c = e.target.closest('[data-i]'); if (!c || !PL) return;
+    var i = parseInt(c.getAttribute('data-i'), 10); openForm(i < 0 ? null : PL.people[i]);
+  });
+  $('ubGoPay').addEventListener('click', function () { if (!PDAY) PDAY = payDayStr(new Date()); show('ubPay'); loadPay(); });
+  $('ubPayPrev').addEventListener('click', function () { var d = new Date(PDAY + 'T12:00:00'); d.setDate(d.getDate() - 1); PDAY = payDayStr(d); loadPay(); });
+  $('ubPayNext').addEventListener('click', function () { var d = new Date(PDAY + 'T12:00:00'); d.setDate(d.getDate() + 1); PDAY = payDayStr(d); loadPay(); });
+  $('ubPayBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
+  $('ubPayFBack').addEventListener('click', function (e) { e.preventDefault(); show('ubPay'); });
+  $('ubPayRBack').addEventListener('click', function (e) { e.preventDefault(); show('ubPay'); });
+  $('ubPayRAgain').addEventListener('click', function () { show('ubPayF'); });
+
   show('ubMenu'); draw();
   fetchData(function () { ask({ action: 'load' }, '', null, true); });
 }
@@ -762,7 +937,7 @@ function renderUriageBookPage_(base, staff, dev) {
     exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
     key: 'kx7Q2p9mVt4Zr8'
   };
-  return '<style>' + HOMECSS_ + EXPADCSS_ + UBCSS_ + '</style>' +
+  return '<style>' + HOMECSS_ + EXPADCSS_ + UBCSS_ + UBPAYCSS_ + '</style>' +
     '<div class="home ubhome">' + backBar_(base, staff, dev) +   
     '<div class="ub">' +
       '<div id="ubMenu">' + head('📒', 'TT売上帳簿') +
@@ -773,6 +948,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
           '<button type="button" id="ubGoAuth" style="display:none">✅ 作廢の<span class="ubem auth">認証</span></button>' +
+          '<button type="button" id="ubGoPay" style="display:none">🧾 お会計<span class="ubem auth">テスト</span></button>' +
         '</div>' +
       '</div>' +
       '<div id="ubInv" style="display:none">' +
@@ -802,6 +978,23 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<div class="ubtest" style="width:fit-content;max-width:100%;box-sizing:border-box;margin:4px auto 10px;padding:8px 18px">認証したら本物の発票システムに作廢が反映されます</div>' +   
         '<div id="ubAuths"></div>' +
+      '</div>' +
+      '<div id="ubPay" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubPayBack') + '<span class="bname ubttl">🧾 お会計（テスト）</span>' +
+          '<span class="ubwg"><button type="button" id="ubPayPrev" class="ubsm">◀ 前の日</button><span id="ubPayDay" class="ubwhen"></span><button type="button" id="ubPayNext" class="ubsm">次の日 ▶</button></span>' +
+        '</div>' +
+        '<div class="ubtest">テストです。発票サイトには送らず、印刷も売上表への書き込みもしません</div>' +
+        '<div class="ubtop2"><span class="ubh ubhint">お会計するお客様を選択してください😊（●＝候補に含める行）</span></div>' +
+        '<div id="ubPays"></div>' +
+      '</div>' +
+      '<div id="ubPayF" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubPayFBack') + '<span class="bname ubttl">🧾 お会計の入力（テスト）</span></div>' +
+        '<div id="ubPFbody"></div>' +
+      '</div>' +
+      '<div id="ubPayR" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubPayRBack') + '<span class="bname ubttl">🧾 発行（テスト）の結果</span></div>' +
+        '<div id="ubPRbody"></div>' +
+        '<button type="button" class="exgo" id="ubPayRAgain" style="background:#2C7A99">入力に戻って修正する</button>' +
       '</div>' +
       '<div id="ubAdd" style="display:none">' + inBack('ubAddBack') + head('✍️', '売上を手動で追加') +
         '<div class="ubf">' +
