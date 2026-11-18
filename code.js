@@ -1337,6 +1337,8 @@ var szName_ = (function () {
     load: function (cb) { ask(); if (fresh) { if (cb) cb(); } else if (cb) waits.push(cb); }
   };
 })();
+// ★2026-11-18 購入証明書（中の画面）からも同じ顧客名を引けるように、外から見える所にも置く（共通\画面\数字の入れ方.js の SUJI.custNum が使う）
+try { window.szName_ = szName_; } catch (e) {}
 
 function szOvShow_(html, bg) {
   var ov = document.getElementById('szBusyOv');
