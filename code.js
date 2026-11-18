@@ -12349,6 +12349,8 @@ function uriageBookScript_(C) {
   function draw() {
     if (!D || !D.rows) { $('ubList').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubTest').style.display = (D.mode === 'テスト') ? '' : 'none';
+    // ★2026-11-18 まるちゃん「本番データを読み込むところだけ実装して」＝本番は見るだけ
+    $('ubRO').style.display = D.readonly ? '' : 'none';
     setWhen(D.tab + ' の売上表　' + String(D.at || '').slice(11, 16) + ' 時点');
     // ★2026-11-07 まるちゃん「ここのぶぶんいらない」「売上表くらいシンプルで一覧でみれるのがいい」
     //   ＝上の支払方法毎の合計の欄をやめ、売上表と同じ並び（番号・顧客番号・顧客名・支払方法・明細・合計）の表にした。
@@ -12465,6 +12467,11 @@ function uriageBookScript_(C) {
   function ask(fields, title, onOk, quiet) {
     // ★2026-11-14 作廢の一覧（voidlist）は売上表の読み直しとは別に頼む（重なっても捨てない）
     var lq = quiet && fields.action !== 'voidlist';
+    // ★2026-11-18 本番は見るだけ＝書く用事は送らずに知らせる（作廢の一覧・認証は売上表に書かないので通す）
+    if (!quiet && D && D.readonly && fields.action !== 'voidsend') {
+      popup('今は本番の売上表の表示のみです。修正は売上表に直接入力してください🙇');
+      return;
+    }
     if (lq) {
       if (loading) return;
       loading = true; setWhen('最新の売上表を読んでいます…');
@@ -12998,6 +13005,7 @@ function renderUriageBookPage_(base, staff, dev) {
     '<div class="ub">' +
       '<div id="ubMenu">' + head('📒', 'TT売上帳簿') +
         '<div class="ubtest" id="ubTest" style="display:none">テスト中：本番の売上表には書きません（2026_帳簿_テスト に書きます）</div>' +
+        '<div class="ubtest" id="ubRO" style="display:none">本番の売上表を表示しています（表示のみです）。修正は売上表に直接入力してください😊</div>' +
         '<div class="ubmenu">' +
           '<button type="button" id="ubGoInv">🧾 發票<span class="ubem ari">あり</span>の売上</button>' +
           '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
