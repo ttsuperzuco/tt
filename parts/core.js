@@ -2578,10 +2578,11 @@ var SZ_PCKEYS_ = (function () {
   try {
     var q = new URLSearchParams(location.search);
     if (q.get('sp') === '1') sessionStorage.setItem(SP, '1');
-    else if (q.get('sp') === '0') sessionStorage.removeItem(SP);
+    else if (q.get('sp') === '0') sessionStorage.setItem(SP, '0');   
     forced = sessionStorage.getItem(SP) === '1';
+    var forcedPc = sessionStorage.getItem(SP) === '0';
   } catch (e) {}
-  try { pc = !forced && !!window.matchMedia && window.matchMedia('(pointer: fine)').matches; } catch (e) {}
+  try { pc = !forced && (forcedPc || (!!window.matchMedia && window.matchMedia('(pointer: fine)').matches)); } catch (e) {}
   if (!pc) return { pc: false, phone: forced };
   var de = document.documentElement;
   de.classList.add('szpc');
@@ -2631,7 +2632,6 @@ var SZ_PCKEYS_ = (function () {
 })();
 (function () {
   try {
-    if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
     var put = function () {
       if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body || document.getElementById('szPcSw')) return;
       var ph = !!(SZ_PCKEYS_ && SZ_PCKEYS_.phone), d = document.createElement('div');

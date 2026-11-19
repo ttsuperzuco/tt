@@ -9514,10 +9514,11 @@ var SZ_PCKEYS_ = (function () {
   try {
     var q = new URLSearchParams(location.search);
     if (q.get('sp') === '1') sessionStorage.setItem(SP, '1');
-    else if (q.get('sp') === '0') sessionStorage.removeItem(SP);
+    else if (q.get('sp') === '0') sessionStorage.setItem(SP, '0');   // ★2026-11-19 開発の切り替えでパソコンの形を選んだ（指で触る画面でもパソコンの形で試せる）
     forced = sessionStorage.getItem(SP) === '1';
+    var forcedPc = sessionStorage.getItem(SP) === '0';
   } catch (e) {}
-  try { pc = !forced && !!window.matchMedia && window.matchMedia('(pointer: fine)').matches; } catch (e) {}
+  try { pc = !forced && (forcedPc || (!!window.matchMedia && window.matchMedia('(pointer: fine)').matches)); } catch (e) {}
   if (!pc) return { pc: false, phone: forced };
   var de = document.documentElement;
   de.classList.add('szpc');
@@ -9570,7 +9571,7 @@ var SZ_PCKEYS_ = (function () {
 //     （住所の &sp=1＝スマホの形／&sp=0＝パソコンの形。上の SZ_PCKEYS_ と同じ印を使う）。スタッフの画面には出ない。
 (function () {
   try {
-    if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+    // ★同日まるちゃん「（切り替えのスイッチは）ずっと出してて」＝開発の時はスマホの形・指で触る画面でも出す
     var put = function () {
       if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body || document.getElementById('szPcSw')) return;
       var ph = !!(SZ_PCKEYS_ && SZ_PCKEYS_.phone), d = document.createElement('div');
