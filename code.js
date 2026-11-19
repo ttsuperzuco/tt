@@ -13117,8 +13117,8 @@ function uriageBookScript_(C) {
     if (!on && $('ubCoinHint')) $('ubCoinHint').style.display = 'none';
     // ★2026-11-19 まるちゃん「タッチボタンが入力欄とめちゃくちゃ離れてる。すごく近くして」＝数字ボタン（と入力OK）を入力中の欄のすぐ下へ動かす
     if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
-      // ★同日まるちゃん「入力欄とタッチボタンのあいだに『下の数字ボタンを押して数字を入力』」＝スマホだけ案内の1行（パソコンはキーボードの案内が出る）
-      var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; hint.textContent = '下の数字ボタンを押して数字を入力してください😊'; }
+      // ★同日まるちゃん「入力欄とタッチボタンのあいだに『下のボタンを押して数字を入れ、OKボタンを押してください』」＝スマホだけ案内の1行（パソコンはキーボードの案内が出る）
+      var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; hint.textContent = '下のボタンを押して数字を入れ、OKボタンを押してください😊'; }
       hint.style.display = phone ? '' : 'none';
       if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);

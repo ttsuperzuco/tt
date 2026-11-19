@@ -708,7 +708,7 @@ function uriageBookScript_(C) {
     $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
     if (!on && $('ubCoinHint')) $('ubCoinHint').style.display = 'none';
     if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
-      var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; hint.textContent = '下の数字ボタンを押して数字を入力してください😊'; }
+      var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; hint.textContent = '下のボタンを押して数字を入れ、OKボタンを押してください😊'; }
       hint.style.display = phone ? '' : 'none';
       if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
