@@ -9615,7 +9615,7 @@ var SZ_PCKEYS_ = (function () {
           (on ? 'background:#fde047;color:#0f172a;' : 'background:#2C7A99;color:#fff;');
         b.addEventListener('click', function () {
           if (on) return;
-          var u = new URL(location.href); u.searchParams.set('sp', x[0]); u.searchParams.set('tscale', x[0] === '1' ? '1.3' : '0'); location.href = u.toString();   // スマホ＝A55と同じ字の大きさ（1.3倍）・PC＝1倍
+          var u = new URL(location.href); u.searchParams.set('sp', x[0]); u.searchParams.set('tscale', '0'); location.href = u.toString();   // 同日まるちゃん「文字の大きさこんなに大きくない」＝ズコ（アイコンから開く）は1.3倍にならない＝切り替えでは字の大きさを変えない
         });
         d.appendChild(b);
       });
