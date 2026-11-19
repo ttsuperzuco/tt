@@ -692,7 +692,7 @@ function uriageBookScript_(C) {
   var CP = padKit($('ubCoins'), { c100: { kind: 'int', max: 4, comma: true }, c50: { kind: 'int', max: 4, comma: true },
     c10: { kind: 'int', max: 4, comma: true }, c5: { kind: 'int', max: 4, comma: true }, c1: { kind: 'int', max: 4, comma: true },
     bills: { kind: 'int', max: 6, comma: true } });
-  var coinTouched = false;    
+  var coinTouched = false, coinTopCel = null;    
   function fillCoins() {
     if (!CP || !D) return;
     var c = D.coins || {};
@@ -712,7 +712,9 @@ function uriageBookScript_(C) {
       hint.style.display = phone ? '' : 'none';
       if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
-      if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling); }
+      if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling);
+      if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try { cel.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {} }, 80); } }
+    if (!on) coinTopCel = null;
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
     $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';
     $('ubCoinGo').style.background = had ? '#2563eb' : '';

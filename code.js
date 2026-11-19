@@ -13099,7 +13099,7 @@ function uriageBookScript_(C) {
   var CP = padKit($('ubCoins'), { c100: { kind: 'int', max: 4, comma: true }, c50: { kind: 'int', max: 4, comma: true },
     c10: { kind: 'int', max: 4, comma: true }, c5: { kind: 'int', max: 4, comma: true }, c1: { kind: 'int', max: 4, comma: true },
     bills: { kind: 'int', max: 6, comma: true } });
-  var coinTouched = false;    // 数字を押したら、読み直しても上書きしない
+  var coinTouched = false, coinTopCel = null;    // 数字を押したら、読み直しても上書きしない
   function fillCoins() {
     if (!CP || !D) return;
     var c = D.coins || {};
@@ -13122,7 +13122,10 @@ function uriageBookScript_(C) {
       hint.style.display = phone ? '' : 'none';
       if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
-      if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling); }
+      if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling);
+      // ★同日まるちゃん「各ボタンを押したら、そこが一番トップにならないと見にくい」＝押した欄を画面の一番上へ（数字ボタンの位置合わせより後に動かす）
+      if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try { cel.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {} }, 80); } }
+    if (!on) coinTopCel = null;
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
     //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
