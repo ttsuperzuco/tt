@@ -283,7 +283,7 @@ function uriageBookScript_(C) {
     $('ubList').innerHTML = L;
     var O = D.others || [];
     var o;
-    if (SP) {
+    {   
       var on = 0;
       o = '<div class="ubtbl ubsp"><table><thead><tr><th>お客様</th><th>明細</th><th class="r">金額</th><th></th></tr></thead><tbody>';
       if (!O.length) o += '<tr><td colspan="4" class="ubnone">まだ行がありません</td></tr>';
@@ -298,19 +298,6 @@ function uriageBookScript_(C) {
       }
       o += '</tbody><tfoot><tr><td colspan="2">合計（' + on + '件）</td><td class="n">' + (D.other_total == null ? '' : Number(D.other_total).toLocaleString('ja-JP')) + '</td><td></td></tr></tfoot></table></div>';
       $('ubOthers').innerHTML = o;
-    } else {
-    o = '<div class="ubtbl"><table><colgroup><col><col style="width:22%"><col style="width:13%"></colgroup>' +
-      '<thead><tr><th>内容</th><th class="r">金額</th><th class="c">削除</th></tr></thead><tbody>';
-    if (!O.length) o += '<tr><td colspan="3" class="ubnone">まだ行がありません</td></tr>';
-    for (var q = 0; q < O.length; q++) {
-      var y = O[q];
-      o += '<tr class="r' + (y._pend ? ' pend' : '') + (y._del ? ' del' : '') + '" data-q="' + q + '">' +
-        '<td class="d e" data-c="J">' + esc(y.label) + '</td>' +
-        '<td class="n e" data-c="K">' + (y.amount == null ? '' : Number(y.amount).toLocaleString('ja-JP')) + '</td>' +
-        '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
-    }
-    o += '</tbody><tfoot><tr class="ubsum"><td>合計</td><td class="n">' + (D.other_total == null ? '' : Number(D.other_total).toLocaleString('ja-JP')) + '</td><td></td></tr></tfoot></table></div>';
-    $('ubOthers').innerHTML = o;
     }
     var V = D.invs || [];
     var v = '<div class="ubtbl"><table><colgroup><col style="width:18%"><col style="width:13%"><col style="width:11%"><col style="width:15%"><col><col style="width:17%"></colgroup>' +
