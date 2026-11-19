@@ -2385,8 +2385,8 @@ function instaScript_(C) {
   function openSearch() {
     var el = document.createElement('div'); el.className = 'igp igsr'; el.id = 'igSr';
     el.innerHTML = '<div class="w"><div class="q top">' + S('<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16 16"/>', 18) +
-      '<input id="igSrQ" type="search" enterkeyhint="search" placeholder="検索" autocomplete="off" autocapitalize="off"><button type="button" id="igSrGo">検索</button></div>' +
-      '<div id="igSrOpen"></div><div class="hint">名前やユーザーネームで、個人のアカウントも探せます。検索には1分ほどかかります。</div><div id="igSrR"></div></div>' + navHtml('search');
+      '<input id="igSrQ" type="search" enterkeyhint="go" placeholder="ユーザーネーム" autocomplete="off" autocapitalize="off"><button type="button" id="igSrGo">開く</button></div>' +
+      '<div id="igSrOpen"></div><div class="hint">お店・発信者のアカウントのユーザーネームを入力すると、プロフィールを表示します。個人のアカウントは表示できません。</div></div>' + navHtml('search');
     document.body.appendChild(el);
     var q0 = function () { return document.getElementById('igSrQ').value.trim().replace(/^@/, ''); };
     var row = function (u, name) {
@@ -2398,14 +2398,8 @@ function instaScript_(C) {
       o.innerHTML = /^[A-Za-z0-9._]{1,30}$/.test(q) ? row(q, 'このユーザーネームのプロフィールを開く') : '';
     };
     var go = function () {
-      var q = q0(); if (!q) { warn('探す名前を入力してください😊'); return; }
-      document.getElementById('igSrR').innerHTML = '<div class="igempty">探しています…（1分ほどかかります）</div>';
-      phone({ kind: 'phone_search', acct: CUR, q: q }, '', function (err, d) {
-        var r = document.getElementById('igSrR'); if (!r) return;
-        if (err) { r.innerHTML = ''; warn(err); return; }
-        var us = (d && d.users) || [];
-        r.innerHTML = us.length ? us.map(function (x) { return row(x.user, x.name); }).join('') : '<div class="igempty">「' + esc(q) + '」の検索結果はありません。</div>';
-      });
+      var q = q0(); if (!q) { warn('ユーザーネームを入力してください😊'); return; }
+      openUProf(q);
     };
     el.addEventListener('click', function (e) {
       var t = e.target;
@@ -2470,7 +2464,7 @@ function instaScript_(C) {
     if (!/^[A-Za-z0-9._]{1,30}$/.test(u)) { warn('ユーザーネームは英数字で入力してください😊'); return; }
     var el = document.createElement('div'); el.className = 'igp igup';
     var head = '<div class="w"><div class="igph"><button type="button" data-upback="1">' + IC.back + '</button><b>' + esc(u) + '</b><span></span></div>';
-    el.innerHTML = head + '<div class="igempty">読み込み中です…（20秒ほどかかります）</div></div>';
+    el.innerHTML = head + '<div class="igempty">読み込み中です…</div></div>';
     document.body.appendChild(el);
     var url = 'https://www.instagram.com/' + u + '/';
     el.addEventListener('click', function (e) {
@@ -2494,7 +2488,7 @@ function instaScript_(C) {
       if (p.addr) h += '<div class="igaddr">' + esc(p.addr) + '</div>';
       if (p.threads || p.fb) h += '<div class="igchips">' + (p.threads ? '<span class="chip">' + IC.thS + esc(p.threads) + '</span>' : '') +
         (p.fb ? '<span class="chip">' + IC.fb + esc(p.fb) + '</span>' : '') + '</div>';
-      h += '<div class="igbtns"><button type="button" data-upopen="1"' + (p.following ? '' : ' class="blue"') + '>' + (p.following ? 'フォロー中 ' + IC.down : 'フォローする') + '</button>' +
+      h += '<div class="igbtns"><button type="button" data-upopen="1" class="blue">インスタで開く</button>' +
         '<button type="button" data-upopen="1">メッセージ</button></div>';
       if ((d.hl || []).length) h += '<div class="ighl">' + d.hl.map(function (x) {
         return '<button type="button"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
