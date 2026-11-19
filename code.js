@@ -13107,6 +13107,10 @@ function uriageBookScript_(C) {
     var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
     $('ubCoins').classList.toggle('ubphone', phone);
     $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
+    // ★2026-11-19 まるちゃん「タッチボタンが入力欄とめちゃくちゃ離れてる。すごく近くして」＝数字ボタン（と入力OK）を入力中の欄のすぐ下へ動かす
+    if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
+      if (cel && cel.nextSibling !== kp) cel.parentNode.insertBefore(kp, cel.nextSibling);
+      if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling); }
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
     //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });

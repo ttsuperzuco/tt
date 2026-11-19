@@ -705,6 +705,9 @@ function uriageBookScript_(C) {
     var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
     $('ubCoins').classList.toggle('ubphone', phone);
     $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
+    if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
+      if (cel && cel.nextSibling !== kp) cel.parentNode.insertBefore(kp, cel.nextSibling);
+      if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling); }
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
     $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';
     $('ubCoinGo').style.background = had ? '#2563eb' : '';
