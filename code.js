@@ -13124,8 +13124,10 @@ function uriageBookScript_(C) {
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
       if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling);
       // ★同日まるちゃん「各ボタンを押したら、そこが一番トップにならないと見にくい」＝押した欄を画面の一番上へ（数字ボタンの位置合わせより後に動かす）
-      if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try { cel.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) {} }, 80); } }
-    if (!on) coinTopCel = null;
+      //   下の欄（お札など）でも一番上まで動かせるよう、数字ボタンを出している間は下に余白を足す。動きはすぐ（なめらかに動かすと途中で止まる端末がある）。
+      $('ubCoins').style.paddingBottom = '100vh';
+      if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try { window.scrollTo(0, Math.max(0, cel.getBoundingClientRect().top + window.pageYOffset - 8)); } catch (e) {} }, 80); } }
+    if (!on) { coinTopCel = null; $('ubCoins').style.paddingBottom = ''; }
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
     //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
