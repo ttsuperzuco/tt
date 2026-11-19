@@ -70,7 +70,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span><span>NO（<span class="sgemr">頭皮の</span>プロセルをやっていない）</span></button>' +
     '</div>' +
     '<div class="sg" id="sgJJ" style="display:none">' +
-      '<div class="sgwho"><span style="white-space:nowrap">本日、ホホバエッセンス</span><wbr><span style="white-space:nowrap">「No.31」を</span><wbr><span style="white-space:nowrap">お渡ししましたか？</span></div>' +
+      '<div class="sgwho"><span style="white-space:nowrap">ホホバ「No.31」の</span><wbr><span style="white-space:nowrap">使い方をLINEで</span><wbr><span style="white-space:nowrap">送りましょうか？</span></div>' +
       '<div class="sgmnote">販売・プレゼントのどちらも「YES」です。<wbr>YESの時は、使い方のご案内を<wbr>お客様に送ります。</div>' +
       '<button type="button" class="sgrbig sgjj" data-k="yes"><span class="sgrbi">🧴</span><span>YES（お渡しした）</span></button>' +
       '<button type="button" class="sgrbig sgjj" data-k="no"><span class="sgrbi">🙅</span><span>NO（お渡ししていない）</span></button>' +
