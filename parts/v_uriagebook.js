@@ -695,9 +695,13 @@ function uriageBookScript_(C) {
     var v = { c100: c['100'], c50: c['50'], c10: c['10'], c5: c['5'], c1: c['1'], bills: D.bills };
     for (var i = 0; i < CK.length; i++) CP.set(CK[i], v[CK[i]] == null ? '' : String(v[CK[i]]));
   }
-  $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; });
+  function coinBtns() {
+    var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
+    $('ubCoinOk').style.display = on ? '' : 'none'; $('ubCoinGo').style.display = on ? 'none' : '';
+  }
+  $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
   $('ubGoCoins').addEventListener('click', function () {
-    coinTouched = false; fillCoins(); CP.close(); show('ubCoins');
+    coinTouched = false; fillCoins(); CP.close(); coinBtns(); show('ubCoins');
   });
   $('ubCoinGo').addEventListener('click', function () {
     CP.close();
@@ -1240,7 +1244,8 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubrow"><div class="ubcoin">' +
           [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]
             .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div></div>'; }).join('') +
-        '</div></div>' +   
+        '</div></div>' +
+        '<button type="button" class="exgo" id="ubCoinOk" data-pok="coins" style="display:none">入力OK</button>' +
         '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
       '</div>' +
     '</div></div>' +
