@@ -719,7 +719,10 @@ function uriageBookScript_(C) {
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
       if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling);
       $('ubCoins').style.paddingBottom = '100vh';
-      if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try { window.scrollTo(0, Math.max(0, cel.getBoundingClientRect().top + window.pageYOffset - 8)); } catch (e) {} }, 80); } }
+      if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try {
+        var first = $('ubCoins').querySelector('.ubcell'), y = window.pageYOffset;
+        window.scrollTo(0, Math.max(0, (cel.getBoundingClientRect().top + y) - (first.getBoundingClientRect().top + y)));
+      } catch (e) {} }, 80); } }
     if (!on) { coinTopCel = null; $('ubCoins').style.paddingBottom = ''; }
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
     $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';

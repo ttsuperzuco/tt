@@ -13167,7 +13167,11 @@ function uriageBookScript_(C) {
       // ★同日まるちゃん「各ボタンを押したら、そこが一番トップにならないと見にくい」＝押した欄を画面の一番上へ（数字ボタンの位置合わせより後に動かす）
       //   下の欄（お札など）でも一番上まで動かせるよう、数字ボタンを出している間は下に余白を足す。動きはすぐ（なめらかに動かすと途中で止まる端末がある）。
       $('ubCoins').style.paddingBottom = '100vh';
-      if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try { window.scrollTo(0, Math.max(0, cel.getBoundingClientRect().top + window.pageYOffset - 8)); } catch (e) {} }, 80); } }
+      if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try {
+        // ★同日まるちゃん「上にいきすぎじゃない？普通のアプリってこう？」＝見出し（戻る・小銭とお札・何時点）は残し、押した欄は一番上の欄（100元）の位置へ
+        var first = $('ubCoins').querySelector('.ubcell'), y = window.pageYOffset;
+        window.scrollTo(0, Math.max(0, (cel.getBoundingClientRect().top + y) - (first.getBoundingClientRect().top + y)));
+      } catch (e) {} }, 80); } }
     if (!on) { coinTopCel = null; $('ubCoins').style.paddingBottom = ''; }
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
     //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。
