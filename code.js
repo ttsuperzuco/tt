@@ -12688,7 +12688,27 @@ function uriageBookScript_(C) {
     $('ubList').innerHTML = L;
     // ★2026-11-08 まるちゃん「發票ありと同じにして」＝同じ表の形。内容・金額の枠を押すと直せる・右の×で消す。
     var O = D.others || [];
-    var o = '<div class="ubtbl"><table><colgroup><col><col style="width:22%"><col style="width:13%"></colgroup>' +
+    var o;
+    if (SP) {
+      // ★2026-11-20 まるちゃん「發票なしも發票ありと似た形式の表にしたい」→見本を見て「①」
+      //   ＝スマホは お客様（名前・下に顧客番号）｜明細｜金額｜×。売上表は1つの欄（内容）のまま＝表示する時だけ頭の番号と名前を分ける。
+      //   金額の無い行（作廢のメモ等）は薄い字にして件数に数えない。合計は売上表の合計の欄のまま。
+      var on = 0;
+      o = '<div class="ubtbl ubsp"><table><thead><tr><th>お客様</th><th>明細</th><th class="r">金額</th><th></th></tr></thead><tbody>';
+      if (!O.length) o += '<tr><td colspan="4" class="ubnone">まだ行がありません</td></tr>';
+      for (var q9 = 0; q9 < O.length; q9++) {
+        var y9 = O[q9], sp9 = ubSplitLabel_(y9.label);
+        if (!y9._del && y9.amount != null) on++;
+        o += '<tr class="r' + (y9._pend ? ' pend' : '') + (y9._del ? ' del' : '') + (y9.amount == null ? ' vd' : '') + '" data-q="' + q9 + '">' +
+          '<td class="cu e" data-c="J" data-p="cu">' + (sp9.num ? '<span class="nm">' + esc(sp9.name) + '</span><span class="sub">' + esc(sp9.num) + '</span>' : '') + '</td>' +
+          '<td class="d e" data-c="J" data-p="dt">' + esc(sp9.rest) + '</td>' +
+          '<td class="n e" data-c="K">' + (y9.amount == null ? '' : Number(y9.amount).toLocaleString('ja-JP')) + '</td>' +
+          '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
+      }
+      o += '</tbody><tfoot><tr><td colspan="2">合計（' + on + '件）</td><td class="n">' + (D.other_total == null ? '' : Number(D.other_total).toLocaleString('ja-JP')) + '</td><td></td></tr></tfoot></table></div>';
+      $('ubOthers').innerHTML = o;
+    } else {
+    o = '<div class="ubtbl"><table><colgroup><col><col style="width:22%"><col style="width:13%"></colgroup>' +
       '<thead><tr><th>内容</th><th class="r">金額</th><th class="c">削除</th></tr></thead><tbody>';
     if (!O.length) o += '<tr><td colspan="3" class="ubnone">まだ行がありません</td></tr>';
     for (var q = 0; q < O.length; q++) {
@@ -12700,6 +12720,7 @@ function uriageBookScript_(C) {
     }
     o += '</tbody><tfoot><tr class="ubsum"><td>合計</td><td class="n">' + (D.other_total == null ? '' : Number(D.other_total).toLocaleString('ja-JP')) + '</td><td></td></tr></tfoot></table></div>';
     $('ubOthers').innerHTML = o;
+    }
     // ★2026-11-14 發票の作廢＝今日打った發票の記録（取り込みが残した物）から選ぶ。番号を打たせない（打ち間違い・書き忘れを無くす）。
     var V = D.invs || [];
     var v = '<div class="ubtbl"><table><colgroup><col style="width:18%"><col style="width:13%"><col style="width:11%"><col style="width:15%"><col><col style="width:17%"></colgroup>' +
@@ -13076,11 +13097,26 @@ function uriageBookScript_(C) {
     openVoid(z, '');
   });
 
+  // ★2026-11-20 發票なしの内容「F886○○様プロアフター…」を、頭の顧客番号・名前（〜様）と残りの明細に分ける（表示のため）。
+  //   raw＝元の文字のまま3つ（番号・名前・残り）＝くっつけると元の内容に戻る。番号で始まらない行は全部を明細にする。
+  function ubSplitLabel_(t) {
+    t = String(t || '');
+    var m = t.match(/^(\s*[FMＦＭfmｆｍ]\s*[0-9０-９]+)([^0-9０-９]{0,12}?様)?([\s\S]*)$/);
+    if (!m) return { num: '', name: '', rest: t, raw: ['', '', t] };
+    var nm = m[2] || '', num = m[1];
+    try { num = num.normalize('NFKC'); } catch (e) {}
+    return { num: num.replace(/\s/g, '').toUpperCase(), name: nm.trim(), rest: m[3].trim(), raw: [m[1], nm, m[3]] };
+  }
   // ── 發票なしの売上：枠を押して直す・×で消す（2026-11-08 まるちゃん「發票ありと同じにして」）──
-  function openPickO(y, col) {
+  // ★2026-11-20 スマホはお客様と明細を分けて見せる。part＝'cu'（頭の顧客番号と名前）／'dt'（残りの明細）。
+  //   直す時はその部分だけを入れ直し、残りとくっつけて売上表の1つの欄（内容）に書く（売上表の形は変えない）。
+  function openPickO(y, col, part) {
+    var sp = ubSplitLabel_(y.label), pre = sp.raw[0] + sp.raw[1];
+    if (col !== 'J' || !sp.num) part = '';
+    var what = col === 'K' ? '金額' : (part === 'cu' ? 'お客様' : (part === 'dt' ? '明細' : '内容'));
     var head = '<div class="h">' + esc(y.label) + '　' + yen(y.amount) + '</div>' +
-      '<div class="s">' + (col === 'J' ? '内容' : '金額') + 'を修正します</div>';
-    var cur = col === 'J' ? (y.label || '') : (y.amount == null ? '' : String(y.amount));
+      '<div class="s">' + what + 'を修正します</div>';
+    var cur = col === 'J' ? (part === 'cu' ? pre : (part === 'dt' ? sp.raw[2] : (y.label || ''))) : (y.amount == null ? '' : String(y.amount));
     var body = (col === 'K' ? '<div class="ubrow"><div class="ubbox" data-pk="v" data-ph="数字を押してください😊"></div></div>'
       : '<textarea id="ubEd" rows="3"></textarea>') +
       '<button type="button" class="go" data-a="save" style="margin-top:12px">以上の内容で修正する</button>';
@@ -13098,10 +13134,12 @@ function uriageBookScript_(C) {
       if (a !== 'save') return;
       var nv = PK ? PK.get('v') : $('ubEd').value.trim();
       if (col === 'K' && !/\d/.test(nv)) { popup('金額は数字で入力してください😊'); return; }
-      if (col === 'J' && !nv) { popup('内容を入力してください😊'); return; }
+      if (col === 'J' && !nv && part !== 'cu') { popup(what + 'を入力してください😊'); return; }
       closePick();
       if (nv === cur) return;
-      ask({ action: 'oedit', row: y.r, label: y.label, amount: y.amount, _k: ok(y), col: col, value: nv }, (col === 'J' ? '内容' : '金額') + 'を修正しています');
+      var lv = part === 'cu' ? nv + sp.raw[2] : (part === 'dt' ? pre + nv : nv);
+      if (col === 'J' && !lv.trim()) { popup('内容を入力してください😊'); return; }
+      ask({ action: 'oedit', row: y.r, label: y.label, amount: y.amount, _k: ok(y), col: col, value: col === 'J' ? lv : nv }, what + 'を修正しています');
     });
   }
   $('ubOthers').addEventListener('click', function (e) {
@@ -13116,7 +13154,7 @@ function uriageBookScript_(C) {
       return;
     }
     var td = e.target.closest('td.e'); if (!td) return;
-    openPickO(y, td.getAttribute('data-c'));
+    openPickO(y, td.getAttribute('data-c'), td.getAttribute('data-p') || '');
   });
 
   // ── 手で1行足す ──
