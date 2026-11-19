@@ -12886,6 +12886,16 @@ function uriageBookScript_(C) {
       if (sel && spec[sel].open) return;
       sel = ''; kp.style.display = 'none'; draw(); focusOff();
     }
+    // ★2026-11-19 まるちゃん「（数字を入れている時の）戻るは、一個前の画面に戻ると思っちゃうから、（全部の欄が見える）ここに戻ろう。
+    //   実際は画面が変わっていないのは分かるけど、直感的にそこに戻るのが正解でしょ。こういう類の画面は全部。共通ルールにして」
+    //   ＝数字ボタンを出している間の「← 戻る」は、画面を出ずに数字ボタンを閉じて、入力前の見え方（全部の欄）に戻すだけ。
+    cont.addEventListener('click', function (e) {
+      var bk = e.target.closest('.uhome');
+      if (!bk || !sel || kp.style.display === 'none') return;
+      e.preventDefault(); e.stopPropagation();
+      sel = ''; kp.style.display = 'none'; draw(); focusOff();
+      try { cont.dispatchEvent(new CustomEvent('ubpadclose')); } catch (x) {}
+    }, true);
     cont.addEventListener('click', function (e) {
       var b = e.target.closest('.ubbox[data-pk]');
       if (b) { var k = b.getAttribute('data-pk'); if (sel === k) close(); else open(k); return; }
@@ -13208,6 +13218,7 @@ function uriageBookScript_(C) {
     for (var i = 0; i < cs.length; i++) { cs[i].style.visibility = ''; cs[i].style.display = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'none'; }
   }
   $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
+  $('ubCoins').addEventListener('ubpadclose', function () { coinBtns(); });   // 数字ボタンを出している間の「戻る」＝6行の見え方に戻す
   $('ubGoCoins').addEventListener('click', function () {
     coinTouched = false; fillCoins(); CP.close(); coinBtns(); show('ubCoins');
   });

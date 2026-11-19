@@ -461,6 +461,13 @@ function uriageBookScript_(C) {
       sel = ''; kp.style.display = 'none'; draw(); focusOff();
     }
     cont.addEventListener('click', function (e) {
+      var bk = e.target.closest('.uhome');
+      if (!bk || !sel || kp.style.display === 'none') return;
+      e.preventDefault(); e.stopPropagation();
+      sel = ''; kp.style.display = 'none'; draw(); focusOff();
+      try { cont.dispatchEvent(new CustomEvent('ubpadclose')); } catch (x) {}
+    }, true);
+    cont.addEventListener('click', function (e) {
       var b = e.target.closest('.ubbox[data-pk]');
       if (b) { var k = b.getAttribute('data-pk'); if (sel === k) close(); else open(k); return; }
       if (e.target.closest('[data-pok]')) close();
@@ -751,6 +758,7 @@ function uriageBookScript_(C) {
     for (var i = 0; i < cs.length; i++) { cs[i].style.visibility = ''; cs[i].style.display = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'none'; }
   }
   $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
+  $('ubCoins').addEventListener('ubpadclose', function () { coinBtns(); });   
   $('ubGoCoins').addEventListener('click', function () {
     coinTouched = false; fillCoins(); CP.close(); coinBtns(); show('ubCoins');
   });
