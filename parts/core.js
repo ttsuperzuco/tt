@@ -2634,7 +2634,7 @@ var SZ_PCKEYS_ = (function () {
   try {
     var put = function () {
       if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body || document.getElementById('szPcSw')) return;
-      var ph = !!(SZ_PCKEYS_ && SZ_PCKEYS_.phone), d = document.createElement('div');
+      var ph = !(SZ_PCKEYS_ && SZ_PCKEYS_.pc), d = document.createElement('div');
       d.id = 'szPcSw';
       d.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;border:2px solid #fff;border-radius:999px;' +
         'overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.3);font-weight:700;font-size:13px;';
