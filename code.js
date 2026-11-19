@@ -13246,17 +13246,27 @@ function uriageBookScript_(C) {
   function freeLine() {
     var m = document.createElement('div'); m.className = 'ubmask'; m.id = 'ubMask';
     m.innerHTML = '<div class="ubpick"><div class="h">自由に入力</div><div class="s">内容（発票の明細・40文字まで）</div><input id="ubFreeT" maxlength="40" class="ubpfree">' +
+      '<div class="s">種類（発票に印字されます）</div><div class="ubpseg" id="ubFreeC"></div>' +
       '<div class="s">金額</div><div class="ubrow"><div class="ubbox" data-pk="u" data-ph="押して入力"></div></div>' +
       '<button type="button" class="go" data-a="ok" style="margin-top:12px">追加する</button><button type="button" class="x" data-a="close">閉じる</button></div>';
     document.body.appendChild(m);
     var PF = padKit(m.querySelector('.ubpick'), { u: { kind: 'int', max: 6, comma: true, open: true } }); PF.open('u');
+    // ★2026-11-19 まるちゃん①＝種類を選べるようにする（書いた言葉から推測して最初から選んでおく。1年の発票で言葉だけでは109行ずれた）
+    var FC = { 'cat': '脫毛', 'hand': false };
+    var FCN = { '脫毛': '脱毛', 'パリジェンヌ': 'パリ', 'プロセル': 'プロセル', 'フェイシャル': 'フェイシャル', 'よもぎ': 'よもぎ', '商品': '商品' };
+    function guessCat(t) { return /よもぎ/.test(t) ? 'よもぎ' : /プロセル|頭皮|肌/.test(t) ? 'プロセル' : /パリ|リペア|ラッシュ/.test(t) ? 'パリジェンヌ' : /ハイドラ|マツヤニ/.test(t) ? 'フェイシャル' : /ホホバ|オイル|商品/.test(t) ? '商品' : '脫毛'; }
+    function drawCat() { $('ubFreeC').innerHTML = Object.keys(FCN).map(function (c) {
+      return '<button type="button" data-fc="' + c + '" style="flex:1 1 30%" class="' + (FC.cat === c ? 'on' : '') + '">' + FCN[c] + '</button>'; }).join(''); }
+    drawCat();
+    $('ubFreeT').addEventListener('input', function () { if (!FC.hand) { FC.cat = guessCat(this.value); drawCat(); } });
     m.addEventListener('click', function (ev) {
       var b = ev.target.closest('button'); if (ev.target === m || (b && b.getAttribute('data-a') === 'close')) { closePick(); return; }
+      if (b && b.hasAttribute('data-fc')) { FC.cat = b.getAttribute('data-fc'); FC.hand = true; drawCat(); return; }
       if (!b || b.getAttribute('data-a') !== 'ok') return;
       var t = $('ubFreeT').value.trim(), u = PF.raw('u');
       if (!t) { popup('内容を入力してください😊'); return; }
       if (!(parseInt(u, 10) > 0)) { popup('金額を入力してください😊'); return; }
-      CUR.lines.push({ key: '', label: t, cat: /プロセル/.test(t) ? 'プロセル' : /パリ/.test(t) ? 'パリジェンヌ' : /ハイドラ|マツヤニ/.test(t) ? 'フェイシャル' : '脫毛', timing: '', unit: u, qty: 1, on: true, note: '', kind: '' });
+      CUR.lines.push({ key: '', label: t, cat: FC.cat, timing: '', unit: u, qty: 1, on: true, note: '', kind: '' });
       closePick(); drawCheckout();
     });
   }
