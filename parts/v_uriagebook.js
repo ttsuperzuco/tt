@@ -100,7 +100,7 @@ var UBCSS_ =
   '#ubCoins .ubcell .ubbox{flex:1 1 auto;min-height:44px;font-size:20px;padding:6px 14px;justify-content:flex-end;}' +
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:-4px;}' +
-  '#ubCoins .ubchint{color:#fff;font-weight:800;font-size:15px;text-align:center;margin:-4px 0 -2px;}' +
+  '#ubCoins .ubchint{color:#fff;font-weight:800;font-size:15px;line-height:1.45;text-align:center;margin:-4px 0 -2px;white-space:pre-line;}' +   
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
   '#ubCoins .ubcok{display:none !important;}' +
   '.szpc #ubCoins .expad::before{display:none;}' +
@@ -713,7 +713,7 @@ function uriageBookScript_(C) {
     if (!on && $('ubCoinHint')) $('ubCoinHint').style.display = 'none';
     if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
       var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; }
-      hint.textContent = phone ? '下のボタンを押して数字を入れ、OKボタンを押してください😊' : '⌨️ キーボードで数字を入力してください😊（BackSpaceで1文字削除）';
+      hint.textContent = phone ? '下のボタンを押して数字を入れ、\nOKボタンを押してください😊' : '⌨️ キーボードで数字を入力してください😊（BackSpaceで1文字削除）';
       hint.style.display = '';
       if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
