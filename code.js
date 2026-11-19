@@ -9566,6 +9566,36 @@ var SZ_PCKEYS_ = (function () {
   });
   return { pc: true, phone: false };
 })();
+// ★2026-11-19 まるちゃん「画面の幅とか高さとかも全部一緒にして。そうじゃないと分かりにくい」
+//   ＝試しの窓だけ、まるちゃんのA55（Android の「文字を大きくする」＝字が1.3倍）と同じ字の大きさにする。
+//     住所に &tscale=1.3 を付けた窓だけ（その窓の中では覚えておく・&tscale=0 で戻す）。開発の時だけ。本物のスマホは自分で1.3倍にするので付けない。
+//     画面の中身が描き直されるたびに、全部の字を「元の大きさ×倍率」に付け直す（枠の幅は変えない＝Android と同じ）。
+(function () {
+  try {
+    var K = 'sz_tscale', q = new URLSearchParams(location.search);
+    if (q.has('tscale')) { var v = q.get('tscale'); if (+v > 1) sessionStorage.setItem(K, v); else sessionStorage.removeItem(K); }
+    var f = +(sessionStorage.getItem(K) || 0);
+    if (!(f > 1)) return;
+    var busy = false, tm = null;
+    var run = function () {
+      if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body) return;
+      busy = true;
+      var done = document.querySelectorAll('[data-tsc]');
+      for (var i = 0; i < done.length; i++) { done[i].style.fontSize = done[i].getAttribute('data-tsc-own') || ''; done[i].removeAttribute('data-tsc'); }
+      var els = [document.body].concat([].slice.call(document.body.getElementsByTagName('*')));
+      var org = els.map(function (e) { return parseFloat(getComputedStyle(e).fontSize) || 0; });
+      for (var j = 0; j < els.length; j++) {
+        var e = els[j]; if (!org[j]) continue;
+        e.setAttribute('data-tsc-own', e.style.fontSize || ''); e.setAttribute('data-tsc', '1');
+        e.style.fontSize = (org[j] * f).toFixed(2) + 'px';
+      }
+      busy = false;
+    };
+    new MutationObserver(function () { if (busy) return; clearTimeout(tm); tm = setTimeout(run, 120); })
+      .observe(document.documentElement, { subtree: true, childList: true });
+    setTimeout(run, 400);
+  } catch (e) {}
+})();
 // ★2026-11-19 まるちゃん「スマホとパソコン用どっちもテストしたいから、右上にテスト用だけPCとスマホっていうスイッチをつけて」
 //   ＝開発の時だけ・パソコン（マウス）で開いた時だけ、右上に「PC｜スマホ」の切り替えを出す。押すとこの窓だけ切り替えて開き直す
 //     （住所の &sp=1＝スマホの形／&sp=0＝パソコンの形。上の SZ_PCKEYS_ と同じ印を使う）。スタッフの画面には出ない。

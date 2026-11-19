@@ -2632,6 +2632,32 @@ var SZ_PCKEYS_ = (function () {
 })();
 (function () {
   try {
+    var K = 'sz_tscale', q = new URLSearchParams(location.search);
+    if (q.has('tscale')) { var v = q.get('tscale'); if (+v > 1) sessionStorage.setItem(K, v); else sessionStorage.removeItem(K); }
+    var f = +(sessionStorage.getItem(K) || 0);
+    if (!(f > 1)) return;
+    var busy = false, tm = null;
+    var run = function () {
+      if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body) return;
+      busy = true;
+      var done = document.querySelectorAll('[data-tsc]');
+      for (var i = 0; i < done.length; i++) { done[i].style.fontSize = done[i].getAttribute('data-tsc-own') || ''; done[i].removeAttribute('data-tsc'); }
+      var els = [document.body].concat([].slice.call(document.body.getElementsByTagName('*')));
+      var org = els.map(function (e) { return parseFloat(getComputedStyle(e).fontSize) || 0; });
+      for (var j = 0; j < els.length; j++) {
+        var e = els[j]; if (!org[j]) continue;
+        e.setAttribute('data-tsc-own', e.style.fontSize || ''); e.setAttribute('data-tsc', '1');
+        e.style.fontSize = (org[j] * f).toFixed(2) + 'px';
+      }
+      busy = false;
+    };
+    new MutationObserver(function () { if (busy) return; clearTimeout(tm); tm = setTimeout(run, 120); })
+      .observe(document.documentElement, { subtree: true, childList: true });
+    setTimeout(run, 400);
+  } catch (e) {}
+})();
+(function () {
+  try {
     var put = function () {
       if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body || document.getElementById('szPcSw')) return;
       var ph = !(SZ_PCKEYS_ && SZ_PCKEYS_.pc), d = document.createElement('div');
