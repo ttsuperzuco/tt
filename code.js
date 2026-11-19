@@ -9615,7 +9615,7 @@ var SZ_PCKEYS_ = (function () {
           (on ? 'background:#fde047;color:#0f172a;' : 'background:#2C7A99;color:#fff;');
         b.addEventListener('click', function () {
           if (on) return;
-          var u = new URL(location.href); u.searchParams.set('sp', x[0]); u.searchParams.set('tscale', '0'); location.href = u.toString();   // 同日まるちゃん「文字の大きさこんなに大きくない」＝ズコ（アイコンから開く）は1.3倍にならない＝切り替えでは字の大きさを変えない
+          var w = window.top || window, u = new URL(location.href); u.searchParams.set('sp', x[0]); u.searchParams.set('tscale', '0'); u.searchParams.delete('frame'); w.location.href = u.toString();   // 枠（phone.html）の中から押した時は窓ごと切り替える   // 同日まるちゃん「文字の大きさこんなに大きくない」＝ズコ（アイコンから開く）は1.3倍にならない＝切り替えでは字の大きさを変えない
         });
         d.appendChild(b);
       });

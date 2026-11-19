@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>スマホの大きさで確認</title>
+<!-- ★2026-11-19 まるちゃん「それがおれのスマホ。その画面の大きさにして」
+     ＝開発の試しで「スマホ」を選んだパソコンの窓は、ここで実機（まるちゃんのA55のズコ）と同じ横411×縦809の枠の中にズコを開く。
+     窓の大きさが変わっても枠の中は411×809のまま（入りきらない時は全体を縮めて見せるだけ）。 -->
+<style>
+  html, body { margin:0; height:100%; background:#1f2937; }
+  body { overflow:hidden; }
+  .ph { position:absolute; left:50%; top:10px; width:411px; height:809px; transform-origin:top center;
+        border:8px solid #000; border-radius:26px; overflow:hidden; box-shadow:0 0 0 2px #4b5563; background:#2C7A99; }
+  iframe { width:411px; height:809px; border:0; display:block; }
+</style>
+</head>
+<body>
+<div class="ph" id="ph"><iframe id="f" title="ズコ"></iframe></div>
+<script>
+(function () {
+  var u = new URLSearchParams(location.search).get('u') || './';
+  if (!/^https:\/\/ttsuperzuco\.github\.io\/tt\//.test(new URL(u, location.href).href)) u = './';
+  document.getElementById('f').src = u;
+  function fit() {
+    var w = 411 + 16, h = 809 + 16, s = Math.min(1, (window.innerWidth - 8) / w, (window.innerHeight - 20) / h);
+    document.getElementById('ph').style.transform = 'translateX(-50%) scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit); fit();
+})();
+</script>
+</body>
+</html>
