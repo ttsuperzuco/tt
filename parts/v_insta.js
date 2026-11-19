@@ -2488,8 +2488,6 @@ function instaScript_(C) {
       if (p.addr) h += '<div class="igaddr">' + esc(p.addr) + '</div>';
       if (p.threads || p.fb) h += '<div class="igchips">' + (p.threads ? '<span class="chip">' + IC.thS + esc(p.threads) + '</span>' : '') +
         (p.fb ? '<span class="chip">' + IC.fb + esc(p.fb) + '</span>' : '') + '</div>';
-      h += '<div class="igbtns"><button type="button" data-upopen="1" class="blue">インスタで開く</button>' +
-        '<button type="button" data-upopen="1">メッセージ</button></div>';
       if ((d.hl || []).length) h += '<div class="ighl">' + d.hl.map(function (x) {
         return '<button type="button"><div class="c"><img src="' + esc(x.cv) + '" loading="lazy" referrerpolicy="no-referrer" alt=""></div><div class="t">' + esc(x.t) + '</div></button>';
       }).join('') + '</div>';
