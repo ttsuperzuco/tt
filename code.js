@@ -13179,6 +13179,13 @@ function uriageBookScript_(C) {
     var st = p.state === '支払い済み' ? '<span class="ubpbd paid">予約メモ：支払い済み</span>' : p.state === '未払い' ? '<span class="ubpbd unpaid">予約メモ：未払い</span>' : '';
     h += '<div class="ubpwho"><div><div class="ubpnm">' + esc(CUR.name || '（お名前なし）') + '</div><div class="ubpnum">' + esc(CUR.num || '番号なし') + '</div></div>' + st + '</div>';
     if (p.state === '支払い済み' && !p.cert) h += '<div class="ubpnote">当日分はお支払い済みです。払うのは次回分・まとめ買いだけです</div>';
+    // ★今日の分は送った前日お知らせから（2026-11-19）＝どのお知らせの金額かを出す
+    if (p.notice && !p.cert) h += '<div class="ubpnote">' + (p.notice.has
+      ? '前日お知らせ（' + esc(p.notice.at) + ' 送信）で伝えた明日のお支払い：合計 ' + yen(p.notice.total) +
+        (p.notice.prepaid ? '（払い済み ' + yen(p.notice.prepaid) + ' を引いた金額）' : '') +
+        (p.notice.shave ? '<br>剃毛代 ' + yen(p.notice.shave) + ' は発票の対象外です。売上帳簿の「發票なしの売上」で入力してください😊' : '') +
+        (p.notice.separate ? '<br>デザ眉・まつエク ' + yen(p.notice.separate) + ' は別会計です' : '')
+      : '前日お知らせ（' + esc(p.notice.at) + ' 送信）では、今日のお支払いはありません') + '</div>';
     if (p.cert) h += '<div class="ubpnote cert">購入証明書（' + esc(p.cert.at) + ' 印刷）の内容です：' + esc(p.cert.summary) +
       (p.cert.mode === 'part' ? '<br>一部払い＝今日のお支払いは入金分だけです（未払い残金 ' + yen(p.cert.unpaid) + '）' : '') + '</div>';
     h += '<div class="ubplist">';
