@@ -125,7 +125,7 @@ var UBCSS_ =
     'background:transparent;color:#fff;border:2px solid rgba(255,255,255,.75);border-radius:12px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;}' +
   '.ubac .t1{font-size:18px;}.ubac .t2{font-size:16px;}.ubac .ck{font-size:16px;}';
 var UBPAYCSS_ =
-  '.ubpspc{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;margin:8px 0 10px;}' +
+  '.ubpspc{display:grid;grid-template-columns:2fr 1fr;gap:6px;margin:8px 0 10px;}' +
   '.ubpspc button{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.8);border-radius:12px;padding:10px 4px;font:inherit;font-size:15px;font-weight:900;cursor:pointer;}' +
   '.ubpc{cursor:pointer;}' +
   '.ubpch{display:flex;justify-content:space-between;align-items:center;gap:8px;}' +
@@ -1046,7 +1046,7 @@ function uriageBookScript_(C) {
     var miss = ls.filter(function (l) { return !(parseInt(l.unit, 10) > 0); });
     if (miss.length) { popup('「' + miss[0].label + '」の金額が入っていません。行を押して入力してください😊'); return; }
     if (!CUR.pay) { popup('支払方法を選択してください😊'); return; }
-    if (!CUR.num) { popup('顧客番号が入っていません。キウイさん・スタッフは一覧の上のボタンから入ってください🙇'); return; }
+    if (!CUR.num) { popup('顧客番号が入っていません。スタッフは一覧の上のボタンから入ってください🙇'); return; }
     var items = ls.map(function (l) { return { key: l.key, label: l.label, cat: l.cat, timing: l.timing, unit: l.unit, qty: l.qty, note: l.note }; });
     var go = function () {
       $('ubPRbody').innerHTML = '<div class="ubnone">確認しています…</div>'; show('ubPayR');
@@ -1120,9 +1120,8 @@ function uriageBookScript_(C) {
     });
   });
   function openSpecial(who) {
-    openCheckout({ num: who, name: who === 'キウイ' ? 'キウイさん' : 'スタッフ', gender: '', state: '', lines: [], next: [], issued: [], buyer: '' });
+    openCheckout({ num: who, name: 'スタッフ', gender: '', state: '', lines: [], next: [], issued: [], buyer: '' });
   }
-  $('ubPayKiwi').addEventListener('click', function () { openSpecial('キウイ'); });
   $('ubPayStaff').addEventListener('click', function () { openSpecial('スタッフ'); });
   $('ubGoPay').addEventListener('click', function () { if (!PDAY) PDAY = payDayStr(new Date()); show('ubPay'); loadPay(); });
   $('ubPayPrev').addEventListener('click', function () { var d = new Date(PDAY + 'T12:00:00'); d.setDate(d.getDate() - 1); PDAY = payDayStr(d); loadPay(); });
@@ -1195,7 +1194,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<span class="ubwg"><button type="button" id="ubPayPrev" class="ubsm">◀</button><span id="ubPayDay" class="ubwhen"></span><button type="button" id="ubPayNext" class="ubsm">▶</button></span>' +
         '</div>' +
         '<div class="ubtest">テストです。発票サイトには送らず、印刷も売上表への書き込みもしません</div>' +
-        '<div class="ubpspc"><button type="button" id="ubPayCust">予約にないお会計</button><button type="button" id="ubPayKiwi">キウイさん</button><button type="button" id="ubPayStaff">スタッフ</button></div>' +
+        '<div class="ubpspc"><button type="button" id="ubPayCust">予約にないお会計</button><button type="button" id="ubPayStaff">スタッフ</button></div>' +
         '<div id="ubPays"></div>' +
       '</div>' +
       '<div id="ubPayF" style="display:none">' +
