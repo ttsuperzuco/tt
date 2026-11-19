@@ -2671,7 +2671,7 @@ var SZ_PCKEYS_ = (function () {
           (on ? 'background:#fde047;color:#0f172a;' : 'background:#2C7A99;color:#fff;');
         b.addEventListener('click', function () {
           if (on) return;
-          var u = new URL(location.href); u.searchParams.set('sp', x[0]); location.href = u.toString();
+          var u = new URL(location.href); u.searchParams.set('sp', x[0]); u.searchParams.set('tscale', x[0] === '1' ? '1.3' : '0'); location.href = u.toString();   
         });
         d.appendChild(b);
       });
