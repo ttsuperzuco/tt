@@ -1,10 +1,10 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
-// この画面だけで使う部品：manual
+// この画面だけで使う部品：manual、wifiman
 var MANUALS_ = [
   { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' }
 ];
-function renderManualPage_(base, staff, dev) {
-  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: MANUALS_ };
+function renderManualPage_(base, staff, dev, only) {
+  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: only ? [only] : MANUALS_, only: !!only };
   return '<style>' + HOMECSS_ +
     '.mnwrap{max-width:720px;margin:0 auto;padding:0 2px 40px}' +
     '.mntitle{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 14px}' +
@@ -23,10 +23,10 @@ function renderManualPage_(base, staff, dev) {
     '.mnmsg{color:#fff;font-weight:700;margin:10px 4px}' +
     '</style>' +
     '<div class="home">' +
-      '<div id="mnList">' + backBar_(base, staff, dev) +
+      '<div id="mnList"' + (only ? ' style="display:none"' : '') + '>' + backBar_(base, staff, dev) +
         '<div class="mntitle">📖 マニュアル</div><div class="mnwrap" id="mnBtns"></div></div>' +
       '<div id="mnBook" class="mnbook">' +
-        '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>' +
+        (only ? backBar_(base, staff, dev) : '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>') +
         '<div class="mntitle" id="mnTitle"></div><div class="mnwrap" id="mnPages"></div></div>' +
       '<button type="button" class="mntop" id="mnTop">↑ 表紙へ</button>' +
     '</div>' +
@@ -71,7 +71,7 @@ function manualScript_(C) {
       $('mnPages').innerHTML = '<div class="mnmsg">マニュアルを読み込めませんでした。少し待ってから、もう一度開いてください😊</div>';
     });
   }
-  $('mnBack').onclick = function () {
+  if ($('mnBack')) $('mnBack').onclick = function () {
     $('mnBook').style.display = 'none'; $('mnList').style.display = 'block'; $('mnTop').style.display = 'none';
     $('mnPages').innerHTML = ''; window.scrollTo(0, 0);
   };
@@ -80,4 +80,5 @@ function manualScript_(C) {
     var on = $('mnBook').style.display === 'block' && window.scrollY > 600;
     $('mnTop').style.display = on ? 'block' : 'none';
   }, { passive: true });
+  if (C.only) open(C.list[0]);   
 }

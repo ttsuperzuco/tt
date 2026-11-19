@@ -13778,8 +13778,10 @@ function shomeishoScript_(C) {
 var MANUALS_ = [
   { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' }
 ];
-function renderManualPage_(base, staff, dev) {
-  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: MANUALS_ };
+// ★2026-11-19 only＝マニュアル1冊だけを、一覧を出さずにすぐ表紙から見せる（📶お店のWi-Fiの設定のボタン＝renderWifiManualPage_）。
+//   その時の「← 戻る」は一覧ではなく、ズコの1つ前の画面へ戻る。
+function renderManualPage_(base, staff, dev, only) {
+  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: only ? [only] : MANUALS_, only: !!only };
   return '<style>' + HOMECSS_ +
     '.mnwrap{max-width:720px;margin:0 auto;padding:0 2px 40px}' +
     '.mntitle{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 14px}' +
@@ -13799,10 +13801,10 @@ function renderManualPage_(base, staff, dev) {
     '.mnmsg{color:#fff;font-weight:700;margin:10px 4px}' +
     '</style>' +
     '<div class="home">' +
-      '<div id="mnList">' + backBar_(base, staff, dev) +
+      '<div id="mnList"' + (only ? ' style="display:none"' : '') + '>' + backBar_(base, staff, dev) +
         '<div class="mntitle">📖 マニュアル</div><div class="mnwrap" id="mnBtns"></div></div>' +
       '<div id="mnBook" class="mnbook">' +
-        '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>' +
+        (only ? backBar_(base, staff, dev) : '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>') +
         '<div class="mntitle" id="mnTitle"></div><div class="mnwrap" id="mnPages"></div></div>' +
       '<button type="button" class="mntop" id="mnTop">↑ 表紙へ</button>' +
     '</div>' +
@@ -13847,7 +13849,7 @@ function manualScript_(C) {
       $('mnPages').innerHTML = '<div class="mnmsg">マニュアルを読み込めませんでした。少し待ってから、もう一度開いてください😊</div>';
     });
   }
-  $('mnBack').onclick = function () {
+  if ($('mnBack')) $('mnBack').onclick = function () {
     $('mnBook').style.display = 'none'; $('mnList').style.display = 'block'; $('mnTop').style.display = 'none';
     $('mnPages').innerHTML = ''; window.scrollTo(0, 0);
   };
@@ -13856,24 +13858,14 @@ function manualScript_(C) {
     var on = $('mnBook').style.display === 'block' && window.scrollY > 600;
     $('mnTop').style.display = on ? 'block' : 'none';
   }, { passive: true });
+  if (C.only) open(C.list[0]);   // ★1冊だけの時は、一覧を出さずにすぐ表紙から
 }
-// ★📶お店のWi-Fiの設定（2026-11-19 まるちゃん）＝中華電信ルーターの設定の説明書を、表紙から順に上から下へ見るだけの画面。
-//   画像を差し替える時は manual/wifi/p00〜p11.jpg を上げ直し、WIFIMAN_VER_ の数字を上げる（スマホが前の画像を覚えているため）。
-var WIFIMAN_VER_ = 2;
+// ★📶お店のWi-Fiの設定（2026-11-19 まるちゃん）＝中華電信ルーターの設定の説明書を、表紙から順に上から下へ見る画面。
+// ★2026-11-19 まるちゃん「ページ押すとそのページ飛ぶって機能入れてよ」＝📖マニュアルと同じ画面（renderManualPage_ の1冊だけの形）にした。
+//   表紙の「◯ページ」を押すとそのページへ飛ぶ。中身＝置き場の manual/wifi/p00〜p11.jpg と index.json
+//   （位置は AI自動プログラム\マニュアル一覧\お店のWi-Fiの設定（中華電信ルーター）\ズコに載せる.py で作る・写真のWi-Fiの名前はぼかしてある）。
 function renderWifiManualPage_(base, staff, dev) {
-  var imgs = '';
-  for (var i = 0; i < 12; i++) {
-    imgs += '<img class="wmimg" alt="' + (i ? i + 'ページ' : '表紙') + '"' + (i > 1 ? ' loading="lazy"' : '') +
-      ' src="https://ttsuperzuco.github.io/tt/manual/wifi/p' + (i < 10 ? '0' : '') + i + '.jpg?v=' + WIFIMAN_VER_ + '">';
-  }
-  return '<style>' + HOMECSS_ +
-    '.wmwrap{max-width:720px;margin:0 auto;padding:0 2px 30px}' +
-    '.wmtitle{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 14px}' +
-    '.wmimg{display:block;width:100%;height:auto;border-radius:14px;margin:0 0 14px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18)}' +
-    '</style>' +
-    '<div class="home">' + backBar_(base, staff, dev) +
-    '<div class="wmtitle">📶 お店のWi-Fiの設定</div>' +
-    '<div class="wmwrap">' + imgs + '</div></div>';
+  return renderManualPage_(base, staff, dev, { key: 'wifi', icon: '📶', title: 'お店のWi-Fiの設定' });
 }
 
 function renderShomeishoPage_(base, staff, dev) {
