@@ -12349,13 +12349,22 @@ var UBCSS_ =
   // ★2026-11-09 顧客番号に該当する方がいない時の知らせ（欄のすぐ下・白地に赤い太字）
   '.ubnf{margin:6px 0 0;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
   '.ubpn{margin:6px 0 0;background:#e0f2fe;color:#0c4a6e;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
-  '.ubcoin{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 8px;margin-top:4px;}' +
-  '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
-  '.ubcell .ubbox{justify-content:center;}' +
-  '#ubCoins .ubkp{margin-top:12px;}' +
-  '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
-  '#ubCoins.ubphone .ubcok{display:none !important;}' +
-  '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:10px 0 4px;}' +
+  '.ubclist{display:flex;flex-direction:column;gap:8px;margin-top:4px;}' +
+  '.ubcrow{display:grid;grid-template-columns:4.2em 1fr 1.6em 6.2em;align-items:center;gap:8px;background:rgba(255,255,255,.1);border-radius:14px;padding:6px 10px;}' +
+  '.ubcrow.on{background:rgba(253,224,71,.28);}' +
+  '.ubcrow .lab{color:#fff;font-weight:900;font-size:18px;}' +
+  '.ubcrow .u{color:#fff;font-weight:800;font-size:15px;}' +
+  '.ubcrow .sub{color:#fde047;font-weight:900;font-size:15px;text-align:right;white-space:nowrap;}' +
+  '.ubcrow .ubbox{justify-content:flex-end;min-height:46px;}' +
+  '.ubctot{display:flex;justify-content:space-between;align-items:baseline;color:#fff;font-weight:900;font-size:20px;margin:12px 4px 0;padding-top:10px;border-top:2px solid rgba(255,255,255,.45);}' +
+  '.ubctot b{font-size:26px;color:#fde047;}' +
+  '#ubCoins .ubkp{position:fixed;left:0;right:0;bottom:0;z-index:60;max-width:560px;margin:0 auto;box-sizing:border-box;background:#2C7A99;' +
+    'padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-radius:18px 18px 0 0;box-shadow:0 -6px 20px rgba(0,0,0,.35);}' +
+  '.ubcbar{display:flex;align-items:center;gap:8px;margin-bottom:8px;}' +
+  '.ubcbar .cur{flex:1;color:#fff;font-weight:800;font-size:15px;order:1;}' +
+  '.ubcbar button{border:0;border-radius:12px;font:inherit;font-weight:900;cursor:pointer;min-height:50px;padding:0 18px;}' +
+  '.ubcbar .dn{order:2;background:#fff;color:#0f172a;font-size:16px;}' +
+  '.ubcbar .nx{order:3;background:#16a34a;color:#fff;font-size:18px;min-width:8em;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
   '.uboth .r:first-child{border-top:0;}' +
@@ -13088,35 +13097,75 @@ function uriageBookScript_(C) {
 
   // ── 小銭とお札（数字ボタンで入れる） ──
   var CK = ['c100', 'c50', 'c10', 'c5', 'c1', 'bills'];
+  var CV = { c100: 100, c50: 50, c10: 10, c5: 5, c1: 1, bills: 1 };
+  var CN = { c100: '100元', c50: '50元', c10: '10元', c5: '5元', c1: '1元', bills: 'お札' };
   var CP = padKit($('ubCoins'), { c100: { kind: 'int', max: 4, comma: true }, c50: { kind: 'int', max: 4, comma: true },
     c10: { kind: 'int', max: 4, comma: true }, c5: { kind: 'int', max: 4, comma: true }, c1: { kind: 'int', max: 4, comma: true },
-    bills: { kind: 'int', max: 6, comma: true } });
-  var coinTouched = false;    // 数字を押したら、読み直しても上書きしない
+    bills: { kind: 'int', max: 6, comma: true } }, function () { coinSum(); });
+  var coinTouched = false, coinLast = '';    // 数字を押したら、読み直しても上書きしない
+  // 小計と合計（金種×枚数・お札はそのまま）
+  function coinSum() {
+    var t = 0;
+    for (var i = 0; i < CK.length; i++) {
+      var k = CK[i], r = CP.raw(k), v = (parseInt(r || '0', 10) || 0) * CV[k];
+      t += v;
+      var el = $('ubcs_' + k); if (el) el.textContent = (k === 'bills' || r === '') ? '' : v.toLocaleString() + '元';
+    }
+    $('ubCoinTot').textContent = t.toLocaleString() + '元';
+  }
   function fillCoins() {
     if (!CP || !D) return;
     var c = D.coins || {};
     var v = { c100: c['100'], c50: c['50'], c10: c['10'], c5: c['5'], c1: c['1'], bills: D.bills };
     for (var i = 0; i < CK.length; i++) CP.set(CK[i], v[CK[i]] == null ? '' : String(v[CK[i]]));
-    coinBtns();   // 読み直した時も「入力／修正」を合わせる
+    coinSum(); coinBtns();   // 読み直した時も「入力／修正」を合わせる
   }
-  // 数字パネルが開いている間は「入力OK」、閉じたら「以上の内容で入力」（2026-11-19 まるちゃん）
+  function coinCur() { var b = $('ubCoins').querySelector('.ubbox.sel'); return b ? b.getAttribute('data-pk') : ''; }
+  // 数字ボタンの上の帯＝「◯を入力中」「完了」「次へ（◯）」。数字ボタンは画面の下に固定（パソコンはキーボード＝Enterで次へ）。
+  function coinBar() {
+    var kp = $('ubCoins').querySelector('.ubkp');
+    if (!kp || kp.querySelector('.ubcbar')) return;
+    var bar = document.createElement('div'); bar.className = 'ubcbar';
+    bar.innerHTML = '<span class="cur"></span><button type="button" class="nx" data-pok="cnext">次へ</button>' +
+      '<button type="button" class="dn" data-pok="cdone">完了</button>';
+    kp.insertBefore(bar, kp.firstChild);
+    bar.querySelector('.nx').addEventListener('click', function (e) {
+      e.stopPropagation(); coinTouched = true;
+      var i = CK.indexOf(coinCur());
+      if (i >= 0 && i < CK.length - 1) CP.open(CK[i + 1]); else CP.close();
+      coinBtns();
+    });
+  }
   function coinBtns() {
-    var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
+    coinBar();
+    var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none'), cur = on ? coinCur() : '';
     $('ubCoinGo').style.display = on ? 'none' : '';
-    var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
-    $('ubCoins').classList.toggle('ubphone', phone);
-    $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
+    $('ubCoins').style.paddingBottom = on ? (kp.offsetHeight + 16) + 'px' : '';
+    var rs = $('ubCoins').querySelectorAll('.ubcrow');
+    for (var i = 0; i < rs.length; i++) rs[i].classList.toggle('on', rs[i].getAttribute('data-ck') === cur);
+    if (on) {
+      var ix = CK.indexOf(cur), last = ix === CK.length - 1, nx = kp.querySelector('.ubcbar .nx');
+      kp.querySelector('.ubcbar .cur').textContent = (CN[cur] || '') + 'を入力中';
+      nx.textContent = last ? '完了' : '次へ（' + CN[CK[ix + 1]] + '）';
+      kp.querySelector('.ubcbar .dn').style.display = last ? 'none' : '';
+      if (cur !== coinLast) {
+        var row = $('ubCoins').querySelector('.ubcrow[data-ck="' + cur + '"]');
+        setTimeout(function () { try { row.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }, 30);
+      }
+    }
+    coinLast = cur;
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
     //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
     $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';
     $('ubCoinGo').style.background = had ? '#2563eb' : '';
-    // ★2026-11-19 まるちゃん「押している間は他のが消えないと、どの数字を入れているのか分からない」＝入力中の欄だけ残す
-    var cs = $('ubCoins').querySelectorAll('.ubcell');
-    //   同日「左に移動するんじゃなくて、その場所でほかのが消える方がいい」＝場所はそのまま（見えなくするだけ）
-    for (var i = 0; i < cs.length; i++) cs[i].style.visibility = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'hidden';
   }
   $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
+  // 行のどこを押しても、その金種を入力（枠だけでなく金種の名前・小計の所でも）
+  $('ubCoins').addEventListener('click', function (e) {
+    var r = e.target.closest('.ubcrow'); if (!r || e.target.closest('.ubbox')) return;
+    var k = r.getAttribute('data-ck'); if (k && coinCur() !== k) CP.open(k);
+  });
   $('ubGoCoins').addEventListener('click', function () {
     coinTouched = false; fillCoins(); CP.close(); coinBtns(); show('ubCoins');
   });
@@ -13724,17 +13773,16 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubtop">' + inBack('ubCoinBack') + '<span class="bname ubttl">🪙 小銭とお札</span>' +
           '<span class="ubwg"><span id="ubWhen3" class="ubwhen"></span><button type="button" id="ubReload3" class="ubsm">再読込</button></span>' +
         '</div>' +
-        '<div class="ubrow"><div class="ubcoin">' +
-          [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]
-            .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div>' +
-              // ★同日まるちゃん「入力OKボタンはその数字のすぐ下に小さく出せばいい」＝入力中の欄の下にだけ小さく出す
-              '<button type="button" class="ubok ubcok" data-pok="' + k[0] + '" style="display:none">入力OK</button></div>'; }).join('') +
+        // ★2026-11-19 まるちゃん「一般的なアプリだったらどういう感じ？」→「作り直して」＝レジの金種の数え方の形：
+        //   金種を縦に1列（金種・枚数・小計）／数字ボタンは画面の下に固定（入力中の欄に色）／「次へ」で100→50→10→5→1→お札と進む／
+        //   下に合計／一番下に「以上の内容で入力（修正）」。前の「入力OK」「ほかの欄を隠す」はこれで置き換え。
+        '<div class="ubrow"><div class="ubclist">' +
+          [['c100', '100元', '枚'], ['c50', '50元', '枚'], ['c10', '10元', '枚'], ['c5', '5元', '枚'], ['c1', '1元', '枚'], ['bills', 'お札', '元']]
+            .map(function (k) { return '<div class="ubcrow" data-ck="' + k[0] + '"><span class="lab">' + k[1] + '</span>' +
+              '<div class="ubbox" data-pk="' + k[0] + '" data-ph="0"></div><span class="u">' + k[2] + '</span>' +
+              '<span class="sub" id="ubcs_' + k[0] + '"></span></div>'; }).join('') +
         '</div></div>' +
-        // ★2026-11-19 まるちゃん「OKボタンがないから、どこを押せばOKになるのかわからない」「数字を押している間は以上の内容で入力を出さない」
-        //   ＝数字パネルが開いている間は「入力OK」だけ出し、閉じたら「以上の内容で入力」を出す（11/9の「入力OKいらない」はこれで置き換え）。
-        // ★同日まるちゃん「スマホの場合は入力OKは数字のボタンの下に長めに一行で」＝スマホは数字ボタンのすぐ下に横いっぱいの入力OK。
-        //   パソコン（キーボードで入力）は今までどおり欄のすぐ下に小さく。
-        '<button type="button" class="ubok ubcokw" id="ubCoinOkW" data-pok="coinsw" style="display:none">入力OK</button>' +
+        '<div class="ubctot"><span>合計</span><b id="ubCoinTot">0元</b></div>' +
         '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
       '</div>' +
     '</div></div>' +
