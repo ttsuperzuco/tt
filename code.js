@@ -12354,6 +12354,8 @@ var UBCSS_ =
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:12px;}' +
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
+  '#ubCoins.ubphone .ubcok{display:none !important;}' +
+  '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:10px 0 4px;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
   '.uboth .r:first-child{border-top:0;}' +
@@ -13101,6 +13103,9 @@ function uriageBookScript_(C) {
   function coinBtns() {
     var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
     $('ubCoinGo').style.display = on ? 'none' : '';
+    var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
+    $('ubCoins').classList.toggle('ubphone', phone);
+    $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
     //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
@@ -13727,6 +13732,9 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div></div>' +
         // ★2026-11-19 まるちゃん「OKボタンがないから、どこを押せばOKになるのかわからない」「数字を押している間は以上の内容で入力を出さない」
         //   ＝数字パネルが開いている間は「入力OK」だけ出し、閉じたら「以上の内容で入力」を出す（11/9の「入力OKいらない」はこれで置き換え）。
+        // ★同日まるちゃん「スマホの場合は入力OKは数字のボタンの下に長めに一行で」＝スマホは数字ボタンのすぐ下に横いっぱいの入力OK。
+        //   パソコン（キーボードで入力）は今までどおり欄のすぐ下に小さく。
+        '<button type="button" class="ubok ubcokw" id="ubCoinOkW" data-pok="coinsw" style="display:none">入力OK</button>' +
         '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
       '</div>' +
     '</div></div>' +

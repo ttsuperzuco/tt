@@ -99,6 +99,8 @@ var UBCSS_ =
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:12px;}' +
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
+  '#ubCoins.ubphone .ubcok{display:none !important;}' +
+  '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:10px 0 4px;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
   '.uboth .r:first-child{border-top:0;}' +
@@ -700,6 +702,9 @@ function uriageBookScript_(C) {
   function coinBtns() {
     var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
     $('ubCoinGo').style.display = on ? 'none' : '';
+    var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
+    $('ubCoins').classList.toggle('ubphone', phone);
+    $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
     $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';
     $('ubCoinGo').style.background = had ? '#2563eb' : '';
@@ -1253,6 +1258,7 @@ function renderUriageBookPage_(base, staff, dev) {
             .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div>' +
               '<button type="button" class="ubok ubcok" data-pok="' + k[0] + '" style="display:none">入力OK</button></div>'; }).join('') +
         '</div></div>' +
+        '<button type="button" class="ubok ubcokw" id="ubCoinOkW" data-pok="coinsw" style="display:none">入力OK</button>' +
         '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
       '</div>' +
     '</div></div>' +
