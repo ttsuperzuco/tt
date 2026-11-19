@@ -58,6 +58,8 @@
       var u = new URL(location.href); u.searchParams.set('frame', '0');
       location.replace('phone.html?u=' + encodeURIComponent(u.toString()));
     }
+    // 枠の中＝実機と同じく、横のスクロールバーで幅を取られないようにする（スマホはバーが幅を取らない）
+    if (q.get('frame') === '0') { var st = document.createElement('style'); st.textContent = 'html{scrollbar-width:none}::-webkit-scrollbar{width:0;height:0;display:none}'; document.head.appendChild(st); }
   } catch (e) {}
 })();
 // ★2026-11-18 なすさん「画面ロック・別のアプリを開くと、画面が最初に戻る」：ハチミツちゃんの作業中にスマホがズコを止めると、
