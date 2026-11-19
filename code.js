@@ -12400,7 +12400,7 @@ var UBCSS_ =
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
   // ★2026-11-19 まるちゃん「キーボードで数字…の文を入力OKと欄の間に、白い地はいらない、スマホと同じ文字の出し方に」
   //   ＝入力OKはスマホもパソコンも数字ボタンの下の横長1つ（欄の下の小さい入力OKは出さない）。パソコンの白い地の案内は隠し、欄の下の案内1行にする。
-  '#ubCoins .ubcok{display:none !important;}' +
+  '#ubCoins .ubcell .ubnumrow{flex:1 1 auto;min-width:0;}' +
   '.szpc #ubCoins .expad::before{display:none;}' +
   '.szpc #ubCoins .ubkp{margin:0;}' +
   '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:-4px 0 4px;}' +
@@ -13153,7 +13153,7 @@ function uriageBookScript_(C) {
     $('ubCoinGo').style.display = on ? 'none' : '';
     var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
     $('ubCoins').classList.toggle('ubphone', phone);
-    $('ubCoinOkW').style.display = on ? '' : 'none';
+    $('ubCoinOkW').style.display = 'none';   // 入力OKは欄の右（下の横長はもう出さない）
     if (!on && $('ubCoinHint')) $('ubCoinHint').style.display = 'none';
     // ★2026-11-19 まるちゃん「タッチボタンが入力欄とめちゃくちゃ離れてる。すごく近くして」＝数字ボタン（と入力OK）を入力中の欄のすぐ下へ動かす
     if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
@@ -13793,9 +13793,9 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<div class="ubrow"><div class="ubcoin">' +
           [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]
-            .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div>' +
-              // ★同日まるちゃん「入力OKボタンはその数字のすぐ下に小さく出せばいい」＝入力中の欄の下にだけ小さく出す
-              '<button type="button" class="ubok ubcok" data-pok="' + k[0] + '" style="display:none">入力OK</button></div>'; }).join('') +
+            .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubnumrow"><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div>' +
+              // ★同日まるちゃん「小銭のほうもこの方式」＝發票なしの売上一行追加と同じ＝入力OKは入力中の欄のすぐ右（数字ボタンの下の横長の入力OKはやめた）
+              '<button type="button" class="ubok" data-pok="' + k[0] + '" style="display:none">入力OK</button></div></div>'; }).join('') +
         '</div></div>' +
         // ★2026-11-19 まるちゃん「OKボタンがないから、どこを押せばOKになるのかわからない」「数字を押している間は以上の内容で入力を出さない」
         //   ＝数字パネルが開いている間は「入力OK」だけ出し、閉じたら「以上の内容で入力」を出す（11/9の「入力OKいらない」はこれで置き換え）。

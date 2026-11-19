@@ -102,7 +102,7 @@ var UBCSS_ =
   '#ubCoins .ubkp{margin-top:-4px;}' +
   '#ubCoins .ubchint{color:#fff;font-weight:800;font-size:15px;line-height:1.45;text-align:center;margin:-4px 0 -2px;white-space:pre-line;}' +   
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
-  '#ubCoins .ubcok{display:none !important;}' +
+  '#ubCoins .ubcell .ubnumrow{flex:1 1 auto;min-width:0;}' +
   '.szpc #ubCoins .expad::before{display:none;}' +
   '.szpc #ubCoins .ubkp{margin:0;}' +
   '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:-4px 0 4px;}' +
@@ -709,7 +709,7 @@ function uriageBookScript_(C) {
     $('ubCoinGo').style.display = on ? 'none' : '';
     var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
     $('ubCoins').classList.toggle('ubphone', phone);
-    $('ubCoinOkW').style.display = on ? '' : 'none';
+    $('ubCoinOkW').style.display = 'none';   
     if (!on && $('ubCoinHint')) $('ubCoinHint').style.display = 'none';
     if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
       var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; }
@@ -1273,8 +1273,8 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<div class="ubrow"><div class="ubcoin">' +
           [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]
-            .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div>' +
-              '<button type="button" class="ubok ubcok" data-pok="' + k[0] + '" style="display:none">入力OK</button></div>'; }).join('') +
+            .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubnumrow"><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div>' +
+              '<button type="button" class="ubok" data-pok="' + k[0] + '" style="display:none">入力OK</button></div></div>'; }).join('') +
         '</div></div>' +
         '<button type="button" class="ubok ubcokw" id="ubCoinOkW" data-pok="coinsw" style="display:none">入力OK</button>' +
         '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
