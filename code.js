@@ -12396,6 +12396,8 @@ var UBCSS_ =
   '#ubCoins .ubcell .ubbox{flex:1 1 auto;min-height:44px;font-size:20px;padding:6px 14px;justify-content:flex-end;}' +
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:-4px;}' +
+  '.ubkphint{color:#fff;font-weight:800;font-size:15px;line-height:1.45;text-align:center;margin:8px 0 0;white-space:pre-line;}' +
+  '.szpc .ubf .expad::before{display:none;}' +
   '#ubCoins .ubchint{color:#fff;font-weight:800;font-size:15px;line-height:1.45;text-align:center;margin:-4px 0 -2px;white-space:pre-line;}' +   // 同日まるちゃん「二行に」
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
   // ★2026-11-19 まるちゃん「キーボードで数字…の文を入力OKと欄の間に、白い地はいらない、スマホと同じ文字の出し方に」
@@ -12851,16 +12853,38 @@ function uriageBookScript_(C) {
         if (o) o.style.display = (sel === k) ? '' : 'none';
       }
     }
+    // ★2026-11-19 まるちゃん「（發票なしの追加も）小銭と同じく、下は表示しないし、下の方のは上に持ってくる。小銭と一緒。ほかの画面も」
+    //   ＝入力の欄が並ぶ画面（.ubf）では、数字ボタンを出している間は入力中の欄（とその見出し）だけ残し、ほかの欄と
+    //     「以上の内容で追加」を隠す＝下の欄も見出しのすぐ下に来る。欄と数字ボタンの間に案内の1行（小銭とお札と同じ）。閉じたら全部戻す。
+    var fhint = null;
+    function focusOn(k) {
+      var f = cont.querySelector('.ubf'); if (!f) return;
+      focusOff();
+      var row = box(k).closest('.ubrow'), lab = row && row.previousElementSibling;
+      var hide = [].slice.call(f.children).filter(function (x) { return x !== row && x !== lab; })
+        .concat([].slice.call(cont.querySelectorAll('.exgo')));
+      hide.forEach(function (x) { x.setAttribute('data-fh', x.style.display); x.style.display = 'none'; });
+      if (!fhint) { fhint = document.createElement('div'); fhint.className = 'ubkphint'; }
+      var pc = typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc;
+      fhint.textContent = pc ? '⌨️ キーボードで数字を入力してください😊（BackSpaceで1文字削除）' : '下のボタンを押して数字を入れ、\nOKボタンを押してください😊';
+      row.insertBefore(fhint, kp);
+      try { window.scrollTo(0, 0); } catch (e) {}
+    }
+    function focusOff() {
+      [].forEach.call(cont.querySelectorAll('[data-fh]'), function (x) { x.style.display = x.getAttribute('data-fh'); x.removeAttribute('data-fh'); });
+      if (fhint && fhint.parentNode) fhint.parentNode.removeChild(fhint);
+    }
     function open(k) {
       sel = k; fresh = true;
       var b = box(k), row = b.closest('.ubrow') || b.parentNode;
       row.appendChild(kp); kp.style.display = '';
       segs(); draw();
+      if (cont.querySelector('.ubf')) { focusOn(k); return; }
       setTimeout(function () { try { kp.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {} }, 30);
     }
     function close() {
       if (sel && spec[sel].open) return;
-      sel = ''; kp.style.display = 'none'; draw();
+      sel = ''; kp.style.display = 'none'; draw(); focusOff();
     }
     cont.addEventListener('click', function (e) {
       var b = e.target.closest('.ubbox[data-pk]');
