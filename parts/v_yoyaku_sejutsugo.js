@@ -846,7 +846,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'for(var ji=0;ji<jb.length;ji++){jb[ji].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(a){JJANS=a;nextOf(17);},' +
           'jn=(CUST&&CUST.id&&JJN[CUST.id])||0;' +
           'if(k==="yes"&&jn>0){szPopup_("このお客様には過去に"+jn+"度使い方を送っていますが再送しますか？😊",' +
-            '{cancel:true,noLabel:"再送しない",yesLabel:"再送する",onYes:function(){go("yes");},onNo:function(){go("no");}});return;}' +
+            '{cancel:true,noLabel:"再送する",yesLabel:"再送しない",onYes:function(){go("no");},onNo:function(){go("yes");}});return;}' +
           'go(k);};}}' +
       'var yb=$("sgyb");if(yb)yb.onclick=function(){if(!tapOK())return;goYList();};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +

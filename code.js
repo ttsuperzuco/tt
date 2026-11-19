@@ -8657,12 +8657,13 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'if(k==="no"){noCheck("頭皮のプロセル",go);return;}go();};}' +
         /* ★17枚目：ホホバ＝押すとすぐ次へ（予約メモに書かない物なので、NOの確かめは出さない）。
            ★2026-11-19 まるちゃん「このお客様には過去に〇度使い方を送っていますが再送しますか？」＝YESの時、過去に使い方を
-           送ったことがある方（JJN＝事務所側が予定表と一緒に渡す回数・LINEの会話で数えた日数）だけ確認を出す。再送しない＝NOと同じ。 */
+           送ったことがある方（JJN＝事務所側が予定表と一緒に渡す回数・LINEの会話で数えた日数）だけ確認を出す。再送しない＝NOと同じ。
+           ★同日 まるちゃん「再送しない　がデフォルト」＝「再送しない」を青い標準のボタン（右）に、「再送する」を左の枠だけのボタンにした。 */
         'var jb=$("sgJJ").getElementsByClassName("sgjj");' +
         'for(var ji=0;ji<jb.length;ji++){jb[ji].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(a){JJANS=a;nextOf(17);},' +
           'jn=(CUST&&CUST.id&&JJN[CUST.id])||0;' +
           'if(k==="yes"&&jn>0){szPopup_("このお客様には過去に"+jn+"度使い方を送っていますが再送しますか？😊",' +
-            '{cancel:true,noLabel:"再送しない",yesLabel:"再送する",onYes:function(){go("yes");},onNo:function(){go("no");}});return;}' +
+            '{cancel:true,noLabel:"再送する",yesLabel:"再送しない",onYes:function(){go("no");},onNo:function(){go("yes");}});return;}' +
           'go(k);};}}' +
       'var yb=$("sgyb");if(yb)yb.onclick=function(){if(!tapOK())return;goYList();};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
