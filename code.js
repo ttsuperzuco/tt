@@ -12573,7 +12573,7 @@ function uriageBookScript_(C) {
   function yen(n) { return (n == null || n === '') ? '―' : Number(n).toLocaleString('ja-JP') + '元'; }
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
-  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR'];
+  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR', 'ubSheet'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
   var D = null, busy = false, loading = false;
   // ★2026-11-07 まるちゃん「修正するをOKしたとき、かきこみおわるまでまつとうざいので、バックグラウンドで書き込みします…
@@ -13710,6 +13710,77 @@ function uriageBookScript_(C) {
     });
   });
   $('ubGoPay').addEventListener('click', function () { if (!PDAY) PDAY = payDayStr(new Date()); show('ubPay'); loadPay(); });
+
+  // ── スプレッドシート再現（2026-11-20・開発の時だけ・表示のみ）──
+  //   裏の係が売上表のそのタブを「グーグルの表が自分で作る見た目」（色・枠・幅・選択肢の形）のまま読んで置き場へ置く
+  //   （uriagebook_sheet.json）。画面はそれを枠の中にそのまま出すだけ（中の仕掛けは動かさない）。
+  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoSheet').style.display = '';
+  var SHDAY = '', SHREQ = 0, SHGOT = 0;
+  function shMsg(t) { var m = $('ubShMsg'); m.textContent = t || ''; m.style.display = t ? '' : 'none'; }
+  function shFit() {
+    var f = $('ubShFrame'); if (f.style.display === 'none') return;
+    var top = f.getBoundingClientRect().top;
+    f.style.height = Math.max(320, Math.floor(window.innerHeight - top - 10)) + 'px';
+  }
+  window.addEventListener('resize', shFit);
+  function shDraw(v) {
+    v = (v && v.data && !v.html && !v.none) ? v.data : v;
+    if (!v || !(v.html || v.none)) return false;
+    SHDAY = v.day || SHDAY;
+    $('ubShDay').textContent = (v.tab || '') + '　' + String(v.at || '').slice(11, 16) + ' 時点';
+    var f = $('ubShFrame');
+    if (v.none) { f.style.display = 'none'; shMsg('この日の売上表のタブはありません'); return true; }
+    f.srcdoc = '<!doctype html><html><head><meta charset="utf-8"><style>' + v.css + '</style></head>' +
+      '<body><div class="ritz grid-container" dir="ltr">' + v.html + '</div></body></html>';
+    f.style.display = ''; shMsg(''); shFit();
+    return true;
+  }
+  function shDayAdd(n) {
+    var t = SHDAY ? new Date(SHDAY + 'T00:00:00') : new Date();
+    t.setDate(t.getDate() + n);
+    return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2);
+  }
+  function loadSheet(day) {
+    var my = ++SHREQ;
+    shMsg('売上表を読んでいます…（20秒ほどかかります）');
+    function fail(t) { if (my !== SHREQ) return; shMsg(t || '売上表を読めませんでした。りゅうさんに連絡してください🙇'); }
+    devKey(function (ex) {
+      var fl = { action: 'sheetview' }; if (day) fl.day = day;
+      for (var ek in ex) fl[ek] = ex[ek];
+      jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
+              device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fl) }, function (r) {
+        if (!r || !r.ok || !r.id) { fail(''); return; }
+        var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('uriagebook', 1000) : 300;
+        (function poll() {
+          if (my !== SHREQ) return;
+          n++; if (n > max) { fail(''); return; }
+          jsonp({ action: 'status', key: C.key, id: r.id }, function (st) {
+            if (!st || !st.ok || st.status === 'pending' || st.status === 'running' || st.status === 'queued' || st.status === '') { setTimeout(poll, 1000); return; }
+            if (st.status !== 'done') { fail(st.result || ''); return; }
+            jsonp({ action: 'data', name: 'uriagebook_sheet.json' }, function (v) {
+              if (my !== SHREQ) return;
+              if (shDraw(v)) SHGOT = my; else fail('');
+            });
+          });
+        })();
+      });
+    });
+  }
+  $('ubGoSheet').addEventListener('click', function () {
+    show('ubSheet');
+    // 前に読んだ物があれば先にそれを出し（すぐ見える）、裏で最新を読み直す
+    var my0 = SHREQ + 1;
+    jsonp({ action: 'data', name: 'uriagebook_sheet.json' }, function (v) {
+      if (SHREQ !== my0 || SHGOT === my0) return;
+      var d0 = SHDAY;
+      if (shDraw(v)) { if (d0 && SHDAY !== d0) SHDAY = d0; shMsg('最新の売上表を読んでいます…'); }
+    });
+    loadSheet(SHDAY);
+  });
+  $('ubSheetBack').addEventListener('click', function (e) { e.preventDefault(); SHREQ++; show('ubMenu'); });
+  $('ubShPrev').addEventListener('click', function () { SHDAY = shDayAdd(-1); loadSheet(SHDAY); });
+  $('ubShNext').addEventListener('click', function () { SHDAY = shDayAdd(1); loadSheet(SHDAY); });
+  $('ubShReload').addEventListener('click', function () { loadSheet(SHDAY); });
   // ★印刷テスト（本番・2026-11-19）＝確認の小窓のあとだけ送る。結果（発票番号・印刷済みか）は小窓で出す。
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubPayPrint').style.display = '';
   $('ubPayPrint').addEventListener('click', function () {
@@ -13768,6 +13839,8 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoAuth" style="display:none">✅ 作廢の<span class="ubem auth">認証</span></button>' +
           // ★2026-11-18 まるちゃん「スタッフの記入の手間を減らしたい」「全部テストプラットフォームで」＝お会計（テスト）・開発の時だけ
           '<button type="button" id="ubGoPay" style="display:none">🧾 お会計<span class="ubem auth">テスト</span></button>' +
+          // ★2026-11-20 まるちゃん「テストで　スプレッドシート再現　ていうボタンつくり、スプレシート売上帳簿と全く同じ画面を再現して」＝開発の時だけ
+          '<button type="button" id="ubGoSheet" style="display:none">📊 スプレッドシート<span class="ubem auth">再現</span></button>' +
         '</div>' +
       '</div>' +
       // ★2026-11-08 まるちゃん「この画面はできるだけデータを出すのが重要。上の余白をできるだけ詰めて」
@@ -13810,6 +13883,16 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div id="ubAuths"></div>' +
       '</div>' +
       // ★2026-11-18 お会計（テスト）＝予約の一覧／お会計／結果（発票サイトにも売上表にも送らない）
+      // ★2026-11-20 スプレッドシート再現＝売上表のタブを、グーグルの表が自分で作る見た目のまま出す（表示のみ・開発の時だけ）
+      '<div id="ubSheet" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubSheetBack') + '<span class="bname ubttl">📊 スプレッドシート再現</span>' +
+          '<span class="ubwg"><button type="button" id="ubShPrev" class="ubsm">◀</button><span id="ubShDay" class="ubwhen"></span>' +
+          '<button type="button" id="ubShNext" class="ubsm">▶</button><button type="button" id="ubShReload" class="ubsm">再読込</button></span>' +
+        '</div>' +
+        '<div class="ubtest">テストです。売上表をそのまま表示しています（表示のみです）</div>' +
+        '<div id="ubShMsg" class="ubnone" style="display:none"></div>' +
+        '<iframe id="ubShFrame" sandbox="" title="売上表" style="display:none;width:100%;border:0;background:#fff;border-radius:8px;"></iframe>' +
+      '</div>' +
       '<div id="ubPay" style="display:none">' +
         '<div class="ubtop">' + inBack('ubPayBack') + '<span class="bname ubttl">🧾 お会計（テスト）</span>' +
           '<span class="ubwg"><button type="button" id="ubPayPrev" class="ubsm">◀</button><span id="ubPayDay" class="ubwhen"></span><button type="button" id="ubPayNext" class="ubsm">▶</button></span>' +
