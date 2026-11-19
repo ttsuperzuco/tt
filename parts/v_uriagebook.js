@@ -1110,6 +1110,19 @@ function uriageBookScript_(C) {
     });
   });
   $('ubGoPay').addEventListener('click', function () { if (!PDAY) PDAY = payDayStr(new Date()); show('ubPay'); loadPay(); });
+  if ((window.__SZ_ROLE_ || '') === '開発') $('ubPayPrint').style.display = '';
+  $('ubPayPrint').addEventListener('click', function () {
+    var b = $('ubPayPrint');
+    if (b.disabled) return;
+    popup('本物の発票を1枚発行し、お店の発票機で印刷します。\n内容：備註「テスト」・明細「印刷テスト」・0元\n※発票サイトから国税局にも届きます。印刷を確認したら、発票番号を伝えて作廢を依頼してください😊\n※売上表には書き込みません。\n発行してよろしいでしょうか？😊', {
+      cancel: true, onYes: function () {
+        b.disabled = true; b.textContent = '🖨 発票を発行しています…';
+        askDev({ action: 'printtest', confirm: '1' }, function (ok, msg) {
+          b.disabled = false; b.textContent = '🖨 印刷テスト（本番）';
+          popup(msg || (ok ? '発行しました' : '発行できませんでした。もう一度試してもらえると嬉しいです🙇'));
+        });
+      } });
+  });
   $('ubPayPrev').addEventListener('click', function () { var d = new Date(PDAY + 'T12:00:00'); d.setDate(d.getDate() - 1); PDAY = payDayStr(d); loadPay(); });
   $('ubPayNext').addEventListener('click', function () { var d = new Date(PDAY + 'T12:00:00'); d.setDate(d.getDate() + 1); PDAY = payDayStr(d); loadPay(); });
   $('ubPayBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
@@ -1181,6 +1194,7 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<div class="ubtest">テストです。発票サイトには送らず、印刷も売上表への書き込みもしません</div>' +
         '<div class="ubpspc"><button type="button" id="ubPayCust">予約にないお会計</button></div>' +
+        '<div class="ubpspc"><button type="button" id="ubPayPrint" style="display:none;background:#b91c1c;color:#fff">🖨 印刷テスト（本番）</button></div>' +
         '<div id="ubPays"></div>' +
       '</div>' +
       '<div id="ubPayF" style="display:none">' +
