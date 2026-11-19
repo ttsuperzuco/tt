@@ -13007,6 +13007,9 @@ function uriageBookScript_(C) {
   function coinBtns() {
     var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
     $('ubCoinOk').style.display = on ? '' : 'none'; $('ubCoinGo').style.display = on ? 'none' : '';
+    // ★2026-11-19 まるちゃん「押している間は他のが消えないと、どの数字を入れているのか分からない」＝入力中の欄だけ残す
+    var cs = $('ubCoins').querySelectorAll('.ubcell');
+    for (var i = 0; i < cs.length; i++) cs[i].style.display = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'none';
   }
   $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
   $('ubGoCoins').addEventListener('click', function () {
