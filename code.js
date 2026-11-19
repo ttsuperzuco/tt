@@ -13200,7 +13200,7 @@ function uriageBookScript_(C) {
     h += '<div class="ubpadds">';
     if (nx.length) h += '<button type="button" data-add="next">＋ 次回分' + (p.next_day ? '（' + esc(p.next_day.slice(5).replace('-', '/').replace(/^0/, '')) + 'の予約）' : '') + '</button>';
     h += '<button type="button" data-add="menu">＋ メニューから追加</button>' +
-      '<button type="button" data-add="zan">＋ 残金・差額</button><button type="button" data-add="free">＋ 自由に入力</button></div>';
+      '<button type="button" data-add="free">＋ 自由に入力</button></div>';
     h += '<div class="ubptot">合計 ' + yen(curTotal()) + '</div>';
     h += '<div class="ubpay" id="ubPFpay">' + PAYS.map(function (v) { return '<button type="button" data-pay="' + esc(v) + '" class="' + (CUR.pay === v ? 'on' : '') + '">' + esc(v === '街口支付' ? '街口' : v) + '</button>'; }).join('') + '</div>';
     var bid = CUR.buyer || p.buyer || '';
@@ -13340,14 +13340,7 @@ function uriageBookScript_(C) {
         CUR.lines.push({ key: '', label: menuLabel(it, pr), cat: it.cat, timing: /セット|まとめ|コース総額/.test(pr.t) ? '' : '本日分', unit: pr.a, qty: 1, on: true, note: '', kind: '' });
         drawCheckout(); }); return; }
     // ★2026-11-19 まるちゃん「おまとめボタンいらなくね？」＝まとめ買いは購入証明書から入る。合わない時は自由に入力
-    if (ad === 'zan') {
-      // ★残金・差額＝金額だけ入れる（明細は自動）。再現テストで「前回残金」「差額」が5件
-      chipPick('残金・差額', [{ t: '前回残金' }, { t: '差額' }, { t: '次回の残金' }], function (it) {
-        CUR.lines.push({ key: '', label: it.t, cat: CUR.lines.length ? CUR.lines[0].cat : '脫毛', timing: '', unit: '', qty: 1, on: true, note: '', kind: '' });
-        drawCheckout(); editLine(CUR.lines.length - 1);
-      });
-      return;
-    }
+    // ★2026-11-19 まるちゃん「残金・差額ボタンもいらなくね？」＝前日お知らせの明日のお支払いから入る。無い時は自由に入力
     if (ad === 'free') { freeLine(); return; }
     if (b.id !== 'ubPFgo') return;
     issue(false);
