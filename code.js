@@ -12360,6 +12360,7 @@ var UBCSS_ =
   '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:-4px;}' +
+  '#ubCoins .ubchint{color:#fff;font-weight:800;font-size:15px;text-align:center;margin:-4px 0 -2px;}' +
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
   '#ubCoins.ubphone .ubcok{display:none !important;}' +
   '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:-4px 0 4px;}' +
@@ -13113,9 +13114,14 @@ function uriageBookScript_(C) {
     var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
     $('ubCoins').classList.toggle('ubphone', phone);
     $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
+    if (!on && $('ubCoinHint')) $('ubCoinHint').style.display = 'none';
     // ★2026-11-19 まるちゃん「タッチボタンが入力欄とめちゃくちゃ離れてる。すごく近くして」＝数字ボタン（と入力OK）を入力中の欄のすぐ下へ動かす
     if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
-      if (cel && cel.nextSibling !== kp) cel.parentNode.insertBefore(kp, cel.nextSibling);
+      // ★同日まるちゃん「入力欄とタッチボタンのあいだに『下の数字ボタンを押して数字を入力』」＝スマホだけ案内の1行（パソコンはキーボードの案内が出る）
+      var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; hint.textContent = '下の数字ボタンを押して数字を入力してください😊'; }
+      hint.style.display = phone ? '' : 'none';
+      if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
+      if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
       if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling); }
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
     //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。

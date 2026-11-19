@@ -98,6 +98,7 @@ var UBCSS_ =
   '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:-4px;}' +
+  '#ubCoins .ubchint{color:#fff;font-weight:800;font-size:15px;text-align:center;margin:-4px 0 -2px;}' +
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
   '#ubCoins.ubphone .ubcok{display:none !important;}' +
   '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:-4px 0 4px;}' +
@@ -705,8 +706,12 @@ function uriageBookScript_(C) {
     var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
     $('ubCoins').classList.toggle('ubphone', phone);
     $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
+    if (!on && $('ubCoinHint')) $('ubCoinHint').style.display = 'none';
     if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
-      if (cel && cel.nextSibling !== kp) cel.parentNode.insertBefore(kp, cel.nextSibling);
+      var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; hint.textContent = '下の数字ボタンを押して数字を入力してください😊'; }
+      hint.style.display = phone ? '' : 'none';
+      if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
+      if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
       if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling); }
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
     $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';
