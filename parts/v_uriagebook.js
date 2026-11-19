@@ -699,7 +699,7 @@ function uriageBookScript_(C) {
     var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
     $('ubCoinOk').style.display = on ? '' : 'none'; $('ubCoinGo').style.display = on ? 'none' : '';
     var cs = $('ubCoins').querySelectorAll('.ubcell');
-    for (var i = 0; i < cs.length; i++) cs[i].style.display = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'none';
+    for (var i = 0; i < cs.length; i++) cs[i].style.visibility = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'hidden';
   }
   $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
   $('ubGoCoins').addEventListener('click', function () {

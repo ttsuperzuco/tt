@@ -13072,7 +13072,8 @@ function uriageBookScript_(C) {
     $('ubCoinOk').style.display = on ? '' : 'none'; $('ubCoinGo').style.display = on ? 'none' : '';
     // ★2026-11-19 まるちゃん「押している間は他のが消えないと、どの数字を入れているのか分からない」＝入力中の欄だけ残す
     var cs = $('ubCoins').querySelectorAll('.ubcell');
-    for (var i = 0; i < cs.length; i++) cs[i].style.display = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'none';
+    //   同日「左に移動するんじゃなくて、その場所でほかのが消える方がいい」＝場所はそのまま（見えなくするだけ）
+    for (var i = 0; i < cs.length; i++) cs[i].style.visibility = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'hidden';
   }
   $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
   $('ubGoCoins').addEventListener('click', function () {
