@@ -7705,12 +7705,12 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       '<button type="button" class="sgrbig sgph" data-k="no"><span class="sgrbi">🙅</span><span>NO（<span class="sgemr">頭皮の</span>プロセルをやっていない）</span></button>' +
     '</div>' +
     /* 17枚目＝本日ホホバエッセンス「No.31」をお渡ししましたか？（2026-11-18 まるちゃん決定）。施術に関係なく渡すので全員に聞く
-       （2026-11-19スタッフに公開）。頭皮プロセルの次・最後の質問。★2026-11-19 まるちゃん「ホホバ「No.31」の使い方をLINEで送りましょうか？にする」＝見出しだけこの文に（ボタンと説明はそのまま）。YES＝☆次回の文／施術後のLINEに使い方のリンクを入れる（紙は無い）。 */
+       （2026-11-19スタッフに公開）。頭皮プロセルの次・最後の質問。★2026-11-19 まるちゃん「ホホバ「No.31」の使い方をLINEで送りましょうか？にする」＝見出しだけこの文に。★同日まるちゃん「YESの時は文章は要りません。YESは送ります。NOは送りません」＝説明は1文目だけ、ボタンは「YES（送る）」「NO（送らない）」。YES＝☆次回の文／施術後のLINEに使い方のリンクを入れる（紙は無い）。 */
     '<div class="sg" id="sgJJ" style="display:none">' +
       '<div class="sgwho"><span style="white-space:nowrap">ホホバ「No.31」の</span><wbr><span style="white-space:nowrap">使い方をLINEで</span><wbr><span style="white-space:nowrap">送りましょうか？</span></div>' +
-      '<div class="sgmnote">販売・プレゼントのどちらも「YES」です。<wbr>YESの時は、使い方のご案内を<wbr>お客様に送ります。</div>' +
-      '<button type="button" class="sgrbig sgjj" data-k="yes"><span class="sgrbi">🧴</span><span>YES（お渡しした）</span></button>' +
-      '<button type="button" class="sgrbig sgjj" data-k="no"><span class="sgrbi">🙅</span><span>NO（お渡ししていない）</span></button>' +
+      '<div class="sgmnote">販売・プレゼントのどちらも「YES」です。</div>' +
+      '<button type="button" class="sgrbig sgjj" data-k="yes"><span class="sgrbi">🧴</span><span>YES（送る）</span></button>' +
+      '<button type="button" class="sgrbig sgjj" data-k="no"><span class="sgrbi">🙅</span><span>NO（送らない）</span></button>' +
     '</div>' +
     /* 15枚目＝確認の一覧（2026-11-09 まるちゃん決定・受付の端末だけ・今は開発版だけ）。予約メモの確定のあとに出す。
        お客様が退店された後に、担当した施術者へ聞く物を全部並べる。「全て確認しました」で各確認の画面へ。文は共通の判断（SG.checkItems）。 */
