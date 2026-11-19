@@ -95,12 +95,14 @@ var UBCSS_ =
   '.ubnf{margin:6px 0 0;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
   '.ubpn{margin:6px 0 0;background:#e0f2fe;color:#0c4a6e;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
   '.ubcoin{display:grid;grid-template-columns:1fr;gap:10px;margin-top:4px;}' +
-  '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
+  '.ubcell .lab{color:#fff;font-weight:900;font-size:22px;margin:0 2px 6px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:-4px;}' +
   '#ubCoins .ubchint{color:#fff;font-weight:800;font-size:15px;text-align:center;margin:-4px 0 -2px;}' +
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
-  '#ubCoins.ubphone .ubcok{display:none !important;}' +
+  '#ubCoins .ubcok{display:none !important;}' +
+  '.szpc #ubCoins .expad::before{display:none;}' +
+  '.szpc #ubCoins .ubkp{margin:0;}' +
   '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:-4px 0 4px;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
@@ -705,11 +707,12 @@ function uriageBookScript_(C) {
     $('ubCoinGo').style.display = on ? 'none' : '';
     var phone = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_.pc);
     $('ubCoins').classList.toggle('ubphone', phone);
-    $('ubCoinOkW').style.display = (on && phone) ? '' : 'none';
+    $('ubCoinOkW').style.display = on ? '' : 'none';
     if (!on && $('ubCoinHint')) $('ubCoinHint').style.display = 'none';
     if (on) { var sb = $('ubCoins').querySelector('.ubbox.sel'), cel = sb && sb.closest('.ubcell');
-      var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; hint.textContent = '下のボタンを押して数字を入れ、OKボタンを押してください😊'; }
-      hint.style.display = phone ? '' : 'none';
+      var hint = $('ubCoinHint'); if (!hint) { hint = document.createElement('div'); hint.id = 'ubCoinHint'; hint.className = 'ubchint'; }
+      hint.textContent = phone ? '下のボタンを押して数字を入れ、OKボタンを押してください😊' : '⌨️ キーボードで数字を入力してください😊（BackSpaceで1文字削除）';
+      hint.style.display = '';
       if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
       if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling);
