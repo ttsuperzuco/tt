@@ -12359,10 +12359,10 @@ var UBCSS_ =
   '.ubcoin{display:grid;grid-template-columns:1fr;gap:10px;margin-top:4px;}' +
   '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
-  '#ubCoins .ubkp{margin-top:12px;}' +
+  '#ubCoins .ubkp{margin-top:-4px;}' +
   '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
   '#ubCoins.ubphone .ubcok{display:none !important;}' +
-  '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:10px 0 4px;}' +
+  '#ubCoins .ubcokw{display:block;width:100%;min-height:54px;margin:-4px 0 4px;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
   '.uboth .r:first-child{border-top:0;}' +
