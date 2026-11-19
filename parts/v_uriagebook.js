@@ -718,17 +718,16 @@ function uriageBookScript_(C) {
       if (cel && cel.nextSibling !== hint) cel.parentNode.insertBefore(hint, cel.nextSibling);
       if (hint.nextSibling !== kp) hint.parentNode.insertBefore(kp, hint.nextSibling);
       if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling);
-      $('ubCoins').style.paddingBottom = '100vh';
+      $('ubCoins').style.paddingBottom = '';   
       if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try {
-        var first = $('ubCoins').querySelector('.ubcell'), y = window.pageYOffset;
-        window.scrollTo(0, Math.max(0, (cel.getBoundingClientRect().top + y) - (first.getBoundingClientRect().top + y)));
+        window.scrollTo(0, 0);
       } catch (e) {} }, 80); } }
     if (!on) { coinTopCel = null; $('ubCoins').style.paddingBottom = ''; }
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
     $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';
     $('ubCoinGo').style.background = had ? '#2563eb' : '';
     var cs = $('ubCoins').querySelectorAll('.ubcell');
-    for (var i = 0; i < cs.length; i++) cs[i].style.visibility = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'hidden';
+    for (var i = 0; i < cs.length; i++) { cs[i].style.visibility = ''; cs[i].style.display = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'none'; }
   }
   $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
   $('ubGoCoins').addEventListener('click', function () {

@@ -13166,11 +13166,11 @@ function uriageBookScript_(C) {
       if (kp.nextSibling !== $('ubCoinOkW')) kp.parentNode.insertBefore($('ubCoinOkW'), kp.nextSibling);
       // ★同日まるちゃん「各ボタンを押したら、そこが一番トップにならないと見にくい」＝押した欄を画面の一番上へ（数字ボタンの位置合わせより後に動かす）
       //   下の欄（お札など）でも一番上まで動かせるよう、数字ボタンを出している間は下に余白を足す。動きはすぐ（なめらかに動かすと途中で止まる端末がある）。
-      $('ubCoins').style.paddingBottom = '100vh';
+      $('ubCoins').style.paddingBottom = '';   // 詰めて隠すので下の余白は要らない
       if (cel && cel !== coinTopCel) { coinTopCel = cel; setTimeout(function () { try {
         // ★同日まるちゃん「上にいきすぎじゃない？普通のアプリってこう？」＝見出し（戻る・小銭とお札・何時点）は残し、押した欄は一番上の欄（100元）の位置へ
-        var first = $('ubCoins').querySelector('.ubcell'), y = window.pageYOffset;
-        window.scrollTo(0, Math.max(0, (cel.getBoundingClientRect().top + y) - (first.getBoundingClientRect().top + y)));
+        //   ＝ほかの欄は詰めて隠す（下の行）ので、押した欄はそのまま一番上の欄の位置に来る。画面は一番上（見出しが見える所）に戻すだけ。
+        window.scrollTo(0, 0);
       } catch (e) {} }, 80); } }
     if (!on) { coinTopCel = null; $('ubCoins').style.paddingBottom = ''; }
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
@@ -13181,7 +13181,7 @@ function uriageBookScript_(C) {
     // ★2026-11-19 まるちゃん「押している間は他のが消えないと、どの数字を入れているのか分からない」＝入力中の欄だけ残す
     var cs = $('ubCoins').querySelectorAll('.ubcell');
     //   同日「左に移動するんじゃなくて、その場所でほかのが消える方がいい」＝場所はそのまま（見えなくするだけ）
-    for (var i = 0; i < cs.length; i++) cs[i].style.visibility = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'hidden';
+    for (var i = 0; i < cs.length; i++) { cs[i].style.visibility = ''; cs[i].style.display = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'none'; }
   }
   $('ubCoins').addEventListener('click', function (e) { if (e.target.closest('.ubkp')) coinTouched = true; setTimeout(coinBtns, 0); });
   $('ubGoCoins').addEventListener('click', function () {
