@@ -7811,7 +7811,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
     /* ★2026-11-01：11枚目（本日が当店はじめての脱毛ですか？）を出す日か（DT）と答え（FDANS＝null／"yes"／"no"）。 */
     /* FDASK＝記録で「はじめての脱毛」の画面を出すか（受付係の ask_first。null＝まだ届いていない＝出す）。 */
-    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={},FGN={};' +
+    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={},FGN={},JJN={};' +
     /* ★2026-11-01：お客様を選んだあとに出す画面の並び（SEQ）＝イーライト(9)→はじめての脱毛(11)→パリジェンヌ(12)→当てはまる物(10)。
        出さない画面は並びに入れない。次へ・戻るはこの並びだけで決める。LASHANS＝パリジェンヌの答え（null／"yes"／"no"）。 */
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null,JJANS=null;' +
@@ -7873,7 +7873,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* 受け取った予定から「今日・うちの施術者の分」だけ取り出す */
     'function build(p){' +
       'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読み込めませんでした。通信環境をご確認くださいませ🙇";return;}' +
-      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};FGN=p.foreign||{};NXC={};' +
+      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};FGN=p.foreign||{};JJN=p.jojoba_sent||{};NXC={};' +
       'var day=[];' +
       /* ★2026-11-02：今日より先に同じ番号の予約がある方＝次回の予約がもう入っている（施術後のLINE送信の「新規脱毛（次回予約なし）」に印を付けない） */
       'for(var i=0;i<p.events.length;i++){var e=p.events[i];' +
@@ -8386,7 +8386,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'st:e.start_time||"",et:e.end_time||"",id:e.event_id||"",dname:x.name||""};' +
       'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];TA={};' +
       'FIRSTDAT=null;FDANS=null;FDASK=null;ELANS=null;LASHANS=null;PFANS=null;PHANS=null;JJANS=null;' +
-      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}if(x.foreign&&CUST.id)FGN[CUST.id]=1;' +
+      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}if(x.foreign&&CUST.id)FGN[CUST.id]=1;if(x.jojoba_sent&&CUST.id)JJN[CUST.id]=x.jojoba_sent;' +
       'ACQ=["lash","procell_face","procell_scalp"].filter(function(k){return ks.indexOf(k)>=0;});' +
       'ELJ=(SG.elightAsk)?SG.elightAsk(CUST.title,CUST.note):{ask:false,parts:[]};' +
       'YNX=(ks.indexOf("next")>=0&&x.next)?x.next:null;' +
@@ -8655,9 +8655,15 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'var hb=$("sgPH").getElementsByClassName("sgph");' +
         'for(var hi=0;hi<hb.length;hi++){hb[hi].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){PHANS=k;nextOf(14);};' +
           'if(k==="no"){noCheck("頭皮のプロセル",go);return;}go();};}' +
-        /* ★17枚目：ホホバ＝押すとすぐ次へ（予約メモに書かない物なので、NOの確かめは出さない）。 */
+        /* ★17枚目：ホホバ＝押すとすぐ次へ（予約メモに書かない物なので、NOの確かめは出さない）。
+           ★2026-11-19 まるちゃん「このお客様には過去に〇度使い方を送っていますが再送しますか？」＝YESの時、過去に使い方を
+           送ったことがある方（JJN＝事務所側が予定表と一緒に渡す回数・LINEの会話で数えた日数）だけ確認を出す。再送しない＝NOと同じ。 */
         'var jb=$("sgJJ").getElementsByClassName("sgjj");' +
-        'for(var ji=0;ji<jb.length;ji++){jb[ji].onclick=function(){if(!tapOK())return;JJANS=this.getAttribute("data-k");nextOf(17);};}}' +
+        'for(var ji=0;ji<jb.length;ji++){jb[ji].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(a){JJANS=a;nextOf(17);},' +
+          'jn=(CUST&&CUST.id&&JJN[CUST.id])||0;' +
+          'if(k==="yes"&&jn>0){szPopup_("このお客様には過去に"+jn+"度使い方を送っていますが再送しますか？😊",' +
+            '{cancel:true,noLabel:"再送しない",yesLabel:"再送する",onYes:function(){go("yes");},onNo:function(){go("no");}});return;}' +
+          'go(k);};}}' +
       'var yb=$("sgyb");if(yb)yb.onclick=function(){if(!tapOK())return;goYList();};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgckgo").onclick=function(){if(!tapOK())return;var sv=seqv();if(sv.length){goStep(sv[0]);}else{rcpFinish();}};' +

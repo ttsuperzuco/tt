@@ -143,7 +143,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var ASK=false;' +
     'var ACQ=[],ACNAME={lash:"パリジェンヌ",procell_face:"顔プロセル",procell_scalp:"頭皮プロセル"};' +
     'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
-    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={},FGN={};' +
+    'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={},FGN={},JJN={};' +
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null,JJANS=null;' +
     'function jjAsk(){return !REP&&!(CUST&&FGN[CUST.id]);}' +
     'var ELANS=null;' +
@@ -186,7 +186,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
       's.onerror=function(){cb({error:"net"});};document.body.appendChild(s);}' +
     'function build(p){' +
       'if(!p||p.error||!p.events){$("sgstatus").textContent="今日の予約を読み込めませんでした。通信環境をご確認くださいませ🙇";return;}' +
-      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};FGN=p.foreign||{};NXC={};' +
+      'var today=p.date_from||"";TODAY=today;ALLEV=[];BK=[];FDMAP=p.first_dat||{};FGN=p.foreign||{};JJN=p.jojoba_sent||{};NXC={};' +
       'var day=[];' +
       'for(var i=0;i<p.events.length;i++){var e=p.events[i];' +
         'if(e.date>today&&typeof codeOf==="function"){var c0=codeOf(e.title||"");if(c0)NXC[c0]=1;}' +
@@ -611,7 +611,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'st:e.start_time||"",et:e.end_time||"",id:e.event_id||"",dname:x.name||""};' +
       'NEXTMEMO=null;NEXTCHG=null;NEXTFOR=null;PAID=null;ASK=false;AHEAD={};PAIDAUTO="";PAYREMOVED=[];TA={};' +
       'FIRSTDAT=null;FDANS=null;FDASK=null;ELANS=null;LASHANS=null;PFANS=null;PHANS=null;JJANS=null;' +
-      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}if(x.foreign&&CUST.id)FGN[CUST.id]=1;' +
+      'if(x.first_dat){FIRSTDAT=x.first_dat[0];FDASK=x.first_dat[1];}if(x.foreign&&CUST.id)FGN[CUST.id]=1;if(x.jojoba_sent&&CUST.id)JJN[CUST.id]=x.jojoba_sent;' +
       'ACQ=["lash","procell_face","procell_scalp"].filter(function(k){return ks.indexOf(k)>=0;});' +
       'ELJ=(SG.elightAsk)?SG.elightAsk(CUST.title,CUST.note):{ask:false,parts:[]};' +
       'YNX=(ks.indexOf("next")>=0&&x.next)?x.next:null;' +
@@ -843,7 +843,11 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
         'for(var hi=0;hi<hb.length;hi++){hb[hi].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(){PHANS=k;nextOf(14);};' +
           'if(k==="no"){noCheck("頭皮のプロセル",go);return;}go();};}' +
         'var jb=$("sgJJ").getElementsByClassName("sgjj");' +
-        'for(var ji=0;ji<jb.length;ji++){jb[ji].onclick=function(){if(!tapOK())return;JJANS=this.getAttribute("data-k");nextOf(17);};}}' +
+        'for(var ji=0;ji<jb.length;ji++){jb[ji].onclick=function(){if(!tapOK())return;var k=this.getAttribute("data-k"),go=function(a){JJANS=a;nextOf(17);},' +
+          'jn=(CUST&&CUST.id&&JJN[CUST.id])||0;' +
+          'if(k==="yes"&&jn>0){szPopup_("このお客様には過去に"+jn+"度使い方を送っていますが再送しますか？😊",' +
+            '{cancel:true,noLabel:"再送しない",yesLabel:"再送する",onYes:function(){go("yes");},onNo:function(){go("no");}});return;}' +
+          'go(k);};}}' +
       'var yb=$("sgyb");if(yb)yb.onclick=function(){if(!tapOK())return;goYList();};' +
       '$("sgmgo").onclick=function(){if(!tapOK())return;memoNext();};' +
       '$("sgckgo").onclick=function(){if(!tapOK())return;var sv=seqv();if(sv.length){goStep(sv[0]);}else{rcpFinish();}};' +
