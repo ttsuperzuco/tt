@@ -138,8 +138,11 @@ function doGet(e) {
   } else if (view === 'uriagebook') {
     title = 'TT売上帳簿';                               
     html = renderUriageBookPage_(base, staff, dev);
+  } else if (view === 'manual') {
+    title = 'マニュアル';                                      
+    html = renderManualPage_(base, staff, dev);
   } else if (view === 'wifiman') {
-    title = 'お店のWi-Fiの設定';                               
+    title = 'お店のWi-Fiの設定';                              
     html = renderWifiManualPage_(base, staff, dev);
   } else if (view === 'shomeisho') {
     title = '購入証明書作成';                                 
@@ -825,9 +828,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   facebook:   { exec: false, staff: false },
   mita:       { exec: true, staff: true },
   shomeisho:  { exec: true, staff: true },
-  wifiman:    { exec: false, staff: false }
+  wifiman:    { exec: false, staff: false },
+  manual:     { exec: false, staff: false }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1557,6 +1561,8 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
   { id: 'wifiman', cls: 'wifiman', view: 'wifiman',
     icon: '<span class="ticon">📶</span>', label: 'お店の\nWi-Fiの設定' },
+  { id: 'manual', cls: 'manual', view: 'manual',
+    icon: '<span class="ticon">📖</span>', label: 'マニュアル' },
 ];
 var TILE_GROUP_ = {
   kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
@@ -1854,11 +1860,12 @@ function homeFolderBoot_(OPT) {
     { k: 'd2', d: true, f: 'SNS', items: ['insta', 'threads', 'hachimitsu', 'facebook', 'timetree'] },
     { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'lt', 'conflict'] },
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
-    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] },
+    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered', 'manual'] },
     { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
     { k: 'd7', d: true, f: 'マニュアル', items: ['wifiman'] }];
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
-    { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' }];
+    { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
+    { to: 'd6', id: 'manual' }];   
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
   var group = document.querySelector(OPT.group || '#group-jitsumu');
@@ -2856,6 +2863,87 @@ try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined'
 
 
 
+var MANUALS_ = [
+  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' }
+];
+function renderManualPage_(base, staff, dev) {
+  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: MANUALS_ };
+  return '<style>' + HOMECSS_ +
+    '.mnwrap{max-width:720px;margin:0 auto;padding:0 2px 40px}' +
+    '.mntitle{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 14px}' +
+    '.mnbtn{display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;border:0;border-radius:18px;background:#131C2E;color:#fff;' +
+      'font-size:21px;font-weight:900;padding:18px 18px;margin:0 0 12px;text-align:left;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.12)}' +
+    '.mnbtn .mi{font-size:30px}' +
+    '.mnbook{display:none}' +
+    '.mncover{position:relative}' +
+    '.mncover a{position:absolute;display:block;border-radius:14px}' +
+    '.mncover a:active{background:rgba(255,23,68,.18)}' +
+    '.mnimg{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:14px;margin:0 0 14px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18);scroll-margin-top:10px}' +
+    '.mncover .mnimg{margin:0}' +
+    '.mncoverbox{margin:0 0 14px}' +
+    '.mntop{position:fixed;right:14px;bottom:18px;z-index:50;display:none;border:0;border-radius:999px;background:#131C2E;color:#fff;' +
+      'font-size:16px;font-weight:900;padding:12px 16px;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer}' +
+    '.mnmsg{color:#fff;font-weight:700;margin:10px 4px}' +
+    '</style>' +
+    '<div class="home">' +
+      '<div id="mnList">' + backBar_(base, staff, dev) +
+        '<div class="mntitle">📖 マニュアル</div><div class="mnwrap" id="mnBtns"></div></div>' +
+      '<div id="mnBook" class="mnbook">' +
+        '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>' +
+        '<div class="mntitle" id="mnTitle"></div><div class="mnwrap" id="mnPages"></div></div>' +
+      '<button type="button" class="mntop" id="mnTop">↑ 表紙へ</button>' +
+    '</div>' +
+    '<script>(' + manualScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
+function manualScript_(C) {
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var btns = '';
+  C.list.forEach(function (m, i) {
+    btns += '<button type="button" class="mnbtn" data-i="' + i + '"><span class="mi">' + m.icon + '</span>' + esc(m.title) + '</button>';
+  });
+  $('mnBtns').innerHTML = btns;
+  Array.prototype.forEach.call(document.querySelectorAll('.mnbtn'), function (b) {
+    b.onclick = function () { open(C.list[Number(b.getAttribute('data-i'))]); };
+  });
+  function jump(n) {
+    var e = $('mnP' + n);
+    if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function open(m) {
+    $('mnList').style.display = 'none'; $('mnBook').style.display = 'block';
+    $('mnTitle').textContent = m.icon + ' ' + m.title;
+    $('mnPages').innerHTML = '<div class="mnmsg">読み込み中…</div>';
+    window.scrollTo(0, 0);
+    var dir = C.root + m.key + '/';
+    fetch(dir + 'index.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (info) {
+      var src = function (i) { return dir + 'p' + (i < 10 ? '0' : '') + i + '.jpg?v=' + info.ver; };
+      var links = (info.links || []).map(function (l) {
+        return '<a href="javascript:void(0)" data-p="' + l.page + '" style="left:' + (l.x * 100) + '%;top:' + (l.y * 100) + '%;width:' +
+          (l.w * 100) + '%;height:' + (l.h * 100) + '%" aria-label="' + l.page + 'ページへ"></a>';
+      }).join('');
+      var h = '<div class="mncoverbox" id="mnP0"><div class="mncover"><img class="mnimg" alt="表紙" src="' + src(0) + '">' + links + '</div></div>';
+      for (var i = 1; i < info.pages; i++) {
+        h += '<img class="mnimg" id="mnP' + i + '" alt="' + i + 'ページ"' + (i > 2 ? ' loading="lazy"' : '') + ' src="' + src(i) + '">';
+      }
+      $('mnPages').innerHTML = h;
+      Array.prototype.forEach.call(document.querySelectorAll('.mncover a'), function (a) {
+        a.onclick = function () { jump(Number(a.getAttribute('data-p'))); };
+      });
+    }).catch(function () {
+      $('mnPages').innerHTML = '<div class="mnmsg">マニュアルを読み込めませんでした。少し待ってから、もう一度開いてください😊</div>';
+    });
+  }
+  $('mnBack').onclick = function () {
+    $('mnBook').style.display = 'none'; $('mnList').style.display = 'block'; $('mnTop').style.display = 'none';
+    $('mnPages').innerHTML = ''; window.scrollTo(0, 0);
+  };
+  $('mnTop').onclick = function () { jump(0); };
+  window.addEventListener('scroll', function () {
+    var on = $('mnBook').style.display === 'block' && window.scrollY > 600;
+    $('mnTop').style.display = on ? 'block' : 'none';
+  }, { passive: true });
+}
 
 
 
@@ -3371,6 +3459,7 @@ var HOMECSS_ =
 '  .tile.uriagebook::before { background:#0f766e; }' +
 '  .tile.shomeisho::before { background:#b5757e; }' +   
 '  .tile.wifiman::before { background:#2563eb; }' +   
+'  .tile.manual::before { background:#0891b2; }' +   
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -3399,6 +3488,7 @@ var HOMECSS_ =
 '  .tile.uriagebook .ticon { background:rgba(15,118,110,.16); }' +
 '  .tile.shomeisho .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.wifiman .ticon { background:rgba(37,99,235,.16); }' +
+'  .tile.manual .ticon { background:rgba(8,145,178,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
