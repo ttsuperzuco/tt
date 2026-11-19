@@ -94,7 +94,7 @@ var UBCSS_ =
   '.ubnamerow{display:flex;align-items:center;gap:8px;}.ubnamerow input{flex:1 1 auto;min-width:0;}' +
   '.ubnf{margin:6px 0 0;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
   '.ubpn{margin:6px 0 0;background:#e0f2fe;color:#0c4a6e;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
-  '.ubcoin{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 8px;margin-top:4px;}' +
+  '.ubcoin{display:grid;grid-template-columns:1fr;gap:10px;margin-top:4px;}' +
   '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:12px;}' +
