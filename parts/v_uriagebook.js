@@ -305,7 +305,7 @@ function uriageBookScript_(C) {
   function fetchData(after) {
     jsonp({ action: 'data', name: 'uriagebook.json' }, function (p) {
       var older = p && D && p.tab === D.tab && String(p.at || '') < String(D.at || '');
-      if (p && p.rows && !older) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); }
+      if (p && p.rows && !older) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); else try { coinBtns(); } catch (e) {} }
       if (after) after(p);
     });
   }
@@ -694,10 +694,14 @@ function uriageBookScript_(C) {
     var c = D.coins || {};
     var v = { c100: c['100'], c50: c['50'], c10: c['10'], c5: c['5'], c1: c['1'], bills: D.bills };
     for (var i = 0; i < CK.length; i++) CP.set(CK[i], v[CK[i]] == null ? '' : String(v[CK[i]]));
+    coinBtns();   
   }
   function coinBtns() {
     var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
     $('ubCoinOk').style.display = on ? '' : 'none'; $('ubCoinGo').style.display = on ? 'none' : '';
+    var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
+    $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';
+    $('ubCoinGo').style.background = had ? '#2563eb' : '';
     var cs = $('ubCoins').querySelectorAll('.ubcell');
     for (var i = 0; i < cs.length; i++) cs[i].style.visibility = (!on || cs[i].querySelector('.ubbox.sel')) ? '' : 'hidden';
   }

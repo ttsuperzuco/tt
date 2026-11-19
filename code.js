@@ -12637,7 +12637,7 @@ function uriageBookScript_(C) {
     jsonp({ action: 'data', name: 'uriagebook.json' }, function (p) {
       // 先に頼んだ古い中身が後から届いても、新しい中身を上書きしない（同じ日の時刻で比べる）
       var older = p && D && p.tab === D.tab && String(p.at || '') < String(D.at || '');
-      if (p && p.rows && !older) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); }
+      if (p && p.rows && !older) { D = p; applyPend(); draw(); if (typeof CP !== 'undefined' && !coinTouched) fillCoins(); else try { coinBtns(); } catch (e) {} }
       if (after) after(p);
     });
   }
@@ -13065,11 +13065,17 @@ function uriageBookScript_(C) {
     var c = D.coins || {};
     var v = { c100: c['100'], c50: c['50'], c10: c['10'], c5: c['5'], c1: c['1'], bills: D.bills };
     for (var i = 0; i < CK.length; i++) CP.set(CK[i], v[CK[i]] == null ? '' : String(v[CK[i]]));
+    coinBtns();   // 読み直した時も「入力／修正」を合わせる
   }
   // 数字パネルが開いている間は「入力OK」、閉じたら「以上の内容で入力」（2026-11-19 まるちゃん）
   function coinBtns() {
     var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
     $('ubCoinOk').style.display = on ? '' : 'none'; $('ubCoinGo').style.display = on ? 'none' : '';
+    // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
+    //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。
+    var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
+    $('ubCoinGo').textContent = had ? '以上の内容で修正' : '以上の内容で入力';
+    $('ubCoinGo').style.background = had ? '#2563eb' : '';
     // ★2026-11-19 まるちゃん「押している間は他のが消えないと、どの数字を入れているのか分からない」＝入力中の欄だけ残す
     var cs = $('ubCoins').querySelectorAll('.ubcell');
     //   同日「左に移動するんじゃなくて、その場所でほかのが消える方がいい」＝場所はそのまま（見えなくするだけ）
