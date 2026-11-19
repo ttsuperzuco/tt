@@ -2124,7 +2124,7 @@ function instaScript_(C) {
       el.innerHTML = '<div class="bars">' + (its.length ? its.map(function (x, k) { return '<i' + (k <= st.i ? ' class="on"' : '') + '></i>'; }).join('') : '<i></i>') + '</div>' +
         '<div class="hd"><img src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><b>' + esc(p.user || '') +
         (it.at ? '<span style="font-weight:400;opacity:.8;margin-left:8px">' + esc(ago(new Date(it.at * 1000).toISOString())) + (it.live === false ? '・表示は終了' : '') + '</span>' : '') +
-        '</b><span></span>' + (its.length && !st.official ? '<button type="button" data-sm="1">⋯</button>' : '') + '<button type="button" data-sx="1">✕</button></div>' +
+        '</b><span></span>' + (its.length ? '<button type="button" data-sm="1">⋯</button>' : '') + '<button type="button" data-sx="1">✕</button></div>' +
         '<div class="bd">' + (st.err ? '<div class="msg">' + esc(st.err) + '</div>' :
           !st.items ? '<div class="msg">読み込み中です…</div>' :
           !its.length ? (st.official ? '<div class="msg">表示中のストーリーズはありません。<br>数字は、表示中（出してから24時間）のストーリーズだけ確認できます。</div>' : '<div class="msg">48時間以内のストーリーズはありません。<br>見た人は、ストーリーズを出してから48時間まで確認できます。</div>') :
@@ -2173,7 +2173,23 @@ function instaScript_(C) {
       if (t.closest('[data-sx]')) { el.remove(); return; }
       if (t.closest('[data-sv]')) { var it = (st.items || [])[st.i]; if (it) viewers(it); return; }
       if (t.closest('[data-sm]')) {
-        var cur = (st.items || [])[st.i]; if (!cur) return;
+        var cur0 = (st.items || [])[st.i]; if (!cur0) return;
+        if (st.official && !cur0.key) {
+          busyAsk({ kind: 'stories_web', acct: acct }, false, 'ストーリーズを確認しています', '1〜2分ほどかかります', function (err, d) {
+            if (err) { warn(err); return; }
+            var hit = ((d && d.stories) || []).filter(function (x) { return Math.abs(Number(x.at || 0) - Number(cur0.at || 0)) < 120; })[0];
+            if (!hit) { warn('このストーリーズが見つかりませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
+            cur0.key = hit.key; cur0.pk = hit.pk; cur0.th = cur0.th || hit.th;
+            menu(cur0);
+          });
+          return;
+        }
+        menu(cur0); return;
+      }
+      if (t.closest('[data-sprev]')) { if (st.i > 0) { st.i--; draw(); } return; }
+      if (t.closest('[data-snext]')) { if (st.items && st.i < st.items.length - 1) { st.i++; draw(); } else el.remove(); return; }
+    });
+    function menu(cur) {
         var its2 = [{ t: 'ハイライトに追加', go: function () {
           var hls = ((DATA && DATA.views && DATA.views[acct] && DATA.views[acct].hl) || []);
           sheet([{ t: '＋ 新しいハイライト', go: function () { el.remove(); openHlEdit(null, [cur]); } }].concat(hls.map(function (h) {
@@ -2188,7 +2204,7 @@ function instaScript_(C) {
           })));
         } }];
         if (cur.live) its2.push({ t: 'ストーリーズを削除', red: true, go: function () {
-          szPopup_('このストーリーズを削除しますか？😊\n（見た人の一覧も消えます）', { cancel: true, onYes: function () {
+          szPopup_('このストーリーズを削除しますか？😊', { cancel: true, onYes: function () {
             busyAsk({ kind: 'story_delete', acct: acct, pk: cur.pk }, false, 'ストーリーズを削除しています', '1分ほどかかります', function (err) {
               if (err) { warn(err); return; }
               st.items.splice(st.i, 1); if (st.i >= st.items.length) st.i = Math.max(0, st.items.length - 1); draw();
@@ -2196,11 +2212,8 @@ function instaScript_(C) {
             });
           } });
         } });
-        sheet(its2); return;
-      }
-      if (t.closest('[data-sprev]')) { if (st.i > 0) { st.i--; draw(); } return; }
-      if (t.closest('[data-snext]')) { if (st.items && st.i < st.items.length - 1) { st.i++; draw(); } else el.remove(); return; }
-    });
+        sheet(its2);
+    }
   }
   var IMGERR = ' onerror="this.removeAttribute(&quot;src&quot;);this.style.background=&quot;#efefef&quot;"';
   function userRow(u, right) {
