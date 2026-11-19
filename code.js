@@ -21479,17 +21479,31 @@ function instaScript_(C) {
       el.innerHTML = '<div class="bars">' + (its.length ? its.map(function (x, k) { return '<i' + (k <= st.i ? ' class="on"' : '') + '></i>'; }).join('') : '<i></i>') + '</div>' +
         '<div class="hd"><img src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><b>' + esc(p.user || '') +
         (it.at ? '<span style="font-weight:400;opacity:.8;margin-left:8px">' + esc(ago(new Date(it.at * 1000).toISOString())) + (it.live === false ? '・表示は終了' : '') + '</span>' : '') +
-        '</b><span></span>' + (its.length ? '<button type="button" data-sm="1">⋯</button>' : '') + '<button type="button" data-sx="1">✕</button></div>' +
+        '</b><span></span>' + (its.length && !st.official ? '<button type="button" data-sm="1">⋯</button>' : '') + '<button type="button" data-sx="1">✕</button></div>' +
         '<div class="bd">' + (st.err ? '<div class="msg">' + esc(st.err) + '</div>' :
-          !st.items ? '<div class="msg">読み込み中です…（1分ほどかかります）</div>' :
-          !its.length ? '<div class="msg">48時間以内のストーリーズはありません。<br>見た人は、ストーリーズを出してから48時間まで確認できます。</div>' :
+          !st.items ? '<div class="msg">読み込み中です…</div>' :
+          !its.length ? (st.official ? '<div class="msg">表示中のストーリーズはありません。<br>数字は、表示中（出してから24時間）のストーリーズだけ確認できます。</div>' : '<div class="msg">48時間以内のストーリーズはありません。<br>見た人は、ストーリーズを出してから48時間まで確認できます。</div>') :
           (it.v && it.vid ? '<video src="' + esc(it.vid) + '" poster="' + esc(it.big || it.th) + '" autoplay playsinline controls style="max-width:100%;max-height:100%"></video>' :
             '<img src="' + esc(it.big || it.th) + '" referrerpolicy="no-referrer" alt="">' + (it.v ? '<span class="vd">動画</span>' : '')) +
           '<span class="lt" data-sprev="1"></span><span class="rt" data-snext="1"></span>') + '</div>' +
         (its.length && !st.nov ? '<button type="button" data-sv="1" style="position:fixed;left:16px;bottom:22px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;border-radius:20px;padding:9px 16px;font:inherit;font-weight:700;cursor:pointer">' +
-          '👁️ 見た人 ' + num(n || 0) + '人</button>' : '');
+          (st.official ? '📊 閲覧 ' + num(n || 0) + '回' : '👁️ 見た人 ' + num(n || 0) + '人') + '</button>' : '');
+    };
+    // ★2026-11-19 まるちゃん決定（A5）：公式の仕組みで読んだ時は、見た人の名前ではなく数字だけを出す
+    var nums = function (it) {
+      var n = it.nums || {}, nv = it.nav || {};
+      var row = function (t, v) { return '<div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #efefef"><span>' + t + '</span><b>' + (v == null ? '—' : num(v)) + '</b></div>'; };
+      var pg = document.createElement('div'); pg.className = 'igp igsr'; pg.id = 'igStV';
+      pg.innerHTML = '<div class="w"><div class="igph"><button type="button" data-svback="1">' + IC.back + '</button><b>ストーリーズの数字</b><span></span></div>' +
+        row('閲覧数', n.views) + row('リーチ（見たアカウントの数）', n.reach) + row('返信', n.replies) + row('シェア', n.shares) +
+        row('プロフィールへのアクセス', n.profile_visits) + row('フォロー', n.follows) + row('インタラクション', n.total_interactions) +
+        row('次へ進んだ（タップ）', nv.tap_forward) + row('前に戻った', nv.tap_back) + row('次のアカウントへ（スワイプ）', nv.swipe_forward) + row('閉じた', nv.tap_exit) +
+        '<div class="hint">見た人の名前は、インスタのアプリで確認してください😊</div></div>';
+      document.body.appendChild(pg);
+      pg.addEventListener('click', function (e) { if (e.target.closest('[data-svback]')) pg.remove(); });
     };
     var viewers = function (it) {
+      if (st.official) { nums(it); return; }
       var lst = it.viewers || [], n = it.count == null ? lst.length : it.count;
       var pg = document.createElement('div'); pg.className = 'igp igsr'; pg.id = 'igStV';
       pg.innerHTML = '<div class="w"><div class="igph"><button type="button" data-svback="1">' + IC.back + '</button><b>見た人 ' + num(n || 0) + '人</b><span></span></div>' +
@@ -21508,7 +21522,7 @@ function instaScript_(C) {
     readAsk({ kind: 'stories', acct: acct }, function (err, d) {
       if (!document.getElementById('igSt')) return;
       if (err) { st.err = err; draw(); return; }
-      st.items = (d && d.stories) || []; st.nov = !!(d && d.nov); draw();
+      st.items = (d && d.stories) || []; st.nov = !!(d && d.nov); st.official = !!(d && d.via === 'official'); draw();
     });
     el.addEventListener('click', function (e) {
       var t = e.target;
