@@ -9558,6 +9558,35 @@ var SZ_PCKEYS_ = (function () {
   });
   return { pc: true, phone: false };
 })();
+// ★2026-11-19 まるちゃん「スマホとパソコン用どっちもテストしたいから、右上にテスト用だけPCとスマホっていうスイッチをつけて」
+//   ＝開発の時だけ・パソコン（マウス）で開いた時だけ、右上に「PC｜スマホ」の切り替えを出す。押すとこの窓だけ切り替えて開き直す
+//     （住所の &sp=1＝スマホの形／&sp=0＝パソコンの形。上の SZ_PCKEYS_ と同じ印を使う）。スタッフの画面には出ない。
+(function () {
+  try {
+    if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+    var put = function () {
+      if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body || document.getElementById('szPcSw')) return;
+      var ph = !!(SZ_PCKEYS_ && SZ_PCKEYS_.phone), d = document.createElement('div');
+      d.id = 'szPcSw';
+      d.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;border:2px solid #fff;border-radius:999px;' +
+        'overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.3);font-weight:700;font-size:13px;';
+      [['0', 'PC'], ['1', 'スマホ']].forEach(function (x) {
+        var on = (x[0] === '1') === ph, b = document.createElement('button');
+        b.type = 'button'; b.textContent = x[1];
+        b.style.cssText = 'border:0;padding:7px 12px;cursor:pointer;font:inherit;' +
+          (on ? 'background:#fde047;color:#0f172a;' : 'background:#2C7A99;color:#fff;');
+        b.addEventListener('click', function () {
+          if (on) return;
+          var u = new URL(location.href); u.searchParams.set('sp', x[0]); location.href = u.toString();
+        });
+        d.appendChild(b);
+      });
+      document.body.appendChild(d);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', put); else put();
+    setTimeout(put, 1500);
+  } catch (e) {}
+})();
 // ★長さの絞り込みボタン（全部・◯分・30分・60分）と「◯分」の数字ボタンの置き場所＝共通（2026-11-15）。
 //   空き時間検索（AKICSS_）と施術後の予約・既存の予約の空き状況（sgCss_）の両方が使う。見た目を直す時はここだけ直す。
 //   色は置かれた画面の --akicard／--akisub／--akiline／--akiprimary で決まる。

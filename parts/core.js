@@ -2629,6 +2629,32 @@ var SZ_PCKEYS_ = (function () {
   });
   return { pc: true, phone: false };
 })();
+(function () {
+  try {
+    if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+    var put = function () {
+      if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body || document.getElementById('szPcSw')) return;
+      var ph = !!(SZ_PCKEYS_ && SZ_PCKEYS_.phone), d = document.createElement('div');
+      d.id = 'szPcSw';
+      d.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;border:2px solid #fff;border-radius:999px;' +
+        'overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.3);font-weight:700;font-size:13px;';
+      [['0', 'PC'], ['1', 'スマホ']].forEach(function (x) {
+        var on = (x[0] === '1') === ph, b = document.createElement('button');
+        b.type = 'button'; b.textContent = x[1];
+        b.style.cssText = 'border:0;padding:7px 12px;cursor:pointer;font:inherit;' +
+          (on ? 'background:#fde047;color:#0f172a;' : 'background:#2C7A99;color:#fff;');
+        b.addEventListener('click', function () {
+          if (on) return;
+          var u = new URL(location.href); u.searchParams.set('sp', x[0]); location.href = u.toString();
+        });
+        d.appendChild(b);
+      });
+      document.body.appendChild(d);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', put); else put();
+    setTimeout(put, 1500);
+  } catch (e) {}
+})();
 
 
 function renderUriagePage_(d, base, staff, dev) {
