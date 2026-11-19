@@ -449,6 +449,10 @@
       bt.nt = nav.type;
     }
   } catch (e) {}
+  // ★2026-11-19 まるちゃん「スマホの画面が実機と違う」＝開いた端末の画面の大きさ（横・縦・こまかさ・字の倍率）も記録に残す（試しの窓を実機と同じ大きさにするため）
+  try { bt.vw = window.innerWidth; bt.vh = window.innerHeight; bt.dpr = Math.round((window.devicePixelRatio || 1) * 1000) / 1000;
+    var fz = document.createElement('div'); fz.style.cssText = 'position:absolute;visibility:hidden;font-size:16px'; fz.textContent = 'x';
+    (document.body || document.documentElement).appendChild(fz); bt.fs = Math.round(parseFloat(getComputedStyle(fz).fontSize) / 16 * 1000) / 1000; fz.parentNode.removeChild(fz); } catch (e) {}
   var hidAt = document.visibilityState === 'hidden' ? performance.now() : null;
   document.addEventListener('visibilitychange', function () {
     if (bt.done) return;
