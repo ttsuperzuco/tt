@@ -1,5 +1,5 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
-// この画面だけで使う部品：manual、wifiman
+// この画面だけで使う部品：manual、shomeiman、wifiman
 var MANUALS_ = [
   { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' }
 ];

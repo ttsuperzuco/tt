@@ -181,6 +181,9 @@ function doGet(e) {
   } else if (view === 'manual') {
     title = 'マニュアル';                                      // ★📖スタッフ向けのマニュアル（画像を見るだけ・純JS・既定は開発者だけ）
     html = renderManualPage_(base, staff, dev);
+  } else if (view === 'shomeiman') {
+    title = '購入証明書の使い方';                              // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ）
+    html = renderShomeiManualPage_(base, staff, dev);
   } else if (view === 'wifiman') {
     title = 'お店のWi-Fiの設定';                              // ★マニュアルの画像を並べて見るだけ（純JS・開発者だけ）
     html = renderWifiManualPage_(base, staff, dev);
@@ -1083,6 +1086,9 @@ var DEFAULT_TILE_SETTINGS_ = {
   //   ＝中華電信ルーターの設定の説明書（12枚の画像）を見るだけの画面。りゅう画面の「マニュアル」フォルダに入る。
   //   開発者だけ（共通ルール16・tile_settings.py の TILES に入れない＝誰もONにできない）。
   wifiman:    { exec: false, staff: false },
+  // ★🧾購入証明書の使い方（2026-11-19 まるちゃん「購入証明書のマニュアルも出して」）＝りゅう画面の「マニュアル」フォルダに入る。
+  //   開発者だけ（スタッフは📖マニュアル＝お客様系から同じ物を見る）。
+  shomeiman:  { exec: false, staff: false },
   // ★📖マニュアル（2026-11-19 まるちゃん「ここに マニュアル ボタンつくって これいれて。でトップのページ番号押すとそのページに飛ぶようにして」）
   //   ＝お客様系のフォルダに入れる。中身＝購入証明書の使い方（画像）。既定は開発者だけ（共通ルール16・人ごとの表示でスタッフにONにできる）。
   manual:     { exec: false, staff: false }
@@ -1093,7 +1099,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -2126,6 +2132,10 @@ var TILE_DEFS_ = [
   //   お客様系のフォルダ（共通\画面\ホームのフォルダ.js の d6）に入る。開発者だけ（共通ルール16）。PC版 super_pc.py も同じ。
   { id: 'manual', cls: 'manual', view: 'manual',
     icon: '<span class="ticon">📖</span>', label: 'マニュアル' },
+  // ★🧾購入証明書の使い方（2026-11-19 まるちゃん「購入証明書のマニュアルも出して」）＝📖マニュアルの中の1冊を、表紙からすぐ見る（renderShomeiManualPage_）。
+  //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
+  { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
+    icon: '<span class="ticon">🧾</span>', label: '購入証明書\nの使い方' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   // ★2026-11-14 まるちゃん「フォルダの試しボタンも消して」＝ホームのボタンを外した（画面 view はそのまま）。PC版 super_pc.py と同じ。
@@ -2567,12 +2577,15 @@ function homeFolderBoot_(OPT) {
     { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
     // ★2026-11-19 まるちゃん「龍の画面にマニュアルフォルダをつくって、このマニュアルいれて」「おれだけ」＝中のボタンは開発者だけ
     //   （スタッフ・TOMATOさんの画面では中が空になる＝hideEmpty でフォルダごと出ない）。マニュアルを足す時は items に足す。
-    { k: 'd7', d: true, f: 'マニュアル', items: ['wifiman'] }];
+    // ★2026-11-19 まるちゃん「購入証明書のマニュアルも出して」＝🧾購入証明書の使い方（shomeiman・開発者だけ）もここに。
+    //   スタッフは📖マニュアル（お客様系）から見る＝同じボタンは2つの最初のフォルダに入れられないので、りゅう用に別のボタンにした。
+    { k: 'd7', d: true, f: 'マニュアル', items: ['wifiman', 'shomeiman'] }];
   // ★2026-11-14 あとから最初のフォルダを変えた分（まるちゃん「全適用させて」）＝並びを覚えている端末にも1回だけ当てる。
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
-    { to: 'd6', id: 'manual' }];   // ★2026-11-19 📖マニュアル
+    { to: 'd6', id: 'manual' },   // ★2026-11-19 📖マニュアル
+    { to: 'd7', id: 'shomeiman' }];   // ★2026-11-19 🧾購入証明書の使い方（りゅうのマニュアルフォルダ）
   // ★2026-11-16 OPT.start＝最初のフォルダ分けを渡した時はそれを使う（パソコン版の一番トップの画面＝最初のフォルダ無し）。その時は MOVES も当てない。
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
@@ -13866,6 +13879,10 @@ function manualScript_(C) {
 //   （位置は AI自動プログラム\マニュアル一覧\お店のWi-Fiの設定（中華電信ルーター）\ズコに載せる.py で作る・写真のWi-Fiの名前はぼかしてある）。
 function renderWifiManualPage_(base, staff, dev) {
   return renderManualPage_(base, staff, dev, { key: 'wifi', icon: '📶', title: 'お店のWi-Fiの設定' });
+}
+// ★🧾購入証明書の使い方（2026-11-19 まるちゃん「購入証明書のマニュアルも出して」）＝📖マニュアルの1冊を、一覧を出さずに表紙から見る。
+function renderShomeiManualPage_(base, staff, dev) {
+  return renderManualPage_(base, staff, dev, MANUALS_[0]);
 }
 
 function renderShomeishoPage_(base, staff, dev) {
@@ -26094,6 +26111,7 @@ var HOMECSS_ =
 '  .tile.uriagebook::before { background:#0f766e; }' +
 '  .tile.shomeisho::before { background:#b5757e; }' +   // ★購入証明書＝PC版と同じ色（super_pc.py）
 '  .tile.wifiman::before { background:#2563eb; }' +   // ★📶お店のWi-Fiの設定（2026-11-19）＝PC版と同じ色（super_pc.py）
+'  .tile.shomeiman::before { background:#b5757e; }' +   // ★🧾購入証明書の使い方（2026-11-19）＝購入証明書と同じ色（super_pc.py も同じ）
 '  .tile.manual::before { background:#0891b2; }' +   // ★📖マニュアル（2026-11-19）＝PC版と同じ色（super_pc.py）
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
@@ -26123,6 +26141,7 @@ var HOMECSS_ =
 '  .tile.uriagebook .ticon { background:rgba(15,118,110,.16); }' +
 '  .tile.shomeisho .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.wifiman .ticon { background:rgba(37,99,235,.16); }' +
+'  .tile.shomeiman .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.manual .ticon { background:rgba(8,145,178,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
