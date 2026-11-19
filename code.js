@@ -7818,7 +7818,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     /* ★2026-11-18：ホホバの質問（17枚目）を出すか。リピート入力では聞かない。今は開発版だけ（公開する時は DEVMODE を外す）。
        まるちゃん「外国人の客にはださない」＝英語で送るお客様（事務所側が予定表と一緒に渡す foreign の印）には出さない
        （使い方の案内に英語版が無いため）。 */
-    'function jjAsk(){return DEVMODE&&!REP&&!(CUST&&FGN[CUST.id]);}' +
+    'function jjAsk(){return !REP&&!(CUST&&FGN[CUST.id]);}' +
     /* ★2026-11-01：9枚目のイーライトの答え（null＝聞いていない・"vio"／"both"／"other"／"no"）。 */
     'var ELANS=null;' +
     /* ★2026-11-13：昨日の未送信（YD＝一覧・YDM＝その一覧から来た・YNX＝送っていない☆次回の予約＝届いていない時は自動で一緒に送る・TNX＝今日の方の分） */

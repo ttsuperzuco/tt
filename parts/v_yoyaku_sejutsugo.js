@@ -145,7 +145,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     'var TA={},ELJ={ask:false,parts:[]},FIRSTDAT=null,TAORDER=["lash","procell_face","procell_scalp"];' +
     'var DT=false,FDANS=null,FDASK=null,FDMAP={},NXC={},FGN={};' +
     'var SEQ=[],LASHANS=null,PFANS=null,PHANS=null,JJANS=null;' +
-    'function jjAsk(){return DEVMODE&&!REP&&!(CUST&&FGN[CUST.id]);}' +
+    'function jjAsk(){return !REP&&!(CUST&&FGN[CUST.id]);}' +
     'var ELANS=null;' +
     'var YD=null,YDL=false,YDM=false,YNX=null,TNX={};' +
     'var PAID=null;' +
