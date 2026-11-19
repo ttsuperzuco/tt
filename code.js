@@ -9606,7 +9606,7 @@ var SZ_PCKEYS_ = (function () {
       if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body || document.getElementById('szPcSw')) return;
       var ph = !(SZ_PCKEYS_ && SZ_PCKEYS_.pc), d = document.createElement('div');
       d.id = 'szPcSw';
-      d.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;border:2px solid #fff;border-radius:999px;' +
+      d.style.cssText = 'position:fixed;top:8px;right:8px;z-index:2147483647;display:flex;border:2px solid #fff;border-radius:999px;' +
         'overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.3);font-weight:700;font-size:13px;';
       [['0', 'PC'], ['1', 'スマホ']].forEach(function (x) {
         var on = (x[0] === '1') === ph, b = document.createElement('button');
@@ -9623,6 +9623,16 @@ var SZ_PCKEYS_ = (function () {
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', put); else put();
     setTimeout(put, 1500);
+    // ★2026-11-20 まるちゃん「パソコンスマホのスイッチがぜったいきえないようにして」
+    //   ＝画面を描き直して消えても、1秒ごとに見て無ければ付け直す。ほかの物の下に隠れないよう一番上に出す。
+    setInterval(function () {
+      try {
+        put();
+        var w = document.getElementById('szPcSw');
+        if (w && document.body && w.parentNode !== document.body) document.body.appendChild(w);
+        if (w) { w.style.zIndex = '2147483647'; w.style.display = 'flex'; }
+      } catch (e) {}
+    }, 1000);
   } catch (e) {}
 })();
 // ★長さの絞り込みボタン（全部・◯分・30分・60分）と「◯分」の数字ボタンの置き場所＝共通（2026-11-15）。
@@ -12360,7 +12370,19 @@ var UBCSS_ =
   '.ubtbl td.n{text-align:right;white-space:nowrap;}' +
   '.ubtbl td.d{white-space:pre-wrap;font-weight:600;}' +
   '.ubtbl td.p{text-align:center;font-weight:800;font-size:12px;}' +
-  '.ubtbl td.p.np{background:#ffd60a;color:#9a3412;}' +   // ★2026-11-16 まるちゃん「未選択をもっと鮮やかな黄色に」
+  '.ubtbl td.p.np{background:#ffd60a;color:#9a3412;}' +
+  // ★2026-11-20 スマホの發票ありの売上（6列）＝見本と同じ大きさ
+  '.ubsp table{table-layout:auto;font-size:14px;}' +
+  '.ubsp th{font-size:13px;font-weight:900;padding:8px 5px;white-space:nowrap;}' +
+  '.ubsp td{padding:9px 5px;vertical-align:middle;word-break:normal;}' +
+  '.ubsp td.d{font-weight:700;white-space:pre-wrap;word-break:break-all;}' +
+  '.ubsp td.p{font-size:13px;}' +
+  '.ubsp .no{display:block;font-weight:900;font-size:15px;}' +
+  '.ubsp .nm{display:block;min-height:1.3em;cursor:pointer;}' +
+  '.ubsp .sub{display:block;color:#64748b;font-size:11px;font-weight:700;min-height:1.2em;}' +
+  '.ubsp span.e:active{background:#bfdbfe;}' +
+  '.ubsp .ubvb{font-size:12px;padding:5px 7px;}' +
+  '.ubsp tfoot td{font-size:15px;padding:9px 5px;}' +   // ★2026-11-16 まるちゃん「未選択をもっと鮮やかな黄色に」
   '.ubmask{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px;}' +
   '.ubpick{background:#fff;border-radius:16px;padding:16px;width:100%;max-width:420px;color:#0f172a;box-shadow:0 8px 24px rgba(0,0,0,.3);}' +
   '.ubpick .h{font-weight:900;font-size:18px;margin-bottom:4px;}' +
@@ -12616,7 +12638,27 @@ function uriageBookScript_(C) {
     // ★2026-11-07 まるちゃん「ここのぶぶんいらない」「売上表くらいシンプルで一覧でみれるのがいい」
     //   ＝上の支払方法毎の合計の欄をやめ、売上表と同じ並び（番号・顧客番号・顧客名・支払方法・明細・合計）の表にした。
     var L = '';
+    // ★2026-11-20 まるちゃん「（發票ありの売上の）明細がごちゃごちゃしてる」→見本を見て「ズコにいれて。スマホの画面はそれでいい。パソコンは前のまま」
+    //   ＝スマホの時だけ6列（番号の下に時刻・お客様の下に顧客番号・総計の列はやめて一番下に合計を1回）。パソコンは下の9列のまま。
+    var SP = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_ && SZ_PCKEYS_.pc);
     if (!D.rows.length) L = '<div class="ubnone">まだ売上の行がありません</div>';
+    else if (SP) {
+      var cnt = 0, tot = 0;
+      L = '<div class="ubtbl ubsp"><table><thead><tr><th>番号</th><th>お客様</th><th>明細</th><th>支払</th><th class="r">合計</th><th></th></tr></thead><tbody>';
+      for (var j9 = 0; j9 < D.rows.length; j9++) {
+        var x9 = D.rows[j9];
+        if (!x9._del) { cnt++; tot += Number(x9.amount) || 0; }
+        L += '<tr class="r' + (x9._pend ? ' pend' : '') + (x9._del ? ' del' : '') + '" data-j="' + j9 + '">' +
+          '<td class="w"><span class="no">' + esc(x9.no) + '</span><span class="sub">' + esc(x9.time || '') + '</span></td>' +
+          '<td class="cu"><span class="e nm" data-c="C">' + esc(x9.name) + '</span><span class="e sub" data-c="B">' + esc(x9.num) + '</span></td>' +
+          '<td class="d e" data-c="E">' + esc(x9.detail) + '</td>' +
+          '<td class="p e' + (x9.pay ? '' : ' np') + '" data-c="D">' + esc(x9.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x9.pay] || x9.pay) : '未選択') + '</td>' +
+          '<td class="n e" data-c="F">' + (x9.amount == null ? '' : Number(x9.amount).toLocaleString('ja-JP')) + '</td>' +
+          '<td class="xc">' + (invOf(x9.no) ? '<button type="button" class="ubvb" data-a="del">作廢</button>'
+            : '<button type="button" class="ubx" data-a="del" aria-label="削除">×</button>') + '</td></tr>';
+      }
+      L += '</tbody><tfoot><tr><td colspan="4">合計（' + cnt + '件）</td><td class="n">' + tot.toLocaleString('ja-JP') + '</td><td></td></tr></tfoot></table></div>';
+    }
     else {
       // ★2026-11-07 まるちゃん「番号は、發票下3桁」「一番左に時刻入れて（本番の売上表にはいれない）」
       //   ＝時刻は發票を打った時刻（取り込みが残した発票から係が引く）。画面だけに出す。
@@ -13019,7 +13061,7 @@ function uriageBookScript_(C) {
       });
       return;
     }
-    var td = e.target.closest('td.e'); if (!td) return;   // 時刻・發票下3桁は直さない
+    var td = e.target.closest('.e'); if (!td) return;   // 時刻・發票下3桁は直さない（スマホはお客様の欄の中に名前と顧客番号の2つ）
     openPick(x, td.getAttribute('data-c'));
   });
   $('ubReload').addEventListener('click', function () { ask({ action: 'load' }, '', null, true); });

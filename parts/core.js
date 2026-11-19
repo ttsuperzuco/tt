@@ -2662,7 +2662,7 @@ var SZ_PCKEYS_ = (function () {
       if ((window.__SZ_ROLE_ || '') !== '開発' || !document.body || document.getElementById('szPcSw')) return;
       var ph = !(SZ_PCKEYS_ && SZ_PCKEYS_.pc), d = document.createElement('div');
       d.id = 'szPcSw';
-      d.style.cssText = 'position:fixed;top:8px;right:8px;z-index:99999;display:flex;border:2px solid #fff;border-radius:999px;' +
+      d.style.cssText = 'position:fixed;top:8px;right:8px;z-index:2147483647;display:flex;border:2px solid #fff;border-radius:999px;' +
         'overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.3);font-weight:700;font-size:13px;';
       [['0', 'PC'], ['1', 'スマホ']].forEach(function (x) {
         var on = (x[0] === '1') === ph, b = document.createElement('button');
@@ -2679,6 +2679,14 @@ var SZ_PCKEYS_ = (function () {
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', put); else put();
     setTimeout(put, 1500);
+    setInterval(function () {
+      try {
+        put();
+        var w = document.getElementById('szPcSw');
+        if (w && document.body && w.parentNode !== document.body) document.body.appendChild(w);
+        if (w) { w.style.zIndex = '2147483647'; w.style.display = 'flex'; }
+      } catch (e) {}
+    }, 1000);
   } catch (e) {}
 })();
 
