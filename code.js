@@ -12357,9 +12357,12 @@ var UBCSS_ =
   '.ubnf{margin:6px 0 0;background:#fee2e2;color:#b91c1c;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
   '.ubpn{margin:6px 0 0;background:#e0f2fe;color:#0c4a6e;border-radius:10px;padding:8px 12px;font-weight:900;font-size:15px;}' +
   // ★2026-11-19 まるちゃん「100元、50元、10元、5元、1元で縦に並べて、最後お札。右側には何も出さない。とにかく縦に並べるだけ」
-  '.ubcoin{display:grid;grid-template-columns:1fr;gap:10px;margin-top:4px;}' +
+  '.ubcoin{display:grid;grid-template-columns:1fr;gap:8px;margin-top:4px;}' +
   // ★同日まるちゃん「100元、50元…がすごく目立たないから、字も大きくしてもっと目立つように」
-  '.ubcell .lab{color:#fff;font-weight:900;font-size:22px;margin:0 2px 6px;}' +
+  // ★同日まるちゃん「欄の左に100元とかでよくない？数字はこんなに大きい必要ない。コンパクトにまとまる」＝1行に「金種｜欄」・欄は細めで右寄せ
+  '.ubcell{display:flex;align-items:center;gap:12px;}' +
+  '.ubcell .lab{color:#fff;font-weight:900;font-size:22px;margin:0;flex:0 0 7.2em;}' +
+  '#ubCoins .ubcell .ubbox{flex:1 1 auto;min-height:44px;font-size:20px;padding:6px 14px;justify-content:flex-end;}' +
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:-4px;}' +
   '#ubCoins .ubchint{color:#fff;font-weight:800;font-size:15px;text-align:center;margin:-4px 0 -2px;}' +
