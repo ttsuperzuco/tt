@@ -12324,6 +12324,7 @@ var UBCSS_ =
   '.ubcell .lab{color:#fff;font-weight:800;font-size:15px;margin:0 2px 4px;}' +
   '.ubcell .ubbox{justify-content:center;}' +
   '#ubCoins .ubkp{margin-top:12px;}' +
+  '#ubCoins .ubcok{display:block;width:100%;min-height:36px;margin-top:6px;padding:0 8px;font-size:15px;}' +
   '.uboth{background:#fff;border-radius:14px;overflow:hidden;margin:4px 0 10px;color:#0f172a;}' +
   '.uboth .r{display:flex;justify-content:space-between;padding:9px 12px;border-top:1px solid #e2e8f0;font-weight:800;font-size:16px;}' +
   '.uboth .r:first-child{border-top:0;}' +
@@ -13070,7 +13071,7 @@ function uriageBookScript_(C) {
   // 数字パネルが開いている間は「入力OK」、閉じたら「以上の内容で入力」（2026-11-19 まるちゃん）
   function coinBtns() {
     var kp = $('ubCoins').querySelector('.ubkp'), on = !!(kp && kp.style.display !== 'none');
-    $('ubCoinOk').style.display = on ? '' : 'none'; $('ubCoinGo').style.display = on ? 'none' : '';
+    $('ubCoinGo').style.display = on ? 'none' : '';
     // ★同日まるちゃん「その日に一度でも入力してあった場合は『以上の内容で修正』、修正の場合は青の修正用のボタン」
     //   ＝売上表のその日の枠にもう数字がある（読み込んだ時点）なら、修正の言い方と青。まだ空なら今までどおり緑の「以上の内容で入力」。
     var cc = (D && D.coins) || {}, had = (D && D.bills != null) || ['100', '50', '10', '5', '1'].some(function (k) { return cc[k] != null; });
@@ -13691,11 +13692,12 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<div class="ubrow"><div class="ubcoin">' +
           [['c100', '100元（枚）'], ['c50', '50元（枚）'], ['c10', '10元（枚）'], ['c5', '5元（枚）'], ['c1', '1元（枚）'], ['bills', 'お札（元）']]
-            .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div></div>'; }).join('') +
+            .map(function (k) { return '<div class="ubcell"><div class="lab">' + k[1] + '</div><div class="ubbox" data-pk="' + k[0] + '" data-ph="―"></div>' +
+              // ★同日まるちゃん「入力OKボタンはその数字のすぐ下に小さく出せばいい」＝入力中の欄の下にだけ小さく出す
+              '<button type="button" class="ubok ubcok" data-pok="' + k[0] + '" style="display:none">入力OK</button></div>'; }).join('') +
         '</div></div>' +
         // ★2026-11-19 まるちゃん「OKボタンがないから、どこを押せばOKになるのかわからない」「数字を押している間は以上の内容で入力を出さない」
         //   ＝数字パネルが開いている間は「入力OK」だけ出し、閉じたら「以上の内容で入力」を出す（11/9の「入力OKいらない」はこれで置き換え）。
-        '<button type="button" class="exgo" id="ubCoinOk" data-pok="coins" style="display:none">入力OK</button>' +
         '<button type="button" class="exgo" id="ubCoinGo">以上の内容で入力</button>' +
       '</div>' +
     '</div></div>' +
