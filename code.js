@@ -9495,6 +9495,69 @@ var EXPADHTML_ =
   '<button>4</button><button>5</button><button>6</button>' +
   '<button>7</button><button>8</button><button>9</button>' +
   '<button class="util" data-k="del">⌫</button><button>0</button><button class="util" data-k="clr">C</button>';
+// ★2026-11-19 まるちゃん「パソコンの場合は、ボタンを押していく今の方式じゃなく、キーボードから直接番号を入力する方法にしましょう」
+//   ＝パソコン（マウスで使う画面＝パソコン版ズコの窓・お店受付PC・事務所のパソコンのブラウザ）では、共通の数字ボタン（上の EXPADHTML_）の
+//     ボタンを出さず、案内の1行だけにして、キーボードの数字で入れる。数字ボタンを使う全部の画面に効く（売上帳簿の数字の欄も）。
+//   ・数字＝その数字のボタンを押したのと同じ／BackSpace＝⌫／Delete＝C／M・F＝顧客番号の頭／−・＋＝その他の経費のマイナス・プラス／
+//     Enter＝「入力OK」（売上帳簿の欄）。画面の中の文字の入れ口（備考など）に入力している時は何もしない。
+//   ・前からキーボードで打てる画面（空き時間の◯分・プロセル在庫・No31販売管理・施術後の予約の◯分）は、その画面の受け方が先に動く＝二重に入らない。
+//   ・スマホ（指で使う画面）は今までどおり数字ボタン。パソコンでスマホと同じ見え方を試す窓は住所に &sp=1（その窓の中ではずっとスマホの形）。
+var SZ_PCKEYS_ = (function () {
+  var SP = 'sz_sp', forced = false, pc = false;
+  try {
+    var q = new URLSearchParams(location.search);
+    if (q.get('sp') === '1') sessionStorage.setItem(SP, '1');
+    else if (q.get('sp') === '0') sessionStorage.removeItem(SP);
+    forced = sessionStorage.getItem(SP) === '1';
+  } catch (e) {}
+  try { pc = !forced && !!window.matchMedia && window.matchMedia('(pointer: fine)').matches; } catch (e) {}
+  if (!pc) return { pc: false, phone: forced };
+  var de = document.documentElement;
+  de.classList.add('szpc');
+  var st = document.createElement('style');
+  st.textContent = '.szpc .expad{display:block;margin:0 0 10px;}' +
+    '.szpc .expad>button{display:none;}' +
+    '.szpc .expad::before{content:"⌨️ キーボードで数字を入力してください😊（BackSpaceで1文字削除）";display:block;' +
+      'font-size:14px;font-weight:700;color:#475569;background:#f1f5f9;border-radius:10px;padding:8px 12px;text-align:center;}';
+  (document.head || de).appendChild(st);
+  function typing(el) {
+    if (!el || el === document.body) return false;
+    if (el.isContentEditable) return true;
+    var t = (el.tagName || '').toLowerCase();
+    if (t === 'textarea') return !el.readOnly && !el.disabled;
+    if (t === 'select') return true;
+    if (t !== 'input') return false;
+    var ty = (el.type || 'text').toLowerCase();
+    if (/^(button|submit|reset|checkbox|radio|range|color|file|image)$/.test(ty)) return false;
+    return !el.readOnly && !el.disabled;
+  }
+  function shown(el) { return !!el && el.getClientRects().length > 0; }
+  window.addEventListener('keydown', function (e) {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (typing(document.activeElement)) return;
+    var ps = document.querySelectorAll('.expad'), pad = null;
+    for (var i = ps.length - 1; i >= 0; i--) if (shown(ps[i])) { pad = ps[i]; break; }
+    if (!pad) return;
+    var k = e.key, m = String(e.code || '').match(/^(?:Digit|Numpad)([0-9])$/), b = null;
+    var want = /^[0-9]$/.test(k) ? k : (m && !e.shiftKey) ? m[1] : k === 'Backspace' ? 'del' : k === 'Delete' ? 'clr' : '';
+    if (want) {
+      var bs = pad.querySelectorAll('button');
+      for (var j = 0; j < bs.length; j++) if ((bs[j].getAttribute('data-k') || bs[j].textContent) === want) { b = bs[j]; break; }
+    } else if (k === 'Enter') {
+      var oks = document.querySelectorAll('[data-pok]');
+      for (var n = 0; n < oks.length; n++) if (shown(oks[n])) { b = oks[n]; break; }
+    } else {
+      var seg = null, v = null, box = pad.parentNode;
+      if (/^[mMfF]$/.test(k)) { seg = box.querySelector('.exseg[data-s="pre"]'); v = k.toUpperCase(); }
+      else if (k === '-' || k === '+') { seg = box.querySelector('.exseg[data-s="sign"]'); v = k === '-' ? '-' : ''; }
+      if (seg && shown(seg)) b = seg.querySelector('button[data-v="' + v + '"]');
+    }
+    if (!b) return;
+    e.preventDefault();
+    b.click();
+  });
+  return { pc: true, phone: false };
+})();
 // ★長さの絞り込みボタン（全部・◯分・30分・60分）と「◯分」の数字ボタンの置き場所＝共通（2026-11-15）。
 //   空き時間検索（AKICSS_）と施術後の予約・既存の予約の空き状況（sgCss_）の両方が使う。見た目を直す時はここだけ直す。
 //   色は置かれた画面の --akicard／--akisub／--akiline／--akiprimary で決まる。
