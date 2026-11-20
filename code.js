@@ -14331,6 +14331,8 @@ function renderUriageBookPage_(base, staff, dev) {
           // ★2026-11-20 まるちゃん「過去売上の検索　ボタンをつくりたい　顧客番号か氏名の一部で過去の売上データを検索して確認したい」（まず開発の時だけ）
           // ★2026-11-20 まるちゃん「かこうりあげは　ぴんくぼたんのした」＝過去売上の検索はピンクの財布の下
           '<button type="button" id="ubGoWallet" class="ubwalgo" style="display:none">👛 <span style="color:#db2777">ピンク</span>の財布<span class="ubwalsub" id="ubGoWalBal"></span></button>' +
+          // ★2026-11-20 まるちゃん「テストで　スプレッドシート再現　ていうボタンつくり、スプレシート売上帳簿と全く同じ画面を再現して」＝開発の時だけ／同日まるちゃん「ぴんくのさいふのしたにおく」
+          '<button type="button" id="ubGoSheet" style="display:none">📊 スプレッドシート<span class="ubem auth">再現</span></button>' +
           '<button type="button" id="ubGoPast" style="display:none">🔍 過去売上の<span class="ubem auth">検索</span></button>' +
           // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
           // ★2026-11-16 まるちゃん「このボタンいらない」＝發票の作廢は發票ありの売上の「作廢」の列から行う（メニューのボタンを消した）
@@ -14338,8 +14340,6 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoAuth" style="display:none">✅ 作廢の<span class="ubem auth">認証</span></button>' +
           // ★2026-11-18 まるちゃん「スタッフの記入の手間を減らしたい」「全部テストプラットフォームで」＝お会計（テスト）・開発の時だけ
           '<button type="button" id="ubGoPay" style="display:none">🧾 お会計<span class="ubem auth">テスト</span></button>' +
-          // ★2026-11-20 まるちゃん「テストで　スプレッドシート再現　ていうボタンつくり、スプレシート売上帳簿と全く同じ画面を再現して」＝開発の時だけ
-          '<button type="button" id="ubGoSheet" style="display:none">📊 スプレッドシート<span class="ubem auth">再現</span></button>' +
         '</div>' +
       '</div>' +
       // ★2026-11-08 まるちゃん「この画面はできるだけデータを出すのが重要。上の余白をできるだけ詰めて」
