@@ -13890,7 +13890,9 @@ function uriageBookScript_(C) {
     var t = new Date(), wd = '日月火水木金土'.charAt(t.getDay());
     $('ubWalDay').textContent = (t.getMonth() + 1) + '/' + t.getDate() + '（' + wd + '）';
     var au = walAuto();
-    if (au) $('ubWalStaff').innerHTML = '<div class="ubwalauto">' + esc(walSt(au)) + '　<small>（このスマホの持ち主）</small></div>';
+    // ★同日まるちゃん「確定のときは担当者欄いらない」＝持ち主で決まる時は担当者の欄を出さない（記録には持ち主の名前が入る）
+    $('ubWalStaffL').style.display = au ? 'none' : ''; $('ubWalStaff').style.display = au ? 'none' : '';
+    if (au) $('ubWalStaff').innerHTML = '';
     else {
       var ch = ((WAL && WAL.choices) || ['トマト', 'みかん', 'オリーブ', 'パイン']).slice();
       if ((window.__SZ_ROLE_ || '') === '開発') ch.push('りゅう');
@@ -14078,7 +14080,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<label>日付</label><div class="ubwalday" id="ubWalDay"></div>' +
           '<label id="ubWalAmtL">金額</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +
-          '<label>担当者</label><div id="ubWalStaff"></div>' +
+          '<label id="ubWalStaffL">担当者</label><div id="ubWalStaff"></div>' +
         '</div>' +
         '<button type="button" class="exgo" id="ubWalGo">以上の内容で記録</button>' +
       '</div>' +
