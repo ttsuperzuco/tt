@@ -1782,8 +1782,10 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
       var room = x.room || '';
       var roomMark = '<span class="lroom" style="--rc:' + roomColor_(room) + '">' +
         esc_(room ? shortRoomName_(room) : '—') + '</span>';
-      var msg = x.off === 'shop' ? 'の予約ですが、お店のお休みの日です'
-        : (x.off === 'tentative' ? 'の仮のお休みの日に予約が入っています' : 'のお休みの日に予約が入っています');
+      // ★言葉の途中で折り返さない（共通\画面\CLAUDE.md ルール20）＝まとまりごとに包み、間でだけ折り返す。
+      function nw_(a, b) { return '<span style="white-space:nowrap">' + a + '</span><wbr><span style="white-space:nowrap">' + b + '</span>'; }
+      var msg = x.off === 'shop' ? nw_('の予約ですが、', 'お店のお休みの日です')
+        : nw_(x.off === 'tentative' ? 'の仮のお休みの日に' : 'のお休みの日に', '予約が入っています');
       var h = '' +
       '<article class="card staff staffoff" style="--sc:' + sc + '">' +
         '<header class="card-h">' +
