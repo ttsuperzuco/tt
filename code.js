@@ -13786,8 +13786,7 @@ function uriageBookScript_(C) {
   // ── スプレッドシート再現（2026-11-20・開発の時だけ・表示のみ）──
   //   裏の係が売上表のそのタブを「グーグルの表が自分で作る見た目」（色・枠・幅・選択肢の形）のまま読んで置き場へ置く
   //   （uriagebook_sheet.json）。画面はそれを枠の中にそのまま出すだけ（中の仕掛けは動かさない）。
-  // ★同日まるちゃん「これかくして」＝スプレッドシート再現のボタンは開発にも出さない（画面と仕組みは残す）
-  // if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoSheet').style.display = '';
+  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoSheet').style.display = '';   // ★同日まるちゃん「開発のがめんにはだしてよ」＝開発の画面だけに出す（スタッフ・受付には出ない）
   var SHDAY = '', SHREQ = 0, SHGOT = 0;
   function shMsg(t) { var m = $('ubShMsg'); m.textContent = t || ''; m.style.display = t ? '' : 'none'; shFit(); }
   function shFit() {
