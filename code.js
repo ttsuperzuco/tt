@@ -2238,7 +2238,10 @@ var TILE_DEFS_ = [
   // ★📖マニュアル（2026-11-19 まるちゃん）＝スタッフ向けのマニュアルの一覧→押すと画像を表紙から順に見る（renderManualPage_）。
   //   お客様系のフォルダ（共通\画面\ホームのフォルダ.js の d6）に入る。開発者だけ（共通ルール16）。PC版 super_pc.py も同じ。
   { id: 'manual', cls: 'manual', view: 'manual',
-    icon: '<span class="ticon">📖</span>', label: 'マニュアル' },
+    // ★2026-11-20 まるちゃん選択（②の案の③）＝ズコの金魚が水色の丸い眼鏡（ピンクのリボン付き）をかけて青い本を読む絵（GPTで作成）。
+    //   元絵＝PC版スーパーズコ\icons\マニュアル_アイコンの元絵_リボン眼鏡.png。パソコン版の同じ絵＝PC版スーパーズコ\icons\manual-zuko-96.png。
+    icon: '<span class="ticon">📖</span>',
+    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/manual-192.png?v=1"></span>', label: 'マニュアル' },
   // ★🧾購入証明書の使い方（2026-11-19 まるちゃん「購入証明書のマニュアルも出して」）＝📖マニュアルの中の1冊を、表紙からすぐ見る（renderShomeiManualPage_）。
   //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
   { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
