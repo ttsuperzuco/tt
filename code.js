@@ -1770,11 +1770,59 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
       items.push({ key: [x.date || '', x.overlap_time || '', 1], html: h });
   });
 
+  // ―― ★2026-11-20 まるちゃん「担当が休みの時に予約が入ってると検出して、このボタンに表示させたい」――
+  //   担当がお休みの日（🍅カレンダーの終日の休み・仮休み・お店の休み）に入っている予約。判断は事務所側の1か所
+  //   （施術室被り検出\programs\staff_off.py）が作った payload.staff_off をそのまま出す＝ここで判断しない。
+  //   ★まずは開発者だけに見せる（スタッフへの公開はまるちゃんの確認のあと）。
+  var offList = dev ? (payload.staff_off || []) : [];
+  offList.forEach(function (x) {
+      var sc = staffColor_(x.staff);
+      var pill = ((x.staff || '') + (x.staff_name || '')).trim() || '担当';
+      var dayStaff = (payload.staff_free && payload.staff_free[x.date]) || [];
+      var room = x.room || '';
+      var roomMark = '<span class="lroom" style="--rc:' + roomColor_(room) + '">' +
+        esc_(room ? shortRoomName_(room) : '—') + '</span>';
+      var msg = x.off === 'shop' ? 'の予約ですが、お店のお休みの日です'
+        : (x.off === 'tentative' ? 'の仮のお休みの日に予約が入っています' : 'のお休みの日に予約が入っています');
+      var h = '' +
+      '<article class="card staff staffoff" style="--sc:' + sc + '">' +
+        '<header class="card-h">' +
+          '<div class="cline">' +
+            '<div class="clineDate fit1line">' + esc_(jpDateWeekday_(x.date)) + ' ' + esc_(x.time) + '</div>' +
+            '<div class="clineRoom staffLine">' +
+              '<span class="staffpill" style="--sc:' + sc + '">' + esc_(pill) + '</span>' +
+              '<span class="cmsg">' + msg + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<span class="offmemo">' + (x.off === 'shop' ? '🏠 ' : '📅 ') + esc_(x.off_label || '') + '</span>' +
+        '</header>' +
+        '<div class="pair one"><div class="side">' +
+          '<div class="time">' + roomMark + esc_(x.time) + '</div>' +
+          '<div class="who"><span class="code">' + esc_(x.code) + '</span>' +
+          '<span class="name">' + esc_(x.name) + '</span></div>' +
+          menu_(x.menu) +
+        '</div></div>' +
+        (x.off === 'shop' ? '' :
+        '<div class="mv">' +
+          '<div class="mvtoprow">' +
+            '<button type="button" class="mvtoggle" data-side="A">この予約の担当を異動</button>' +
+          '</div>' +
+          '<div class="mvpanel" data-side="A" hidden>' +
+            staffMoveRow_(x.cal_id, x.event_id, x.title || '', x.staff, x.staff_name || '', x.time, [x.code, x.name].filter(Boolean).join(' '), dayStaff) +
+            '<button type="button" class="rstoggle fit1line">📋 念のため、この日の担当状況を見る</button>' +
+            staffStatusPanel_(x.date, dayStaff) +
+          '</div>' +
+          '<div class="mvstatus" hidden></div>' +
+        '</div>') +
+      '</article>';
+      items.push({ key: [x.date || '', x.time || '', 2], html: h });
+  });
+
   items.sort(function (a, b) {
     for (var i = 0; i < 3; i++) { if (a.key[i] < b.key[i]) return -1; if (a.key[i] > b.key[i]) return 1; }
     return 0;
   });
-  var total = real + staffConflicts.length;
+  var total = real + staffConflicts.length + offList.length;
   var bodyCards = items.length
     ? items.map(function (it) { return it.html; }).join('\n')
     : '<div class="empty">✅ 施術室・施術者の被りはありませんでした</div>';
@@ -1790,7 +1838,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
     '</div>' +
   '</div>' +
-  '<h1 class="fit1line">⚠️ 部屋＆担当 被り検出 <span class="cnt">' + (real + staffConflicts.length) + '件</span>' + nailNote + '</h1>' +
+  '<h1 class="fit1line">⚠️ 部屋＆担当 被り検出 <span class="cnt">' + total + '件</span>' + nailNote + '</h1>' +
   bodyCards +
 '</div>' +
 identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
@@ -26962,6 +27010,10 @@ var CSS_ =
 '    margin-bottom:40px; box-shadow:0 1px 3px rgba(0,0,0,.06); }' +   // 1件と次の1件の境目が分かるよう「部屋を移動ボタン」の半分の高さ空ける（2026-07-17ユーザー指示。実測80pxの半分）
 '  .card.dup { border-left-color:var(--dup); }' +
 '  .card.staff { border-left-color:var(--sc,#7c3aed); }' +
+/* ★2026-11-20 担当のお休みの日に入っている予約のカード：予約は1件だけ＝1列。休みのメモは二重入力の印と同じ形の札で出す */
+'  .pair.one { grid-template-columns:1fr; }' +
+'  .offmemo { font-size:.95rem; font-weight:800; color:#fff; background:#475569;' +
+'    padding:4px 12px; border-radius:999px; }' +
 '  h2.sec { color:#fff; font-size:1.25rem; margin:6px 0 12px; font-weight:900;' +
 '    border-bottom:2px solid rgba(255,255,255,.35); padding-bottom:5px; }' +
 '  h2.sec .cnt { color:#ff8fb3; font-weight:900; }' +
