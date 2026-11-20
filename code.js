@@ -2250,7 +2250,8 @@ var TILE_DEFS_ = [
   //   画像＝manual/linereply/p00（流れ図）・p01（少々お待ちくださいの出し方）。元＝AI自動プログラム\マニュアル一覧\LINE返信の流れ\画像を作る.py --zuko。
   //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
   { id: 'linereply', cls: 'linereply', view: 'linereply',
-    icon: '<span class="ticon">💬</span>', label: 'LINE返信\nの流れ' },
+    // ★2026-11-20 まるちゃん（ぱいんちゃんのマニュアルのフォルダ）＝📖マニュアルと同じ絵（金魚が水色の丸い眼鏡で本を読む・icons/manual-192.png）。
+    icon: '<span class="ticon">💬</span>', iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/manual-192.png?v=1"></span>', label: 'LINE返信\nの流れ' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   // ★2026-11-14 まるちゃん「フォルダの試しボタンも消して」＝ホームのボタンを外した（画面 view はそのまま）。PC版 super_pc.py と同じ。

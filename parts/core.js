@@ -1628,7 +1628,7 @@ var TILE_DEFS_ = [
   { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
     icon: '<span class="ticon">🧾</span>', label: '購入証明書\nの使い方' },
   { id: 'linereply', cls: 'linereply', view: 'linereply',
-    icon: '<span class="ticon">💬</span>', label: 'LINE返信\nの流れ' },
+    icon: '<span class="ticon">💬</span>', iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/manual-192.png?v=1"></span>', label: 'LINE返信\nの流れ' },
 ];
 var TILE_GROUP_ = {
   kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
