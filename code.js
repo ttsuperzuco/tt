@@ -13848,7 +13848,7 @@ function uriageBookScript_(C) {
   //    担当者は、スマホ名ならもちぬし自動記入　受付なら　選択式」
   //   記録は共有DB（裏の係＝発票から売上表\programs\ピンクの財布.py）。画面は pink_wallet.json を読むだけ。
   //   担当者の自動記入は画面の名乗りでなく、裏の係が本人確認した端末で決める（ここは見せるだけ）。
-  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoWallet').style.display = '';
+  $('ubGoWallet').style.display = '';   // ★同日まるちゃん「財布ボタンを全員に出して」（売上帳簿を開ける全員）
   var WAL = null, WKIND = '', WSTAFF = '', WBUSY = 0;
   // ★2026-11-20 まるちゃん「受付の担当は共通モジュールをつかってよ」＝人の決め方・候補・表示名（果物のマーク付き）はズコ共通の SZSTAFF_。
   function walSt(n) { return String(n || ''); }
@@ -14016,7 +14016,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoInv">🧾 發票<span class="ubem ari">あり</span>の売上</button>' +
           '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
-          // ★2026-11-20 まるちゃん「ピンクの財布ボタンを売上帳簿につくる」（新しいボタンは、まず開発の時だけ出す）
+          // ★2026-11-20 まるちゃん「ピンクの財布ボタンを売上帳簿につくる」→同日「財布ボタンを全員に出して」（表示は下の動きの所で）
           '<button type="button" id="ubGoWallet" style="display:none">👛 <span class="ubem" style="color:#db2777">ピンク</span>の財布</button>' +
           // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
           // ★2026-11-16 まるちゃん「このボタンいらない」＝發票の作廢は發票ありの売上の「作廢」の列から行う（メニューのボタンを消した）

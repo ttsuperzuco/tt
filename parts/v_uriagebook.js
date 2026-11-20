@@ -1298,7 +1298,7 @@ function uriageBookScript_(C) {
   $('ubShNext').addEventListener('click', function () { SHDAY = shDayAdd(1); loadSheet(SHDAY); });
   $('ubShReload').addEventListener('click', function () { loadSheet(SHDAY); });
 
-  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoWallet').style.display = '';
+  $('ubGoWallet').style.display = '';   
   var WAL = null, WKIND = '', WSTAFF = '', WBUSY = 0;
   function walSt(n) { return String(n || ''); }
   var WK = padKit($('ubWalF'), { amt: { kind: 'int', max: 6, comma: true } });
