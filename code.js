@@ -14643,9 +14643,12 @@ function shomeishoScript_(C) {
 //   作り直す時は AI自動プログラム\マニュアル一覧\<マニュアル>\ズコに載せる.py を回して tt を保存するだけ＝この画面は直さなくてよい。
 //   マニュアルを足す時は MANUALS_ に1行足す。
 var MANUALS_ = [
-  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' },
-  { key: 'linereply', icon: '💬', title: 'LINE返信の流れ' }   // ★2026-11-20（流れ図は縦長＝画像は元の形のまま見せる・.mnimg の aspect-ratio は auto 4/5）
+  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' }
 ];
+// ★💬LINE返信の流れ（2026-11-20）＝流れ図は縦長＝画像は元の形のまま見せる・.mnimg の aspect-ratio は auto 4/5。
+// ★2026-11-20 まるちゃん「この画像はパインちゃんだけにだす」＝全員に見える📖マニュアルの一覧（MANUALS_）からは外した。
+//   見られるのは💬LINE返信の流れのボタン（パインちゃん＋開発者だけ）からだけ。
+var LINEREPLY_MANUAL_ = { key: 'linereply', icon: '💬', title: 'LINE返信の流れ' };
 // ★2026-11-19 only＝マニュアル1冊だけを、一覧を出さずにすぐ表紙から見せる（📶お店のWi-Fiの設定のボタン＝renderWifiManualPage_）。
 //   その時の「← 戻る」は一覧ではなく、ズコの1つ前の画面へ戻る。
 function renderManualPage_(base, staff, dev, only) {
@@ -14741,7 +14744,7 @@ function renderShomeiManualPage_(base, staff, dev) {
 }
 // ★💬LINE返信の流れ（2026-11-20 まるちゃん）＝📖マニュアルの1冊を、一覧を出さずに表紙（流れ図）から見る。表紙の「★出し方は 1ページへ」を押すと出し方へ飛ぶ。
 function renderLineReplyManualPage_(base, staff, dev) {
-  return renderManualPage_(base, staff, dev, MANUALS_[1]);
+  return renderManualPage_(base, staff, dev, LINEREPLY_MANUAL_);
 }
 
 function renderShomeishoPage_(base, staff, dev) {
