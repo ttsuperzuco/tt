@@ -72,11 +72,16 @@ function shomeishoScript_(C) {
     sizer.style.width = Math.ceil(1180 * s) + 'px'; sizer.style.height = Math.ceil(h * s) + 'px';
     $('smZoom').textContent = zoom ? '全体を表示' : '拡大して表示';
   }
-  cert.onload = function () { setTimeout(fit, 60); setTimeout(fit, 1500); };
+  var certLater = false, certAuto = false;
+  function askPay() { box.style.display = 'none'; cert.srcdoc = ''; try { frame.contentWindow.postMessage({ szsm: 'wantpay' }, '*'); } catch (e) {} }
+  cert.onload = function () {
+    setTimeout(fit, 60); setTimeout(fit, 1500);
+    if (certAuto) { certAuto = false; setTimeout(function () { printed(); try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} }, 900); }
+  };
   window.addEventListener('resize', fit);
   $('smZoom').onclick = function () { zoom = !zoom; fit(); };
   function printed() { try { frame.contentWindow.postMessage({ szsm: 'printed' }, '*'); } catch (e) {} }
-  $('smPrint').onclick = function () { printed(); try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
+  $('smPrint').onclick = function () { if (certLater) { askPay(); return; } printed(); try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
   function exit() { var a = document.querySelector('#smHome a'); if (a) a.click(); }
   var LSK = 'sz_shomeisho_page', VIEW = 'shomeisho_view.json', shown = '';
   function showPage(h) { frame.srcdoc = h; frame.style.display = ''; $('smMsg').style.display = 'none'; }
@@ -125,7 +130,11 @@ function shomeishoScript_(C) {
   }
   if (window.__smMsgH) window.removeEventListener('message', window.__smMsgH);
   window.__smMsgH = function (ev) {
-    if (cert.contentWindow && ev.source === cert.contentWindow) { if ((ev.data || {}).szsm === 'printed') printed(); return; }
+    if (cert.contentWindow && ev.source === cert.contentWindow) {
+      var cd = (ev.data || {}).szsm;
+      if (cd === 'printed') printed(); else if (cd === 'wantpay') askPay();
+      return;
+    }
     if (!frame.contentWindow || ev.source !== frame.contentWindow) return;
     var d = ev.data || {};
     if (d.szsm === 'call') {
@@ -135,6 +144,7 @@ function shomeishoScript_(C) {
       if (d.name === 'bundle') bundleGet(reply);
       else ask(String(d.name || ''), d.args || [], reply);
     } else if (d.szsm === 'cert') {
+      certLater = !!d.payLater; certAuto = !!d.autoPrint;
       zoom = false; box.style.display = 'block'; cert.srcdoc = String(d.html || ''); fit();
     } else if (d.szsm === 'exit') {
       exit();

@@ -14305,14 +14305,22 @@ function shomeishoScript_(C) {
     sizer.style.width = Math.ceil(1180 * s) + 'px'; sizer.style.height = Math.ceil(h * s) + 'px';
     $('smZoom').textContent = zoom ? '全体を表示' : '拡大して表示';
   }
-  cert.onload = function () { setTimeout(fit, 60); setTimeout(fit, 1500); };
+  // ★2026-11-20 まるちゃん「支払い方法と一括支払いか分割かを選ぶ を、印刷ボタンおしたときに画面がでるようにしたい」
+  //   ＝certLater（まだ支払いが決まっていない紙）の時は、「印刷する」で印刷せず購入証明書の支払いの画面へ戻す。
+  //   certAuto（支払いを選んだ直後の紙）の時は、紙が出たらそのまま印刷の画面を開く＝ここで初めて「印刷した」（LINEのきっかけ）。
+  var certLater = false, certAuto = false;
+  function askPay() { box.style.display = 'none'; cert.srcdoc = ''; try { frame.contentWindow.postMessage({ szsm: 'wantpay' }, '*'); } catch (e) {} }
+  cert.onload = function () {
+    setTimeout(fit, 60); setTimeout(fit, 1500);
+    if (certAuto) { certAuto = false; setTimeout(function () { printed(); try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} }, 900); }
+  };
   window.addEventListener('resize', fit);
   $('smZoom').onclick = function () { zoom = !zoom; fit(); };
   // 紙の中の「印刷する」と同じ＝紙のページそのものを印刷する（ズコの画面は刷らない）
   // ★2026-11-18 まるちゃん「印刷ボタンを押してないよ」→「１」＝証明書は印刷ボタンを押した時に初めて過去履歴に残す。
   //   印刷を押したら、購入証明書の画面（枠の中）へ「印刷した」と知らせる（紙の中の「印刷する」から来た知らせも同じく渡す）。
   function printed() { try { frame.contentWindow.postMessage({ szsm: 'printed' }, '*'); } catch (e) {} }
-  $('smPrint').onclick = function () { printed(); try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
+  $('smPrint').onclick = function () { if (certLater) { askPay(); return; } printed(); try { cert.contentWindow.focus(); cert.contentWindow.print(); } catch (e) {} };
   function exit() { var a = document.querySelector('#smHome a'); if (a) a.click(); }
   // ★★スマホには何も覚えない（2026-11-10 まるちゃん「はんえいされてない」「なんどもおなじこと」＝同じ日に3回）。
   //   前の作り＝画面とまとめた答えをスマホに覚えて、開いた瞬間にそれを出し、裏で最新を取って差し替える。
@@ -14373,7 +14381,11 @@ function shomeishoScript_(C) {
   // 枠の中の画面からの頼み（計算して／紙を出して／ズコのホームへ戻る）
   if (window.__smMsgH) window.removeEventListener('message', window.__smMsgH);
   window.__smMsgH = function (ev) {
-    if (cert.contentWindow && ev.source === cert.contentWindow) { if ((ev.data || {}).szsm === 'printed') printed(); return; }
+    if (cert.contentWindow && ev.source === cert.contentWindow) {
+      var cd = (ev.data || {}).szsm;
+      if (cd === 'printed') printed(); else if (cd === 'wantpay') askPay();
+      return;
+    }
     if (!frame.contentWindow || ev.source !== frame.contentWindow) return;
     var d = ev.data || {};
     if (d.szsm === 'call') {
@@ -14383,6 +14395,7 @@ function shomeishoScript_(C) {
       if (d.name === 'bundle') bundleGet(reply);
       else ask(String(d.name || ''), d.args || [], reply);
     } else if (d.szsm === 'cert') {
+      certLater = !!d.payLater; certAuto = !!d.autoPrint;
       zoom = false; box.style.display = 'block'; cert.srcdoc = String(d.html || ''); fit();
     } else if (d.szsm === 'exit') {
       exit();
