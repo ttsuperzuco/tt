@@ -1773,8 +1773,8 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
   // ―― ★2026-11-20 まるちゃん「担当が休みの時に予約が入ってると検出して、このボタンに表示させたい」――
   //   担当がお休みの日（🍅カレンダーの終日の休み・仮休み・お店の休み）に入っている予約。判断は事務所側の1か所
   //   （施術室被り検出\programs\staff_off.py）が作った payload.staff_off をそのまま出す＝ここで判断しない。
-  //   ★まずは開発者だけに見せる（スタッフへの公開はまるちゃんの確認のあと）。
-  var offList = dev ? (payload.staff_off || []) : [];
+  //   ★2026-11-20 まるちゃん「公開して」＝スタッフ・幹部にも出す。
+  var offList = payload.staff_off || [];
   var offCards = [];
   offList.forEach(function (x) {
       var sc = staffColor_(x.staff);

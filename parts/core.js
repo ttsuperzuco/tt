@@ -1324,7 +1324,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
       items.push({ key: [x.date || '', x.overlap_time || '', 1], html: h });
   });
 
-  var offList = dev ? (payload.staff_off || []) : [];
+  var offList = payload.staff_off || [];
   var offCards = [];
   offList.forEach(function (x) {
       var sc = staffColor_(x.staff);
