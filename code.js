@@ -13903,12 +13903,19 @@ function uriageBookScript_(C) {
   //   裏の係（発票から売上表\programs\過去売上の検索.py）が共有DBの売上の帳面から探し、この端末用の置き場（ubpast_<端末>.json）に置く。
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoPast').style.display = '';
   var PSREQ = 0;
-  function psMsg(t) { $('ubPastMsg').textContent = t || ''; }
+  function psMsg(t) { var m = $('ubPastMsg'); m.textContent = t || ''; m.style.fontSize = ''; }
+  function psFit() {
+    var m = $('ubPastMsg'), f = 16;
+    m.style.whiteSpace = 'nowrap'; m.style.fontSize = f + 'px';
+    while (f > 10 && m.scrollWidth > m.clientWidth) { f -= 0.5; m.style.fontSize = f + 'px'; }
+  }
   function psDate(d) { var m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[1] + '/' + (+m[2]) + '/' + (+m[3]) : String(d || ''); }
   function psDraw(v) {
     var rs = v.rows || [];
-    psMsg(v.count ? (v.count + '件　合計 ' + Number(v.total || 0).toLocaleString('ja-JP') + '元（' + psDate(v.first) + '〜' + psDate(v.last) + '）' +
-      (v.shown < v.count ? '　※新しい順に' + v.shown + '件まで出しています' : '')) : '見つかりませんでした。顧客番号やお名前を確認してください😊');
+    // ★2026-11-20 まるちゃん「12件　合計 172,860元（2025/5/28〜2026/11/11）　一行で表示」＝年は下2桁にし、入りきらない時は字を小さくして1行に収める
+    psMsg(v.count ? (v.count + '件　合計 ' + Number(v.total || 0).toLocaleString('ja-JP') + '元（' + psDate(v.first).slice(2) + '〜' + psDate(v.last).slice(2) + '）' +
+      (v.shown < v.count ? '　※新しい順に' + v.shown + '件まで' : '')) : '見つかりませんでした。顧客番号やお名前を確認してください😊');
+    psFit();
     if (!rs.length) { $('ubPastList').innerHTML = ''; return; }
     var h = '<div class="ubtbl ubsp"><table><thead><tr><th>日付</th><th>お客様</th><th>明細</th><th>支払</th><th class="r">金額</th></tr></thead><tbody>';
     for (var i = 0; i < rs.length; i++) {
