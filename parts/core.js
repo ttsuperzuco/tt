@@ -977,8 +977,8 @@ function staffColor_(fruit) {
 }
 var szName_ = (function () {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
-  var LS = 'sz_customer_names', N = null, fresh = false, asked = false, waits = [], shown = [];
-  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) N = c.names; } catch (e) {}
+  var LS = 'sz_customer_names', N = null, F = {}, fresh = false, asked = false, waits = [], shown = [];
+  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) { N = c.names; F = c.full || {}; } } catch (e) {}
   function key(s) { var v = String(s || '').toUpperCase().replace(/\s/g, ''), m = v.match(/^([FMD])0*(\d+)$/); return m ? m[1] + parseInt(m[2], 10) : v; }
   function fire() { var w = waits; waits = []; for (var i = 0; i < w.length; i++) { try { w[i](); } catch (e) {} } redraw(); }
   function ask() {
@@ -986,7 +986,7 @@ var szName_ = (function () {
     var n = '__szn' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (p) {
       try { delete window[n]; } catch (e) {}
-      if (p && p.names) { N = p.names; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N })); } catch (e) {} }
+      if (p && p.names) { N = p.names; F = p.full || {}; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N, full: F })); } catch (e) {} }
       fire();
     };
     var s = document.createElement('script');
@@ -1021,8 +1021,30 @@ var szName_ = (function () {
     if (!hit) shown.push({ el: el, num: num });
     paint(el, num);
   }
+  function fold(s) { return String(s || '').normalize('NFKC').replace(/[\s　]/g, '').replace(/様$/, '').replace(/髙/g, '高').replace(/﨑/g, '崎').toUpperCase(); }
+  function find(q) {
+    var k = fold(q), out = [];
+    if (!k || !N) return out;
+    var seen = {};
+    [N, F].forEach(function (src) {
+      for (var c in src) {
+        if (seen[c] || !Object.prototype.hasOwnProperty.call(src, c)) continue;
+        var a = fold(N[c]), b = fold(F[c]);
+        if (a.indexOf(k) < 0 && b.indexOf(k) < 0) continue;
+        seen[c] = 1;
+        out.push({ num: c, name: F[c] || N[c] || '', top: (a.indexOf(k) === 0 || b.indexOf(k) === 0) });
+      }
+    });
+    out.sort(function (x, y) {
+      if (x.top !== y.top) return x.top ? -1 : 1;
+      var xd = parseInt(x.num.slice(1), 10) || 0, yd = parseInt(y.num.slice(1), 10) || 0;
+      return yd - xd || (x.num < y.num ? -1 : 1);
+    });
+    return out;
+  }
   return {
-    key: key, of: of, show: show,
+    key: key, of: of, show: show, find: find,
+    full: function (num) { var k = key(num); return (k && (F[k] || (N && N[k]))) || ''; },
     ready: function () { return !!N; },
     load: function (cb) { ask(); if (fresh) { if (cb) cb(); } else if (cb) waits.push(cb); }
   };

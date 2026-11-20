@@ -191,6 +191,11 @@ var UBPAYCSS_ =
   '#ubPast .ubf>:nth-child(5){grid-column:1 / span 2;grid-row:3;}' +
   '#ubPast .ubf:has(> [data-fh])>*{grid-column:1 / span 2 !important;}' +
   '.ubpastmsg:empty{display:none;}' +
+  '.ubpick{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.25);max-height:62vh;overflow-y:auto;}' +
+  '.ubpick button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;border:0;border-bottom:1px solid #e2e8f0;' +
+    'background:#fff;padding:13px 16px;font-size:17px;font-weight:900;color:#0f172a;text-align:left;cursor:pointer;font-family:inherit;}' +
+  '.ubpick button:last-child{border-bottom:0;}.ubpick button:hover,.ubpick button:active{background:#e0f2fe;}' +
+  '.ubpick button small{color:#64748b;font-size:14px;font-weight:800;white-space:nowrap;}' +
   '#ubPastList td.p small{display:block;color:#64748b;font-size:11px;font-weight:700;white-space:nowrap;}' +
   '.ubmenu .ubwalsub:empty{display:none;}' +
   '.ubwal .v{color:#be185d;font-weight:900;font-size:44px;line-height:1.25;}' +
@@ -1314,7 +1319,7 @@ function uriageBookScript_(C) {
   function loadSheet(day) {
     var my = ++SHREQ;
     shMsg('売上表を読んでいます…（20秒ほどかかります）');
-    function fail(t) { if (my !== SHREQ) return; shMsg(t || '売上表を読めませんでした。りゅうさんに連絡してください🙇'); }
+    function fail(t) { if (my !== SHREQ) return; shMsg(t || '売上表を読み込めませんでした。りゅうさんに連絡してください🙇'); }
     devKey(function (ex) {
       var fl = { action: 'sheetview' }; if (day) fl.day = day;
       for (var ek in ex) fl[ek] = ex[ek];
@@ -1382,9 +1387,9 @@ function uriageBookScript_(C) {
   var PSK = padKit($('ubPast'), { num: { kind: 'num', max: 4 } }, function (k) { if (k === 'num' && PSW) PSW.run(); });
   var PSW = nameWatch(PSK, 'ubPastName', 'ubPastNameMsg');
   $('ubPastName').addEventListener('focus', PSK.close);
-  function psSearch(by) {
+  function psSearch(by, q2) {
     var num = PSK.get('num') || '';
-    var q = by === 'num' ? (/\d/.test(num) ? num : '') : $('ubPastName').value.trim().replace(/\s*様$/, '');
+    var q = q2 || (by === 'num' ? (/\d/.test(num) ? num : '') : $('ubPastName').value.trim().replace(/\s*様$/, ''));
     if (!q) return;
     var my = ++PSREQ, rid = 'r' + Date.now().toString(36);
     var dv = String(window.__SZ_DEVICE_ || 'x').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40) || 'x';
@@ -1416,13 +1421,34 @@ function uriageBookScript_(C) {
   $('ubPast').addEventListener('click', function (e) {
     if (e.target.closest('[data-pok="num"]')) setTimeout(function () { psSearch('num'); }, 0);
   });
-  var PSTM = null;
-  function psByName(now) {
-    clearTimeout(PSTM);
-    var go = function () { if (!$('ubPastName').value.trim()) return; if (PSK.get('num')) { PSK.set('num', ''); } psSearch('name'); };
-    if (now) go(); else PSTM = setTimeout(go, 800);
+  function psPick(num) {
+    PSREQ++; PSW.auto = PSW.full = '';
+    $('ubPastName').value = '';
+    try { $('ubPastName').blur(); } catch (x) {}
+    if (/^[MF]\d/.test(num)) { PSK.set('num', num); psSearch('num'); return; }   
+    PSK.set('num', ''); $('ubPastName').value = szName_.full(num).replace(/\s*様$/, '');
+    psSearch('num', num);
   }
+  function psByName(now) {
+    var q = $('ubPastName').value.trim().replace(/\s*様$/, '');
+    PSREQ++;
+    if (/\d/.test(PSK.get('num') || '')) { PSK.set('num', ''); $('ubPastName').value = q; }   
+    $('ubPastNameMsg').style.display = 'none';
+    if (!q) { psMsg(''); $('ubPastList').innerHTML = ''; return; }
+    if (!szName_.ready()) { psMsg('お客様の一覧を読み込んでいます…'); $('ubPastList').innerHTML = ''; szName_.load(function () { psByName(now); }); return; }
+    var c = szName_.find(q);
+    if (!c.length) { psMsg(''); $('ubPastList').innerHTML = ''; $('ubPastNameMsg').style.display = ''; return; }
+    if (now && c.length === 1) { psPick(c[0].num); return; }
+    psMsg('「' + q + '」を含むお客様　' + c.length + '人　選択してください😊');
+    var h = '<div class="ubpick">';
+    for (var i = 0; i < c.length; i++) h += '<button type="button" data-num="' + esc(c[i].num) + '"><span>' + esc(c[i].name) + '</span><small>' + esc(c[i].num) + '</small></button>';
+    $('ubPastList').innerHTML = h + '</div>';
+  }
+  $('ubPastList').addEventListener('click', function (e) {
+    var b = e.target.closest('.ubpick button[data-num]'); if (b) psPick(b.getAttribute('data-num'));
+  });
   $('ubPastName').addEventListener('input', function (e) { PSW.auto = PSW.full = ''; if (e.isComposing) return; psByName(false); });
+  $('ubPastName').addEventListener('focus', function () { if ($('ubPastName').value.trim() && !/\d/.test(PSK.get('num') || '')) psByName(false); });
   $('ubPastName').addEventListener('compositionend', function () { psByName(false); });
   $('ubPastName').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); try { $('ubPastName').blur(); } catch (x) {} psByName(true); } });
   $('ubGoPast').addEventListener('click', function () { show('ubPast'); });
@@ -1472,7 +1498,7 @@ function uriageBookScript_(C) {
           jsonp({ action: 'status', key: C.key, id: r.id }, function (st) {
             if (!st || !st.ok || st.status === 'pending' || st.status === 'running' || st.status === 'queued' || st.status === '') { setTimeout(poll, 1000); return; }
             if (st.status === 'done') walFetch();
-            else popup(st.result || '財布の記録を読めませんでした。りゅうさんに連絡してください🙇');
+            else popup(st.result || '財布の記録を読み込めませんでした。りゅうさんに連絡してください🙇');
           });
         })();
       });
@@ -1508,7 +1534,7 @@ function uriageBookScript_(C) {
     var amt = parseInt(WK.get('amt') || '0', 10) || 0; WK.close();
     var au = walAuto(), st = au || WSTAFF;
     if (amt <= 0) { popup(WKIND + 'の金額を入力してください😊'); return; }
-    if (!st) { popup('担当者を選んでください😊'); return; }
+    if (!st) { popup('担当者を選択してください😊'); return; }
     if (WKIND === '出金' && WAL && amt > (WAL.balance || 0)) { popup('財布の残高（' + walYen(WAL.balance || 0) + '元）より多い金額は出金できません。金額を確認してください🙇'); return; }
     popup(WKIND + '　' + walYen(amt) + '元（担当 ' + walSt(st) + '）\nこの内容で記録しますか？😊', {
       cancel: true, onYes: function () {

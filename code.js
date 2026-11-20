@@ -1352,8 +1352,8 @@ function staffColor_(fruit) {
 //    szName_.load(関数) → 一覧が届いたら呼ぶ（届いていればすぐ呼ぶ）
 var szName_ = (function () {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
-  var LS = 'sz_customer_names', N = null, fresh = false, asked = false, waits = [], shown = [];
-  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) N = c.names; } catch (e) {}
+  var LS = 'sz_customer_names', N = null, F = {}, fresh = false, asked = false, waits = [], shown = [];
+  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) { N = c.names; F = c.full || {}; } } catch (e) {}
   function key(s) { var v = String(s || '').toUpperCase().replace(/\s/g, ''), m = v.match(/^([FMD])0*(\d+)$/); return m ? m[1] + parseInt(m[2], 10) : v; }
   function fire() { var w = waits; waits = []; for (var i = 0; i < w.length; i++) { try { w[i](); } catch (e) {} } redraw(); }
   function ask() {
@@ -1361,7 +1361,7 @@ var szName_ = (function () {
     var n = '__szn' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (p) {
       try { delete window[n]; } catch (e) {}
-      if (p && p.names) { N = p.names; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N })); } catch (e) {} }
+      if (p && p.names) { N = p.names; F = p.full || {}; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N, full: F })); } catch (e) {} }
       fire();
     };
     var s = document.createElement('script');
@@ -1396,8 +1396,33 @@ var szName_ = (function () {
     if (!hit) shown.push({ el: el, num: num });
     paint(el, num);
   }
+  // ★2026-11-20 まるちゃん「高で検索すると　高を含んだ氏名の人がプルダウンでリストが出る　選んだらその人の記録が出るように」
+  //   find('高') → [{num:'F908', name:'高橋 里奈様'}, …]＝帳簿の書き方か名簿のフルネームに入っている方（髙・﨑も同じ字として探す）。
+  //   name はフルネーム（無ければ帳簿の書き方）。頭から一致する方を先に、あとは番号の新しい順。
+  function fold(s) { return String(s || '').normalize('NFKC').replace(/[\s　]/g, '').replace(/様$/, '').replace(/髙/g, '高').replace(/﨑/g, '崎').toUpperCase(); }
+  function find(q) {
+    var k = fold(q), out = [];
+    if (!k || !N) return out;
+    var seen = {};
+    [N, F].forEach(function (src) {
+      for (var c in src) {
+        if (seen[c] || !Object.prototype.hasOwnProperty.call(src, c)) continue;
+        var a = fold(N[c]), b = fold(F[c]);
+        if (a.indexOf(k) < 0 && b.indexOf(k) < 0) continue;
+        seen[c] = 1;
+        out.push({ num: c, name: F[c] || N[c] || '', top: (a.indexOf(k) === 0 || b.indexOf(k) === 0) });
+      }
+    });
+    out.sort(function (x, y) {
+      if (x.top !== y.top) return x.top ? -1 : 1;
+      var xd = parseInt(x.num.slice(1), 10) || 0, yd = parseInt(y.num.slice(1), 10) || 0;
+      return yd - xd || (x.num < y.num ? -1 : 1);
+    });
+    return out;
+  }
   return {
-    key: key, of: of, show: show,
+    key: key, of: of, show: show, find: find,
+    full: function (num) { var k = key(num); return (k && (F[k] || (N && N[k]))) || ''; },
     ready: function () { return !!N; },
     load: function (cb) { ask(); if (fresh) { if (cb) cb(); } else if (cb) waits.push(cb); }
   };
@@ -12633,6 +12658,11 @@ var UBPAYCSS_ =
   '#ubPast .ubf>:nth-child(5){grid-column:1 / span 2;grid-row:3;}' +
   '#ubPast .ubf:has(> [data-fh])>*{grid-column:1 / span 2 !important;}' +
   '.ubpastmsg:empty{display:none;}' +
+  '.ubpick{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.25);max-height:62vh;overflow-y:auto;}' +
+  '.ubpick button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;border:0;border-bottom:1px solid #e2e8f0;' +
+    'background:#fff;padding:13px 16px;font-size:17px;font-weight:900;color:#0f172a;text-align:left;cursor:pointer;font-family:inherit;}' +
+  '.ubpick button:last-child{border-bottom:0;}.ubpick button:hover,.ubpick button:active{background:#e0f2fe;}' +
+  '.ubpick button small{color:#64748b;font-size:14px;font-weight:800;white-space:nowrap;}' +
   '#ubPastList td.p small{display:block;color:#64748b;font-size:11px;font-weight:700;white-space:nowrap;}' +
   '.ubmenu .ubwalsub:empty{display:none;}' +
   '.ubwal .v{color:#be185d;font-weight:900;font-size:44px;line-height:1.25;}' +
@@ -13969,7 +13999,7 @@ function uriageBookScript_(C) {
   function loadSheet(day) {
     var my = ++SHREQ;
     shMsg('売上表を読んでいます…（20秒ほどかかります）');
-    function fail(t) { if (my !== SHREQ) return; shMsg(t || '売上表を読めませんでした。りゅうさんに連絡してください🙇'); }
+    function fail(t) { if (my !== SHREQ) return; shMsg(t || '売上表を読み込めませんでした。りゅうさんに連絡してください🙇'); }
     devKey(function (ex) {
       var fl = { action: 'sheetview' }; if (day) fl.day = day;
       for (var ek in ex) fl[ek] = ex[ek];
@@ -14045,9 +14075,9 @@ function uriageBookScript_(C) {
   // ★2026-11-20 まるちゃん「検索のボタンいらないよ、入力OKしたら、すぐに検索を始めて」
   //   ＝顧客番号は数字ボタンの「入力OK」で、氏名の一部は打ち終わって少し待つか Enter で、すぐ探す（検索ボタンは無し）。
   //   by＝'num'（番号で探す）／'name'（氏名の一部で探す）。
-  function psSearch(by) {
+  function psSearch(by, q2) {
     var num = PSK.get('num') || '';
-    var q = by === 'num' ? (/\d/.test(num) ? num : '') : $('ubPastName').value.trim().replace(/\s*様$/, '');
+    var q = q2 || (by === 'num' ? (/\d/.test(num) ? num : '') : $('ubPastName').value.trim().replace(/\s*様$/, ''));
     if (!q) return;
     var my = ++PSREQ, rid = 'r' + Date.now().toString(36);
     var dv = String(window.__SZ_DEVICE_ || 'x').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40) || 'x';
@@ -14080,15 +14110,38 @@ function uriageBookScript_(C) {
   $('ubPast').addEventListener('click', function (e) {
     if (e.target.closest('[data-pok="num"]')) setTimeout(function () { psSearch('num'); }, 0);
   });
-  // 氏名の一部＝打ち終わって0.8秒たったら（変換中は待つ）、または Enter ですぐ探す。番号の欄は空にする（名前で探していると分かるように）
-  var PSTM = null;
-  function psByName(now) {
-    clearTimeout(PSTM);
-    var go = function () { if (!$('ubPastName').value.trim()) return; if (PSK.get('num')) { PSK.set('num', ''); } psSearch('name'); };
-    if (now) go(); else PSTM = setTimeout(go, 800);
+  // ★2026-11-20 まるちゃん「高で検索すると　高を含んだ氏名の人がプルダウンでリストが出る　選んだらその人の記録が出るようにしたい
+  //   じゃないと出てきた結果がめちゃくちゃ」＝氏名の一部は、打つたびにこの端末の顧客の一覧（szName_）から候補の方を出し、
+  //   選んだ方の顧客番号で探す（ほかの方の記録は混ぜない）。候補は待たずにすぐ出る。Enter は候補が1人の時だけその方を選ぶ。
+  function psPick(num) {
+    PSREQ++; PSW.auto = PSW.full = '';
+    $('ubPastName').value = '';
+    try { $('ubPastName').blur(); } catch (x) {}
+    if (/^[MF]\d/.test(num)) { PSK.set('num', num); psSearch('num'); return; }   // 番号を入れると、いつもどおりお名前が自動で入る
+    // 昔の番号（D408 など）は数字ボタンで入れられないので、お名前だけ見せてその番号で探す
+    PSK.set('num', ''); $('ubPastName').value = szName_.full(num).replace(/\s*様$/, '');
+    psSearch('num', num);
   }
-  // ★2026-11-20 人が打った時点で自動のお名前ではなくなる（前は、番号で探したあと同じ名前を打ち直すと欄が空になり検索されなかった）
+  function psByName(now) {
+    var q = $('ubPastName').value.trim().replace(/\s*様$/, '');
+    PSREQ++;
+    if (/\d/.test(PSK.get('num') || '')) { PSK.set('num', ''); $('ubPastName').value = q; }   // 名前で探していると分かるように番号の欄は空にする
+    $('ubPastNameMsg').style.display = 'none';
+    if (!q) { psMsg(''); $('ubPastList').innerHTML = ''; return; }
+    if (!szName_.ready()) { psMsg('お客様の一覧を読み込んでいます…'); $('ubPastList').innerHTML = ''; szName_.load(function () { psByName(now); }); return; }
+    var c = szName_.find(q);
+    if (!c.length) { psMsg(''); $('ubPastList').innerHTML = ''; $('ubPastNameMsg').style.display = ''; return; }
+    if (now && c.length === 1) { psPick(c[0].num); return; }
+    psMsg('「' + q + '」を含むお客様　' + c.length + '人　選択してください😊');
+    var h = '<div class="ubpick">';
+    for (var i = 0; i < c.length; i++) h += '<button type="button" data-num="' + esc(c[i].num) + '"><span>' + esc(c[i].name) + '</span><small>' + esc(c[i].num) + '</small></button>';
+    $('ubPastList').innerHTML = h + '</div>';
+  }
+  $('ubPastList').addEventListener('click', function (e) {
+    var b = e.target.closest('.ubpick button[data-num]'); if (b) psPick(b.getAttribute('data-num'));
+  });
   $('ubPastName').addEventListener('input', function (e) { PSW.auto = PSW.full = ''; if (e.isComposing) return; psByName(false); });
+  $('ubPastName').addEventListener('focus', function () { if ($('ubPastName').value.trim() && !/\d/.test(PSK.get('num') || '')) psByName(false); });
   $('ubPastName').addEventListener('compositionend', function () { psByName(false); });
   $('ubPastName').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); try { $('ubPastName').blur(); } catch (x) {} psByName(true); } });
   $('ubGoPast').addEventListener('click', function () { show('ubPast'); });
@@ -14145,7 +14198,7 @@ function uriageBookScript_(C) {
           jsonp({ action: 'status', key: C.key, id: r.id }, function (st) {
             if (!st || !st.ok || st.status === 'pending' || st.status === 'running' || st.status === 'queued' || st.status === '') { setTimeout(poll, 1000); return; }
             if (st.status === 'done') walFetch();
-            else popup(st.result || '財布の記録を読めませんでした。りゅうさんに連絡してください🙇');
+            else popup(st.result || '財布の記録を読み込めませんでした。りゅうさんに連絡してください🙇');
           });
         })();
       });
@@ -14182,7 +14235,7 @@ function uriageBookScript_(C) {
     var amt = parseInt(WK.get('amt') || '0', 10) || 0; WK.close();
     var au = walAuto(), st = au || WSTAFF;
     if (amt <= 0) { popup(WKIND + 'の金額を入力してください😊'); return; }
-    if (!st) { popup('担当者を選んでください😊'); return; }
+    if (!st) { popup('担当者を選択してください😊'); return; }
     if (WKIND === '出金' && WAL && amt > (WAL.balance || 0)) { popup('財布の残高（' + walYen(WAL.balance || 0) + '元）より多い金額は出金できません。金額を確認してください🙇'); return; }
     popup(WKIND + '　' + walYen(amt) + '元（担当 ' + walSt(st) + '）\nこの内容で記録しますか？😊', {
       cancel: true, onYes: function () {
