@@ -255,7 +255,7 @@ function uriageBookScript_(C) {
     if (!D || !D.rows) { $('ubList').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubTest').style.display = (D.mode === 'テスト') ? '' : 'none';
     $('ubRO').style.display = D.readonly ? '' : 'none';
-    setWhen(D.tab + ' の売上表　' + String(D.at || '').slice(11, 16) + ' 時点');
+    setWhen(D.tab + '　' + String(D.at || '').slice(11, 16) + ' 時点');   
     var L = '';
     var SP = !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_ && SZ_PCKEYS_.pc);
     if (!D.rows.length) L = '<div class="ubnone">まだ売上の行がありません</div>';
