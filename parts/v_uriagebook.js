@@ -1262,7 +1262,7 @@ function uriageBookScript_(C) {
     var trs = tb.querySelectorAll('tbody tr'), last = null;
     for (i = 0; i < trs.length; i++) {
       var tds = trs[i].querySelectorAll('td');
-      for (j = 0; j < tds.length; j++) if (j !== 6 && (tds[j].textContent || '').trim()) { last = trs[i]; break; }
+      for (j = 0; j < tds.length; j++) if (j !== 6 && (tds[j].textContent || '').replace(/[\s\u200b\u00a0\ufeff]/g, '')) { last = trs[i]; break; }
     }
     if (last) bottom = last.getBoundingClientRect().bottom + 24;
     var w = right - r0.left, h = bottom - r0.top;
