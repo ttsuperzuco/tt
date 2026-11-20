@@ -144,6 +144,9 @@ function doGet(e) {
   } else if (view === 'shomeiman') {
     title = '購入証明書の使い方';                              
     html = renderShomeiManualPage_(base, staff, dev);
+  } else if (view === 'linereply') {
+    title = 'LINE返信の流れ';                                  
+    html = renderLineReplyManualPage_(base, staff, dev);
   } else if (view === 'wifiman') {
     title = 'お店のWi-Fiの設定';                              
     html = renderWifiManualPage_(base, staff, dev);
@@ -833,9 +836,10 @@ var DEFAULT_TILE_SETTINGS_ = {
   shomeisho:  { exec: true, staff: true },
   wifiman:    { exec: false, staff: false },
   shomeiman:  { exec: false, staff: false },
+  linereply:  { exec: false, staff: false },
   manual:     { exec: false, staff: false }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'linereply'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1618,12 +1622,12 @@ var TILE_DEFS_ = [
   { id: 'shomeisho', cls: 'shomeisho', view: 'shomeisho',
     icon: '<span class="ticon">🧾</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
-  { id: 'wifiman', cls: 'wifiman', view: 'wifiman',
-    icon: '<span class="ticon">📶</span>', label: 'お店の\nWi-Fiの設定' },
   { id: 'manual', cls: 'manual', view: 'manual',
     icon: '<span class="ticon">📖</span>', label: 'マニュアル' },
   { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
     icon: '<span class="ticon">🧾</span>', label: '購入証明書\nの使い方' },
+  { id: 'linereply', cls: 'linereply', view: 'linereply',
+    icon: '<span class="ticon">💬</span>', label: 'LINE返信\nの流れ' },
 ];
 var TILE_GROUP_ = {
   kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
@@ -1923,11 +1927,12 @@ function homeFolderBoot_(OPT) {
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
     { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered', 'manual'] },
     { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
-    { k: 'd7', d: true, f: 'マニュアル', items: ['wifiman', 'shomeiman'] }];
+    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'shomeiman'] }];
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
     { to: 'd6', id: 'manual' },   
-    { to: 'd7', id: 'shomeiman' }];   
+    { to: 'd7', id: 'shomeiman' },   
+    { to: 'd7', id: 'linereply' }];   
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
   var group = document.querySelector(OPT.group || '#group-jitsumu');
@@ -3070,6 +3075,7 @@ try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined'
 
 
 
+
 function renderPcStatus_(base, staff, dev) {
   try {
     return renderPcStatusPage_(
@@ -3562,6 +3568,7 @@ var HOMECSS_ =
 '  .tile.wifiman::before { background:#2563eb; }' +   
 '  .tile.shomeiman::before { background:#b5757e; }' +   
 '  .tile.manual::before { background:#0891b2; }' +   
+'  .tile.linereply::before { background:#06c755; }' +   
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -3592,6 +3599,7 @@ var HOMECSS_ =
 '  .tile.wifiman .ticon { background:rgba(37,99,235,.16); }' +
 '  .tile.shomeiman .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.manual .ticon { background:rgba(8,145,178,.16); }' +
+'  .tile.linereply .ticon { background:rgba(6,199,85,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +

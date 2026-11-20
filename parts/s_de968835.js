@@ -1,7 +1,8 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
-// この画面だけで使う部品：manual、shomeiman、wifiman
+// この画面だけで使う部品：linereply、manual、shomeiman、wifiman
 var MANUALS_ = [
-  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' }
+  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' },
+  { key: 'linereply', icon: '💬', title: 'LINE返信の流れ' }   
 ];
 function renderManualPage_(base, staff, dev, only) {
   var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: only ? [only] : MANUALS_, only: !!only };
@@ -15,7 +16,7 @@ function renderManualPage_(base, staff, dev, only) {
     '.mncover{position:relative}' +
     '.mncover a{position:absolute;display:block;border-radius:14px}' +
     '.mncover a:active{background:rgba(255,23,68,.18)}' +
-    '.mnimg{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:14px;margin:0 0 14px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18);scroll-margin-top:10px}' +
+    '.mnimg{display:block;width:100%;height:auto;aspect-ratio:auto 4/5;border-radius:14px;margin:0 0 14px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18);scroll-margin-top:10px}' +
     '.mncover .mnimg{margin:0}' +
     '.mncoverbox{margin:0 0 14px}' +
     '.mntop{position:fixed;right:14px;bottom:18px;z-index:50;display:none;border:0;border-radius:999px;background:#131C2E;color:#fff;' +

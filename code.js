@@ -184,6 +184,9 @@ function doGet(e) {
   } else if (view === 'shomeiman') {
     title = '購入証明書の使い方';                              // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ）
     html = renderShomeiManualPage_(base, staff, dev);
+  } else if (view === 'linereply') {
+    title = 'LINE返信の流れ';                                  // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ・2026-11-20）
+    html = renderLineReplyManualPage_(base, staff, dev);
   } else if (view === 'wifiman') {
     title = 'お店のWi-Fiの設定';                              // ★マニュアルの画像を並べて見るだけ（純JS・開発者だけ）
     html = renderWifiManualPage_(base, staff, dev);
@@ -1089,6 +1092,9 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★🧾購入証明書の使い方（2026-11-19 まるちゃん「購入証明書のマニュアルも出して」）＝りゅう画面の「マニュアル」フォルダに入る。
   //   開発者だけ（スタッフは📖マニュアル＝お客様系から同じ物を見る）。
   shomeiman:  { exec: false, staff: false },
+  // ★💬LINE返信の流れ（2026-11-20 まるちゃん）＝お客様からLINEが来た時の流れ図と「少々お待ちください」の出し方。
+  //   りゅう画面の「マニュアル」フォルダに入る。開発者だけ（スタッフには📖マニュアルの一覧から・公開はまるちゃんが言ってから）。
+  linereply:  { exec: false, staff: false },
   // ★📖マニュアル（2026-11-19 まるちゃん「ここに マニュアル ボタンつくって これいれて。でトップのページ番号押すとそのページに飛ぶようにして」）
   //   ＝お客様系のフォルダに入れる。中身＝購入証明書の使い方（画像）。既定は開発者だけ（共通ルール16・人ごとの表示でスタッフにONにできる）。
   manual:     { exec: false, staff: false }
@@ -1099,7 +1105,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'linereply'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -2220,8 +2226,7 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/shomeisho-192.png?v=2"></span>', label: '購入証明書\n作成' },
   // ★📶お店のWi-Fiの設定（2026-11-19 まるちゃん）＝マニュアルの画像を上から順に見る画面（renderWifiManualPage_）。開発者だけ。
   //   画像＝manual/wifi/p00〜p11.jpg（元＝AI自動プログラム\マニュアル一覧\お店のWi-Fiの設定（中華電信ルーター）・写真のWi-Fiの名前はぼかしてある）。PC版 super_pc.py も同じ。
-  { id: 'wifiman', cls: 'wifiman', view: 'wifiman',
-    icon: '<span class="ticon">📶</span>', label: 'お店の\nWi-Fiの設定' },
+  // ★2026-11-20 まるちゃん「お店のWi-Fiの設定は消して」＝ホームのボタンだけ外した（画面 view=wifiman と画像はそのまま）。PC版 super_pc.py も同じ。
   // ★📖マニュアル（2026-11-19 まるちゃん）＝スタッフ向けのマニュアルの一覧→押すと画像を表紙から順に見る（renderManualPage_）。
   //   お客様系のフォルダ（共通\画面\ホームのフォルダ.js の d6）に入る。開発者だけ（共通ルール16）。PC版 super_pc.py も同じ。
   { id: 'manual', cls: 'manual', view: 'manual',
@@ -2230,6 +2235,11 @@ var TILE_DEFS_ = [
   //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
   { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
     icon: '<span class="ticon">🧾</span>', label: '購入証明書\nの使い方' },
+  // ★💬LINE返信の流れ（2026-11-20 まるちゃん「りゅうのマニュアルフォルダーのボタンとして追加」）＝📖マニュアルの1冊を表紙から見る（renderLineReplyManualPage_）。
+  //   画像＝manual/linereply/p00（流れ図）・p01（少々お待ちくださいの出し方）。元＝AI自動プログラム\マニュアル一覧\LINE返信の流れ\画像を作る.py --zuko。
+  //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
+  { id: 'linereply', cls: 'linereply', view: 'linereply',
+    icon: '<span class="ticon">💬</span>', label: 'LINE返信\nの流れ' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   // ★2026-11-14 まるちゃん「フォルダの試しボタンも消して」＝ホームのボタンを外した（画面 view はそのまま）。PC版 super_pc.py と同じ。
@@ -2673,13 +2683,15 @@ function homeFolderBoot_(OPT) {
     //   （スタッフ・TOMATOさんの画面では中が空になる＝hideEmpty でフォルダごと出ない）。マニュアルを足す時は items に足す。
     // ★2026-11-19 まるちゃん「購入証明書のマニュアルも出して」＝🧾購入証明書の使い方（shomeiman・開発者だけ）もここに。
     //   スタッフは📖マニュアル（お客様系）から見る＝同じボタンは2つの最初のフォルダに入れられないので、りゅう用に別のボタンにした。
-    { k: 'd7', d: true, f: 'マニュアル', items: ['wifiman', 'shomeiman'] }];
+    // ★2026-11-20 まるちゃん「お店のWi-Fiの設定は消して」＝wifiman を外し、💬LINE返信の流れ（linereply・開発者だけ）を足した。
+    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'shomeiman'] }];
   // ★2026-11-14 あとから最初のフォルダを変えた分（まるちゃん「全適用させて」）＝並びを覚えている端末にも1回だけ当てる。
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
     { to: 'd6', id: 'manual' },   // ★2026-11-19 📖マニュアル
-    { to: 'd7', id: 'shomeiman' }];   // ★2026-11-19 🧾購入証明書の使い方（りゅうのマニュアルフォルダ）
+    { to: 'd7', id: 'shomeiman' },   // ★2026-11-19 🧾購入証明書の使い方（りゅうのマニュアルフォルダ）
+    { to: 'd7', id: 'linereply' }];   // ★2026-11-20 💬LINE返信の流れ（りゅうのマニュアルフォルダ）
   // ★2026-11-16 OPT.start＝最初のフォルダ分けを渡した時はそれを使う（パソコン版の一番トップの画面＝最初のフォルダ無し）。その時は MOVES も当てない。
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
@@ -14601,7 +14613,8 @@ function shomeishoScript_(C) {
 //   作り直す時は AI自動プログラム\マニュアル一覧\<マニュアル>\ズコに載せる.py を回して tt を保存するだけ＝この画面は直さなくてよい。
 //   マニュアルを足す時は MANUALS_ に1行足す。
 var MANUALS_ = [
-  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' }
+  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' },
+  { key: 'linereply', icon: '💬', title: 'LINE返信の流れ' }   // ★2026-11-20（流れ図は縦長＝画像は元の形のまま見せる・.mnimg の aspect-ratio は auto 4/5）
 ];
 // ★2026-11-19 only＝マニュアル1冊だけを、一覧を出さずにすぐ表紙から見せる（📶お店のWi-Fiの設定のボタン＝renderWifiManualPage_）。
 //   その時の「← 戻る」は一覧ではなく、ズコの1つ前の画面へ戻る。
@@ -14618,7 +14631,7 @@ function renderManualPage_(base, staff, dev, only) {
     '.mncover a{position:absolute;display:block;border-radius:14px}' +
     '.mncover a:active{background:rgba(255,23,68,.18)}' +
     // ★ページの画像は全部 縦横4:5（説明書の1枚の形）＝読み込む前から高さを取っておく（表紙から飛んだ時に、間の画像がまだでも位置がずれない）
-    '.mnimg{display:block;width:100%;height:auto;aspect-ratio:4/5;border-radius:14px;margin:0 0 14px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18);scroll-margin-top:10px}' +
+    '.mnimg{display:block;width:100%;height:auto;aspect-ratio:auto 4/5;border-radius:14px;margin:0 0 14px;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.18);scroll-margin-top:10px}' +
     '.mncover .mnimg{margin:0}' +
     '.mncoverbox{margin:0 0 14px}' +
     '.mntop{position:fixed;right:14px;bottom:18px;z-index:50;display:none;border:0;border-radius:999px;background:#131C2E;color:#fff;' +
@@ -14695,6 +14708,10 @@ function renderWifiManualPage_(base, staff, dev) {
 // ★🧾購入証明書の使い方（2026-11-19 まるちゃん「購入証明書のマニュアルも出して」）＝📖マニュアルの1冊を、一覧を出さずに表紙から見る。
 function renderShomeiManualPage_(base, staff, dev) {
   return renderManualPage_(base, staff, dev, MANUALS_[0]);
+}
+// ★💬LINE返信の流れ（2026-11-20 まるちゃん）＝📖マニュアルの1冊を、一覧を出さずに表紙（流れ図）から見る。表紙の「★出し方は 1ページへ」を押すと出し方へ飛ぶ。
+function renderLineReplyManualPage_(base, staff, dev) {
+  return renderManualPage_(base, staff, dev, MANUALS_[1]);
 }
 
 function renderShomeishoPage_(base, staff, dev) {
@@ -26933,6 +26950,7 @@ var HOMECSS_ =
 '  .tile.wifiman::before { background:#2563eb; }' +   // ★📶お店のWi-Fiの設定（2026-11-19）＝PC版と同じ色（super_pc.py）
 '  .tile.shomeiman::before { background:#b5757e; }' +   // ★🧾購入証明書の使い方（2026-11-19）＝購入証明書と同じ色（super_pc.py も同じ）
 '  .tile.manual::before { background:#0891b2; }' +   // ★📖マニュアル（2026-11-19）＝PC版と同じ色（super_pc.py）
+'  .tile.linereply::before { background:#06c755; }' +   // ★💬LINE返信の流れ（2026-11-20）＝LINEの緑・PC版と同じ色（super_pc.py）
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -26963,6 +26981,7 @@ var HOMECSS_ =
 '  .tile.wifiman .ticon { background:rgba(37,99,235,.16); }' +
 '  .tile.shomeiman .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.manual .ticon { background:rgba(8,145,178,.16); }' +
+'  .tile.linereply .ticon { background:rgba(6,199,85,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
