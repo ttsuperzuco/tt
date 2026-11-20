@@ -2886,6 +2886,22 @@ function homeFolderBoot_(OPT) {
     } catch (e) {}
   }
   var items = load(), openF = null;
+  // ★2026-11-20 まるちゃん「マニュアルで戻るをやると、2つ前に戻って一つ前に戻らない」＝フォルダの中のボタンで画面を開いて
+  //   「← 戻る」を押すと、フォルダが閉じた部屋まで戻っていた（開いていたフォルダを覚えていなかった）。
+  //   → 開いているフォルダを覚え、戻ってきたらそのフォルダを開いた形で出す。スマホ＝この端末のこの窓だけ覚える（部屋と同じ覚え方）。
+  //     パソコン版＝ホームを作り直すので、覚えるのはパソコン版の側（OPT.openKey で受け取り、OPT.onOpen で教える）。
+  var OPENKEY = 'sz_home_folder:' + (OPT.group || '#group-jitsumu');
+  function rememberOpen() {
+    var k = openF ? openF.k : '';
+    if (typeof OPT.onOpen === 'function') { try { OPT.onOpen(k); } catch (e) {} return; }
+    try { if (k) sessionStorage.setItem(OPENKEY, k); else sessionStorage.removeItem(OPENKEY); } catch (e) {}
+  }
+  (function () {
+    var k = '';
+    if (typeof OPT.onOpen === 'function') k = OPT.openKey || '';
+    else { try { k = sessionStorage.getItem(OPENKEY) || ''; } catch (e) {} }
+    if (k) { openF = folderByKey(k); if (openF && isHiddenEmpty(openF)) openF = null; }
+  })();
   group.addEventListener('contextmenu', function (ev) { if (ev.target && ev.target.closest && ev.target.closest('.tiles.hfold')) ev.preventDefault(); });
   function folderByKey(k) { for (var i = 0; i < items.length; i++) if (typeof items[i] !== 'string' && items[i].k === k) return items[i]; return null; }
 
@@ -2943,6 +2959,7 @@ function homeFolderBoot_(OPT) {
       if (titleEl) (titleEl.parentNode && titleEl.parentNode !== group ? titleEl.parentNode : titleEl).style.display = openF ? '' : 'none';
     }
     if (typeof OPT.onRender === 'function') OPT.onRender(!!openF);
+    rememberOpen();
   }
   var toastTm = null;
   function toast(m) {
