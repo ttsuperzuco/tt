@@ -1628,7 +1628,7 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubf">' +
           '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
-          '<label>お名前の一部</label><div class="ubnamerow"><input id="ubPastName" autocomplete="off"><span class="ubu">様</span></div>' +
+          '<label>氏名の一部</label><div class="ubnamerow"><input id="ubPastName" autocomplete="off"><span class="ubu">様</span></div>' +
             '<div class="ubnf" id="ubPastNameMsg" style="display:none">該当する顧客が存在しません</div>' +
         '</div>' +
         '<button type="button" class="exgo" id="ubPastGo">🔍 検索</button>' +
