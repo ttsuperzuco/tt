@@ -7,7 +7,7 @@ var UBCSS_ =
   '.ubtop .ubar{margin:0;}' +
   '.ubtop .uhome{padding:7px 12px;}' +
   '.ubttl{font-size:20px;line-height:1.2;margin:0;}' +
-  '.ubwhen{color:#eaf6fb;font-weight:800;font-size:15px;}' +
+  '.ubwhen{color:#fde047;font-weight:800;font-size:15px;}' +   
   '.ubwg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-left:auto;}' +   
   '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop2 .ubhint{font-size:15px;margin:0;}' +

@@ -12323,7 +12323,7 @@ var UBCSS_ =
   '.ubtop .ubar{margin:0;}' +
   '.ubtop .uhome{padding:7px 12px;}' +
   '.ubttl{font-size:20px;line-height:1.2;margin:0;}' +
-  '.ubwhen{color:#eaf6fb;font-weight:800;font-size:15px;}' +
+  '.ubwhen{color:#fde047;font-weight:800;font-size:15px;}' +   // ★2026-11-20 まるちゃん「いろかえて　下の行とまじっちゃうから」（前は白っぽい #eaf6fb）
   // ★2026-11-16 まるちゃん「再読込は時点の右だろ　一行に収めて」＝時点と再読込を離さない
   '.ubwg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-left:auto;}' +   // ★2026-11-20 まるちゃん「11/19 23:29 時点　で全体を右寄せ」
   '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
