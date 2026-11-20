@@ -14046,7 +14046,8 @@ function uriageBookScript_(C) {
     var go = function () { if (!$('ubPastName').value.trim()) return; if (PSK.get('num')) { PSK.set('num', ''); } psSearch('name'); };
     if (now) go(); else PSTM = setTimeout(go, 800);
   }
-  $('ubPastName').addEventListener('input', function (e) { if (e.isComposing) return; if (PSW.auto && $('ubPastName').value === PSW.auto) return; psByName(false); });
+  // ★2026-11-20 人が打った時点で自動のお名前ではなくなる（前は、番号で探したあと同じ名前を打ち直すと欄が空になり検索されなかった）
+  $('ubPastName').addEventListener('input', function (e) { PSW.auto = PSW.full = ''; if (e.isComposing) return; psByName(false); });
   $('ubPastName').addEventListener('compositionend', function () { psByName(false); });
   $('ubPastName').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); try { $('ubPastName').blur(); } catch (x) {} psByName(true); } });
   $('ubGoPast').addEventListener('click', function () { show('ubPast'); });
