@@ -977,8 +977,8 @@ function staffColor_(fruit) {
 }
 var szName_ = (function () {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
-  var LS = 'sz_customer_names', N = null, F = {}, fresh = false, asked = false, waits = [], shown = [];
-  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) { N = c.names; F = c.full || {}; } } catch (e) {}
+  var LS = 'sz_customer_names', N = null, F = {}, L = {}, fresh = false, asked = false, waits = [], shown = [];
+  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) { N = c.names; F = c.full || {}; L = c.last || {}; } } catch (e) {}
   function key(s) { var v = String(s || '').toUpperCase().replace(/\s/g, ''), m = v.match(/^([FMD])0*(\d+)$/); return m ? m[1] + parseInt(m[2], 10) : v; }
   function fire() { var w = waits; waits = []; for (var i = 0; i < w.length; i++) { try { w[i](); } catch (e) {} } redraw(); }
   function ask() {
@@ -986,7 +986,7 @@ var szName_ = (function () {
     var n = '__szn' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (p) {
       try { delete window[n]; } catch (e) {}
-      if (p && p.names) { N = p.names; F = p.full || {}; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N, full: F })); } catch (e) {} }
+      if (p && p.names) { N = p.names; F = p.full || {}; L = p.last || {}; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N, full: F, last: L })); } catch (e) {} }
       fire();
     };
     var s = document.createElement('script');
@@ -1032,11 +1032,12 @@ var szName_ = (function () {
         var a = fold(N[c]), b = fold(F[c]);
         if (a.indexOf(k) < 0 && b.indexOf(k) < 0) continue;
         seen[c] = 1;
-        out.push({ num: c, name: F[c] || N[c] || '', top: (a.indexOf(k) === 0 || b.indexOf(k) === 0) });
+        var d = String(L[c] || '');
+        out.push({ num: c, name: F[c] || N[c] || '', d: d, last: d.length === 6 ? d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4) : '' });
       }
     });
     out.sort(function (x, y) {
-      if (x.top !== y.top) return x.top ? -1 : 1;
+      if (x.d !== y.d) return x.d < y.d ? 1 : -1;
       var xd = parseInt(x.num.slice(1), 10) || 0, yd = parseInt(y.num.slice(1), 10) || 0;
       return yd - xd || (x.num < y.num ? -1 : 1);
     });

@@ -1352,8 +1352,8 @@ function staffColor_(fruit) {
 //    szName_.load(関数) → 一覧が届いたら呼ぶ（届いていればすぐ呼ぶ）
 var szName_ = (function () {
   var EXEC = 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec';
-  var LS = 'sz_customer_names', N = null, F = {}, fresh = false, asked = false, waits = [], shown = [];
-  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) { N = c.names; F = c.full || {}; } } catch (e) {}
+  var LS = 'sz_customer_names', N = null, F = {}, L = {}, fresh = false, asked = false, waits = [], shown = [];
+  try { var c = JSON.parse(localStorage.getItem(LS) || 'null'); if (c && c.names) { N = c.names; F = c.full || {}; L = c.last || {}; } } catch (e) {}
   function key(s) { var v = String(s || '').toUpperCase().replace(/\s/g, ''), m = v.match(/^([FMD])0*(\d+)$/); return m ? m[1] + parseInt(m[2], 10) : v; }
   function fire() { var w = waits; waits = []; for (var i = 0; i < w.length; i++) { try { w[i](); } catch (e) {} } redraw(); }
   function ask() {
@@ -1361,7 +1361,7 @@ var szName_ = (function () {
     var n = '__szn' + Date.now() + Math.floor(Math.random() * 1000);
     window[n] = function (p) {
       try { delete window[n]; } catch (e) {}
-      if (p && p.names) { N = p.names; F = p.full || {}; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N, full: F })); } catch (e) {} }
+      if (p && p.names) { N = p.names; F = p.full || {}; L = p.last || {}; fresh = true; try { localStorage.setItem(LS, JSON.stringify({ names: N, full: F, last: L })); } catch (e) {} }
       fire();
     };
     var s = document.createElement('script');
@@ -1398,7 +1398,8 @@ var szName_ = (function () {
   }
   // ★2026-11-20 まるちゃん「高で検索すると　高を含んだ氏名の人がプルダウンでリストが出る　選んだらその人の記録が出るように」
   //   find('高') → [{num:'F908', name:'高橋 里奈様'}, …]＝帳簿の書き方か名簿のフルネームに入っている方（髙・﨑も同じ字として探す）。
-  //   name はフルネーム（無ければ帳簿の書き方）。頭から一致する方を先に、あとは番号の新しい順。
+  //   name はフルネーム（無ければ帳簿の書き方）。last＝最後に売上があった日（'26/11/20'・無ければ ''）。
+  //   ★同日まるちゃん「①②とも推奨」＝最後にご来店（売上）があった日が新しい順。売上の無い方は最後（番号の大きい順）。
   function fold(s) { return String(s || '').normalize('NFKC').replace(/[\s　]/g, '').replace(/様$/, '').replace(/髙/g, '高').replace(/﨑/g, '崎').toUpperCase(); }
   function find(q) {
     var k = fold(q), out = [];
@@ -1410,11 +1411,12 @@ var szName_ = (function () {
         var a = fold(N[c]), b = fold(F[c]);
         if (a.indexOf(k) < 0 && b.indexOf(k) < 0) continue;
         seen[c] = 1;
-        out.push({ num: c, name: F[c] || N[c] || '', top: (a.indexOf(k) === 0 || b.indexOf(k) === 0) });
+        var d = String(L[c] || '');
+        out.push({ num: c, name: F[c] || N[c] || '', d: d, last: d.length === 6 ? d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4) : '' });
       }
     });
     out.sort(function (x, y) {
-      if (x.top !== y.top) return x.top ? -1 : 1;
+      if (x.d !== y.d) return x.d < y.d ? 1 : -1;
       var xd = parseInt(x.num.slice(1), 10) || 0, yd = parseInt(y.num.slice(1), 10) || 0;
       return yd - xd || (x.num < y.num ? -1 : 1);
     });
@@ -14134,7 +14136,7 @@ function uriageBookScript_(C) {
     if (now && c.length === 1) { psPick(c[0].num); return; }
     psMsg('「' + q + '」を含むお客様　' + c.length + '人　選択してください😊');
     var h = '<div class="ubpick">';
-    for (var i = 0; i < c.length; i++) h += '<button type="button" data-num="' + esc(c[i].num) + '"><span>' + esc(c[i].name) + '</span><small>' + esc(c[i].num) + '</small></button>';
+    for (var i = 0; i < c.length; i++) h += '<button type="button" data-num="' + esc(c[i].num) + '"><span>' + esc(c[i].name) + '</span><small>' + esc(c[i].num) + (c[i].last ? '　' + esc(c[i].last) : '') + '</small></button>';
     $('ubPastList').innerHTML = h + '</div>';
   }
   $('ubPastList').addEventListener('click', function (e) {

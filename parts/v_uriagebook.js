@@ -1441,7 +1441,7 @@ function uriageBookScript_(C) {
     if (now && c.length === 1) { psPick(c[0].num); return; }
     psMsg('「' + q + '」を含むお客様　' + c.length + '人　選択してください😊');
     var h = '<div class="ubpick">';
-    for (var i = 0; i < c.length; i++) h += '<button type="button" data-num="' + esc(c[i].num) + '"><span>' + esc(c[i].name) + '</span><small>' + esc(c[i].num) + '</small></button>';
+    for (var i = 0; i < c.length; i++) h += '<button type="button" data-num="' + esc(c[i].num) + '"><span>' + esc(c[i].name) + '</span><small>' + esc(c[i].num) + (c[i].last ? '　' + esc(c[i].last) : '') + '</small></button>';
     $('ubPastList').innerHTML = h + '</div>';
   }
   $('ubPastList').addEventListener('click', function (e) {
