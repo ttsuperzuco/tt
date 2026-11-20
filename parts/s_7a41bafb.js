@@ -13,13 +13,14 @@ var SZSTAFF_ = {
     if (r === '開発') return SZSTAFF_.DEV;
     return '';
   },
+  ORDER: ['kanbu', 'mikan', 'olive', 'pine', 'ringo', 'coconut', 'mango'],
   choices: function () {
-    var ids = _peopleFromCfg_(SZSTAFF_.cfg()), L = SZSTAFF_.labels(), out = [];
-    for (var i = 0; i < ids.length; i++) {
-      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
+    var ids = _peopleFromCfg_(SZSTAFF_.cfg()), L = SZSTAFF_.labels(), O = SZSTAFF_.ORDER, out = [], i;
+    for (i = 0; i < O.length; i++) if (ids.indexOf(O[i]) >= 0) out.push(L[O[i]] || O[i]);
+    for (i = 0; i < ids.length; i++) {
+      if (ids[i] === 'reception' || ids[i] === 'reception_sp' || O.indexOf(ids[i]) >= 0) continue;
       out.push(L[ids[i]] || ids[i]);
     }
-    out.push(SZSTAFF_.DEV);
     return out;
   }
 };

@@ -1164,7 +1164,7 @@ function _labelsFromCfg_(d) {
 //   ＝「この端末で入れた人」と「受付で選ぶ担当の候補」の正本。プロセル在庫・販売管理・ピンクの財布が使う。ボタンごとに書かない。
 //   ・お店受付PC・お店スマホ＝誰が入れたか分からない＝人を選ぶ（needPick）
 //   ・名前を選んだスマホ＝その人／社長（幹部）の画面＝🍅トマト／開発（まるちゃんの端末・パソコン版のズコ）＝🐉Ryu（auto）
-//   ・候補＝ズコの名前選びの一覧（自動監視で足した人も入る・受付の端末は除く）＋🐉Ryu（choices）
+//   ・候補＝ズコの名前選びの一覧（自動監視で足した人も入る・受付の端末は除く・🐉Ryuは入れない）（choices）
 //   名前は絵文字つきの表示名（🍊みかん）のまま記録する。サーバー側の正本＝共通\zuko_people.py（同じ決め方）。
 var SZSTAFF_ = {
   DEV: '🐉Ryu',
@@ -1179,13 +1179,16 @@ var SZSTAFF_ = {
     if (r === '開発') return SZSTAFF_.DEV;
     return '';
   },
+  // ★同日まるちゃん「🍅トマト・🍊みかん・🫒オリーブ・🍍パイン🍎りんご・🥥ココナッツ🥭マンゴー・のならびにして。でりゅうはいれない」
+  //   ＝候補はこの並び（自動監視で足した人はその後ろ）。🐉Ryu は候補に入れない（開発の端末は auto で🐉Ryu）。
+  ORDER: ['kanbu', 'mikan', 'olive', 'pine', 'ringo', 'coconut', 'mango'],
   choices: function () {
-    var ids = _peopleFromCfg_(SZSTAFF_.cfg()), L = SZSTAFF_.labels(), out = [];
-    for (var i = 0; i < ids.length; i++) {
-      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
+    var ids = _peopleFromCfg_(SZSTAFF_.cfg()), L = SZSTAFF_.labels(), O = SZSTAFF_.ORDER, out = [], i;
+    for (i = 0; i < O.length; i++) if (ids.indexOf(O[i]) >= 0) out.push(L[O[i]] || O[i]);
+    for (i = 0; i < ids.length; i++) {
+      if (ids[i] === 'reception' || ids[i] === 'reception_sp' || O.indexOf(ids[i]) >= 0) continue;
       out.push(L[ids[i]] || ids[i]);
     }
-    out.push(SZSTAFF_.DEV);
     return out;
   }
 };
