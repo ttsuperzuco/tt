@@ -1775,6 +1775,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
   //   （施術室被り検出\programs\staff_off.py）が作った payload.staff_off をそのまま出す＝ここで判断しない。
   //   ★まずは開発者だけに見せる（スタッフへの公開はまるちゃんの確認のあと）。
   var offList = dev ? (payload.staff_off || []) : [];
+  var offCards = [];
   offList.forEach(function (x) {
       var sc = staffColor_(x.staff);
       var pill = ((x.staff || '') + (x.staff_name || '')).trim() || '担当';
@@ -1817,17 +1818,22 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
           '<div class="mvstatus" hidden></div>' +
         '</div>') +
       '</article>';
-      items.push({ key: [x.date || '', x.time || '', 2], html: h });
+      offCards.push(h);   // ★被りとは別の見出しの下に並べる（まるちゃん「表題変えようよ 担当のお休みに予約入ってる 1件」）
   });
 
   items.sort(function (a, b) {
     for (var i = 0; i < 3; i++) { if (a.key[i] < b.key[i]) return -1; if (a.key[i] > b.key[i]) return 1; }
     return 0;
   });
-  var total = real + staffConflicts.length + offList.length;
+  var total = real + staffConflicts.length;   // 上の見出しは本当の被りだけを数える
   var bodyCards = items.length
     ? items.map(function (it) { return it.html; }).join('\n')
     : '<div class="empty">✅ 施術室・施術者の被りはありませんでした</div>';
+  // ★2026-11-20 担当のお休みに入っている予約は、被りとは別の見出し＋件数で出す（無い時は見出しごと出さない）。
+  var offBlock = offCards.length
+    ? '<h1 class="fit1line offhead">⚠️ 担当のお休みに予約が入っています <span class="cnt">' + offCards.length + '件</span></h1>' +
+      offCards.join('\n')
+    : '';
 
   var nailNote = withNail ? '（NAIL含む）' : '';
   return '' +
@@ -1842,6 +1848,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
   '</div>' +
   '<h1 class="fit1line">⚠️ 部屋＆担当 被り検出 <span class="cnt">' + total + '件</span>' + nailNote + '</h1>' +
   bodyCards +
+  offBlock +
 '</div>' +
 identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
 }
@@ -27014,6 +27021,7 @@ var CSS_ =
 '  .card.staff { border-left-color:var(--sc,#7c3aed); }' +
 /* ★2026-11-20 担当のお休みの日に入っている予約のカード：予約は1件だけ＝1列。休みのメモは二重入力の印と同じ形の札で出す */
 '  .pair.one { grid-template-columns:1fr; }' +
+'  h1.offhead { margin-top:28px; }' +
 '  .offmemo { font-size:.95rem; font-weight:800; color:#fff; background:#475569;' +
 '    padding:4px 12px; border-radius:999px; }' +
 '  h2.sec { color:#fff; font-size:1.25rem; margin:6px 0 12px; font-weight:900;' +
