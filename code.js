@@ -12402,6 +12402,7 @@ var UBCSS_ =
   '.ubsp td.p{font-size:13px;}' +
   '.ubsp .no{display:block;font-weight:900;font-size:15px;}' +
   '.ubsp .nm{display:block;min-height:1.3em;cursor:pointer;}' +
+  '.ubsp .nmw{white-space:nowrap;}' +
   '.ubsp .sub{display:block;color:#64748b;font-size:11px;font-weight:700;min-height:1.2em;}' +
   '.ubsp span.e:active{background:#bfdbfe;}' +
   '.ubsp .ubvb{font-size:12px;padding:5px 7px;}' +
@@ -12688,7 +12689,7 @@ function uriageBookScript_(C) {
         if (!x9._del) { cnt++; tot += Number(x9.amount) || 0; }
         L += '<tr class="r' + (x9._pend ? ' pend' : '') + (x9._del ? ' del' : '') + '" data-j="' + j9 + '">' +
           '<td class="w"><span class="no">' + esc(x9.no) + '</span><span class="sub">' + esc(x9.time || '') + '</span></td>' +
-          '<td class="cu"><span class="e nm" data-c="C">' + esc(x9.name) + '</span><span class="e sub" data-c="B">' + esc(x9.num) + '</span></td>' +
+          '<td class="cu"><span class="e nm" data-c="C">' + ubNameHtml_(x9.name) + '</span><span class="e sub" data-c="B">' + esc(x9.num) + '</span></td>' +
           '<td class="d e" data-c="E">' + esc(x9.detail) + '</td>' +
           '<td class="p e' + (x9.pay ? '' : ' np') + '" data-c="D">' + esc(x9.pay ? ({ '街口支付': '街口', 'LINE PAY': 'LINE' }[x9.pay] || x9.pay) : '未選択') + '</td>' +
           '<td class="n e" data-c="F">' + (x9.amount == null ? '' : Number(x9.amount).toLocaleString('ja-JP')) + '</td>' +
@@ -12738,7 +12739,7 @@ function uriageBookScript_(C) {
         var y9 = O[q9], sp9 = ubSplitLabel_(y9.label);
         if (!y9._del && y9.amount != null) on++;
         o += '<tr class="r' + (y9._pend ? ' pend' : '') + (y9._del ? ' del' : '') + (y9.amount == null ? ' vd' : '') + '" data-q="' + q9 + '">' +
-          '<td class="cu e" data-c="J" data-p="cu">' + (sp9.num ? '<span class="nm">' + esc(sp9.name) + '</span><span class="sub">' + esc(sp9.num) + '</span>' : '') + '</td>' +
+          '<td class="cu e" data-c="J" data-p="cu">' + (sp9.num ? '<span class="nm">' + ubNameHtml_(sp9.name) + '</span><span class="sub">' + esc(sp9.num) + '</span>' : '') + '</td>' +
           '<td class="d e" data-c="J" data-p="dt">' + esc(sp9.rest) + '</td>' +
           '<td class="n e" data-c="K">' + (y9.amount == null ? '' : Number(y9.amount).toLocaleString('ja-JP')) + '</td>' +
           '<td class="xc"><button type="button" class="ubx" data-a="del" aria-label="削除">×</button></td></tr>';
@@ -13125,6 +13126,11 @@ function uriageBookScript_(C) {
 
   // ★2026-11-20 發票なしの内容「F886○○様プロアフター…」を、頭の顧客番号・名前（〜様）と残りの明細に分ける（表示のため）。
   //   raw＝元の文字のまま3つ（番号・名前・残り）＝くっつけると元の内容に戻る。番号で始まらない行は全部を明細にする。
+  // ★2026-11-20 まるちゃん「山本　改行　はるか様　の方がいいだろ　氏名で改行」＝お名前は姓と名の間（空白）でだけ折り返す。
+  function ubNameHtml_(n) {
+    var ps = String(n || '').split(/[\s　]+/).filter(function (x) { return x; });
+    return ps.map(function (x) { return '<span class="nmw">' + esc(x) + '</span>'; }).join(' ');
+  }
   function ubSplitLabel_(t) {
     t = String(t || '');
     var m = t.match(/^(\s*[FMＦＭfmｆｍ]\s*[0-9０-９]+)([^0-9０-９]{0,12}?様)?([\s\S]*)$/);
