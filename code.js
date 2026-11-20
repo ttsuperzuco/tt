@@ -12517,6 +12517,8 @@ var UBPAYCSS_ =
   '.ubwalbtn .in{background:#16a34a;}.ubwalbtn .out{background:#dc2626;}' +
   '.ubwalday,.ubwalauto{background:#fff;border-radius:12px;padding:12px;font-size:19px;font-weight:800;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubwalauto small{color:#64748b;font-size:13px;font-weight:700;}' +
+  // ★同日 受付の担当者の候補が8人に増えた（ズコの人の一覧）＝2列に並べる（プロセル在庫の人を選ぶ画面と同じ並び）
+  '#ubWalPick{display:grid;grid-template-columns:1fr 1fr;gap:8px;}#ubWalPick button{padding:14px 4px;font-size:17px;}' +
   '#ubWalList td.in{color:#15803d;}#ubWalList td.out{color:#b91c1c;}' +
   '.ubchips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px;}' +
   '.ubchip{background:#fff;color:#0f172a;border:2px solid #cbd5e1;border-radius:999px;padding:8px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
