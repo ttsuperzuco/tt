@@ -206,7 +206,17 @@ function uriageBookScript_(C) {
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
   var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR', 'ubSheet', 'ubWallet', 'ubWalF'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0);
-    document.body.classList.toggle('ubwide', id === 'ubSheet'); }   
+    document.body.classList.toggle('ubwide', id === 'ubSheet'); if (id === 'ubMenu') setTimeout(ubFitMenu_, 0); }
+  function ubFitMenu_() {
+    var m = document.querySelector('#ubMenu .ubmenu'); if (!m || $('ubMenu').style.display === 'none') return;
+    var bs = [].filter.call(m.querySelectorAll('button'), function (b) { return b.style.display !== 'none'; });
+    if (!bs.length) return;
+    var top = m.getBoundingClientRect().top + (window.scrollY || 0), gap = 10;
+    var h = Math.floor((window.innerHeight - top - 18 - gap * (bs.length - 1)) / bs.length);
+    h = Math.max(56, Math.min(110, h));
+    bs.forEach(function (b) { b.style.height = h + 'px'; b.style.paddingTop = '0'; b.style.paddingBottom = '0'; });
+  }
+  window.addEventListener('resize', ubFitMenu_);   
   var D = null, busy = false, loading = false;
   var PEND = [];          
   function pendAll() { return PEND.concat(ubPendList_()); }
@@ -1424,6 +1434,7 @@ function uriageBookScript_(C) {
   window.addEventListener('ubdone', window.__ubWalDoneH);
   $('ubGoWallet').addEventListener('click', function () { show('ubWallet'); walDraw(); walFetch(); walLoad(); });
   walFetch();   
+  setTimeout(ubFitMenu_, 0); setTimeout(ubFitMenu_, 600);   
   $('ubWalBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubWalFBack').addEventListener('click', function (e) { e.preventDefault(); WK.close(); show('ubWallet'); });
   $('ubWalIn').addEventListener('click', function () { walOpenF('入金'); });

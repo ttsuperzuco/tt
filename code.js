@@ -12615,7 +12615,19 @@ function uriageBookScript_(C) {
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
   var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR', 'ubSheet', 'ubWallet', 'ubWalF'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0);
-    document.body.classList.toggle('ubwide', id === 'ubSheet'); }   // ★2026-11-20 スプレッドシート再現だけ画面の横いっぱいに使う
+    document.body.classList.toggle('ubwide', id === 'ubSheet'); if (id === 'ubMenu') setTimeout(ubFitMenu_, 0); }
+  // ★2026-11-20 まるちゃん「ボタン数に応じてボタンの高さ調整して　全部のボタンが一画面で表示されるように。PCもスマホも」
+  //   ＝メニューに出ているボタンの数で高さを割り振り、画面の下まででちょうど全部入るようにする（大きすぎず小さすぎず：56〜110px）。
+  function ubFitMenu_() {
+    var m = document.querySelector('#ubMenu .ubmenu'); if (!m || $('ubMenu').style.display === 'none') return;
+    var bs = [].filter.call(m.querySelectorAll('button'), function (b) { return b.style.display !== 'none'; });
+    if (!bs.length) return;
+    var top = m.getBoundingClientRect().top + (window.scrollY || 0), gap = 10;
+    var h = Math.floor((window.innerHeight - top - 18 - gap * (bs.length - 1)) / bs.length);
+    h = Math.max(56, Math.min(110, h));
+    bs.forEach(function (b) { b.style.height = h + 'px'; b.style.paddingTop = '0'; b.style.paddingBottom = '0'; });
+  }
+  window.addEventListener('resize', ubFitMenu_);   // ★2026-11-20 スプレッドシート再現だけ画面の横いっぱいに使う
   var D = null, busy = false, loading = false;
   // ★2026-11-07 まるちゃん「修正するをOKしたとき、かきこみおわるまでまつとうざいので、バックグラウンドで書き込みします…
   //   のBOXを出す。失敗した時だけポップアップで通知」＝書く用事は裏で進める。書き終わるまで、その行は薄く出す。
@@ -13982,6 +13994,7 @@ function uriageBookScript_(C) {
   window.addEventListener('ubdone', window.__ubWalDoneH);
   $('ubGoWallet').addEventListener('click', function () { show('ubWallet'); walDraw(); walFetch(); walLoad(); });
   walFetch();   // メニューのボタンの下に今の残高を出すため、開いた時に1回読む
+  setTimeout(ubFitMenu_, 0); setTimeout(ubFitMenu_, 600);   // 開発だけのボタンを出し終えてから高さを合わせる
   $('ubWalBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubWalFBack').addEventListener('click', function (e) { e.preventDefault(); WK.close(); show('ubWallet'); });
   $('ubWalIn').addEventListener('click', function () { walOpenF('入金'); });
