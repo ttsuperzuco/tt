@@ -1,7 +1,8 @@
 // ★機械が作ったファイル（.githooks/zuko_split.py）。手で直さない＝直すのは code.js。
 // この画面だけで使う部品：linereply、manual、shomeiman、wifiman
 var MANUALS_ = [
-  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' }
+  { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' },
+  { key: 'linereply_all', icon: '💬', title: 'LINE返信の流れ' }
 ];
 function renderManualPage_(base, staff, dev, only) {
   var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: only ? [only] : MANUALS_, only: !!only };
