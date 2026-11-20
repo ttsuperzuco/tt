@@ -9615,6 +9615,9 @@ var SZ_PCKEYS_ = (function () {
           (on ? 'background:#fde047;color:#0f172a;' : 'background:#2C7A99;color:#fff;');
         b.addEventListener('click', function () {
           if (on) return;
+          // ★2026-11-20 まるちゃん「パソコンとスマホのボタンを切り替えたら、同じ画面で切り替えて」
+          //   ＝画面の中で今どこを開いているか（画面が __szKeep.save で教える）を覚えてから切り替え、開き直した画面が戻す。
+          try { if (window.__szKeep && window.__szKeep.save) sessionStorage.setItem('sz_sw_keep', JSON.stringify({ at: Date.now(), s: window.__szKeep.save() })); } catch (e) {}
           var w = window.top || window, u = new URL(location.href); u.searchParams.set('sp', x[0]); u.searchParams.set('tscale', '0'); u.searchParams.delete('frame'); w.location.href = u.toString();   // 枠（phone.html）の中から押した時は窓ごと切り替える   // 同日まるちゃん「文字の大きさこんなに大きくない」＝ズコ（アイコンから開く）は1.3倍にならない＝切り替えでは字の大きさを変えない
         });
         d.appendChild(b);
@@ -13825,6 +13828,9 @@ function uriageBookScript_(C) {
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoWallet').style.display = '';
   var WAL = null, WKIND = '', WSTAFF = '', WBUSY = 0;
   var WNAME = { kanbu: 'トマト', mikan: 'みかん', olive: 'オリーブ', pine: 'パイン', ringo: 'りんご', mango: 'マンゴー', coconut: 'ココナッツ' };
+  // ★2026-11-20 まるちゃん「ピンクの財布の担当者はマークをつけて、それぞれの果物のマークをつけて」（ズコの人の印と同じ）
+  var WMARK = { 'トマト': '🍅', 'みかん': '🍊', 'オリーブ': '🫒', 'パイン': '🍍', 'りんご': '🍎', 'マンゴー': '🥭', 'ココナッツ': '🥥', 'りゅう': '🐉' };
+  function walSt(n) { n = String(n || ''); return n ? (WMARK[n] || '') + n : ''; }
   var WK = padKit($('ubWalF'), { amt: { kind: 'int', max: 6, comma: true } });
   function walAuto() {
     var r = window.__SZ_ROLE_ || '', w = window.__SZ_WHO_ || '';
@@ -13846,7 +13852,7 @@ function uriageBookScript_(C) {
       h += '<tr><td class="w">' + esc(walMD(r.day)) + '</td>' +
         '<td class="n in">' + (r.kind === '繰越' ? '<span class="sub">繰越</span>' : '') + walYen(r['in']) + '</td>' +
         '<td class="n out">' + walYen(r.out) + '</td>' +
-        '<td class="n">' + walYen(r.bal) + '</td><td>' + esc(r.staff || '') + '</td></tr>';
+        '<td class="n">' + walYen(r.bal) + '</td><td class="w">' + esc(walSt(r.staff)) + '</td></tr>';
     }
     h += '</tbody></table></div>';
     $('ubWalList').innerHTML = h;
@@ -13883,12 +13889,12 @@ function uriageBookScript_(C) {
     var t = new Date(), wd = '日月火水木金土'.charAt(t.getDay());
     $('ubWalDay').textContent = (t.getMonth() + 1) + '/' + t.getDate() + '（' + wd + '）';
     var au = walAuto();
-    if (au) $('ubWalStaff').innerHTML = '<div class="ubwalauto">' + esc(au) + '　<small>（このスマホの持ち主）</small></div>';
+    if (au) $('ubWalStaff').innerHTML = '<div class="ubwalauto">' + esc(walSt(au)) + '　<small>（このスマホの持ち主）</small></div>';
     else {
       var ch = ((WAL && WAL.choices) || ['トマト', 'みかん', 'オリーブ', 'パイン']).slice();
       if ((window.__SZ_ROLE_ || '') === '開発') ch.push('りゅう');
       var hb = '<div class="ubpseg" id="ubWalPick">';
-      for (var i = 0; i < ch.length; i++) hb += '<button type="button" data-st="' + esc(ch[i]) + '">' + esc(ch[i]) + '</button>';
+      for (var i = 0; i < ch.length; i++) hb += '<button type="button" data-st="' + esc(ch[i]) + '">' + esc(walSt(ch[i])) + '</button>';
       $('ubWalStaff').innerHTML = hb + '</div>';
     }
     WK.set('amt', ''); WK.close();
@@ -13908,7 +13914,7 @@ function uriageBookScript_(C) {
     if (amt <= 0) { popup(WKIND + 'の金額を入力してください😊'); return; }
     if (!st) { popup('担当者を選んでください😊'); return; }
     if (WKIND === '出金' && WAL && amt > (WAL.balance || 0)) { popup('財布の残高（' + walYen(WAL.balance || 0) + '元）より多い金額は出金できません。金額を確認してください🙇'); return; }
-    popup(WKIND + '　' + walYen(amt) + '元（担当 ' + st + '）\nこの内容で記録しますか？😊', {
+    popup(WKIND + '　' + walYen(amt) + '元（担当 ' + walSt(st) + '）\nこの内容で記録しますか？😊', {
       cancel: true, onYes: function () {
         WBUSY++;
         ask({ action: 'walletadd', kind: WKIND, amount: amt, staff: au ? '' : st }, '財布に記録しています', function () { show('ubWallet'); walDraw(); });
@@ -13954,6 +13960,22 @@ function uriageBookScript_(C) {
   // ★2026-11-18 前回の中身を読み終わるのを待たずに、すぐ読み直しを頼む（前は読み終わるまで2〜6秒待ってから頼んでいた）
   fetchData();
   ask(isDev ? { action: 'load', voids: 1 } : { action: 'load' }, '', null, true);
+  // ★2026-11-20 まるちゃん「パソコンとスマホのボタンを切り替えたら、同じ画面で切り替えて」
+  //   ＝開いていた画面を開発の切り替えスイッチに教え、切り替えて開き直したらその画面を開く（入力の途中の画面は、その一覧の画面）。
+  var SW_BACK = { ubAdd: 'ubInv', ubVoid: 'ubInv', ubOther: 'ubNoInv', ubWalF: 'ubWallet', ubPayF: 'ubPay', ubPayR: 'ubPay' };
+  var SW_GO = { ubInv: 'ubGoInv', ubNoInv: 'ubGoNoInv', ubCoins: 'ubGoCoins', ubAuth: 'ubGoAuth', ubPay: 'ubGoPay', ubSheet: 'ubGoSheet', ubWallet: 'ubGoWallet' };
+  window.__szKeep = { save: function () { for (var i = 0; i < SECS.length; i++) if ($(SECS[i]) && $(SECS[i]).style.display !== 'none') return 'ub:' + SECS[i]; return ''; } };
+  try {
+    var swk = window.__szToFrame ? null : JSON.parse(sessionStorage.getItem('sz_sw_keep') || 'null');
+    if (swk) {
+      sessionStorage.removeItem('sz_sw_keep');
+      var sws = String(swk.s || '');
+      if (Date.now() - (swk.at || 0) < 60000 && sws.indexOf('ub:') === 0) {
+        sws = sws.slice(3); sws = SW_BACK[sws] || sws;
+        if (SW_GO[sws] && $(SW_GO[sws])) $(SW_GO[sws]).click();
+      }
+    }
+  } catch (e) {}
 }
 
 function renderUriageBookPage_(base, staff, dev) {

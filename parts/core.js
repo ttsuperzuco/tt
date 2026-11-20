@@ -2671,6 +2671,7 @@ var SZ_PCKEYS_ = (function () {
           (on ? 'background:#fde047;color:#0f172a;' : 'background:#2C7A99;color:#fff;');
         b.addEventListener('click', function () {
           if (on) return;
+          try { if (window.__szKeep && window.__szKeep.save) sessionStorage.setItem('sz_sw_keep', JSON.stringify({ at: Date.now(), s: window.__szKeep.save() })); } catch (e) {}
           var w = window.top || window, u = new URL(location.href); u.searchParams.set('sp', x[0]); u.searchParams.set('tscale', '0'); u.searchParams.delete('frame'); w.location.href = u.toString();   
         });
         d.appendChild(b);
