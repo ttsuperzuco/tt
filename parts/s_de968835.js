@@ -2,7 +2,7 @@
 // この画面だけで使う部品：linereply、manual、shomeiman、wifiman
 var MANUALS_ = [
   { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' },
-  { key: 'linereply_all', icon: '💬', title: 'LINE返信の流れ' }
+  { key: 'linereply_all', icon: '💬', title: 'LINEにすぐ返信できない' }   
 ];
 function renderManualPage_(base, staff, dev, only) {
   var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: only ? [only] : MANUALS_, only: !!only };
