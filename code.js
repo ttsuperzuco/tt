@@ -14274,8 +14274,9 @@ function renderUriageBookPage_(base, staff, dev) {
           // ★2026-11-20 まるちゃん「ピンクの財布ボタンを売上帳簿につくる」→同日「財布ボタンを全員に出して」（表示は下の動きの所で）
           // ★同日まるちゃん「ピンクは普通の文字の大きさ　でその文字の下に　現在残高　を表示」
           // ★2026-11-20 まるちゃん「過去売上の検索　ボタンをつくりたい　顧客番号か氏名の一部で過去の売上データを検索して確認したい」（まず開発の時だけ）
-          '<button type="button" id="ubGoPast" style="display:none">🔍 過去売上の<span class="ubem auth">検索</span></button>' +
+          // ★2026-11-20 まるちゃん「かこうりあげは　ぴんくぼたんのした」＝過去売上の検索はピンクの財布の下
           '<button type="button" id="ubGoWallet" class="ubwalgo" style="display:none">👛 <span style="color:#db2777">ピンク</span>の財布<span class="ubwalsub" id="ubGoWalBal"></span></button>' +
+          '<button type="button" id="ubGoPast" style="display:none">🔍 過去売上の<span class="ubem auth">検索</span></button>' +
           // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
           // ★2026-11-16 まるちゃん「このボタンいらない」＝發票の作廢は發票ありの売上の「作廢」の列から行う（メニューのボタンを消した）
           // ★2026-11-14 まるちゃん「作廢の認証ボタン…俺だけ見れるように」＝開発の時だけ出す
