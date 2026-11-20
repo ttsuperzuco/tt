@@ -1828,7 +1828,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
   var total = real + staffConflicts.length;   // 上の見出しは本当の被りだけを数える
   var bodyCards = items.length
     ? items.map(function (it) { return it.html; }).join('\n')
-    : '<div class="empty">✅ 施術室・施術者の被りはありませんでした</div>';
+    : '<div class="empty"><span style="white-space:nowrap">✅ 施術室・施術者の被りは</span><wbr><span style="white-space:nowrap">ありませんでした</span></div>';
   // ★2026-11-20 担当のお休みに入っている予約は、被りとは別の見出し＋件数で出す（無い時は見出しごと出さない）。
   var offBlock = offCards.length
     ? '<h1 class="fit1line offhead">⚠️ 担当のお休みに予約が入っています <span class="cnt">' + offCards.length + '件</span></h1>' +
