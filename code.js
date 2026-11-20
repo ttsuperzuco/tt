@@ -12315,6 +12315,7 @@ function renderProcStockPage_(base, staff, dev) {
 var UBCSS_ =
   '.ub{width:100%;box-sizing:border-box;max-width:1200px;margin:0 auto;padding:0 6px 70px;text-align:left;}' +
   '.ubwide .home.ubhome,.ubwide .ub{max-width:none;}.ubwide .ub{padding-bottom:0;}' +
+  '.ubwide #ubSheet .ubwg{margin-right:150px;}' +   // 右上の開発の切り替え（PC｜スマホ）に再読込が隠れないように
   /* ★2026-11-08 まるちゃん「画面の大きさに応じて広げて文字ができるだけ一行で表示されるようにして」
      ＝売上の一覧だけ画面の幅いっぱいまで広げる（入力の画面は今までどおり620まで）。広い画面では、
      明細以外の欄は折り返さず、明細が残りの幅を使う（それでも入らない時だけ明細を折り返す）。 */
@@ -13805,7 +13806,7 @@ function uriageBookScript_(C) {
     d.documentElement.style.zoom = '';
     var r0 = tb.getBoundingClientRect(), right = r0.right, bottom = r0.bottom, i, j;
     var ths = tb.querySelectorAll('thead th');
-    for (i = 0; i < ths.length; i++) if ((ths[i].textContent || '').trim() === 'O') { right = ths[i].getBoundingClientRect().right; break; }
+    for (i = 0; i < ths.length; i++) if ((ths[i].textContent || '').trim() === 'P') { right = ths[i].getBoundingClientRect().right; break; }   // ★同日まるちゃん「Pまで表示しよう」（前はO列まで）
     var trs = tb.querySelectorAll('tbody tr'), last = null;
     for (i = 0; i < trs.length; i++) {
       var tds = trs[i].querySelectorAll('td');

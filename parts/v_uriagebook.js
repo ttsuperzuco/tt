@@ -3,6 +3,7 @@
 var UBCSS_ =
   '.ub{width:100%;box-sizing:border-box;max-width:1200px;margin:0 auto;padding:0 6px 70px;text-align:left;}' +
   '.ubwide .home.ubhome,.ubwide .ub{max-width:none;}.ubwide .ub{padding-bottom:0;}' +
+  '.ubwide #ubSheet .ubwg{margin-right:150px;}' +   
   '.home.ubhome{max-width:1200px;padding-top:6px;}' +
   '.ubtop{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop .ubar{margin:0;}' +
@@ -1258,7 +1259,7 @@ function uriageBookScript_(C) {
     d.documentElement.style.zoom = '';
     var r0 = tb.getBoundingClientRect(), right = r0.right, bottom = r0.bottom, i, j;
     var ths = tb.querySelectorAll('thead th');
-    for (i = 0; i < ths.length; i++) if ((ths[i].textContent || '').trim() === 'O') { right = ths[i].getBoundingClientRect().right; break; }
+    for (i = 0; i < ths.length; i++) if ((ths[i].textContent || '').trim() === 'P') { right = ths[i].getBoundingClientRect().right; break; }   
     var trs = tb.querySelectorAll('tbody tr'), last = null;
     for (i = 0; i < trs.length; i++) {
       var tds = trs[i].querySelectorAll('td');
