@@ -185,7 +185,7 @@ function doGet(e) {
     title = '購入証明書の使い方';                              // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ）
     html = renderShomeiManualPage_(base, staff, dev);
   } else if (view === 'linereply') {
-    title = 'LINE返信の流れ';                                  // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ・2026-11-20）
+    title = 'LINEにすぐ返信できない';                                  // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ・2026-11-20）
     html = renderLineReplyManualPage_(base, staff, dev);
   } else if (view === 'wifiman') {
     title = 'お店のWi-Fiの設定';                              // ★マニュアルの画像を並べて見るだけ（純JS・開発者だけ）
@@ -2278,7 +2278,7 @@ var TILE_DEFS_ = [
   //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
   { id: 'linereply', cls: 'linereply', view: 'linereply',
     // ★2026-11-20 まるちゃん「シンプルなアイコンにしたい」②＝LINEの緑の吹き出しに白い矢印の絵（GPTで作成・元絵＝PC版スーパーズコ\icons\LINE返信の流れ_アイコンの元絵_吹き出しに矢印.png）。
-    icon: '<span class="ticon">💬</span>', iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/linereply-192.png?v=1"></span>', label: 'LINE返信\nの流れ' },
+    icon: '<span class="ticon">💬</span>', iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/linereply-192.png?v=1"></span>', label: 'LINEにすぐ\n返信できない' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   // ★2026-11-14 まるちゃん「フォルダの試しボタンも消して」＝ホームのボタンを外した（画面 view はそのまま）。PC版 super_pc.py と同じ。
@@ -14707,7 +14707,7 @@ var MANUALS_ = [
 // ★💬LINE返信の流れ（2026-11-20）＝流れ図は縦長＝画像は元の形のまま見せる・.mnimg の aspect-ratio は auto 4/5。
 // ★2026-11-20 まるちゃん「この画像はパインちゃんだけにだす」＝全員に見える📖マニュアルの一覧（MANUALS_）からは外した。
 //   見られるのは💬LINE返信の流れのボタン（パインちゃん＋開発者だけ）からだけ。
-var LINEREPLY_MANUAL_ = { key: 'linereply', icon: '💬', title: 'LINE返信の流れ' };
+var LINEREPLY_MANUAL_ = { key: 'linereply', icon: '💬', title: 'LINEにすぐ返信できない' };   // ★2026-11-20 まるちゃん「替えて」＝ぱいんちゃんのボタン名も同じ名前に
 // ★2026-11-19 only＝マニュアル1冊だけを、一覧を出さずにすぐ表紙から見せる（📶お店のWi-Fiの設定のボタン＝renderWifiManualPage_）。
 //   その時の「← 戻る」は一覧ではなく、ズコの1つ前の画面へ戻る。
 function renderManualPage_(base, staff, dev, only) {
