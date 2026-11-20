@@ -12849,7 +12849,8 @@ function uriageBookScript_(C) {
     });
   }
   function devKey(cb) {
-    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    // ★2026-11-20 開発の見本（その人の画面）でも、この窓の鍵を添える（受付係がその人と同じ範囲で通す）
+    if ((window.__SZ_ROLE_ || '') !== '開発' && !window.__SZ_AS_) { cb({}); return; }
     var dv = '', dk = '';
     try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
     if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }
