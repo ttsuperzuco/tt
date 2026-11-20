@@ -186,7 +186,7 @@ var UBPAYCSS_ =
   '.ubpastbar .ubadd{padding:0 22px;font-size:17px;}' +
   '.ubpastmsg{color:#fde047;font-weight:900;font-size:16px;margin:8px 4px;}' +
   '.ubpastmsg:empty{display:none;}' +
-  '#ubPastList td.p small{display:block;color:#64748b;font-size:11px;font-weight:700;}' +
+  '#ubPastList td.p small{display:block;color:#64748b;font-size:11px;font-weight:700;white-space:nowrap;}' +
   '.ubmenu .ubwalsub:empty{display:none;}' +
   '.ubwal .v{color:#be185d;font-weight:900;font-size:44px;line-height:1.25;}' +
   '.ubwalbtn{display:flex;gap:10px;margin:0 0 4px;}' +
@@ -1358,10 +1358,11 @@ function uriageBookScript_(C) {
     if (!rs.length) { $('ubPastList').innerHTML = ''; return; }
     var h = '<div class="ubtbl ubsp"><table><thead><tr><th>日付</th><th>お客様</th><th>明細</th><th>支払</th><th class="r">金額</th></tr></thead><tbody>';
     for (var i = 0; i < rs.length; i++) {
-      var r = rs[i];
+      var r = rs[i], nm = r.name || '', dt = r.detail || '';
+      if (r.other) { var sp = ubSplitLabel_(dt); if (sp.num) { nm = nm || sp.name; dt = sp.rest || dt; } }
       h += '<tr><td class="w">' + esc(psDate(r.date)) + '</td>' +
-        '<td class="cu"><span class="nm">' + (r.name ? ubNameHtml_(r.name) : '') + '</span><span class="sub">' + esc(r.num || '') + '</span></td>' +
-        '<td class="d">' + esc(r.detail || '') + '</td>' +
+        '<td class="cu"><span class="nm">' + (nm ? ubNameHtml_(nm) : '') + '</span><span class="sub">' + esc(r.num || '') + '</span></td>' +
+        '<td class="d">' + esc(dt) + '</td>' +
         '<td class="p">' + (r.other ? '<small>發票なし</small>' : esc({ '街口支付': '街口', 'LINE PAY': 'LINE' }[r.pay] || r.pay || '')) + '</td>' +
         '<td class="n">' + (r.amount == null ? '' : Number(r.amount).toLocaleString('ja-JP')) + '</td></tr>';
     }
