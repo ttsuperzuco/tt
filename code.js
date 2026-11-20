@@ -12523,6 +12523,12 @@ var UBPAYCSS_ =
   '.ubpastbar input{flex:1 1 auto;min-width:0;border:0;border-radius:12px;padding:12px;font:inherit;font-size:18px;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
   '.ubpastbar .ubadd{padding:0 22px;font-size:17px;}' +
   '.ubpastmsg{color:#fde047;font-weight:900;font-size:16px;margin:8px 4px;}' +
+  // ★同日まるちゃん「顧客番号と名前の一部は隣同士でいいよ」＝2つの欄を横に並べる。数字ボタンを出している間（ほかの欄が隠れた時）は横いっぱい
+  '#ubPast .ubf{display:grid;grid-template-columns:1fr 1fr;column-gap:10px;align-items:end;}' +
+  '#ubPast .ubf>:nth-child(1){grid-column:1;grid-row:1;}#ubPast .ubf>:nth-child(2){grid-column:1;grid-row:2;}' +
+  '#ubPast .ubf>:nth-child(3){grid-column:2;grid-row:1;}#ubPast .ubf>:nth-child(4){grid-column:2;grid-row:2;}' +
+  '#ubPast .ubf>:nth-child(5){grid-column:1 / span 2;grid-row:3;}' +
+  '#ubPast .ubf:has(> [data-fh])>*{grid-column:1 / span 2 !important;}' +
   '.ubpastmsg:empty{display:none;}' +
   '#ubPastList td.p small{display:block;color:#64748b;font-size:11px;font-weight:700;white-space:nowrap;}' +
   '.ubmenu .ubwalsub:empty{display:none;}' +
@@ -14221,7 +14227,7 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubf">' +
           '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
-          '<label>お名前の一部（番号が分からない時）</label><div class="ubnamerow"><input id="ubPastName" autocomplete="off"><span class="ubu">様</span></div>' +
+          '<label>お名前の一部</label><div class="ubnamerow"><input id="ubPastName" autocomplete="off"><span class="ubu">様</span></div>' +
             '<div class="ubnf" id="ubPastNameMsg" style="display:none">該当する顧客が存在しません</div>' +
         '</div>' +
         '<button type="button" class="exgo" id="ubPastGo">🔍 検索</button>' +
