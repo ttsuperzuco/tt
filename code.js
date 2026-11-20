@@ -12325,7 +12325,7 @@ var UBCSS_ =
   '.ubttl{font-size:20px;line-height:1.2;margin:0;}' +
   '.ubwhen{color:#eaf6fb;font-weight:800;font-size:15px;}' +
   // ★2026-11-16 まるちゃん「再読込は時点の右だろ　一行に収めて」＝時点と再読込を離さない
-  '.ubwg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;}' +
+  '.ubwg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;margin-left:auto;}' +   // ★2026-11-20 まるちゃん「11/19 23:29 時点　で全体を右寄せ」
   '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop2 .ubhint{font-size:15px;margin:0;}' +
   '.ubtop2 .ubadd{padding:16px 16px;}' +   // ★2026-11-20 まるちゃん「このボタンを縦に大きく」（前は 7px 14px）   // ★2026-11-16 まるちゃん「売上一行追加は一番左に、その右に各項目の文字」
