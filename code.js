@@ -1160,6 +1160,35 @@ function _labelsFromCfg_(d) {
   }
   return labels;
 }
+// ★2026-11-20 まるちゃん「受付の担当は共通モジュールをつかってよ　ボタンごとにちがうのはおかしい、もっといるはず」
+//   ＝「この端末で入れた人」と「受付で選ぶ担当の候補」の正本。プロセル在庫・販売管理・ピンクの財布が使う。ボタンごとに書かない。
+//   ・お店受付PC・お店スマホ＝誰が入れたか分からない＝人を選ぶ（needPick）
+//   ・名前を選んだスマホ＝その人／社長（幹部）の画面＝🍅トマト／開発（まるちゃんの端末・パソコン版のズコ）＝🐉Ryu（auto）
+//   ・候補＝ズコの名前選びの一覧（自動監視で足した人も入る・受付の端末は除く）＋🐉Ryu（choices）
+//   名前は絵文字つきの表示名（🍊みかん）のまま記録する。サーバー側の正本＝共通\zuko_people.py（同じ決め方）。
+var SZSTAFF_ = {
+  DEV: '🐉Ryu',
+  cfg: function () { try { return JSON.parse(localStorage.getItem('sz_cfg') || '{}') || {}; } catch (e) { return {}; } },
+  labels: function () { return _labelsFromCfg_(SZSTAFF_.cfg()); },
+  needPick: function () { var w = window.__SZ_WHO_ || ''; return w === 'reception' || w === 'reception_sp'; },
+  auto: function () {
+    if (SZSTAFF_.needPick()) return '';
+    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = SZSTAFF_.labels();
+    if (w && L[w]) return L[w];
+    if (r === '社長(幹部)') return L.kanbu || '🍅トマト';
+    if (r === '開発') return SZSTAFF_.DEV;
+    return '';
+  },
+  choices: function () {
+    var ids = _peopleFromCfg_(SZSTAFF_.cfg()), L = SZSTAFF_.labels(), out = [];
+    for (var i = 0; i < ids.length; i++) {
+      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
+      out.push(L[ids[i]] || ids[i]);
+    }
+    out.push(SZSTAFF_.DEV);
+    return out;
+  }
+};
 // 誰がどの人(pid)を選択済みか＝{pid:{device,label,at}}。一度誰かが選んだ人は他端末から選べなくする
 // （2026-07-16・重複選択防止）。実際の防止はサーバー側の_claimJsonp_のみ、これは読み取り専用。
 function _claimedFromCfg_(d) {
@@ -12051,28 +12080,16 @@ function procStockScript_(C) {
   function cfg() { try { return JSON.parse(localStorage.getItem('sz_cfg') || '{}'); } catch (e) { return {}; } }
   function labels() { return (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(cfg()) : {}; }
   // お店のパソコン（お店受付PC・パソコン版のズコ）とお店スマホは、誰が入れたか分からない＝人をえらぶ。
-  function needPick() {
-    var w = window.__SZ_WHO_ || '';
-    return !!window.pywebview || w === 'reception' || w === 'reception_sp';
-  }
-  function autoLabel() {
-    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = labels();
-    if (w && L[w]) return L[w];
-    if (r === '社長(幹部)') return L.kanbu || '🍅トマト';
-    if (r === '開発') return 'Ryu';
-    return r || '不明';
-  }
+  // ★2026-11-20 人の決め方はズコ共通の SZSTAFF_（販売管理・ピンクの財布と同じ）。
+  function needPick() { return SZSTAFF_.needPick(); }
+  function autoLabel() { return SZSTAFF_.auto() || '不明'; }
   function popup(msg) { if (typeof szPopup_ === 'function') szPopup_(msg); else alert(msg); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   // ── 人をえらぶ ──
   function drawPeople() {
-    var ids = (typeof _peopleFromCfg_ === 'function') ? _peopleFromCfg_(cfg()) : [];
-    var L = labels(), h = '';
-    for (var i = 0; i < ids.length; i++) {
-      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
-      h += '<button type="button" data-lb="' + esc(L[ids[i]] || ids[i]) + '">' + esc(L[ids[i]] || ids[i]) + '</button>';
-    }
+    var ch = SZSTAFF_.choices(), h = '';
+    for (var i = 0; i < ch.length; i++) h += '<button type="button" data-lb="' + esc(ch[i]) + '">' + esc(ch[i]) + '</button>';
     $('psPeople').innerHTML = h;
   }
   $('psPeople').addEventListener('click', function (e) {
@@ -13828,18 +13845,10 @@ function uriageBookScript_(C) {
   //   担当者の自動記入は画面の名乗りでなく、裏の係が本人確認した端末で決める（ここは見せるだけ）。
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoWallet').style.display = '';
   var WAL = null, WKIND = '', WSTAFF = '', WBUSY = 0;
-  var WNAME = { kanbu: 'トマト', mikan: 'みかん', olive: 'オリーブ', pine: 'パイン', ringo: 'りんご', mango: 'マンゴー', coconut: 'ココナッツ' };
-  // ★2026-11-20 まるちゃん「ピンクの財布の担当者はマークをつけて、それぞれの果物のマークをつけて」（ズコの人の印と同じ）
-  var WMARK = { 'トマト': '🍅', 'みかん': '🍊', 'オリーブ': '🫒', 'パイン': '🍍', 'りんご': '🍎', 'マンゴー': '🥭', 'ココナッツ': '🥥', 'りゅう': '🐉' };
-  function walSt(n) { n = String(n || ''); return n ? (WMARK[n] || '') + n : ''; }
+  // ★2026-11-20 まるちゃん「受付の担当は共通モジュールをつかってよ」＝人の決め方・候補・表示名（果物のマーク付き）はズコ共通の SZSTAFF_。
+  function walSt(n) { return String(n || ''); }
   var WK = padKit($('ubWalF'), { amt: { kind: 'int', max: 6, comma: true } });
-  function walAuto() {
-    var r = window.__SZ_ROLE_ || '', w = window.__SZ_WHO_ || '';
-    if (r === 'スタッフ' && WNAME[w]) return WNAME[w];
-    if (r === '社長(幹部)') return 'トマト';
-    if (r === '開発') return 'りゅう';   // ★同日まるちゃん「スマホなのに担当者選択が出てる」＝開発（まるちゃんの端末）は持ち主＝りゅう
-    return '';
-  }
+  function walAuto() { return SZSTAFF_.auto(); }
   function walMD(d) { var m = String(d || '').match(/^\d{4}-(\d{2})-(\d{2})/); return m ? (+m[1]) + '/' + (+m[2]) : String(d || ''); }
   function walYen(n) { return n == null ? '' : Number(n).toLocaleString('ja-JP'); }
   function walDraw() {
@@ -13895,8 +13904,7 @@ function uriageBookScript_(C) {
     $('ubWalStaffL').style.display = au ? 'none' : ''; $('ubWalStaff').style.display = au ? 'none' : '';
     if (au) $('ubWalStaff').innerHTML = '';
     else {
-      var ch = ((WAL && WAL.choices) || ['トマト', 'みかん', 'オリーブ', 'パイン']).slice();
-      if ((window.__SZ_ROLE_ || '') === '開発') ch.push('りゅう');
+      var ch = SZSTAFF_.choices();
       var hb = '<div class="ubpseg" id="ubWalPick">';
       for (var i = 0; i < ch.length; i++) hb += '<button type="button" data-st="' + esc(ch[i]) + '">' + esc(walSt(ch[i])) + '</button>';
       $('ubWalStaff').innerHTML = hb + '</div>';
@@ -15512,17 +15520,11 @@ function hanbaiScript_(C) {
   function labels() {
     try { return (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : {}; } catch (e) { return {}; }
   }
-  function needPick() {
-    var w = window.__SZ_WHO_ || '';
-    return w === 'reception' || w === 'reception_sp';
-  }
+  // ★2026-11-20 人の決め方はズコ共通の SZSTAFF_（プロセル在庫・ピンクの財布と同じ）。
+  function needPick() { return SZSTAFF_.needPick(); }
   function who() {
     if (needPick()) return PICKED || '不明';
-    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = labels();
-    if (w && L[w]) return L[w];
-    if (r === '社長(幹部)') return L.kanbu || '🍅トマト';
-    if (r === '開発') return '🐉Ryu';
-    return r || '不明';
+    return SZSTAFF_.auto() || '不明';
   }
   // 入力した人のマーク（「🍊みかん」→「🍊」）。昔の記録で絵文字が無い時は空。
   function markOf(label) {
@@ -15530,14 +15532,8 @@ function hanbaiScript_(C) {
     return m ? m[1] : '';
   }
   function drawWho() {
-    var ids = (typeof _peopleFromCfg_ === 'function') ? _peopleFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : [];
-    var L = labels(), h = '';
-    for (var i = 0; i < ids.length; i++) {
-      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
-      var lb = L[ids[i]] || ids[i];
-      h += '<button type="button" data-lb="' + esc(lb) + '">' + esc(lb) + '</button>';
-    }
-    h += '<button type="button" data-lb="🐉Ryu">🐉Ryu</button>';
+    var ch = SZSTAFF_.choices(), h = '';
+    for (var i = 0; i < ch.length; i++) h += '<button type="button" data-lb="' + esc(ch[i]) + '">' + esc(ch[i]) + '</button>';
     $('hbWhoBtns').innerHTML = h;
   }
   function drawWhoLine() {

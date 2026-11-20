@@ -68,31 +68,18 @@ function hanbaiScript_(C) {
   function labels() {
     try { return (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : {}; } catch (e) { return {}; }
   }
-  function needPick() {
-    var w = window.__SZ_WHO_ || '';
-    return w === 'reception' || w === 'reception_sp';
-  }
+  function needPick() { return SZSTAFF_.needPick(); }
   function who() {
     if (needPick()) return PICKED || '不明';
-    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = labels();
-    if (w && L[w]) return L[w];
-    if (r === '社長(幹部)') return L.kanbu || '🍅トマト';
-    if (r === '開発') return '🐉Ryu';
-    return r || '不明';
+    return SZSTAFF_.auto() || '不明';
   }
   function markOf(label) {
     var m = String(label || '').match(/^(\p{Extended_Pictographic}\uFE0F?)/u);
     return m ? m[1] : '';
   }
   function drawWho() {
-    var ids = (typeof _peopleFromCfg_ === 'function') ? _peopleFromCfg_(JSON.parse(localStorage.getItem('sz_cfg') || '{}')) : [];
-    var L = labels(), h = '';
-    for (var i = 0; i < ids.length; i++) {
-      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
-      var lb = L[ids[i]] || ids[i];
-      h += '<button type="button" data-lb="' + esc(lb) + '">' + esc(lb) + '</button>';
-    }
-    h += '<button type="button" data-lb="🐉Ryu">🐉Ryu</button>';
+    var ch = SZSTAFF_.choices(), h = '';
+    for (var i = 0; i < ch.length; i++) h += '<button type="button" data-lb="' + esc(ch[i]) + '">' + esc(ch[i]) + '</button>';
     $('hbWhoBtns').innerHTML = h;
   }
   function drawWhoLine() {

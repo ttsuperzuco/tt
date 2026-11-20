@@ -13,27 +13,14 @@ function procStockScript_(C) {
   var vals = {}, cur = 0, fromList = false, digits = '', staffLabel = '', sending = false;
   function cfg() { try { return JSON.parse(localStorage.getItem('sz_cfg') || '{}'); } catch (e) { return {}; } }
   function labels() { return (typeof _labelsFromCfg_ === 'function') ? _labelsFromCfg_(cfg()) : {}; }
-  function needPick() {
-    var w = window.__SZ_WHO_ || '';
-    return !!window.pywebview || w === 'reception' || w === 'reception_sp';
-  }
-  function autoLabel() {
-    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '', L = labels();
-    if (w && L[w]) return L[w];
-    if (r === '社長(幹部)') return L.kanbu || '🍅トマト';
-    if (r === '開発') return 'Ryu';
-    return r || '不明';
-  }
+  function needPick() { return SZSTAFF_.needPick(); }
+  function autoLabel() { return SZSTAFF_.auto() || '不明'; }
   function popup(msg) { if (typeof szPopup_ === 'function') szPopup_(msg); else alert(msg); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
   function drawPeople() {
-    var ids = (typeof _peopleFromCfg_ === 'function') ? _peopleFromCfg_(cfg()) : [];
-    var L = labels(), h = '';
-    for (var i = 0; i < ids.length; i++) {
-      if (ids[i] === 'reception' || ids[i] === 'reception_sp') continue;
-      h += '<button type="button" data-lb="' + esc(L[ids[i]] || ids[i]) + '">' + esc(L[ids[i]] || ids[i]) + '</button>';
-    }
+    var ch = SZSTAFF_.choices(), h = '';
+    for (var i = 0; i < ch.length; i++) h += '<button type="button" data-lb="' + esc(ch[i]) + '">' + esc(ch[i]) + '</button>';
     $('psPeople').innerHTML = h;
   }
   $('psPeople').addEventListener('click', function (e) {

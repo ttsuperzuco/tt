@@ -875,6 +875,7 @@ function _labelsFromCfg_(d) {
   }
   return labels;
 }
+
 function _claimedFromCfg_(d) {
   var c = d && d.claimed;
   return (c && typeof c === 'object') ? c : {};

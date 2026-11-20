@@ -1299,17 +1299,9 @@ function uriageBookScript_(C) {
 
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoWallet').style.display = '';
   var WAL = null, WKIND = '', WSTAFF = '', WBUSY = 0;
-  var WNAME = { kanbu: 'トマト', mikan: 'みかん', olive: 'オリーブ', pine: 'パイン', ringo: 'りんご', mango: 'マンゴー', coconut: 'ココナッツ' };
-  var WMARK = { 'トマト': '🍅', 'みかん': '🍊', 'オリーブ': '🫒', 'パイン': '🍍', 'りんご': '🍎', 'マンゴー': '🥭', 'ココナッツ': '🥥', 'りゅう': '🐉' };
-  function walSt(n) { n = String(n || ''); return n ? (WMARK[n] || '') + n : ''; }
+  function walSt(n) { return String(n || ''); }
   var WK = padKit($('ubWalF'), { amt: { kind: 'int', max: 6, comma: true } });
-  function walAuto() {
-    var r = window.__SZ_ROLE_ || '', w = window.__SZ_WHO_ || '';
-    if (r === 'スタッフ' && WNAME[w]) return WNAME[w];
-    if (r === '社長(幹部)') return 'トマト';
-    if (r === '開発') return 'りゅう';   
-    return '';
-  }
+  function walAuto() { return SZSTAFF_.auto(); }
   function walMD(d) { var m = String(d || '').match(/^\d{4}-(\d{2})-(\d{2})/); return m ? (+m[1]) + '/' + (+m[2]) : String(d || ''); }
   function walYen(n) { return n == null ? '' : Number(n).toLocaleString('ja-JP'); }
   function walDraw() {
@@ -1363,8 +1355,7 @@ function uriageBookScript_(C) {
     $('ubWalStaffL').style.display = au ? 'none' : ''; $('ubWalStaff').style.display = au ? 'none' : '';
     if (au) $('ubWalStaff').innerHTML = '';
     else {
-      var ch = ((WAL && WAL.choices) || ['トマト', 'みかん', 'オリーブ', 'パイン']).slice();
-      if ((window.__SZ_ROLE_ || '') === '開発') ch.push('りゅう');
+      var ch = SZSTAFF_.choices();
       var hb = '<div class="ubpseg" id="ubWalPick">';
       for (var i = 0; i < ch.length; i++) hb += '<button type="button" data-st="' + esc(ch[i]) + '">' + esc(walSt(ch[i])) + '</button>';
       $('ubWalStaff').innerHTML = hb + '</div>';
