@@ -14243,7 +14243,6 @@ function renderUriageBookPage_(base, staff, dev) {
             '<div class="ubnf" id="ubPastNameMsg" style="display:none">該当する顧客が存在しません</div>' +
         '</div>' +
 
-        '<div class="ubh ubhint" style="font-size:14px;margin:4px 4px 8px">昨日までの売上表から探します。今日の分は「發票ありの売上」「發票なしの売上」で確認してください😊</div>' +
         '<div id="ubPastMsg" class="ubpastmsg"></div>' +
         '<div id="ubPastList"></div>' +
       '</div>' +
