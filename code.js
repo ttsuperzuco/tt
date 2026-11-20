@@ -12488,6 +12488,16 @@ var UBPAYCSS_ =
   '.ubpseg{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}' +
   '.ubpseg button{flex:1 1 0;border:2px solid #cbd5e1;background:#f8fafc;color:#0f172a;border-radius:10px;padding:10px 4px;font:inherit;font-size:14px;font-weight:900;cursor:pointer;}' +
   '.ubpseg button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +
+  // ★2026-11-20 ピンクの財布
+  '.ubwal{background:#fce7f3;border:3px solid #f472b6;border-radius:18px;padding:14px 12px;text-align:center;margin:6px 0 12px;box-shadow:0 4px 12px rgba(0,0,0,.15);}' +
+  '.ubwal .l{color:#9d174d;font-weight:900;font-size:16px;}' +
+  '.ubwal .v{color:#be185d;font-weight:900;font-size:44px;line-height:1.25;}' +
+  '.ubwalbtn{display:flex;gap:10px;margin:0 0 4px;}' +
+  '.ubwalbtn button{flex:1 1 0;border:0;border-radius:14px;padding:16px 4px;font:inherit;font-size:21px;font-weight:900;color:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.18);}' +
+  '.ubwalbtn .in{background:#16a34a;}.ubwalbtn .out{background:#dc2626;}' +
+  '.ubwalday,.ubwalauto{background:#fff;border-radius:12px;padding:12px;font-size:19px;font-weight:800;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
+  '.ubwalauto small{color:#64748b;font-size:13px;font-weight:700;}' +
+  '#ubWalList td.in{color:#15803d;}#ubWalList td.out{color:#b91c1c;}' +
   '.ubchips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px;}' +
   '.ubchip{background:#fff;color:#0f172a;border:2px solid #cbd5e1;border-radius:999px;padding:8px 12px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;}' +
   '.ubplt .tm.cy{cursor:pointer;border:1.5px solid #7dd3fc;}' +
@@ -12573,7 +12583,7 @@ function uriageBookScript_(C) {
   function yen(n) { return (n == null || n === '') ? '―' : Number(n).toLocaleString('ja-JP') + '元'; }
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
-  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR', 'ubSheet'];
+  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR', 'ubSheet', 'ubWallet', 'ubWalF'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
   var D = null, busy = false, loading = false;
   // ★2026-11-07 まるちゃん「修正するをOKしたとき、かきこみおわるまでまつとうざいので、バックグラウンドで書き込みします…
@@ -12807,7 +12817,7 @@ function uriageBookScript_(C) {
       fetchData();
     }
     // ★2026-11-14 作廢の認証（まるちゃんだけ）は、この窓の鍵の指紋も添える（受付係が開発と確かめる・購入証明書と同じ）
-    var devAct = fields.action === 'voidlist' || fields.action === 'voidsend' || !!fields.voids;
+    var devAct = fields.action === 'voidlist' || fields.action === 'voidsend' || !!fields.voids || fields.action === 'walletadd';
     (devAct ? devKey : function (cb) { cb({}); })(function (ex) {
     for (var ek in ex) fields[ek] = ex[ek];
     jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
@@ -13806,6 +13816,115 @@ function uriageBookScript_(C) {
   $('ubShPrev').addEventListener('click', function () { SHDAY = shDayAdd(-1); loadSheet(SHDAY); });
   $('ubShNext').addEventListener('click', function () { SHDAY = shDayAdd(1); loadSheet(SHDAY); });
   $('ubShReload').addEventListener('click', function () { loadSheet(SHDAY); });
+
+  // ── 👛 ピンクの財布（2026-11-20 まるちゃん）──
+  //   「一番上におおきく　財布現在残高　〇元　その下に　入金　出金　ボタン　その下に　入出金履歴　日付　入金　出金　残高　担当者
+  //    担当者は、スマホ名ならもちぬし自動記入　受付なら　選択式」
+  //   記録は共有DB（裏の係＝発票から売上表\programs\ピンクの財布.py）。画面は pink_wallet.json を読むだけ。
+  //   担当者の自動記入は画面の名乗りでなく、裏の係が本人確認した端末で決める（ここは見せるだけ）。
+  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoWallet').style.display = '';
+  var WAL = null, WKIND = '', WSTAFF = '', WBUSY = 0;
+  var WNAME = { kanbu: 'トマト', mikan: 'みかん', olive: 'オリーブ', pine: 'パイン', ringo: 'りんご', mango: 'マンゴー', coconut: 'ココナッツ' };
+  var WK = padKit($('ubWalF'), { amt: { kind: 'int', max: 6, comma: true } });
+  function walAuto() {
+    var r = window.__SZ_ROLE_ || '', w = window.__SZ_WHO_ || '';
+    if (r === 'スタッフ' && WNAME[w]) return WNAME[w];
+    if (r === '社長(幹部)') return 'トマト';
+    return '';
+  }
+  function walMD(d) { var m = String(d || '').match(/^\d{4}-(\d{2})-(\d{2})/); return m ? (+m[1]) + '/' + (+m[2]) : String(d || ''); }
+  function walYen(n) { return n == null ? '' : Number(n).toLocaleString('ja-JP'); }
+  function walDraw() {
+    if (!WAL) { $('ubWalBal').textContent = '…'; $('ubWalList').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
+    $('ubWalBal').textContent = walYen(WAL.balance || 0) + '元';
+    $('ubWalWhen').textContent = WBUSY ? '記録しています…' : String(WAL.at || '').slice(11, 16) + ' 時点';
+    var rs = WAL.rows || [];
+    var h = '<div class="ubtbl ubsp"><table><thead><tr><th>日付</th><th class="r">入金</th><th class="r">出金</th><th class="r">残高</th><th>担当者</th></tr></thead><tbody>';
+    if (!rs.length) h += '<tr><td colspan="5" class="ubnone">まだ記録がありません</td></tr>';
+    for (var i = 0; i < rs.length; i++) {
+      var r = rs[i];
+      h += '<tr><td class="w">' + esc(walMD(r.day)) + '</td>' +
+        '<td class="n in">' + (r.kind === '繰越' ? '<span class="sub">繰越</span>' : '') + walYen(r['in']) + '</td>' +
+        '<td class="n out">' + walYen(r.out) + '</td>' +
+        '<td class="n">' + walYen(r.bal) + '</td><td>' + esc(r.staff || '') + '</td></tr>';
+    }
+    h += '</tbody></table></div>';
+    $('ubWalList').innerHTML = h;
+  }
+  function walFetch() {
+    jsonp({ action: 'data', name: 'pink_wallet.json' }, function (p) {
+      p = (p && p.data && !p.rows) ? p.data : p;
+      if (p && p.rows) { WAL = p; walDraw(); }
+    });
+  }
+  // 読み直し＝裏の係に頼んで最新を置き場へ置いてもらい、置き場から読む（黙って）
+  function walLoad() {
+    devKey(function (ex) {
+      var fl = { action: 'walletload' }; for (var ek in ex) fl[ek] = ex[ek];
+      jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
+              device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fl) }, function (r) {
+        if (!r || !r.ok || !r.id) return;
+        var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('uriagebook', 1000) : 300;
+        (function poll() {
+          n++; if (n > max) return;
+          jsonp({ action: 'status', key: C.key, id: r.id }, function (st) {
+            if (!st || !st.ok || st.status === 'pending' || st.status === 'running' || st.status === 'queued' || st.status === '') { setTimeout(poll, 1000); return; }
+            if (st.status === 'done') walFetch();
+            else popup(st.result || '財布の記録を読めませんでした。りゅうさんに連絡してください🙇');
+          });
+        })();
+      });
+    });
+  }
+  function walOpenF(kind) {
+    WKIND = kind; WSTAFF = '';
+    $('ubWalFTitle').textContent = kind === '入金' ? '財布に入金' : '財布から出金';
+    $('ubWalAmtL').textContent = kind + 'の金額';
+    var t = new Date(), wd = '日月火水木金土'.charAt(t.getDay());
+    $('ubWalDay').textContent = (t.getMonth() + 1) + '/' + t.getDate() + '（' + wd + '）';
+    var au = walAuto();
+    if (au) $('ubWalStaff').innerHTML = '<div class="ubwalauto">' + esc(au) + '　<small>（このスマホの持ち主）</small></div>';
+    else {
+      var ch = ((WAL && WAL.choices) || ['トマト', 'みかん', 'オリーブ', 'パイン']).slice();
+      if ((window.__SZ_ROLE_ || '') === '開発') ch.push('りゅう');
+      var hb = '<div class="ubpseg" id="ubWalPick">';
+      for (var i = 0; i < ch.length; i++) hb += '<button type="button" data-st="' + esc(ch[i]) + '">' + esc(ch[i]) + '</button>';
+      $('ubWalStaff').innerHTML = hb + '</div>';
+    }
+    WK.set('amt', ''); WK.close();
+    $('ubWalGo').textContent = '以上の内容で' + kind;
+    $('ubWalGo').style.background = kind === '入金' ? '#16a34a' : '#dc2626';
+    show('ubWalF');
+  }
+  $('ubWalStaff').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-st]'); if (!b) return;
+    WSTAFF = b.getAttribute('data-st');
+    [].forEach.call($('ubWalStaff').querySelectorAll('button[data-st]'), function (x) { x.classList.toggle('on', x === b); });
+    WK.close();
+  });
+  $('ubWalGo').addEventListener('click', function () {
+    var amt = parseInt(WK.get('amt') || '0', 10) || 0; WK.close();
+    var au = walAuto(), st = au || WSTAFF;
+    if (amt <= 0) { popup(WKIND + 'の金額を入力してください😊'); return; }
+    if (!st) { popup('担当者を選んでください😊'); return; }
+    if (WKIND === '出金' && WAL && amt > (WAL.balance || 0)) { popup('財布の残高（' + walYen(WAL.balance || 0) + '元）より多い金額は出金できません。金額を確認してください🙇'); return; }
+    popup(WKIND + '　' + walYen(amt) + '元（担当 ' + st + '）\nこの内容で記録しますか？😊', {
+      cancel: true, onYes: function () {
+        WBUSY++;
+        ask({ action: 'walletadd', kind: WKIND, amount: amt, staff: au ? '' : st }, '財布に記録しています', function () { show('ubWallet'); walDraw(); });
+      }
+    });
+  });
+  // 書き込みが終わった合図（ズコ共通の見張り）＝財布を読み直す
+  if (window.__ubWalDoneH) window.removeEventListener('ubdone', window.__ubWalDoneH);
+  window.__ubWalDoneH = function () { if (WBUSY) WBUSY--; walFetch(); };
+  window.addEventListener('ubdone', window.__ubWalDoneH);
+  $('ubGoWallet').addEventListener('click', function () { show('ubWallet'); walDraw(); walFetch(); walLoad(); });
+  $('ubWalBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
+  $('ubWalFBack').addEventListener('click', function (e) { e.preventDefault(); WK.close(); show('ubWallet'); });
+  $('ubWalIn').addEventListener('click', function () { walOpenF('入金'); });
+  $('ubWalOut').addEventListener('click', function () { walOpenF('出金'); });
+  $('ubWalReload').addEventListener('click', function () { walLoad(); });
   // ★印刷テスト（本番・2026-11-19）＝確認の小窓のあとだけ送る。結果（発票番号・印刷済みか）は小窓で出す。
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubPayPrint').style.display = '';
   $('ubPayPrint').addEventListener('click', function () {
@@ -13858,6 +13977,8 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoInv">🧾 發票<span class="ubem ari">あり</span>の売上</button>' +
           '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
+          // ★2026-11-20 まるちゃん「ピンクの財布ボタンを売上帳簿につくる」（新しいボタンは、まず開発の時だけ出す）
+          '<button type="button" id="ubGoWallet" style="display:none">👛 <span class="ubem" style="color:#db2777">ピンク</span>の財布</button>' +
           // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
           // ★2026-11-16 まるちゃん「このボタンいらない」＝發票の作廢は發票ありの売上の「作廢」の列から行う（メニューのボタンを消した）
           // ★2026-11-14 まるちゃん「作廢の認証ボタン…俺だけ見れるように」＝開発の時だけ出す
@@ -13917,6 +14038,26 @@ function renderUriageBookPage_(base, staff, dev) {
         '<div class="ubtest">テストです。売上表をそのまま表示しています（表示のみです）</div>' +
         '<div id="ubShMsg" class="ubnone" style="display:none"></div>' +
         '<iframe id="ubShFrame" sandbox="" title="売上表" style="display:none;width:100%;border:0;background:#fff;border-radius:8px;"></iframe>' +
+      '</div>' +
+      // ★2026-11-20 ピンクの財布＝一番上に大きく残高・その下に入金／出金・その下に入出金履歴（日付・入金・出金・残高・担当者）
+      '<div id="ubWallet" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubWalBack') + '<span class="bname ubttl">👛 ピンクの財布</span>' +
+          '<span class="ubwg"><span id="ubWalWhen" class="ubwhen"></span><button type="button" id="ubWalReload" class="ubsm">再読込</button></span>' +
+        '</div>' +
+        '<div class="ubwal"><div class="l">財布の現在残高</div><div class="v" id="ubWalBal">…</div></div>' +
+        '<div class="ubwalbtn"><button type="button" id="ubWalIn" class="in">入金</button><button type="button" id="ubWalOut" class="out">出金</button></div>' +
+        '<div class="ubh">入出金履歴</div>' +
+        '<div id="ubWalList"></div>' +
+      '</div>' +
+      '<div id="ubWalF" style="display:none">' + inBack('ubWalFBack') +
+        '<div class="hhead"><span class="bmark">👛</span><span class="bname" id="ubWalFTitle">入金</span></div>' +
+        '<div class="ubf">' +
+          '<label>日付</label><div class="ubwalday" id="ubWalDay"></div>' +
+          '<label id="ubWalAmtL">金額</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="amt" data-ph="押して入力"></div>' +
+            '<button type="button" data-pok="amt" class="ubok" style="display:none">入力OK</button></div></div>' +
+          '<label>担当者</label><div id="ubWalStaff"></div>' +
+        '</div>' +
+        '<button type="button" class="exgo" id="ubWalGo">以上の内容で記録</button>' +
       '</div>' +
       '<div id="ubPay" style="display:none">' +
         '<div class="ubtop">' + inBack('ubPayBack') + '<span class="bname ubttl">🧾 お会計（テスト）</span>' +
