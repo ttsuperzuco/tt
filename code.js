@@ -12518,6 +12518,13 @@ var UBPAYCSS_ =
   '.ubwal .l{color:#9d174d;font-weight:900;font-size:16px;}' +
   '.ubmenu button.ubwalgo{padding:22px 10px;}' +
   '.ubmenu .ubwalsub{display:block;margin-top:6px;color:#be185d;font-size:18px;font-weight:900;}' +
+  // ★2026-11-20 過去売上の検索
+  '.ubpastbar{display:flex;gap:8px;align-items:stretch;margin:6px 0 4px;}' +
+  '.ubpastbar input{flex:1 1 auto;min-width:0;border:0;border-radius:12px;padding:12px;font:inherit;font-size:18px;color:#0f172a;box-shadow:0 3px 8px rgba(0,0,0,.12);}' +
+  '.ubpastbar .ubadd{padding:0 22px;font-size:17px;}' +
+  '.ubpastmsg{color:#fde047;font-weight:900;font-size:16px;margin:8px 4px;}' +
+  '.ubpastmsg:empty{display:none;}' +
+  '#ubPastList td.p small{display:block;color:#64748b;font-size:11px;font-weight:700;}' +
   '.ubmenu .ubwalsub:empty{display:none;}' +
   '.ubwal .v{color:#be185d;font-weight:900;font-size:44px;line-height:1.25;}' +
   '.ubwalbtn{display:flex;gap:10px;margin:0 0 4px;}' +
@@ -12613,7 +12620,7 @@ function uriageBookScript_(C) {
   function yen(n) { return (n == null || n === '') ? '―' : Number(n).toLocaleString('ja-JP') + '元'; }
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
-  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR', 'ubSheet', 'ubWallet', 'ubWalF'];
+  var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR', 'ubSheet', 'ubWallet', 'ubWalF', 'ubPast'];
   function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0);
     document.body.classList.toggle('ubwide', id === 'ubSheet'); if (id === 'ubMenu') setTimeout(ubFitMenu_, 0); }
   // ★2026-11-20 まるちゃん「ボタン数に応じてボタンの高さ調整して　全部のボタンが一画面で表示されるように。PCもスマホも」
@@ -13892,6 +13899,63 @@ function uriageBookScript_(C) {
   $('ubShNext').addEventListener('click', function () { SHDAY = shDayAdd(1); loadSheet(SHDAY); });
   $('ubShReload').addEventListener('click', function () { loadSheet(SHDAY); });
 
+  // ── 🔍 過去売上の検索（2026-11-20 まるちゃん・読むだけ）──
+  //   裏の係（発票から売上表\programs\過去売上の検索.py）が共有DBの売上の帳面から探し、この端末用の置き場（ubpast_<端末>.json）に置く。
+  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoPast').style.display = '';
+  var PSREQ = 0;
+  function psMsg(t) { $('ubPastMsg').textContent = t || ''; }
+  function psDate(d) { var m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[1] + '/' + (+m[2]) + '/' + (+m[3]) : String(d || ''); }
+  function psDraw(v) {
+    var rs = v.rows || [];
+    psMsg(v.count ? (v.count + '件　合計 ' + Number(v.total || 0).toLocaleString('ja-JP') + '元（' + psDate(v.first) + '〜' + psDate(v.last) + '）' +
+      (v.shown < v.count ? '　※新しい順に' + v.shown + '件まで出しています' : '')) : '見つかりませんでした。顧客番号やお名前を確認してください😊');
+    if (!rs.length) { $('ubPastList').innerHTML = ''; return; }
+    var h = '<div class="ubtbl ubsp"><table><thead><tr><th>日付</th><th>お客様</th><th>明細</th><th>支払</th><th class="r">金額</th></tr></thead><tbody>';
+    for (var i = 0; i < rs.length; i++) {
+      var r = rs[i];
+      h += '<tr><td class="w">' + esc(psDate(r.date)) + '</td>' +
+        '<td class="cu"><span class="nm">' + (r.name ? ubNameHtml_(r.name) : '') + '</span><span class="sub">' + esc(r.num || '') + '</span></td>' +
+        '<td class="d">' + esc(r.detail || '') + '</td>' +
+        '<td class="p">' + (r.other ? '<small>發票なし</small>' : esc({ '街口支付': '街口', 'LINE PAY': 'LINE' }[r.pay] || r.pay || '')) + '</td>' +
+        '<td class="n">' + (r.amount == null ? '' : Number(r.amount).toLocaleString('ja-JP')) + '</td></tr>';
+    }
+    $('ubPastList').innerHTML = h + '</tbody></table></div>';
+  }
+  function psSearch() {
+    var q = $('ubPastQ').value.trim();
+    if (!q) { popup('顧客番号か、お名前の一部を入力してください😊'); return; }
+    var my = ++PSREQ, rid = 'r' + Date.now().toString(36);
+    var dv = String(window.__SZ_DEVICE_ || 'x').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40) || 'x';
+    psMsg('検索しています…'); $('ubPastList').innerHTML = '';
+    function fail(t) { if (my === PSREQ) psMsg(t || '検索できませんでした。りゅうさんに連絡してください🙇'); }
+    devKey(function (ex) {
+      var fl = { action: 'pastsearch', q: q, rid: rid }; for (var ek in ex) fl[ek] = ex[ek];
+      jsonp({ action: 'submit', key: C.key, op: 'uriagebook', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
+              device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fl) }, function (r) {
+        if (!r || !r.ok || !r.id) { fail(''); return; }
+        var n = 0, max = (typeof LIMITS !== 'undefined') ? LIMITS.tries('uriagebook', 1000) : 300;
+        (function poll() {
+          if (my !== PSREQ) return;
+          n++; if (n > max) { fail(''); return; }
+          jsonp({ action: 'status', key: C.key, id: r.id }, function (st) {
+            if (!st || !st.ok || st.status === 'pending' || st.status === 'running' || st.status === 'queued' || st.status === '') { setTimeout(poll, 800); return; }
+            if (st.status !== 'done') { fail(st.result || ''); return; }
+            jsonp({ action: 'data', name: 'ubpast_' + dv + '.json' }, function (v) {
+              if (my !== PSREQ) return;
+              v = (v && v.data && !v.rows) ? v.data : v;
+              if (!v || v.rid !== rid) { fail(''); return; }
+              psDraw(v);
+            });
+          });
+        })();
+      });
+    });
+  }
+  $('ubPastGo').addEventListener('click', psSearch);
+  $('ubPastQ').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); psSearch(); } });
+  $('ubGoPast').addEventListener('click', function () { show('ubPast'); try { $('ubPastQ').focus(); } catch (e) {} });
+  $('ubPastBack').addEventListener('click', function (e) { e.preventDefault(); PSREQ++; show('ubMenu'); });
+
   // ── 👛 ピンクの財布（2026-11-20 まるちゃん）──
   //   「一番上におおきく　財布現在残高　〇元　その下に　入金　出金　ボタン　その下に　入出金履歴　日付　入金　出金　残高　担当者
   //    担当者は、スマホ名ならもちぬし自動記入　受付なら　選択式」
@@ -14032,7 +14096,7 @@ function uriageBookScript_(C) {
   // ★2026-11-20 まるちゃん「パソコンとスマホのボタンを切り替えたら、同じ画面で切り替えて」
   //   ＝開いていた画面を開発の切り替えスイッチに教え、切り替えて開き直したらその画面を開く（入力の途中の画面は、その一覧の画面）。
   var SW_BACK = { ubAdd: 'ubInv', ubVoid: 'ubInv', ubOther: 'ubNoInv', ubWalF: 'ubWallet', ubPayF: 'ubPay', ubPayR: 'ubPay' };
-  var SW_GO = { ubInv: 'ubGoInv', ubNoInv: 'ubGoNoInv', ubCoins: 'ubGoCoins', ubAuth: 'ubGoAuth', ubPay: 'ubGoPay', ubSheet: 'ubGoSheet', ubWallet: 'ubGoWallet' };
+  var SW_GO = { ubInv: 'ubGoInv', ubNoInv: 'ubGoNoInv', ubCoins: 'ubGoCoins', ubAuth: 'ubGoAuth', ubPay: 'ubGoPay', ubSheet: 'ubGoSheet', ubWallet: 'ubGoWallet', ubPast: 'ubGoPast' };
   window.__szKeep = { save: function () { for (var i = 0; i < SECS.length; i++) if ($(SECS[i]) && $(SECS[i]).style.display !== 'none') return 'ub:' + SECS[i]; return ''; } };
   try {
     var swk = window.__szToFrame ? null : JSON.parse(sessionStorage.getItem('sz_sw_keep') || 'null');
@@ -14070,6 +14134,8 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
           // ★2026-11-20 まるちゃん「ピンクの財布ボタンを売上帳簿につくる」→同日「財布ボタンを全員に出して」（表示は下の動きの所で）
           // ★同日まるちゃん「ピンクは普通の文字の大きさ　でその文字の下に　現在残高　を表示」
+          // ★2026-11-20 まるちゃん「過去売上の検索　ボタンをつくりたい　顧客番号か氏名の一部で過去の売上データを検索して確認したい」（まず開発の時だけ）
+          '<button type="button" id="ubGoPast" style="display:none">🔍 過去売上の<span class="ubem auth">検索</span></button>' +
           '<button type="button" id="ubGoWallet" class="ubwalgo" style="display:none">👛 <span style="color:#db2777">ピンク</span>の財布<span class="ubwalsub" id="ubGoWalBal"></span></button>' +
           // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
           // ★2026-11-16 まるちゃん「このボタンいらない」＝發票の作廢は發票ありの売上の「作廢」の列から行う（メニューのボタンを消した）
@@ -14132,6 +14198,14 @@ function renderUriageBookPage_(base, staff, dev) {
         '<iframe id="ubShFrame" sandbox="allow-same-origin" title="売上表" style="display:none;width:100%;border:0;background:#fff;border-radius:8px;"></iframe>' +
       '</div>' +
       // ★2026-11-20 ピンクの財布＝一番上に大きく残高・その下に入金／出金・その下に入出金履歴（日付・入金・出金・残高・担当者）
+      '<div id="ubPast" style="display:none">' +
+        '<div class="ubtop">' + inBack('ubPastBack') + '<span class="bname ubttl">🔍 過去売上の検索</span></div>' +
+        '<div class="ubpastbar"><input id="ubPastQ" type="text" placeholder="顧客番号（例 M439）かお名前の一部" autocomplete="off">' +
+          '<button type="button" id="ubPastGo" class="ubadd">検索</button></div>' +
+        '<div class="ubh ubhint" style="font-size:14px;margin:4px 4px 8px">昨日までの売上表から探します。今日の分は「發票ありの売上」「發票なしの売上」で確認してください😊</div>' +
+        '<div id="ubPastMsg" class="ubpastmsg"></div>' +
+        '<div id="ubPastList"></div>' +
+      '</div>' +
       '<div id="ubWallet" style="display:none">' +
         '<div class="ubtop">' + inBack('ubWalBack') + '<span class="bname ubttl">👛 ピンクの財布</span>' +
           '<span class="ubwg"><span id="ubWalWhen" class="ubwhen"></span><button type="button" id="ubWalReload" class="ubsm">再読込</button></span>' +
