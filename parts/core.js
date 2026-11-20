@@ -144,6 +144,9 @@ function doGet(e) {
   } else if (view === 'shomeiman') {
     title = '購入証明書の使い方';                              
     html = renderShomeiManualPage_(base, staff, dev);
+  } else if (view === 'ubman') {
+    title = 'TT売上帳簿の使い方';                              
+    html = renderUbManualPage_(base, staff, dev);
   } else if (view === 'linereply') {
     title = 'LINEにすぐ返信できない';                                  
     html = renderLineReplyManualPage_(base, staff, dev);
@@ -836,10 +839,11 @@ var DEFAULT_TILE_SETTINGS_ = {
   shomeisho:  { exec: true, staff: true },
   wifiman:    { exec: false, staff: false },
   shomeiman:  { exec: false, staff: false },
+  ubman:      { exec: false, staff: false },   
   linereply:  { exec: false, staff: false },
   manual:     { exec: false, staff: false }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'linereply'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1650,6 +1654,8 @@ var TILE_DEFS_ = [
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/manual-192.png?v=1"></span>', label: 'マニュアル' },
   { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
     icon: '<span class="ticon">🧾</span>', label: '購入証明書\nの使い方' },
+  { id: 'ubman', cls: 'ubman', view: 'ubman',
+    icon: '<span class="ticon">📒</span>', label: 'TT売上帳簿\nの使い方' },
   { id: 'linereply', cls: 'linereply', view: 'linereply',
     icon: '<span class="ticon">💬</span>', iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/linereply-192.png?v=1"></span>', label: 'LINEにすぐ\n返信できない' },
 ];
@@ -1951,11 +1957,12 @@ function homeFolderBoot_(OPT) {
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
     { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered', 'manual'] },
     { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
-    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'shomeiman'] }];
+    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'shomeiman', 'ubman'] }];
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
     { to: 'd6', id: 'manual' },   
     { to: 'd7', id: 'shomeiman' },   
+    { to: 'd7', id: 'ubman' },   
     { to: 'd7', id: 'linereply' }];   
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
@@ -3114,6 +3121,7 @@ try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined'
 
 
 
+
 function renderPcStatus_(base, staff, dev) {
   try {
     return renderPcStatusPage_(
@@ -3605,6 +3613,7 @@ var HOMECSS_ =
 '  .tile.shomeisho::before { background:#b5757e; }' +   
 '  .tile.wifiman::before { background:#2563eb; }' +   
 '  .tile.shomeiman::before { background:#b5757e; }' +   
+'  .tile.ubman::before { background:#0f766e; }' +   
 '  .tile.manual::before { background:#0891b2; }' +   
 '  .tile.linereply::before { background:#06c755; }' +   
 '  .tile.hanbai::before { background:#0e7490; }' +
@@ -3636,6 +3645,7 @@ var HOMECSS_ =
 '  .tile.shomeisho .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.wifiman .ticon { background:rgba(37,99,235,.16); }' +
 '  .tile.shomeiman .ticon { background:rgba(181,117,126,.18); }' +
+'  .tile.ubman .ticon { background:rgba(15,118,110,.16); }' +
 '  .tile.manual .ticon { background:rgba(8,145,178,.16); }' +
 '  .tile.linereply .ticon { background:rgba(6,199,85,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +

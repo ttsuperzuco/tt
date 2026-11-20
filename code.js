@@ -184,6 +184,9 @@ function doGet(e) {
   } else if (view === 'shomeiman') {
     title = '購入証明書の使い方';                              // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ）
     html = renderShomeiManualPage_(base, staff, dev);
+  } else if (view === 'ubman') {
+    title = 'TT売上帳簿の使い方';                              // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ・2026-11-21）
+    html = renderUbManualPage_(base, staff, dev);
   } else if (view === 'linereply') {
     title = 'LINEにすぐ返信できない';                                  // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ・2026-11-20）
     html = renderLineReplyManualPage_(base, staff, dev);
@@ -1092,6 +1095,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★🧾購入証明書の使い方（2026-11-19 まるちゃん「購入証明書のマニュアルも出して」）＝りゅう画面の「マニュアル」フォルダに入る。
   //   開発者だけ（スタッフは📖マニュアル＝お客様系から同じ物を見る）。
   shomeiman:  { exec: false, staff: false },
+  ubman:      { exec: false, staff: false },   // ★📒TT売上帳簿の使い方（2026-11-21・開発者だけ）
   // ★💬LINE返信の流れ（2026-11-20 まるちゃん）＝お客様からLINEが来た時の流れ図と「少々お待ちください」の出し方。
   //   りゅう画面の「マニュアル」フォルダに入る。開発者だけ（スタッフには📖マニュアルの一覧から・公開はまるちゃんが言ってから）。
   linereply:  { exec: false, staff: false },
@@ -1105,7 +1109,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'linereply'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -2273,6 +2277,11 @@ var TILE_DEFS_ = [
   //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
   { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
     icon: '<span class="ticon">🧾</span>', label: '購入証明書\nの使い方' },
+  // ★📒TT売上帳簿の使い方（2026-11-21 まるちゃん「入れて」＝ズコの「マニュアル」フォルダに入れる）＝📖マニュアルの1冊を、表紙からすぐ見る（renderUbManualPage_）。
+  //   画像＝manual/uriagebook/p00〜（元＝AI自動プログラム\マニュアル一覧\TT売上帳簿の使い方\ズコに載せる.py）。
+  //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
+  { id: 'ubman', cls: 'ubman', view: 'ubman',
+    icon: '<span class="ticon">📒</span>', label: 'TT売上帳簿\nの使い方' },
   // ★💬LINE返信の流れ（2026-11-20 まるちゃん「りゅうのマニュアルフォルダーのボタンとして追加」）＝📖マニュアルの1冊を表紙から見る（renderLineReplyManualPage_）。
   //   画像＝manual/linereply/p00（流れ図）・p01（少々お待ちくださいの出し方）。元＝AI自動プログラム\マニュアル一覧\LINE返信の流れ\画像を作る.py --zuko。
   //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
@@ -2723,13 +2732,15 @@ function homeFolderBoot_(OPT) {
     // ★2026-11-19 まるちゃん「購入証明書のマニュアルも出して」＝🧾購入証明書の使い方（shomeiman・開発者だけ）もここに。
     //   スタッフは📖マニュアル（お客様系）から見る＝同じボタンは2つの最初のフォルダに入れられないので、りゅう用に別のボタンにした。
     // ★2026-11-20 まるちゃん「お店のWi-Fiの設定は消して」＝wifiman を外し、💬LINE返信の流れ（linereply・開発者だけ）を足した。
-    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'shomeiman'] }];
+    // ★2026-11-21 まるちゃん「入れて」＝📒TT売上帳簿の使い方（ubman・開発者だけ）もここに。
+    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'shomeiman', 'ubman'] }];
   // ★2026-11-14 あとから最初のフォルダを変えた分（まるちゃん「全適用させて」）＝並びを覚えている端末にも1回だけ当てる。
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
     { to: 'd6', id: 'manual' },   // ★2026-11-19 📖マニュアル
     { to: 'd7', id: 'shomeiman' },   // ★2026-11-19 🧾購入証明書の使い方（りゅうのマニュアルフォルダ）
+    { to: 'd7', id: 'ubman' },   // ★2026-11-21 📒TT売上帳簿の使い方（りゅうのマニュアルフォルダ）
     { to: 'd7', id: 'linereply' }];   // ★2026-11-20 💬LINE返信の流れ（りゅうのマニュアルフォルダ）
   // ★2026-11-16 OPT.start＝最初のフォルダ分けを渡した時はそれを使う（パソコン版の一番トップの画面＝最初のフォルダ無し）。その時は MOVES も当てない。
   if (OPT.start) { START = OPT.start; MOVES = []; }
@@ -14701,6 +14712,7 @@ function shomeishoScript_(C) {
 //   マニュアルを足す時は MANUALS_ に1行足す。
 var MANUALS_ = [
   { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' },
+  { key: 'uriagebook', icon: '📒', title: 'TT売上帳簿の使い方' },   // ★2026-11-21 まるちゃん「入れて」
   // ★2026-11-20 まるちゃん「他の人は流れ図を出さずに、出し方の最初を『お客様からLINEが来たら／「少々お待ちください」と返信する／
   //   「お待ちください」の当店定型文の保存場所は以下の通り』にかえる」＝ほかのスタッフ用は流れ図なしの1枚（manual/linereply_all）。
   { key: 'linereply_all', icon: '💬', title: 'LINEにすぐ返信できない' }   // ★2026-11-20 まるちゃん「LINE返信の流れじゃなくLINEにすぐ返信できないにかえる。ボタン名も」
@@ -14803,6 +14815,9 @@ function renderShomeiManualPage_(base, staff, dev) {
   return renderManualPage_(base, staff, dev, MANUALS_[0]);
 }
 // ★💬LINE返信の流れ（2026-11-20 まるちゃん）＝📖マニュアルの1冊を、一覧を出さずに表紙（流れ図）から見る。表紙の「★出し方は 1ページへ」を押すと出し方へ飛ぶ。
+function renderUbManualPage_(base, staff, dev) {   // ★📒TT売上帳簿の使い方（2026-11-21）＝📖マニュアルの1冊を表紙から見る
+  return renderManualPage_(base, staff, dev, { key: 'uriagebook', icon: '📒', title: 'TT売上帳簿の使い方' });
+}
 function renderLineReplyManualPage_(base, staff, dev) {
   return renderManualPage_(base, staff, dev, LINEREPLY_MANUAL_);
 }
@@ -27042,6 +27057,7 @@ var HOMECSS_ =
 '  .tile.shomeisho::before { background:#b5757e; }' +   // ★購入証明書＝PC版と同じ色（super_pc.py）
 '  .tile.wifiman::before { background:#2563eb; }' +   // ★📶お店のWi-Fiの設定（2026-11-19）＝PC版と同じ色（super_pc.py）
 '  .tile.shomeiman::before { background:#b5757e; }' +   // ★🧾購入証明書の使い方（2026-11-19）＝購入証明書と同じ色（super_pc.py も同じ）
+'  .tile.ubman::before { background:#0f766e; }' +   // ★📒TT売上帳簿の使い方（2026-11-21）＝TT売上帳簿と同じ色（super_pc.py も同じ）
 '  .tile.manual::before { background:#0891b2; }' +   // ★📖マニュアル（2026-11-19）＝PC版と同じ色（super_pc.py）
 '  .tile.linereply::before { background:#06c755; }' +   // ★💬LINE返信の流れ（2026-11-20）＝LINEの緑・PC版と同じ色（super_pc.py）
 '  .tile.hanbai::before { background:#0e7490; }' +
@@ -27073,6 +27089,7 @@ var HOMECSS_ =
 '  .tile.shomeisho .ticon { background:rgba(181,117,126,.18); }' +
 '  .tile.wifiman .ticon { background:rgba(37,99,235,.16); }' +
 '  .tile.shomeiman .ticon { background:rgba(181,117,126,.18); }' +
+'  .tile.ubman .ticon { background:rgba(15,118,110,.16); }' +
 '  .tile.manual .ticon { background:rgba(8,145,178,.16); }' +
 '  .tile.linereply .ticon { background:rgba(6,199,85,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
