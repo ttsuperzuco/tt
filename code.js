@@ -12328,7 +12328,7 @@ var UBCSS_ =
   '.ubwg{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;}' +
   '.ubtop2{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop2 .ubhint{font-size:15px;margin:0;}' +
-  '.ubtop2 .ubadd{padding:7px 14px;}' +   // ★2026-11-16 まるちゃん「売上一行追加は一番左に、その右に各項目の文字」
+  '.ubtop2 .ubadd{padding:16px 16px;}' +   // ★2026-11-20 まるちゃん「このボタンを縦に大きく」（前は 7px 14px）   // ★2026-11-16 まるちゃん「売上一行追加は一番左に、その右に各項目の文字」
   '#ubMenu,#ubNoInv,#ubAdd,#ubOther,#ubCoins{max-width:560px;margin:0 auto;}' +
   '@media (min-width:700px){.ubtbl table{table-layout:auto;font-size:14px;}.ubtbl col{width:auto!important;}' +
   '.ubtbl th,.ubtbl td{white-space:nowrap;padding-left:8px;padding-right:8px;}.ubtbl th br{display:none;}.ubtbl td.d{white-space:normal;width:100%;}}' +
