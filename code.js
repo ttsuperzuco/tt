@@ -14059,7 +14059,7 @@ function renderUriageBookPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + EXPADCSS_ + UBCSS_ + UBPAYCSS_ + '</style>' +
-    '<div class="home ubhome">' + backBar_(base, staff, dev) +   // ★この画面だけ枠を広げる（ズコ共通の枠は560まで）
+    '<div class="home ubhome">' + backBarUnlessSolo_(base, staff, dev) +   // ★この画面だけ枠を広げる（ズコ共通の枠は560まで）／★2026-11-20 まるちゃん「独立した画面として開いたアプリは、ここがトップ画面だから戻るボタンはいらない」＝独立した窓（solo=1）では出さない
     '<div class="ub">' +
       '<div id="ubMenu">' + head('📒', 'TT売上帳簿') +
         '<div class="ubtest" id="ubTest" style="display:none">テスト中：本番の売上表には書きません（2026_帳簿_テスト に書きます）</div>' +

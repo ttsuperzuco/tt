@@ -1491,7 +1491,7 @@ function renderUriageBookPage_(base, staff, dev) {
     key: 'kx7Q2p9mVt4Zr8'
   };
   return '<style>' + HOMECSS_ + EXPADCSS_ + UBCSS_ + UBPAYCSS_ + '</style>' +
-    '<div class="home ubhome">' + backBar_(base, staff, dev) +   
+    '<div class="home ubhome">' + backBarUnlessSolo_(base, staff, dev) +   
     '<div class="ub">' +
       '<div id="ubMenu">' + head('📒', 'TT売上帳簿') +
         '<div class="ubtest" id="ubTest" style="display:none">テスト中：本番の売上表には書きません（2026_帳簿_テスト に書きます）</div>' +
