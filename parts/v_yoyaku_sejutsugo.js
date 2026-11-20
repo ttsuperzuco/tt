@@ -71,7 +71,6 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
     '</div>' +
     '<div class="sg" id="sgJJ" style="display:none">' +
       '<div class="sgwho"><span style="white-space:nowrap">ホホバ「No.31」の</span><wbr><span style="white-space:nowrap">使い方をLINEで</span><wbr><span style="white-space:nowrap">送りましょうか？</span></div>' +
-      '<div class="sgmnote">販売・プレゼントのどちらも「YES」です。</div>' +
       '<button type="button" class="sgrbig sgjj" data-k="yes"><span class="sgrbi">🧴</span><span>YES（送る）</span></button>' +
       '<button type="button" class="sgrbig sgjj" data-k="no"><span class="sgrbi">🙅</span><span>NO（送らない）</span></button>' +
     '</div>' +
