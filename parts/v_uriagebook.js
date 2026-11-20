@@ -176,6 +176,9 @@ var UBPAYCSS_ =
   '.ubpseg button.on{background:#2C7A99;border-color:#2C7A99;color:#fff;}' +
   '.ubwal{background:#fce7f3;border:3px solid #f472b6;border-radius:18px;padding:14px 12px;text-align:center;margin:6px 0 12px;box-shadow:0 4px 12px rgba(0,0,0,.15);}' +
   '.ubwal .l{color:#9d174d;font-weight:900;font-size:16px;}' +
+  '.ubmenu button.ubwalgo{padding:22px 10px;}' +
+  '.ubmenu .ubwalsub{display:block;margin-top:6px;color:#be185d;font-size:18px;font-weight:900;}' +
+  '.ubmenu .ubwalsub:empty{display:none;}' +
   '.ubwal .v{color:#be185d;font-weight:900;font-size:44px;line-height:1.25;}' +
   '.ubwalbtn{display:flex;gap:10px;margin:0 0 4px;}' +
   '.ubwalbtn button{flex:1 1 0;border:0;border-radius:14px;padding:16px 4px;font:inherit;font-size:21px;font-weight:900;color:#fff;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.18);}' +
@@ -1308,6 +1311,7 @@ function uriageBookScript_(C) {
   function walDraw() {
     if (!WAL) { $('ubWalBal').textContent = '…'; $('ubWalList').innerHTML = '<div class="ubnone">読み込み中です…</div>'; return; }
     $('ubWalBal').textContent = walYen(WAL.balance || 0) + '元';
+    $('ubGoWalBal').textContent = '現在残高 ' + walYen(WAL.balance || 0) + '元';
     $('ubWalWhen').textContent = WBUSY ? '記録しています…' : String(WAL.at || '').slice(11, 16) + ' 時点';
     var rs = WAL.rows || [];
     var h = '<div class="ubtbl ubsp"><table><thead><tr><th>日付</th><th class="r">入金</th><th class="r">出金</th><th class="r">残高</th><th>担当者</th></tr></thead><tbody>';
@@ -1389,6 +1393,7 @@ function uriageBookScript_(C) {
   window.__ubWalDoneH = function () { if (WBUSY) WBUSY--; walFetch(); };
   window.addEventListener('ubdone', window.__ubWalDoneH);
   $('ubGoWallet').addEventListener('click', function () { show('ubWallet'); walDraw(); walFetch(); walLoad(); });
+  walFetch();   
   $('ubWalBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubWalFBack').addEventListener('click', function (e) { e.preventDefault(); WK.close(); show('ubWallet'); });
   $('ubWalIn').addEventListener('click', function () { walOpenF('入金'); });
@@ -1454,7 +1459,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoInv">🧾 發票<span class="ubem ari">あり</span>の売上</button>' +
           '<button type="button" id="ubGoNoInv">📝 發票<span class="ubem nashi">なし</span>の売上</button>' +
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
-          '<button type="button" id="ubGoWallet" style="display:none">👛 <span class="ubem" style="color:#db2777">ピンク</span>の財布</button>' +
+          '<button type="button" id="ubGoWallet" class="ubwalgo" style="display:none">👛 <span style="color:#db2777">ピンク</span>の財布<span class="ubwalsub" id="ubGoWalBal"></span></button>' +
           '<button type="button" id="ubGoAuth" style="display:none">✅ 作廢の<span class="ubem auth">認証</span></button>' +
           '<button type="button" id="ubGoPay" style="display:none">🧾 お会計<span class="ubem auth">テスト</span></button>' +
           '<button type="button" id="ubGoSheet" style="display:none">📊 スプレッドシート<span class="ubem auth">再現</span></button>' +
