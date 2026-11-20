@@ -2001,8 +2001,15 @@
     var m = /[?&]view=([^&#]*)/.exec(a.getAttribute('href') || '');
     return !m || m[1] === 'home';
   }
+  // ★2026-11-20 スマホの大きさの枠（phone.html）の中では、口は外側の窓にある＝外側の口を使う（同じ置き場なので届く）。
+  function pcWin() {
+    try { if (window.pywebview) return window; } catch (e) {}
+    try { if (window.top !== window && window.top.pywebview) return window.top; } catch (e) {}
+    return null;
+  }
   function pcHome() {
-    return window.pywebview && window.pywebview.api && typeof window.pywebview.api.back_home === 'function';
+    var w = pcWin();
+    return !!(w && w.pywebview.api && typeof w.pywebview.api.back_home === 'function');
   }
   // ★2026-09-17：画面が自分で戻るを受け取る時（LINE一斉配信のように画面の中で1つずつ戻す）はそちらを優先する。
   //   前は先回りして受け取っていたので、途中の画面から押すとホーム（パソコンは押す前の部屋）まで戻ってしまった。
@@ -2011,7 +2018,7 @@
     if (e.defaultPrevented) return;
     var a = e.target && e.target.closest ? e.target.closest('a') : null;
     if (!a || !isBack(a) || !isTopLink(a)) return;
-    if (toTop(a) && pcHome()) { e.preventDefault(); window.pywebview.api.back_home(); return; }
+    if (toTop(a) && pcHome()) { e.preventDefault(); pcWin().pywebview.api.back_home(); return; }
     if (cameFromApp()) { e.preventDefault(); history.back(); }
   }, false);
 
