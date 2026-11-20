@@ -1374,9 +1374,15 @@ function uriageBookScript_(C) {
     }
     $('ubPastList').innerHTML = h + '</tbody></table></div>';
   }
+  var PSK = padKit($('ubPast'), { num: { kind: 'num', max: 4 } }, function (k) { if (k === 'num' && PSW) PSW.run(); });
+  var PSW = nameWatch(PSK, 'ubPastName', 'ubPastNameMsg');
+  $('ubPastName').addEventListener('focus', PSK.close);
   function psSearch() {
-    var q = $('ubPastQ').value.trim();
+    var num = PSK.get('num') || '';
+    var q = /\d/.test(num) ? num : $('ubPastName').value.trim().replace(/\s*様$/, '');
+    PSK.close();
     if (!q) { popup('顧客番号か、お名前の一部を入力してください😊'); return; }
+    try { $('ubPastName').blur(); } catch (e) {}
     var my = ++PSREQ, rid = 'r' + Date.now().toString(36);
     var dv = String(window.__SZ_DEVICE_ || 'x').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40) || 'x';
     psMsg('検索しています…'); $('ubPastList').innerHTML = '';
@@ -1405,8 +1411,8 @@ function uriageBookScript_(C) {
     });
   }
   $('ubPastGo').addEventListener('click', psSearch);
-  $('ubPastQ').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); psSearch(); } });
-  $('ubGoPast').addEventListener('click', function () { show('ubPast'); try { $('ubPastQ').focus(); } catch (e) {} });
+  $('ubPastName').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); psSearch(); } });
+  $('ubGoPast').addEventListener('click', function () { show('ubPast'); });
   $('ubPastBack').addEventListener('click', function (e) { e.preventDefault(); PSREQ++; show('ubMenu'); });
 
   $('ubGoWallet').style.display = '';   
@@ -1614,8 +1620,13 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       '<div id="ubPast" style="display:none">' +
         '<div class="ubtop">' + inBack('ubPastBack') + '<span class="bname ubttl">🔍 過去売上の検索</span></div>' +
-        '<div class="ubpastbar"><input id="ubPastQ" type="text" placeholder="顧客番号（例 M439）かお名前の一部" autocomplete="off">' +
-          '<button type="button" id="ubPastGo" class="ubadd">検索</button></div>' +
+        '<div class="ubf">' +
+          '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
+            '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
+          '<label>お名前の一部（番号が分からない時）</label><div class="ubnamerow"><input id="ubPastName" autocomplete="off"><span class="ubu">様</span></div>' +
+            '<div class="ubnf" id="ubPastNameMsg" style="display:none">該当する顧客が存在しません</div>' +
+        '</div>' +
+        '<button type="button" class="exgo" id="ubPastGo">🔍 検索</button>' +
         '<div class="ubh ubhint" style="font-size:14px;margin:4px 4px 8px">昨日までの売上表から探します。今日の分は「發票ありの売上」「發票なしの売上」で確認してください😊</div>' +
         '<div id="ubPastMsg" class="ubpastmsg"></div>' +
         '<div id="ubPastList"></div>' +

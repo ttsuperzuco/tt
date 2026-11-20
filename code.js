@@ -13930,9 +13930,16 @@ function uriageBookScript_(C) {
     }
     $('ubPastList').innerHTML = h + '</tbody></table></div>';
   }
+  var PSK = padKit($('ubPast'), { num: { kind: 'num', max: 4 } }, function (k) { if (k === 'num' && PSW) PSW.run(); });
+  var PSW = nameWatch(PSK, 'ubPastName', 'ubPastNameMsg');
+  $('ubPastName').addEventListener('focus', PSK.close);
   function psSearch() {
-    var q = $('ubPastQ').value.trim();
+    // 番号が入っていれば番号で、無ければお名前の一部で探す
+    var num = PSK.get('num') || '';
+    var q = /\d/.test(num) ? num : $('ubPastName').value.trim().replace(/\s*様$/, '');
+    PSK.close();
     if (!q) { popup('顧客番号か、お名前の一部を入力してください😊'); return; }
+    try { $('ubPastName').blur(); } catch (e) {}
     var my = ++PSREQ, rid = 'r' + Date.now().toString(36);
     var dv = String(window.__SZ_DEVICE_ || 'x').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40) || 'x';
     psMsg('検索しています…'); $('ubPastList').innerHTML = '';
@@ -13961,8 +13968,8 @@ function uriageBookScript_(C) {
     });
   }
   $('ubPastGo').addEventListener('click', psSearch);
-  $('ubPastQ').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); psSearch(); } });
-  $('ubGoPast').addEventListener('click', function () { show('ubPast'); try { $('ubPastQ').focus(); } catch (e) {} });
+  $('ubPastName').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); psSearch(); } });
+  $('ubGoPast').addEventListener('click', function () { show('ubPast'); });
   $('ubPastBack').addEventListener('click', function (e) { e.preventDefault(); PSREQ++; show('ubMenu'); });
 
   // ── 👛 ピンクの財布（2026-11-20 まるちゃん）──
@@ -14209,8 +14216,15 @@ function renderUriageBookPage_(base, staff, dev) {
       // ★2026-11-20 ピンクの財布＝一番上に大きく残高・その下に入金／出金・その下に入出金履歴（日付・入金・出金・残高・担当者）
       '<div id="ubPast" style="display:none">' +
         '<div class="ubtop">' + inBack('ubPastBack') + '<span class="bname ubttl">🔍 過去売上の検索</span></div>' +
-        '<div class="ubpastbar"><input id="ubPastQ" type="text" placeholder="顧客番号（例 M439）かお名前の一部" autocomplete="off">' +
-          '<button type="button" id="ubPastGo" class="ubadd">検索</button></div>' +
+        // ★2026-11-20 まるちゃん「スマホのバージョンは番号をタップで入れられないようにしないと」→「1」
+        //   ＝顧客番号は共通の数字ボタン（M・F付き・入れるとお名前が出る）、お名前の一部はキーボード。売上一行追加と同じ部品。
+        '<div class="ubf">' +
+          '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
+            '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +
+          '<label>お名前の一部（番号が分からない時）</label><div class="ubnamerow"><input id="ubPastName" autocomplete="off"><span class="ubu">様</span></div>' +
+            '<div class="ubnf" id="ubPastNameMsg" style="display:none">該当する顧客が存在しません</div>' +
+        '</div>' +
+        '<button type="button" class="exgo" id="ubPastGo">🔍 検索</button>' +
         '<div class="ubh ubhint" style="font-size:14px;margin:4px 4px 8px">昨日までの売上表から探します。今日の分は「發票ありの売上」「發票なしの売上」で確認してください😊</div>' +
         '<div id="ubPastMsg" class="ubpastmsg"></div>' +
         '<div id="ubPastList"></div>' +
