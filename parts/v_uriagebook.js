@@ -1242,7 +1242,6 @@ function uriageBookScript_(C) {
   });
   $('ubGoPay').addEventListener('click', function () { if (!PDAY) PDAY = payDayStr(new Date()); show('ubPay'); loadPay(); });
 
-  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoSheet').style.display = '';
   var SHDAY = '', SHREQ = 0, SHGOT = 0;
   function shMsg(t) { var m = $('ubShMsg'); m.textContent = t || ''; m.style.display = t ? '' : 'none'; shFit(); }
   function shFit() {
