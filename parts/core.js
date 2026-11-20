@@ -1374,16 +1374,21 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
     for (var i = 0; i < 3; i++) { if (a.key[i] < b.key[i]) return -1; if (a.key[i] > b.key[i]) return 1; }
     return 0;
   });
-  var total = real + staffConflicts.length;   
-  var bodyCards = items.length
-    ? items.map(function (it) { return it.html; }).join('\n')
-    : '<div class="empty"><span style="white-space:nowrap">✅ 施術室・施術者の被りは</span><wbr><span style="white-space:nowrap">ありませんでした</span></div>';
-  var offBlock = offCards.length
-    ? '<h1 class="fit1line offhead">⚠️ 担当のお休みに予約が入っています <span class="cnt">' + offCards.length + '件</span></h1>' +
-      offCards.join('\n')
-    : '';
-
+  var total = real + staffConflicts.length;
   var nailNote = withNail ? '（NAIL含む）' : '';
+  var cards = '';
+  if (items.length) {
+    cards += '<h1 class="fit1line">⚠️ 部屋＆担当 被り検出 <span class="cnt">' + total + '件</span>' + nailNote + '</h1>' +
+             items.map(function (it) { return it.html; }).join('\n');
+  }
+  if (offCards.length) {
+    cards += '<h1 class="fit1line' + (items.length ? ' offhead' : '') + '">⚠️ 担当のお休みに予約 <span class="cnt">' +
+             offCards.length + '件</span></h1>' + offCards.join('\n');
+  }
+  if (!cards) {
+    cards = '<h1 class="fit1line">部屋＆担当 被り検出' + nailNote + '</h1>' +
+      '<div class="empty"><span style="white-space:nowrap">✅ 施術室・施術者の被りは</span><wbr><span style="white-space:nowrap">ありませんでした</span></div>';
+  }
   return '' +
 '<style>' + CSS_ + '</style>' +
 '<div class="wrap">' +
@@ -1394,9 +1399,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
     '</div>' +
   '</div>' +
-  '<h1 class="fit1line">⚠️ 部屋＆担当 被り検出 <span class="cnt">' + total + '件</span>' + nailNote + '</h1>' +
-  bodyCards +
-  offBlock +
+  cards +
 '</div>' +
 identScript_(staff, dev) + TTSCRIPT_ + MOVESCRIPT_ + FIT1LINE_SCRIPT_;
 }
