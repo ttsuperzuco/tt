@@ -1616,7 +1616,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoCoins">🪙 小銭とお札</button>' +
           '<button type="button" id="ubGoWallet" class="ubwalgo" style="display:none">👛 <span style="color:#db2777">ピンク</span>の財布<span class="ubwalsub" id="ubGoWalBal"></span></button>' +
           '<button type="button" id="ubGoSheet" style="display:none">📊 スプレッドシート<span class="ubem auth">再現</span></button>' +
-          '<button type="button" id="ubGoPast" style="display:none">🔍 過去売上の<span class="ubem auth">検索</span></button>' +
+          '<button type="button" id="ubGoPast" style="display:none">🔍 お客様の売上履歴の<span class="ubem auth">検索</span></button>' +
           '<button type="button" id="ubGoAuth" style="display:none">✅ 作廢の<span class="ubem auth">認証</span></button>' +
           '<button type="button" id="ubGoPay" style="display:none">🧾 お会計<span class="ubem auth">テスト</span></button>' +
         '</div>' +
@@ -1659,7 +1659,7 @@ function renderUriageBookPage_(base, staff, dev) {
         '<iframe id="ubShFrame" sandbox="allow-same-origin" title="売上表" style="display:none;width:100%;border:0;background:#fff;border-radius:8px;"></iframe>' +
       '</div>' +
       '<div id="ubPast" style="display:none">' +
-        '<div class="ubtop">' + inBack('ubPastBack') + '<span class="bname ubttl">🔍 過去売上の検索</span></div>' +
+        '<div class="ubtop">' + inBack('ubPastBack') + '<span class="bname ubttl">🔍 お客様の売上履歴の検索</span></div>' +
         '<div class="ubf">' +
           '<label>顧客番号</label><div class="ubrow"><div class="ubnumrow"><div class="ubbox" data-pk="num" data-ph="押して入力"></div>' +
             '<button type="button" data-pok="num" class="ubok" style="display:none">入力OK</button></div></div>' +

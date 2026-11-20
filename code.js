@@ -14333,7 +14333,8 @@ function renderUriageBookPage_(base, staff, dev) {
           '<button type="button" id="ubGoWallet" class="ubwalgo" style="display:none">👛 <span style="color:#db2777">ピンク</span>の財布<span class="ubwalsub" id="ubGoWalBal"></span></button>' +
           // ★2026-11-20 まるちゃん「テストで　スプレッドシート再現　ていうボタンつくり、スプレシート売上帳簿と全く同じ画面を再現して」＝開発の時だけ／同日まるちゃん「ぴんくのさいふのしたにおく」
           '<button type="button" id="ubGoSheet" style="display:none">📊 スプレッドシート<span class="ubem auth">再現</span></button>' +
-          '<button type="button" id="ubGoPast" style="display:none">🔍 過去売上の<span class="ubem auth">検索</span></button>' +
+          // ★2026-11-21 まるちゃん「お客様の売上履歴の検索」＝ボタンと画面の名前を変えた（前は「過去売上の検索」）
+          '<button type="button" id="ubGoPast" style="display:none">🔍 お客様の売上履歴の<span class="ubem auth">検索</span></button>' +
           // ★2026-11-14 まるちゃん「作廢の入力ボタンを作る」
           // ★2026-11-16 まるちゃん「このボタンいらない」＝發票の作廢は發票ありの売上の「作廢」の列から行う（メニューのボタンを消した）
           // ★2026-11-14 まるちゃん「作廢の認証ボタン…俺だけ見れるように」＝開発の時だけ出す
@@ -14394,7 +14395,7 @@ function renderUriageBookPage_(base, staff, dev) {
       '</div>' +
       // ★2026-11-20 ピンクの財布＝一番上に大きく残高・その下に入金／出金・その下に入出金履歴（日付・入金・出金・残高・担当者）
       '<div id="ubPast" style="display:none">' +
-        '<div class="ubtop">' + inBack('ubPastBack') + '<span class="bname ubttl">🔍 過去売上の検索</span></div>' +
+        '<div class="ubtop">' + inBack('ubPastBack') + '<span class="bname ubttl">🔍 お客様の売上履歴の検索</span></div>' +
         // ★2026-11-20 まるちゃん「スマホのバージョンは番号をタップで入れられないようにしないと」→「1」
         //   ＝顧客番号は共通の数字ボタン（M・F付き・入れるとお名前が出る）、お名前の一部はキーボード。売上一行追加と同じ部品。
         '<div class="ubf">' +
