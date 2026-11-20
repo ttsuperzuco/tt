@@ -13939,13 +13939,13 @@ function uriageBookScript_(C) {
   var PSK = padKit($('ubPast'), { num: { kind: 'num', max: 4 } }, function (k) { if (k === 'num' && PSW) PSW.run(); });
   var PSW = nameWatch(PSK, 'ubPastName', 'ubPastNameMsg');
   $('ubPastName').addEventListener('focus', PSK.close);
-  function psSearch() {
-    // 番号が入っていれば番号で、無ければお名前の一部で探す
+  // ★2026-11-20 まるちゃん「検索のボタンいらないよ、入力OKしたら、すぐに検索を始めて」
+  //   ＝顧客番号は数字ボタンの「入力OK」で、氏名の一部は打ち終わって少し待つか Enter で、すぐ探す（検索ボタンは無し）。
+  //   by＝'num'（番号で探す）／'name'（氏名の一部で探す）。
+  function psSearch(by) {
     var num = PSK.get('num') || '';
-    var q = /\d/.test(num) ? num : $('ubPastName').value.trim().replace(/\s*様$/, '');
-    PSK.close();
-    if (!q) { popup('顧客番号か、お名前の一部を入力してください😊'); return; }
-    try { $('ubPastName').blur(); } catch (e) {}
+    var q = by === 'num' ? (/\d/.test(num) ? num : '') : $('ubPastName').value.trim().replace(/\s*様$/, '');
+    if (!q) return;
     var my = ++PSREQ, rid = 'r' + Date.now().toString(36);
     var dv = String(window.__SZ_DEVICE_ || 'x').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 40) || 'x';
     psMsg('検索しています…'); $('ubPastList').innerHTML = '';
@@ -13973,8 +13973,20 @@ function uriageBookScript_(C) {
       });
     });
   }
-  $('ubPastGo').addEventListener('click', psSearch);
-  $('ubPastName').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); psSearch(); } });
+  // 番号＝数字ボタンの「入力OK」（パソコンの Enter も同じボタンを押す）を押したらすぐ探す
+  $('ubPast').addEventListener('click', function (e) {
+    if (e.target.closest('[data-pok="num"]')) setTimeout(function () { psSearch('num'); }, 0);
+  });
+  // 氏名の一部＝打ち終わって0.8秒たったら（変換中は待つ）、または Enter ですぐ探す。番号の欄は空にする（名前で探していると分かるように）
+  var PSTM = null;
+  function psByName(now) {
+    clearTimeout(PSTM);
+    var go = function () { if (!$('ubPastName').value.trim()) return; if (PSK.get('num')) { PSK.set('num', ''); } psSearch('name'); };
+    if (now) go(); else PSTM = setTimeout(go, 800);
+  }
+  $('ubPastName').addEventListener('input', function (e) { if (e.isComposing) return; if (PSW.auto && $('ubPastName').value === PSW.auto) return; psByName(false); });
+  $('ubPastName').addEventListener('compositionend', function () { psByName(false); });
+  $('ubPastName').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); try { $('ubPastName').blur(); } catch (x) {} psByName(true); } });
   $('ubGoPast').addEventListener('click', function () { show('ubPast'); });
   $('ubPastBack').addEventListener('click', function (e) { e.preventDefault(); PSREQ++; show('ubMenu'); });
 
@@ -14230,7 +14242,7 @@ function renderUriageBookPage_(base, staff, dev) {
           '<label>氏名の一部</label><div class="ubnamerow"><input id="ubPastName" autocomplete="off"><span class="ubu">様</span></div>' +
             '<div class="ubnf" id="ubPastNameMsg" style="display:none">該当する顧客が存在しません</div>' +
         '</div>' +
-        '<button type="button" class="exgo" id="ubPastGo">🔍 検索</button>' +
+
         '<div class="ubh ubhint" style="font-size:14px;margin:4px 4px 8px">昨日までの売上表から探します。今日の分は「發票ありの売上」「發票なしの売上」で確認してください😊</div>' +
         '<div id="ubPastMsg" class="ubpastmsg"></div>' +
         '<div id="ubPastList"></div>' +
