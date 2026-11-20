@@ -2,6 +2,7 @@
 // この画面だけで使う部品：uriagebook
 var UBCSS_ =
   '.ub{width:100%;box-sizing:border-box;max-width:1200px;margin:0 auto;padding:0 6px 70px;text-align:left;}' +
+  '.ubwide .home.ubhome,.ubwide .ub{max-width:none;}.ubwide .ub{padding-bottom:0;}' +
   '.home.ubhome{max-width:1200px;padding-top:6px;}' +
   '.ubtop{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin:0 2px 6px;}' +
   '.ubtop .ubar{margin:0;}' +
@@ -203,7 +204,8 @@ function uriageBookScript_(C) {
   function popup(msg, o) { if (typeof szPopup_ === 'function') szPopup_(msg, o); else alert(msg); }
   var PAYS = ['現金', 'LINE PAY', '街口支付', '振込'];
   var SECS = ['ubMenu', 'ubInv', 'ubNoInv', 'ubAdd', 'ubOther', 'ubCoins', 'ubVoid', 'ubAuth', 'ubPay', 'ubPayF', 'ubPayR', 'ubSheet', 'ubWallet', 'ubWalF'];
-  function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0); }
+  function show(id) { for (var i = 0; i < SECS.length; i++) $(SECS[i]).style.display = (SECS[i] === id) ? '' : 'none'; window.scrollTo(0, 0);
+    document.body.classList.toggle('ubwide', id === 'ubSheet'); }   
   var D = null, busy = false, loading = false;
   var PEND = [];          
   function pendAll() { return PEND.concat(ubPendList_()); }
@@ -1241,13 +1243,35 @@ function uriageBookScript_(C) {
 
   if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoSheet').style.display = '';
   var SHDAY = '', SHREQ = 0, SHGOT = 0;
-  function shMsg(t) { var m = $('ubShMsg'); m.textContent = t || ''; m.style.display = t ? '' : 'none'; }
+  function shMsg(t) { var m = $('ubShMsg'); m.textContent = t || ''; m.style.display = t ? '' : 'none'; shFit(); }
   function shFit() {
     var f = $('ubShFrame'); if (f.style.display === 'none') return;
     var top = f.getBoundingClientRect().top;
     f.style.height = Math.max(320, Math.floor(window.innerHeight - top - 10)) + 'px';
+    shZoom();
+  }
+  function shZoom() {
+    var f = $('ubShFrame'), d = null;
+    try { d = f.contentDocument; } catch (e) {}
+    if (!d || !d.documentElement || !(typeof SZ_PCKEYS_ !== 'undefined' && SZ_PCKEYS_ && SZ_PCKEYS_.pc)) return;
+    var tb = d.querySelector('table.waffle'); if (!tb) return;
+    d.documentElement.style.zoom = '';
+    var r0 = tb.getBoundingClientRect(), right = r0.right, bottom = r0.bottom, i, j;
+    var ths = tb.querySelectorAll('thead th');
+    for (i = 0; i < ths.length; i++) if ((ths[i].textContent || '').trim() === 'O') { right = ths[i].getBoundingClientRect().right; break; }
+    var trs = tb.querySelectorAll('tbody tr'), last = null;
+    for (i = 0; i < trs.length; i++) {
+      var tds = trs[i].querySelectorAll('td');
+      for (j = 0; j < tds.length; j++) if (j !== 6 && (tds[j].textContent || '').trim()) { last = trs[i]; break; }
+    }
+    if (last) bottom = last.getBoundingClientRect().bottom + 24;
+    var w = right - r0.left, h = bottom - r0.top;
+    if (w <= 0 || h <= 0) return;
+    var z = Math.min((f.clientWidth - 18) / w, (f.clientHeight - 18) / h, 2.5);
+    d.documentElement.style.zoom = String(Math.max(0.3, Math.round(z * 100) / 100));
   }
   window.addEventListener('resize', shFit);
+  $('ubShFrame').addEventListener('load', shZoom);
   function shDraw(v) {
     v = (v && v.data && !v.html && !v.none) ? v.data : v;
     if (!v || !(v.html || v.none)) return false;
@@ -1505,7 +1529,7 @@ function renderUriageBookPage_(base, staff, dev) {
         '</div>' +
         '<div class="ubtest">テストです。売上表をそのまま表示しています（表示のみです）</div>' +
         '<div id="ubShMsg" class="ubnone" style="display:none"></div>' +
-        '<iframe id="ubShFrame" sandbox="" title="売上表" style="display:none;width:100%;border:0;background:#fff;border-radius:8px;"></iframe>' +
+        '<iframe id="ubShFrame" sandbox="allow-same-origin" title="売上表" style="display:none;width:100%;border:0;background:#fff;border-radius:8px;"></iframe>' +
       '</div>' +
       '<div id="ubWallet" style="display:none">' +
         '<div class="ubtop">' + inBack('ubWalBack') + '<span class="bname ubttl">👛 ピンクの財布</span>' +
