@@ -1352,7 +1352,7 @@ function uriageBookScript_(C) {
   $('ubShNext').addEventListener('click', function () { SHDAY = shDayAdd(1); loadSheet(SHDAY); });
   $('ubShReload').addEventListener('click', function () { loadSheet(SHDAY); });
 
-  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoPast').style.display = '';
+  $('ubGoPast').style.display = '';   
   var PSREQ = 0;
   function psMsg(t) { var m = $('ubPastMsg'); m.textContent = t || ''; m.style.fontSize = ''; }
   function psFit() {

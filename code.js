@@ -13998,7 +13998,7 @@ function uriageBookScript_(C) {
 
   // ── 🔍 過去売上の検索（2026-11-20 まるちゃん・読むだけ）──
   //   裏の係（発票から売上表\programs\過去売上の検索.py）が共有DBの売上の帳面から探し、この端末用の置き場（ubpast_<端末>.json）に置く。
-  if ((window.__SZ_ROLE_ || '') === '開発') $('ubGoPast').style.display = '';
+  $('ubGoPast').style.display = '';   // ★2026-11-20 まるちゃん「過去検索ボタン　全員に出して」（売上帳簿を開ける全員）
   var PSREQ = 0;
   function psMsg(t) { var m = $('ubPastMsg'); m.textContent = t || ''; m.style.fontSize = ''; }
   function psFit() {
