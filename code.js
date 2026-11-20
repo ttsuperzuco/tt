@@ -1188,6 +1188,14 @@ var SZSTAFF_ = {
   // ★同日まるちゃん「🍅トマト・🍊みかん・🫒オリーブ・🍍パイン🍎りんご・🥥ココナッツ🥭マンゴー・のならびにして。でりゅうはいれない」
   //   ＝候補はこの並び（自動監視で足した人はその後ろ）。🐉Ryu は候補に入れない（開発の端末は auto で🐉Ryu）。
   ORDER: ['kanbu', 'mikan', 'olive', 'pine', 'ringo', 'coconut', 'mango'],
+  // ★2026-11-20 まるちゃん「全員って、🍅、オリーブ、みかん、受付PCとスマホのことね。全員の定義は　なにもいわなければそのひとたち。
+  //   本当の全員のばあいは、そうつたえる」＝ボタンを「全員に出して」と言われたら、この5つ（＋開発）にだけ出す。サーバー側の正本＝zuko_people.EVERYONE。
+  EVERYONE: ['kanbu', 'olive', 'mikan', 'reception', 'reception_sp'],
+  isEveryone: function () {
+    var w = window.__SZ_WHO_ || '', r = window.__SZ_ROLE_ || '';
+    if (r === '開発' || r === '社長(幹部)') return true;
+    return SZSTAFF_.EVERYONE.indexOf(w) >= 0;
+  },
   choices: function () {
     var ids = _peopleFromCfg_(SZSTAFF_.cfg()), L = SZSTAFF_.labels(), O = SZSTAFF_.ORDER, out = [], i;
     for (i = 0; i < O.length; i++) if (ids.indexOf(O[i]) >= 0) out.push(L[O[i]] || O[i]);
@@ -13998,7 +14006,7 @@ function uriageBookScript_(C) {
 
   // ── 🔍 過去売上の検索（2026-11-20 まるちゃん・読むだけ）──
   //   裏の係（発票から売上表\programs\過去売上の検索.py）が共有DBの売上の帳面から探し、この端末用の置き場（ubpast_<端末>.json）に置く。
-  $('ubGoPast').style.display = '';   // ★2026-11-20 まるちゃん「過去検索ボタン　全員に出して」（売上帳簿を開ける全員）
+  if (SZSTAFF_.isEveryone()) $('ubGoPast').style.display = '';   // ★2026-11-20 まるちゃん「過去検索ボタン　全員に出して」＝全員の決まり（SZSTAFF_.EVERYONE）
   var PSREQ = 0;
   function psMsg(t) { var m = $('ubPastMsg'); m.textContent = t || ''; m.style.fontSize = ''; }
   function psFit() {
@@ -14087,7 +14095,8 @@ function uriageBookScript_(C) {
   //    担当者は、スマホ名ならもちぬし自動記入　受付なら　選択式」
   //   記録は共有DB（裏の係＝発票から売上表\programs\ピンクの財布.py）。画面は pink_wallet.json を読むだけ。
   //   担当者の自動記入は画面の名乗りでなく、裏の係が本人確認した端末で決める（ここは見せるだけ）。
-  $('ubGoWallet').style.display = '';   // ★同日まるちゃん「財布ボタンを全員に出して」（売上帳簿を開ける全員）
+  var WALON = SZSTAFF_.isEveryone();
+  if (WALON) $('ubGoWallet').style.display = '';   // ★同日まるちゃん「財布ボタンを全員に出して」＝全員の決まり（SZSTAFF_.EVERYONE）
   var WAL = null, WKIND = '', WSTAFF = '', WBUSY = 0;
   // ★2026-11-20 まるちゃん「受付の担当は共通モジュールをつかってよ」＝人の決め方・候補・表示名（果物のマーク付き）はズコ共通の SZSTAFF_。
   function walSt(n) { return String(n || ''); }
@@ -14183,7 +14192,7 @@ function uriageBookScript_(C) {
   window.__ubWalDoneH = function () { if (WBUSY) WBUSY--; walFetch(); };
   window.addEventListener('ubdone', window.__ubWalDoneH);
   $('ubGoWallet').addEventListener('click', function () { show('ubWallet'); walDraw(); walFetch(); walLoad(); });
-  walFetch();   // メニューのボタンの下に今の残高を出すため、開いた時に1回読む
+  if (WALON) walFetch();   // メニューのボタンの下に今の残高を出すため、開いた時に1回読む（ボタンが出ない人は読まない）
   setTimeout(ubFitMenu_, 0); setTimeout(ubFitMenu_, 600);   // 開発だけのボタンを出し終えてから高さを合わせる
   $('ubWalBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubWalFBack').addEventListener('click', function (e) { e.preventDefault(); WK.close(); show('ubWallet'); });

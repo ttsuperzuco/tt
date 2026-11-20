@@ -1352,7 +1352,7 @@ function uriageBookScript_(C) {
   $('ubShNext').addEventListener('click', function () { SHDAY = shDayAdd(1); loadSheet(SHDAY); });
   $('ubShReload').addEventListener('click', function () { loadSheet(SHDAY); });
 
-  $('ubGoPast').style.display = '';   
+  if (SZSTAFF_.isEveryone()) $('ubGoPast').style.display = '';   
   var PSREQ = 0;
   function psMsg(t) { var m = $('ubPastMsg'); m.textContent = t || ''; m.style.fontSize = ''; }
   function psFit() {
@@ -1428,7 +1428,8 @@ function uriageBookScript_(C) {
   $('ubGoPast').addEventListener('click', function () { show('ubPast'); });
   $('ubPastBack').addEventListener('click', function (e) { e.preventDefault(); PSREQ++; show('ubMenu'); });
 
-  $('ubGoWallet').style.display = '';   
+  var WALON = SZSTAFF_.isEveryone();
+  if (WALON) $('ubGoWallet').style.display = '';   
   var WAL = null, WKIND = '', WSTAFF = '', WBUSY = 0;
   function walSt(n) { return String(n || ''); }
   var WK = padKit($('ubWalF'), { amt: { kind: 'int', max: 6, comma: true } });
@@ -1520,7 +1521,7 @@ function uriageBookScript_(C) {
   window.__ubWalDoneH = function () { if (WBUSY) WBUSY--; walFetch(); };
   window.addEventListener('ubdone', window.__ubWalDoneH);
   $('ubGoWallet').addEventListener('click', function () { show('ubWallet'); walDraw(); walFetch(); walLoad(); });
-  walFetch();   
+  if (WALON) walFetch();   
   setTimeout(ubFitMenu_, 0); setTimeout(ubFitMenu_, 600);   
   $('ubWalBack').addEventListener('click', function (e) { e.preventDefault(); show('ubMenu'); });
   $('ubWalFBack').addEventListener('click', function (e) { e.preventDefault(); WK.close(); show('ubWallet'); });
