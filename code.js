@@ -14734,6 +14734,7 @@ var LINEREPLY_MANUAL_ = { key: 'linereply', icon: '💬', title: 'LINEにすぐ�
 // ★2026-11-19 only＝マニュアル1冊だけを、一覧を出さずにすぐ表紙から見せる（📶お店のWi-Fiの設定のボタン＝renderWifiManualPage_）。
 //   その時の「← 戻る」は一覧ではなく、ズコの1つ前の画面へ戻る。
 function renderManualPage_(base, staff, dev, only) {
+  // ★2026-11-21 まるちゃん「マニュアルもひらいたら独立画面でひらくつくりにして」＝パソコン版は別の窓（solo=1）で開く＝一番上の「← 戻る」は出さない（本の中の「← 戻る」＝一覧へ、は残す）
   var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', only: !!only,
     list: only ? [only] : MANUALS_.filter(function (m) { return !m.dev || dev; }) };   // ★dev:true＝開発者だけ（2026-11-21）
   return '<style>' + HOMECSS_ +
@@ -14755,10 +14756,10 @@ function renderManualPage_(base, staff, dev, only) {
     '.mnmsg{color:#fff;font-weight:700;margin:10px 4px}' +
     '</style>' +
     '<div class="home">' +
-      '<div id="mnList"' + (only ? ' style="display:none"' : '') + '>' + backBar_(base, staff, dev) +
+      '<div id="mnList"' + (only ? ' style="display:none"' : '') + '>' + backBarUnlessSolo_(base, staff, dev) +
         '<div class="mntitle">📖 マニュアル</div><div class="mnwrap" id="mnBtns"></div></div>' +
       '<div id="mnBook" class="mnbook">' +
-        (only ? backBar_(base, staff, dev) : '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>') +
+        (only ? backBarUnlessSolo_(base, staff, dev) : '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>') +
         '<div class="mntitle" id="mnTitle"></div><div class="mnwrap" id="mnPages"></div></div>' +
       '<button type="button" class="mntop" id="mnTop">↑ 表紙へ</button>' +
     '</div>' +

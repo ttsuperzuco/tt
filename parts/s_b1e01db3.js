@@ -26,10 +26,10 @@ function renderManualPage_(base, staff, dev, only) {
     '.mnmsg{color:#fff;font-weight:700;margin:10px 4px}' +
     '</style>' +
     '<div class="home">' +
-      '<div id="mnList"' + (only ? ' style="display:none"' : '') + '>' + backBar_(base, staff, dev) +
+      '<div id="mnList"' + (only ? ' style="display:none"' : '') + '>' + backBarUnlessSolo_(base, staff, dev) +
         '<div class="mntitle">📖 マニュアル</div><div class="mnwrap" id="mnBtns"></div></div>' +
       '<div id="mnBook" class="mnbook">' +
-        (only ? backBar_(base, staff, dev) : '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>') +
+        (only ? backBarUnlessSolo_(base, staff, dev) : '<div class="ubar"><a class="uhome" id="mnBack" href="javascript:void(0)">← 戻る</a></div>') +
         '<div class="mntitle" id="mnTitle"></div><div class="mnwrap" id="mnPages"></div></div>' +
       '<button type="button" class="mntop" id="mnTop">↑ 表紙へ</button>' +
     '</div>' +
