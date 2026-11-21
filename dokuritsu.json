@@ -1,5 +1,5 @@
 {
- "made": "2026-11-21 10:42",
+ "made": "2026-11-21 10:49",
  "rows": [
   {
    "id": "conflict",
@@ -245,6 +245,88 @@
    "room": "りゅう画面",
    "own": true,
    "how": "独立した窓（ズコの画面）"
+  }
+ ],
+ "folders": [
+  {
+   "name": "施術直後",
+   "items": [
+    "sejutsugo",
+    "sgline",
+    "shomeisho"
+   ]
+  },
+  {
+   "name": "SNS",
+   "items": [
+    "insta",
+    "threads",
+    "hachimitsu",
+    "facebook",
+    "timetree"
+   ]
+  },
+  {
+   "name": "予約系",
+   "items": [
+    "yoyaku",
+    "akijikan",
+    "ttapp",
+    "lt",
+    "conflict"
+   ]
+  },
+  {
+   "name": "在庫売上管理",
+   "items": [
+    "procstock",
+    "hanbai",
+    "uriage",
+    "uriagebook"
+   ]
+  },
+  {
+   "name": "お客様系",
+   "items": [
+    "rireki",
+    "links",
+    "unanswered"
+   ]
+  },
+  {
+   "name": "スタッフ系",
+   "items": [
+    "manual"
+   ]
+  },
+  {
+   "name": "お知らせ＆配信",
+   "items": [
+    "zenjitsu",
+    "mita",
+    "bcast"
+   ]
+  },
+  {
+   "name": "マニュアル",
+   "items": [
+    "linereply",
+    "shomeiman",
+    "ubman"
+   ]
+  },
+  {
+   "name": "りゅうツール",
+   "items": [
+    "procell",
+    "kanshi",
+    "mushitori",
+    "cost",
+    "koukoku",
+    "shophist",
+    "pcstatus",
+    "dokuritsu"
+   ]
   }
  ]
 }
