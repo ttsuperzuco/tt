@@ -3369,7 +3369,10 @@ function instaScript_(C) {
     });
   }
 
-  var IG_FRESH = 30 * 60000, IG_KEEP = 7 * 86400000;
+  var IG_FRESH = 30 * 60000, IG_KEEP = 7 * 86400000, IG_LIMIT_STOP = 60 * 60000;
+  function pfStopped() { try { return Date.now() < Number(localStorage.getItem('ig_pf_stop_until') || 0); } catch (e) { return false; } }
+  function pfStop() { try { localStorage.setItem('ig_pf_stop_until', String(Date.now() + IG_LIMIT_STOP)); } catch (e) {} }
+  function pfIsLimit(err) { return /回数の上限|request limit/i.test(String(err || '')); }
   var PFP = 'ig|' + (window.__SZ_ROLE_ || '') + '|' + (window.__SZ_WHO_ || '') + '|';
   var PF = { on: false, done: {}, bad: {} }, PFT = null, PFTQ = [], IDB = null, IDBQ = [];
   function idb(cb) {
@@ -3472,13 +3475,16 @@ function instaScript_(C) {
   }
   function pfRun() {
     if (PF.on) return;
+    if (pfStopped()) return;   
     PF.on = true;
     pfTimes(function (T) {
       if (!IDB) { PF.on = false; return; }   
       var it = pfNext(T);
       if (!it) { PF.on = false; return; }
-      ask(JSON.parse(JSON.stringify(it.f)), function (err, d) {
+      var q = JSON.parse(JSON.stringify(it.f)); q.pf = 1;   
+      ask(q, function (err, d) {
         PF.on = false; PF.done[it.key] = 1;
+        if (err && pfIsLimit(err)) { pfStop(); return; }   
         if (err || !d) PF.bad[it.t + '_' + it.a] = 1;
         else {
           pfPut(it.key, d);

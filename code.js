@@ -23552,7 +23552,13 @@ function instaScript_(C) {
   //   ★まだ一度も読んでいない物を先に読む。失敗した種類（アカウントごと）はその回はもう頼まない（失敗はりゅうさんのLINEに届くので何度も送らない）。
   //   ★覚える場所は IndexedDB（大きく使える）。ズコ全体で約5MBの localStorage は使わない＝ほかの画面の控えを押し出さない。
   //     7日より前に読んだ物は開いた時に消す（たまり続けない）。権限が無い物は頼まない。
-  var IG_FRESH = 30 * 60000, IG_KEEP = 7 * 86400000;
+  //   ★2026-11-21 まるちゃん「推奨どおり修正」：11/21 12:02 に2台の裏の読み込みが重なり、メタ公式のアプリ全体の1時間の上限に達した。
+  //     ① 裏の読み込みの依頼には pf:1 を付ける＝サーバーは30分以内にどの端末かが読んだ答えを返す（インスタに聞かない・Instagram投稿\programs\insta_zuko.py _compute_shared）。
+  //     ② 答えに「回数の上限」が出たら、この端末の裏の読み込みを60分全部止める（種類ごとではなく全部・端末に覚えるので開き直しても止まったまま）。
+  var IG_FRESH = 30 * 60000, IG_KEEP = 7 * 86400000, IG_LIMIT_STOP = 60 * 60000;
+  function pfStopped() { try { return Date.now() < Number(localStorage.getItem('ig_pf_stop_until') || 0); } catch (e) { return false; } }
+  function pfStop() { try { localStorage.setItem('ig_pf_stop_until', String(Date.now() + IG_LIMIT_STOP)); } catch (e) {} }
+  function pfIsLimit(err) { return /回数の上限|request limit/i.test(String(err || '')); }
   var PFP = 'ig|' + (window.__SZ_ROLE_ || '') + '|' + (window.__SZ_WHO_ || '') + '|';
   var PF = { on: false, done: {}, bad: {} }, PFT = null, PFTQ = [], IDB = null, IDBQ = [];
   function idb(cb) {
@@ -23659,13 +23665,16 @@ function instaScript_(C) {
   }
   function pfRun() {
     if (PF.on) return;
+    if (pfStopped()) return;   // 回数の上限で止めている間は、裏の読み込みをしない
     PF.on = true;
     pfTimes(function (T) {
       if (!IDB) { PF.on = false; return; }   // 覚える場所が使えない端末では裏の読み込みをしない
       var it = pfNext(T);
       if (!it) { PF.on = false; return; }
-      ask(JSON.parse(JSON.stringify(it.f)), function (err, d) {
+      var q = JSON.parse(JSON.stringify(it.f)); q.pf = 1;   // 裏の読み込みの印＝サーバーの共通の控えを使ってよい
+      ask(q, function (err, d) {
         PF.on = false; PF.done[it.key] = 1;
+        if (err && pfIsLimit(err)) { pfStop(); return; }   // 回数の上限＝この回の裏の読み込みを全部止める
         if (err || !d) PF.bad[it.t + '_' + it.a] = 1;
         else {
           pfPut(it.key, d);
