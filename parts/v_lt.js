@@ -187,7 +187,7 @@ function renderLtPage_(d, base, staff, dev) {
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +
   '<div class="lbar">' +
-    '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   
     (rbtn
       ? '<div class="lbarr">' + rbtn + '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span></div>'
       : '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>') +

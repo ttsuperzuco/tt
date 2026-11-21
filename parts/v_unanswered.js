@@ -88,7 +88,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
 '<style>' + UNACSS_ + '</style>' +
 '<div class="unawrap">' +
   '<div class="unabar">' +
-    '<a class="unahome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="unahome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   
     '<span class="unagen">' + esc_(d.fresh || '—') + ' 時点</span>' +
   '</div>' +
   '<h1>💬 LINE未回答＆返信待ち</h1>' +

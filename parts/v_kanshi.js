@@ -40,7 +40,7 @@ function renderKanshiPage_(d, base, staff, dev) {
   return '<style>' + KANSHICSS_ + '</style>' +
   '<div class="kwrap">' +
     '<div class="kbar">' +
-      '<a class="khome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+      (soloWin_() ? '' : '<a class="khome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   
       '<button type="button" class="kref" id="kRef">今すぐ更新</button>' +
     '</div>' +
     '<h1>📟 自動監視</h1>' +

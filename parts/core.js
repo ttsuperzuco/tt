@@ -1427,7 +1427,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
 '<style>' + CSS_ + '</style>' +
 '<div class="wrap">' +
   '<div class="bar">' +
-    '<a class="homelink" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="homelink" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   
     '<div class="fetched">' +
       '<span class="fline"><b>LINE取得</b> ' + esc_(payload.line_fetched_at || '—') + '</span>' +
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
@@ -2638,6 +2638,7 @@ function renderUriage_(base, staff, dev) {
     return renderUriageError_(err, base, staff, dev);
   }
 }
+function soloWin_() { try { return /[?&]solo=1(&|$)/.test(location.search); } catch (e) { return false; } }
 function backBar_(base, staff, dev) {
   try { if (/[?&]solo=1(&|$)/.test(location.search)) return ''; } catch (e) {}
   return '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +

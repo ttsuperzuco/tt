@@ -31,7 +31,7 @@ function renderLinksPage_(d, base, staff, dev) {
 '<style>' + LKCSS_ + LKIMGCSS_ + '</style>' +
 '<div class="lkwrap">' +
   '<div class="lkbar">' +
-    '<a class="lkhome" href="' + homeHref + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="lkhome" href="' + homeHref + '" target="_top">← 戻る</a>') +   
     '<span class="lkgen">生成: ' + esc_((d && d.generated_at) || '—') + '</span>' +
   '</div>' +
   '<div class="lkhead"><h1>🔗 各種LINK</h1></div>' +

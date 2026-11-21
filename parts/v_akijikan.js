@@ -99,7 +99,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
 '<style>' + EXPADCSS_ + AKICSS_ + '</style>' +    
 '<div class="akiwrap">' +
   '<div class="akibar">' +
-    '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   
     '<span class="akigen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
   '</div>' +
   '<h1>🕑 空き時間検索</h1>' +

@@ -1895,7 +1895,7 @@ function renderPage_(conflicts, meta, payload, withNail, base, staff, dev, staff
 '<style>' + CSS_ + '</style>' +
 '<div class="wrap">' +
   '<div class="bar">' +
-    '<a class="homelink" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="homelink" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   // ★2026-11-21 独立画面の一番上は戻るを出さない
     '<div class="fetched">' +
       '<span class="fline"><b>LINE取得</b> ' + esc_(payload.line_fetched_at || '—') + '</span>' +
       '<span class="fline"><b>TimeTree取得</b> ' + esc_(payload.timetree_fetched_at || '—') + '</span>' +
@@ -4025,7 +4025,7 @@ function renderLtPage_(d, base, staff, dev) {
 '<style>' + LTCSS_ + '</style>' +
 '<div class="lwrap">' +
   '<div class="lbar">' +
-    '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="lhome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   // ★2026-11-21 独立画面の一番上は戻るを出さない
     (rbtn
       ? '<div class="lbarr">' + rbtn + '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span></div>'
       : '<span class="lgen">照合: ' + esc_(d.matched_at || d.generated_at || '—') + '</span>') +
@@ -4052,6 +4052,8 @@ function renderUriage_(base, staff, dev) {
 
 // 「前に戻る」共通の土台（★ルール：戻るリンクは全画面この方式に統一＝施術室被り(.homelink)と
 // 同じ「← 戻る」の上部バー。新しいviewを足す時もこれを使う。共通\スーパーズコApp_必読.md参照）。
+// ★2026-11-21 パソコン版の独立した窓（住所に solo=1）で開いているか＝その画面が窓の一番上（戻るを出さない）
+function soloWin_() { try { return /[?&]solo=1(&|$)/.test(location.search); } catch (e) { return false; } }
 function backBar_(base, staff, dev) {
   // ★2026-11-21 まるちゃん「（TimeTree・記入漏れ・各種LINK・LINE未回答・一斉配信・広告費管理も）独立画面」＝パソコン版の独立した窓（住所に solo=1）で
   //   開いた一番上の画面は、そこがトップ画面なので「← 戻る」を出さない（2026-11-20 まるちゃん「独立した画面として開いたアプリは、ここがトップ画面だから戻るボタンはいらない」）。
@@ -11488,7 +11490,7 @@ function renderUnansweredPage_(d, base, staff, dev) {
 '<style>' + UNACSS_ + '</style>' +
 '<div class="unawrap">' +
   '<div class="unabar">' +
-    '<a class="unahome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="unahome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   // ★2026-11-21 独立画面の一番上は戻るを出さない
     '<span class="unagen">' + esc_(d.fresh || '—') + ' 時点</span>' +
   '</div>' +
   '<h1>💬 LINE未回答＆返信待ち</h1>' +
@@ -24650,7 +24652,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
 '<style>' + EXPADCSS_ + AKICSS_ + '</style>' +   /* 数字ボタンは共通の部品（「◯分」で使う・2026-11-15） */
 '<div class="akiwrap">' +
   '<div class="akibar">' +
-    '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="akihome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   // ★2026-11-21 独立画面の一番上は戻るを出さない
     '<span class="akigen">生成: ' + esc_(d.generated_at || '—') + '</span>' +
   '</div>' +
   '<h1>🕑 空き時間検索</h1>' +
@@ -25330,7 +25332,7 @@ function renderLinksPage_(d, base, staff, dev) {
 '<style>' + LKCSS_ + LKIMGCSS_ + '</style>' +
 '<div class="lkwrap">' +
   '<div class="lkbar">' +
-    '<a class="lkhome" href="' + homeHref + '" target="_top">← 戻る</a>' +
+    (soloWin_() ? '' : '<a class="lkhome" href="' + homeHref + '" target="_top">← 戻る</a>') +   // ★2026-11-21 独立画面の一番上は戻るを出さない
     '<span class="lkgen">生成: ' + esc_((d && d.generated_at) || '—') + '</span>' +
   '</div>' +
   '<div class="lkhead"><h1>🔗 各種LINK</h1></div>' +
@@ -27455,7 +27457,7 @@ function renderKanshiPage_(d, base, staff, dev) {
   return '<style>' + KANSHICSS_ + '</style>' +
   '<div class="kwrap">' +
     '<div class="kbar">' +
-      '<a class="khome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>' +
+      (soloWin_() ? '' : '<a class="khome" href="' + (base || '') + '?view=home' + roleSfx_(staff, dev) + '" target="_top">← 戻る</a>') +   // ★2026-11-21 独立画面の一番上は戻るを出さない
       '<button type="button" class="kref" id="kRef">今すぐ更新</button>' +
     '</div>' +
     '<h1>📟 自動監視</h1>' +
