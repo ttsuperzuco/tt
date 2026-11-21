@@ -143,6 +143,9 @@ function doGet(e) {
   } else if (view === 'procell') {
     title = 'プロセル 残り本数';                         // ★開発URL(?dev=1)専用。美容液を何本注文するかの数
     html = renderProcell_(base, staff, dev);
+  } else if (view === 'dokuritsu') {
+    title = '独立画面';                                 // ★2026-11-21 パソコン版のボタンの開き方の一覧（開発者だけ）
+    html = renderDokuritsuPage_(base, staff, dev);
   } else if (view === 'pcstatus') {
     title = '自宅PC';                                   // ★開発URL(?dev=1)専用。事務所PCの生き死にと止まった理由
     html = renderPcStatus_(base, staff, dev);
@@ -1109,7 +1112,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'dokuritsu'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -2167,6 +2170,11 @@ var TILE_DEFS_ = [
   //   開発URL(?dev=1)専用。事務所PCが1分ごとに送る pc_status.json を読むだけ。
   { id: 'pcstatus', cls: 'pcstatus', view: 'pcstatus',
     icon: '<span class="ticon">🖥️</span>', label: '自宅\nPC' },
+  // ★独立画面（2026-11-21 まるちゃん「りゅうのツールの中に独立画面というボタンを作って、そこで今そのボタンの中で独立して出しているもの、
+  //   独立として出していないものの一覧を出してもらえる?」）＝パソコン版ズコのボタンが独立した窓で開くか・ズコの中で開くかの一覧。
+  //   中身＝置き場の dokuritsu.json（PC版スーパーズコ\programs\独立画面の一覧を作る.py が パソコン版のボタンの決まりから作る）。開発者だけ（りゅうツール）。
+  { id: 'dokuritsu', cls: 'dokuritsu', view: 'dokuritsu',
+    icon: '<span class="ticon">🪟</span>', label: '独立\n画面' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
     // ★2026-11-13 まるちゃん選択＝開いたピンクの予約帳に大きな黄色い鉛筆で書き込む絵（子ども向けアニメ風・GPTで作成）。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\yoyaku-zuko-96.png。
@@ -2307,7 +2315,7 @@ var TILE_GROUP_ = {
   // ★2026-11-13 まるちゃん「りゅうのかんりつーるにいれちゃって。このフォルダからになるからさくじょ」「フォルダ名は りゅうツール に変更」
   //   ＝便利ツール(kanri)の部屋をやめ、中身を経営管理ツール(keiei)へ入れて、部屋の名前を「りゅうツール」にした（PC版と同じ）。
   kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
-  claudetools: 'keiei', pcstatus: 'keiei',
+  claudetools: 'keiei', pcstatus: 'keiei', dokuritsu: 'keiei',   // ★2026-11-21 独立画面（りゅうツール）
   procell: 'keiei', shophist: 'keiei',
   // ★2026-10-26 まるちゃん決定：幹部(🍅トマト)にだけ出すボタンはスタッフ画面の下の「TOMATO画面」（PC版 super_pc.py と同じ）。
   uriage: 'tomato',
@@ -23706,6 +23714,48 @@ var KAESHICSS_ =
 
 
 // GAS側から開いた時用（静的アプリは index.html が窓口から取って renderPcStatusPage_ を直接呼ぶ）。
+// ★独立画面（2026-11-21 まるちゃん）＝パソコン版ズコのボタンが「独立した窓で開くか・ズコの中で開くか」の一覧を見るだけ。
+//   中身＝置き場の dokuritsu.json（PC版スーパーズコ\programs\独立画面の一覧を作る.py がパソコン版のボタンの決まりから作る＝ここで書き写さない）。
+function renderDokuritsuPage_(base, staff, dev) {
+  return '<style>' + HOMECSS_ +
+    '.dkwrap{max-width:720px;margin:0 auto;padding:0 2px 40px}' +
+    '.dkttl{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 6px}' +
+    '.dknote{color:#fff;font-weight:700;line-height:1.6;margin:0 4px 14px}' +
+    '.dksec{color:#fff;font-size:20px;font-weight:900;margin:18px 4px 8px}' +
+    '.dkcard{background:#fff;border-radius:16px;padding:6px 14px;box-shadow:0 3px 10px rgba(0,0,0,.18)}' +
+    '.dkrow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 0;border-bottom:1px solid #e3edf2}' +
+    '.dkrow:last-child{border-bottom:0}' +
+    '.dkrow .n{flex:1 1 auto;font-weight:900;color:#12303c;font-size:17px}' +
+    '.dkrow .r{flex:0 0 auto;font-size:13px;font-weight:800;color:#5b7a88;background:#eef4f7;border-radius:999px;padding:3px 10px}' +
+    '.dkrow .h{flex:0 0 auto;font-size:13px;font-weight:800;color:#fff;border-radius:999px;padding:3px 10px}' +
+    '.dkrow .h.own{background:#2C7A99}.dkrow .h.in{background:#8a9aa3}' +
+    '.dkmsg{color:#fff;font-weight:700;margin:10px 4px}' +
+    '</style>' +
+    '<div class="home">' + backBarUnlessSolo_(base, staff, dev) + '<div class="dkwrap">' +
+      '<div class="dkttl">🪟 独立画面</div>' +
+      '<div class="dknote">パソコン版ズコでボタンを押した時の開き方です。スマホでは、どのボタンもズコの中で開きます。</div>' +
+      '<div id="dkBody"><div class="dkmsg">読み込み中…</div></div>' +
+    '</div></div>' +
+    '<script>(' + dokuritsuScript_.toString() + ')();<\/script>';
+}
+function dokuritsuScript_() {
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var box = document.getElementById('dkBody');
+  fetch('https://ttsuperzuco.github.io/tt/dokuritsu.json?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (d) {
+    var rows = (d && d.rows) || [];
+    var part = function (own, title) {
+      var list = rows.filter(function (x) { return !!x.own === own; });
+      return '<div class="dksec">' + title + '（' + list.length + '個）</div><div class="dkcard">' + (list.map(function (x) {
+        return '<div class="dkrow"><span class="n">' + esc(x.label) + '</span><span class="r">' + esc(x.room) + '</span>' +
+          '<span class="h ' + (own ? 'own' : 'in') + '">' + esc(x.how) + '</span></div>';
+      }).join('') || '<div class="dkrow"><span class="n">ありません</span></div>') + '</div>';
+    };
+    box.innerHTML = part(true, '独立した窓で開くボタン') + part(false, '独立した窓で開かないボタン') +
+      '<div class="dknote" style="margin-top:14px">一覧を作った日時：' + esc(d.made || '') + '</div>';
+  }).catch(function () {
+    box.innerHTML = '<div class="dkmsg">一覧を読み込めませんでした。少し待ってから、もう一度開いてください😊</div>';
+  });
+}
 function renderPcStatus_(base, staff, dev) {
   try {
     return renderPcStatusPage_(

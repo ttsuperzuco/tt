@@ -1,0 +1,250 @@
+{
+ "made": "2026-11-21 10:42",
+ "rows": [
+  {
+   "id": "conflict",
+   "label": "部屋＆担当被り検出",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "lt",
+   "label": "TimeTree予約記入漏れ",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "uriage",
+   "label": "売上転記TimeTree",
+   "room": "TOMATO画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "unanswered",
+   "label": "LINE未回答＆返信待ち",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "akijikan",
+   "label": "空き時間検索",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "procell",
+   "label": "プロセル残り本数",
+   "room": "りゅうツール",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "yoyaku",
+   "label": "予約入力",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "links",
+   "label": "各種LINK",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "zenjitsu",
+   "label": "前日お知らせ",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（パソコン専用のソフト）"
+  },
+  {
+   "id": "ttapp",
+   "label": "元祖TTアプリ",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "kanshi",
+   "label": "自動監視（開発用）",
+   "room": "りゅうツール",
+   "own": true,
+   "how": "独立した窓（パソコン専用のソフト）"
+  },
+  {
+   "id": "rireki",
+   "label": "顧客履歴検索",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（パソコン専用のソフト）"
+  },
+  {
+   "id": "mushitori",
+   "label": "LINE虫とり(Unknown)",
+   "room": "りゅうツール",
+   "own": true,
+   "how": "独立した窓（パソコン専用のソフト）"
+  },
+  {
+   "id": "bcast",
+   "label": "LINE一斉配信",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "cost",
+   "label": "台湾トマト売上・コスト",
+   "room": "りゅうツール",
+   "own": true,
+   "how": "独立した窓（パソコン専用のソフト）"
+  },
+  {
+   "id": "koukoku",
+   "label": "広告費管理",
+   "room": "りゅうツール",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "shomeisho",
+   "label": "購入証明書作成",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（パソコン専用のソフト）"
+  },
+  {
+   "id": "sejutsugo",
+   "label": "施術後の予約",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "sgline",
+   "label": "施術後のLINE送信",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "timetree",
+   "label": "TimeTree",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "shophist",
+   "label": "T＆Tショップ履歴",
+   "room": "りゅうツール",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "pcstatus",
+   "label": "自宅PC",
+   "room": "りゅうツール",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "dokuritsu",
+   "label": "独立画面",
+   "room": "りゅうツール",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "procstock",
+   "label": "プロセル在庫",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "hanbai",
+   "label": "No31販売管理",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "uriagebook",
+   "label": "TT売上帳簿",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "hachimitsu",
+   "label": "ハチミツちゃん",
+   "room": "TOMATO画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "threads",
+   "label": "スレッズコ",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "insta",
+   "label": "インズコグラム",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "facebook",
+   "label": "フェイズコブック",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "mita",
+   "label": "お知らせ見てくれた？",
+   "room": "りゅう画面",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "manual",
+   "label": "マニュアル",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "shomeiman",
+   "label": "購入証明書の使い方",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "ubman",
+   "label": "TT売上帳簿の使い方",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  },
+  {
+   "id": "linereply",
+   "label": "LINEにすぐ返信できない",
+   "room": "りゅう画面",
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
+  }
+ ]
+}
