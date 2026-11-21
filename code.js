@@ -14771,6 +14771,8 @@ function manualScript_(C) {
   function open(m) {
     $('mnList').style.display = 'none'; $('mnBook').style.display = 'block';
     $('mnTitle').textContent = m.icon + ' ' + m.title;
+    // ★2026-11-21 まるちゃん「これいらない」（購入証明書の使い方の上の題名）＝表紙に大きく題名があるので、この本は上の題名を出さない
+    $('mnTitle').style.display = (m.key === 'shomeisho') ? 'none' : '';
     $('mnPages').innerHTML = '<div class="mnmsg">読み込み中…</div>';
     window.scrollTo(0, 0);
     var dir = C.root + m.key + '/';
