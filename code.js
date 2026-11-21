@@ -4053,6 +4053,10 @@ function renderUriage_(base, staff, dev) {
 // 「前に戻る」共通の土台（★ルール：戻るリンクは全画面この方式に統一＝施術室被り(.homelink)と
 // 同じ「← 戻る」の上部バー。新しいviewを足す時もこれを使う。共通\スーパーズコApp_必読.md参照）。
 function backBar_(base, staff, dev) {
+  // ★2026-11-21 まるちゃん「（TimeTree・記入漏れ・各種LINK・LINE未回答・一斉配信・広告費管理も）独立画面」＝パソコン版の独立した窓（住所に solo=1）で
+  //   開いた一番上の画面は、そこがトップ画面なので「← 戻る」を出さない（2026-11-20 まるちゃん「独立した画面として開いたアプリは、ここがトップ画面だから戻るボタンはいらない」）。
+  //   中の画面へ進んだ先（住所に solo=1 が無い）は今までどおり出す。
+  try { if (/[?&]solo=1(&|$)/.test(location.search)) return ''; } catch (e) {}
   return '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +
     roleSfx_(staff, dev) + '" target="_top">← 戻る</a></div>';
 }

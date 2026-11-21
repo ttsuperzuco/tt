@@ -1,5 +1,5 @@
 {
- "made": "2026-11-21 10:49",
+ "made": "2026-11-21 11:05",
  "rows": [
   {
    "id": "conflict",
@@ -12,8 +12,8 @@
    "id": "lt",
    "label": "TimeTree予約記入漏れ",
    "room": "りゅう画面",
-   "own": false,
-   "how": "ズコの中で開く"
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
   },
   {
    "id": "uriage",
@@ -26,8 +26,8 @@
    "id": "unanswered",
    "label": "LINE未回答＆返信待ち",
    "room": "りゅう画面",
-   "own": false,
-   "how": "ズコの中で開く"
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
   },
   {
    "id": "akijikan",
@@ -54,8 +54,8 @@
    "id": "links",
    "label": "各種LINK",
    "room": "りゅう画面",
-   "own": false,
-   "how": "ズコの中で開く"
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
   },
   {
    "id": "zenjitsu",
@@ -96,8 +96,8 @@
    "id": "bcast",
    "label": "LINE一斉配信",
    "room": "りゅう画面",
-   "own": false,
-   "how": "ズコの中で開く"
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
   },
   {
    "id": "cost",
@@ -110,8 +110,8 @@
    "id": "koukoku",
    "label": "広告費管理",
    "room": "りゅうツール",
-   "own": false,
-   "how": "ズコの中で開く"
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
   },
   {
    "id": "shomeisho",
@@ -138,8 +138,8 @@
    "id": "timetree",
    "label": "TimeTree",
    "room": "りゅう画面",
-   "own": false,
-   "how": "ズコの中で開く"
+   "own": true,
+   "how": "独立した窓（ズコの画面）"
   },
   {
    "id": "shophist",

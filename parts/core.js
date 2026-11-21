@@ -2639,6 +2639,7 @@ function renderUriage_(base, staff, dev) {
   }
 }
 function backBar_(base, staff, dev) {
+  try { if (/[?&]solo=1(&|$)/.test(location.search)) return ''; } catch (e) {}
   return '<div class="ubar"><a class="uhome" href="' + (base || '') + '?view=home' +
     roleSfx_(staff, dev) + '" target="_top">← 戻る</a></div>';
 }
