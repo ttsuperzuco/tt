@@ -1706,6 +1706,14 @@ var EXTLINK_SCRIPT_ =
 '\'<img src="icons/zuko-boot.png" alt="" class="bootIcon" onload="this.className+=&quot; ok&quot;"></div>\';' +
 'window.location.href=u;' +
 '});})(a[i]);}' +
+'})();</script>' +
+'<script>(function(){' +
+'document.addEventListener("click",function(ev){' +
+'var a=ev.target&&ev.target.closest?ev.target.closest("a.tile[data-tid]"):null;' +
+'var api=window.pywebview&&window.pywebview.api;if(!a||!api||!api.launch_own)return;' +
+'ev.preventDefault();var u=a.getAttribute("href");' +
+'api.launch_own(a.getAttribute("data-tid")).then(function(r){if(!(r&&r.ok)&&u)window.location.href=u;},function(){if(u)window.location.href=u;});' +
+'});' +
 '})();</script>';
 var HOME_MY_ORDER_KEY_ = 'sz_my_tile_order';
 function homeMyOrder_() {

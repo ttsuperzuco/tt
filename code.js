@@ -2397,6 +2397,17 @@ var EXTLINK_SCRIPT_ =
 '\'<img src="icons/zuko-boot.png" alt="" class="bootIcon" onload="this.className+=&quot; ok&quot;"></div>\';' +
 'window.location.href=u;' +
 '});})(a[i]);}' +
+'})();</script>' +
+// ★2026-11-21 まるちゃん「売上帳簿のこのボタンは独立した画面で出して」＝パソコン版の窓の中で開いたこの画面（トマトの画面など）では、
+//   パソコン版で独立した窓で開くアプリ（売上帳簿など）を押すと、パソコン版に頼んで同じ独立した窓で開く（それ以外はこれまでどおり中で開く）。
+//   並べ替えで動かした直後の押した事にしない処理（ホーム並べ替え）は先に止めるので、ここは押した事になった時だけ動く。
+'<script>(function(){' +
+'document.addEventListener("click",function(ev){' +
+'var a=ev.target&&ev.target.closest?ev.target.closest("a.tile[data-tid]"):null;' +
+'var api=window.pywebview&&window.pywebview.api;if(!a||!api||!api.launch_own)return;' +
+'ev.preventDefault();var u=a.getAttribute("href");' +
+'api.launch_own(a.getAttribute("data-tid")).then(function(r){if(!(r&&r.ok)&&u)window.location.href=u;},function(){if(u)window.location.href=u;});' +
+'});' +
 '})();</script>';
 
 // ===== ホームのボタンを長押しして場所を入れ替える（2026-11-10 まるちゃん「長押しして下にずらすと入れ替えられるやつ」）=====
