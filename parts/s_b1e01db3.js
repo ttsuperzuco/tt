@@ -64,7 +64,13 @@ function manualScript_(C) {
       }).join('');
       var h = '<div class="mncoverbox" id="mnP0"><div class="mncover"><img class="mnimg" alt="表紙" src="' + src(0) + '">' + links + '</div></div>';
       for (var i = 1; i < info.pages; i++) {
-        h += '<img class="mnimg" id="mnP' + i + '" alt="' + i + 'ページ"' + (i > 2 ? ' loading="lazy"' : '') + ' src="' + src(i) + '">';
+        var img = '<img class="mnimg"' + (info.back ? '' : ' id="mnP' + i + '"') + ' alt="' + i + 'ページ"' + (i > 2 ? ' loading="lazy"' : '') + ' src="' + src(i) + '">';
+        if (info.back) {
+          var bk = info.back;
+          img = '<div class="mncoverbox" id="mnP' + i + '"><div class="mncover">' + img + '<a href="javascript:void(0)" data-p="0" style="left:' + (bk.x * 100) + '%;top:' +
+            (bk.y * 100) + '%;width:' + (bk.w * 100) + '%;height:' + (bk.h * 100) + '%" aria-label="カバーページに戻る"></a></div></div>';
+        }
+        h += img;
       }
       $('mnPages').innerHTML = h;
       Array.prototype.forEach.call(document.querySelectorAll('.mncover a'), function (a) {
