@@ -2725,7 +2725,9 @@ function homeFolderBoot_(OPT) {
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
     // ★2026-11-14 まるちゃん「お客様系とお知らせ＆配信のフォルダを入れ替えて。これは全員」＝お客様系を先に。
     // ★2026-11-19 まるちゃん「ここに マニュアル ボタンつくって これいれて」＝📖マニュアル（manual）もお客様系に（中のボタンは開発者だけ＝共通ルール16）。
-    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered', 'manual'] },
+    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] },
+    // ★2026-11-21 まるちゃん「マニュアルはお客様系から削除し、スタッフ系フォルダをつくってその中にいれて。すべてのスタッフのをそうして」
+    { k: 'd8', d: true, f: 'スタッフ系', items: ['manual'] },
     { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
     // ★2026-11-19 まるちゃん「龍の画面にマニュアルフォルダをつくって、このマニュアルいれて」「おれだけ」＝中のボタンは開発者だけ
     //   （スタッフ・TOMATOさんの画面では中が空になる＝hideEmpty でフォルダごと出ない）。マニュアルを足す時は items に足す。
@@ -2738,7 +2740,7 @@ function homeFolderBoot_(OPT) {
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
-    { to: 'd6', id: 'manual' },   // ★2026-11-19 📖マニュアル
+    { to: 'd8', id: 'manual', from: 'd6' },   // ★2026-11-21 📖マニュアル＝お客様系からスタッフ系へ（全員の端末に1回だけ当てる）
     { to: 'd7', id: 'shomeiman' },   // ★2026-11-19 🧾購入証明書の使い方（りゅうのマニュアルフォルダ）
     { to: 'd7', id: 'ubman' },   // ★2026-11-21 📒TT売上帳簿の使い方（りゅうのマニュアルフォルダ）
     { to: 'd7', id: 'linereply' }];   // ★2026-11-20 💬LINE返信の流れ（りゅうのマニュアルフォルダ）
@@ -2852,7 +2854,14 @@ function homeFolderBoot_(OPT) {
       var m = (d && Array.isArray(x.m)) ? x.m.filter(function (y) { return typeof y === 'string'; }) : [];
       if (it.length || d) out.push({ k: k, f: d ? DEF[k].f : String(x.f || 'フォルダ'), items: it, c: c, d: d, m: m });   // ★最初からあるフォルダは決まった名前
     });
-    START.forEach(function (F) { if (!keys[F.k]) out.push({ k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true, m: [] }); });
+    // ★2026-11-21 あとから足した最初のフォルダ（スタッフ系など）は、並びを覚えている端末でも一番後ろではなく、START で前にあるフォルダのすぐ後に置く
+    START.forEach(function (F, si) {
+      if (keys[F.k]) return;
+      var nf = { k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true, m: [] };
+      var at = -1;
+      for (var j = si - 1; j >= 0 && at < 0; j--) { var P = fold(START[j].k); if (P) at = out.indexOf(P); }
+      if (at >= 0) out.splice(at + 1, 0, nf); else out.push(nf);
+    });
     function fold(k) { for (var i = 0; i < out.length; i++) if (typeof out[i] !== 'string' && out[i].k === k) return out[i]; return null; }
     MOVES.forEach(function (L) {   // あとから最初のフォルダを変えた分（上の MOVES）
       var mk = (L.from ? L.from + '>' : '') + L.to + ':' + L.id, F = fold(L.to);

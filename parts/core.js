@@ -1955,12 +1955,13 @@ function homeFolderBoot_(OPT) {
     { k: 'd2', d: true, f: 'SNS', items: ['insta', 'threads', 'hachimitsu', 'facebook', 'timetree'] },
     { k: 'd3', d: true, f: '予約系', items: ['yoyaku', 'akijikan', 'ttapp', 'lt', 'conflict'] },
     { k: 'd4', d: true, f: '在庫売上\n管理', items: ['procstock', 'hanbai', 'uriage', 'uriagebook'] },
-    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered', 'manual'] },
+    { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] },
+    { k: 'd8', d: true, f: 'スタッフ系', items: ['manual'] },
     { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
     { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'shomeiman', 'ubman'] }];
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
-    { to: 'd6', id: 'manual' },   
+    { to: 'd8', id: 'manual', from: 'd6' },   
     { to: 'd7', id: 'shomeiman' },   
     { to: 'd7', id: 'ubman' },   
     { to: 'd7', id: 'linereply' }];   
@@ -2066,7 +2067,13 @@ function homeFolderBoot_(OPT) {
       var m = (d && Array.isArray(x.m)) ? x.m.filter(function (y) { return typeof y === 'string'; }) : [];
       if (it.length || d) out.push({ k: k, f: d ? DEF[k].f : String(x.f || 'フォルダ'), items: it, c: c, d: d, m: m });   
     });
-    START.forEach(function (F) { if (!keys[F.k]) out.push({ k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true, m: [] }); });
+    START.forEach(function (F, si) {
+      if (keys[F.k]) return;
+      var nf = { k: F.k, f: F.f, items: F.items.filter(function (y) { return !!T[y] && !seenDef[y] && (seenDef[y] = 1); }), c: '', d: true, m: [] };
+      var at = -1;
+      for (var j = si - 1; j >= 0 && at < 0; j--) { var P = fold(START[j].k); if (P) at = out.indexOf(P); }
+      if (at >= 0) out.splice(at + 1, 0, nf); else out.push(nf);
+    });
     function fold(k) { for (var i = 0; i < out.length; i++) if (typeof out[i] !== 'string' && out[i].k === k) return out[i]; return null; }
     MOVES.forEach(function (L) {   
       var mk = (L.from ? L.from + '>' : '') + L.to + ':' + L.id, F = fold(L.to);
