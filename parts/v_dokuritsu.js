@@ -20,7 +20,7 @@ function renderDokuritsuPage_(base, staff, dev) {
     '</style>' +
     '<div class="home">' + backBarUnlessSolo_(base, staff, dev) + '<div class="dkwrap">' +
       '<div class="dkttl">🪟 独立画面</div>' +
-      '<div class="dknote"><b>🪟 別の窓</b> が付いているボタンは、パソコン版ズコで押すと別の窓で開きます。<br>付いていないボタンは、ズコの画面の中で開きます。</div>' +
+      '<div class="dknote"><b>🪟 独立画面</b> が付いているボタンは、パソコン版ズコで押すと独立画面で開きます。<br>付いていないボタンは、ズコの画面の中で開きます。</div>' +
       '<div id="dkBody"><div class="dkmsg">読み込み中…</div></div>' +
     '</div></div>' +
     '<script>(' + dokuritsuScript_.toString() + ')();<\/script>';
@@ -38,7 +38,7 @@ function dokuritsuScript_() {
         var x = byId[id] || {}, t = defs[id] || {};
         var ic = t.iconDev || t.icon || '<span class="ticon">▫️</span>';
         return '<div class="dktile' + (x.own ? ' own' : '') + '"><span class="ic">' + ic + '</span><span class="nm">' + esc(x.label || id) + '</span>' +
-          (x.own ? '<span class="bd">🪟 別の窓</span>' : '') + '</div>';
+          (x.own ? '<span class="bd">🪟 独立画面</span>' : '') + '</div>';
       }).join('') + '</div></div>';
     }).join('');
   }).catch(function () {

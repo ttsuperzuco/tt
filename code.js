@@ -23716,7 +23716,7 @@ var KAESHICSS_ =
 // GAS側から開いた時用（静的アプリは index.html が窓口から取って renderPcStatusPage_ を直接呼ぶ）。
 // ★独立画面（2026-11-21 まるちゃん）＝パソコン版ズコのボタンが「別の窓で開くか・ズコの中で開くか」を見るだけ。
 //   ★同日 まるちゃん「むちゃくちゃわかりにくい。一覧で並べられても理解できない」＝ホームと同じフォルダの形・同じ絵で並べ、
-//     別の窓で開くボタンにだけ「🪟 別の窓」の印を付ける（文字の表はやめた）。
+//     別の窓で開くボタンにだけ「🪟 独立画面」の印を付ける（文字の表はやめた・同日まるちゃん「別の窓じゃなくて独立画面にして」）。
 //   中身＝置き場の dokuritsu.json（PC版スーパーズコ\programs\独立画面の一覧を作る.py が、パソコン版のボタンの決まりと
 //   共通\画面\ホームのフォルダ.js のフォルダ分けから作る＝ここで書き写さない）。
 function renderDokuritsuPage_(base, staff, dev) {
@@ -23739,7 +23739,7 @@ function renderDokuritsuPage_(base, staff, dev) {
     '</style>' +
     '<div class="home">' + backBarUnlessSolo_(base, staff, dev) + '<div class="dkwrap">' +
       '<div class="dkttl">🪟 独立画面</div>' +
-      '<div class="dknote"><b>🪟 別の窓</b> が付いているボタンは、パソコン版ズコで押すと別の窓で開きます。<br>付いていないボタンは、ズコの画面の中で開きます。</div>' +
+      '<div class="dknote"><b>🪟 独立画面</b> が付いているボタンは、パソコン版ズコで押すと独立画面で開きます。<br>付いていないボタンは、ズコの画面の中で開きます。</div>' +
       '<div id="dkBody"><div class="dkmsg">読み込み中…</div></div>' +
     '</div></div>' +
     '<script>(' + dokuritsuScript_.toString() + ')();<\/script>';
@@ -23757,7 +23757,7 @@ function dokuritsuScript_() {
         var x = byId[id] || {}, t = defs[id] || {};
         var ic = t.iconDev || t.icon || '<span class="ticon">▫️</span>';
         return '<div class="dktile' + (x.own ? ' own' : '') + '"><span class="ic">' + ic + '</span><span class="nm">' + esc(x.label || id) + '</span>' +
-          (x.own ? '<span class="bd">🪟 別の窓</span>' : '') + '</div>';
+          (x.own ? '<span class="bd">🪟 独立画面</span>' : '') + '</div>';
       }).join('') + '</div></div>';
     }).join('');
   }).catch(function () {
