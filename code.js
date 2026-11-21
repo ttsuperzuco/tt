@@ -14785,12 +14785,14 @@ function manualScript_(C) {
       }).join('');
       var h = '<div class="mncoverbox" id="mnP0"><div class="mncover"><img class="mnimg" alt="表紙" src="' + src(0) + '">' + links + '</div></div>';
       for (var i = 1; i < info.pages; i++) {
-        var img = '<img class="mnimg"' + (info.back ? '' : ' id="mnP' + i + '"') + ' alt="' + i + 'ページ"' + (i > 2 ? ' loading="lazy"' : '') + ' src="' + src(i) + '">';
-        // ★2026-11-21 まるちゃん「左下にはカバーページに戻るボタンを置く」＝ページの画像の左下のボタンを押すと表紙へ（位置は index.json の back）
-        if (info.back) {
-          var bk = info.back;
-          img = '<div class="mncoverbox" id="mnP' + i + '"><div class="mncover">' + img + '<a href="javascript:void(0)" data-p="0" style="left:' + (bk.x * 100) + '%;top:' +
-            (bk.y * 100) + '%;width:' + (bk.w * 100) + '%;height:' + (bk.h * 100) + '%" aria-label="カバーページに戻る"></a></div></div>';
+        var rs = (info.refs || []).filter(function (r) { return r.img === i; });
+        var img = '<img class="mnimg"' + (rs.length ? '' : ' id="mnP' + i + '"') + ' alt="' + i + 'ページ"' + (i > 2 ? ' loading="lazy"' : '') + ' src="' + src(i) + '">';
+        // ★2026-11-21 まるちゃん「参照する場合は飛ばせるボタンつくらないと」＝ページの中の「◯ページへ」を押すとそのページへ飛ぶ（位置は index.json の refs）
+        if (rs.length) {
+          img = '<div class="mncoverbox" id="mnP' + i + '"><div class="mncover">' + img + rs.map(function (r) {
+            return '<a href="javascript:void(0)" data-p="' + r.page + '" style="left:' + (r.x * 100) + '%;top:' + (r.y * 100) + '%;width:' +
+              (r.w * 100) + '%;height:' + (r.h * 100) + '%" aria-label="' + r.page + 'ページへ"></a>';
+          }).join('') + '</div></div>';
         }
         h += img;
       }
