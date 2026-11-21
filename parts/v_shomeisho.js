@@ -8,6 +8,7 @@ var SMCSS_ =
   '#smCertBox .smbar .ubar{margin:0;}' +
   '.smzoom{margin-left:auto;background:#fff;color:#2C7A99;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;}' +
   '.smprint{margin-left:8px;background:#16a34a;color:#fff;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;white-space:nowrap;}' +
+  '.smprint.pay{white-space:normal;line-height:1.25;padding:6px 14px;font-size:14px;text-align:center;}' +
   '#smCertPane{position:absolute;left:0;right:0;top:58px;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;}' +
   '#smCertSizer{position:relative;overflow:hidden;margin:0 auto;}' +
   '#smCertSizer iframe{position:absolute;left:0;top:0;width:1180px;height:1000px;transform-origin:0 0;background:#fff;}' +
@@ -145,6 +146,8 @@ function shomeishoScript_(C) {
       else ask(String(d.name || ''), d.args || [], reply);
     } else if (d.szsm === 'cert') {
       certLater = !!d.payLater; certAuto = !!d.autoPrint;
+      var pb = $('smPrint'); pb.className = certLater ? 'smprint pay' : 'smprint';
+      pb.innerHTML = certLater ? '<span style="white-space:nowrap">💳 お支払いを選択して</span><wbr><span style="white-space:nowrap">印刷する</span>' : '🖨️ 印刷する';
       zoom = false; box.style.display = 'block'; cert.srcdoc = String(d.html || ''); fit();
     } else if (d.szsm === 'exit') {
       exit();

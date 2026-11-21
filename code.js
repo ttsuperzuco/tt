@@ -14568,6 +14568,9 @@ var SMCSS_ =
   '.smzoom{margin-left:auto;background:#fff;color:#2C7A99;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;}' +
   // ★「拡大して表示」の右に「印刷する」（2026-11-10 まるちゃん「印刷画面までいったら拡大して表示の右に印刷するボタンをつけちゃう」）
   '.smprint{margin-left:8px;background:#16a34a;color:#fff;border:0;border-radius:999px;padding:9px 16px;font:inherit;font-weight:900;font-size:15px;cursor:pointer;white-space:nowrap;}' +
+  // ★2026-11-21 まるちゃん「①推奨」＝まだ支払いが決まっていない紙では「💳 お支払いを選択して印刷する」（押すと支払いの画面へ・すぐには印刷しない）。
+  //   スマホの幅では入りきらないので、「お支払いを選択して／印刷する」の切れ目でだけ2行にする（言葉の途中で切らない）。
+  '.smprint.pay{white-space:normal;line-height:1.25;padding:6px 14px;font-size:14px;text-align:center;}' +
   // ★紙はパソコンの窓と同じ広さ（1180）で作り、画面の幅に縮めて見せる（スマホの幅のまま作ると紙が縦につぶれる）
   '#smCertPane{position:absolute;left:0;right:0;top:58px;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;}' +
   '#smCertSizer{position:relative;overflow:hidden;margin:0 auto;}' +
@@ -14730,6 +14733,9 @@ function shomeishoScript_(C) {
       else ask(String(d.name || ''), d.args || [], reply);
     } else if (d.szsm === 'cert') {
       certLater = !!d.payLater; certAuto = !!d.autoPrint;
+      // ★2026-11-21 支払い前の紙は、押すと支払いの画面へ移ることがボタンで分かる文にする（最後の紙は今までどおり「印刷する」）
+      var pb = $('smPrint'); pb.className = certLater ? 'smprint pay' : 'smprint';
+      pb.innerHTML = certLater ? '<span style="white-space:nowrap">💳 お支払いを選択して</span><wbr><span style="white-space:nowrap">印刷する</span>' : '🖨️ 印刷する';
       zoom = false; box.style.display = 'block'; cert.srcdoc = String(d.html || ''); fit();
     } else if (d.szsm === 'exit') {
       exit();
