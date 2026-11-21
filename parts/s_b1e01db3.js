@@ -2,11 +2,12 @@
 // この画面だけで使う部品：linereply、manual、shomeiman、ubman、wifiman
 var MANUALS_ = [
   { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' },
-  { key: 'uriagebook', icon: '📒', title: 'TT売上帳簿の使い方' },   
+  { key: 'uriagebook', icon: '📒', title: 'TT売上帳簿の使い方', dev: true },
   { key: 'linereply_all', icon: '💬', title: 'LINEにすぐ返信できない' }   
 ];
 function renderManualPage_(base, staff, dev, only) {
-  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: only ? [only] : MANUALS_, only: !!only };
+  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', only: !!only,
+    list: only ? [only] : MANUALS_.filter(function (m) { return !m.dev || dev; }) };   
   return '<style>' + HOMECSS_ +
     '.mnwrap{max-width:720px;margin:0 auto;padding:0 2px 40px}' +
     '.mntitle{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 14px}' +

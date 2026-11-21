@@ -14712,7 +14712,8 @@ function shomeishoScript_(C) {
 //   マニュアルを足す時は MANUALS_ に1行足す。
 var MANUALS_ = [
   { key: 'shomeisho', icon: '🧾', title: '購入証明書の使い方' },
-  { key: 'uriagebook', icon: '📒', title: 'TT売上帳簿の使い方' },   // ★2026-11-21 まるちゃん「入れて」
+  // ★2026-11-21 まるちゃん「売上帳簿のマニュアルは開発者だけに表示」＝dev:true の物は開発者の画面の一覧にだけ出す（📖マニュアルはスタッフにも見えるため）。
+  { key: 'uriagebook', icon: '📒', title: 'TT売上帳簿の使い方', dev: true },
   // ★2026-11-20 まるちゃん「他の人は流れ図を出さずに、出し方の最初を『お客様からLINEが来たら／「少々お待ちください」と返信する／
   //   「お待ちください」の当店定型文の保存場所は以下の通り』にかえる」＝ほかのスタッフ用は流れ図なしの1枚（manual/linereply_all）。
   { key: 'linereply_all', icon: '💬', title: 'LINEにすぐ返信できない' }   // ★2026-11-20 まるちゃん「LINE返信の流れじゃなくLINEにすぐ返信できないにかえる。ボタン名も」
@@ -14724,7 +14725,8 @@ var LINEREPLY_MANUAL_ = { key: 'linereply', icon: '💬', title: 'LINEにすぐ�
 // ★2026-11-19 only＝マニュアル1冊だけを、一覧を出さずにすぐ表紙から見せる（📶お店のWi-Fiの設定のボタン＝renderWifiManualPage_）。
 //   その時の「← 戻る」は一覧ではなく、ズコの1つ前の画面へ戻る。
 function renderManualPage_(base, staff, dev, only) {
-  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', list: only ? [only] : MANUALS_, only: !!only };
+  var C = { root: 'https://ttsuperzuco.github.io/tt/manual/', only: !!only,
+    list: only ? [only] : MANUALS_.filter(function (m) { return !m.dev || dev; }) };   // ★dev:true＝開発者だけ（2026-11-21）
   return '<style>' + HOMECSS_ +
     '.mnwrap{max-width:720px;margin:0 auto;padding:0 2px 40px}' +
     '.mntitle{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 14px}' +
