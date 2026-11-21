@@ -52,7 +52,7 @@ function manualScript_(C) {
   function open(m) {
     $('mnList').style.display = 'none'; $('mnBook').style.display = 'block';
     $('mnTitle').textContent = m.icon + ' ' + m.title;
-    $('mnTitle').style.display = (m.key === 'shomeisho') ? 'none' : '';
+    $('mnTitle').style.display = 'none';
     $('mnPages').innerHTML = '<div class="mnmsg">読み込み中…</div>';
     window.scrollTo(0, 0);
     var dir = C.root + m.key + '/';
