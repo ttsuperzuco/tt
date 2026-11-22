@@ -238,6 +238,14 @@ var SG_STEPS_JS_ =
         'if(typeof sgOnDate==="function")sgOnDate(PICKDATE);' +
         'goFree();};}}}' +
     'function goFree(){step=5;show();drawFree();window.scrollTo(0,0);}' +
+    'function sgTvOpen(ds){if(document.getElementById("sgTvOv"))return;' +
+      'var ov=document.createElement("div");ov.id="sgTvOv";' +
+      'ov.style.cssText="position:fixed;inset:0;z-index:10050;background:#fff;";' +
+      'var fr=document.createElement("iframe");fr.style.cssText="border:0;width:100%;height:100%;display:block;";' +
+      'fr.src=location.pathname+"?view=timetree&tvd="+ds+"&tvall=1&tvfrom=sg&dev=1&frame=0";' +
+      'ov.appendChild(fr);document.body.appendChild(ov);}' +
+    'window.addEventListener("message",function(e){if(e.origin!==location.origin||!e.data||e.data.sz!=="tvclose")return;' +
+      'var ov=document.getElementById("sgTvOv");if(ov)ov.parentNode.removeChild(ov);});' +
     'var DURLO=0,DURDIG="",DURVAL=0,DURBOUND=false;' +
     'function sgDurDraw(){var b=$("sgDurBox");if(b)b.innerHTML=DURDIG?DURDIG+"<span class=akidurunit> 分</span>":"<span class=akidurph>数字を入力してください😊</span>";}' +
     'function sgDurSet(b,lo){DURLO=lo;var bs=$("sgDurF").getElementsByClassName("akidurbtn");' +
@@ -265,6 +273,11 @@ var SG_STEPS_JS_ =
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
       '$("sgfct").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）の空き状況";' +
+      'if((window.__SZ_ROLE_||"")==="開発"){$("sgfct").style.display="flex";$("sgfct").style.alignItems="center";$("sgfct").style.gap="8px";' +
+        'var _tt=document.createElement("span");_tt.style.flex="1";_tt.textContent=$("sgfct").textContent;$("sgfct").textContent="";$("sgfct").appendChild(_tt);' +
+        'var _tb=document.createElement("button");_tb.type="button";_tb.textContent="📅 TimeTreeで見る";' +
+        '_tb.style.cssText="flex:none;border:0;border-radius:999px;background:#2bad6f;color:#fff;font-size:13px;font-weight:800;padding:7px 13px;white-space:nowrap;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.25);";' +
+        '_tb.onclick=function(){sgTvOpen(PICKDATE);};$("sgfct").appendChild(_tb);}' +
       'if(!AKI&&!AKIERR){$("sgstatus3").textContent="空き状況を読んでいます...";' +
         '$("sgfree").innerHTML="";AKIWAIT=function(){if(step===5)drawFree();};return;}' +
       'if(AKIERR){$("sgstatus3").textContent="空き状況を読み込めませんでした。通信環境をご確認くださいませ🙇";' +

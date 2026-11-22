@@ -7555,6 +7555,16 @@ var SG_STEPS_JS_ =
         'goFree();};}}}' +
     /* ── 5枚目：その日の空き状況（空き時間検索の「完全版」と同じ物） ── */
     'function goFree(){step=5;show();drawFree();window.scrollTo(0,0);}' +
+    /* ★2026-11-22 その日のTimeTreeを、この画面の上に重ねて開く（ズコのTimeTree画面をそのまま中に開く）。
+       TimeTree側の大きな「← 空き状況に戻る」（住所 tvfrom=sg）を押すと、ここへ知らせが来て重ねた画面を閉じる。 */
+    'function sgTvOpen(ds){if(document.getElementById("sgTvOv"))return;' +
+      'var ov=document.createElement("div");ov.id="sgTvOv";' +
+      'ov.style.cssText="position:fixed;inset:0;z-index:10050;background:#fff;";' +
+      'var fr=document.createElement("iframe");fr.style.cssText="border:0;width:100%;height:100%;display:block;";' +
+      'fr.src=location.pathname+"?view=timetree&tvd="+ds+"&tvall=1&tvfrom=sg&dev=1&frame=0";' +
+      'ov.appendChild(fr);document.body.appendChild(ov);}' +
+    'window.addEventListener("message",function(e){if(e.origin!==location.origin||!e.data||e.data.sz!=="tvclose")return;' +
+      'var ov=document.getElementById("sgTvOv");if(ov)ov.parentNode.removeChild(ov);});' +
     /* ★2026-11-15 長さの絞り込み（全部・◯分・30分・60分）＝空き時間検索と同じ動き。最初は「全部」。
        足りない空きは消さずに薄く出して押せなくする（施術時間を先に決めた時と同じ出し方＝時間割の形を崩さない）。
        「◯分」は共通の数字ボタン。パソコンはキーボードの数字・Enter・BackSpace・Escでも入力できる。 */
@@ -7585,6 +7595,13 @@ var SG_STEPS_JS_ =
       'var wd=["日","月","火","水","木","金","土"];' +
       'var d=new Date(PICKDATE+"T00:00:00");' +
       '$("sgfct").textContent=(d.getMonth()+1)+"月"+d.getDate()+"日（"+wd[d.getDay()]+"）の空き状況";' +
+      /* ★2026-11-22 まるちゃん「施術後の予約の方にもつけて」（空き時間検索と同じ「📅 TimeTreeで見る」・開発者だけ）。
+         この画面は入力の途中（お客様・日付など）を持っているので、画面を移らず上に重ねて開く（sgTvOpen）＝閉じるとそのまま続きができる。 */
+      'if((window.__SZ_ROLE_||"")==="開発"){$("sgfct").style.display="flex";$("sgfct").style.alignItems="center";$("sgfct").style.gap="8px";' +
+        'var _tt=document.createElement("span");_tt.style.flex="1";_tt.textContent=$("sgfct").textContent;$("sgfct").textContent="";$("sgfct").appendChild(_tt);' +
+        'var _tb=document.createElement("button");_tb.type="button";_tb.textContent="📅 TimeTreeで見る";' +
+        '_tb.style.cssText="flex:none;border:0;border-radius:999px;background:#2bad6f;color:#fff;font-size:13px;font-weight:800;padding:7px 13px;white-space:nowrap;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.25);";' +
+        '_tb.onclick=function(){sgTvOpen(PICKDATE);};$("sgfct").appendChild(_tb);}' +
       'if(!AKI&&!AKIERR){$("sgstatus3").textContent="空き状況を読んでいます...";' +
         '$("sgfree").innerHTML="";AKIWAIT=function(){if(step===5)drawFree();};return;}' +
       'if(AKIERR){$("sgstatus3").textContent="空き状況を読み込めませんでした。通信環境をご確認くださいませ🙇";' +
@@ -25902,6 +25919,7 @@ function ttviewStart_(exec, base, staff, dev) {
   var range = null;        // {lo:k, hi:k}（今月のファイルが届くまでは先月〜5か月先として動く）
   var roomOnly = false;
   var fromAki = false;     // 空き時間検索の「📅 TimeTreeで見る」から開いた時（その日の予定の戻るを大きな「空き時間検索に戻る」にする）
+  var fromSg = false;      // 施術後の予約（空き状況）の上に重ねて開いた時（大きな「空き状況に戻る」＝重ねた画面を閉じる）
   try { roomOnly = localStorage.getItem('sz_tv_roomonly') === '1'; } catch (e) {}
   // ★2026-11-22 まるちゃん決定（案A）：空き時間検索の「📅 TimeTreeで見る」から開いた時は、その日の予定から始める
   //   （住所の tvd=日付）。tvall=1 の時は「全部」で開く（出勤・休みのメモを隠さない）。覚えている切り替えは書き換えない。
@@ -25913,6 +25931,7 @@ function ttviewStart_(exec, base, staff, dev) {
       st = { step: 'day', k: (+dd0[0] - today.getFullYear()) * 12 + (+dd0[1] - 1) - today.getMonth(), date: tvd0 };
       if (qs0.get('tvall') === '1') roomOnly = false;
       fromAki = qs0.get('tvfrom') === 'aki';
+      fromSg = qs0.get('tvfrom') === 'sg';
     }
   } catch (e) {}
   var body = document.getElementById('tvbody');
@@ -26355,6 +26374,12 @@ function ttviewStart_(exec, base, staff, dev) {
       //   日の予定はこの画面の一番手前（前後の日へ移っても履歴は増えない）＝ひとつ前は空き時間検索。
       bar.innerHTML = '<button class="tvbackaki" id="tvbackbtn">← 空き時間検索に戻る</button>';
       document.getElementById('tvbackbtn').onclick = function () { history.back(); };
+    } else if (fromSg) {
+      // ★2026-11-22 施術後の予約の空き状況の上に重ねて開いた時＝押すと重ねた画面を閉じて、入力の続きに戻る
+      bar.innerHTML = '<button class="tvbackaki" id="tvbackbtn">← 空き状況に戻る</button>';
+      document.getElementById('tvbackbtn').onclick = function () {
+        try { window.parent.postMessage({ sz: 'tvclose' }, location.origin); } catch (e) {}
+      };
     } else setBack(function () { history.back(); });
     var d = parseIso(ds);
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);

@@ -159,6 +159,7 @@ function ttviewStart_(exec, base, staff, dev) {
   var range = null;        
   var roomOnly = false;
   var fromAki = false;     
+  var fromSg = false;      
   try { roomOnly = localStorage.getItem('sz_tv_roomonly') === '1'; } catch (e) {}
   try {
     var qs0 = new URLSearchParams(location.search);
@@ -168,6 +169,7 @@ function ttviewStart_(exec, base, staff, dev) {
       st = { step: 'day', k: (+dd0[0] - today.getFullYear()) * 12 + (+dd0[1] - 1) - today.getMonth(), date: tvd0 };
       if (qs0.get('tvall') === '1') roomOnly = false;
       fromAki = qs0.get('tvfrom') === 'aki';
+      fromSg = qs0.get('tvfrom') === 'sg';
     }
   } catch (e) {}
   var body = document.getElementById('tvbody');
@@ -581,6 +583,11 @@ function ttviewStart_(exec, base, staff, dev) {
     if (fromAki) {
       bar.innerHTML = '<button class="tvbackaki" id="tvbackbtn">← 空き時間検索に戻る</button>';
       document.getElementById('tvbackbtn').onclick = function () { history.back(); };
+    } else if (fromSg) {
+      bar.innerHTML = '<button class="tvbackaki" id="tvbackbtn">← 空き状況に戻る</button>';
+      document.getElementById('tvbackbtn').onclick = function () {
+        try { window.parent.postMessage({ sz: 'tvclose' }, location.origin); } catch (e) {}
+      };
     } else setBack(function () { history.back(); });
     var d = parseIso(ds);
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
