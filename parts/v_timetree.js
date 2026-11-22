@@ -10,6 +10,8 @@ function renderTimeTreePage_(base, staff, dev) {
     '.tvbar{position:sticky;top:0;z-index:5;background:#fff;padding:10px 12px 4px;}' +
     '.tvbar .ubar{margin:0;}' +
     '.tvback{border:1px solid #e2e8f0;cursor:pointer;font:inherit;}' +
+    '.tvbackaki{display:block;width:100%;box-sizing:border-box;border:0;border-radius:14px;background:#2C7A99;color:#fff;' +
+      'font:inherit;font-size:18px;font-weight:900;padding:14px 12px;cursor:pointer;box-shadow:0 3px 10px rgba(44,122,153,.45);}' +
     '.tvstatus{color:#666;font-weight:700;font-size:15px;margin:24px 16px;line-height:1.6;}' +
     '.tvmh{display:flex;align-items:center;gap:8px;padding:6px 12px 8px;}' +
     '.tvym{border:0;background:none;font-size:21px;font-weight:800;color:#222;cursor:pointer;padding:4px 2px;' +
@@ -156,6 +158,7 @@ function ttviewStart_(exec, base, staff, dev) {
   var st = { step: 'month', k: 0, date: '', ev: null };
   var range = null;        
   var roomOnly = false;
+  var fromAki = false;     
   try { roomOnly = localStorage.getItem('sz_tv_roomonly') === '1'; } catch (e) {}
   try {
     var qs0 = new URLSearchParams(location.search);
@@ -164,6 +167,7 @@ function ttviewStart_(exec, base, staff, dev) {
       var dd0 = tvd0.split('-');
       st = { step: 'day', k: (+dd0[0] - today.getFullYear()) * 12 + (+dd0[1] - 1) - today.getMonth(), date: tvd0 };
       if (qs0.get('tvall') === '1') roomOnly = false;
+      fromAki = qs0.get('tvfrom') === 'aki';
     }
   } catch (e) {}
   var body = document.getElementById('tvbody');
@@ -574,7 +578,10 @@ function ttviewStart_(exec, base, staff, dev) {
   }
   function drawDay() {
     var ds = st.date;
-    setBack(function () { history.back(); });
+    if (fromAki) {
+      bar.innerHTML = '<button class="tvbackaki" id="tvbackbtn">← 空き時間検索に戻る</button>';
+      document.getElementById('tvbackbtn').onclick = function () { history.back(); };
+    } else setBack(function () { history.back(); });
     var d = parseIso(ds);
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
     var pk = kOfDate(iso(prev)), nk = kOfDate(iso(next));

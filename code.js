@@ -24668,7 +24668,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
   var days = d.days || [];
   // ★2026-11-22 まるちゃん決定（案A）：日の見出しに「📅 TimeTreeで見る」＝開発者だけ（ズコのTimeTree画面も開発者だけのため）。
   //   tvall=1＝空き時間検索から開いた時は、出勤・休みのメモが隠れないよう「全部」で開く（覚えている切り替えは変えない）。
-  var ttLink = (!!dev && !staff) ? ((base || '') + '?view=timetree&tvall=1' + roleSfx_(staff, dev)) : '';
+  var ttLink = (!!dev && !staff) ? ((base || '') + '?view=timetree&tvall=1&tvfrom=aki' + roleSfx_(staff, dev)) : '';
   var cards = days.length
     ? days.map(function (dy) { return akiDayCard_(dy, ttLink); }).join('\n')
     : '<div class="akinone">データがありません</div>';
@@ -25083,6 +25083,35 @@ var AKISCRIPT_ =
 '    applyDur_(b, kind==="all" ? 0 : Number(kind));' +
 '  }); });' +
 '  setRange(minD, thisWeekEnd_(minD));' +   // 初期表示＝今週（2026-10-01 まるちゃん指示。前は今・来週）
+// ★2026-11-22 まるちゃん「TimeTreeから戻ったら、設定していた条件が全部元に戻る。来週の日を調べていたのに意味がない」
+//   ＝「📅 TimeTreeで見る」を押す時に、今の条件（期間・選んだ日付・曜日・長さ・表示の種類・画面の位置）を覚え、
+//   この画面の住所に akr=1 を付けておく。戻ってきた時（住所に akr=1）だけ、覚えた条件に戻す。
+//   ホームから開き直した時は今までどおり「今週」から始まる。
+'  function akiSaveBack_(){' +
+'    var on=document.querySelector(".akipreset.on"), dOn=document.querySelector(".akidurbtn.on"), cOn=document.querySelector(".akichip.on");' +
+'    var s={rf:rangeFrom, rt:rangeTo, md:manualDates, wd:selectedWd, pr:on?on.getAttribute("data-preset"):"",' +
+'      du:dOn?dOn.getAttribute("data-dur"):"all", dv:durVal, ch:cOn?cOn.getAttribute("data-sec"):"full", y:window.scrollY||0};' +
+'    try{ sessionStorage.setItem("sz_aki_back", JSON.stringify(s)); }catch(e){}' +
+'    try{ if(!/[?&]akr=1/.test(location.search)) history.replaceState(history.state, "", location.pathname+location.search+(location.search?"&":"?")+"akr=1"+location.hash); }catch(e){}' +
+'  }' +
+'  [].slice.call(document.querySelectorAll(".akittbtn")).forEach(function(a){ a.addEventListener("click", akiSaveBack_); });' +
+'  (function(){' +
+'    if(!/[?&]akr=1/.test(location.search)) return;' +
+'    var s=null; try{ s=JSON.parse(sessionStorage.getItem("sz_aki_back")||"null"); }catch(e){}' +
+'    if(!s) return;' +
+'    if(s.ch && s.ch!=="full"){ var c=document.querySelector(".akichip[data-sec=\\""+s.ch+"\\"]"); if(c) c.click(); }' +
+'    rangeFrom=clamp(s.rf||minD); rangeTo=clamp(s.rt||minD);' +
+'    manualDates=(s.md&&s.md.length)?s.md:null; updateDateBoxLabel_();' +
+'    presets.forEach(function(x){ x.classList.toggle("on", !manualDates && x.getAttribute("data-preset")===s.pr); });' +
+'    selectedWd=(s.wd&&s.wd.length)?s.wd:null;' +
+'    wdBtns.forEach(function(b){ var w=b.getAttribute("data-wd");' +
+'      b.classList.toggle("on", selectedWd ? selectedWd.indexOf(Number(w))>-1 : w==="all"); });' +
+'    applyFilter();' +
+'    if(s.du==="custom" && s.dv>0){ durVal=s.dv; durCustom.textContent=s.dv+"分"; applyDur_(durCustom, s.dv); }' +
+'    else { var db=document.querySelector(".akidurbtn[data-dur=\\""+(s.du||"all")+"\\"]");' +
+'      if(db && s.du && s.du!=="all") applyDur_(db, Number(s.du)); }' +
+'    setTimeout(function(){ window.scrollTo(0, s.y||0); }, 60);' +
+'  })();' +
 '}' +
 '})();</scr' + 'ipt>';
 
@@ -25203,9 +25232,10 @@ AKFCSS_ +
 /* ★2026-11-22 まるちゃん決定（案A）：日の見出しの右に「TimeTreeで見る」＝その日のTimeTree画面を開く（開発者だけ） */
 '  .akidh.akidhtt{ display:flex; align-items:center; gap:8px; }' +
 '  .akidh.akidhtt .akidht{ flex:1; min-width:0; }' +
-'  .akittbtn{ flex:none; display:inline-block; text-decoration:none; border-radius:999px; background:#fff; color:#2C7A99;' +
-'    border:1px solid var(--akiline); font-size:13px; font-weight:800; padding:6px 12px; white-space:nowrap;' +
-'    box-shadow:0 1px 3px rgba(0,0,0,.2); }' +
+/* ★2026-11-22 まるちゃん「タイムツリーのイメージで緑に」＝TimeTree画面の緑（.tvopen と同じ #2bad6f）・白い字 */
+'  .akittbtn{ flex:none; display:inline-block; text-decoration:none; border-radius:999px; background:#2bad6f; color:#fff;' +
+'    border:0; font-size:13px; font-weight:800; padding:7px 13px; white-space:nowrap;' +
+'    box-shadow:0 1px 3px rgba(0,0,0,.25); }' +
 '  .akiclosed{ color:#c33; font-weight:700; font-size:16px; }' +
 '  .akisec.akihidden{ display:none; }' +
 // 予約可能枠（新規男性／既存男性／新規女性／既存女性）＝区分ごとにひとまとまり＋コピー。
@@ -25705,6 +25735,9 @@ function renderTimeTreePage_(base, staff, dev) {
     '.tvbar{position:sticky;top:0;z-index:5;background:#fff;padding:10px 12px 4px;}' +
     '.tvbar .ubar{margin:0;}' +
     '.tvback{border:1px solid #e2e8f0;cursor:pointer;font:inherit;}' +
+    /* ★2026-11-22 空き時間検索から開いた時だけの、目立つ戻るボタン（ズコの青緑・横いっぱい・大きな字） */
+    '.tvbackaki{display:block;width:100%;box-sizing:border-box;border:0;border-radius:14px;background:#2C7A99;color:#fff;' +
+      'font:inherit;font-size:18px;font-weight:900;padding:14px 12px;cursor:pointer;box-shadow:0 3px 10px rgba(44,122,153,.45);}' +
     '.tvstatus{color:#666;font-weight:700;font-size:15px;margin:24px 16px;line-height:1.6;}' +
     /* ── 月のカレンダー ── */
     '.tvmh{display:flex;align-items:center;gap:8px;padding:6px 12px 8px;}' +
@@ -25868,6 +25901,7 @@ function ttviewStart_(exec, base, staff, dev) {
   var st = { step: 'month', k: 0, date: '', ev: null };
   var range = null;        // {lo:k, hi:k}（今月のファイルが届くまでは先月〜5か月先として動く）
   var roomOnly = false;
+  var fromAki = false;     // 空き時間検索の「📅 TimeTreeで見る」から開いた時（その日の予定の戻るを大きな「空き時間検索に戻る」にする）
   try { roomOnly = localStorage.getItem('sz_tv_roomonly') === '1'; } catch (e) {}
   // ★2026-11-22 まるちゃん決定（案A）：空き時間検索の「📅 TimeTreeで見る」から開いた時は、その日の予定から始める
   //   （住所の tvd=日付）。tvall=1 の時は「全部」で開く（出勤・休みのメモを隠さない）。覚えている切り替えは書き換えない。
@@ -25878,6 +25912,7 @@ function ttviewStart_(exec, base, staff, dev) {
       var dd0 = tvd0.split('-');
       st = { step: 'day', k: (+dd0[0] - today.getFullYear()) * 12 + (+dd0[1] - 1) - today.getMonth(), date: tvd0 };
       if (qs0.get('tvall') === '1') roomOnly = false;
+      fromAki = qs0.get('tvfrom') === 'aki';
     }
   } catch (e) {}
   var body = document.getElementById('tvbody');
@@ -26315,7 +26350,12 @@ function ttviewStart_(exec, base, staff, dev) {
   }
   function drawDay() {
     var ds = st.date;
-    setBack(function () { history.back(); });
+    if (fromAki) {
+      // ★2026-11-22 まるちゃん「空き時間検索から行った時だけ、戻るを『空き時間検索に戻る』にして、すごく目立つボタンに」
+      //   日の予定はこの画面の一番手前（前後の日へ移っても履歴は増えない）＝ひとつ前は空き時間検索。
+      bar.innerHTML = '<button class="tvbackaki" id="tvbackbtn">← 空き時間検索に戻る</button>';
+      document.getElementById('tvbackbtn').onclick = function () { history.back(); };
+    } else setBack(function () { history.back(); });
     var d = parseIso(ds);
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
     var pk = kOfDate(iso(prev)), nk = kOfDate(iso(next));
