@@ -59,8 +59,14 @@ function akiRoomRows_(roomsFree) {
     return '<div class="akirow">' + badge + chips + '</div>';
   }).join('');
 }
-function akiDayCard_(day) {
+function akiDayCard_(day, ttLink) {
   var dattr = ' data-date="' + esc_(day.date || '') + '"';
+  if (ttLink && day.kind !== 'closed' && !day.empty && day.date) {
+    return '<div class="akiday"' + dattr + '>' +
+      '<div class="akidh akidhtt"><span class="akidht">📅 ' + esc_(day.dh) + '</span>' +
+        '<a class="akittbtn" href="' + esc_(ttLink + '&tvd=' + day.date) + '" target="_top">📅 TimeTreeで見る</a></div>' +
+      akiDayBody_(day) + '</div>';
+  }
   if (day.kind === 'closed') {
     return '<div class="akiday"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
       '<div class="akiclosed">' + esc_(day.label) + '</div></div>';
@@ -71,6 +77,11 @@ function akiDayCard_(day) {
   }
   return '<div class="akiday"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    akiDayBody_(day) +
+  '</div>';
+}
+function akiDayBody_(day) {
+  return '' +
     '<div class="akisec akisec-full" data-sec="full">' +
       akiFullCard_(day) +
     '</div>' +
@@ -87,8 +98,9 @@ function akiDayCard_(day) {
 }
 function renderAkijikanPage_(d, base, staff, dev) {
   var days = d.days || [];
+  var ttLink = (!!dev && !staff) ? ((base || '') + '?view=timetree&tvall=1' + roleSfx_(staff, dev)) : '';
   var cards = days.length
-    ? days.map(akiDayCard_).join('\n')
+    ? days.map(function (dy) { return akiDayCard_(dy, ttLink); }).join('\n')
     : '<div class="akinone">データがありません</div>';
   var wakuOn = !!dev && !staff;
   var wakuData = wakuOn
@@ -511,6 +523,11 @@ AKFCSS_ +
 '    padding:12px clamp(8px,3.6vw,14px); margin-bottom:12px; }' +
 '  .akidh{ font-weight:800; font-size:clamp(19px,6.6vw,25px); border-bottom:1px solid var(--akiline);' +
 '    padding-bottom:6px; margin-bottom:8px; }' +
+'  .akidh.akidhtt{ display:flex; align-items:center; gap:8px; }' +
+'  .akidh.akidhtt .akidht{ flex:1; min-width:0; }' +
+'  .akittbtn{ flex:none; display:inline-block; text-decoration:none; border-radius:999px; background:#fff; color:#2C7A99;' +
+'    border:1px solid var(--akiline); font-size:13px; font-weight:800; padding:6px 12px; white-space:nowrap;' +
+'    box-shadow:0 1px 3px rgba(0,0,0,.2); }' +
 '  .akiclosed{ color:#c33; font-weight:700; font-size:16px; }' +
 '  .akisec.akihidden{ display:none; }' +
 '  #akidays.akihidden{ display:none; }' +

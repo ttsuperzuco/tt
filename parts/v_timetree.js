@@ -157,6 +157,15 @@ function ttviewStart_(exec, base, staff, dev) {
   var range = null;        
   var roomOnly = false;
   try { roomOnly = localStorage.getItem('sz_tv_roomonly') === '1'; } catch (e) {}
+  try {
+    var qs0 = new URLSearchParams(location.search);
+    var tvd0 = qs0.get('tvd') || '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(tvd0)) {
+      var dd0 = tvd0.split('-');
+      st = { step: 'day', k: (+dd0[0] - today.getFullYear()) * 12 + (+dd0[1] - 1) - today.getMonth(), date: tvd0 };
+      if (qs0.get('tvall') === '1') roomOnly = false;
+    }
+  } catch (e) {}
   var body = document.getElementById('tvbody');
   var bar = document.getElementById('tvbar');
   var homeBar = bar.innerHTML;

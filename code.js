@@ -24619,8 +24619,16 @@ function akiFullCard_(day) {
   return '<div class="akfull">' + head + body + '</div>';
 }
 
-function akiDayCard_(day) {
+function akiDayCard_(day, ttLink) {
   var dattr = ' data-date="' + esc_(day.date || '') + '"';
+  // ★2026-11-22 まるちゃん決定（案A・開発者だけ）：営業日の見出しの右に「📅 TimeTreeで見る」。
+  //   押すとズコのTimeTree画面のその日の予定（「全部」＝出勤・休みのメモも出る）を開く。← 戻るでここに戻る。
+  if (ttLink && day.kind !== 'closed' && !day.empty && day.date) {
+    return '<div class="akiday"' + dattr + '>' +
+      '<div class="akidh akidhtt"><span class="akidht">📅 ' + esc_(day.dh) + '</span>' +
+        '<a class="akittbtn" href="' + esc_(ttLink + '&tvd=' + day.date) + '" target="_top">📅 TimeTreeで見る</a></div>' +
+      akiDayBody_(day) + '</div>';
+  }
   if (day.kind === 'closed') {
     return '<div class="akiday"' + dattr + '><div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
       '<div class="akiclosed">' + esc_(day.label) + '</div></div>';
@@ -24631,6 +24639,12 @@ function akiDayCard_(day) {
   }
   return '<div class="akiday"' + dattr + '>' +
     '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    akiDayBody_(day) +
+  '</div>';
+}
+/** 日のカードの中身（完全版・各時間帯別・スタッフ別・施術室別）。見出しの形だけ違う2通りで共用。 */
+function akiDayBody_(day) {
+  return '' +
     '<div class="akisec akisec-full" data-sec="full">' +
       akiFullCard_(day) +
     '</div>' +
@@ -24652,8 +24666,11 @@ function akiDayCard_(day) {
  *  既定は完全版だけON＝まるちゃん指示 2026-09-11）。データは全部JSONに入っているので、切替に読み直しは不要。 */
 function renderAkijikanPage_(d, base, staff, dev) {
   var days = d.days || [];
+  // ★2026-11-22 まるちゃん決定（案A）：日の見出しに「📅 TimeTreeで見る」＝開発者だけ（ズコのTimeTree画面も開発者だけのため）。
+  //   tvall=1＝空き時間検索から開いた時は、出勤・休みのメモが隠れないよう「全部」で開く（覚えている切り替えは変えない）。
+  var ttLink = (!!dev && !staff) ? ((base || '') + '?view=timetree&tvall=1' + roleSfx_(staff, dev)) : '';
   var cards = days.length
-    ? days.map(akiDayCard_).join('\n')
+    ? days.map(function (dy) { return akiDayCard_(dy, ttLink); }).join('\n')
     : '<div class="akinone">データがありません</div>';
   // 予約可能枠は日付の絞り込みに合わせてその場で組み直すので、素の材料をページに載せておく。
   // ★開発者だけに出す（まるちゃん指示 2026-09-05／新しいボタンは既定で開発者のみ＝共通の決まり）。
@@ -25183,6 +25200,12 @@ AKFCSS_ +
 '    padding:12px clamp(8px,3.6vw,14px); margin-bottom:12px; }' +
 '  .akidh{ font-weight:800; font-size:clamp(19px,6.6vw,25px); border-bottom:1px solid var(--akiline);' +
 '    padding-bottom:6px; margin-bottom:8px; }' +
+/* ★2026-11-22 まるちゃん決定（案A）：日の見出しの右に「TimeTreeで見る」＝その日のTimeTree画面を開く（開発者だけ） */
+'  .akidh.akidhtt{ display:flex; align-items:center; gap:8px; }' +
+'  .akidh.akidhtt .akidht{ flex:1; min-width:0; }' +
+'  .akittbtn{ flex:none; display:inline-block; text-decoration:none; border-radius:999px; background:#fff; color:#2C7A99;' +
+'    border:1px solid var(--akiline); font-size:13px; font-weight:800; padding:6px 12px; white-space:nowrap;' +
+'    box-shadow:0 1px 3px rgba(0,0,0,.2); }' +
 '  .akiclosed{ color:#c33; font-weight:700; font-size:16px; }' +
 '  .akisec.akihidden{ display:none; }' +
 // 予約可能枠（新規男性／既存男性／新規女性／既存女性）＝区分ごとにひとまとまり＋コピー。
@@ -25846,6 +25869,17 @@ function ttviewStart_(exec, base, staff, dev) {
   var range = null;        // {lo:k, hi:k}（今月のファイルが届くまでは先月〜5か月先として動く）
   var roomOnly = false;
   try { roomOnly = localStorage.getItem('sz_tv_roomonly') === '1'; } catch (e) {}
+  // ★2026-11-22 まるちゃん決定（案A）：空き時間検索の「📅 TimeTreeで見る」から開いた時は、その日の予定から始める
+  //   （住所の tvd=日付）。tvall=1 の時は「全部」で開く（出勤・休みのメモを隠さない）。覚えている切り替えは書き換えない。
+  try {
+    var qs0 = new URLSearchParams(location.search);
+    var tvd0 = qs0.get('tvd') || '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(tvd0)) {
+      var dd0 = tvd0.split('-');
+      st = { step: 'day', k: (+dd0[0] - today.getFullYear()) * 12 + (+dd0[1] - 1) - today.getMonth(), date: tvd0 };
+      if (qs0.get('tvall') === '1') roomOnly = false;
+    }
+  } catch (e) {}
   var body = document.getElementById('tvbody');
   var bar = document.getElementById('tvbar');
   var homeBar = bar.innerHTML;
