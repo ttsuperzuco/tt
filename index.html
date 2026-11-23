@@ -109,7 +109,13 @@
     var q = new URLSearchParams(location.search);
     var zk = q.get('zk'), zdv = q.get('zdv'), zdk = q.get('zdk');
     if (zk && /^[0-9a-f]{32}$/.test(zk)) { s(LS_TK, zk); s('sz_pw_ok', '1'); }
-    if (zdv && zdk && /^[0-9a-f]{24}$/.test(zdv) && /^[0-9a-f]{32}$/.test(zdk)) { s(LS_DV, zdv); s(LS_DK, zdk); }
+    // ★2026-11-23 プログラムの点検：住所に付いた番号と鍵を無条件で覚え直していた＝悪いリンクを開かせると、このスマホの本物の鍵が消えた。
+    //   → 別の番号で上書きする時は前の番号と鍵を控え、新しい鍵が窓口に断られたら（他の人の番号・許可が無い）前の鍵に戻す（下の settle）。
+    //   一度断られた番号は、住所に付いていても使わない。
+    if (zdv && zdk && /^[0-9a-f]{24}$/.test(zdv) && /^[0-9a-f]{32}$/.test(zdk) && zdv !== g('zk_url_ng')) {
+      if (g(LS_DK) && g(LS_DV) && g(LS_DV) !== zdv) { s('zk_dv_prev', g(LS_DV)); s('zk_dk_prev', g(LS_DK)); }
+      s(LS_DV, zdv); s(LS_DK, zdk);
+    }
   } catch (e) {}
   if (!/^[0-9a-f]{24}$/.test(g(LS_DV))) { newDv(); rm(LS_DK); }
   var EXEC_RE = /^https:\/\/script\.google\.com\/macros\/s\/AKfycbzSxho3e4CH[^\/?]*\/exec/;
@@ -171,6 +177,12 @@
     if (st === 'pending') poll();
   };
   function settle(r, prev) {
+    // ★2026-11-23 住所の鍵が断られた（他の人の番号・許可待ち）＝前に使っていた鍵に戻す（悪いリンクで鍵を消されないため）
+    if (r.state && r.state !== 'ok' && g('zk_dk_prev')) {
+      s('zk_url_ng', g(LS_DV)); s(LS_DV, g('zk_dv_prev')); s(LS_DK, g('zk_dk_prev')); rm('zk_dv_prev'); rm('zk_dk_prev');
+      location.reload(); return;
+    }
+    if (r.state === 'ok') { rm('zk_dv_prev'); rm('zk_dk_prev'); }
     if (r.dk) s(LS_DK, r.dk);
     if (r.state === 'ok') { st = 'ok'; if (prev === 'need' || prev === 'pending') location.reload(); return; }
     if (r.state === 'pending') { st = (prev === 'tk') ? 'tk' : 'pending'; if (st === 'pending') window.__zkShowWait(); return; }
@@ -198,6 +210,11 @@
     rm(LS_TK); rm('sz_pw_ok');
     if (!g(LS_DK)) { location.reload(); return; }
     ask(function (r) {
+      // ★2026-11-23 住所の鍵が断られた＝前に使っていた鍵に戻す（上の settle と同じ）
+      if (r.state && r.state !== 'ok' && g('zk_dk_prev')) {
+        s('zk_url_ng', g(LS_DV)); s(LS_DV, g('zk_dv_prev')); s(LS_DK, g('zk_dk_prev')); rm('zk_dv_prev'); rm('zk_dk_prev');
+        location.reload(); return;
+      }
       if (r.dk) s(LS_DK, r.dk);
       if (r.state === 'ok') { location.reload(); return; }
       if (r.state === 'taken') { newDv(); rm(LS_DK); location.reload(); return; }
@@ -1463,6 +1480,10 @@
     //     iPhoneはズコとアイコンの記憶が別なので、済んだかを画面から知る道が無い＝名前で外す。
     //     スマホを替えた等でもう一度要る時は、ZK_CARRY_DONE_WHO_ から外す。
     if (staff && ZK_CARRY_DONE_WHO_.indexOf(who) >= 0) return;
+    // ★2026-11-23 プログラムの点検（まるちゃん「全部推奨で直して」）：このボタンが作るリンクには、このスマホの番号と鍵がそのまま入る
+    //   （誤って人に送ると、受け取った人がこのスタッフとして期限なしで使えた）。オリーブさん・みかんさんは11/10に追加済み＝役目を終えたので出さない。
+    //   もう一度要る時は、1回だけ・数分だけ使える番号に引き換える形で作り直す。①（受け取る側）は入れてあるアイコンのために残す。
+    return;
     var url = zkCarryUrl_({ origin: location.origin, path: location.pathname, staff: staff, dev: dev,
       dv: lsGet('zk_dv'), dk: lsGet('zk_dk'), device: device, who: who, at: lsGet('sz_picked_at') });
     if (!url || typeof szPopup_ !== 'function') return;
