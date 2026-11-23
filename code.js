@@ -24573,7 +24573,8 @@ function akiFullCard_(day) {
   //   空き時間検索では押しても何も起きない（押す仕掛けを付けるのは施術後の予約の側）。
   function blk(cls, a, b, color, withTime, kind, who) {
     var top = Math.round((a - lo) * AKI_PX_), h = Math.round((b - a) * AKI_PX_);
-    var dat = kind ? (' data-s="' + akiHm_(a) + '" data-e="' + akiHm_(b) + '"' +
+    // ★2026-11-23 まるちゃん「全部は全部出さないと」：空きの長さ(data-dur)も持たせ、長さボタンで薄く出せるようにした。
+    var dat = kind ? (' data-s="' + akiHm_(a) + '" data-e="' + akiHm_(b) + '" data-dur="' + (b - a) + '"' +
                       ' data-kind="' + kind + '" data-who="' + esc_(who || '') + '"') : '';
     return '<div class="akfblk ' + cls + '" style="top:' + top + 'px;height:' + h + 'px' +
       (color ? ';background:' + color : '') + '"' + dat + '>' +
@@ -25057,7 +25058,7 @@ var AKISCRIPT_ =
 // 30分＝30分以上を全部／60分＝60分以上を全部／120分＝120分以上を全部（すべて同じロジック）。
 // 対象は各時間帯別の1行(.akirow[data-dur])とスタッフ別/施術室別の枠チップ(.akislot[data-dur])。
 '  var durBtns=[].slice.call(document.querySelectorAll(".akidurbtn"));' +
-'  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur]"));' +
+'  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur], .akfblk[data-dur]"));' +
 '  function applyDur_(b, lo){' +
 '    durBtns.forEach(function(x){ x.classList.toggle("on", x===b); });' +
 '    durRows.forEach(function(el){' +
@@ -25239,6 +25240,8 @@ var AKICSS_ =
 // ★2026-11-15 長さの絞り込みボタンと「◯分」の数字ボタンの置き場所＝共通の部品（AKIDURCSS_・施術後の予約と同じ物）。
 AKIDURCSS_ +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
+// ★2026-11-23 完全版（時間割）の空きの帯は消さずに薄く出す＝施術後の予約と同じ見せ方（時間割の形を崩さない）。
+'  .akfblk.akidurhide{ opacity:.3; }' +
 '  .akiday.akidatehide{ display:none; }' +
 AKFCSS_ +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +

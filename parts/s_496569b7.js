@@ -74,7 +74,7 @@ function akiFullCard_(day) {
 
   function blk(cls, a, b, color, withTime, kind, who) {
     var top = Math.round((a - lo) * AKI_PX_), h = Math.round((b - a) * AKI_PX_);
-    var dat = kind ? (' data-s="' + akiHm_(a) + '" data-e="' + akiHm_(b) + '"' +
+    var dat = kind ? (' data-s="' + akiHm_(a) + '" data-e="' + akiHm_(b) + '" data-dur="' + (b - a) + '"' +
                       ' data-kind="' + kind + '" data-who="' + esc_(who || '') + '"') : '';
     return '<div class="akfblk ' + cls + '" style="top:' + top + 'px;height:' + h + 'px' +
       (color ? ';background:' + color : '') + '"' + dat + '>' +

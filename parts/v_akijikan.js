@@ -410,7 +410,7 @@ var AKISCRIPT_ =
 '    applyFilter();' +
 '  }); });' +
 '  var durBtns=[].slice.call(document.querySelectorAll(".akidurbtn"));' +
-'  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur]"));' +
+'  var durRows=[].slice.call(document.querySelectorAll(".akirow[data-dur], .akislot[data-dur], .akfblk[data-dur]"));' +
 '  function applyDur_(b, lo){' +
 '    durBtns.forEach(function(x){ x.classList.toggle("on", x===b); });' +
 '    durRows.forEach(function(el){' +
@@ -536,6 +536,7 @@ var AKICSS_ =
 '  .akiwd.on{ color:#fff; background:var(--akiprimary); border-color:var(--akiprimary); }' +
 AKIDURCSS_ +
 '  .akirow.akidurhide, .akislot.akidurhide{ display:none; }' +
+'  .akfblk.akidurhide{ opacity:.3; }' +
 '  .akiday.akidatehide{ display:none; }' +
 AKFCSS_ +
 '  .akichips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }' +
