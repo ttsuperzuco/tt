@@ -2,7 +2,7 @@
 // この画面だけで使う部品：facebook、insta、kanshi、permlist、threads、timedsend、timetree、yoyaku_henkou、yoyaku_kizon、yoyaku_new、yoyaku_sejutsugo
 function szDoneHtml_(title, backLabel, openUrl) {
   var extra = openUrl
-    ? "<a id='szDoneOpen' href='" + openUrl + "' target='_blank' rel='noopener' " +
+    ? "<a id='szDoneOpen' href='" + (/^https:\/\//i.test(String(openUrl)) ? esc_(openUrl) : '#') + "' target='_blank' rel='noopener' " +
       "style='display:block;margin:0 auto 16px;font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;" +
       "background:#fff;border:0;border-radius:12px;padding:14px 26px;text-decoration:none;" +
       "box-shadow:0 4px 10px rgba(0,0,0,.18);'>タイムツリーを確認</a>"

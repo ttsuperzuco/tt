@@ -103,7 +103,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
     : '<div class="akinone">データがありません</div>';
   var wakuOn = !!dev && !staff;
   var wakuData = wakuOn
-    ? '<script>var AKIWAKU_=' + JSON.stringify(d.waku || []) + ';</scr' + 'ipt>'
+    ? '<script>var AKIWAKU_=' + JSON.stringify(d.waku || []).replace(/</g, '\\u003c') + ';</scr' + 'ipt>'
     : '';
 
   return '' +

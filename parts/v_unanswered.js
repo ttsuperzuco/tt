@@ -37,7 +37,7 @@ function unaCard_(r, kind, dev) {
     '" data-cid="' + esc_(r.cid || '') + '" data-reply="' + canR +
     '" data-sex="' + esc_(r.sex || '') + '">🔍 詳細（内容を見る）</button>';
   var link = r.url
-    ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(r.url) + '">💬 LINEを開く（返信する）</a>'
+    ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(/^https?:\/\//i.test(String(r.url)) ? r.url : '#') + '">💬 LINEを開く（返信する）</a>'
     : '';
   var box = (r.reply && r.cid && dev)
     ? '<div class="unareply" data-cid="' + esc_(r.cid) + '" data-nm="' + esc_(name) + '">' +

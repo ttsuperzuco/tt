@@ -1458,7 +1458,7 @@ function szDoneHtml_(title, backLabel, openUrl) {
   // ★openUrl＝あれば「タイムツリーを確認」ボタンを戻るの下に出す（2026-08-23 まるちゃん）。
   //   見た目・文言・並びはパソコン版（gui.py の .ov-b2）とまったく同じにそろえる＝勝手に作り直さない。
   var extra = openUrl
-    ? "<a id='szDoneOpen' href='" + openUrl + "' target='_blank' rel='noopener' " +
+    ? "<a id='szDoneOpen' href='" + (/^https:\/\//i.test(String(openUrl)) ? esc_(openUrl) : '#') + "' target='_blank' rel='noopener' " +
       "style='display:block;margin:0 auto 16px;font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;" +
       "background:#fff;border:0;border-radius:12px;padding:14px 26px;text-decoration:none;" +
       "box-shadow:0 4px 10px rgba(0,0,0,.18);'>タイムツリーを確認</a>"
@@ -3830,7 +3830,7 @@ function ltCard_(r) {
   if (!bubbles) bubbles = '<div class="lqnone">会話の記録が見つかりませんでした</div>';
 
   var lineBtn = r.line_url
-    ? '<a class="lqline" href="' + esc_(r.line_url) + '" target="_top" rel="noopener">このお客様の<br>LINEに飛ぶ ↗</a>'
+    ? '<a class="lqline" href="' + esc_(/^https?:\/\//i.test(String(r.line_url)) ? r.line_url : '#') + '" target="_top" rel="noopener">このお客様の<br>LINEに飛ぶ ↗</a>'
     : '';
 
   // ★2026-07-31：日時を「LINE予約」「TimeTree予約」の2行にする（どちらが正か一目で分かるように）。
@@ -3900,7 +3900,7 @@ function ltGmapSection_(g) {
       '<div class="lmeta"><span class="ltag">書いた<br>時期</span><span class="ltxt">' + esc_(u.when || '') + stars + '</span></div>' +
       '<div class="lgmbox">' +
         '<div class="lgmh"><span class="lgmlab">口コミの本文</span>' +
-          '<a class="lgmbtn" href="' + esc_(g.reply_url || 'https://business.google.com/reviews') + '" target="_blank" rel="noopener">グーグルで<br>返信する ↗</a></div>' +
+          '<a class="lgmbtn" href="' + esc_(/^https?:\/\//i.test(String((g.reply_url || 'https://business.google.com/reviews'))) ? (g.reply_url || 'https://business.google.com/reviews') : '#') + '" target="_blank" rel="noopener">グーグルで<br>返信する ↗</a></div>' +
         '<div class="lgmb">' + body + '</div>' +
       '</div>' +
     '</article>';
@@ -10337,7 +10337,7 @@ function renderExistingPage_(base, staff, dev, mode) {
     // ── 既存の予約（新規登録＝前回コピー）：材料を取り込み→内容を選んで→登録 ──
     'var rvctx=null,rvitems=[],rvsel={staff:"",room:"",dur:""};' +
     'function startExistingReserve(){var nd=picked;var ymd=nd.getFullYear()+"-"+("0"+(nd.getMonth()+1)).slice(-2)+"-"+("0"+nd.getDate()).slice(-2);var tm=tdig.slice(0,2)+":"+tdig.slice(2);exOvShow_(szBusyHtml_("前回の予約を読み込み中です","読み終わったら自動で切り替わりますので、少し待っててくださいね🥺"),"#2C7A99");jsonp({action:"submit",key:KEY,op:"existing_build_ctx",who:idn.who,role:idn.role,device:idn.device,fields:JSON.stringify({number:disp(),date:ymd,time:tm})},function(r){if(!r||!r.ok||!r.id){exOvHide_();szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}pollBuildCtx(r.id,ymd,tm);});}' +
-    'function pollBuildCtx(id,ymd,tm){var nm="exctx_"+String(id).toLowerCase().replace(/[^a-z0-9_]/g,"")+".json",n=0,fin=false;function got(ctx){if(fin)return;fin=true;exOvHide_();if(!ctx||!ctx.found){szPopup_("「"+disp()+"」の前回の予約が見つかりません。");return;}rvctx=ctx;rvctx._ymd=ymd;rvctx._tm=tm;showResvEdit();}function fail(m){if(fin)return;fin=true;exOvHide_();szPopup_(m);}function tryData(){if(fin)return;n++;jsonp({action:"data",name:nm},function(ctx){if(fin)return;if(ctx&&ctx.ok){got(ctx);return;}if(n%3===0){jsonp({action:"status",key:KEY,id:id},function(r){if(fin)return;if(!r||!r.ok){setTimeout(tryData,700);return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""||r.status==="done"){setTimeout(tryData,r.status==="done"?0:700);return;}fail(esc(r.result)||"エラーが発生しました。りゅうさんに伝えてください🙇");});return;}setTimeout(tryData,700);});}tryData();}' +
+    'function pollBuildCtx(id,ymd,tm){var nm="exctx_"+String(id).toLowerCase().replace(/[^a-z0-9_]/g,"")+".json",n=0,fin=false;function got(ctx){if(fin)return;fin=true;exOvHide_();if(!ctx||!ctx.found){szPopup_("「"+disp()+"」の前回の予約が見つかりません。");return;}rvctx=ctx;rvctx._ymd=ymd;rvctx._tm=tm;showResvEdit();}function fail(m){if(fin)return;fin=true;exOvHide_();szPopup_(m);}function tryData(){if(fin)return;n++;jsonp({action:"data",name:nm},function(ctx){if(fin)return;if(ctx&&ctx.ok){got(ctx);return;}if(n%3===0){jsonp({action:"status",key:KEY,id:id},function(r){if(fin)return;if(!r||!r.ok){setTimeout(tryData,700);return;}if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""||r.status==="done"){setTimeout(tryData,r.status==="done"?0:700);return;}fail(r.result||"エラーが発生しました。りゅうさんに伝えてください🙇");});return;}setTimeout(tryData,700);});}tryData();}' +
     'var rvMarkOv={},rvEyeOv=null,rvDochi=false,rvNewItems=[],rvTitleOv=null,rvMemoOv=null;' +
     'var _rvcat="",_rvsub="";' +
     'function showResvEdit(){hideSteps();document.getElementById("exResv").style.display="";document.getElementById("exrvwho").innerHTML="「"+disp()+"」"+(rvctx.name?esc(rvctx.name)+"様":"")+"<br>"+rvctx._ymd+" "+rvctx._tm+" に予約";var _pe=document.getElementById("exrvprev");if(_pe){var _pn=rvctx.prev_note||"";_pe.innerHTML=_pn?("<div class=\\"exsec\\">前回の予約メモ"+(rvctx.prev_date?("（"+esc(rvctx.prev_date)+" "+esc(rvctx.prev_time||"")+"）"):"")+"</div><div class=\\"rvprevmemo\\">"+esc(_pn)+"</div>"):"";}EXMENUBACK="exResv";' +
@@ -11297,6 +11297,7 @@ var URIAGESCRIPT_ =
 //   共通ルール（2026-07-16）。新しい画面を作る時もこの3関数(szOverlay_/szOverlayHide_/szOverlayResult_)
 //   と同じ考え方＝①処理中は全画面で待たせる②完了/失敗も全画面で見せる③一定時間 or タップで消す、
 //   をコピーして使う。
+'function szEsc_(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
 'function szOverlay_(bg, iconHtml, titleHtml, subHtml){' +
 '  var ov=document.getElementById("szFullOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="szFullOverlay"; document.body.appendChild(ov); }' +
@@ -11319,7 +11320,7 @@ var URIAGESCRIPT_ =
 '    allBtn.disabled=true;' +
 '    szOverlay_("#2C7A99","⏳","処理中です","売上の記入・ミス修正・プロセル転記を\\nまとめて実行しています。数分かかることがあります。\\n完了したら自動で切り替わります。");' +
 '    jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_},function(r){' +
-'      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
+'      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",szEsc_((r&&r.error)||"不明")); allBtn.disabled=false; enableUriageBtns(); return; }' +
 '      pollUAll(r.id);' +
 '    });' +
 '  });' +
@@ -11329,9 +11330,9 @@ var URIAGESCRIPT_ =
 '  var timer=setInterval(function(){ tries++;' +
 '    jsonpU0_({action:"status",key:EKEY_U0_,id:id},function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",(r.result)||""); allBtn.disabled=false; enableUriageBtns();' +
+'      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",szEsc_((r.result)||"")); allBtn.disabled=false; enableUriageBtns();' +
 '        try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }' +
-'      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",(r.result)||s); allBtn.disabled=false; enableUriageBtns(); }' +
+'      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",szEsc_((r.result)||s)); allBtn.disabled=false; enableUriageBtns(); }' +
 '      else if(tries>=120){ clearInterval(timer); szOverlayResult_(false,"時間切れです","もう一度試してもらえると嬉しいです🙇"); allBtn.disabled=false; enableUriageBtns(); }' +
 '    });' +
 '  },3000);' +
@@ -11437,7 +11438,7 @@ function unaCard_(r, kind, dev) {
     '" data-cid="' + esc_(r.cid || '') + '" data-reply="' + canR +
     '" data-sex="' + esc_(r.sex || '') + '">🔍 詳細（内容を見る）</button>';
   var link = r.url
-    ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(r.url) + '">💬 LINEを開く（返信する）</a>'
+    ? '<a class="unalink" target="_blank" rel="noopener" href="' + esc_(/^https?:\/\//i.test(String(r.url)) ? r.url : '#') + '">💬 LINEを開く（返信する）</a>'
     : '';
   // ★アプリの中から直接LINEを返す欄（事務所PCが reply:true を立てたカードにだけ出す）。
   //   いま立つのは練習用カード（宛先＝オーナー本人）だけ。本物のお客さんのカードへ広げるのは
@@ -12389,8 +12390,8 @@ function procStockScript_(C) {
       '<div class="pstbl"><table><thead><tr><th>品物</th><th>今の<br>お店在庫</th><th>1か月の<br>予約分</th><th>余裕分</th><th class="o">必要<br>補充数</th></tr></thead><tbody>';
     for (var i = 0; i < t.rows.length; i++) {
       var x = t.rows[i];
-      h += '<tr><td class="n">' + esc(x[0]) + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + x[3] + '</td>' +
-        '<td class="o' + (x[4] ? '' : ' z') + '">' + x[4] + '</td></tr>';
+      h += '<tr><td class="n">' + esc(x[0]) + '</td><td>' + esc(x[1]) + '</td><td>' + esc(x[2]) + '</td><td>' + esc(x[3]) + '</td>' +
+        '<td class="o' + (x[4] ? '' : ' z') + '">' + esc(x[4]) + '</td></tr>';
     }
     h += '</tbody></table></div>';
     // ★2026-10-02 まるちゃん指定：補充が1つも要らない時は、表の下に大きく目立つ色で知らせる。
@@ -14706,7 +14707,7 @@ function shomeishoScript_(C) {
   }
   function useView(v) { shown = v.stamp; bundleSet(null, v.bundle); showPage(v.html); }
   function failed(err) {
-    $('smMsg').innerHTML = (err || '読み込みに失敗しました。') + '<br><button type="button" id="smRetry">もう一度読み込む</button>' +
+    $('smMsg').innerHTML = (err ? String(err).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }) : '読み込みに失敗しました。') + '<br><button type="button" id="smRetry">もう一度読み込む</button>' +
       '<br><button type="button" id="smExit">← 戻る</button>';
     $('smMsg').style.display = ''; frame.style.display = 'none';
     $('smRetry').onclick = load; $('smExit').onclick = exit;
@@ -18143,7 +18144,7 @@ function threadsScript_(C) {
           (r.text ? '<div class="tx">' + esc(r.text) + '</div>' : '') +
           (r.imgs && r.imgs.length ? '<div class="md' + (r.imgs.length > 1 ? ' many' : '') + '">' + r.imgs.map(function (u) { return '<img src="' + esc(u) + '" loading="lazy" referrerpolicy="no-referrer">'; }).join('') + '</div>' : '') +
           '<div class="st"><span>♡ ' + esc(n[0] || 0) + '</span><span>💬 ' + esc(n[1] || 0) + '</span><span>🔁 ' + esc(n[2] || 0) + '</span><span>➤ ' + esc(n[3] || 0) + '</span>' +
-          (r.link ? '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div></div></div>';
+          (r.link ? '<a href="' + esc(/^https?:\/\//i.test(String(r.link)) ? r.link : '#') + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div></div></div>';
       });
       $('thFeed').innerHTML = h; return;
     }
@@ -18186,7 +18187,7 @@ function threadsScript_(C) {
       }
       var nz = function (v) { return (v && v !== '0' && v !== 0) ? esc(v) : ''; };
       var card = '';
-      if (p.card) card = '<a class="lcard" href="' + esc(p.card.url) + '" target="_blank" rel="noopener">' + (p.card.img ? '<img src="' + esc(p.card.img) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
+      if (p.card) card = '<a class="lcard" href="' + esc(/^https?:\/\//i.test(String(p.card.url)) ? p.card.url : '#') + '" target="_blank" rel="noopener">' + (p.card.img ? '<img src="' + esc(p.card.img) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
         '<div class="d">' + esc(p.card.domain || '') + '</div><div class="t">' + esc(p.card.title || p.card.url) + '</div></a>';
       var linkify = function (t) {
         return esc(t).replace(/https?:\/\/[^\s<]+/g, function (u) {
@@ -18199,7 +18200,7 @@ function threadsScript_(C) {
         '<div class="bd"><div class="hd"><b>' + esc(pf.username || '') + '</b>' + (p.topic ? '<span class="tp">› ' + esc(p.topic) + '</span>' : '') + '<span>' + esc(ago(p.at)) + '</span>' + (p.zuko ? '<i>ズコから</i>' : '') +
         '<button type="button" class="dots" data-menu="' + esc(p.id) + '">⋯</button></div>' +
         '<div class="pmenu" id="pm_' + esc(p.id) + '" style="display:none">' +
-          (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') +
+          (p.link ? '<a href="' + esc(/^https?:\/\//i.test(String(p.link)) ? p.link : '#') + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') +
           (!ro && TAB !== 'rp' && p.type !== 'REPOST_FACADE' ? '<button type="button" data-fquote="' + esc(p.id) + '">引用する</button>' : '') +
           (canDel ? '<button type="button" class="del" data-fdel="' + esc(p.id) + '">削除</button>' : '') + '</div>' +
         (p.text ? '<div class="tx">' + linkify(p.text) + '</div>' : (p.type === 'REPOST_FACADE' ? '<div class="tx" style="color:#888">🔁 再投稿（内容はThreadsの画面から読み込んでいます…）</div>' : '')) + md + card +
@@ -18491,7 +18492,7 @@ function threadsScript_(C) {
       $('thList').innerHTML = ps.map(function (p) {
         return '<div class="thpost"><div class="m">' + esc(String(p.at || '').slice(0, 16)) + '　' + esc(p.who || '') +
           (p.n ? '　📷' + p.n : '') + (p.chain ? '　➕続き' + p.chain : '') + '</div><div class="t">' + esc(p.text || '（文なし）') + '</div>' +
-          '<div class="b">' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">開く</a>' : '') +
+          '<div class="b">' + (p.link ? '<a href="' + esc(/^https?:\/\//i.test(String(p.link)) ? p.link : '#') + '" target="_blank" rel="noopener">開く</a>' : '') +
           '<button type="button" data-id="' + esc(p.id) + '">削除</button></div></div>';
       }).join('');
     })({ posts: DATA.lists[CUR] });
@@ -24697,7 +24698,7 @@ function renderAkijikanPage_(d, base, staff, dev) {
   //   スタッフ・幹部にはボタンも材料も渡さない（画面のもとを見ても中身が分からない）。
   var wakuOn = !!dev && !staff;
   var wakuData = wakuOn
-    ? '<script>var AKIWAKU_=' + JSON.stringify(d.waku || []) + ';</scr' + 'ipt>'
+    ? '<script>var AKIWAKU_=' + JSON.stringify(d.waku || []).replace(/</g, '\\u003c') + ';</scr' + 'ipt>'
     : '';
 
   return '' +
@@ -26877,7 +26878,7 @@ var MOVESCRIPT_ =
 // 「移動中」の説明文＝何を動かしているか（担当者マーク＋番号＋名前 と 時刻の予約）を明示（2026-07-12
 //   ユーザー要望）。who="🍅 M000 山田様" 等、mtime="13:30-14:00" 等（開始時刻だけ使う）。
 'function mvDesc_(who,mtime,fromRoom,room){ var t=(mtime||"").split("-")[0];' +
-'  return (who?who+" ":"")+(t?t+"の予約を、":"")+"「"+fromRoom+"」から「"+room+"」へ移動中です"; }' +
+'  return (who?ccH_(who)+" ":"")+(t?ccH_(t)+"の予約を、":"")+"「"+ccH_(fromRoom)+"」から「"+ccH_(room)+"」へ移動中です"; }' +
 'function movingHtml_(who,mtime,fromRoom,room){ return "⏳ "+mvDesc_(who,mtime,fromRoom,room)+' +
 '  "<div style=\\"font-size:.82rem;font-weight:normal;margin-top:6px;line-height:1.5;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>"; }' +
 // ★待機は画面いっぱいのオーバーレイで出す（2026-07-12 ユーザー要望）。移動開始〜検出画面へ戻るまで
@@ -26888,8 +26889,8 @@ var MOVESCRIPT_ =
 '    document.body.appendChild(ov); }' +
 '  var t=(mtime||"").split("-")[0];' +
 '  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
-'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">「"+fromRoom+"」から「"+room+"」へ<br>移動中です</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?ccH_(who):"")+(t?"　"+ccH_(t)+"の予約":"")+"</div>"+' +
+'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">「"+ccH_(fromRoom)+"」から「"+ccH_(room)+"」へ<br>移動中です</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>";' +
 '  return ov; }' +
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
@@ -26901,7 +26902,7 @@ var MOVESCRIPT_ =
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
 '  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
 '  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div>"+' +
-'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">「"+room+"」へ<br>移動が完了しました</div>"+' +
+'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">「"+ccH_(room)+"」へ<br>移動が完了しました</div>"+' +
 '    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">施術室被り検出画面に戻る</button>";' +
 '  document.getElementById("mvBackBtn").addEventListener("click",function(){' +
 '    try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_();' +
@@ -26925,15 +26926,15 @@ var MOVESCRIPT_ =
 '    document.body.appendChild(ov); }' +
 '  var t=(mtime||"").split("-")[0];' +
 '  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
-'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">担当を「"+of+onm+"」から「"+nf+nm+"」へ<br>変更中です</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?ccH_(who):"")+(t?"　"+ccH_(t)+"の予約":"")+"</div>"+' +
+'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">担当を「"+ccH_(of+onm)+"」から「"+ccH_(nf+nm)+"」へ<br>変更中です</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>";' +
 '  return ov; }' +
 'function showStaffDoneOverlay_(nf,nm){ var ov=document.getElementById("mvWaitOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
 '  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
 '  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div>"+' +
-'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">担当を「"+nf+nm+"」へ<br>変更が完了しました</div>"+' +
+'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">担当を「"+ccH_(nf+nm)+"」へ<br>変更が完了しました</div>"+' +
 '    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">被り検出画面に戻る</button>";' +
 '  document.getElementById("mvBackBtn").addEventListener("click",function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); });' +
 '  return ov; }' +
@@ -27586,7 +27587,7 @@ function renderKanshiPage_(d, base, staff, dev) {
       'この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
       'この画面は自宅PCが1分ごとに送ってきた状態を見ています。</div>' +
   '</div>' +
-  '<script>window.__KANSHI_DATA__=' + JSON.stringify(d) + ';<' + '/script>' +
+  '<script>window.__KANSHI_DATA__=' + JSON.stringify(d).replace(/</g, '\\u003c') + ';<' + '/script>' +
   KANSHISCRIPT_;
 }
 
@@ -27712,7 +27713,7 @@ var KANSHISCRIPT_ =
 'var CONFIRM_={};' +   // 押す前に出す確認文（事務所PCが monitor.json の row.confirm で配る）
 'var TILEROW_=null;' + // ボタン表示設定の行（ボタンの一覧・色を持っている＝一覧をここに書き写さない）
 
-'function esc(s){ var d=document.createElement("div"); d.textContent=(s==null?"":String(s)); return d.innerHTML; }' +
+'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
 'function jsonp_(params, onDone){' +
 '  var cb="__k"+Date.now()+Math.floor(Math.random()*1000);' +
 '  window[cb]=function(r){ try{ delete window[cb]; }catch(ig){} onDone(r); };' +

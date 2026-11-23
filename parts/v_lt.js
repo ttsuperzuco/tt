@@ -29,7 +29,7 @@ function ltCard_(r) {
   if (!bubbles) bubbles = '<div class="lqnone">会話の記録が見つかりませんでした</div>';
 
   var lineBtn = r.line_url
-    ? '<a class="lqline" href="' + esc_(r.line_url) + '" target="_top" rel="noopener">このお客様の<br>LINEに飛ぶ ↗</a>'
+    ? '<a class="lqline" href="' + esc_(/^https?:\/\//i.test(String(r.line_url)) ? r.line_url : '#') + '" target="_top" rel="noopener">このお客様の<br>LINEに飛ぶ ↗</a>'
     : '';
 
   var _ttHas = r.tt_time && r.tt_time !== '—' && r.tt_time !== '';
@@ -89,7 +89,7 @@ function ltGmapSection_(g) {
       '<div class="lmeta"><span class="ltag">書いた<br>時期</span><span class="ltxt">' + esc_(u.when || '') + stars + '</span></div>' +
       '<div class="lgmbox">' +
         '<div class="lgmh"><span class="lgmlab">口コミの本文</span>' +
-          '<a class="lgmbtn" href="' + esc_(g.reply_url || 'https://business.google.com/reviews') + '" target="_blank" rel="noopener">グーグルで<br>返信する ↗</a></div>' +
+          '<a class="lgmbtn" href="' + esc_(/^https?:\/\//i.test(String((g.reply_url || 'https://business.google.com/reviews'))) ? (g.reply_url || 'https://business.google.com/reviews') : '#') + '" target="_blank" rel="noopener">グーグルで<br>返信する ↗</a></div>' +
         '<div class="lgmb">' + body + '</div>' +
       '</div>' +
     '</article>';

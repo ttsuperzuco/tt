@@ -2931,6 +2931,7 @@ var URIAGESCRIPT_ =
 '  noBtn.addEventListener("click",function(){ document.body.removeChild(mask); });' +
 '}' +
 'function enableUriageBtns(){ if(allBtn) allBtn.disabled=false; }' +
+'function szEsc_(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
 'function szOverlay_(bg, iconHtml, titleHtml, subHtml){' +
 '  var ov=document.getElementById("szFullOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="szFullOverlay"; document.body.appendChild(ov); }' +
@@ -2952,7 +2953,7 @@ var URIAGESCRIPT_ =
 '    allBtn.disabled=true;' +
 '    szOverlay_("#2C7A99","⏳","処理中です","売上の記入・ミス修正・プロセル転記を\\nまとめて実行しています。数分かかることがあります。\\n完了したら自動で切り替わります。");' +
 '    jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_},function(r){' +
-'      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",(r&&r.error)||"不明"); allBtn.disabled=false; enableUriageBtns(); return; }' +
+'      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",szEsc_((r&&r.error)||"不明")); allBtn.disabled=false; enableUriageBtns(); return; }' +
 '      pollUAll(r.id);' +
 '    });' +
 '  });' +
@@ -2962,9 +2963,9 @@ var URIAGESCRIPT_ =
 '  var timer=setInterval(function(){ tries++;' +
 '    jsonpU0_({action:"status",key:EKEY_U0_,id:id},function(r){' +
 '      var s=(r&&r.status)||"";' +
-'      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",(r.result)||""); allBtn.disabled=false; enableUriageBtns();' +
+'      if(s==="done"){ clearInterval(timer); szOverlayResult_(true,"完了しました",szEsc_((r.result)||"")); allBtn.disabled=false; enableUriageBtns();' +
 '        try{ if(window.__refreshUriageView){ window.__refreshUriageView(); } }catch(e3){} }' +
-'      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",(r.result)||s); allBtn.disabled=false; enableUriageBtns(); }' +
+'      else if(s==="error"||s==="failed"){ clearInterval(timer); szOverlayResult_(false,"失敗しました",szEsc_((r.result)||s)); allBtn.disabled=false; enableUriageBtns(); }' +
 '      else if(tries>=120){ clearInterval(timer); szOverlayResult_(false,"時間切れです","もう一度試してもらえると嬉しいです🙇"); allBtn.disabled=false; enableUriageBtns(); }' +
 '    });' +
 '  },3000);' +
@@ -3387,7 +3388,7 @@ var MOVESCRIPT_ =
 '  }' +
 '});' +
 'function mvDesc_(who,mtime,fromRoom,room){ var t=(mtime||"").split("-")[0];' +
-'  return (who?who+" ":"")+(t?t+"の予約を、":"")+"「"+fromRoom+"」から「"+room+"」へ移動中です"; }' +
+'  return (who?ccH_(who)+" ":"")+(t?ccH_(t)+"の予約を、":"")+"「"+ccH_(fromRoom)+"」から「"+ccH_(room)+"」へ移動中です"; }' +
 'function movingHtml_(who,mtime,fromRoom,room){ return "⏳ "+mvDesc_(who,mtime,fromRoom,room)+' +
 '  "<div style=\\"font-size:.82rem;font-weight:normal;margin-top:6px;line-height:1.5;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>"; }' +
 'function mvOverlay_(who,mtime,fromRoom,room){ var ov=document.getElementById("mvWaitOverlay");' +
@@ -3396,8 +3397,8 @@ var MOVESCRIPT_ =
 '    document.body.appendChild(ov); }' +
 '  var t=(mtime||"").split("-")[0];' +
 '  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
-'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">「"+fromRoom+"」から「"+room+"」へ<br>移動中です</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?ccH_(who):"")+(t?"　"+ccH_(t)+"の予約":"")+"</div>"+' +
+'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">「"+ccH_(fromRoom)+"」から「"+ccH_(room)+"」へ<br>移動中です</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>";' +
 '  return ov; }' +
 'function mvOverlayHide_(){ var ov=document.getElementById("mvWaitOverlay"); if(ov&&ov.parentNode) ov.parentNode.removeChild(ov); }' +
@@ -3405,7 +3406,7 @@ var MOVESCRIPT_ =
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
 '  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
 '  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div>"+' +
-'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">「"+room+"」へ<br>移動が完了しました</div>"+' +
+'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">「"+ccH_(room)+"」へ<br>移動が完了しました</div>"+' +
 '    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">施術室被り検出画面に戻る</button>";' +
 '  document.getElementById("mvBackBtn").addEventListener("click",function(){' +
 '    try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_();' +
@@ -3427,15 +3428,15 @@ var MOVESCRIPT_ =
 '    document.body.appendChild(ov); }' +
 '  var t=(mtime||"").split("-")[0];' +
 '  ov.innerHTML="<div style=\\"font-size:66px;margin-bottom:20px;\\">⏳</div>"+' +
-'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?who:"")+(t?"　"+t+"の予約":"")+"</div>"+' +
-'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">担当を「"+of+onm+"」から「"+nf+nm+"」へ<br>変更中です</div>"+' +
+'    "<div style=\\"color:#eaf3f7;font-size:22px;line-height:1.6;margin-bottom:14px;\\">"+(who?ccH_(who):"")+(t?"　"+ccH_(t)+"の予約":"")+"</div>"+' +
+'    "<div style=\\"color:#fff;font-size:33px;font-weight:800;line-height:1.5;margin-bottom:22px;\\">担当を「"+ccH_(of+onm)+"」から「"+ccH_(nf+nm)+"」へ<br>変更中です</div>"+' +
 '    "<div style=\\"color:#eaf3f7;font-size:20px;line-height:1.8;max-width:420px;\\">タイムツリーへの書き込みが完了したら自動で画面が切り替わりますので、少し待っててくださいね🥺</div>";' +
 '  return ov; }' +
 'function showStaffDoneOverlay_(nf,nm){ var ov=document.getElementById("mvWaitOverlay");' +
 '  if(!ov){ ov=document.createElement("div"); ov.id="mvWaitOverlay"; document.body.appendChild(ov); }' +
 '  ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#16a34a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center;";' +
 '  ov.innerHTML="<div style=\\"font-size:92px;margin-bottom:16px;\\">✓</div>"+' +
-'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">担当を「"+nf+nm+"」へ<br>変更が完了しました</div>"+' +
+'    "<div style=\\"color:#fff;font-size:35px;font-weight:800;line-height:1.5;margin-bottom:26px;\\">担当を「"+ccH_(nf+nm)+"」へ<br>変更が完了しました</div>"+' +
 '    "<button type=\\"button\\" id=\\"mvBackBtn\\" style=\\"font:inherit;font-size:1.3rem;font-weight:800;color:#16a34a;background:#fff;border:0;border-radius:12px;padding:14px 26px;cursor:pointer;\\">被り検出画面に戻る</button>";' +
 '  document.getElementById("mvBackBtn").addEventListener("click",function(){ try{ window.__keepMvOverlay=false; }catch(e3){} mvOverlayHide_(); });' +
 '  return ov; }' +

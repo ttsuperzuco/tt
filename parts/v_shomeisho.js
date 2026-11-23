@@ -104,7 +104,7 @@ function shomeishoScript_(C) {
   }
   function useView(v) { shown = v.stamp; bundleSet(null, v.bundle); showPage(v.html); }
   function failed(err) {
-    $('smMsg').innerHTML = (err || '読み込みに失敗しました。') + '<br><button type="button" id="smRetry">もう一度読み込む</button>' +
+    $('smMsg').innerHTML = (err ? String(err).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }) : '読み込みに失敗しました。') + '<br><button type="button" id="smRetry">もう一度読み込む</button>' +
       '<br><button type="button" id="smExit">← 戻る</button>';
     $('smMsg').style.display = ''; frame.style.display = 'none';
     $('smRetry').onclick = load; $('smExit').onclick = exit;

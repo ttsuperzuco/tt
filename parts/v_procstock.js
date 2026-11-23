@@ -120,8 +120,8 @@ function procStockScript_(C) {
       '<div class="pstbl"><table><thead><tr><th>品物</th><th>今の<br>お店在庫</th><th>1か月の<br>予約分</th><th>余裕分</th><th class="o">必要<br>補充数</th></tr></thead><tbody>';
     for (var i = 0; i < t.rows.length; i++) {
       var x = t.rows[i];
-      h += '<tr><td class="n">' + esc(x[0]) + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td>' + x[3] + '</td>' +
-        '<td class="o' + (x[4] ? '' : ' z') + '">' + x[4] + '</td></tr>';
+      h += '<tr><td class="n">' + esc(x[0]) + '</td><td>' + esc(x[1]) + '</td><td>' + esc(x[2]) + '</td><td>' + esc(x[3]) + '</td>' +
+        '<td class="o' + (x[4] ? '' : ' z') + '">' + esc(x[4]) + '</td></tr>';
     }
     h += '</tbody></table></div>';
     var any = false;

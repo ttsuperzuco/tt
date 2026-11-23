@@ -52,7 +52,7 @@ function renderKanshiPage_(d, base, staff, dev) {
       'この画面は登録したスマホ（最初に開いた1台）だけが使えます。' +
       'この画面は自宅PCが1分ごとに送ってきた状態を見ています。</div>' +
   '</div>' +
-  '<script>window.__KANSHI_DATA__=' + JSON.stringify(d) + ';<' + '/script>' +
+  '<script>window.__KANSHI_DATA__=' + JSON.stringify(d).replace(/</g, '\\u003c') + ';<' + '/script>' +
   KANSHISCRIPT_;
 }
 var KANSHICSS_ =
@@ -161,7 +161,7 @@ var KANSHISCRIPT_ =
 'var CONFIRM_={};' +   
 'var TILEROW_=null;' + 
 
-'function esc(s){ var d=document.createElement("div"); d.textContent=(s==null?"":String(s)); return d.innerHTML; }' +
+'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
 'function jsonp_(params, onDone){' +
 '  var cb="__k"+Date.now()+Math.floor(Math.random()*1000);' +
 '  window[cb]=function(r){ try{ delete window[cb]; }catch(ig){} onDone(r); };' +

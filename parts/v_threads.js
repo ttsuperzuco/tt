@@ -1394,7 +1394,7 @@ function threadsScript_(C) {
           (r.text ? '<div class="tx">' + esc(r.text) + '</div>' : '') +
           (r.imgs && r.imgs.length ? '<div class="md' + (r.imgs.length > 1 ? ' many' : '') + '">' + r.imgs.map(function (u) { return '<img src="' + esc(u) + '" loading="lazy" referrerpolicy="no-referrer">'; }).join('') + '</div>' : '') +
           '<div class="st"><span>♡ ' + esc(n[0] || 0) + '</span><span>💬 ' + esc(n[1] || 0) + '</span><span>🔁 ' + esc(n[2] || 0) + '</span><span>➤ ' + esc(n[3] || 0) + '</span>' +
-          (r.link ? '<a href="' + esc(r.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div></div></div>';
+          (r.link ? '<a href="' + esc(/^https?:\/\//i.test(String(r.link)) ? r.link : '#') + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') + '</div></div></div>';
       });
       $('thFeed').innerHTML = h; return;
     }
@@ -1434,7 +1434,7 @@ function threadsScript_(C) {
       }
       var nz = function (v) { return (v && v !== '0' && v !== 0) ? esc(v) : ''; };
       var card = '';
-      if (p.card) card = '<a class="lcard" href="' + esc(p.card.url) + '" target="_blank" rel="noopener">' + (p.card.img ? '<img src="' + esc(p.card.img) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
+      if (p.card) card = '<a class="lcard" href="' + esc(/^https?:\/\//i.test(String(p.card.url)) ? p.card.url : '#') + '" target="_blank" rel="noopener">' + (p.card.img ? '<img src="' + esc(p.card.img) + '" loading="lazy" referrerpolicy="no-referrer">' : '') +
         '<div class="d">' + esc(p.card.domain || '') + '</div><div class="t">' + esc(p.card.title || p.card.url) + '</div></a>';
       var linkify = function (t) {
         return esc(t).replace(/https?:\/\/[^\s<]+/g, function (u) {
@@ -1447,7 +1447,7 @@ function threadsScript_(C) {
         '<div class="bd"><div class="hd"><b>' + esc(pf.username || '') + '</b>' + (p.topic ? '<span class="tp">› ' + esc(p.topic) + '</span>' : '') + '<span>' + esc(ago(p.at)) + '</span>' + (p.zuko ? '<i>ズコから</i>' : '') +
         '<button type="button" class="dots" data-menu="' + esc(p.id) + '">⋯</button></div>' +
         '<div class="pmenu" id="pm_' + esc(p.id) + '" style="display:none">' +
-          (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') +
+          (p.link ? '<a href="' + esc(/^https?:\/\//i.test(String(p.link)) ? p.link : '#') + '" target="_blank" rel="noopener">Threadsで開く</a>' : '') +
           (!ro && TAB !== 'rp' && p.type !== 'REPOST_FACADE' ? '<button type="button" data-fquote="' + esc(p.id) + '">引用する</button>' : '') +
           (canDel ? '<button type="button" class="del" data-fdel="' + esc(p.id) + '">削除</button>' : '') + '</div>' +
         (p.text ? '<div class="tx">' + linkify(p.text) + '</div>' : (p.type === 'REPOST_FACADE' ? '<div class="tx" style="color:#888">🔁 再投稿（内容はThreadsの画面から読み込んでいます…）</div>' : '')) + md + card +
@@ -1722,7 +1722,7 @@ function threadsScript_(C) {
       $('thList').innerHTML = ps.map(function (p) {
         return '<div class="thpost"><div class="m">' + esc(String(p.at || '').slice(0, 16)) + '　' + esc(p.who || '') +
           (p.n ? '　📷' + p.n : '') + (p.chain ? '　➕続き' + p.chain : '') + '</div><div class="t">' + esc(p.text || '（文なし）') + '</div>' +
-          '<div class="b">' + (p.link ? '<a href="' + esc(p.link) + '" target="_blank" rel="noopener">開く</a>' : '') +
+          '<div class="b">' + (p.link ? '<a href="' + esc(/^https?:\/\//i.test(String(p.link)) ? p.link : '#') + '" target="_blank" rel="noopener">開く</a>' : '') +
           '<button type="button" data-id="' + esc(p.id) + '">削除</button></div></div>';
       }).join('');
     })({ posts: DATA.lists[CUR] });
