@@ -93,8 +93,7 @@ function akiDayBody_(day) {
     '</div>' +
     '<div class="akisec akisec-rooms akihidden" data-sec="rooms">' +
       akiRoomRows_(day.rooms_free) +
-    '</div>' +
-  '</div>';
+    '</div>';
 }
 function renderAkijikanPage_(d, base, staff, dev) {
   var days = d.days || [];

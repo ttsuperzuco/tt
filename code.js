@@ -24659,7 +24659,11 @@ function akiDayCard_(day, ttLink) {
     akiDayBody_(day) +
   '</div>';
 }
-/** 日のカードの中身（完全版・各時間帯別・スタッフ別・施術室別）。見出しの形だけ違う2通りで共用。 */
+/** 日のカードの中身（完全版・各時間帯別・スタッフ別・施術室別）。見出しの形だけ違う2通りで共用。
+ *  ★2026-11-23 直し（まるちゃん「金曜日を押してるのに水曜日が出る・下の画面がバグってる」）：
+ *    11/22に中身をここへ切り出した時、カードを閉じる </div> がここにも残り、呼ぶ側の </div> と二重になっていた。
+ *    2日目のカードで一覧の箱が閉じてしまい、3日目以降が絞り込みの対象から外れ・画面の枠の外に出ていた。
+ *    カードを閉じるのは呼ぶ側（akiDayCard_）だけ。ここでは閉じない。 */
 function akiDayBody_(day) {
   return '' +
     '<div class="akisec akisec-full" data-sec="full">' +
@@ -24673,8 +24677,7 @@ function akiDayBody_(day) {
     '</div>' +
     '<div class="akisec akisec-rooms akihidden" data-sec="rooms">' +
       akiRoomRows_(day.rooms_free) +
-    '</div>' +
-  '</div>';
+    '</div>';
 }
 
 /** 空き時間検索ページの描画（純JS・GAS API不使用）。GAS直アクセスと静的アプリJSONPの
