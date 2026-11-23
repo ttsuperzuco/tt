@@ -156,7 +156,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'function nrNext(){nrShowStep((window.__nrStepI||0)+1);}' +
     'function nrPrev(){nrShowStep((window.__nrStepI||0)-1);}' +
     'function status(t,err){stEl.textContent=t;stEl.className="nrstatus"+(t?(err?" ng":" on"):"");}' +
-    'function esc(s){return (s==null?"":String(s));}' +
+    'function esc(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
     'function selVal(g,v){if(!v)return;sel[g]=String(v);var sib=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]");for(var j=0;j<sib.length;j++)sib[j].classList.toggle("sel",sib[j].getAttribute("data-val")===String(v));}' +
     'function nrHideBusy(g,list){var pl=document.querySelectorAll(".nrpill[data-grp=\\""+g+"\\"]"),vals=[];' + 'for(var i=0;i<pl.length;i++){vals.push(pl[i].getAttribute("data-val"));}' + 'var r=NR.hideBusy(vals,list,sel[g]);' + 'for(var k=0;k<pl.length;k++){pl[k].style.display=r.hidden[k]?"none":"";}' + 'if(r.sel!==sel[g]){sel[g]=r.sel;for(var m=0;m<pl.length;m++){pl[m].classList.toggle("sel",pl[m].getAttribute("data-val")===r.sel);}}}' +
     'function nrMayuVis(){var v=NR.mayuView(window.__nrMayu,window.__nrSat,window.__nrSlots),o=NR.outerSectionsShown(window.__nrSlots);' +
@@ -342,7 +342,7 @@ function renderNewReservationPage_(base, staff, dev) {
     'var polls=0;function poll(id){polls++;if(polls>350){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}' +
     'jsonp({action:"status",key:KEY,id:id},function(r){if(!r||!r.ok){szOvHide_();goEl.disabled=false;szPopup_("エラーが発生しました。通信に失敗しました。もう一度試してもらえると嬉しいです🙇");return;}' +
     'if(r.status==="pending"||r.status==="running"||r.status==="queued"||r.status===""){setTimeout(function(){poll(id);},600);return;}' +
-    'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(esc(r.result)||"エラーが発生しました。りゅうさんに伝えてください🙇");return;}' +
+    'if(r.status!=="done"){szOvHide_();goEl.disabled=false;szPopup_(r.result||"エラーが発生しました。りゅうさんに伝えてください🙇");return;}' +
     'var _tt=(String(r.result||"").match(/https?:\\/\\/\\S+/)||[""])[0];' +
     'goEl.disabled=false;txtEl.value="";szOvShow_(szDoneHtml_("予約を登録しました","予約入力に戻る",_tt),"#16a34a");var _bb=document.getElementById("szDoneBack");if(_bb){_bb.addEventListener("click",function(){location.href="' + base + '?view=yoyaku' + roleSfx_(staff, dev) + '";});}});}' +
     'var ppolls=0,prevT0=0;function pollPrev(id){ppolls++;' +
@@ -355,9 +355,9 @@ function renderNewReservationPage_(base, staff, dev) {
     ':"変換中です（"+_es+"秒）。時間がかかっています。終わらなければ、もう一度試してもらえると嬉しいです🙇";' +
     'status(_mg,false);' +
     'setTimeout(function(){pollPrev(id);},700);return;}readEl.disabled=false;' +
-    'if(r.status!=="done"){status(esc(r.result||"エラーが発生しました。"),true);return;}' +
+    'if(r.status!=="done"){status(r.result||"エラーが発生しました。",true);return;}' +
     'var d={};try{d=JSON.parse(r.result||"{}");}catch(e){}' +
-    'if(!d.ok){status("読み取れませんでした："+esc(d.error||"日付・時刻が見つかりません"),true);return;}' +
+    'if(!d.ok){status("読み取れませんでした："+(d.error||"日付・時刻が見つかりません"),true);return;}' +
     'var _fx=NR.fixNotice(d.memo||"");' +
     'prevEl.value=_fx.memo;selVal("dur",d.dur);if(d.staff)selVal("staff",d.staff);if(d.room)selVal("room",d.room);window.__rvdt={mm:d.mm,dd:d.dd,hh:d.hh,mi:d.mi};' +
     'window.__nrHasProcell=NR.procellAsk(_fx.memo).ask;window.__procellWord=d.procell_face_word||"トライアル";var _pp=document.querySelector(\'[data-procell="顔プロセルPro"]\');if(_pp)_pp.textContent="顔プロセルPro "+window.__procellWord;var _pm=document.querySelector(\'[data-procell="顔プロセルMD"]\');if(_pm)_pm.textContent="顔プロセルMD "+window.__procellWord;window.__nrCouns=d.counseling||{kind:"3",hint:false,memos:{}};' +

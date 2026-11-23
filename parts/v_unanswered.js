@@ -205,7 +205,7 @@ var UNASCRIPT_ =
 '  if(box) box.style.display="none";' +
 '  unaSend_(wrap);' +
 '});' +
-'function escH(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}' +
+'function escH(s){return (s==null?"":String(s)).replace(/[&<>\\"\\x27]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\\x27":"&#39;"}[c];});}' +
 'function openDetail(btn){' +
 '  if(!mask||!mlog)return;' +
 '  var full=[]; try{ full=JSON.parse(btn.getAttribute("data-full")||"[]"); }catch(e){ full=[]; }' +
