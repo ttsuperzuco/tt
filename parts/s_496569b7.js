@@ -76,6 +76,8 @@ function akiFullCard_(day) {
     var top = Math.round((a - lo) * AKI_PX_), h = Math.round((b - a) * AKI_PX_);
     var dat = kind ? (' data-s="' + akiHm_(a) + '" data-e="' + akiHm_(b) + '" data-dur="' + (b - a) + '"' +
                       ' data-kind="' + kind + '" data-who="' + esc_(who || '') + '"') : '';
+    var shortT = withTime && h < 28;
+    if (shortT) { cls += ' akfshort'; h = Math.max(h, 22); }
     return '<div class="akfblk ' + cls + '" style="top:' + top + 'px;height:' + h + 'px' +
       (color ? ';background:' + color : '') + '"' + dat + '>' +
       (withTime ? '<span class="akfa">' + akiHm_(a) + '</span>' +
@@ -166,4 +168,7 @@ var AKFCSS_ =
 '  .akfa,.akfb{ position:absolute; left:3px; font-size:10px; font-weight:900; color:#fff;' +
 '    text-shadow:0 1px 2px rgba(0,0,0,.55); }' +
 '  .akfa{ top:2px; } .akfb{ bottom:2px; }' +
+'  .akfshort{ z-index:2; }' +
+'  .akfshort .akfa,.akfshort .akfb{ font-size:9px; line-height:10px; }' +
+'  .akfshort .akfa{ top:1px; } .akfshort .akfb{ bottom:1px; }' +
 '';
