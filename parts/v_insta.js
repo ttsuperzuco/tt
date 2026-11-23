@@ -1881,7 +1881,7 @@ function instaScript_(C) {
           'onerror="window.__igStoryImg&&window.__igStoryImg(this)"></video>';
         if (m.t) body += esc(m.t);
         if (!m.t && !m.img) body += (m.story ? '<span style="font-size:12px">' + esc(m.note || '') + '</span>' : esc(m.note || ''));
-        if (m.link) body += (body ? '\n' : '') + '<a href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link) + '</a>';
+        if (m.link) body += (body ? '\n' : '') + '<a href="' + esc(/^https?:\/\//i.test(String(m.link)) ? m.link : '#') + '" target="_blank" rel="noopener">' + esc(m.link) + '</a>';
         h += '<div class="m' + (m.mine ? ' me' : '') + '"><div class="b' + (!m.t && !m.img && m.note ? ' n' : '') + '">' + body + '</div></div>';
       });
       if (DRAFT) apvAll().filter(function (it) { return it.kind === 'dm_send' && (it.light || {}).cid === DMT.id; }).forEach(function (it) {

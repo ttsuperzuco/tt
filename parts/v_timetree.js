@@ -777,7 +777,7 @@ function ttviewStart_(exec, base, staff, dev) {
       infoRow(ICO.tag, '<span class="tvdot" style="background:' + esc(e.col) + '"></span>' + room) +
       (e.r ? infoRow(ICO.rep, 'くり返し') : '') +
       (e.loc ? infoRow(ICO.pin, esc(e.loc)) : '') +
-      (e.url ? infoRow(ICO.link, '<a href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.url) + '</a>') : '') +
+      (e.url ? infoRow(ICO.link, '<a href="' + esc(/^https?:\/\//i.test(String(e.url)) ? e.url : '#') + '" target="_blank" rel="noopener">' + esc(e.url) + '</a>') : '') +
       '</div>';
     h += '<div class="tvlog">';
     if (e.h && e.h.length) {

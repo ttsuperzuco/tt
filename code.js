@@ -21982,7 +21982,7 @@ function instaScript_(C) {
           'onerror="window.__igStoryImg&&window.__igStoryImg(this)"></video>';
         if (m.t) body += esc(m.t);
         if (!m.t && !m.img) body += (m.story ? '<span style="font-size:12px">' + esc(m.note || '') + '</span>' : esc(m.note || ''));
-        if (m.link) body += (body ? '\n' : '') + '<a href="' + esc(m.link) + '" target="_blank" rel="noopener">' + esc(m.link) + '</a>';
+        if (m.link) body += (body ? '\n' : '') + '<a href="' + esc(/^https?:\/\//i.test(String(m.link)) ? m.link : '#') + '" target="_blank" rel="noopener">' + esc(m.link) + '</a>';
         h += '<div class="m' + (m.mine ? ' me' : '') + '"><div class="b' + (!m.t && !m.img && m.note ? ' n' : '') + '">' + body + '</div></div>';
       });
       if (DRAFT) apvAll().filter(function (it) { return it.kind === 'dm_send' && (it.light || {}).cid === DMT.id; }).forEach(function (it) {
@@ -26577,7 +26577,7 @@ function ttviewStart_(exec, base, staff, dev) {
       infoRow(ICO.tag, '<span class="tvdot" style="background:' + esc(e.col) + '"></span>' + room) +
       (e.r ? infoRow(ICO.rep, 'くり返し') : '') +
       (e.loc ? infoRow(ICO.pin, esc(e.loc)) : '') +
-      (e.url ? infoRow(ICO.link, '<a href="' + esc(e.url) + '" target="_blank" rel="noopener">' + esc(e.url) + '</a>') : '') +
+      (e.url ? infoRow(ICO.link, '<a href="' + esc(/^https?:\/\//i.test(String(e.url)) ? e.url : '#') + '" target="_blank" rel="noopener">' + esc(e.url) + '</a>') : '') +
       '</div>';
     /* ★作った・直した人の履歴（2026-09-15 まるちゃん「直した人を並べる」）。
        タイムツリーの予約ごとの履歴を事務所パソコンが貯めた物（h＝[[1作った/2直した, 名前, 時刻], ...]）。
