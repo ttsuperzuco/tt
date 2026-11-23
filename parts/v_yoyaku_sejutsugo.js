@@ -430,7 +430,7 @@ function renderAfterTreatmentPage_(base, staff, dev, who, mode) {
           'PHANS==="yes"?"procell_scalp":"",JJANS==="yes"?"jojoba":""].filter(function(x){return x;})};}' +
     'function seqv(){return SEQ.filter(seqShown);}' +
     'function nextOf(n){var i=SEQ.indexOf(n);for(var j=i+1;i>=0&&j<SEQ.length;j++){if(seqShown(SEQ[j])){goStep(SEQ[j]);return;}}if(LN){lnFinish();return;}if(rcp()){rcpFinish();return;}goMonth();}' +
-    'function rcp(){return DEVMODE&&!REP&&!LN&&typeof SG.asksAfterMemo==="function"&&SG.asksAfterMemo(WHO);}' +
+    'function rcp(){return !REP&&!LN&&typeof SG.asksAfterMemo==="function"&&SG.asksAfterMemo(WHO);}' +
     'function goCheck(){step=15;show();' +
       'var it=SG.checkItems(seqv(),(ELJ&&ELJ.parts)||[],KT),NB="①②③④⑤⑥⑦⑧⑨",h="";' +
       'for(var i=0;i<it.length;i++)h+="<div class=\\"sgckrow\\"><span class=\\"sgckn\\">"+(NB.charAt(i)||"・")+"</span><span>"+esc(it[i]).replace(/(顔の|頭皮の)/g,"<span class=\\"sgemr\\">$1</span>")+"</span></div>";' +
