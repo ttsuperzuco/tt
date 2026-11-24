@@ -23912,11 +23912,20 @@ function claudeConnScript_(C) {
     var bs = box.querySelectorAll('.ccrow');
     for (var j = 0; j < bs.length; j++) bs[j].addEventListener('click', function () { connect(rows[+this.getAttribute('data-i')]); });
   }
+  // ★2026-11-24 まるちゃん「これ以上読み取りは早くできないのかな」→「1」：前回の一覧をこの端末に覚えておき、開いた瞬間に出す。
+  //   新しい一覧は裏で読み直し、中身が変わった時だけ描き直す（ズコの起動画面と同じ「待たない」作り）。
+  var CKEY = 'zk_claudeconn_rows';
+  function lsGet() { try { return localStorage.getItem(CKEY) || ''; } catch (e) { return ''; } }
+  function lsSet(v) { try { localStorage.setItem(CKEY, v); } catch (e) {} }
   function load() {
-    box.innerHTML = '<div class="ccmsg">読み込み中…</div>';
+    var old = lsGet(), shown = '';
+    if (old) { try { draw(JSON.parse(old)); shown = old; } catch (e) { shown = ''; } }
+    if (!shown) box.innerHTML = '<div class="ccmsg">読み込み中…</div>';
     ask({ act: 'list' }, 40, function (err, d) {
-      if (err) { box.innerHTML = '<div class="ccmsg">' + esc(err) + '</div>'; return; }
-      draw(d.rows || []);
+      if (err) { if (!shown) box.innerHTML = '<div class="ccmsg">' + esc(err) + '</div>'; return; }
+      var s = JSON.stringify(d.rows || []);
+      lsSet(s);
+      if (s !== shown) draw(d.rows || []);
     });
   }
   function connect(x) {
