@@ -32,12 +32,25 @@
   var op = q.get('op') || '', dv = q.get('dv') || '', sig = q.get('sig') || '', t = q.get('t') || '';
   var box = document.getElementById('box');
   // ★2026-11-23 リンクを作った時刻（t）も窓口へ渡す＝窓口が24時間で無効にする
-  if (!/^(approve|remove)$/.test(op) || !/^[0-9a-f]{24}$/.test(dv) || !/^[0-9a-f]{32}$/.test(sig) || !/^[0-9]{13}$/.test(t)) {
+  if (!/^(approve|remove|lock)$/.test(op) || !/^[0-9a-f]{24}$/.test(dv) || !/^[0-9a-f]{32}$/.test(sig) || !/^[0-9]{13}$/.test(t)) {
     box.innerHTML = '<p class="ng">このリンクは使えません。</p>';
     return;
   }
   var code = dv.slice(-4).toUpperCase();
   var approve = op === 'approve';
+  // ★2026-11-24 緊急停止のリンク（まるちゃんのLINEに1本だけ置く）。押すと全員のスマホでズコが止まる（戻すのは事務所のパソコンから）。
+  if (op === 'lock') {
+    box.innerHTML = '<h1>ズコを緊急停止しますか？</h1>'
+      + '<p>押すと、全員のスマホでズコのデータが見られなくなります。<br>事務所のパソコンとサーバーは動いたままです。<br>'
+      + '鍵が漏れた・スマホを無くした時だけ押してください🙇</p>'
+      + '<button id="go" class="rm">緊急停止する</button>';
+    document.getElementById('go').onclick = function () {
+      this.disabled = true;
+      this.textContent = '少し待っててくださいね🥺';
+      location.href = EXEC + '?action=devlink&op=lock&dv=' + dv + '&t=' + t + '&sig=' + sig;
+    };
+    return;
+  }
   box.innerHTML = '<h1>' + (approve ? 'このスマホを許可しますか？😊' : 'このスマホを外しますか？😊') + '</h1>'
     + '<div>画面の番号</div><div class="code">' + code + '</div>'
     + '<p>' + (approve ? '心当たりがある時だけ押してください😊<br>押さなければ、何も見られないままです。'
