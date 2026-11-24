@@ -60,8 +60,19 @@ function claudeConnScript_(C) {
             if (!x || !x.ok || x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1500); return; }
             if (x.status !== 'done') { done(x.result || 'エラーが発生しました。もう一度試してもらえると嬉しいです🙇'); return; }
             var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
-            if (!d || !d.ok) { done((d && d.error) || '答えを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
-            done(null, d);
+            var fin = function (v) {
+              if (!v || !v.ok) { done((v && v.error) || '答えを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
+              done(null, v);
+            };
+            if (d && d.__bigres) {
+              jsonp({ action: 'data', key: C.key, name: d.__bigres }, function (y) {
+                var v = null; try { v = JSON.parse(y && y.result); } catch (e) {}
+                if (v && typeof v.result === 'string') { try { v = JSON.parse(v.result); } catch (e) { v = null; } }
+                fin(v);
+              });
+              return;
+            }
+            fin(d);
           });
         };
         setTimeout(tick, 1500);
