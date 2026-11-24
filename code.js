@@ -193,6 +193,9 @@ function doGet(e) {
   } else if (view === 'ubman') {
     title = 'TT売上帳簿の使い方';                              // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ・2026-11-21）
     html = renderUbManualPage_(base, staff, dev);
+  } else if (view === 'browlash') {
+    title = '眉・マツエクをお知らせに出す';                      // ★マニュアル1冊だけを表紙から見る（純JS・パインさん＋開発者だけ・2026-11-24）
+    html = renderBrowLashManualPage_(base, staff, dev);
   } else if (view === 'linereply') {
     title = 'LINEにすぐ返信できない';                                  // ★マニュアル1冊だけを表紙から見る（純JS・開発者だけ・2026-11-20）
     html = renderLineReplyManualPage_(base, staff, dev);
@@ -1106,6 +1109,9 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★💬LINE返信の流れ（2026-11-20 まるちゃん）＝お客様からLINEが来た時の流れ図と「少々お待ちください」の出し方。
   //   りゅう画面の「マニュアル」フォルダに入る。開発者だけ（スタッフには📖マニュアルの一覧から・公開はまるちゃんが言ってから）。
   linereply:  { exec: false, staff: false },
+  // ★👁️眉・マツエクをお知らせに出す（2026-11-24 まるちゃん「パインのズコのマニュアルにいれて　眉・マツエクをお知らせに出す　ボタンにして」）
+  //   ＝デザイン眉・まつエクの予約を前日お知らせに出すためのTimeTreeの書き方（画像1枚）。マニュアルフォルダに入る。人ごとの表示でパインさんだけON。
+  browlash:   { exec: false, staff: false },
   // ★📖マニュアル（2026-11-19 まるちゃん「ここに マニュアル ボタンつくって これいれて。でトップのページ番号押すとそのページに飛ぶようにして」）
   //   ＝お客様系のフォルダに入れる。中身＝購入証明書の使い方（画像）。既定は開発者だけ（共通ルール16・人ごとの表示でスタッフにONにできる）。
   manual:     { exec: false, staff: false }
@@ -1116,7 +1122,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'dokuritsu', 'claudeconn'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'browlash', 'dokuritsu', 'claudeconn'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -2304,6 +2310,11 @@ var TILE_DEFS_ = [
   { id: 'linereply', cls: 'linereply', view: 'linereply',
     // ★2026-11-20 まるちゃん「シンプルなアイコンにしたい」②＝LINEの緑の吹き出しに白い矢印の絵（GPTで作成・元絵＝PC版スーパーズコ\icons\LINE返信の流れ_アイコンの元絵_吹き出しに矢印.png）。
     icon: '<span class="ticon">💬</span>', iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/linereply-192.png?v=1"></span>', label: 'LINEにすぐ\n返信できない' },
+  // ★👁️眉・マツエクをお知らせに出す（2026-11-24 まるちゃん「パインのズコのマニュアルにいれて　眉・マツエクをお知らせに出す　ボタンにして」）
+  //   ＝デザイン眉・まつエクの予約を前日お知らせに出すためのTimeTreeの書き方（renderBrowLashManualPage_）。
+  //   マニュアルフォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。人ごとの表示でパインさんだけON。PC版 super_pc.py も同じ。
+  { id: 'browlash', cls: 'browlash', view: 'browlash',
+    icon: '<span class="ticon">👁️</span>', label: '眉・マツエクを\nお知らせに出す' },
   // ★フォルダの試し（2026-11-13 まるちゃん「開発トップにテストボタンをつくってそのなかに再現して」）＝スタッフ画面のボタンを
   //   フォルダにまとめる案を試す画面（renderFolderTestPage_）。開発中の機能に置く・既定は開発者だけ（共通ルール16・PC版 super_pc.py も同じ）。
   // ★2026-11-14 まるちゃん「フォルダの試しボタンも消して」＝ホームのボタンを外した（画面 view はそのまま）。PC版 super_pc.py と同じ。
@@ -2763,7 +2774,8 @@ function homeFolderBoot_(OPT) {
     //   スタッフは📖マニュアル（お客様系）から見る＝同じボタンは2つの最初のフォルダに入れられないので、りゅう用に別のボタンにした。
     // ★2026-11-20 まるちゃん「お店のWi-Fiの設定は消して」＝wifiman を外し、💬LINE返信の流れ（linereply・開発者だけ）を足した。
     // ★2026-11-21 まるちゃん「入れて」＝📒TT売上帳簿の使い方（ubman・開発者だけ）もここに。
-    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'shomeiman', 'ubman'] }];
+    // ★2026-11-24 まるちゃん「パインのズコのマニュアルにいれて　眉・マツエクをお知らせに出す　ボタンにして」＝👁️眉・マツエクをお知らせに出す（browlash）もここに。
+    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'browlash', 'shomeiman', 'ubman'] }];
   // ★2026-11-14 あとから最初のフォルダを変えた分（まるちゃん「全適用させて」）＝並びを覚えている端末にも1回だけ当てる。
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
@@ -2771,7 +2783,8 @@ function homeFolderBoot_(OPT) {
     { to: 'd8', id: 'manual', from: 'd6' },   // ★2026-11-21 📖マニュアル＝お客様系からスタッフ系へ（全員の端末に1回だけ当てる）
     { to: 'd7', id: 'shomeiman' },   // ★2026-11-19 🧾購入証明書の使い方（りゅうのマニュアルフォルダ）
     { to: 'd7', id: 'ubman' },   // ★2026-11-21 📒TT売上帳簿の使い方（りゅうのマニュアルフォルダ）
-    { to: 'd7', id: 'linereply' }];   // ★2026-11-20 💬LINE返信の流れ（りゅうのマニュアルフォルダ）
+    { to: 'd7', id: 'linereply' },
+    { to: 'd7', id: 'browlash' }];   // ★2026-11-24 👁️眉・マツエクをお知らせに出す（マニュアルフォルダ）   // ★2026-11-20 💬LINE返信の流れ（りゅうのマニュアルフォルダ）
   // ★2026-11-16 OPT.start＝最初のフォルダ分けを渡した時はそれを使う（パソコン版の一番トップの画面＝最初のフォルダ無し）。その時は MOVES も当てない。
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
@@ -14902,6 +14915,11 @@ function renderUbManualPage_(base, staff, dev) {   // ★📒TT売上帳簿の�
 }
 function renderLineReplyManualPage_(base, staff, dev) {
   return renderManualPage_(base, staff, dev, LINEREPLY_MANUAL_);
+}
+// ★眉・マツエクをお知らせに出す（2026-11-24 まるちゃん）＝デザイン眉・まつエクの予約メモの書き方の1枚を表紙から見る。
+//   画像＝manual/browlash/p00（元＝AI自動プログラム\マニュアル一覧\眉・マツエクをお知らせに出す\）。
+function renderBrowLashManualPage_(base, staff, dev) {
+  return renderManualPage_(base, staff, dev, { key: 'browlash', icon: '👁️', title: '眉・マツエクをお知らせに出す' });
 }
 
 function renderShomeishoPage_(base, staff, dev) {
@@ -27439,6 +27457,7 @@ var HOMECSS_ =
 '  .tile.ubman::before { background:#0f766e; }' +   // ★📒TT売上帳簿の使い方（2026-11-21）＝TT売上帳簿と同じ色（super_pc.py も同じ）
 '  .tile.manual::before { background:#0891b2; }' +   // ★📖マニュアル（2026-11-19）＝PC版と同じ色（super_pc.py）
 '  .tile.linereply::before { background:#06c755; }' +   // ★💬LINE返信の流れ（2026-11-20）＝LINEの緑・PC版と同じ色（super_pc.py）
+'  .tile.browlash::before { background:#a855f7; }' +   // ★👁️眉・マツエクをお知らせに出す（2026-11-24）＝PC版と同じ色（super_pc.py）
 '  .tile.hanbai::before { background:#0e7490; }' +
 '  .tile:active { transform:translateY(2px); box-shadow:0 3px 10px rgba(0,0,0,.10); }' +
 '  @media (hover:hover){ .tile:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); } }' +
@@ -27471,6 +27490,7 @@ var HOMECSS_ =
 '  .tile.ubman .ticon { background:rgba(15,118,110,.16); }' +
 '  .tile.manual .ticon { background:rgba(8,145,178,.16); }' +
 '  .tile.linereply .ticon { background:rgba(6,199,85,.16); }' +
+'  .tile.browlash .ticon { background:rgba(168,85,247,.16); }' +
 '  .tile.hanbai .ticon { background:rgba(14,116,144,.16); }' +
 '  .lt2 { display:flex; flex-direction:column; align-items:center; justify-content:center;' +
 '    gap:1px; width:100%; height:100%; }' +
