@@ -106,6 +106,9 @@ function doGet(e) {
   } else if (view === 'dokuritsu') {
     title = '独立画面';                                 
     html = renderDokuritsuPage_(base, staff, dev);
+  } else if (view === 'claudeconn') {
+    title = 'Claudeと接続';                             
+    html = renderClaudeConnPage_(base, staff, dev);
   } else if (view === 'pcstatus') {
     title = '自宅PC';                                   
     html = renderPcStatus_(base, staff, dev);
@@ -825,6 +828,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   claudetools: { exec: false, staff: false },
   procell:    { exec: false, staff: false },
   pcstatus:   { exec: false, staff: false },
+  claudeconn: { exec: false, staff: false },   
   bcast:      { exec: false, staff: false },
   sejutsugo:  { exec: true, staff: true },
   sgline:     { exec: true, staff: true },
@@ -846,7 +850,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   linereply:  { exec: false, staff: false },
   manual:     { exec: false, staff: false }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'dokuritsu'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'dokuritsu', 'claudeconn'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1612,6 +1616,8 @@ var TILE_DEFS_ = [
     icon: '<span class="ticon">🖥️</span>', label: '自宅\nPC' },
   { id: 'dokuritsu', cls: 'dokuritsu', view: 'dokuritsu',
     icon: '<span class="ticon">🪟</span>', label: '独立\n画面' },
+  { id: 'claudeconn', cls: 'claudeconn', view: 'claudeconn',
+    icon: '<span class="ticon">🔗</span>', label: 'Claudeと\n接続' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
     icon: '<span class="ticon">📝</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/yoyaku-192.png?v=2"></span>', label: '予約\n入力' },
@@ -1667,6 +1673,7 @@ var TILE_DEFS_ = [
 var TILE_GROUP_ = {
   kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
   claudetools: 'keiei', pcstatus: 'keiei', dokuritsu: 'keiei',   
+  claudeconn: 'keiei',   
   procell: 'keiei', shophist: 'keiei',
   uriage: 'tomato',
   hachimitsu: 'tomato',
@@ -3111,6 +3118,8 @@ function ubWatch_() { if (ubWatchTimer_) return; ubWatchTimer_ = setInterval(ubW
 
 
 try { if (typeof localStorage !== 'undefined' && typeof document !== 'undefined' && ubPendList_().length) setTimeout(ubWatch_, 1500); } catch (e) {}
+
+
 
 
 

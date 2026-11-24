@@ -1,5 +1,5 @@
 {
- "made": "2026-11-21 11:05",
+ "made": "2026-11-24 12:27",
  "rows": [
   {
    "id": "conflict",
@@ -158,6 +158,13 @@
   {
    "id": "dokuritsu",
    "label": "独立画面",
+   "room": "りゅうツール",
+   "own": false,
+   "how": "ズコの中で開く"
+  },
+  {
+   "id": "claudeconn",
+   "label": "Claudeと接続",
    "room": "りゅうツール",
    "own": false,
    "how": "ズコの中で開く"
@@ -325,7 +332,8 @@
     "koukoku",
     "shophist",
     "pcstatus",
-    "dokuritsu"
+    "dokuritsu",
+    "claudeconn"
    ]
   }
  ]

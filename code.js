@@ -146,6 +146,9 @@ function doGet(e) {
   } else if (view === 'dokuritsu') {
     title = '独立画面';                                 // ★2026-11-21 パソコン版のボタンの開き方の一覧（開発者だけ）
     html = renderDokuritsuPage_(base, staff, dev);
+  } else if (view === 'claudeconn') {
+    title = 'Claudeと接続';                             // ★2026-11-24 自宅PCのClaudeの会話をスマホにつなぐ（開発者だけ）
+    html = renderClaudeConnPage_(base, staff, dev);
   } else if (view === 'pcstatus') {
     title = '自宅PC';                                   // ★開発URL(?dev=1)専用。事務所PCの生き死にと止まった理由
     html = renderPcStatus_(base, staff, dev);
@@ -1044,6 +1047,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   // ★自宅PC＝事務所PCが今動いているか／止まっているなら何が起きたか。オーナー(開発者)専用＝
   //   開発URL(?dev=1)だけに出る（tile_settings.py の TILES にも入れない・共通ルール16）。2026-08-24。
   pcstatus:   { exec: false, staff: false },
+  claudeconn: { exec: false, staff: false },   // ★2026-11-24 Claudeと接続＝開発者だけ（tile_settings.py に入れない）
   // ★LINE一斉配信予約（2026-09-05）。既定は開発者だけ（共通ルール16）。
   //   ★2026-10-06 まるちゃん依頼：トマト・みかん・オリーブ・お店スマホ・お店受付PCに出す＝
   //   tile_settings.py の STAFF_ASSIGNABLE に入れた（自動監視の人ごとの表示で入切）。
@@ -1112,7 +1116,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'dokuritsu'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'dokuritsu', 'claudeconn'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -2175,6 +2179,10 @@ var TILE_DEFS_ = [
   //   中身＝置き場の dokuritsu.json（PC版スーパーズコ\programs\独立画面の一覧を作る.py が パソコン版のボタンの決まりから作る）。開発者だけ（りゅうツール）。
   { id: 'dokuritsu', cls: 'dokuritsu', view: 'dokuritsu',
     icon: '<span class="ticon">🪟</span>', label: '独立\n画面' },
+  // ★🔗 Claudeと接続（2026-11-24 まるちゃん決定）＝自宅PCのClaudeアプリの会話をスマホのClaudeアプリにつなぐ（renderClaudeConnPage_）。
+  //   りゅうツール・開発者だけ（tile_settings.py の TILES に入れない）。PC版 super_pc.py も同じ。
+  { id: 'claudeconn', cls: 'claudeconn', view: 'claudeconn',
+    icon: '<span class="ticon">🔗</span>', label: 'Claudeと\n接続' },
   { id: 'yoyaku', cls: 'yoyaku', view: 'yoyaku',
     // ★2026-11-13 まるちゃん選択＝開いたピンクの予約帳に大きな黄色い鉛筆で書き込む絵（子ども向けアニメ風・GPTで作成）。
     //   パソコン版の同じ絵＝PC版スーパーズコ\icons\yoyaku-zuko-96.png。
@@ -2316,6 +2324,7 @@ var TILE_GROUP_ = {
   //   ＝便利ツール(kanri)の部屋をやめ、中身を経営管理ツール(keiei)へ入れて、部屋の名前を「りゅうツール」にした（PC版と同じ）。
   kanshi: 'keiei', mushitori: 'keiei', cost: 'keiei', koukoku: 'keiei', imglink: 'keiei',
   claudetools: 'keiei', pcstatus: 'keiei', dokuritsu: 'keiei',   // ★2026-11-21 独立画面（りゅうツール）
+  claudeconn: 'keiei',   // ★2026-11-24 Claudeと接続（りゅうツール）
   procell: 'keiei', shophist: 'keiei',
   // ★2026-10-26 まるちゃん決定：幹部(🍅トマト)にだけ出すボタンはスタッフ画面の下の「TOMATO画面」（PC版 super_pc.py と同じ）。
   uriage: 'tomato',
@@ -23802,6 +23811,117 @@ function dokuritsuScript_() {
   }).catch(function () {
     box.innerHTML = '<div class="dkmsg">一覧を読み込めませんでした。少し待ってから、もう一度開いてください😊</div>';
   });
+}
+// ★🔗 Claudeと接続（2026-11-24 まるちゃん決定・全体の決まり0-14）＝自宅PCのClaudeアプリの会話を一覧で出し、押すとその会話を
+//   スマホのClaudeアプリから話しかけられるようにする（スマホ接続＝Remote Control をオンにする）。
+//   受けるのは自宅PC（AI自動プログラム\Claudeと接続\programs\claude_connect.py・op=claude_connect）。窓口の道だけ（近道は使わない）。
+//   使えるのは、まるちゃんのスマホと自宅PCのパソコン版ズコだけ（本人確認は自宅PC側）。りゅうツール・開発者だけ。PC版 super_pc.py も同じ画面を窓で開く。
+function renderClaudeConnPage_(base, staff, dev) {
+  var C = {
+    exec: 'https://script.google.com/macros/s/AKfycbzSxho3e4CHyAuoymGlzcVwGnLshGoCg53zY18laLrHMq5Cun_pBv8XgRsNxKMDxlKwUA/exec',
+    key: 'kx7Q2p9mVt4Zr8'
+  };
+  return '<style>' + HOMECSS_ +
+    '.ccwrap{max-width:720px;margin:0 auto;padding:0 2px 40px}' +
+    '.ccttl{color:#fff;font-size:24px;font-weight:900;margin:4px 4px 6px}' +
+    '.ccnote{color:#fff;font-weight:800;font-size:17px;line-height:1.6;margin:0 4px 14px}' +
+    '.cclist{display:flex;flex-direction:column;gap:10px}' +
+    '.ccrow{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;background:#fff;border:3px solid transparent;border-radius:14px;padding:12px 14px;text-align:left;font:inherit;cursor:pointer}' +
+    '.ccrow.on{border-color:#38bdf8}' +
+    '.ccrow .tt{flex:1 1 auto;min-width:0;font-weight:900;color:#12303c;font-size:17px;line-height:1.35;overflow-wrap:anywhere}' +
+    '.ccrow .tm{display:block;font-weight:700;color:#5b7480;font-size:13px;margin-top:2px}' +
+    '.ccrow .bd{flex:0 0 auto;background:#2C7A99;color:#fff;border-radius:999px;font-size:12px;font-weight:900;padding:2px 9px;white-space:nowrap}' +
+    '.ccmsg{color:#fff;font-weight:700;margin:10px 4px;line-height:1.7}' +
+    '.ccre{display:block;margin:16px auto 0;font:inherit;font-size:16px;font-weight:900;color:#12303c;background:#fff;border:0;border-radius:999px;padding:10px 22px;cursor:pointer}' +
+    '</style>' +
+    '<div class="home">' + backBarUnlessSolo_(base, staff, dev) + '<div class="ccwrap">' +
+      '<div class="ccttl">🔗 Claudeと接続</div>' +
+      '<div class="ccnote">会話を押すと、スマホのClaudeアプリからその会話に話しかけられるようになります。<br>自宅PCを再起動すると、つないだ会話は全部切れます。</div>' +
+      '<div id="ccBody"><div class="ccmsg">読み込み中…</div></div>' +
+      '<button type="button" class="ccre" id="ccReload">🔄 一覧を読み直す</button>' +
+    '</div></div>' +
+    '<script>(' + claudeConnScript_.toString() + ')(' + JSON.stringify(C).replace(/</g, '\\u003c') + ');<\/script>';
+}
+function claudeConnScript_(C) {
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function popup(msg) { if (typeof szPopup_ === 'function') szPopup_(msg); else alert(msg); }
+  var box = document.getElementById('ccBody'), busy = false;
+  function jsonp(p, cb) {
+    var n = '__ccc' + Date.now() + Math.floor(Math.random() * 1000);
+    window[n] = function (r) { try { delete window[n]; } catch (e) {} cb(r); };
+    var q = 'callback=' + n; for (var k in p) q += '&' + k + '=' + encodeURIComponent(p[k]);
+    var s = document.createElement('script'); s.src = C.exec + '?' + q + '&cb=' + Date.now();
+    s.onerror = function () { cb({ ok: false, error: '通信に失敗しました。もう一度試してもらえると嬉しいです🙇' }); }; document.body.appendChild(s);
+  }
+  // パソコン版ズコの窓は、窓の鍵（zdv）と鍵の指紋（zdh）で本人を確かめる（🍯ハチミツちゃんと同じ）。
+  function devKey(cb) {
+    if ((window.__SZ_ROLE_ || '') !== '開発') { cb({}); return; }
+    var dv = '', dk = '';
+    try { dv = localStorage.getItem('zk_dv') || ''; dk = localStorage.getItem('zk_dk') || ''; } catch (e) {}
+    if (!dv || !dk || !window.crypto || !crypto.subtle || typeof TextEncoder === 'undefined') { cb({}); return; }
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(dk)).then(function (b) {
+      var h = Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      cb({ zdv: dv, zdh: h });
+    }, function () { cb({}); });
+  }
+  // 自宅PCへ頼んで答えを待つ。自宅PCは3秒おきに見に来る＝一覧は数秒、つなぐのは30秒前後。
+  function ask(fields, maxSec, done) {
+    devKey(function (ex) {
+      for (var k in ex) fields[k] = ex[k];
+      jsonp({ action: 'submit', key: C.key, op: 'claude_connect', who: window.__SZ_WHO_ || '', role: window.__SZ_ROLE_ || '',
+              device: window.__SZ_DEVICE_ || '', fields: JSON.stringify(fields) }, function (r) {
+        if (!r || !r.ok || !r.id) { done((r && r.error) || '通信に失敗しました。もう一度試してもらえると嬉しいです🙇'); return; }
+        var t0 = Date.now();
+        var tick = function () {
+          if (Date.now() - t0 > maxSec * 1000) { done('時間切れです。もう一度試してもらえると嬉しいです🙇'); return; }
+          jsonp({ action: 'status', key: C.key, id: r.id }, function (x) {
+            if (!x || !x.ok || x.status === 'pending' || x.status === 'running' || x.status === 'queued' || x.status === '') { setTimeout(tick, 1500); return; }
+            if (x.status !== 'done') { done(x.result || 'エラーが発生しました。もう一度試してもらえると嬉しいです🙇'); return; }
+            var d = null; try { d = JSON.parse(x.result || '{}'); } catch (e) {}
+            if (!d || !d.ok) { done((d && d.error) || '答えを読み込めませんでした。もう一度試してもらえると嬉しいです🙇'); return; }
+            done(null, d);
+          });
+        };
+        setTimeout(tick, 1500);
+      });
+    });
+  }
+  function when(ms) {
+    var d = new Date(ms), now = new Date();
+    var hm = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    return (d.toDateString() === now.toDateString()) ? '今日 ' + hm : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
+  }
+  function draw(rows) {
+    if (!rows.length) { box.innerHTML = '<div class="ccmsg">会話がありません。</div>'; return; }
+    box.innerHTML = '<div class="cclist">' + rows.map(function (x, i) {
+      return '<button type="button" class="ccrow' + (x.rc ? ' on' : '') + '" data-i="' + i + '"><span class="tt">' + esc(x.title) +
+        '<span class="tm">' + esc(when(x.last)) + '</span></span>' + (x.rc ? '<span class="bd">📱 つながっています</span>' : '') + '</button>';
+    }).join('') + '</div>';
+    var bs = box.querySelectorAll('.ccrow');
+    for (var j = 0; j < bs.length; j++) bs[j].addEventListener('click', function () { connect(rows[+this.getAttribute('data-i')]); });
+  }
+  function load() {
+    box.innerHTML = '<div class="ccmsg">読み込み中…</div>';
+    ask({ act: 'list' }, 40, function (err, d) {
+      if (err) { box.innerHTML = '<div class="ccmsg">' + esc(err) + '</div>'; return; }
+      draw(d.rows || []);
+    });
+  }
+  function connect(x) {
+    if (busy || !x) return;
+    busy = true;
+    if (typeof szOvShow_ === 'function') szOvShow_(szBusyHtml_('「' + esc(x.title) + '」をつないでいます', '30秒ほどかかります。少し待っててくださいね🥺'), '#2C7A99');
+    ask({ act: 'connect', sid: x.id }, 150, function (err, d) {
+      busy = false;
+      if (err) { if (typeof szOvHide_ === 'function') szOvHide_(); popup(err); return; }
+      szOvShow_(szDoneHtml_('「' + esc(d.title) + '」がスマホとつながりました', '一覧に戻る') +
+        "<div style='color:#fff;font-size:18px;font-weight:700;line-height:1.7;margin-top:18px;max-width:420px'>スマホのClaudeアプリの一覧から、この会話を開いてください😊</div>", '#16a34a');
+      var b = document.getElementById('szDoneBack');
+      if (b) b.addEventListener('click', function () { szOvHide_(); load(); });
+    });
+  }
+  document.getElementById('ccReload').addEventListener('click', function () { if (!busy) load(); });
+  load();
 }
 function renderPcStatus_(base, staff, dev) {
   try {
