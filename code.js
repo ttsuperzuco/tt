@@ -1114,8 +1114,7 @@ var DEFAULT_TILE_SETTINGS_ = {
   browlash:   { exec: false, staff: false },
   // ★📖マニュアル（2026-11-19 まるちゃん「ここに マニュアル ボタンつくって これいれて。でトップのページ番号押すとそのページに飛ぶようにして」）
   //   ＝お客様系のフォルダに入れる。中身＝購入証明書の使い方（画像）。既定は開発者だけ（共通ルール16・人ごとの表示でスタッフにONにできる）。
-  manual:     { exec: false, staff: false },
-  pineman:    { exec: false, staff: false }   // ★📖マニュアル（パインさん用・マニュアルフォルダ・2026-11-24）
+  manual:     { exec: false, staff: false }
   // ★プロセル頭キャリスト(procamp)のボタンは 2026-09-17 まるちゃん決定で外した（登録が済んだため）。
   //   画面(view=procamp・renderProcampPage_)と受け取りの仕組みは残す＝同じような選択を頼む時に使い回す
   //   （AI自動プログラム\CLAUDE.md「選んで登録してもらう表」の決まり）。
@@ -1123,7 +1122,7 @@ var DEFAULT_TILE_SETTINGS_ = {
 
 // ホーム画面のボタン並び順のデフォルト（tile_settings.json に order が無い時）。
 // tile_settings.py の「ボタンの並びをかえれる」設定画面（2026-07-16追加）で変更できる。
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'browlash', 'pineman', 'dokuritsu', 'claudeconn'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'browlash', 'dokuritsu', 'claudeconn'];
 
 /** 現在のタイル表示設定を取得（①GAS専用＝DriveApp呼び出し。失敗時はデフォルトにフォールバック
  *  ＝設定ファイルが無くてもホーム画面が壊れないことを優先）。 */
@@ -2296,12 +2295,6 @@ var TILE_DEFS_ = [
     //   元絵＝PC版スーパーズコ\icons\マニュアル_アイコンの元絵_リボン眼鏡.png。パソコン版の同じ絵＝PC版スーパーズコ\icons\manual-zuko-96.png。
     icon: '<span class="ticon">📖</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/manual-192.png?v=1"></span>', label: 'マニュアル' },
-  // ★📖マニュアル（パインさん用・2026-11-24 まるちゃん「受付に置いてある別のマニュアルも置きたい」「（マニュアルフォルダに）移して」）
-  //   ＝📖マニュアルと同じ画面（view=manual）を開く別のボタン。フォルダの並びは全員共通で、同じボタンは2つの最初のフォルダに入れられないため、
-  //   マニュアルフォルダ（d7）用に分けた（🧾購入証明書の使い方をりゅう用に分けたのと同じ形）。人ごとの表示でパインさんだけON。PC版 super_pc.py も同じ。
-  { id: 'pineman', cls: 'manual', view: 'manual',
-    icon: '<span class="ticon">📖</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/manual-192.png?v=1"></span>', label: 'マニュアル' },
   // ★🧾購入証明書の使い方（2026-11-19 まるちゃん「購入証明書のマニュアルも出して」）＝📖マニュアルの中の1冊を、表紙からすぐ見る（renderShomeiManualPage_）。
   //   りゅう画面の「マニュアル」フォルダ（共通\画面\ホームのフォルダ.js の d7）に入る。開発者だけ。PC版 super_pc.py も同じ。
   { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
@@ -2781,9 +2774,8 @@ function homeFolderBoot_(OPT) {
     //   スタッフは📖マニュアル（お客様系）から見る＝同じボタンは2つの最初のフォルダに入れられないので、りゅう用に別のボタンにした。
     // ★2026-11-20 まるちゃん「お店のWi-Fiの設定は消して」＝wifiman を外し、💬LINE返信の流れ（linereply・開発者だけ）を足した。
     // ★2026-11-21 まるちゃん「入れて」＝📒TT売上帳簿の使い方（ubman・開発者だけ）もここに。
-    // ★2026-11-24 まるちゃん「受付に置いてある別のマニュアルも置きたい」「移して」＝📖マニュアルのパインさん用（pineman）もここに。
     // ★2026-11-24 まるちゃん「パインのズコのマニュアルにいれて　眉・マツエクをお知らせに出す　ボタンにして」＝👁️眉・マツエクをお知らせに出す（browlash）もここに。
-    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'browlash', 'pineman', 'shomeiman', 'ubman'] }];
+    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'browlash', 'shomeiman', 'ubman'] }];
   // ★2026-11-14 あとから最初のフォルダを変えた分（まるちゃん「全適用させて」）＝並びを覚えている端末にも1回だけ当てる。
   //   to＝入れる最初のフォルダ・from＝そこから外す最初のフォルダ。トップにあればフォルダへ移す。当てた印は入れた先のフォルダの m に残す（2回目からは触らない）。
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
@@ -2792,8 +2784,7 @@ function homeFolderBoot_(OPT) {
     { to: 'd7', id: 'shomeiman' },   // ★2026-11-19 🧾購入証明書の使い方（りゅうのマニュアルフォルダ）
     { to: 'd7', id: 'ubman' },   // ★2026-11-21 📒TT売上帳簿の使い方（りゅうのマニュアルフォルダ）
     { to: 'd7', id: 'linereply' },
-    { to: 'd7', id: 'browlash' },
-    { to: 'd7', id: 'pineman' }];   // ★2026-11-24 📖マニュアル（パインさん用＝マニュアルフォルダ）   // ★2026-11-24 👁️眉・マツエクをお知らせに出す（マニュアルフォルダ）   // ★2026-11-20 💬LINE返信の流れ（りゅうのマニュアルフォルダ）
+    { to: 'd7', id: 'browlash' }];   // ★2026-11-24 👁️眉・マツエクをお知らせに出す（マニュアルフォルダ）   // ★2026-11-24 👁️眉・マツエクをお知らせに出す（マニュアルフォルダ）   // ★2026-11-20 💬LINE返信の流れ（りゅうのマニュアルフォルダ）
   // ★2026-11-16 OPT.start＝最初のフォルダ分けを渡した時はそれを使う（パソコン版の一番トップの画面＝最初のフォルダ無し）。その時は MOVES も当てない。
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];

@@ -852,10 +852,9 @@ var DEFAULT_TILE_SETTINGS_ = {
   ubman:      { exec: false, staff: false },   
   linereply:  { exec: false, staff: false },
   browlash:   { exec: false, staff: false },
-  manual:     { exec: false, staff: false },
-  pineman:    { exec: false, staff: false }   
+  manual:     { exec: false, staff: false }
 };
-var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'browlash', 'pineman', 'dokuritsu', 'claudeconn'];
+var DEFAULT_TILE_ORDER_ = ['conflict', 'lt', 'uriage', 'unanswered', 'akijikan', 'links', 'ttapp', 'rireki', 'kanshi', 'zenjitsu', 'cost', 'koukoku', 'bcast', 'yoyaku', 'procell', 'pcstatus', 'sejutsugo', 'sgline', 'kizon', 'timetree', 'shophist', 'procstock', 'hanbai', 'hachimitsu', 'threads', 'insta', 'facebook', 'mita', 'uriagebook', 'shomeisho', 'foldertest', 'wifiman', 'manual', 'shomeiman', 'ubman', 'linereply', 'browlash', 'dokuritsu', 'claudeconn'];
 function getTileSettings_() {
   try {
     var file = getTileSettingsFile_();
@@ -1668,9 +1667,6 @@ var TILE_DEFS_ = [
   { id: 'manual', cls: 'manual', view: 'manual',
     icon: '<span class="ticon">📖</span>',
     iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/manual-192.png?v=1"></span>', label: 'マニュアル' },
-  { id: 'pineman', cls: 'manual', view: 'manual',
-    icon: '<span class="ticon">📖</span>',
-    iconDev: '<span class="ticon"><img alt="" src="https://ttsuperzuco.github.io/tt/icons/manual-192.png?v=1"></span>', label: 'マニュアル' },
   { id: 'shomeiman', cls: 'shomeiman', view: 'shomeiman',
     icon: '<span class="ticon">🧾</span>', label: '購入証明書\nの使い方' },
   { id: 'ubman', cls: 'ubman', view: 'ubman',
@@ -1988,15 +1984,14 @@ function homeFolderBoot_(OPT) {
     { k: 'd6', d: true, f: 'お客様系', items: ['rireki', 'links', 'unanswered'] },
     { k: 'd8', d: true, f: 'スタッフ系', items: ['manual'] },
     { k: 'd5', d: true, f: 'お知らせ\n＆配信', items: ['zenjitsu', 'mita', 'bcast'] },
-    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'browlash', 'pineman', 'shomeiman', 'ubman'] }];
+    { k: 'd7', d: true, f: 'マニュアル', items: ['linereply', 'browlash', 'shomeiman', 'ubman'] }];
   var MOVES = [{ to: 'd2', id: 'timetree' }, { to: 'd2', id: 'facebook' }, { to: 'd4', id: 'uriagebook' },
     { to: 'd6', id: 'rireki' }, { to: 'd6', id: 'links', from: 'd3' }, { to: 'd6', id: 'unanswered' },
     { to: 'd8', id: 'manual', from: 'd6' },   
     { to: 'd7', id: 'shomeiman' },   
     { to: 'd7', id: 'ubman' },   
     { to: 'd7', id: 'linereply' },
-    { to: 'd7', id: 'browlash' },
-    { to: 'd7', id: 'pineman' }];   
+    { to: 'd7', id: 'browlash' }];   
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
   var group = document.querySelector(OPT.group || '#group-jitsumu');
