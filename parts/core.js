@@ -1990,7 +1990,7 @@ function homeFolderBoot_(OPT) {
     { to: 'd8', id: 'manual', from: 'd6' },   
     { to: 'd7', id: 'shomeiman' },   
     { to: 'd7', id: 'ubman' },   
-    { to: 'd7', id: 'linereply' },
+    { to: 'd7', id: 'linereply' },   
     { to: 'd7', id: 'browlash' }];   
   if (OPT.start) { START = OPT.start; MOVES = []; }
   var PALETTE = ['#f97316', '#ec4899', '#22c55e', '#eab308', '#3b82f6', '#a855f7', '#14b8a6', '#ef4444', '#84cc16', '#06b6d4'];
