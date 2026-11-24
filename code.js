@@ -23849,6 +23849,9 @@ function renderClaudeConnPage_(base, staff, dev) {
     '.ccrow .tt{flex:1 1 auto;min-width:0;font-weight:900;color:#12303c;font-size:17px;line-height:1.35;overflow-wrap:anywhere}' +
     '.ccrow .tm{display:block;font-weight:700;color:#5b7480;font-size:13px;margin-top:2px}' +
     '.ccrow .bd{flex:0 0 auto;background:#2C7A99;color:#fff;border-radius:999px;font-size:12px;font-weight:900;padding:2px 9px;white-space:nowrap}' +
+    '.ccrow.kid{margin-left:22px;width:calc(100% - 22px)}' +
+    '.ccsec{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:0;color:#cfe3ec;font:inherit;font-size:16px;font-weight:900;padding:14px 4px 6px;cursor:pointer;text-align:left}' +
+    '.ccsec .ar{font-size:13px}' +
     '.ccmsg{color:#fff;font-weight:700;margin:10px 4px;line-height:1.7}' +
     '.ccre{display:block;margin:16px auto 0;font:inherit;font-size:16px;font-weight:900;color:#12303c;background:#fff;border:0;border-radius:999px;padding:10px 22px;cursor:pointer}' +
     '</style>' +
@@ -23921,18 +23924,38 @@ function claudeConnScript_(C) {
     var hm = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
     return (d.toDateString() === now.toDateString()) ? '今日 ' + hm : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
   }
-  function draw(rows) {
-    if (!rows.length) { box.innerHTML = '<div class="ccmsg">会話がありません。</div>'; return; }
-    box.innerHTML = '<div class="cclist">' + rows.map(function (x, i) {
-      return '<button type="button" class="ccrow' + (x.rc ? ' on' : '') + '" data-i="' + i + '"><span class="tt">' + esc(x.title) +
-        '<span class="tm">' + esc(when(x.last)) + '</span></span>' + (x.rc ? '<span class="bd">📱 つながっています</span>' : '') + '</button>';
-    }).join('') + '</div>';
+  // ★2026-11-24 まるちゃん「俺のこのアプリと一緒の並びにしたい」：アプリの左の一覧と同じ形で出す
+  //   （グループの見出し・アプリと同じ開閉・中は新しい順・ほかの会話から作られた会話は作った会話の下に字下げ）。
+  //   並べ方は自宅PCが決めて送る＝ここでは描くだけ。見出しを押すと開閉（この端末で覚える）。
+  var OKEY = 'zk_claudeconn_open';
+  function openGet() { try { return JSON.parse(localStorage.getItem(OKEY) || '{}') || {}; } catch (e) { return {}; } }
+  function openSet(o) { try { localStorage.setItem(OKEY, JSON.stringify(o)); } catch (e) {} }
+  function draw(secs) {
+    var rows = [], op = openGet(), h = '';
+    (secs || []).forEach(function (s, si) {
+      var open = (s.name in op) ? op[s.name] : !s.collapsed;
+      h += '<button type="button" class="ccsec" data-s="' + si + '"><span>' + esc(s.name) + '</span><span class="ar">' + (open ? '▾' : '▸') + '</span></button>';
+      if (!open) return;
+      h += '<div class="cclist">' + (s.rows || []).map(function (x) {
+        rows.push(x);
+        return '<button type="button" class="ccrow' + (x.rc ? ' on' : '') + (x.depth ? ' kid' : '') + '" data-i="' + (rows.length - 1) + '"><span class="tt">' + esc(x.title) +
+          '<span class="tm">' + esc(when(x.last)) + '</span></span>' + (x.rc ? '<span class="bd">📱 つながっています</span>' : '') + '</button>';
+      }).join('') + '</div>';
+    });
+    if (!h) { box.innerHTML = '<div class="ccmsg">会話がありません。</div>'; return; }
+    box.innerHTML = h;
     var bs = box.querySelectorAll('.ccrow');
     for (var j = 0; j < bs.length; j++) bs[j].addEventListener('click', function () { connect(rows[+this.getAttribute('data-i')]); });
+    var hs = box.querySelectorAll('.ccsec');
+    for (var k = 0; k < hs.length; k++) hs[k].addEventListener('click', function () {
+      var s = secs[+this.getAttribute('data-s')], o = openGet();
+      o[s.name] = !((s.name in o) ? o[s.name] : !s.collapsed);
+      openSet(o); draw(secs);
+    });
   }
   // ★2026-11-24 まるちゃん「これ以上読み取りは早くできないのかな」→「1」：前回の一覧をこの端末に覚えておき、開いた瞬間に出す。
   //   新しい一覧は裏で読み直し、中身が変わった時だけ描き直す（ズコの起動画面と同じ「待たない」作り）。
-  var CKEY = 'zk_claudeconn_rows';
+  var CKEY = 'zk_claudeconn_secs';   // ★グループ付きにした時に名前を変えた（前の形の覚えを読まない）
   function lsGet() { try { return localStorage.getItem(CKEY) || ''; } catch (e) { return ''; } }
   function lsSet(v) { try { localStorage.setItem(CKEY, v); } catch (e) {} }
   function load() {
@@ -23941,9 +23964,10 @@ function claudeConnScript_(C) {
     if (!shown) box.innerHTML = '<div class="ccmsg">読み込み中…</div>';
     ask({ act: 'list' }, 40, function (err, d) {
       if (err) { if (!shown) box.innerHTML = '<div class="ccmsg">' + esc(err) + '</div>'; return; }
-      var s = JSON.stringify(d.rows || []);
+      var secs = d.sections || [{ name: '会話', collapsed: false, rows: d.rows || [] }];
+      var s = JSON.stringify(secs);
       lsSet(s);
-      if (s !== shown) draw(d.rows || []);
+      if (s !== shown) draw(secs);
     });
   }
   function connect(x) {
