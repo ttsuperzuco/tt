@@ -96,8 +96,9 @@ function claudeConnScript_(C) {
     ask({ act: 'connect', sid: x.id }, 150, function (err, d) {
       busy = false;
       if (err) { if (typeof szOvHide_ === 'function') szOvHide_(); popup(err); return; }
-      szOvShow_(szDoneHtml_('「' + esc(d.title) + '」がスマホとつながりました', '一覧に戻る') +
-        "<div style='color:#fff;font-size:18px;font-weight:700;line-height:1.7;margin-top:18px;max-width:420px'>スマホのClaudeアプリの一覧から、この会話を開いてください😊</div>", '#16a34a');
+      var note = "<div style='color:#fff;font-size:18px;font-weight:700;line-height:1.7;margin:0 auto 22px;max-width:420px;word-break:auto-phrase;text-wrap:pretty'>" +
+        'スマホのClaudeアプリの一覧から、<wbr>この会話を開いてください😊</div>';
+      szOvShow_(szDoneHtml_('「' + esc(d.title) + '」がスマホとつながりました', '一覧に戻る').replace("<button type='button' id='szDoneBack'", note + "<button type='button' id='szDoneBack'"), '#16a34a');
       var b = document.getElementById('szDoneBack');
       if (b) b.addEventListener('click', function () { szOvHide_(); load(); });
     });
