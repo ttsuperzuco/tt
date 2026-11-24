@@ -3,6 +3,73 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ★2026-11-24 どこで開いても台湾時間（台湾以外の端末だけ・ほかのどのスクリプトよりも先に動かす）。試し＝scratchpadで台湾・日本・アメリカ・豪州の4時間帯×22項目が完全一致 -->
+<script>
+(function () {
+  /* ★2026-11-24 まるちゃん「全部どこにいても台湾時間が表示できるように」。
+     台湾以外（日本など）で開いた時だけ、ズコの中の日付と時計を台湾時間（UTC+8・夏時間なし）に合わせる。
+     台湾の端末では何もしない（今までと1つも変わらない）。お店の日時の正本はいつも台湾時間。 */
+  var TWOFF = -480, H = 8 * 3600000, N = Date;
+  try { if (new N().getTimezoneOffset() === TWOFF && new N(2026, 6, 1).getTimezoneOffset() === TWOFF) return; } catch (e) { return; }
+  var NP = N.prototype, gt = NP.getTime;
+  var RE = /^(\d{4})([-\/])(\d{1,2})[-\/](\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3})\d*)?)?)?$/;
+  function tw(y, mo, d, h, mi, s, ms) {
+    var t = N.UTC(y, mo, d === undefined ? 1 : d, h || 0, mi || 0, s || 0, ms || 0);
+    if (y >= 0 && y <= 99) { var x = new N(t); x.setUTCFullYear(y); t = x.getTime(); }
+    return t - H;
+  }
+  function parseTw(s) {
+    var m = typeof s === 'string' ? RE.exec(s.trim()) : null;
+    if (!m) {                                                         // そのほかの書き方：時差の書いていない物は台湾時間として読み直す
+      var t0 = N.parse(s);
+      if (isNaN(t0) || /(Z|GMT|UTC|[+-]\d{2}:?\d{2})\s*(\(.*\))?\s*$/i.test(String(s).trim())) return t0;
+      return t0 - (new N(t0).getTimezoneOffset() - TWOFF) * 60000;
+    }
+    if (m[2] === '-' && m[5] === undefined) return N.parse(s);          // 「2026-11-24」だけは世界共通の読み方（UTCの0時）のまま
+    return tw(+m[1], +m[3] - 1, +m[4], +(m[5] || 0), +(m[6] || 0), +(m[7] || 0), m[8] ? +(m[8] + '00').slice(0, 3) : 0);
+  }
+  function TD(a0, a1, a2, a3, a4, a5, a6) {
+    if (!(this instanceof TD)) return new TD().toString();
+    var n = arguments.length, t;
+    if (n === 0) t = N.now();
+    else if (n === 1) t = (typeof a0 === 'string') ? parseTw(a0) : new N(a0 instanceof N ? gt.call(a0) : a0).getTime();
+    else t = tw(+a0, +a1, a2 === undefined ? 1 : +a2, +a3 || 0, +a4 || 0, +a5 || 0, +a6 || 0);
+    var d = new N(t); Object.setPrototypeOf(d, TD.prototype); return d;
+  }
+  TD.prototype = Object.create(NP); TD.prototype.constructor = TD;
+  TD.now = N.now; TD.UTC = N.UTC; TD.parse = parseTw;
+  var P = TD.prototype;
+  function u(d) { return new N(gt.call(d) + H); }
+  [['getFullYear', 'getUTCFullYear'], ['getMonth', 'getUTCMonth'], ['getDate', 'getUTCDate'], ['getDay', 'getUTCDay'],
+   ['getHours', 'getUTCHours'], ['getMinutes', 'getUTCMinutes'], ['getSeconds', 'getUTCSeconds'],
+   ['getMilliseconds', 'getUTCMilliseconds']].forEach(function (p) {
+    P[p[0]] = function () { return NP[p[1]].call(u(this)); };
+  });
+  P.getYear = function () { return this.getFullYear() - 1900; };
+  P.getTimezoneOffset = function () { return TWOFF; };
+  ['FullYear', 'Month', 'Date', 'Hours', 'Minutes', 'Seconds', 'Milliseconds'].forEach(function (k) {
+    P['set' + k] = function () {
+      var x = u(this); NP['setUTC' + k].apply(x, arguments);
+      var t = x.getTime(); return NP.setTime.call(this, isNaN(t) ? NaN : t - H);
+    };
+  });
+  var WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+  P.toDateString = function () { if (isNaN(gt.call(this))) return 'Invalid Date'; return WD[this.getDay()] + ' ' + MN[this.getMonth()] + ' ' + p2(this.getDate()) + ' ' + this.getFullYear(); };
+  P.toTimeString = function () { if (isNaN(gt.call(this))) return 'Invalid Date'; return p2(this.getHours()) + ':' + p2(this.getMinutes()) + ':' + p2(this.getSeconds()) + ' GMT+0800 (台北標準時間)'; };
+  P.toString = function () { if (isNaN(gt.call(this))) return 'Invalid Date'; return this.toDateString() + ' ' + this.toTimeString(); };
+  ['toLocaleString', 'toLocaleDateString', 'toLocaleTimeString'].forEach(function (k) {
+    P[k] = function (l, o) { var q = {}; for (var a in (o || {})) q[a] = o[a]; if (!q.timeZone) q.timeZone = 'Asia/Taipei'; return NP[k].call(this, l, q); };
+  });
+  try {
+    var DTF = Intl.DateTimeFormat;
+    var TDTF = function (l, o) { var q = {}; for (var a in (o || {})) q[a] = o[a]; if (!q.timeZone) q.timeZone = 'Asia/Taipei'; return new DTF(l, q); };
+    TDTF.prototype = DTF.prototype; TDTF.supportedLocalesOf = DTF.supportedLocalesOf; Intl.DateTimeFormat = TDTF;
+  } catch (e) {}
+  window.Date = TD;
+  window.__SZ_TZFIX_ = 1;   // 台湾時間に合わせた印（調べる時用）
+})();
+</script>
 <title>TTスーパーズコApp</title>
 <style>
   html, body { margin:0; background:#2C7A99; }
