@@ -91,6 +91,9 @@ function renderTimeTreePage_(base, staff, dev) {
     '.tvrow:active{background:#f5f5f5;}' +
     '.tvrow .tm{flex:none;width:36px;text-align:right;font-size:11px;font-weight:600;color:#9a9a9a;line-height:1.3;}' +
     '.tvrow .tm b{display:block;color:#555;font-weight:700;}' +
+    '.tvrow .tm .twtm{display:block;font-size:9px;font-weight:900;color:#c8102e;line-height:1.1;margin-top:1px;}' +
+    '.tvdh .dt .tvtwb{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:999px;background:#fff;color:#c8102e;' +
+      'border:2px solid #c8102e;font-size:13px;font-weight:900;vertical-align:middle;white-space:nowrap;line-height:1.5;}' +
     '.tvrow .ln{flex:none;width:3px;align-self:stretch;border-radius:2px;min-height:30px;}' +
     '.tvrow .bd{flex:1;min-width:0;}' +
     '.tvrow .ti{display:block;font-size:14px;font-weight:700;line-height:1.35;color:#222;word-break:break-all;}' +
@@ -571,7 +574,8 @@ function ttviewStart_(exec, base, staff, dev) {
     if (sub == null) sub = memo1(e.n);   
     var tm;
     if (isAllDay(e, ds)) tm = '終日';
-    else tm = '<b>' + esc(e.s || '') + '</b>' + esc(e.e === ds ? (e.f || '') : '');   
+    else tm = '<b>' + esc(e.s || '') + '</b>' + esc(e.e === ds ? (e.f || '') : '') +   
+      (window.__SZ_TZFIX_ ? '<span class="twtm">台湾</span>' : '');   
     return '<button class="tvrow" data-i="' + idx + '"><span class="tm">' + tm + '</span>' +
       '<span class="ln" style="background:' + esc(e.col) + '"></span>' +
       '<span class="bd"><span class="ti">' + esc(e.t || '(タイトルなし)') + '</span>' +
@@ -592,7 +596,8 @@ function ttviewStart_(exec, base, staff, dev) {
     var d = parseIso(ds);
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
     var pk = kOfDate(iso(prev)), nk = kOfDate(iso(next));
-    body.innerHTML = '<div class="tvdh"><div class="dt">' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + JWD[d.getDay()] + '曜日</div>' +
+    body.innerHTML = '<div class="tvdh"><div class="dt">' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + JWD[d.getDay()] + '曜日' +
+      (window.__SZ_TZFIX_ ? '<span class="tvtwb">台湾時間</span>' : '') + '</div>' +   
       '<button class="tvadd" id="tvadd" title="予約を追加">＋</button>' +
       '<button class="tvic" id="tvprev"' + (inRange(pk) ? '' : ' disabled') + '>‹</button>' +
       '<button class="tvic" id="tvnext"' + (inRange(nk) ? '' : ' disabled') + '>›</button></div>' +

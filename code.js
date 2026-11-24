@@ -24644,11 +24644,13 @@ function akiFullCard_(day) {
 
 function akiDayCard_(day, ttLink) {
   var dattr = ' data-date="' + esc_(day.date || '') + '"';
+  // ★2026-11-24 まるちゃん決定：台湾以外（日本など）で開いた時だけ、日付の下に「台湾時間」の印（入口の台湾時間の仕組みが付けた印 __SZ_TZFIX_ を見る）。
+  var tw = window.__SZ_TZFIX_ ? '<span class="akitwb">台湾時間</span>' : '';
   // ★2026-11-22 まるちゃん決定（案A・開発者だけ）：営業日の見出しの右に「📅 TimeTreeで見る」。
   //   押すとズコのTimeTree画面のその日の予定（「全部」＝出勤・休みのメモも出る）を開く。← 戻るでここに戻る。
   if (ttLink && day.kind !== 'closed' && !day.empty && day.date) {
     return '<div class="akiday"' + dattr + '>' +
-      '<div class="akidh akidhtt"><span class="akidht">📅 ' + esc_(day.dh) + '</span>' +
+      '<div class="akidh akidhtt"><span class="akidht">📅 ' + esc_(day.dh) + tw + '</span>' +
         '<a class="akittbtn" href="' + esc_(ttLink + '&tvd=' + day.date) + '" target="_top">📅 TimeTreeで見る</a></div>' +
       akiDayBody_(day) + '</div>';
   }
@@ -24661,7 +24663,7 @@ function akiDayCard_(day, ttLink) {
       '<div class="akinone">（出勤スタッフなし）</div></div>';
   }
   return '<div class="akiday"' + dattr + '>' +
-    '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    '<div class="akidh">📅 ' + esc_(day.dh) + tw + '</div>' +
     akiDayBody_(day) +
   '</div>';
 }
@@ -25263,6 +25265,8 @@ AKFCSS_ +
 /* ★2026-11-22 まるちゃん決定（案A）：日の見出しの右に「TimeTreeで見る」＝その日のTimeTree画面を開く（開発者だけ） */
 '  .akidh.akidhtt{ display:flex; align-items:center; gap:8px; }' +
 '  .akidh.akidhtt .akidht{ flex:1; min-width:0; }' +
+'  .akitwb{ display:table; margin-top:4px; padding:1px 9px; border-radius:999px; background:#fff; color:#c8102e;' +
+'    border:2px solid #c8102e; font-size:13px; font-weight:900; line-height:1.5; white-space:nowrap; }' +
 /* ★2026-11-22 まるちゃん「タイムツリーのイメージで緑に」＝TimeTree画面の緑（.tvopen と同じ #2bad6f）・白い字 */
 '  .akittbtn{ flex:none; display:inline-block; text-decoration:none; border-radius:999px; background:#2bad6f; color:#fff;' +
 '    border:0; font-size:13px; font-weight:800; padding:7px 13px; white-space:nowrap;' +
@@ -25853,6 +25857,9 @@ function renderTimeTreePage_(base, staff, dev) {
     '.tvrow:active{background:#f5f5f5;}' +
     '.tvrow .tm{flex:none;width:36px;text-align:right;font-size:11px;font-weight:600;color:#9a9a9a;line-height:1.3;}' +
     '.tvrow .tm b{display:block;color:#555;font-weight:700;}' +
+    '.tvrow .tm .twtm{display:block;font-size:9px;font-weight:900;color:#c8102e;line-height:1.1;margin-top:1px;}' +
+    '.tvdh .dt .tvtwb{display:inline-block;margin-left:8px;padding:1px 9px;border-radius:999px;background:#fff;color:#c8102e;' +
+      'border:2px solid #c8102e;font-size:13px;font-weight:900;vertical-align:middle;white-space:nowrap;line-height:1.5;}' +
     '.tvrow .ln{flex:none;width:3px;align-self:stretch;border-radius:2px;min-height:30px;}' +
     '.tvrow .bd{flex:1;min-width:0;}' +
     '.tvrow .ti{display:block;font-size:14px;font-weight:700;line-height:1.35;color:#222;word-break:break-all;}' +
@@ -26374,7 +26381,8 @@ function ttviewStart_(exec, base, staff, dev) {
     if (sub == null) sub = memo1(e.n);   // 2行目＝ふつうはメモの1行目（検索の時は当たった行）
     var tm;
     if (isAllDay(e, ds)) tm = '終日';
-    else tm = '<b>' + esc(e.s || '') + '</b>' + esc(e.e === ds ? (e.f || '') : '');   // 次の日まで続く予定は終わりの時刻を出さない（元と同じ）
+    else tm = '<b>' + esc(e.s || '') + '</b>' + esc(e.e === ds ? (e.f || '') : '') +   // 次の日まで続く予定は終わりの時刻を出さない（元と同じ）
+      (window.__SZ_TZFIX_ ? '<span class="twtm">台湾</span>' : '');   // ★2026-11-24 台湾以外で開いた時だけ、時刻の下に「台湾」
     return '<button class="tvrow" data-i="' + idx + '"><span class="tm">' + tm + '</span>' +
       '<span class="ln" style="background:' + esc(e.col) + '"></span>' +
       '<span class="bd"><span class="ti">' + esc(e.t || '(タイトルなし)') + '</span>' +
@@ -26398,7 +26406,8 @@ function ttviewStart_(exec, base, staff, dev) {
     var d = parseIso(ds);
     var prev = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1), next = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
     var pk = kOfDate(iso(prev)), nk = kOfDate(iso(next));
-    body.innerHTML = '<div class="tvdh"><div class="dt">' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + JWD[d.getDay()] + '曜日</div>' +
+    body.innerHTML = '<div class="tvdh"><div class="dt">' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + JWD[d.getDay()] + '曜日' +
+      (window.__SZ_TZFIX_ ? '<span class="tvtwb">台湾時間</span>' : '') + '</div>' +   // ★2026-11-24 台湾以外で開いた時だけ
       '<button class="tvadd" id="tvadd" title="予約を追加">＋</button>' +
       '<button class="tvic" id="tvprev"' + (inRange(pk) ? '' : ' disabled') + '>‹</button>' +
       '<button class="tvic" id="tvnext"' + (inRange(nk) ? '' : ' disabled') + '>›</button></div>' +

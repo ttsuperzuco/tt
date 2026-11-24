@@ -61,9 +61,10 @@ function akiRoomRows_(roomsFree) {
 }
 function akiDayCard_(day, ttLink) {
   var dattr = ' data-date="' + esc_(day.date || '') + '"';
+  var tw = window.__SZ_TZFIX_ ? '<span class="akitwb">台湾時間</span>' : '';
   if (ttLink && day.kind !== 'closed' && !day.empty && day.date) {
     return '<div class="akiday"' + dattr + '>' +
-      '<div class="akidh akidhtt"><span class="akidht">📅 ' + esc_(day.dh) + '</span>' +
+      '<div class="akidh akidhtt"><span class="akidht">📅 ' + esc_(day.dh) + tw + '</span>' +
         '<a class="akittbtn" href="' + esc_(ttLink + '&tvd=' + day.date) + '" target="_top">📅 TimeTreeで見る</a></div>' +
       akiDayBody_(day) + '</div>';
   }
@@ -76,7 +77,7 @@ function akiDayCard_(day, ttLink) {
       '<div class="akinone">（出勤スタッフなし）</div></div>';
   }
   return '<div class="akiday"' + dattr + '>' +
-    '<div class="akidh">📅 ' + esc_(day.dh) + '</div>' +
+    '<div class="akidh">📅 ' + esc_(day.dh) + tw + '</div>' +
     akiDayBody_(day) +
   '</div>';
 }
@@ -550,6 +551,8 @@ AKFCSS_ +
 '    padding-bottom:6px; margin-bottom:8px; }' +
 '  .akidh.akidhtt{ display:flex; align-items:center; gap:8px; }' +
 '  .akidh.akidhtt .akidht{ flex:1; min-width:0; }' +
+'  .akitwb{ display:table; margin-top:4px; padding:1px 9px; border-radius:999px; background:#fff; color:#c8102e;' +
+'    border:2px solid #c8102e; font-size:13px; font-weight:900; line-height:1.5; white-space:nowrap; }' +
 '  .akittbtn{ flex:none; display:inline-block; text-decoration:none; border-radius:999px; background:#2bad6f; color:#fff;' +
 '    border:0; font-size:13px; font-weight:800; padding:7px 13px; white-space:nowrap;' +
 '    box-shadow:0 1px 3px rgba(0,0,0,.25); }' +
