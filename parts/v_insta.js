@@ -297,6 +297,14 @@ var INSTACSS_ =
   '.ighv .bd .lt,.ighv .bd .rt{position:absolute;top:0;bottom:0;width:40%;}' +
   '.ighv .bd .lt{left:0;}.ighv .bd .rt{right:0;}' +
   '.ighv .msg{color:#bbb;font-size:14px;padding:20px;text-align:center;}' +
+  '.ighv .igasb{position:relative;height:100%;max-width:100%;aspect-ratio:9/16;overflow:hidden;border-radius:8px;}' +
+  '.ighv .igasb>img,.ighv .igasb>video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;max-width:none;max-height:none;}' +
+  '.ighv .igasb>img.ov{pointer-events:none;}' +
+  '.ighv .igasp{position:absolute;left:50%;transform:translateX(-50%);z-index:2;max-width:86%;background:#fff;color:#262626;font-size:13px;font-weight:700;padding:6px 12px;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.25);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;}' +
+  '.ighv .igasm{position:absolute;left:12px;top:10px;z-index:2;max-width:80%;background:rgba(0,0,0,.45);color:#fff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;}' +
+  '.ighv .igasn{text-align:center;color:#bbb;font-size:12px;padding:6px 16px 0;}' +
+  '.ighv .igasc{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 16px 18px;padding:12px;border:0;border-radius:10px;background:#fff;color:#262626;font:inherit;font-weight:700;cursor:pointer;}' +
+  '.igav.igavst img{box-shadow:0 0 0 2px #fff,0 0 0 5px #EF9F27;}' +
   '.ighe .cv{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 0 6px;}' +
   '.ighe .cv .c{width:86px;height:86px;border-radius:50%;border:1px solid #dbdbdb;padding:3px;box-sizing:border-box;}' +
   '.ighe .cv .c img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:#efefef;display:block;}' +
@@ -525,8 +533,10 @@ function instaScript_(C) {
       '<div class="u"><span>' + esc(p.user) + '</span>' + IC.down + '</div>' +
       '<div class="r"><button type="button" data-go="threads">' + IC.threads + '</button><button type="button" data-go="menu">' + IC.menu + '</button></div></div>';
     var note = !!NOTE_ON[CUR];
-    h += '<div class="igprof' + (note ? ' hasnote' : '') + '"><div class="igav" data-go="stories" style="cursor:pointer">' + (note ? '<div class="ignote">夢中になっていること…</div>' : '') +
-      '<img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b></div>' +
+    var apvSt = DRAFT && (v._apvSt || []).length;      
+    h += '<div class="igprof' + (note ? ' hasnote' : '') + '"><div class="igav' + (apvSt ? ' igavst' : '') + '" data-go="stories" style="cursor:pointer">' + (note ? '<div class="ignote">夢中になっていること…</div>' : '') +
+      '<img src="' + esc(p.pic) + '" referrerpolicy="no-referrer" alt=""><b>' + IC.plusS + '</b>' +
+      (apvSt ? '<span class="igapv" style="top:auto;bottom:-6px;right:auto;left:50%;transform:translateX(-50%)">新規' + (apvSt > 1 ? apvSt : '') + '</span>' : '') + '</div>' +
       '<div class="igr"><div class="nmw"><div class="nm">' + esc(p.name || p.user) + '</div>' +
       S('<circle cx="12" cy="12" r="9" stroke-dasharray="2.2 2.2"/><path d="M8 12.3l2.7 2.7L16 9.7"/>', 18) + '</div>' +
       '<div class="igcnt"><div><b>' + num(p.posts) + '</b>投稿</div><div data-go="followers" style="cursor:pointer"><b>' + num(p.followers) + '</b>フォロワー</div>' +
@@ -664,7 +674,77 @@ function instaScript_(C) {
       }
     });
     v._apvM = M;
+    v._apvSt = apvAll().filter(apvIsStory).map(function (it) { return it.id; });
     return v;
+  }
+  function apvIsStory(it) { return it.kind === 'phone_story' || (it.kind === 'post' && (it.light || {}).type === 'story'); }
+  var APV_MEDIA = {};      
+  var APV_STK_POS = function (pos) { pos = String(pos || ''); return pos.indexOf('上') >= 0 ? 'top:16%' : pos.indexOf('下') >= 0 ? 'bottom:16%' : 'top:50%;transform:translate(-50%,-50%)'; };
+  function openApvStories(startId) {
+    var v0 = DATA && DATA.views && DATA.views[CUR], p = (v0 && v0.prof) || {};
+    var its = apvAll().filter(apvIsStory);
+    if (startId) its = its.filter(function (x) { return x.id === startId; }).concat(its.filter(function (x) { return x.id !== startId; }));
+    if (!its.length) { warn('下書きのストーリーズはありません'); return; }
+    var fr = [];      
+    its.forEach(function (it) { var n = Math.max(1, (it.light || {}).n_media || 1); for (var k = 0; k < n; k++) fr.push({ id: it.id, k: k, it: it }); });
+    var st = { i: 0 };
+    var old = document.getElementById('igASt'); if (old) old.remove();
+    var el = document.createElement('div'); el.className = 'ighv'; el.id = 'igASt';
+    el.style.zIndex = 8680;      
+    document.body.appendChild(el);
+    var stk = function (d) {
+      var h = '', pill = function (pos, t) { return '<span class="igasp" style="' + pos + '">' + esc(t) + '</span>'; };
+      if (d.music) h += '<span class="igasm">♪ ' + esc([d.music.title, d.music.artist].filter(Boolean).join(' ・ ')) + '</span>';
+      if (d.link) h += pill(APV_STK_POS(d.link_pos), '🔗 ' + (d.link_text || shortUrl(d.link)));
+      (d.stickers || []).forEach(function (x) {
+        var main = x.type === 'mention' ? '@' + (x.user || '') : x.type === 'hashtag' ? '#' + (x.q || '') : (x.type === 'photo' || x.type === 'frame') ? '写真' : (x.q || '');
+        if (x.type === 'poll') main += '（' + (x.opts || []).join('／') + '）';
+        if (x.type === 'countdown') main += '（' + String(x.date || '').replace(/-/g, '/') + 'まで）';
+        if (x.type === 'slider') main += ' ' + (x.emoji || '');
+        h += pill(APV_STK_POS(x.pos), (STK_NAME[x.type] || 'スタンプ') + '：' + main);
+      });
+      return h;
+    };
+    var draw = function () {
+      var f = fr[st.i], it = f.it, d = APV_MEDIA[f.id], m = d && d.media && d.media[f.k];
+      var body;
+      if (!d) body = '<div class="msg">読み込み中です…</div>';
+      else if (d.err) body = '<div class="msg">' + esc(d.err) + '</div>';
+      else if (!m) body = '<div class="msg">写真・動画がありません</div>';
+      else if (m.v && m.big) body = '<div class="msg">動画が大きいため、ここでは再生できません。<br>承認すると本番のストーリーズで確認できます😊</div>';
+      else body = '<div class="igasb" style="background:' + esc(m.bgc || '#111111') + '">' +
+        (m.v ? '<video src="' + esc(m.src) + '" autoplay playsinline loop controls></video>' : '<img src="' + esc(m.src) + '" alt="">') +
+        (m.ov ? '<img class="ov" src="' + esc(m.ov) + '" alt="">' : '') + stk(d) + '</div>';
+      var ex = d && !d.err && (d.link || d.music || (d.stickers || []).length);
+      el.innerHTML = '<div class="bars">' + fr.map(function (_, k) { return '<i' + (k <= st.i ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' +
+        '<div class="hd"><img src="' + esc(p.pic || '') + '" referrerpolicy="no-referrer" alt=""><b style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(p.user || '') +
+        '<span style="font-weight:400;opacity:.8;margin-left:8px">下書き・' + esc(apvWho(it)) + '・' + esc(apvWhen(it.at)) + ((d && d.close_friends) ? '・親しい友達' : '') + '</span></b>' +
+        '<span></span><button type="button" data-ax="1">✕</button></div>' +
+        '<div class="bd">' + body + '<span class="lt" data-aprev="1"></span><span class="rt" data-anext="1"></span></div>' +
+        (ex ? '<div class="igasn">リンク・音楽・スタンプは、本番ではインスタの形で付きます</div>' : '') +
+        '<button type="button" data-acard="1" class="igasc"><span class="igapv" style="position:static">' + apvTag(it) + '</span>' + (ISADMIN ? '承認・差し戻し' : '内容の確認') + '</button>';
+    };
+    var load = function (id) {
+      if (id in APV_MEDIA) return;      
+      APV_MEDIA[id] = null;
+      ask({ kind: 'apv_media', aid: id }, function (err, d) {
+        APV_MEDIA[id] = err ? { err: err } : (d || { err: '読み込めませんでした。もう一度試してもらえると嬉しいです🙇' });
+        if (err) setTimeout(function () { if (APV_MEDIA[id] && APV_MEDIA[id].err) delete APV_MEDIA[id]; }, 100);      
+        if (document.getElementById('igASt') === el && fr[st.i] && fr[st.i].id === id) draw();
+      });
+    };
+    var go = function (n) {
+      if (n < 0 || n >= fr.length) { if (n >= fr.length) el.remove(); return; }
+      st.i = n; draw(); load(fr[n].id); if (fr[n + 1]) load(fr[n + 1].id);
+    };
+    go(0);
+    el.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t.closest('[data-ax]')) { el.remove(); return; }
+      if (t.closest('[data-acard]')) { openApvCard(fr[st.i].id); return; }
+      if (t.closest('[data-aprev]')) { go(st.i - 1); return; }
+      if (t.closest('[data-anext]')) { go(st.i + 1); return; }
+    });
   }
   function apvBadge(el, id, t) {
     if (!el || !id) return;
@@ -825,6 +905,7 @@ function instaScript_(C) {
         (aft ? '<div style="margin-top:12px;color:#737373;font-size:12px">内容</div>' + pre(aft) : '')) +
       ((L.thumbs || []).length ? '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">' + L.thumbs.map(function (s2) { return '<img src="' + s2 + '" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:6px">'; }).join('') + '</div>' : '') +
       (L.n_media && !(L.thumbs || []).length ? '<div style="color:#737373;margin-bottom:10px">写真・動画 ' + L.n_media + '件</div>' : '') +
+      (apvIsStory(it) && it.status === 'wait' && !document.getElementById('igASt') ? '<button type="button" data-asv="1" style="display:block;width:100%;margin:0 0 8px;background:#262626;color:#fff;border-radius:8px;padding:10px;font-weight:700">ストーリーズの形で見る</button>' : '') +
       (ISADMIN && it.status === 'wait' ? '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" data-ok="1" style="flex:1;background:#0095f6;color:#fff;border-radius:8px;padding:10px">承認する</button>' +
         '<button type="button" data-ng="1" style="flex:1;background:#efefef;border-radius:8px;padding:10px">差し戻す</button></div>' : '') +
       (apvCanEdit(it) && APV_EDIT[it.kind] && !(it.kind === 'post' && L.type === 'story') ? '<button type="button" data-aed="1" style="display:block;width:100%;margin-top:10px;background:#efefef;border-radius:8px;padding:10px;font-weight:700">編集</button>' : '') +
@@ -840,10 +921,11 @@ function instaScript_(C) {
         var bb = e.querySelector('[data-apvbef]'); if (bb) bb.innerHTML = pre(APV_FULLCAP[L.code]);
       });
     }
-    var after = function () { e.remove(); APV_FULLCAP = {}; apvLoad(CUR); loadWeb(CUR, true); };      
+    var after = function () { e.remove(); APV_FULLCAP = {}; var sv = document.getElementById('igASt'); if (sv) sv.remove(); apvLoad(CUR); loadWeb(CUR, true); };      
     e.addEventListener('click', function (ev) {
       var t = ev.target;
       if (t.closest('[data-cx]')) { e.remove(); return; }
+      if (t.closest('[data-asv]')) { e.remove(); openApvStories(id); return; }      
       if (t.closest('[data-ok]')) {
         szPopup_('この変更を承認して、本番に出しますか？😊', { cancel: true, onYes: function () {
           busyAsk({ kind: 'apv_ok', aid: id }, false, '承認して本番に出しています', '1〜2分かかります', function (err) { if (err) { warn(err); return; } after(); doneBox('承認して本番に出しました'); });
@@ -1996,7 +2078,7 @@ function instaScript_(C) {
     if (k === 'search') { openSearch(); return; }
     if (k === 'feed') { openFeed(); return; }
     if (k === 'banners') { openBanners(); return; }
-    if (k === 'stories') { openStories(); return; }
+    if (k === 'stories') { if (DRAFT && apvAll().filter(apvIsStory).length) openApvStories(); else openStories(); return; }
     if (k === 'notifs') { openNotifs(); return; }
     if (k === 'followers' || k === 'following') { openFollows(k); return; }
     if (k === 'dash') { openDash(30); return; }
