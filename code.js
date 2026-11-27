@@ -11336,14 +11336,30 @@ var URIAGESCRIPT_ =
 '  ov.style.cursor="pointer";' +
 '  ov.addEventListener("click", szOverlayHide_);' +
 '}' +
+// ★2026-11-27 まるちゃん（パソコン版の窓で「この操作は、この端末では使えません」）：11/23の権限の確認から、
+//   誰が頼んだか（名前・役割・端末番号）と、パソコン版ズコの窓の鍵の指紋（zdv/zdh）を添えない依頼は断られる。
+//   売上転記の「実行」だけ何も添えていなかった＝幹部のスマホでもパソコン版の窓でも断られていた。売上帳簿の画面と同じ物を添える。
+'function uIdent_(cb){' +
+'  var W=(typeof window.__SZ_ROLE_!=="undefined")?window:(window.parent||window);' +
+'  var id={who:W.__SZ_WHO_||"",role:W.__SZ_ROLE_||"",device:W.__SZ_DEVICE_||"",f:{}};' +
+'  var dv="",dk="";' +
+'  try{ dv=localStorage.getItem("zk_dv")||""; dk=localStorage.getItem("zk_dk")||""; }catch(e){}' +
+'  if(id.role!=="開発"||!dv||!dk||!window.crypto||!crypto.subtle||typeof TextEncoder==="undefined"){ cb(id); return; }' +
+'  crypto.subtle.digest("SHA-256",new TextEncoder().encode(dk)).then(function(b){' +
+'    id.f.zdv=dv; id.f.zdh=Array.prototype.map.call(new Uint8Array(b),function(x){return ("0"+x.toString(16)).slice(-2);}).join("");' +
+'    cb(id);' +
+'  },function(){ cb(id); });' +
+'}' +
 'var allBtn=document.getElementById("uallbtn");' +
 'if(allBtn){ allBtn.addEventListener("click",function(){' +
 '  uConfirm_("実行します。この処理には数分かかります。", function(){' +
 '    allBtn.disabled=true;' +
 '    szOverlay_("#2C7A99","⏳","処理中です","売上の記入・ミス修正・プロセル転記を\\nまとめて実行しています。数分かかることがあります。\\n完了したら自動で切り替わります。");' +
-'    jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_},function(r){' +
+'    uIdent_(function(id){' +
+'    jsonpU0_({action:"submit",op:"run_all",key:EKEY_U0_,who:id.who,role:id.role,device:id.device,fields:JSON.stringify(id.f)},function(r){' +
 '      if(!r||!r.ok||!r.id){ szOverlayResult_(false,"依頼に失敗しました",szEsc_((r&&r.error)||"不明")); allBtn.disabled=false; enableUriageBtns(); return; }' +
 '      pollUAll(r.id);' +
+'    });' +
 '    });' +
 '  });' +
 '}); }' +
